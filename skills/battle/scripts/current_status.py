@@ -75,6 +75,510 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _hash_value(value: Any) -> str | None:
+    if not isinstance(value, str) or not value:
+        return None
+    return value.removeprefix("sha256:")
+
+
+def _same_path(left: Path, right: Path) -> bool:
+    return left.resolve(strict=False) == right.resolve(strict=False)
+
+
+def _inside(path: Path, root: Path) -> bool:
+    try:
+        path.resolve(strict=False).relative_to(root.resolve(strict=False))
+    except ValueError:
+        return False
+    return True
+
+
+def _json_or_error(path: Path, label: str, errors: list[str]) -> dict[str, Any] | None:
+    if not path.is_file():
+        errors.append(f"{label}_missing:{path}")
+        return None
+    try:
+        return _read_json(path)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        errors.append(f"{label}_invalid_json:{path}:{exc}")
+        return None
+
+
+def _require_sha(label: str, path: Path, expected: Any, errors: list[str]) -> bool:
+    expected_hash = _hash_value(expected)
+    if not expected_hash:
+        errors.append(f"{label}_missing_expected_sha256:{path}")
+        return False
+    if not path.is_file():
+        errors.append(f"{label}_missing_for_sha256:{path}")
+        return False
+    actual = _sha256(path)
+    if actual != expected_hash:
+        errors.append(f"{label}_sha256_mismatch:{path}:{actual}!={expected_hash}")
+        return False
+    return True
+
+
+def _require_status(label: str, payload: dict[str, Any], status: str, errors: list[str]) -> bool:
+    if payload.get("status") != status:
+        errors.append(f"{label}_status_not_{status.lower()}:{payload.get('status')}")
+        return False
+    return True
+
+
+def _require_schema(label: str, payload: dict[str, Any], schemas: set[str], errors: list[str]) -> bool:
+    if payload.get("schema") not in schemas:
+        errors.append(f"{label}_schema_mismatch:{payload.get('schema')}")
+        return False
+    return True
+
+
+def _record_path(status: dict[str, Any], key: str, errors: list[str]) -> Path | None:
+    record = (status.get("source_receipts") or {}).get(key) or {}
+    raw = record.get("path")
+    if not raw:
+        errors.append(f"{key}_source_receipt_path_missing")
+        return None
+    return Path(str(raw))
+
+
+def _validate_cached_source_records(status: dict[str, Any], errors: list[str]) -> None:
+    for name, record in (status.get("source_receipts") or {}).items():
+        raw = record.get("path")
+        if not raw:
+            errors.append(f"source_receipt_path_missing:{name}")
+            continue
+        path = Path(str(raw))
+        if record.get("kind") == "directory":
+            if not path.is_dir():
+                errors.append(f"source_receipt_directory_missing:{name}:{path}")
+            continue
+        if record.get("exists") is False:
+            if not record.get("superseded_by") and path.exists():
+                errors.append(f"source_receipt_exists_false_but_present:{name}:{path}")
+            continue
+        if record.get("exists") is not True:
+            continue
+        if not path.is_file():
+            errors.append(f"source_receipt_file_missing:{name}:{path}")
+            continue
+        if "sha256" in record:
+            _require_sha(f"source_receipt:{name}", path, record.get("sha256"), errors)
+        try:
+            payload = _read_json(path)
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+            continue
+        for field in ("schema", "status", "mocked", "live"):
+            if field in record and payload.get(field) != record.get(field):
+                errors.append(
+                    f"source_receipt_{field}_mismatch:{name}:{payload.get(field)!r}!={record.get(field)!r}"
+                )
+
+
+def _require_path_binding(
+    label: str,
+    path: Path,
+    *,
+    root: Path,
+    expected_sha256: Any | None,
+    errors: list[str],
+) -> bool:
+    ok = True
+    if not _inside(path, root):
+        errors.append(f"{label}_outside_campaign_root:{path}")
+        ok = False
+    if not path.is_file():
+        errors.append(f"{label}_missing:{path}")
+        return False
+    if expected_sha256 is not None:
+        ok = _require_sha(label, path, expected_sha256, errors) and ok
+    return ok
+
+
+def _required_check_path(
+    qualification: dict[str, Any],
+    name: str,
+    *,
+    root: Path,
+    errors: list[str],
+) -> Path | None:
+    check = _named_check(qualification.get("checks") or [], name)
+    if check.get("status") != "PASS":
+        errors.append(f"qualification_check_not_pass:{name}:{check.get('status')}")
+    raw = check.get("path")
+    if not raw:
+        errors.append(f"qualification_check_path_missing:{name}")
+        return None
+    path = Path(str(raw))
+    if not _inside(path, root):
+        errors.append(f"qualification_check_path_outside_source_run:{name}:{path}")
+    return path
+
+
+def _validate_adaptive_source_run(
+    qualification_path: Path,
+    qualification: dict[str, Any],
+    errors: list[str],
+) -> bool:
+    ok_before = len(errors)
+    _require_schema("adaptive_lineage_qualification", qualification, ADAPTIVE_LINEAGE_QUALIFICATION_SCHEMAS, errors)
+    _require_status("adaptive_lineage_qualification", qualification, "PASS", errors)
+    if qualification.get("battle_id") != "battle-004":
+        errors.append(f"adaptive_lineage_qualification_battle_id_mismatch:{qualification.get('battle_id')}")
+    source_run_dir = Path(str(qualification.get("source_run_dir") or ""))
+    if not source_run_dir.is_dir():
+        errors.append(f"adaptive_lineage_source_run_dir_missing:{source_run_dir}")
+        return False
+    campaign_path = _required_check_path(
+        qualification,
+        "campaign_receipt_present",
+        root=source_run_dir,
+        errors=errors,
+    )
+    integrity_path = _required_check_path(
+        qualification,
+        "artifact_integrity_receipt_present",
+        root=source_run_dir,
+        errors=errors,
+    )
+    backend_path = _required_check_path(
+        qualification,
+        "prior_backend_verification_present",
+        root=source_run_dir,
+        errors=errors,
+    )
+    if campaign_path is None or integrity_path is None or backend_path is None:
+        return False
+
+    campaign = _json_or_error(campaign_path, "adaptive_campaign_receipt", errors)
+    integrity = _json_or_error(integrity_path, "adaptive_artifact_integrity", errors)
+    backend = _json_or_error(backend_path, "adaptive_backend_verification", errors)
+    if campaign is None or integrity is None or backend is None:
+        return False
+    _require_schema("adaptive_campaign_receipt", campaign, {"battle.adaptive_red_blue_lineage_canary.v1"}, errors)
+    _require_schema("adaptive_artifact_integrity", integrity, {"battle.adaptive_artifact_integrity.v1"}, errors)
+    _require_schema(
+        "adaptive_backend_verification",
+        backend,
+        {"battle.adaptive_lineage_backend_verification.v1"},
+        errors,
+    )
+    for label, payload in [
+        ("adaptive_campaign_receipt", campaign),
+        ("adaptive_artifact_integrity", integrity),
+        ("adaptive_backend_verification", backend),
+    ]:
+        _require_status(label, payload, "PASS", errors)
+    if campaign.get("battle_id") != qualification.get("battle_id"):
+        errors.append("adaptive_campaign_battle_id_not_bound_to_qualification")
+    if campaign.get("live") is not True or campaign.get("mocked") is not False:
+        errors.append("adaptive_campaign_live_unmocked_required")
+    if campaign.get("fixture_fallback_used") is not False:
+        errors.append("adaptive_campaign_fixture_fallback_used")
+    if Path(str(backend.get("run_dir") or "")).resolve(strict=False) != source_run_dir.resolve(strict=False):
+        errors.append("adaptive_backend_run_dir_not_source_run")
+    if backend.get("live") is not True or backend.get("mocked") is not False:
+        errors.append("adaptive_backend_verification_live_unmocked_required")
+
+    embedded_integrity = campaign.get("artifact_integrity") or {}
+    embedded_integrity_path = Path(str(embedded_integrity.get("path") or ""))
+    if not _same_path(embedded_integrity_path, integrity_path):
+        errors.append("adaptive_campaign_integrity_path_mismatch")
+    _require_sha("adaptive_campaign_integrity", integrity_path, embedded_integrity.get("sha256"), errors)
+    event_journal = campaign.get("event_journal") or {}
+    if event_journal.get("path"):
+        _require_path_binding(
+            "adaptive_campaign_event_journal",
+            Path(str(event_journal["path"])),
+            root=source_run_dir,
+            expected_sha256=event_journal.get("sha256"),
+            errors=errors,
+        )
+    selection = campaign.get("selection") or {}
+    selection_path = Path(str(selection.get("path") or ""))
+    if selection_path:
+        _require_path_binding(
+            "adaptive_campaign_selection",
+            selection_path,
+            root=source_run_dir,
+            expected_sha256=selection.get("sha256"),
+            errors=errors,
+        )
+
+    slots = integrity.get("slots") or []
+    replays = integrity.get("judge_replays") or []
+    if integrity.get("matched_slot_count") != integrity.get("required_slot_count") or len(slots) != 4:
+        errors.append("adaptive_integrity_slot_count_mismatch")
+    if integrity.get("matched_replay_count") != integrity.get("required_replay_count") or len(replays) != 2:
+        errors.append("adaptive_integrity_replay_count_mismatch")
+    if integrity.get("unique_slot_paths") is not True or integrity.get("unique_replay_paths") is not True:
+        errors.append("adaptive_integrity_paths_not_unique")
+    for slot in slots:
+        slot_path = Path(str(slot.get("path") or ""))
+        label = f"adaptive_slot:{slot.get('slot_key')}"
+        _require_path_binding(label, slot_path, root=source_run_dir, expected_sha256=slot.get("expected_sha256"), errors=errors)
+        if slot.get("actual_sha256") != slot.get("expected_sha256") or slot.get("matched") is not True:
+            errors.append(f"{label}_record_not_matched")
+        expected_key = f"generation-{slot.get('generation')}:{slot.get('team')}"
+        if slot.get("slot_key") != expected_key:
+            errors.append(f"{label}_slot_key_mismatch:{expected_key}")
+    for replay in replays:
+        replay_path = Path(str(replay.get("path") or ""))
+        label = f"adaptive_replay:generation-{replay.get('expected_generation')}"
+        _require_path_binding(label, replay_path, root=source_run_dir, expected_sha256=replay.get("expected_sha256"), errors=errors)
+        replay_payload = _json_or_error(replay_path, label, errors)
+        if replay_payload is not None:
+            _require_status(label, replay_payload, "PASS", errors)
+            generation = replay_payload.get("generation", replay.get("generation"))
+            if generation != replay.get("expected_generation"):
+                errors.append(f"{label}_generation_mismatch:{generation}")
+        if replay.get("actual_sha256") != replay.get("expected_sha256") or replay.get("matched") is not True:
+            errors.append(f"{label}_record_not_matched")
+
+    for record in backend.get("slot_records") or []:
+        _require_path_binding(
+            f"adaptive_backend_slot:{record.get('slot_key')}",
+            Path(str(record.get("path") or "")),
+            root=source_run_dir,
+            expected_sha256=record.get("expected_sha256"),
+            errors=errors,
+        )
+        if record.get("actual_sha256") != record.get("expected_sha256") or record.get("matched") is not True:
+            errors.append(f"adaptive_backend_slot_record_not_matched:{record.get('slot_key')}")
+    for record in backend.get("replay_records") or []:
+        _require_path_binding(
+            f"adaptive_backend_replay:generation-{record.get('generation')}",
+            Path(str(record.get("path") or "")),
+            root=source_run_dir,
+            expected_sha256=record.get("expected_sha256"),
+            errors=errors,
+        )
+        if record.get("actual_sha256") != record.get("expected_sha256") or record.get("matched") is not True:
+            errors.append(f"adaptive_backend_replay_record_not_matched:{record.get('generation')}")
+    for record in backend.get("attempt_records") or []:
+        attempt_path = Path(str(record.get("path") or ""))
+        _require_path_binding("adaptive_backend_attempt", attempt_path, root=source_run_dir, expected_sha256=None, errors=errors)
+        if record.get("status") != "PASS" or record.get("container_input_hash_pass") is not True:
+            errors.append(f"adaptive_backend_attempt_not_bound:{attempt_path}")
+    for record in backend.get("provider_records") or []:
+        provider_path = Path(str(record.get("path") or ""))
+        _require_path_binding("adaptive_backend_provider", provider_path, root=source_run_dir, expected_sha256=record.get("sha256"), errors=errors)
+        provider_payload = _json_or_error(provider_path, "adaptive_backend_provider", errors)
+        if (
+            provider_payload is None
+            or provider_payload.get("schema") != "tau.scillm_call_receipt.v1"
+            or provider_payload.get("status") != "PASS"
+            or provider_payload.get("live") is not True
+            or provider_payload.get("mocked") is not False
+            or provider_payload.get("http_status") != 200
+        ):
+            errors.append(f"adaptive_backend_provider_not_live_pass:{provider_path}")
+    for checked in backend.get("checked_files") or []:
+        _require_path_binding("adaptive_backend_checked_file", Path(str(checked)), root=source_run_dir, expected_sha256=None, errors=errors)
+    if backend.get("slot_hashes_matched") != backend.get("slot_hashes_required"):
+        errors.append("adaptive_backend_slot_hash_count_mismatch")
+    if backend.get("exact_replays_matched") != backend.get("exact_replays_required"):
+        errors.append("adaptive_backend_replay_hash_count_mismatch")
+    if backend.get("provider_receipts_passed") != backend.get("provider_receipts_required"):
+        errors.append("adaptive_backend_provider_count_mismatch")
+
+    counts = qualification.get("counts") or {}
+    for left, right in [
+        ("slot_hashes_matched", "slot_hashes_required"),
+        ("exact_replays_matched", "exact_replays_required"),
+    ]:
+        if counts.get(left) != counts.get(right):
+            errors.append(f"adaptive_qualification_count_mismatch:{left}:{right}")
+    if counts.get("slot_hashes_matched") != backend.get("slot_hashes_matched"):
+        errors.append("adaptive_qualification_slot_count_not_backend_count")
+    if counts.get("exact_replays_matched") != backend.get("exact_replays_matched"):
+        errors.append("adaptive_qualification_replay_count_not_backend_count")
+    provider_check = _named_check(qualification.get("checks") or [], "provider_live_authority_receipts_bound")
+    if provider_check.get("passed") != backend.get("provider_receipts_passed"):
+        errors.append("adaptive_qualification_provider_count_not_backend_count")
+    if not _inside(qualification_path, BATTLE_DIR):
+        errors.append(f"adaptive_qualification_manifest_not_durable_battle_local:{qualification_path}")
+    return len(errors) == ok_before
+
+
+def _seed_records_bound(campaign: dict[str, Any], broadcast: dict[str, Any], errors: list[str]) -> bool:
+    ok_before = len(errors)
+    campaign_seeds = campaign.get("mutation_seed_receipts") or {}
+    broadcast_seeds = broadcast.get("seed_receipts") or []
+    if campaign_seeds.get("schema") != "battle.mutation_seed_receipt_bundle.v1":
+        errors.append("provider_campaign_seed_bundle_schema_mismatch")
+    if campaign_seeds.get("status") != "PASS":
+        errors.append("provider_campaign_seed_bundle_not_pass")
+    campaign_set = {
+        (item.get("kind"), item.get("path"), _hash_value(item.get("sha256")))
+        for item in campaign_seeds.get("receipts") or []
+    }
+    broadcast_set = {
+        (item.get("kind"), item.get("path"), _hash_value(item.get("sha256")))
+        for item in broadcast_seeds
+    }
+    if campaign_set != broadcast_set or not campaign_set:
+        errors.append("provider_seed_receipts_not_bound_between_campaign_and_broadcast")
+    for item in campaign_seeds.get("receipts") or []:
+        seed_path = Path(str(item.get("path") or ""))
+        _require_sha(f"provider_seed:{item.get('kind')}", seed_path, item.get("sha256"), errors)
+        if item.get("bytes") is not None and seed_path.is_file() and seed_path.stat().st_size != item.get("bytes"):
+            errors.append(f"provider_seed_size_mismatch:{seed_path}")
+    return len(errors) == ok_before
+
+
+def _validate_provider_tau_chain(status: dict[str, Any], errors: list[str]) -> bool:
+    ok_before = len(errors)
+    campaign_path = _record_path(status, "provider_tau_seeded_campaign", errors)
+    broadcast_path = _record_path(status, "provider_tau_seeded_broadcast", errors)
+    memory_path = _record_path(status, "provider_tau_memory_promotion", errors)
+    if campaign_path is None or broadcast_path is None or memory_path is None:
+        return False
+    provider_root = campaign_path.parents[1]
+    source_root = provider_root / "source-run"
+    broadcast_root = provider_root / "broadcast"
+    if not _same_path(campaign_path.parent, source_root):
+        errors.append(f"provider_campaign_path_not_source_run:{campaign_path}")
+    if not _inside(broadcast_path, broadcast_root):
+        errors.append(f"provider_broadcast_path_not_broadcast_root:{broadcast_path}")
+    if not _inside(memory_path, provider_root / "memory-promotion-eval"):
+        errors.append(f"provider_memory_path_not_memory_root:{memory_path}")
+
+    campaign = _json_or_error(campaign_path, "provider_campaign_receipt", errors)
+    broadcast = _json_or_error(broadcast_path, "provider_broadcast_receipt", errors)
+    memory = _json_or_error(memory_path, "provider_memory_promotion_receipt", errors)
+    visibility_path = source_root / "generation-2" / "visibility-validation.json"
+    visibility = _json_or_error(visibility_path, "provider_visibility_receipt", errors)
+    if campaign is None or broadcast is None or memory is None or visibility is None:
+        return False
+    _require_schema("provider_campaign_receipt", campaign, {"battle.adaptive_red_blue_lineage_canary.v1"}, errors)
+    _require_schema("provider_broadcast_receipt", broadcast, {"battle.provider_tau_lineage_broadcast.v1"}, errors)
+    _require_schema("provider_memory_promotion_receipt", memory, {"battle.memory_promotion_live_receipt.v1"}, errors)
+    for label, payload in [
+        ("provider_campaign_receipt", campaign),
+        ("provider_broadcast_receipt", broadcast),
+        ("provider_memory_promotion_receipt", memory),
+        ("provider_visibility_receipt", visibility),
+    ]:
+        _require_status(label, payload, "PASS", errors)
+    if campaign.get("battle_id") != "battle-004" or broadcast.get("campaign_receipt") is None:
+        errors.append("provider_campaign_battle_or_broadcast_binding_missing")
+    if campaign.get("live") is not True or campaign.get("mocked") is not False:
+        errors.append("provider_campaign_live_unmocked_required")
+    if not _same_path(Path(str(broadcast.get("campaign_receipt") or "")), campaign_path):
+        errors.append("provider_broadcast_campaign_path_mismatch")
+    _require_sha("provider_broadcast_campaign", campaign_path, broadcast.get("campaign_receipt_sha256"), errors)
+    if not _same_path(Path(str(memory.get("campaign_receipt") or "")), campaign_path):
+        errors.append("provider_memory_campaign_path_mismatch")
+    _require_sha("provider_memory_campaign", campaign_path, memory.get("campaign_receipt_sha256"), errors)
+    if visibility.get("private_input_leaks"):
+        errors.append("provider_visibility_private_input_leaks")
+
+    component_specs = [
+        ("arena", "arena_receipt", "arena_receipt_sha256", {"battle.arena_receipt.v1"}),
+        ("red", "red_team_activity_receipt", "red_team_activity_receipt_sha256", {"battle.team_activity_receipt.v1"}),
+        ("blue", "blue_team_activity_receipt", "blue_team_activity_receipt_sha256", {"battle.team_activity_receipt.v1"}),
+        (
+            "commentary",
+            "sports_play_by_play_commentary_receipt",
+            "sports_play_by_play_commentary_receipt_sha256",
+            {"battle.sports_play_by_play_commentary_receipt.v1"},
+        ),
+    ]
+    components: dict[str, dict[str, Any]] = {}
+    component_paths: dict[str, Path] = {}
+    for label, path_key, sha_key, schemas in component_specs:
+        component_path = Path(str(broadcast.get(path_key) or ""))
+        component_paths[label] = component_path
+        _require_path_binding(
+            f"provider_broadcast_{label}",
+            component_path,
+            root=broadcast_root,
+            expected_sha256=broadcast.get(sha_key),
+            errors=errors,
+        )
+        payload = _json_or_error(component_path, f"provider_broadcast_{label}", errors)
+        if payload is None:
+            continue
+        components[label] = payload
+        _require_schema(f"provider_broadcast_{label}", payload, schemas, errors)
+        _require_status(f"provider_broadcast_{label}", payload, "PASS", errors)
+        if label in {"arena", "red", "blue"}:
+            if not _same_path(Path(str(payload.get("campaign_receipt") or "")), campaign_path):
+                errors.append(f"provider_broadcast_{label}_campaign_path_mismatch")
+            _require_sha(f"provider_broadcast_{label}_campaign", campaign_path, payload.get("campaign_receipt_sha256"), errors)
+        if label in {"red", "blue"} and payload.get("team") != label:
+            errors.append(f"provider_broadcast_team_mismatch:{label}:{payload.get('team')}")
+    commentary = components.get("commentary") or {}
+    for label in ("arena", "red", "blue"):
+        receipt_key = "arena_receipt" if label == "arena" else f"{label}_team_activity_receipt"
+        sha_key = "arena_receipt_sha256" if label == "arena" else f"{label}_team_activity_receipt_sha256"
+        if not _same_path(Path(str(commentary.get(receipt_key) or "")), component_paths.get(label, Path(""))):
+            errors.append(f"provider_commentary_{label}_receipt_path_mismatch")
+        if label in component_paths:
+            _require_sha(f"provider_commentary_{label}_receipt", component_paths[label], commentary.get(sha_key), errors)
+    red_activities = (components.get("red") or {}).get("activities") or []
+    blue_activities = (components.get("blue") or {}).get("activities") or []
+    commentary_lines = commentary.get("commentary_lines") or []
+    if not commentary_lines:
+        errors.append("provider_commentary_lines_empty")
+    for index, line in enumerate(commentary_lines):
+        source_receipts = {str(item) for item in line.get("source_receipts") or []}
+        allowed_receipts = {str(component_paths[key]) for key in ("arena", "red", "blue") if key in component_paths}
+        if not source_receipts or not source_receipts <= allowed_receipts:
+            errors.append(f"provider_commentary_line_source_receipts_mismatch:{index}")
+        for team, indices in (line.get("source_activity_indices") or {}).items():
+            activities = red_activities if team == "red" else blue_activities if team == "blue" else None
+            if activities is None:
+                errors.append(f"provider_commentary_line_unknown_team:{index}:{team}")
+                continue
+            if not indices:
+                errors.append(f"provider_commentary_line_empty_indices:{index}:{team}")
+            for activity_index in indices:
+                if not isinstance(activity_index, int) or isinstance(activity_index, bool) or not 0 <= activity_index < len(activities):
+                    errors.append(f"provider_commentary_line_bad_index:{index}:{team}:{activity_index!r}")
+
+    _seed_records_bound(campaign, broadcast, errors)
+    selection = campaign.get("selection") or {}
+    selection_path = Path(str(selection.get("path") or ""))
+    if selection_path:
+        _require_path_binding("provider_selection", selection_path, root=source_root, expected_sha256=selection.get("sha256"), errors=errors)
+        selection_payload = _json_or_error(selection_path, "provider_selection", errors)
+        if selection_payload is not None:
+            _require_schema("provider_selection", selection_payload, {"battle.adaptive_selection_receipt.v1"}, errors)
+            _require_status("provider_selection", selection_payload, "PASS", errors)
+            if selection_payload.get("run_id") != campaign.get("run_id") or selection_payload.get("battle_id") != campaign.get("battle_id"):
+                errors.append("provider_selection_campaign_binding_mismatch")
+    for promotion in memory.get("promotions") or []:
+        team = promotion.get("team")
+        if team not in {"red", "blue"}:
+            errors.append(f"provider_memory_unknown_team:{team}")
+            continue
+        expected_marker = f"battle-memory-promotion:{campaign.get('run_id')}:{team}:generation-2"
+        if expected_marker not in str(promotion.get("problem") or ""):
+            errors.append(f"provider_memory_marker_mismatch:{team}")
+        if not promotion.get("solution_sha256"):
+            errors.append(f"provider_memory_solution_sha_missing:{team}")
+        for phase in ("learn", "recall"):
+            phase_info = promotion.get(phase) or {}
+            if phase_info.get("exit_code") != 0:
+                errors.append(f"provider_memory_{phase}_exit_nonzero:{team}:{phase_info.get('exit_code')}")
+            for stream in ("stdout", "stderr"):
+                stream_path = Path(str(phase_info.get(stream) or ""))
+                _require_path_binding(
+                    f"provider_memory_{phase}_{stream}:{team}",
+                    stream_path,
+                    root=memory_path.parent,
+                    expected_sha256=None,
+                    errors=errors,
+                )
+        if (promotion.get("recall") or {}).get("marker_found") is not True:
+            errors.append(f"provider_memory_recall_marker_missing:{team}")
+    if {item.get("team") for item in memory.get("promotions") or []} != {"red", "blue"}:
+        errors.append("provider_memory_promotions_not_red_and_blue")
+    return len(errors) == ok_before
+
+
 def _gh_issue_list(state: str) -> list[dict[str, Any]]:
     proc = subprocess.run(
         [
@@ -775,6 +1279,7 @@ def check(path: Path) -> int:
     errors: list[str] = []
     if status.get("schema") != "battle.current_status.v1":
         errors.append("schema_mismatch")
+    _validate_cached_source_records(status, errors)
     for item in status.get("source_receipts", {}).values():
         if not item.get("exists") and not item.get("superseded_by"):
             errors.append(f"missing_source_receipt:{item.get('path')}")
@@ -790,6 +1295,65 @@ def check(path: Path) -> int:
         errors.append("adaptive_lineage_pixi_gameplay_not_pass")
     if status.get("immutable_goal_status") == "MET":
         primary_proof = status.get("primary_proof") or {}
+        adaptive_path = _record_path(status, "adaptive_lineage_qualification", errors)
+        adaptive_payload = (
+            _json_or_error(adaptive_path, "adaptive_lineage_qualification", errors)
+            if adaptive_path is not None
+            else None
+        )
+        recomputed_primary = {
+            "backend_qualification": (
+                adaptive_payload is not None
+                and adaptive_path is not None
+                and _validate_adaptive_source_run(adaptive_path, adaptive_payload, errors)
+            ),
+            "provider_tau_seeded_lineage": _validate_provider_tau_chain(status, errors),
+        }
+        recomputed_primary["memory_promotion_live"] = recomputed_primary[
+            "provider_tau_seeded_lineage"
+        ]
+        recomputed_primary["pydantic_event_commentary"] = recomputed_primary[
+            "provider_tau_seeded_lineage"
+        ]
+        pixi_binding_path = _record_path(status, "adaptive_lineage_pixi_binding", errors)
+        pixi_gameplay_path = _record_path(status, "adaptive_lineage_pixi_gameplay", errors)
+        surf_text_path = _record_path(status, "adaptive_lineage_surf_text", errors)
+        surf_screenshot_path = _record_path(status, "adaptive_lineage_surf_screenshot", errors)
+        pixi_binding = (
+            _json_or_error(pixi_binding_path, "adaptive_lineage_pixi_binding", errors)
+            if pixi_binding_path is not None
+            else None
+        )
+        pixi_gameplay = (
+            _json_or_error(pixi_gameplay_path, "adaptive_lineage_pixi_gameplay", errors)
+            if pixi_gameplay_path is not None
+            else None
+        )
+        recomputed_primary["pixi_receipt_binding"] = (
+            pixi_binding is not None
+            and pixi_binding.get("schema") == "battle.pixi_replay_receipt_binding.v1"
+            and pixi_binding.get("status") == "PASS"
+            and (pixi_binding.get("readback_matches") or {}).get(
+                "route_loaded_same_fixture_sha256"
+            )
+            is True
+            and (pixi_binding.get("readback_matches") or {}).get("route_loaded_same_run_id")
+            is True
+        )
+        recomputed_primary["pixi_gameplay_browser_proof"] = (
+            pixi_gameplay is not None
+            and pixi_gameplay.get("schema") == "battle.pixi_gameplay_video_proof.v1"
+            and pixi_gameplay.get("status") == "PASS"
+            and pixi_gameplay.get("mocked") is False
+            and pixi_gameplay.get("source_identity_visible") is True
+            and pixi_gameplay.get("pause_after_round_not_in_primary_replay") is True
+        )
+        recomputed_primary["surf_text_readback"] = (
+            surf_text_path is not None and surf_text_path.is_file()
+        )
+        recomputed_primary["surf_screenshot"] = (
+            surf_screenshot_path is not None and surf_screenshot_path.is_file()
+        )
         for key in [
             "backend_qualification",
             "pixi_receipt_binding",
@@ -802,6 +1366,8 @@ def check(path: Path) -> int:
         ]:
             if primary_proof.get(key) is not True:
                 errors.append(f"immutable_goal_primary_proof_false:{key}")
+            if recomputed_primary.get(key) is not True:
+                errors.append(f"immutable_goal_primary_proof_revalidation_failed:{key}")
     adaptive_claim = next(
         (
             item

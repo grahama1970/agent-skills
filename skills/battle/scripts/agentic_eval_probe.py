@@ -3229,6 +3229,190 @@ def probe_current_status_adaptive_lineage_receipt(summary_path: Path) -> int:
     )
 
 
+def _run_current_status_check(status_path: Path, out_root: Path, label: str) -> subprocess.CompletedProcess[str]:
+    proc = _run_in(
+        [
+            sys.executable,
+            str(BATTLE_DIR / "scripts" / "current_status.py"),
+            "check",
+            "--path",
+            str(status_path),
+        ],
+        cwd=BATTLE_DIR,
+        timeout=120,
+    )
+    (out_root / f"{label}.stdout.txt").write_text(proc.stdout, encoding="utf-8")
+    (out_root / f"{label}.stderr.txt").write_text(proc.stderr, encoding="utf-8")
+    return proc
+
+
+def _source_receipt(status: dict[str, Any], key: str) -> dict[str, Any]:
+    receipt = (status.get("source_receipts") or {}).get(key)
+    if not isinstance(receipt, dict) or not receipt.get("path"):
+        raise AssertionError(f"generated status missing source receipt {key!r}")
+    return receipt
+
+
+def _copy_receipt_for_status(
+    status: dict[str, Any],
+    key: str,
+    target: Path,
+    *,
+    mutate: dict[str, Any] | None = None,
+) -> None:
+    source = Path(str(_source_receipt(status, key)["path"]))
+    payload = _read_json(source)
+    if mutate:
+        payload.update(mutate)
+    _write_json(target, payload)
+    receipt = _source_receipt(status, key)
+    receipt["path"] = str(target)
+    receipt["exists"] = True
+    receipt["sha256"] = hashlib.sha256(target.read_bytes()).hexdigest()
+    receipt["schema"] = payload.get("schema")
+    receipt["status"] = payload.get("status")
+    if "mocked" in payload:
+        receipt["mocked"] = payload.get("mocked")
+    if "live" in payload:
+        receipt["live"] = payload.get("live")
+
+
+def _write_status_variant(path: Path, status: dict[str, Any]) -> Path:
+    _write_json(path, status)
+    return path
+
+
+def _assert_check_failed_with(proc: subprocess.CompletedProcess[str], needle: str) -> None:
+    combined = proc.stdout + proc.stderr
+    if proc.returncode == 0:
+        raise AssertionError(f"current-status negative check unexpectedly passed: {needle}")
+    if needle not in combined:
+        raise AssertionError(f"current-status negative check missed {needle!r}: {combined}")
+
+
+def probe_review_current_status_proof_chain(summary_path: Path) -> int:
+    suite = "review-current-status-proof-chain"
+    out_root = summary_path.parent / suite
+    if out_root.exists():
+        shutil.rmtree(out_root)
+    out_root.mkdir(parents=True)
+
+    status_path = out_root / "CURRENT_STATUS.json"
+    generate = _run_in(
+        [
+            sys.executable,
+            str(BATTLE_DIR / "scripts" / "current_status.py"),
+            "generate",
+            "--out",
+            str(status_path),
+        ],
+        cwd=BATTLE_DIR,
+        timeout=120,
+    )
+    (out_root / "generate.stdout.txt").write_text(generate.stdout, encoding="utf-8")
+    (out_root / "generate.stderr.txt").write_text(generate.stderr, encoding="utf-8")
+    if generate.returncode != 0:
+        raise AssertionError("current_status generate failed: " + generate.stdout + generate.stderr)
+    positive = _run_current_status_check(status_path, out_root, "positive-check")
+    if positive.returncode != 0:
+        raise AssertionError("current_status positive check failed: " + positive.stdout + positive.stderr)
+    status = _read_json(status_path)
+
+    mutated_manifest_status = copy.deepcopy(status)
+    mutated_manifest_path = out_root / "mutated" / "adaptive-lineage-qualification.json"
+    _copy_receipt_for_status(
+        mutated_manifest_status,
+        "adaptive_lineage_qualification",
+        mutated_manifest_path,
+        mutate={"source_run_dir": str(out_root / "wrong-campaign-root")},
+    )
+    for claim in mutated_manifest_status.get("proven") or []:
+        if claim.get("id") == "p0_adaptive_lineage_fresh_qualification":
+            claim["receipt"] = str(mutated_manifest_path)
+    mutated_manifest_check = _run_current_status_check(
+        _write_status_variant(out_root / "mutated-manifest-status.json", mutated_manifest_status),
+        out_root,
+        "mutated-manifest-check",
+    )
+    _assert_check_failed_with(mutated_manifest_check, "adaptive_lineage_source_run_dir_missing")
+
+    substituted_broadcast_status = copy.deepcopy(status)
+    substituted_broadcast_path = out_root / "foreign-campaign" / "broadcast" / "provider-tau-lineage-broadcast-receipt.json"
+    _copy_receipt_for_status(
+        substituted_broadcast_status,
+        "provider_tau_seeded_broadcast",
+        substituted_broadcast_path,
+    )
+    substituted_broadcast_check = _run_current_status_check(
+        _write_status_variant(out_root / "substituted-broadcast-status.json", substituted_broadcast_status),
+        out_root,
+        "substituted-broadcast-check",
+    )
+    _assert_check_failed_with(substituted_broadcast_check, "provider_broadcast_path_not_broadcast_root")
+
+    missing_memory_status = copy.deepcopy(status)
+    missing_memory_receipt = _source_receipt(missing_memory_status, "provider_tau_memory_promotion")
+    missing_memory_receipt["path"] = str(out_root / "missing" / "memory-promotion-live-receipt.json")
+    missing_memory_receipt["exists"] = True
+    for claim in missing_memory_status.get("proven") or []:
+        if claim.get("id") == "provider_tau_memory_promotion":
+            claim["receipt"] = missing_memory_receipt["path"]
+            claim.setdefault("evidence", {})["path"] = missing_memory_receipt["path"]
+    missing_memory_check = _run_current_status_check(
+        _write_status_variant(out_root / "missing-memory-status.json", missing_memory_status),
+        out_root,
+        "missing-memory-check",
+    )
+    _assert_check_failed_with(missing_memory_check, "source_receipt_file_missing:provider_tau_memory_promotion")
+
+    checks = [
+        {
+            "name": "generated_current_status_revalidates_live_chain",
+            "status": "PASS",
+            "current_status": str(status_path),
+        },
+        {
+            "name": "mutated_adaptive_manifest_rejected",
+            "status": "PASS",
+            "status_variant": str(out_root / "mutated-manifest-status.json"),
+        },
+        {
+            "name": "cross_campaign_broadcast_substitution_rejected",
+            "status": "PASS",
+            "status_variant": str(out_root / "substituted-broadcast-status.json"),
+        },
+        {
+            "name": "missing_memory_promotion_receipt_rejected",
+            "status": "PASS",
+            "status_variant": str(out_root / "missing-memory-status.json"),
+        },
+    ]
+    return _emit(
+        summary_path,
+        _summary(
+            suite=suite,
+            live="local_current_status_generation_with_adversarial_proof_chain_mutation",
+            checks=checks,
+            artifacts={
+                "current_status": str(status_path),
+                "positive_check_stdout": str(out_root / "positive-check.stdout.txt"),
+                "mutated_manifest_status": str(out_root / "mutated-manifest-status.json"),
+                "substituted_broadcast_status": str(out_root / "substituted-broadcast-status.json"),
+                "missing_memory_status": str(out_root / "missing-memory-status.json"),
+            },
+            claims_proves=[
+                "current-status check rereads the selected proof manifest and rejects mutated source-run bindings",
+                "current-status check rejects provider/Tau broadcast receipts outside the selected campaign root",
+                "current-status check rejects missing Memory promotion receipts despite cached primary proof booleans",
+            ],
+            claims_does_not_prove=[
+                "fresh paid-provider campaign regeneration",
+                "production deployment readiness",
+            ],
+        ),
+    )
+
+
 def probe_small_medium_production_battle(summary_path: Path) -> int:
     suite = "small-medium-production-battle"
     out_root = summary_path.parent / suite
@@ -3363,6 +3547,8 @@ def main() -> int:
             return probe_provider_tau_memory_promotion(args.summary, proof_root=args.proof_root)
         if args.suite == "current-status-adaptive-lineage-receipt":
             return probe_current_status_adaptive_lineage_receipt(args.summary)
+        if args.suite == "review-current-status-proof-chain":
+            return probe_review_current_status_proof_chain(args.summary)
         if args.suite == "adaptive-lineage-same-run-backend-contracts":
             return probe_pytest_contracts(
                 args.summary,
