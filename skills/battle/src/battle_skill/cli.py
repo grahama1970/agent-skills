@@ -1129,12 +1129,20 @@ def adaptive_red_blue_lineage_canary(
 ):
     """Run simultaneous Red/Blue parent and child generations through Tau, Docker, and Judge."""
     import json as _json
+    import subprocess
 
+    from .config import SKILL_DIR
     from .adaptive_red_blue_lineage_canary import run_adaptive_red_blue_lineage_canary
 
+    seeded_proof = dogpile_seed_receipt is not None or memory_seed_receipt is not None
+    if seeded_proof and (dogpile_seed_receipt is None or memory_seed_receipt is None):
+        console.print("[red]Seeded lineage proof requires both --dogpile-seed-receipt and --memory-seed-receipt[/red]")
+        raise typer.Exit(2)
+
+    source_out = out / "source-run" if seeded_proof else out
     receipt = run_adaptive_red_blue_lineage_canary(
         battle_id=battle_id,
-        out_dir=out,
+        out_dir=source_out,
         run_id=run_id,
         docker_image=docker_image,
         model=model,
@@ -1144,6 +1152,139 @@ def adaptive_red_blue_lineage_canary(
         dogpile_seed_receipt=dogpile_seed_receipt,
         memory_seed_receipt=memory_seed_receipt,
     )
+    if seeded_proof and receipt.get("status") == "PASS":
+        out.mkdir(parents=True, exist_ok=True)
+        logs_root = out / "logs"
+        logs_root.mkdir(parents=True, exist_ok=True)
+
+        broadcast_root = out / "broadcast"
+        skill_python = ["uv", "run", "--project", str(SKILL_DIR), "python"]
+        broadcast = subprocess.run(
+            [
+                *skill_python,
+                str(SKILL_DIR / "scripts" / "render_provider_tau_lineage_report.py"),
+                "--campaign-receipt",
+                str(source_out / "campaign-receipt.json"),
+                "--out",
+                str(broadcast_root),
+                "--dogpile-seed",
+                str(dogpile_seed_receipt),
+                "--memory-seed",
+                str(memory_seed_receipt),
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=120,
+        )
+        (logs_root / "broadcast.stdout.txt").write_text(broadcast.stdout, encoding="utf-8")
+        (logs_root / "broadcast.stderr.txt").write_text(broadcast.stderr, encoding="utf-8")
+        if broadcast.returncode != 0:
+            receipt = {
+                "schema": "battle.seeded_lineage_live_bundle.v1",
+                "status": "FAIL",
+                "reason": "provider_tau_broadcast_failed",
+                "source_run": str(source_out / "campaign-receipt.json"),
+                "broadcast_stdout": str(logs_root / "broadcast.stdout.txt"),
+                "broadcast_stderr": str(logs_root / "broadcast.stderr.txt"),
+                "campaign": receipt,
+            }
+        else:
+            memory_root = out / "memory-promotion-eval"
+            memory_attempts = []
+            memory = None
+            for attempt in range(1, 4):
+                memory = subprocess.run(
+                    [
+                        *skill_python,
+                        str(SKILL_DIR / "scripts" / "promote_provider_tau_lineage_memory.py"),
+                        "--campaign-receipt",
+                        str(source_out / "campaign-receipt.json"),
+                        "--out",
+                        str(memory_root),
+                    ],
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                    timeout=300,
+                )
+                attempt_stdout = logs_root / f"memory-promotion-attempt-{attempt}.stdout.txt"
+                attempt_stderr = logs_root / f"memory-promotion-attempt-{attempt}.stderr.txt"
+                attempt_stdout.write_text(memory.stdout, encoding="utf-8")
+                attempt_stderr.write_text(memory.stderr, encoding="utf-8")
+                memory_attempts.append(
+                    {
+                        "attempt": attempt,
+                        "returncode": memory.returncode,
+                        "stdout": str(attempt_stdout),
+                        "stderr": str(attempt_stderr),
+                    }
+                )
+                if memory.returncode == 0:
+                    break
+            if memory is None:
+                raise typer.Exit(1)
+            (logs_root / "memory-promotion.stdout.txt").write_text(memory.stdout, encoding="utf-8")
+            (logs_root / "memory-promotion.stderr.txt").write_text(memory.stderr, encoding="utf-8")
+
+            status_path = out / "current-status.json"
+            status_env = os.environ.copy()
+            status_env["BATTLE_PROVIDER_TAU_SEEDED_ROOT"] = str(out.resolve())
+            status_generate = subprocess.run(
+                [
+                    *skill_python,
+                    str(SKILL_DIR / "scripts" / "current_status.py"),
+                    "generate",
+                    "--out",
+                    str(status_path),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+                timeout=120,
+                env=status_env,
+            )
+            (logs_root / "current-status-generate.stdout.txt").write_text(status_generate.stdout, encoding="utf-8")
+            (logs_root / "current-status-generate.stderr.txt").write_text(status_generate.stderr, encoding="utf-8")
+            status_check = subprocess.run(
+                [
+                    *skill_python,
+                    str(SKILL_DIR / "scripts" / "current_status.py"),
+                    "check",
+                    "--path",
+                    str(status_path),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+                timeout=120,
+                env=status_env,
+            )
+            (logs_root / "current-status-check.stdout.txt").write_text(status_check.stdout, encoding="utf-8")
+            (logs_root / "current-status-check.stderr.txt").write_text(status_check.stderr, encoding="utf-8")
+
+            receipt = {
+                "schema": "battle.seeded_lineage_live_bundle.v1",
+                "status": "PASS"
+                if memory.returncode == 0
+                and status_generate.returncode == 0
+                and status_check.returncode == 0
+                else "FAIL",
+                "reason": "seeded_lineage_broadcast_memory_and_status_checked",
+                "source_run": str(source_out / "campaign-receipt.json"),
+                "broadcast_receipt": str(broadcast_root / "provider-tau-lineage-broadcast-receipt.json"),
+                "memory_promotion_receipt": str(memory_root / "memory-promotion-live-receipt.json"),
+                "current_status": str(status_path),
+                "current_status_check_stdout": str(logs_root / "current-status-check.stdout.txt"),
+                "campaign": receipt,
+                "command_results": {
+                    "broadcast": broadcast.returncode,
+                    "memory_promotion": memory.returncode,
+                    "current_status_generate": status_generate.returncode,
+                    "current_status_check": status_check.returncode,
+                },
+                "memory_promotion_attempts": memory_attempts,
+            }
     print(_json.dumps(receipt, indent=2, sort_keys=True))
     if receipt.get("status") != "PASS":
         raise typer.Exit(1)

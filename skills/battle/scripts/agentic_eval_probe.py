@@ -643,6 +643,32 @@ def probe_review_cli_authorization_target_binding(summary_path: Path) -> int:
             root,
         )
 
+        wrong_alias_identity = "review-cli-other-alias@sha256:alias"
+        path_wrong_alias_manifest = root / "path-wrong-alias-authorization.json"
+        path_wrong_alias = _fresh_authorization(
+            path_wrong_alias_manifest,
+            target_identity=wrong_alias_identity,
+            runtime_modes=["copy"],
+        )
+        path_wrong_alias["target"]["repository_url"] = target_b.as_uri()
+        _write_json(path_wrong_alias_manifest, path_wrong_alias)
+
+        wrong_alias_result, wrong_alias_calls = _invoke_battle_cli_with_recording_orchestrator(
+            [
+                "battle",
+                str(target_b),
+                "--mode",
+                "copy",
+                "--rounds",
+                "1",
+                "--authorization-manifest",
+                str(path_wrong_alias_manifest),
+                "--authorization-target",
+                alias_identity,
+            ],
+            root,
+        )
+
         docker_bad_manifest = root / "docker-bad-authorization.json"
         docker_bad = _fresh_authorization(
             docker_bad_manifest,
@@ -662,6 +688,31 @@ def probe_review_cli_authorization_target_binding(summary_path: Path) -> int:
                 "registry.example.invalid/target-b:latest",
                 "--authorization-manifest",
                 str(docker_bad_manifest),
+                "--authorization-target",
+                alias_identity,
+            ],
+            root,
+        )
+
+        docker_wrong_alias_manifest = root / "docker-wrong-alias-authorization.json"
+        docker_wrong_alias = _fresh_authorization(
+            docker_wrong_alias_manifest,
+            target_identity=wrong_alias_identity,
+            runtime_modes=["docker"],
+        )
+        docker_wrong_alias["target"]["image"] = "registry.example.invalid/target-b:latest"
+        _write_json(docker_wrong_alias_manifest, docker_wrong_alias)
+
+        docker_wrong_alias_result, docker_wrong_alias_calls = _invoke_battle_cli_with_recording_orchestrator(
+            [
+                "battle",
+                ".",
+                "--rounds",
+                "1",
+                "--docker-image",
+                "registry.example.invalid/target-b:latest",
+                "--authorization-manifest",
+                str(docker_wrong_alias_manifest),
                 "--authorization-target",
                 alias_identity,
             ],
@@ -715,6 +766,16 @@ def probe_review_cli_authorization_target_binding(summary_path: Path) -> int:
                 "orchestrator_calls": good_calls,
             },
             {
+                "name": "path_mapping_for_wrong_alias_fails_before_orchestrator",
+                "status": "PASS"
+                if wrong_alias_result.exit_code == 2
+                and not wrong_alias_calls
+                and "target identity does not match requested target" in wrong_alias_result.output
+                else "FAIL",
+                "exit_code": wrong_alias_result.exit_code,
+                "orchestrator_calls": wrong_alias_calls,
+            },
+            {
                 "name": "docker_alias_for_other_image_fails_before_orchestrator",
                 "status": "PASS"
                 if docker_result.exit_code == 2
@@ -723,6 +784,16 @@ def probe_review_cli_authorization_target_binding(summary_path: Path) -> int:
                 else "FAIL",
                 "exit_code": docker_result.exit_code,
                 "orchestrator_calls": docker_calls,
+            },
+            {
+                "name": "docker_mapping_for_wrong_alias_fails_before_orchestrator",
+                "status": "PASS"
+                if docker_wrong_alias_result.exit_code == 2
+                and not docker_wrong_alias_calls
+                and "target identity does not match requested target" in docker_wrong_alias_result.output
+                else "FAIL",
+                "exit_code": docker_wrong_alias_result.exit_code,
+                "orchestrator_calls": docker_wrong_alias_calls,
             },
             {
                 "name": "docker_alias_with_verified_image_mapping_reaches_recording_orchestrator",
@@ -746,7 +817,9 @@ def probe_review_cli_authorization_target_binding(summary_path: Path) -> int:
         for name, result in {
             "path-bad": bad_result,
             "path-good": good_result,
+            "path-wrong-alias": wrong_alias_result,
             "docker-bad": docker_result,
+            "docker-wrong-alias": docker_wrong_alias_result,
             "docker-good": docker_good_result,
         }.items():
             (artifact_root / f"{name}.stdout.txt").write_text(result.output, encoding="utf-8")
@@ -760,13 +833,16 @@ def probe_review_cli_authorization_target_binding(summary_path: Path) -> int:
                 artifacts={
                     "path_bad_stdout": str(artifact_root / "path-bad.stdout.txt"),
                     "path_good_stdout": str(artifact_root / "path-good.stdout.txt"),
+                    "path_wrong_alias_stdout": str(artifact_root / "path-wrong-alias.stdout.txt"),
                     "docker_bad_stdout": str(artifact_root / "docker-bad.stdout.txt"),
+                    "docker_wrong_alias_stdout": str(artifact_root / "docker-wrong-alias.stdout.txt"),
                     "docker_good_stdout": str(artifact_root / "docker-good.stdout.txt"),
                 },
                 claims_proves=[
                     "Battle CLI authorization is bound to the target path or Docker image passed to the orchestrator.",
                     "A caller-supplied authorization alias is accepted only when the manifest target maps to the same executed local path.",
                     "A Docker alias is accepted only when the manifest image maps to the same executed Docker image.",
+                    "A manifest mapping to the executed target is rejected when its canonical authorization identity does not match the caller-supplied alias.",
                 ],
                 claims_does_not_prove=[
                     "full Docker target launch",

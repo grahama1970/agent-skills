@@ -232,22 +232,21 @@ def validate_target_authorization(
 
         identity = _validate_target(payload, errors)
         target = payload.get("target")
-        alias_bound_to_execution_target = (
+        alias_requested = (
             expected_execution_target is not None
-            and identity != expected_execution_target
+            and expected_target != expected_execution_target
+        )
+        alias_bound_to_execution_target = (
+            alias_requested
+            and identity == expected_target
             and _target_alias_matches_execution_target(
                 target,
                 expected_execution_target,
             )
         )
-        if identity != expected_target and not alias_bound_to_execution_target:
+        if identity != expected_target:
             errors.append("target identity does not match requested target")
-        if (
-            identity == expected_target
-            and expected_execution_target is not None
-            and expected_target != expected_execution_target
-            and not alias_bound_to_execution_target
-        ):
+        elif alias_requested and not alias_bound_to_execution_target:
             errors.append("authorization target alias is not bound to executed target")
 
         allowed_actions = _validate_string_list(payload, "allowed_actions", errors)
