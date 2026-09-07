@@ -4,7 +4,7 @@
   "trials": 2,
   "proof_scope": "Real intake and existing emit-document-ui CLI against the independently produced ZIP selected by PITCHDECK_INTAKE_PACKAGE. Imports only into new storage directories; no browser windows or working deck changes.",
   "claims": {
-    "proves": "Validation-only leaves no destination; imported canonical JSON, resources and mapping bytes survive exactly; existing browser-payload emission retains notes, slide IDs, animation targets and assets; existing destinations and seeded package faults are refused without destination writes.",
+    "proves": "Validation-only leaves no destination; imported canonical JSON, resources and mapping bytes survive exactly; a matching optional theme.json is accepted unchanged; existing browser-payload emission retains notes, slide IDs, animation targets and assets; existing destinations and seeded package faults are refused without destination writes.",
     "does_not_prove": "Visual approval, asset sanitization, claim/publication authorization, font installation, debugger workspace execution, browser or native Office animation playback, or authoring-view conversion."
   },
   "cases": [

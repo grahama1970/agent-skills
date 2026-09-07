@@ -68,6 +68,17 @@ def main():
         after = {str(p.relative_to(destination)): hashlib.sha256(p.read_bytes()).hexdigest()
                  for p in destination.rglob('*') if p.is_file()}
         assert before == after
+        themed = work / 'with-theme.zip'
+        theme_bytes = json.dumps(canonical['deck']['theme_tokens']).encode()
+        with zipfile.ZipFile(themed, 'w', zipfile.ZIP_DEFLATED) as archive:
+            for name, content in files.items():
+                if name != 'theme.json': archive.writestr(name, content)
+            archive.writestr('theme.json', theme_bytes)
+        themed_destination = work / 'with-theme'
+        result = call('ingest-package', '--package', themed, '--output-dir', themed_destination, '--execute')
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert (themed_destination / 'theme.json').read_bytes() == theme_bytes
+        assert (themed_destination / 'deck.document.json').read_bytes() == files['deck.document.json']
     else:
         for case in ['missing-asset', 'traversal', 'theme-drift', 'stale-debugger', 'unknown-animation',
                      'environment-path', 'duplicate-json', 'symlink', 'asset-collision']:
