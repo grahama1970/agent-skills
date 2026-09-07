@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "skill": "pitchdeck",
+  "trials": 2,
+  "proof_scope": "Live existing pitchdeck source tab and its one user-requested companion. Set PITCHDECK_SOURCE_TAB to the existing source tab. No source/test window is created; the named companion is reused and retained for the user.",
+  "claims": {
+    "proves": "Separate page/window, exact current-slide notes, oversized adjustable text, slide navigation sync, companion reload reconnection, and named-window reuse. Malformed and cross-source messages are refused; an unbound connection does not display stale notes.",
+    "does_not_prove": "Cross-origin or cross-browser sync, private-data access control against same-origin scripts, speech quality, automatic monitor selection, or unrelated motion/export behavior."
+  },
+  "cases": [
+    {"name":"live-teleprompter-sync","type":"positive","real_world":true,
+     "command":["python3","../scripts/eval_teleprompter.py","--out","/mnt/storage12tb/skills/pitchdeck/outputs/teleprompter/live.json"],"timeout_seconds":240,
+     "expected":{"exit_code":0,"artifacts":[{"path":"/mnt/storage12tb/skills/pitchdeck/outputs/teleprompter/live.json","json_pointer":"/status","equals":"PASS"}]}},
+    {"name":"teleprompter-rejects-wrong-source","type":"adversarial","real_world":true,
+     "command":["python3","../scripts/eval_teleprompter.py","--negative","--out","/mnt/storage12tb/skills/pitchdeck/outputs/teleprompter/negative.json"],"timeout_seconds":180,
+     "expected":{"exit_code":0,"artifacts":[{"path":"/mnt/storage12tb/skills/pitchdeck/outputs/teleprompter/negative.json","json_pointer":"/status","equals":"PASS"}]}}
+  ]
+}

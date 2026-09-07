@@ -645,6 +645,22 @@ alternative-generation workflow, OS clipboard behavior or publication readiness.
 
 The compiler proves every visible string survives into the emitted artifacts (post-emit whole-string scan), but it does NOT yet prove visual fidelity between the browser renderer and the PPTX/LibreOffice render: geometry, wrapping, and legibility can differ. The strict xfail `test_case13_browser_vs_libreoffice_visual_diff` tracks this. Review the rendered PPTX (`run.sh render`) before external delivery; every build receipt carries this limitation as a gap line.
 
+## Separate speaker teleprompter
+
+**Teleprompter** beside the rehearsal controls opens an independent
+`/teleprompter?source=…` page, not a drawer or replacement for the audience view.
+It follows the source tab's selected slide in Present, Rehearse and Presenter
+modes. Speaking points come from `slide.notes`, one nonempty line per bullet;
+write short cues there rather than a long script. Text defaults to 64px and is
+adjustable from 32–96px. The same named companion window is reused.
+
+Move the companion to the speaker's monitor and keep the source tab open in the
+same browser profile/origin. BroadcastChannel carries only the current slide's
+speaker-view state; disconnected sources are labeled. The reader does not edit
+decks or execute code. See `docs/TELEPROMPTER.md`. Retained live validation is
+`fixtures/teleprompter.json`, using `PITCHDECK_SOURCE_TAB` to select an existing
+source tab without creating test windows.
+
 ## Theme editor
 
 The **Theme** dropdown is in the main top bar. Select a preset to preview the

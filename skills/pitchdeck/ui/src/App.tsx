@@ -1,5 +1,6 @@
 import { useBuildNavigation } from './animations'
 import { AnimationPanel } from './components/AnimationPanel'
+import { TeleprompterControl } from './components/Teleprompter'
 import { ChevronLeft, ChevronRight, Database, FileCode2, LayoutGrid, LayoutTemplate, Maximize2, MessageSquare, PanelLeft, PanelLeftOpen, PanelRight, Play, ShieldCheck, StickyNote } from 'lucide-react'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { ClaimReview } from './components/ClaimReview'
@@ -365,7 +366,7 @@ export function App() {
   return (
     <div className="deck-app flex h-full min-w-0 flex-col">
       {presenting ? (
-        <PresenterOverlay slides={navSlides.filter((s) => !s.hidden)} initialIndex={index} onClose={() => setPresenting(false)} />
+        <PresenterOverlay slides={navSlides.filter((s) => !s.hidden)} initialIndex={index} onClose={() => setPresenting(false)} onSlideChange={id => { const next = navSlides.findIndex(s => s.id === id); if (next >= 0 && next !== index) setIndex(next) }} />
       ) : null}
       <ShortcutsModal isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
       <Toasts />
@@ -531,6 +532,7 @@ export function App() {
       </header> : null}
       {!rehearsing ? <DeckNavigator deck={deck} onSelect={id => { setMode('present'); location.hash = `#/slide/${encodeURIComponent(id)}` }} /> : null}
       <div className="flex shrink-0 flex-wrap gap-2 border-b border-slate-800 p-2">
+        <TeleprompterControl deckTitle={deck.title} slide={slide} position={index + 1} total={navSlides.length} />
         <RehearsalControls active={rehearsing} onToggle={() => { setRehearsing(v => !v); setMode('present'); setPresenting(false); const url = new URL(location.href); if (rehearsing) url.searchParams.delete('rehearse'); else url.searchParams.set('rehearse', '1'); history.replaceState(null, '', url) }} />
         <DebuggerControls slideId={slide.id} />
         {editing ? <InsertMenu slide={slide} onChanged={reloadAll} onPickFile={setPickedFile} /> : null}

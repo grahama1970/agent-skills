@@ -168,10 +168,12 @@ export function PresenterOverlay({
   slides,
   initialIndex,
   onClose,
+  onSlideChange,
 }: {
   slides: UiSlide[]
   initialIndex: number
   onClose: () => void
+  onSlideChange?: (slideId: string) => void
 }) {
   const [index, setIndex] = useState(Math.min(initialIndex, slides.length - 1))
   const [noteSize, setNoteSize] = useState<(typeof NOTE_SIZES)[number]>('lg')
@@ -204,6 +206,7 @@ export function PresenterOverlay({
 
   const slide = slides[index]
   const upNext = slides[index + 1]
+  useEffect(() => { if (slide) onSlideChange?.(slide.id) }, [slide?.id, onSlideChange])
 
   const body = (
     <div onKeyDown={event => { if (!poppedOut) return; const e = event.nativeEvent; if ((e.target as HTMLElement).closest('input,textarea,select,button,a,[contenteditable=true]')) return; if (['ArrowRight','ArrowDown','PageDown',' ','Enter','n'].includes(e.key)) { e.preventDefault(); next() } else if (['ArrowLeft','ArrowUp','PageUp','Backspace','p'].includes(e.key)) { e.preventDefault(); prev() } else if (e.key === 'Home') jump(0); else if (e.key === 'End') jump(slides.length-1, true) }} className="presenter-shell flex h-full w-full select-none flex-col overflow-hidden bg-slate-950 text-slate-100">

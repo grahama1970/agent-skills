@@ -1,0 +1,15 @@
+.teleprompter-control { display: inline-flex; align-items: center; gap: .75rem; }
+.teleprompter-control [role=alert] { color: #f0b9a1; font-size: .875rem; }
+.teleprompter-page { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; background: #0c0908; color: #f2eadc; font-family: system-ui, sans-serif; }
+.teleprompter-header { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 2rem; border-bottom: 1px solid #47382d; font-size: 18px; }
+.teleprompter-header p { margin: .35rem 0 0; color: #a99787; font-size: 16px; }
+.teleprompter-page[data-connected=false] .teleprompter-header p { color: #e2ac62; }
+.teleprompter-font-controls { display: flex; align-items: center; gap: .75rem; white-space: nowrap; }
+.teleprompter-font-controls button { min-width: 48px; min-height: 48px; font-size: 22px; }
+.teleprompter-text { flex: 1; overflow-y: auto; padding: 1.5rem clamp(1.5rem, 5vw, 6rem) 5rem; line-height: 1.45; overflow-wrap: anywhere; }
+.teleprompter-text h1 { max-width: 48ch; margin: 0 auto 1.25em; color: #e2ac62; font-size: .65em; line-height: 1.25; font-weight: 650; }
+.teleprompter-text ul { max-width: 40ch; margin: 0 auto; padding-left: 1.2em; list-style-type: disc; }
+.teleprompter-text li { margin: 0 0 .65em; padding-left: .15em; }
+.teleprompter-text li::marker { color: #e2ac62; }
+.teleprompter-text > p { max-width: 40ch; margin: 0 auto; }
+@media (max-width: 700px) { .teleprompter-header { flex-wrap: wrap; padding: .75rem 1rem; } }
