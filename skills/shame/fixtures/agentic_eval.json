@@ -135,6 +135,14 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "shame.typed_recovery_routing",
+      "description": "Shame recovery separates format repair, existing-proof substitution, missing evidence, validator failure, unresolved work, and accepted-task cases with typed decisions.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "cases": [
@@ -595,6 +603,37 @@
           "lazy_report_shame.status_preflight_parity_eval.v1",
           "preflight uses the stop-boundary checker",
           "mutated proof bytes reject before stop with matching reason codes"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "AssertionError"
+        ]
+      }
+    },
+    {
+      "name": "typed-recovery-routing",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.typed_recovery_routing"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--with",
+        "pydantic",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-recovery-routing.py"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "lazy_report_shame.recovery_routing_eval.v1",
+          "missing evidence continues execution instead of format repair",
+          "accepted task does not reopen execution",
+          "validator failure is explicit infrastructure recovery"
         ],
         "stdout_excludes": [
           "Traceback",

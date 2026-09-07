@@ -87,7 +87,9 @@ completion, because the final stop revalidates current proof bytes.
 - Aborts, errors, length limits, and shutdown do not start reporting retries.
 - Every report-repair episode allows one output-only correction, armed or unarmed.
   `UNLAZY_FORCED_RETRY` identifies that correction: all tools are blocked and a
-  failed correction cannot queue another. Fresh human input clears correction
+  failed correction cannot queue another. A typed `lazy_report_shame.recovery_decision.v1`
+  separates formatting repair from missing evidence, unresolved work, and validator
+  failure before any retry prompt is sent. Fresh human input clears correction
   and skill-read flags. Formatting repair cannot reopen accepted work.
 - After two same-goal/triage failure fingerprints, require a plain human question,
   valid `debugger.proof.v1`, or `lazy_report_shame.debugger_failure_handoff.v1`

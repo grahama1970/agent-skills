@@ -649,15 +649,36 @@ function validationResult(check: CheckResult): unknown {
   };
 }
 
-function rejectionAction(check: CheckResult, retried: boolean): Record<string, unknown> {
-  if (retried) return { action: "stop_retry", reason: "status_contract_retry_exhausted" };
-  if (check.reason_codes.includes("continuation_guard_unresolved_work")) {
-    return { action: "continue_from_guard", command: check.features?.next_action || null };
+function recoveryDecision(check: CheckResult, retried: boolean, taskPhase?: string): Record<string, unknown> {
+  const codes = new Set(check.reason_codes);
+  const has = (items: string[]) => items.some((item) => codes.has(item));
+  if (retried) return { schema: "lazy_report_shame.recovery_decision.v1", action: "stop_retry", format_only: true, allowed_tools: [], reason: "status_contract_retry_exhausted" };
+  if (has(["validator_script_missing", "validator_invocation_failed", "validator_crashed", "duplicate_detector_failed"])) {
+    return { schema: "lazy_report_shame.recovery_decision.v1", action: "validator_failure", format_only: false, allowed_tools: [], reason: "status_validator_failed" };
   }
-  return { action: "emit_pi_agent_status_v1" };
+  if (has(["continuation_guard_unresolved_work", "task_acceptance_checks_incomplete", "task_budget_exhausted"])) {
+    return { schema: "lazy_report_shame.recovery_decision.v1", action: "continue_execution", format_only: false, allowed_tools: [], reason: "unresolved_work", next_command: check.features?.next_action || null };
+  }
+  if (taskPhase === "accepted" || has(["task_already_accepted"])) {
+    return { schema: "lazy_report_shame.recovery_decision.v1", action: "output_only_repair", format_only: true, allowed_tools: [], reason: "accepted_task_report_repair" };
+  }
+  if (has(["proof_json_schema_missing", "proof_schema_unsupported", "ticket_closure_receipt_not_closed"])) {
+    return { schema: "lazy_report_shame.recovery_decision.v1", action: "existing_proof_substitution", format_only: true, allowed_tools: [], reason: "cite_existing_typed_receipt" };
+  }
+  if (has(["proof_reference_unresolved", "proof_path_missing", "proof_empty", "done_requires_proof", "done_requires_verified", "verified_not_backed_by_proof"])) {
+    return { schema: "lazy_report_shame.recovery_decision.v1", action: "continue_execution", format_only: false, allowed_tools: [], reason: "missing_executable_evidence", next_command: check.features?.next_action || null };
+  }
+  return { schema: "lazy_report_shame.recovery_decision.v1", action: "output_only_repair", format_only: true, allowed_tools: [], reason: "status_field_repair" };
 }
 
-function rejectionNotice(candidate: Candidate, check: CheckResult, retried: boolean, reviewPacketPath: string): string {
+function rejectionAction(decision: Record<string, unknown>): Record<string, unknown> {
+  if (decision.action === "continue_execution") return { action: "continue_from_guard", command: decision.next_command || null };
+  if (decision.action === "validator_failure") return { action: "needs_triage", reason: decision.reason };
+  if (decision.action === "stop_retry") return { action: "stop_retry", reason: decision.reason };
+  return { action: "emit_pi_agent_status_v1", reason: decision.reason };
+}
+
+function rejectionNotice(candidate: Candidate, check: CheckResult, retried: boolean, reviewPacketPath: string, decision: Record<string, unknown>): string {
   return `REJECTED_BY_SLOTH_COURT
 \`\`\`json
 ${JSON.stringify({
@@ -670,12 +691,13 @@ ${JSON.stringify({
     diagnostics_sha256: check.diagnostics ? sha256(check.diagnostics) : null,
     review_packet: reviewPacketPath,
     validation_result: validationResult(check),
-    next: rejectionAction(check, retried),
+    recovery_decision: decision,
+    next: rejectionAction(decision),
   })}
 \`\`\``;
 }
 
-function retryPrompt(candidate: Candidate, check: CheckResult, reviewPacketPath: string, taskBudget?: object): string {
+function retryPrompt(candidate: Candidate, check: CheckResult, reviewPacketPath: string, decision: Record<string, unknown>, taskBudget?: object): string {
   const packet = {
     schema: "lazy_report_shame.retry_request.v1",
     format_only: true,
@@ -688,7 +710,8 @@ function retryPrompt(candidate: Candidate, check: CheckResult, reviewPacketPath:
     diagnostics_sha256: check.diagnostics ? sha256(check.diagnostics) : null,
     review_packet: reviewPacketPath,
     validation_result: validationResult(check),
-    next: rejectionAction(check, false),
+    recovery_decision: decision,
+    next: rejectionAction(decision),
   };
   return `UNLAZY_FORCED_RETRY
 \`\`\`json
@@ -1067,7 +1090,9 @@ export default function lazyReportShameShameShame(pi: any) {
       }
 
       const turnId = lastCandidate.turn_id;
-      const formatAllowed = !formatRepairTurn && (!budget.current || budget.current.requestFormatRepair());
+      const plannedDecision = recoveryDecision(check, false, budget.current?.phase);
+      const wantsFormatRepair = plannedDecision.format_only === true;
+      const formatAllowed = wantsFormatRepair && !formatRepairTurn && (!budget.current || budget.current.requestFormatRepair());
       const pipelineClaim = claimGuardFollowUp({
         guard: "shame",
         messageId: String(event.message.id || event.id || turnId),
@@ -1089,11 +1114,12 @@ export default function lazyReportShameShameShame(pi: any) {
       recordFailure(ctx, { kind: "report_rejected", goal: status?.goal || null, candidate_hash: lastCandidate.response_sha256,
         reason_codes: check.reason_codes, checker_version: check.checker_version, review_packet: reviewPacketPath,
         excerpt: candidateExcerpt(lastCandidate), retry: { planned: !alreadyRetried, reason: pipelineClaim.reason } });
-      const notice = rejectionNotice(lastCandidate, check, alreadyRetried, reviewPacketPath);
+      const finalDecision = recoveryDecision(check, alreadyRetried, budget.current?.phase);
+      const notice = rejectionNotice(lastCandidate, check, alreadyRetried, reviewPacketPath, finalDecision);
       playShameAudio(lastAudioPlayedAt);
       if (!alreadyRetried) {
         keepGuardForRetry = strictStatus;
-        pendingFollowUp = retryPrompt(lastCandidate, check, reviewPacketPath, budget.current ? {
+        pendingFollowUp = retryPrompt(lastCandidate, check, reviewPacketPath, finalDecision, budget.current ? {
           phase: budget.current.phase, receipt: budget.current.receipt, allowed_tools: [], format_repair_limit: 1,
         } : undefined);
       }
