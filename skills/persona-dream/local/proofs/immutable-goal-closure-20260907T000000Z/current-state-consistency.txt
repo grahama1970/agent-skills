@@ -1,0 +1,2 @@
+current-state consistency: PASS_CURRENT_STATE_CONSISTENT
+  9 stages checked, 0 mismatches

@@ -1,0 +1,117 @@
+{
+  "schema": "agentic_evals.report.v2",
+  "source": "skills/persona-dream/fixtures/agentic_eval.json",
+  "run_id": "443ba723e504",
+  "fixture_sha256": "sha256:cbb0bd5137231755a04528deb9017bb79b71fa010139af1bc025cce7f659e67a",
+  "repo": {
+    "sha": "7b70696b198000f2868295f01121e5344961aef7",
+    "ref": "main"
+  },
+  "mocked": false,
+  "fixture_backed": true,
+  "live": true,
+  "proof_scope": "fixture wiring, blinded listener-study collection surface smoke, video_plan crew-casting fail-closed gate, crew_casting pipeline command fixture wiring, retained OAuth image-lane routing, story-contract, storyboard-panel, and panel-repair work-order fulfillment command wiring, cycle-journal-to-spoken-journal spine contract, source-grounded dream conversation context, Chatterbox affect-validation claim-boundary registry consumer, machine-readable research disposition validation, and status-scope boundary regression protection",
+  "claims": {
+    "does_not_prove": "semantic correctness, live service behavior, human perception of emotion, Embry speaker recognition, listener-study analysis, or full skill readiness",
+    "proves": "the existing skill entrypoints exit with the expected status, the listener rater page renderer can produce a blinded static collection artifact, video_plan refuses to compose a storyboard without Look Lock + Script DNA from cinematic-technique-selector, the pipeline crew_casting command can write and validate a receipt-backed crew contract from a fixture selector, retained image generation code refuses unfunded API-key lanes and routes create_panel --backend scillm through ask image generation with Codex OAuth, the story-contract work-order executor consumes a validated work order and emits a validated accepted story contract without promoting stale storyboard/Kling artifacts, the storyboard-panel work-order executor consumes a validated work order and emits a validated panel receipt without provider/Kling calls or storyboard packet promotion, the panel-repair work-order executor consumes a validated work order and emits a validator-facing panel repair gate receipt that refuses provider eligibility until a public media probe passes, the executable Persona Dream spine terminates at a chatterbox_conversation node that declares conversation.jsonl and dynamic conversation receipt artifacts after cycle-journal text and audio, Persona Dream materializes that cycle journal plus watched dream observation/residue into the conversation context instead of generating a generic side journal, Persona Dream refuses perceptual affect claims unless a hash-bound Chatterbox registry entry exactly matches, research dispositions cannot claim immutable-goal completion while required hypotheses remain nonterminal, and status surfaces preserve the boundary between audible full-cycle evidence, provider/Kling readiness, human-perception claims, and the corrected-goal next step"
+  },
+  "what_was_exercised": "local commands declared in the fixture manifest",
+  "what_remains_unverified": "semantic correctness, live services, LLM judge behavior, and release readiness",
+  "readiness": "READY",
+  "case_readiness": "READY",
+  "capability_readiness": null,
+  "claims_coverage": "partial: focused --case run",
+  "focused_cases": [
+    "full-cycle-live"
+  ],
+  "generated_at": "2026-09-07T00:03:03.933399+00:00",
+  "case_count": 1,
+  "required_case_count": 1,
+  "outcome_counts": {
+    "PASS": 1,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "NOT_TESTED": 0
+  },
+  "trial_count": 3,
+  "cases": [
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "full-cycle-live",
+      "type": "positive",
+      "case_id": "443ba723e504-c000",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "python",
+        "../scripts/eval_full_cycle.py"
+      ],
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "live_e2e",
+      "live_qualified": true,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "persona_dream.full_cycle.live",
+        "persona_dream.cycle_journal_spoken_spine_contract"
+      ],
+      "seams": [
+        "pipeline.full_cycle.e2e",
+        "pipeline.cycle_journal_to_chatterbox_conversation"
+      ],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 1038867.292,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "FULL_CYCLE_OK stages=8 run=eval-full-cycle-20260906T231110Z day_ingested transcript_context_curated:8 dream_spine_pass:cycle_20260906T231435Z cycle_context_materialized journal_spoken:1044078b memory_written_and_artifacts_stored conversation:3_pairs_all_voiced_grounded carried:6\n",
+          "stderr": "",
+          "duration_ms": 1037119.571,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "443ba723e504-c000-t00",
+          "artifact_hashes": {
+            "/tmp/persona-dream-full-cycle-eval-receipt.json": "sha256:61118bdd2db26c37c56b5f16876682ea49086c093ba036fdbb4ae2385e31b7f9"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "FULL_CYCLE_OK stages=8 run=eval-full-cycle-20260906T232827Z day_ingested transcript_context_curated:8 dream_spine_pass:cycle_20260906T233140Z cycle_context_materialized journal_spoken:867438b memory_written_and_artifacts_stored conversation:3_pairs_all_voiced_grounded carried:6\n",
+          "stderr": "",
+          "duration_ms": 1007652.775,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "443ba723e504-c000-t01",
+          "artifact_hashes": {
+            "/tmp/persona-dream-full-cycle-eval-receipt.json": "sha256:6e6508859256a7cfb6cc93185967f39b9b301ff5146c61954ea706ce728b9c3a"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "FULL_CYCLE_OK stages=8 run=eval-full-cycle-20260906T234515Z day_ingested transcript_context_curated:8 dream_spine_pass:cycle_20260906T234820Z cycle_context_materialized journal_spoken:969198b memory_written_and_artifacts_stored conversation:3_pairs_all_voiced_grounded carried:6\n",
+          "stderr": "",
+          "duration_ms": 1071829.53,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "443ba723e504-c000-t02",
+          "artifact_hashes": {
+            "/tmp/persona-dream-full-cycle-eval-receipt.json": "sha256:9e1e5e7f9696efd9f18b98d1e585922c3bd1fca0f0c0f307374b5e97a0fd4cac"
+          },
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    }
+  ]
+}

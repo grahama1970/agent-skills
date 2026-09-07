@@ -1,0 +1,115 @@
+{
+  "schema": "agentic_evals.report.v2",
+  "source": "skills/persona-dream/fixtures/agentic_eval.json",
+  "run_id": "0952c725b16a",
+  "fixture_sha256": "sha256:cbb0bd5137231755a04528deb9017bb79b71fa010139af1bc025cce7f659e67a",
+  "repo": {
+    "sha": "7b70696b198000f2868295f01121e5344961aef7",
+    "ref": "main"
+  },
+  "mocked": false,
+  "fixture_backed": true,
+  "live": true,
+  "proof_scope": "fixture wiring, blinded listener-study collection surface smoke, video_plan crew-casting fail-closed gate, crew_casting pipeline command fixture wiring, retained OAuth image-lane routing, story-contract, storyboard-panel, and panel-repair work-order fulfillment command wiring, cycle-journal-to-spoken-journal spine contract, source-grounded dream conversation context, Chatterbox affect-validation claim-boundary registry consumer, machine-readable research disposition validation, and status-scope boundary regression protection",
+  "claims": {
+    "does_not_prove": "semantic correctness, live service behavior, human perception of emotion, Embry speaker recognition, listener-study analysis, or full skill readiness",
+    "proves": "the existing skill entrypoints exit with the expected status, the listener rater page renderer can produce a blinded static collection artifact, video_plan refuses to compose a storyboard without Look Lock + Script DNA from cinematic-technique-selector, the pipeline crew_casting command can write and validate a receipt-backed crew contract from a fixture selector, retained image generation code refuses unfunded API-key lanes and routes create_panel --backend scillm through ask image generation with Codex OAuth, the story-contract work-order executor consumes a validated work order and emits a validated accepted story contract without promoting stale storyboard/Kling artifacts, the storyboard-panel work-order executor consumes a validated work order and emits a validated panel receipt without provider/Kling calls or storyboard packet promotion, the panel-repair work-order executor consumes a validated work order and emits a validator-facing panel repair gate receipt that refuses provider eligibility until a public media probe passes, the executable Persona Dream spine terminates at a chatterbox_conversation node that declares conversation.jsonl and dynamic conversation receipt artifacts after cycle-journal text and audio, Persona Dream materializes that cycle journal plus watched dream observation/residue into the conversation context instead of generating a generic side journal, Persona Dream refuses perceptual affect claims unless a hash-bound Chatterbox registry entry exactly matches, research dispositions cannot claim immutable-goal completion while required hypotheses remain nonterminal, and status surfaces preserve the boundary between audible full-cycle evidence, provider/Kling readiness, human-perception claims, and the corrected-goal next step"
+  },
+  "what_was_exercised": "local commands declared in the fixture manifest",
+  "what_remains_unverified": "semantic correctness, live services, LLM judge behavior, and release readiness",
+  "readiness": "READY",
+  "case_readiness": "READY",
+  "capability_readiness": null,
+  "claims_coverage": "partial: focused --case run",
+  "focused_cases": [
+    "corrected-goal-live-pair-gate-readback"
+  ],
+  "generated_at": "2026-09-07T00:30:48.545209+00:00",
+  "case_count": 1,
+  "required_case_count": 1,
+  "outcome_counts": {
+    "PASS": 1,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "NOT_TESTED": 0
+  },
+  "trial_count": 3,
+  "cases": [
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "corrected-goal-live-pair-gate-readback",
+      "type": "positive",
+      "case_id": "0952c725b16a-c000",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-lc",
+        "set -euo pipefail\ncd ../../..\nMANIFEST=\"$(find skills/persona-dream/evals -name pd_corrected_goal_v1.json -print -quit)\"\ntest -n \"$MANIFEST\"\nSOURCE_ROOT=\"skills/persona-dream/local/proofs/pd-corrected-goal-v1/live-pair-20260822T170000Z\"\nRUN_ROOT=\"/tmp/persona-dream-corrected-goal-live-pair-gate-readback-run\"\nPAIR_OUT=\"/tmp/persona-dream-corrected-goal-live-pair-gate-readback-pair-runner.json\"\nREADBACK=\"/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json\"\nrm -rf \"$RUN_ROOT\"\ncp -a \"$SOURCE_ROOT\" \"$RUN_ROOT\"\nbash skills/persona-dream/run.sh corrected-goal-pair --manifest \"$MANIFEST\" --out \"$RUN_ROOT\" --require-live --forbid-mocked > \"$PAIR_OUT\"\nbash skills/persona-dream/run.sh adjudicate-corrected-goal --manifest \"$MANIFEST\" --run-root \"$RUN_ROOT\" --out \"$READBACK\" --fail-closed\npython3 - <<'PY'\nimport json\nfrom pathlib import Path\npair = json.loads(Path('/tmp/persona-dream-corrected-goal-live-pair-gate-readback-pair-runner.json').read_text(encoding='utf-8'))\nreceipt = json.loads(Path('/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json').read_text(encoding='utf-8'))\nassert pair['status'] == 'PASS_CORRECTED_GOAL_PAIR_ARTIFACTS_PRESENT'\nassert pair['mocked'] is False\nassert pair['live'] is True\nassert pair['missing_live_artifacts'] == []\nassert receipt['status'] == 'PASS_CORRECTED_GOAL_PAIRED_PROOF'\nassert receipt['mocked'] is False\nassert receipt['live'] is True\nassert receipt['failures'] == []\nassert receipt['gate_statuses']['answer_invariance'] == 'PASS_ANSWER_INVARIANCE'\nassert receipt['gate_statuses']['emotional_carryover'] == 'PASS_EMOTION_LINEAGE'\nassert receipt['gate_statuses']['chatterbox_delivery'] == 'PASS_CHATTERBOX_DELIVERY'\nprint(pair['status'])\nprint('CORRECTED_GOAL_LIVE_PAIR_GATE_READBACK_OK')\nPY"
+      ],
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "live_e2e",
+      "live_qualified": true,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "persona_dream.corrected_goal_manifest"
+      ],
+      "seams": [
+        "experiment.corrected_goal.manifest"
+      ],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 218.97,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "{\n  \"artifacts\": {\n    \"answer_invariance.json\": \"sha256:0643ea07d9ce03ac285ff96c93380726a5a2b7fe242a30a9202e22edce1c7467\",\n    \"chatterbox_delivery.json\": \"sha256:065bf04a6350e74827ee6d623a3e9fee44a0f01e2e2406a650f7f3271205d5b8\",\n    \"emotional_carryover.json\": \"sha256:727a179813569af7090aca3a421e611f429a56deac395493dd116ade835ca6f3\",\n    \"manifest.json\": \"sha256:4d7538bc3c0fed72e4ff5756f34c9f47081fee09d5b8191bf71a8e4a7eef7e44\"\n  },\n  \"claims\": {\n    \"does_not_prove\": \"reliability, human-perceived emotional value, human listener identity, production readiness, or separate mediation by dream versus journal\",\n    \"one_passing_pair_proves\": \"one local technical mechanism instance where dream+journal carryover changes bounded emotional framing and Chatterbox delivery without changing the answer body\"\n  },\n  \"failures\": [],\n  \"gate_statuses\": {\n    \"answer_invariance\": \"PASS_ANSWER_INVARIANCE\",\n    \"chatterbox_delivery\": \"PASS_CHATTERBOX_DELIVERY\",\n    \"emotional_carryover\": \"PASS_EMOTION_LINEAGE\"\n  },\n  \"live\": true,\n  \"manifest\": \"skills/persona-dream/evals/fixtures/pd_corrected_goal_v1.json\",\n  \"manifest_sha256\": \"sha256:4d7538bc3c0fed72e4ff5756f34c9f47081fee09d5b8191bf71a8e4a7eef7e44\",\n  \"mocked\": false,\n  \"proof_id\": \"PD-CORRECTED-GOAL-V1\",\n  \"run_root\": \"/tmp/persona-dream-corrected-goal-live-pair-gate-readback-run\",\n  \"schema\": \"persona_dream.corrected_goal_receipt.v1\",\n  \"status\": \"PASS_CORRECTED_GOAL_PAIRED_PROOF\"\n}\nPASS_CORRECTED_GOAL_PAIR_ARTIFACTS_PRESENT\nCORRECTED_GOAL_LIVE_PAIR_GATE_READBACK_OK\n",
+          "stderr": "",
+          "duration_ms": 213.675,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "0952c725b16a-c000-t00",
+          "artifact_hashes": {
+            "/tmp/persona-dream-corrected-goal-live-pair-gate-readback-pair-runner.json": "sha256:4768aff2f4dc6ff85458a16a8965e4d87c52cd07edbc2e588865d21c327e2f10",
+            "/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json": "sha256:50c05116583562d0d5350a174ecbdb856aa6fe5bde24a6d0e499de7db52de8b4"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\n  \"artifacts\": {\n    \"answer_invariance.json\": \"sha256:0643ea07d9ce03ac285ff96c93380726a5a2b7fe242a30a9202e22edce1c7467\",\n    \"chatterbox_delivery.json\": \"sha256:065bf04a6350e74827ee6d623a3e9fee44a0f01e2e2406a650f7f3271205d5b8\",\n    \"emotional_carryover.json\": \"sha256:727a179813569af7090aca3a421e611f429a56deac395493dd116ade835ca6f3\",\n    \"manifest.json\": \"sha256:4d7538bc3c0fed72e4ff5756f34c9f47081fee09d5b8191bf71a8e4a7eef7e44\"\n  },\n  \"claims\": {\n    \"does_not_prove\": \"reliability, human-perceived emotional value, human listener identity, production readiness, or separate mediation by dream versus journal\",\n    \"one_passing_pair_proves\": \"one local technical mechanism instance where dream+journal carryover changes bounded emotional framing and Chatterbox delivery without changing the answer body\"\n  },\n  \"failures\": [],\n  \"gate_statuses\": {\n    \"answer_invariance\": \"PASS_ANSWER_INVARIANCE\",\n    \"chatterbox_delivery\": \"PASS_CHATTERBOX_DELIVERY\",\n    \"emotional_carryover\": \"PASS_EMOTION_LINEAGE\"\n  },\n  \"live\": true,\n  \"manifest\": \"skills/persona-dream/evals/fixtures/pd_corrected_goal_v1.json\",\n  \"manifest_sha256\": \"sha256:4d7538bc3c0fed72e4ff5756f34c9f47081fee09d5b8191bf71a8e4a7eef7e44\",\n  \"mocked\": false,\n  \"proof_id\": \"PD-CORRECTED-GOAL-V1\",\n  \"run_root\": \"/tmp/persona-dream-corrected-goal-live-pair-gate-readback-run\",\n  \"schema\": \"persona_dream.corrected_goal_receipt.v1\",\n  \"status\": \"PASS_CORRECTED_GOAL_PAIRED_PROOF\"\n}\nPASS_CORRECTED_GOAL_PAIR_ARTIFACTS_PRESENT\nCORRECTED_GOAL_LIVE_PAIR_GATE_READBACK_OK\n",
+          "stderr": "",
+          "duration_ms": 212.533,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "0952c725b16a-c000-t01",
+          "artifact_hashes": {
+            "/tmp/persona-dream-corrected-goal-live-pair-gate-readback-pair-runner.json": "sha256:4768aff2f4dc6ff85458a16a8965e4d87c52cd07edbc2e588865d21c327e2f10",
+            "/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json": "sha256:50c05116583562d0d5350a174ecbdb856aa6fe5bde24a6d0e499de7db52de8b4"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\n  \"artifacts\": {\n    \"answer_invariance.json\": \"sha256:0643ea07d9ce03ac285ff96c93380726a5a2b7fe242a30a9202e22edce1c7467\",\n    \"chatterbox_delivery.json\": \"sha256:065bf04a6350e74827ee6d623a3e9fee44a0f01e2e2406a650f7f3271205d5b8\",\n    \"emotional_carryover.json\": \"sha256:727a179813569af7090aca3a421e611f429a56deac395493dd116ade835ca6f3\",\n    \"manifest.json\": \"sha256:4d7538bc3c0fed72e4ff5756f34c9f47081fee09d5b8191bf71a8e4a7eef7e44\"\n  },\n  \"claims\": {\n    \"does_not_prove\": \"reliability, human-perceived emotional value, human listener identity, production readiness, or separate mediation by dream versus journal\",\n    \"one_passing_pair_proves\": \"one local technical mechanism instance where dream+journal carryover changes bounded emotional framing and Chatterbox delivery without changing the answer body\"\n  },\n  \"failures\": [],\n  \"gate_statuses\": {\n    \"answer_invariance\": \"PASS_ANSWER_INVARIANCE\",\n    \"chatterbox_delivery\": \"PASS_CHATTERBOX_DELIVERY\",\n    \"emotional_carryover\": \"PASS_EMOTION_LINEAGE\"\n  },\n  \"live\": true,\n  \"manifest\": \"skills/persona-dream/evals/fixtures/pd_corrected_goal_v1.json\",\n  \"manifest_sha256\": \"sha256:4d7538bc3c0fed72e4ff5756f34c9f47081fee09d5b8191bf71a8e4a7eef7e44\",\n  \"mocked\": false,\n  \"proof_id\": \"PD-CORRECTED-GOAL-V1\",\n  \"run_root\": \"/tmp/persona-dream-corrected-goal-live-pair-gate-readback-run\",\n  \"schema\": \"persona_dream.corrected_goal_receipt.v1\",\n  \"status\": \"PASS_CORRECTED_GOAL_PAIRED_PROOF\"\n}\nPASS_CORRECTED_GOAL_PAIR_ARTIFACTS_PRESENT\nCORRECTED_GOAL_LIVE_PAIR_GATE_READBACK_OK\n",
+          "stderr": "",
+          "duration_ms": 230.702,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "0952c725b16a-c000-t02",
+          "artifact_hashes": {
+            "/tmp/persona-dream-corrected-goal-live-pair-gate-readback-pair-runner.json": "sha256:4768aff2f4dc6ff85458a16a8965e4d87c52cd07edbc2e588865d21c327e2f10",
+            "/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json": "sha256:50c05116583562d0d5350a174ecbdb856aa6fe5bde24a6d0e499de7db52de8b4"
+          },
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    }
+  ]
+}

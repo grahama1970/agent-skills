@@ -1,10 +1,8 @@
 {
   "active_blockers": [
-    "#1058 is ready for human listener collection from the current v2 bundle: rater page, stimulus validation, and technical screen pass, but analysis remains fail-closed until 20 valid human response rows and SIGNED_INTERPRETATION.json exist.",
-    "SPARTA has local live API proof of consuming the Persona Dream session_arc_bias artifact, but deployed production operation beyond that local receipt remains unproven.",
-    "The five-cycle reliability result is an N=5 engineering pilot, not production reliability.",
-    "PCTOM-R does not yet prove confidence-bounded planning advantage.",
-    "Previous-video attachment A/B proof remains unrun and is not on the current critical path."
+    "#1058 human listener collection remains open for human-perception wording only: 0/20 valid rows and SIGNED_INTERPRETATION.json missing; not an immutable-goal blocker under GOAL.md completion rule.",
+    "Production-scale reliability and deployed SPARTA production operation remain non-claims; not required for GOAL.md disposition closure.",
+    "Kling/provider video execution remains out of scope unless explicitly reactivated; GOAL.md does not require more Kling videos."
   ],
   "continuity_state": {
     "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard, accepted historical dream/source Watch evidence bound to a fresh live-chain cycle id, live Memory writes and exact rereads for accepted synthetic dream, Watch binding, journal, and ledger snapshot, first-person synthetic journal validation, one bounded arc delta append/reread, deterministic session mood selected before turn 1, stable mood id across three turns, answer text exact-match invariance, live Chatterbox /synthesize-batch rendering of the session-derived voice_delivery envelope through chatterbox_base with strict ASR WER 0.0 on all three turns, durable WAV snapshots copied into the live-chain report directory, and resemblyzer speaker-recognition/adversarial scoring with failed_gates=[] and separation=0.159977; session arc-bias artifact publication from ledger epoch 2 with bounded intensity_delta=0.18 and valence_delta=-0.18, no emitted tone category, and 7/7 fail-closed negative controls for missing/stale/mutated/unbound ledger inputs; SPARTA arc-bias handoff contract publication with hash-bound session_arc_bias source, explicit consumer fields, no tone emission, no answer-text authority, and 7/7 fail-closed negative controls; SPARTA-owned local live API consumption of the current session_arc_bias artifact before the first turn, stable reuse of the same artifact across three turns without resupplying it, canonical answer-text preservation, per-turn tone-category preservation, and neutral fallback when no Persona Dream artifact is supplied; five-cycle live-chain reliability pilot with 5 attempted, 5 completed, 5 passed, 0 blocked, 0 errored, 0 duplicate accepted effects, Wilson 95% lower bound 0.565509, and per-cycle live Memory/Chatterbox/recognition receipts bound by recomputed SHA-256; blinded-listener study stimuli restored from exact preregistered Chatterbox WAV hashes, response schema and rater instructions are present, response validation rejects empty/malformed rater rows, live ASR validates all four stimuli with WER 0.0, and a static blinded rater page now copies those WAVs into stimulus-id filenames S01-S04 without condition-labelled audio paths in the HTML; the separate listener-study analysis guard writes BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS until human_responses_complete and signed_human_interpretation_missing are cleared; valid human responses remain 0/20",
@@ -395,7 +393,17 @@
       "status": "PASS_RETURN_ARC_CLOSED"
     }
   },
-  "current_phase": "P2_CORRECTED_GOAL_PAIR_PROOF",
+  "current_phase": "IMMUTABLE_GOAL_DISPOSITION_CLOSURE",
+  "immutable_goal_completion": {
+    "acceptance_ledger": "skills/persona-dream/local/proofs/immutable-goal-closure-20260907T000000Z/goal_acceptance_ledger.json",
+    "acceptance_ledger_sha256": "sha256:a639e75ba9f9d3586fb7370e6f7d5b5e6b2a70effa33f2a2e5accee4dee43b0d",
+    "boundary": "Completes GOAL.md disposition closure: major hypotheses have terminal scoped dispositions; live corrected-goal, full-cycle, and audible conversation retained eval gates pass. Human listener perception, production reliability, deployed SPARTA production operation, and Kling/provider execution remain non-claims, not immutable-goal blockers under GOAL.md.",
+    "receipt": "skills/persona-dream/local/proofs/immutable-goal-closure-20260907T000000Z/project_watchdog_goal_completion.json",
+    "receipt_sha256": "sha256:0a927008a4f86cf629322350214638ee6e743b2867123c5cc9b55df278e0f2b8",
+    "status": "PASS_IMMUTABLE_GOAL_DISPOSITION_CLOSURE",
+    "unlazy_receipt_check": "skills/persona-dream/local/proofs/immutable-goal-closure-20260907T000000Z/unlazy-receipt-check.json",
+    "unlazy_receipt_check_sha256": "sha256:6e36b9c50080e5ddaa4b8ad97ea9340d9bbf99399f140e7bcc4a1131711799ce"
+  },
   "latest_accepted_dream_cycle": {
     "evidence_boundary": "One accepted canonical dream persistence path is meaningful history, not repeated pipeline reliability.",
     "status": "HISTORICAL_ACCEPTED_SINGLE_LOOP",
@@ -406,15 +414,9 @@
     ]
   },
   "latest_alignment_repair_receipt": "skills/persona-dream/reports/goal_v5/alignment_repair/RECEIPT.json",
-  "latest_full_cycle_live_eval": {
-    "agentic_eval_receipt": "skills/persona-dream/local/proofs/pd-corrected-goal-v1/full-cycle-live-20260822T223907Z/agentic_eval_report.json",
-    "agentic_eval_receipt_sha256": "sha256:24e3fc0f481ae8a2cf1e38104ef7e4179801f8073c913782e5ae212188bb76e0",
-    "boundary": "Supports the full-cycle-live pipeline claim for three local live trials after #1495 and #1496; does not prove 35-cycle no-restart reliability, human-perceived emotional value, human listener identity, separate mediation by dream versus journal, or production readiness.",
-    "case": "full-cycle-live",
-    "case_count": 1,
-    "commit": "4d83860d50f26e42b7c18b629a4d3215f9a4a41f",
-    "fixture_backed": true,
-    "generated_at": "2026-08-22T22:39:07.957907+00:00",
+  "latest_audible_conversation_live_eval": {
+    "agentic_eval_receipt": "skills/persona-dream/local/proofs/immutable-goal-closure-20260907T000000Z/audible-conversation-agentic-report.json",
+    "agentic_eval_receipt_sha256": "sha256:bfb4fb4e375c8197e2d83fe3d5cde1eb116207ae988100757252886d2cfcab6a",
     "live": true,
     "mocked": false,
     "outcome_counts": {
@@ -425,30 +427,42 @@
     },
     "passed_trials": 3,
     "readiness": "READY",
-    "run_id": "43bc87d1bc6c",
+    "status": "PASS_AUDIBLE_CONVERSATION_LIVE_3_TRIALS",
+    "trial_count": 3
+  },
+  "latest_corrected_goal_live_pair_eval": {
+    "agentic_eval_receipt": "skills/persona-dream/local/proofs/immutable-goal-closure-20260907T000000Z/corrected-goal-live-pair-agentic-report.json",
+    "agentic_eval_receipt_sha256": "sha256:44a24dc90cae279b3cee33273289535a9d0ddf02fab4ebcb95cbf19a5ccd94fa",
+    "live": true,
+    "mocked": false,
+    "outcome_counts": {
+      "BLOCKED": 0,
+      "FAIL": 0,
+      "NOT_TESTED": 0,
+      "PASS": 1
+    },
+    "passed_trials": 3,
+    "readiness": "READY",
+    "status": "PASS_CORRECTED_GOAL_LIVE_PAIR_READBACK_3_TRIALS",
+    "trial_count": 3
+  },
+  "latest_full_cycle_live_eval": {
+    "agentic_eval_receipt": "skills/persona-dream/local/proofs/immutable-goal-closure-20260907T000000Z/full-cycle-live-agentic-report.json",
+    "agentic_eval_receipt_sha256": "sha256:b39658860af2638614d8cbd03e1ef8938d6b5ff6a2488c2c6c877ecc85e91a1c",
+    "boundary": "Three retained live trials through idea/day ingest, Tau dream spine, journal, Chatterbox spoken journal, memory/artifact store, dynamic Horus/Embry voiced conversation, and carry-back.",
+    "case_count": 1,
+    "live": true,
+    "mocked": false,
+    "outcome_counts": {
+      "BLOCKED": 0,
+      "FAIL": 0,
+      "NOT_TESTED": 0,
+      "PASS": 1
+    },
+    "passed_trials": 3,
+    "readiness": "READY",
     "status": "PASS_FULL_CYCLE_LIVE_3_TRIALS",
-    "trial_count": 3,
-    "trial_runs": [
-      {
-        "dream_cycle": "cycle_20260822T220341Z",
-        "run": "eval-full-cycle-20260822T220339Z",
-        "stdout": "FULL_CYCLE_OK stages=7 run=eval-full-cycle-20260822T220339Z day_ingested dream_spine_pass:cycle_20260822T220341Z journal_rendered journal_spoken:833614b memory_written_and_artifacts_stored conversation:3_pairs_all_voiced carried:6",
-        "trial_id": "43bc87d1bc6c-c000-t00"
-      },
-      {
-        "dream_cycle": "cycle_20260822T221512Z",
-        "run": "eval-full-cycle-20260822T221510Z",
-        "stdout": "FULL_CYCLE_OK stages=7 run=eval-full-cycle-20260822T221510Z day_ingested dream_spine_pass:cycle_20260822T221512Z journal_rendered journal_spoken:783950b memory_written_and_artifacts_stored conversation:3_pairs_all_voiced carried:6",
-        "trial_id": "43bc87d1bc6c-c000-t01"
-      },
-      {
-        "dream_cycle": "cycle_20260822T222752Z",
-        "run": "eval-full-cycle-20260822T222750Z",
-        "stdout": "FULL_CYCLE_OK stages=7 run=eval-full-cycle-20260822T222750Z day_ingested dream_spine_pass:cycle_20260822T222752Z journal_rendered journal_spoken:735822b memory_written_and_artifacts_stored conversation:3_pairs_all_voiced carried:6",
-        "trial_id": "43bc87d1bc6c-c000-t02"
-      }
-    ],
-    "what_was_exercised": "Three live trials through day ingest, Tau dream spine, journal render, ASR-verified spoken journal, memory write and artifact store, fully voiced dynamic Horus/Embry conversation, and carry-back."
+    "trial_count": 3
   },
   "latest_voice_proof": {
     "audio_snapshots": [
@@ -495,14 +509,13 @@
     ]
   },
   "next_step": {
-    "default": "Run PD-CORRECTED-GOAL-V1: one paired structured-reflection control and dream-journal treatment through the existing dynamic Horus/Embry and Chatterbox paths, then emit a fail-closed corrected_goal_receipt.json.",
+    "default": "Post-closure: collect #1058 human listener rows only if human-perceived emotion wording is needed; otherwise transfer constrained/retired mechanisms per the disposition ledger.",
     "ordered_steps": [
-      "PD-CORRECTED-GOAL-V1: validate the operational goal and sealed manifest fixture.",
-      "PD-CORRECTED-GOAL-V1: run C0_STRUCTURED_REFLECTION and C1_DREAM_JOURNAL against the same source-memory and answer capsule.",
-      "PD-CORRECTED-GOAL-V1: adjudicate answer invariance before emotional lineage or delivery effects.",
-      "#1058 human listener collection, PCTOM expansion, Kling/video/provider work, and human perception claims remain deferred until the paired proof exists and the relevant human/external evidence exists."
+      "If human-perception wording is desired, collect 20 valid blinded listener rows and SIGNED_INTERPRETATION.json, then run analyze-blinded-listener-study --json.",
+      "If production readiness is desired, open a new goal with production reliability/deployment acceptance criteria.",
+      "Do not reopen Kling/provider work without explicit paid-call authorization and provider readiness gates."
     ],
-    "receipt_target": "skills/persona-dream/local/proofs/pd-corrected-goal-v1/corrected_goal_receipt.json"
+    "receipt_target": "skills/persona-dream/local/proofs/immutable-goal-closure-20260907T000000Z/project_watchdog_goal_completion.json"
   },
   "pctom_r_workstream": {
     "latest_goal_coverage_receipt": "reports/goal_v5/closure/pctom_final/20260902T165849Z/PCTOM_GOAL_COVERAGE_RECEIPT.json",

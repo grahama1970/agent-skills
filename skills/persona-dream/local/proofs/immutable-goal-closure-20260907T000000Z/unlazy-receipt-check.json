@@ -1,0 +1,30 @@
+{
+  "schema": "unlazy.receipt_check.v1",
+  "status": "PASS",
+  "ok": true,
+  "live": false,
+  "mocked": false,
+  "project_root": "/home/graham/workspace/experiments/agent-skills",
+  "receipt_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/proofs/immutable-goal-closure-20260907T000000Z/project_watchdog_goal_completion.json",
+  "receipt_sha256": "sha256:0a927008a4f86cf629322350214638ee6e743b2867123c5cc9b55df278e0f2b8",
+  "receipt_schema": "project_watchdog.goal_completion.v1",
+  "errors": [],
+  "seam_validation": {
+    "kind": "unlazy.receipt_check.v1",
+    "status": "PASS"
+  },
+  "proof_scope": {
+    "proves": [
+      "receipt is readable JSON",
+      "receipt and referenced artifacts resolve inside the project root",
+      "acceptance_ref goal, ledger, and optional lock hashes match current files",
+      "non-watchdog receipts do not claim global immutable-goal completion"
+    ],
+    "does_not_prove": [
+      "gate commands were executed",
+      "receipt producer is trustworthy",
+      "semantic correctness of the referenced workflow",
+      "downstream Herdr, Tau, ticket, or project-watchdog integration is installed"
+    ]
+  }
+}

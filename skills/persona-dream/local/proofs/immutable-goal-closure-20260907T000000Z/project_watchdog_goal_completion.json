@@ -1,0 +1,63 @@
+{
+  "acceptance_ledger": {
+    "path": "skills/persona-dream/local/proofs/immutable-goal-closure-20260907T000000Z/goal_acceptance_ledger.json",
+    "sha256": "sha256:a639e75ba9f9d3586fb7370e6f7d5b5e6b2a70effa33f2a2e5accee4dee43b0d"
+  },
+  "acceptance_ref": {
+    "goal_path": "skills/persona-dream/GOAL.md",
+    "goal_sha256": "sha256:3914e022fdf9c283a623b801dc3f7914f97be5496808115c1db1360d82a24ec2",
+    "ledger_path": "skills/persona-dream/local/proofs/immutable-goal-closure-20260907T000000Z/goal_acceptance_ledger.json",
+    "ledger_sha256": "sha256:a639e75ba9f9d3586fb7370e6f7d5b5e6b2a70effa33f2a2e5accee4dee43b0d",
+    "required_gate_ids": [
+      "disposition_registry_terminal",
+      "current_state_consistency",
+      "corrected_goal_paired_proof",
+      "full_cycle_live_e2e",
+      "horus_embry_audible_conversation"
+    ],
+    "schema": "unlazy.acceptance_ref.v1"
+  },
+  "evidence": [
+    {
+      "path": "skills/persona-dream/local/proofs/immutable-goal-closure-20260907T000000Z/disposition-registry-check.json",
+      "sha256": "sha256:0c7672e7c76d03f3002f98d5fc63d515b879befcfd70fea62838ebc0bbfe1fdb"
+    },
+    {
+      "path": "skills/persona-dream/local/proofs/immutable-goal-closure-20260907T000000Z/current-state-consistency.txt",
+      "sha256": "sha256:6ef45abe632c3f4874fcffc782c9b4ed88584b658cc5d8e72669eaa4413c0619"
+    },
+    {
+      "path": "skills/persona-dream/local/proofs/immutable-goal-closure-20260907T000000Z/corrected-goal-live-pair-agentic-report.json",
+      "sha256": "sha256:44a24dc90cae279b3cee33273289535a9d0ddf02fab4ebcb95cbf19a5ccd94fa"
+    },
+    {
+      "path": "skills/persona-dream/local/proofs/immutable-goal-closure-20260907T000000Z/full-cycle-live-agentic-report.json",
+      "sha256": "sha256:b39658860af2638614d8cbd03e1ef8938d6b5ff6a2488c2c6c877ecc85e91a1c"
+    },
+    {
+      "path": "skills/persona-dream/local/proofs/immutable-goal-closure-20260907T000000Z/audible-conversation-agentic-report.json",
+      "sha256": "sha256:bfb4fb4e375c8197e2d83fe3d5cde1eb116207ae988100757252886d2cfcab6a"
+    }
+  ],
+  "global_goal_state": "COMPLETE",
+  "immutable_goal_state": "COMPLETE",
+  "live": true,
+  "mocked": false,
+  "project": "persona-dream",
+  "proof_scope": {
+    "does_not_prove": [
+      "Does not prove human-perceived emotion or listener preference; #1058 remains human-subject collection work.",
+      "Does not prove production-scale reliability or deployed SPARTA production operation.",
+      "Does not require more Kling/provider video execution under GOAL.md completion rule.",
+      "Does not claim dreaming beats reflection where a hypothesis disposition is null, constrained, retired, or scoped."
+    ],
+    "proves": [
+      "major hypotheses have terminal scoped dispositions",
+      "corrected paired proof passed",
+      "full idea-to-voiced-conversation pipeline passed retained live eval",
+      "Horus/Embry audible dynamic conversation passed retained live eval"
+    ]
+  },
+  "schema": "project_watchdog.goal_completion.v1",
+  "status": "PASS_IMMUTABLE_GOAL_DISPOSITION_CLOSURE"
+}

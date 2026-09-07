@@ -1,0 +1,102 @@
+{
+  "schema": "agentic_evals.report.v2",
+  "source": "skills/persona-dream/fixtures/agentic_eval.json",
+  "run_id": "c51f81abe721",
+  "fixture_sha256": "sha256:cbb0bd5137231755a04528deb9017bb79b71fa010139af1bc025cce7f659e67a",
+  "repo": {
+    "sha": "7b70696b198000f2868295f01121e5344961aef7",
+    "ref": "main"
+  },
+  "mocked": false,
+  "fixture_backed": true,
+  "live": true,
+  "proof_scope": "fixture wiring, blinded listener-study collection surface smoke, video_plan crew-casting fail-closed gate, crew_casting pipeline command fixture wiring, retained OAuth image-lane routing, story-contract, storyboard-panel, and panel-repair work-order fulfillment command wiring, cycle-journal-to-spoken-journal spine contract, source-grounded dream conversation context, Chatterbox affect-validation claim-boundary registry consumer, machine-readable research disposition validation, and status-scope boundary regression protection",
+  "claims": {
+    "does_not_prove": "semantic correctness, live service behavior, human perception of emotion, Embry speaker recognition, listener-study analysis, or full skill readiness",
+    "proves": "the existing skill entrypoints exit with the expected status, the listener rater page renderer can produce a blinded static collection artifact, video_plan refuses to compose a storyboard without Look Lock + Script DNA from cinematic-technique-selector, the pipeline crew_casting command can write and validate a receipt-backed crew contract from a fixture selector, retained image generation code refuses unfunded API-key lanes and routes create_panel --backend scillm through ask image generation with Codex OAuth, the story-contract work-order executor consumes a validated work order and emits a validated accepted story contract without promoting stale storyboard/Kling artifacts, the storyboard-panel work-order executor consumes a validated work order and emits a validated panel receipt without provider/Kling calls or storyboard packet promotion, the panel-repair work-order executor consumes a validated work order and emits a validator-facing panel repair gate receipt that refuses provider eligibility until a public media probe passes, the executable Persona Dream spine terminates at a chatterbox_conversation node that declares conversation.jsonl and dynamic conversation receipt artifacts after cycle-journal text and audio, Persona Dream materializes that cycle journal plus watched dream observation/residue into the conversation context instead of generating a generic side journal, Persona Dream refuses perceptual affect claims unless a hash-bound Chatterbox registry entry exactly matches, research dispositions cannot claim immutable-goal completion while required hypotheses remain nonterminal, and status surfaces preserve the boundary between audible full-cycle evidence, provider/Kling readiness, human-perception claims, and the corrected-goal next step"
+  },
+  "what_was_exercised": "local commands declared in the fixture manifest",
+  "what_remains_unverified": "semantic correctness, live services, LLM judge behavior, and release readiness",
+  "readiness": "READY",
+  "case_readiness": "READY",
+  "capability_readiness": null,
+  "claims_coverage": "partial: focused --case run",
+  "focused_cases": [
+    "horus-embry-audible-conversation-live"
+  ],
+  "generated_at": "2026-09-07T00:30:36.605602+00:00",
+  "case_count": 1,
+  "required_case_count": 1,
+  "outcome_counts": {
+    "PASS": 1,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "NOT_TESTED": 0
+  },
+  "trial_count": 3,
+  "cases": [
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "horus-embry-audible-conversation-live",
+      "type": "positive",
+      "case_id": "c51f81abe721-c000",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "python3",
+        "../scripts/eval_audible_conversation.py"
+      ],
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "live_e2e",
+      "live_qualified": true,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "persona_dream.conversation.audible_two_agent"
+      ],
+      "seams": [
+        "conversation.horus_embry.audible"
+      ],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 58879.606,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "AUDIBLE_CONVERSATION_OK turns=2 dynamic=true horus_bytes=2757628 embry_bytes=3012156\n",
+          "stderr": "",
+          "duration_ms": 63610.206,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "c51f81abe721-c000-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "AUDIBLE_CONVERSATION_OK turns=2 dynamic=true horus_bytes=1600668 embry_bytes=2792316\n",
+          "stderr": "",
+          "duration_ms": 53000.315,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "c51f81abe721-c000-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "AUDIBLE_CONVERSATION_OK turns=2 dynamic=true horus_bytes=1777596 embry_bytes=2839836\n",
+          "stderr": "",
+          "duration_ms": 60028.298,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "c51f81abe721-c000-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    }
+  ]
+}
