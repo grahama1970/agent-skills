@@ -2463,6 +2463,280 @@ def probe_review_commentary_provenance(summary_path: Path) -> int:
     )
 
 
+def _write_recording_memory_adapter(path: Path) -> None:
+    path.write_text(
+        """#!/usr/bin/env python3
+from __future__ import annotations
+
+import json
+import os
+import sys
+from pathlib import Path
+
+
+STATE = Path(os.environ["BATTLE_RECORDING_MEMORY_STATE"])
+
+
+def arg_value(name: str) -> str:
+    try:
+        return sys.argv[sys.argv.index(name) + 1]
+    except (ValueError, IndexError):
+        raise SystemExit(f"missing {name}")
+
+
+def load_state() -> list[dict[str, str]]:
+    if not STATE.is_file():
+        return []
+    return json.loads(STATE.read_text(encoding="utf-8"))
+
+
+def save_state(items: list[dict[str, str]]) -> None:
+    STATE.parent.mkdir(parents=True, exist_ok=True)
+    STATE.write_text(json.dumps(items, indent=2, sort_keys=True) + "\\n", encoding="utf-8")
+
+
+def main() -> int:
+    command = sys.argv[1] if len(sys.argv) > 1 else ""
+    if command == "learn":
+        items = load_state()
+        record = {
+            "_key": f"recording-memory-{len(items)}",
+            "problem": arg_value("--problem"),
+            "solution": arg_value("--solution"),
+        }
+        items.append(record)
+        save_state(items)
+        print(json.dumps({"stored": True, "_key": record["_key"]}, sort_keys=True))
+        return 0
+    if command == "recall":
+        query = arg_value("--q")
+        tokens = query.split()
+        if os.environ.get("BATTLE_RECORDING_MEMORY_TAMPER_RECALL") == "wrong_digest":
+            marker = next((token for token in tokens if token.startswith("battle-memory-promotion:")), "")
+            team = next((token for token in tokens if token.startswith("team=")), "team=red")
+            item = {
+                "_key": "tampered-marker-only",
+                "problem": f"{marker} {team}",
+                "solution": "artifact_sha256=wrong-artifact-digest fitness_sha256=wrong-fitness-digest",
+            }
+            print(json.dumps({"found": True, "items": [item]}, sort_keys=True))
+            return 0
+        print(json.dumps({"found": True, "items": load_state()}, sort_keys=True))
+        return 0
+    raise SystemExit(f"unsupported fake memory command: {command}")
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+""",
+        encoding="utf-8",
+    )
+    path.chmod(0o755)
+
+
+def _memory_admission_selection(
+    *,
+    decision: str,
+    selected_generation: int | None,
+    prefix: str,
+) -> dict[str, Any]:
+    return {
+        "generation_1_fitness_receipt_sha256": f"{prefix}-generation-1-fitness",
+        "generation_2_fitness_receipt_sha256": f"{prefix}-generation-2-fitness",
+        "retention_decision": decision,
+        "selected_generation": selected_generation,
+        "tie_break_reason": None,
+    }
+
+
+def _run_memory_admission_variant(
+    root: Path,
+    *,
+    name: str,
+    teams: dict[str, dict[str, Any]],
+    expected_status: str,
+    tamper_recall: bool = False,
+) -> dict[str, Any]:
+    variant_root = root / name
+    campaign = variant_root / "source-run" / "campaign-receipt.json"
+    promote_root = variant_root / "promotion"
+    state_path = variant_root / "recording-memory-state.json"
+    memory_adapter = variant_root / "recording-memory.py"
+    _selection_reporting_campaign(campaign, run_id=name, teams=teams)
+    _write_recording_memory_adapter(memory_adapter)
+    env = {"BATTLE_RECORDING_MEMORY_STATE": str(state_path)}
+    if tamper_recall:
+        env["BATTLE_RECORDING_MEMORY_TAMPER_RECALL"] = "wrong_digest"
+    proc = _run_in(
+        [
+            sys.executable,
+            str(BATTLE_DIR / "scripts" / "promote_provider_tau_lineage_memory.py"),
+            "--campaign-receipt",
+            str(campaign),
+            "--out",
+            str(promote_root),
+            "--memory-run",
+            str(memory_adapter),
+        ],
+        cwd=REPO_ROOT,
+        timeout=120,
+        env=env,
+    )
+    (variant_root / "promotion.stdout.txt").write_text(proc.stdout, encoding="utf-8")
+    (variant_root / "promotion.stderr.txt").write_text(proc.stderr, encoding="utf-8")
+    receipt_path = promote_root / "memory-promotion-live-receipt.json"
+    if not receipt_path.is_file():
+        raise AssertionError(f"memory promotion receipt missing for {name}: {proc.stdout}{proc.stderr}")
+    receipt = _read_json(receipt_path)
+    if receipt.get("status") != expected_status:
+        raise AssertionError(f"{name} status {receipt.get('status')!r} != {expected_status!r}: {receipt}")
+    if expected_status == "PASS" and proc.returncode != 0:
+        raise AssertionError(f"{name} promoter returned nonzero despite PASS: {proc.stdout}{proc.stderr}")
+    if expected_status != "PASS" and proc.returncode == 0:
+        raise AssertionError(f"{name} promoter returned zero despite {expected_status}")
+    records = _read_json(state_path) if state_path.is_file() else []
+    return {
+        "name": name,
+        "status": "PASS",
+        "expected_status": expected_status,
+        "exit_code": proc.returncode,
+        "receipt": str(receipt_path),
+        "admissions": receipt.get("admissions") or [],
+        "promotions": receipt.get("promotions") or [],
+        "recorded_learns": records,
+        "errors": receipt.get("errors") or [],
+    }
+
+
+def probe_review_memory_admission_binding(summary_path: Path) -> int:
+    suite = "review-memory-admission-binding"
+    out_root = summary_path.parent / suite
+    if out_root.exists():
+        shutil.rmtree(out_root)
+    out_root.mkdir(parents=True)
+    red_child = _memory_admission_selection(
+        decision="GENERATION_2_SELECTED",
+        selected_generation=2,
+        prefix="red",
+    )
+    blue_parent = _memory_admission_selection(
+        decision="PARENT_RETAINED",
+        selected_generation=1,
+        prefix="blue",
+    )
+    no_eligible = _memory_admission_selection(
+        decision="NO_ELIGIBLE_PROMOTION",
+        selected_generation=None,
+        prefix="blue",
+    )
+    variants = [
+        _run_memory_admission_variant(
+            out_root,
+            name="red-admitted-blue-parent-retained",
+            teams={"red": red_child, "blue": blue_parent},
+            expected_status="PASS",
+        ),
+        _run_memory_admission_variant(
+            out_root,
+            name="generation-one-retention-no-write",
+            teams={"red": blue_parent, "blue": no_eligible},
+            expected_status="PASS",
+        ),
+        _run_memory_admission_variant(
+            out_root,
+            name="marker-only-wrong-digest-recall",
+            teams={"red": red_child, "blue": blue_parent},
+            expected_status="BLOCKED",
+            tamper_recall=True,
+        ),
+        _run_memory_admission_variant(
+            out_root,
+            name="admission-generation-mismatch",
+            teams={
+                "red": _memory_admission_selection(
+                    decision="GENERATION_2_SELECTED",
+                    selected_generation=1,
+                    prefix="red",
+                ),
+                "blue": blue_parent,
+            },
+            expected_status="BLOCKED",
+        ),
+    ]
+    red_only = variants[0]
+    retained = variants[1]
+    wrong_digest = variants[2]
+    mismatch = variants[3]
+    red_promotions = red_only["promotions"]
+    retained_promotions = retained["promotions"]
+    wrong_digest_promotion = (wrong_digest["promotions"] or [{}])[0]
+    checks = [
+        {
+            "name": "per_team_admission_controls_writes",
+            "status": "PASS"
+            if len(red_promotions) == 1
+            and red_promotions[0].get("team") == "red"
+            and len(red_only["recorded_learns"]) == 1
+            and "team=blue" not in json.dumps(red_only["recorded_learns"], sort_keys=True)
+            else "FAIL",
+            "variant": red_only["receipt"],
+        },
+        {
+            "name": "generation_one_retention_does_not_pair_with_generation_two_fitness",
+            "status": "PASS"
+            if not retained_promotions
+            and not retained["recorded_learns"]
+            and all(admission.get("admitted") is False for admission in retained["admissions"])
+            else "FAIL",
+            "variant": retained["receipt"],
+        },
+        {
+            "name": "recall_requires_marker_team_artifact_and_evidence_digest",
+            "status": "PASS"
+            if (wrong_digest_promotion.get("recall") or {}).get("marker_found") is False
+            and any("artifact digest" in error and "evidence digest" in error for error in wrong_digest["errors"])
+            else "FAIL",
+            "variant": wrong_digest["receipt"],
+        },
+        {
+            "name": "admission_decision_generation_mismatch_blocks_before_memory_write",
+            "status": "PASS"
+            if not mismatch["recorded_learns"]
+            and any("expected generation 2" in error for error in mismatch["errors"])
+            else "FAIL",
+            "variant": mismatch["receipt"],
+        },
+    ]
+    failed = [item for item in checks if item.get("status") != "PASS"]
+    if failed:
+        raise AssertionError(f"memory admission binding checks failed: {failed}")
+    return _emit(
+        summary_path,
+        _summary(
+            suite=suite,
+            live="recording_memory_adapter_with_campaign_receipt_readback",
+            checks=checks,
+            artifacts={
+                "memory_admission_binding_root": str(out_root),
+                "red_admitted_blue_parent_retained_receipt": red_only["receipt"],
+                "generation_one_retention_receipt": retained["receipt"],
+                "wrong_digest_recall_receipt": wrong_digest["receipt"],
+                "generation_mismatch_receipt": mismatch["receipt"],
+            },
+            claims_proves=[
+                "Memory promotion writes require a validated per-team generation-2 admission decision.",
+                "Parent retention and no-eligible-promotion decisions do not write Memory records or pair selected parent artifacts with generation-2 fitness evidence.",
+                "Recall validation binds marker, team, artifact digest, and fitness evidence digest on the same recalled item.",
+            ],
+            claims_does_not_prove=[
+                "live Memory service ranking quality",
+                "cross-battle automatic reuse",
+                "fresh paid-provider campaign regeneration",
+            ],
+        ),
+    )
+
+
 def probe_provider_tau_memory_promotion(summary_path: Path, *, proof_root: str | None) -> int:
     suite = "provider-tau-memory-promotion"
     out_root = Path(proof_root) if proof_root else Path(
@@ -2499,7 +2773,7 @@ def probe_provider_tau_memory_promotion(summary_path: Path, *, proof_root: str |
         {"name": "memory_promotion_receipt_passed", "status": "PASS" if receipt.get("status") == "PASS" else "FAIL", "receipt": str(receipt_path)},
         {"name": "two_team_promotions_written", "status": "PASS" if {p.get("team") for p in promotions} == {"red", "blue"} else "FAIL", "teams": sorted(p.get("team") for p in promotions)},
         {"name": "learn_commands_succeeded", "status": "PASS" if all((p.get("learn") or {}).get("exit_code") == 0 for p in promotions) else "FAIL"},
-        {"name": "recall_items_return_markers", "status": "PASS" if all((p.get("recall") or {}).get("marker_found") is True for p in promotions) else "FAIL"},
+        {"name": "recall_items_return_bound_markers", "status": "PASS" if all((p.get("recall") or {}).get("bound_item_found") is True for p in promotions) else "FAIL"},
         {"name": "campaign_receipt_hash_bound", "status": "PASS" if receipt.get("campaign_receipt_sha256") else "FAIL", "campaign_receipt": str(campaign)},
     ]
     failed = [item for item in checks if item["status"] != "PASS"]
@@ -2518,7 +2792,7 @@ def probe_provider_tau_memory_promotion(summary_path: Path, *, proof_root: str |
             },
             claims_proves=[
                 "Selected provider/Tau Red and Blue lineage children were written through the Memory skill.",
-                "Both promoted lessons were independently recalled from Memory by marker-bearing item text.",
+                "Both promoted lessons were independently recalled from Memory with marker, team, artifact digest, and fitness evidence digest on the same item.",
             ],
             claims_does_not_prove=[
                 "automatic future strategy reuse",
@@ -2757,6 +3031,8 @@ def main() -> int:
             return probe_review_broadcast_required_evidence(args.summary)
         if args.suite == "review-commentary-provenance":
             return probe_review_commentary_provenance(args.summary)
+        if args.suite == "review-memory-admission-binding":
+            return probe_review_memory_admission_binding(args.summary)
         if args.suite == "provider-tau-memory-promotion":
             return probe_provider_tau_memory_promotion(args.summary, proof_root=args.proof_root)
         if args.suite == "current-status-adaptive-lineage-receipt":

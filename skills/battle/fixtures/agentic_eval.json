@@ -102,7 +102,15 @@
     },
     {
       "id": "battle.memory.provider_tau_promotion",
-      "description": "Selected provider/Tau Red and Blue lineage children are durably written through the Memory skill and independently recalled by marker-bearing item text.",
+      "description": "Selected provider/Tau Red and Blue lineage children are durably written through the Memory skill only after per-team admission and independently recalled by marker, team, artifact digest, and fitness evidence digest.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
+    },
+    {
+      "id": "battle.memory.admission_binding",
+      "description": "Memory promotion writes require a validated per-team admission decision, generation-correct selected artifact and fitness evidence, and recall readback binding marker, team, artifact digest, and evidence digest on the same recalled item.",
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
@@ -408,8 +416,22 @@
       "criticality": "critical",
       "failure_modes": [
         "selected lineage is evaluated but never written to Memory",
-        "recall proof matches only query metadata instead of stored item text",
+        "recall proof matches marker text without binding team, artifact digest, and fitness evidence digest",
         "Battle writes around the Memory skill"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "memory.admission_binding",
+      "claim_id": "battle.memory.admission_binding",
+      "seam_type": "memory/write-readback",
+      "criticality": "critical",
+      "failure_modes": [
+        "campaign success promotes both teams even when only one team has an admitted selection",
+        "parent retention pairs a generation-1 selected artifact with generation-2 fitness evidence",
+        "marker-only recall passes despite wrong artifact or evidence digest"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -989,6 +1011,39 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/provider-tau-memory-promotion.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "review-memory-admission-binding",
+      "category": "review-memory-admission-binding",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.memory.admission_binding"
+      ],
+      "seams": [
+        "memory.admission_binding"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py review-memory-admission-binding --summary /tmp/battle-agentic-evals/review-memory-admission-binding.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=review-memory-admission-binding"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/review-memory-admission-binding.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800
