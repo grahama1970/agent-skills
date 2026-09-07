@@ -156,8 +156,7 @@ return {band_position:getComputedStyle(band).position, band_height:band.getBound
         raise
     finally:
         # The window/tab was created by this test, never the human's project tab.
-        if result.get('passed'):
-            run(SURF, 'tab.close', tab, '--no-screenshot')
+        run(SURF, 'tab.close', tab, '--no-screenshot')
 
 
 def main():

@@ -217,7 +217,7 @@ def main():
                 except ProcessLookupError:
                     result['cleanup_already_exited'] = True
             process.wait(timeout=10)
-        if tab and result.get('status') == 'PASS': run(str(SURF), 'tab.close', tab)
+        if tab: run(str(SURF), 'tab.close', tab)
         result['tab_id'] = tab
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(json.dumps(result, indent=2) + '\n')

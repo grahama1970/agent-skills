@@ -189,7 +189,7 @@ def main():
                     result['debugger_cleanup'] = api('/api/debugger', debug_url, {'action': 'terminate', 'slide_id': debug_slide, 'session_id': session['vscodeSessionId'], 'stop_sequence': session['stopSequence']}, {'X-Pitchdeck-Control': '1'})
             except Exception as cleanup_error:
                 result['cleanup_error'] = str(cleanup_error)
-        if tab and result.get('status') == 'PASS': command(str(SURF), 'tab.close', tab)
+        if tab: command(str(SURF), 'tab.close', tab)
         result['tab_id'] = tab
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(json.dumps(result, indent=2) + '\n')

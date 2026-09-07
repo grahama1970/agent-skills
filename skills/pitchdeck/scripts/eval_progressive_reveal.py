@@ -7,20 +7,27 @@ import hashlib
 import json
 import re
 import shutil
+import signal
+import sys
 import subprocess
 import time
 import zipfile
 from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
 from xml.etree import ElementTree as ET
 from eval_editing import SKILL, SURF, BASE, command, api
 
 ROOT = Path('/mnt/storage12tb/skills/pitchdeck/outputs/progressive-reveal/browser')
 
 def main():
-    p = argparse.ArgumentParser(); p.add_argument('--out', type=Path, required=True); p.add_argument('--negative', action='store_true'); args = p.parse_args()
+    p = argparse.ArgumentParser(); p.add_argument('--out', type=Path, required=True); p.add_argument('--negative', action='store_true'); p.add_argument('--cleanup-probe', choices=['success','failure','terminate']); args = p.parse_args()
     os.environ.setdefault('SPARTA_PUBLIC_ROOT', '/mnt/storage12tb/skills/pitchdeck/sources/sparta-public')
     run = ROOT / str(time.time_ns()); run.mkdir(parents=True)
     result = {'live': True, 'mocked': False, 'run': str(run), 'checks': []}; tab = None
+    def terminate(signum, _frame):
+        result.update(status='INTERRUPTED', signal=signum)
+        raise SystemExit(128 + signum)
+    signal.signal(signal.SIGTERM, terminate)
     try:
         source = run / 'document.json'
         doc = json.loads(Path('/mnt/storage12tb/skills/pitchdeck/outputs/ticket-1278/approved.document.json').read_text())
@@ -60,7 +67,13 @@ def main():
             check('asset bytes preserved',assets=={str(f):hashlib.sha256(f.read_bytes()).hexdigest() for f in (output/'assets').glob('*') if f.is_file()})
         if args.negative:
             cas_negatives(); result['status']='PASS'; return
+        live = json.loads(command(str(SURF),'tab.list','--json'))
+        leftovers = [t['id'] for t in live if t.get('url','').startswith(BASE+'/') and parse_qs(urlsplit(t['url']).query).get('deck',[''])[0].startswith('/reveal-eval-')]
+        assert not leftovers, ('previous reveal test tabs must be closed before creating another', leftovers)
         created=command(str(SURF),'window.new',BASE+'/?deck='+url,'--unfocused','--width','1800','--height','1100');tab=re.search(r'\(tab (\d+)\)',created).group(1);result['tab_id']=tab
+        if args.cleanup_probe == 'failure': raise RuntimeError('injected failure after owned window creation')
+        if args.cleanup_probe == 'terminate': os.kill(os.getpid(), signal.SIGTERM)
+        if args.cleanup_probe == 'success': result['status']='PASS'; return
         def js(code): return json.loads(command(str(SURF),'js','return (async()=>{'+code+'})()','--tab-id',tab,'--no-activate'))
         def key(k):
             js('document.activeElement?.blur();return true')
@@ -149,10 +162,22 @@ def main():
     except Exception as e:
         result.update(status='FAIL',error=str(e));raise
     finally:
-        if tab:
-            if result.get('status') == 'PASS': command(str(SURF),'tab.close',tab)
-            else: result['retained_tab_id']=tab
-        args.out.parent.mkdir(parents=True,exist_ok=True);args.out.write_text(json.dumps(result,indent=2));(run/'result.json').write_text(json.dumps(result,indent=2));print(json.dumps(result))
+        active_error = sys.exc_info()[0] is not None
+        cleanup_error = None
+        try:
+            if tab:
+                live = json.loads(command(str(SURF),'tab.list','--json'))
+                if any(str(t['id']) == tab for t in live):
+                    command(str(SURF),'tab.close','--tab-id',tab)
+                live = json.loads(command(str(SURF),'tab.list','--json'))
+                assert not any(str(t['id']) == tab for t in live), 'owned test tab remains open'
+                result['tab_closed'] = True
+        except Exception as error:
+            result.update(status='FAIL', cleanup_error=str(error))
+            cleanup_error = error
+        finally:
+            args.out.parent.mkdir(parents=True,exist_ok=True);args.out.write_text(json.dumps(result,indent=2));(run/'result.json').write_text(json.dumps(result,indent=2));print(json.dumps(result))
+        if cleanup_error is not None and not active_error: raise cleanup_error
 
 _P='{http://schemas.openxmlformats.org/presentationml/2006/main}'
 

@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "skill": "pitchdeck",
+  "trials": 2,
+  "proof_scope": "One owned Chrome window at a time; live tab-list read-back proves cleanup after normal return, an injected exception, and SIGTERM. Does not prove cleanup after SIGKILL or browser/host failure.",
+  "cases": [
+    {"name":"normal-return-closes-window","type":"positive","real_world":true,
+     "command":["python3","../scripts/eval_progressive_reveal.py","--cleanup-probe","success","--out","/tmp/pitchdeck-window-cleanup.json"],"timeout_seconds":120,
+     "expected":{"exit_code":0,"artifacts":[{"path":"/tmp/pitchdeck-window-cleanup.json","json_pointer":"/tab_closed","equals":true}]}},
+    {"name":"exception-closes-window","type":"adversarial","real_world":true,
+     "command":["python3","../scripts/eval_progressive_reveal.py","--cleanup-probe","failure","--out","/tmp/pitchdeck-window-cleanup.json"],"timeout_seconds":120,
+     "expected":{"exit_code":1,"artifacts":[{"path":"/tmp/pitchdeck-window-cleanup.json","json_pointer":"/tab_closed","equals":true}]}},
+    {"name":"termination-closes-window","type":"adversarial","real_world":true,
+     "command":["python3","../scripts/eval_progressive_reveal.py","--cleanup-probe","terminate","--out","/tmp/pitchdeck-window-cleanup.json"],"timeout_seconds":120,
+     "expected":{"exit_code":143,"artifacts":[{"path":"/tmp/pitchdeck-window-cleanup.json","json_pointer":"/tab_closed","equals":true}]}}
+  ]
+}
