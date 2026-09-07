@@ -26,6 +26,7 @@ explicitly synthetic label on a real captured turn, not a human quality judgment
 | question-turn-requires-answer | terminal question turns require `answer` and render it before status metadata |
 | collab-requires-peer-acceptance | collaborator-mediated closure requires validated JSON question/answer packets, a peer acceptance receipt, and envelope-compatible closure |
 | done-receipt-binding | unrelated text, malformed JSON, unknown receipt schemas, failed receipts, and non-closed ticket receipts cannot authorize `state=done`; `ticket.closure_receipt.v1` can |
+| status-preflight-parity | `run.sh preflight` uses the same stop-boundary checker and matches pass/reject reason codes before terminal retry is consumed |
 | escalation-ladder-data-contract | escalation is pydantic-gated: Brave parent evidence before cross-family Ask, and Brave+Ask typed parents before WebGPT |
 | task-scope-and-acceptance | injected out-of-scope tool calls denied; task still finishes |
 | feedback-and-session-isolation | independent sessions, capture CLI, Memory store/recall |

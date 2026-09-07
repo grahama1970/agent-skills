@@ -15,6 +15,17 @@ case "$cmd" in
   guard)
     uv run --with pydantic python3 "$SKILL_DIR/scripts/continuation_guard_schema.py" "$@"
     ;;
+  preflight)
+    checker="$(realpath "$SKILL_DIR")/../../extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs"
+    if [[ ! -f "$checker" ]]; then checker="$HOME/.pi/agent/extensions/lazy-report-shame-shame-shame/status-json-check.mjs"; fi
+    input="${1:--}"
+    if [[ "$input" == "-" ]]; then
+      LRSSS_FORCE_STATUS=1 node "$checker"
+    else
+      [[ -f "$input" ]] || { echo "preflight input file not found: $input" >&2; exit 2; }
+      LRSSS_FORCE_STATUS=1 node "$checker" < "$input"
+    fi
+    ;;
   failures)
     history="$(realpath "$SKILL_DIR")/../../extensions/pi/lazy-report-shame-shame-shame/failure-history.mjs"
     if [[ ! -f "$history" ]]; then history="$HOME/.pi/agent/extensions/lazy-report-shame-shame-shame/failure-history.mjs"; fi
@@ -35,6 +46,7 @@ Usage:
   run.sh audio status [--extension-dir DIR]
   run.sh guard validate <file.json|->
   run.sh guard write <out.json> <target> <next_command>
+  run.sh preflight <status-response.md|->
   run.sh failures [--all | --session-id ID] [--limit 1..200] [--json]
   run.sh path
 

@@ -51,6 +51,7 @@ The deterministic PHART view is retained at:
 ```bash
 uv run --with pydantic python3 skills/shame/scripts/immutable_goal_schema.py validate skills/shame/immutable_goal.json
 python3 skills/shame/scripts/eval-done-receipt-binding.py
+python3 skills/shame/scripts/eval-status-preflight.py
 python3 skills/shame/scripts/eval-escalation-ladder.py
 skills/shame/sanity.sh --output /tmp/shame-agentic-eval.json
 ```

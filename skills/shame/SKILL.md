@@ -63,6 +63,9 @@ checkout's `extensions/pi/lazy-report-shame-shame-shame/README.md`.
 
 Agents can read the same journal with the read-only `shame_failures` tool
 (`limit`, optional `all`) or `skills/shame/run.sh failures --json`.
+Use `skills/shame/run.sh preflight <candidate.md|->` to run the same stop-boundary
+status checker before spending a terminal retry; preflight never authorizes final
+completion, because the final stop revalidates current proof bytes.
 `/shame-task` and `/lazy-report-shame-shame-shame` remain compatibility commands.
 
 ## Stop-boundary behavior

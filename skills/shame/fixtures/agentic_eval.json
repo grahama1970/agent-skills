@@ -127,6 +127,14 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "shame.status_preflight_parity",
+      "description": "Read-only shame preflight uses the same stop-boundary checker and matches reason codes before terminal retries are consumed.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "cases": [
@@ -557,6 +565,36 @@
           "unknown JSON proof schema is rejected",
           "READY agentic eval receipt can authorize a matching verified item",
           "ticket closure receipt can authorize a close readback"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "AssertionError"
+        ]
+      }
+    },
+    {
+      "name": "status-preflight-parity",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.status_preflight_parity"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--with",
+        "pydantic",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-status-preflight.py"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "lazy_report_shame.status_preflight_parity_eval.v1",
+          "preflight uses the stop-boundary checker",
+          "mutated proof bytes reject before stop with matching reason codes"
         ],
         "stdout_excludes": [
           "Traceback",
