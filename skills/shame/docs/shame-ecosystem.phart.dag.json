@@ -1,0 +1,168 @@
+{
+  "schema_version": "ask.dag.v1",
+  "graph_id": "shame-deterministic-escalation-ladder",
+  "description": "Shame stop-boundary pipeline: pydantic data gate then deterministic escalation commands, not prose.",
+  "max_concurrency": 1,
+  "nodes": [
+    {
+      "id": "terminal_stop_no_tools",
+      "type": "skill.run",
+      "depends_on": [],
+      "input": {
+        "skill": "shame",
+        "contract": "only terminal stop messages are checked"
+      }
+    },
+    {
+      "id": "extract_final_pi_agent_status_json",
+      "type": "skill.run",
+      "depends_on": [
+        "terminal_stop_no_tools"
+      ],
+      "input": {
+        "script": "extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs",
+        "skill": "shame"
+      }
+    },
+    {
+      "id": "reject_missing_duplicate_or_prose_only",
+      "type": "skill.run",
+      "depends_on": [
+        "extract_final_pi_agent_status_json"
+      ],
+      "input": {
+        "contract": "missing JSON, duplicate keys, or prose-only status cannot pass",
+        "skill": "shame"
+      }
+    },
+    {
+      "id": "pydantic_pi_agent_status_v1",
+      "type": "skill.run",
+      "depends_on": [
+        "reject_missing_duplicate_or_prose_only"
+      ],
+      "input": {
+        "script": "skills/shame/scripts/agent_status_schema.py",
+        "skill": "shame"
+      }
+    },
+    {
+      "id": "continuing_requires_not_done_next_command",
+      "type": "skill.run",
+      "depends_on": [
+        "pydantic_pi_agent_status_v1"
+      ],
+      "input": {
+        "state": "continuing",
+        "required": "not_done[].next_command",
+        "skill": "shame"
+      }
+    },
+    {
+      "id": "needs_human_requires_action_reason",
+      "type": "skill.run",
+      "depends_on": [
+        "pydantic_pi_agent_status_v1"
+      ],
+      "input": {
+        "state": "needs_human",
+        "required": "needs_human.action + reason",
+        "skill": "shame"
+      }
+    },
+    {
+      "id": "done_requires_local_proof_files",
+      "type": "skill.run",
+      "depends_on": [
+        "pydantic_pi_agent_status_v1"
+      ],
+      "input": {
+        "state": "done",
+        "required": "verified[] backed by proof[]",
+        "skill": "shame"
+      }
+    },
+    {
+      "id": "compile_valid_status_to_command",
+      "type": "skill.run",
+      "depends_on": [
+        "continuing_requires_not_done_next_command",
+        "needs_human_requires_action_reason",
+        "done_requires_local_proof_files"
+      ],
+      "input": {
+        "script": "extensions/pi/lazy-report-shame-shame-shame/compile-status-command.mjs",
+        "skill": "shame"
+      }
+    },
+    {
+      "id": "rung0_brave_search_web_count5",
+      "type": "dogpile.search",
+      "depends_on": [
+        "compile_valid_status_to_command"
+      ],
+      "input": {
+        "state": "needs_brave_search",
+        "command": "skills/brave-search/run.sh web <query> --count 5"
+      }
+    },
+    {
+      "id": "rung1_ask_cross_family_api_model",
+      "type": "ask.oracle",
+      "depends_on": [
+        "rung0_brave_search_web_count5"
+      ],
+      "input": {
+        "state": "needs_agent",
+        "requires": "brave-search parent_ref; OpenAI->claude-fable-low, Claude->gpt-5.5-high"
+      }
+    },
+    {
+      "id": "rung2_ask_webgpt_browser_after_parents",
+      "type": "ask.oracle",
+      "depends_on": [
+        "rung1_ask_cross_family_api_model"
+      ],
+      "input": {
+        "state": "needs_webgpt",
+        "requires": "brave-search and ask parent_refs"
+      }
+    },
+    {
+      "id": "render_answer_then_status_from_data",
+      "type": "skill.run",
+      "depends_on": [
+        "compile_valid_status_to_command"
+      ],
+      "input": {
+        "contract": "visible Status Report rendered from validated data",
+        "skill": "shame"
+      }
+    },
+    {
+      "id": "record_failure_history_jsonl",
+      "type": "skill.run",
+      "depends_on": [
+        "reject_missing_duplicate_or_prose_only",
+        "pydantic_pi_agent_status_v1"
+      ],
+      "input": {
+        "path": "/mnt/storage12tb/skills/shame/failures/events.jsonl",
+        "skill": "shame"
+      }
+    },
+    {
+      "id": "retained_agentic_eval_receipt",
+      "type": "skill.run",
+      "depends_on": [
+        "rung2_ask_webgpt_browser_after_parents",
+        "render_answer_then_status_from_data",
+        "record_failure_history_jsonl"
+      ],
+      "input": {
+        "case": "escalation-ladder-data-contract",
+        "skill": "shame"
+      }
+    }
+  ]
+}

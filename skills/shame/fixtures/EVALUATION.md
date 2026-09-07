@@ -25,6 +25,8 @@ explicitly synthetic label on a real captured turn, not a human quality judgment
 | data-not-prose-decides | misleading prose cannot override valid status data |
 | question-turn-requires-answer | terminal question turns require `answer` and render it before status metadata |
 | collab-requires-peer-acceptance | collaborator-mediated closure requires validated JSON question/answer packets, a peer acceptance receipt, and envelope-compatible closure |
+| done-receipt-binding | unrelated text, malformed JSON, unknown receipt schemas, failed receipts, and non-closed ticket receipts cannot authorize `state=done`; `ticket.closure_receipt.v1` can |
+| escalation-ladder-data-contract | escalation is pydantic-gated: Brave parent evidence before cross-family Ask, and Brave+Ask typed parents before WebGPT |
 | task-scope-and-acceptance | injected out-of-scope tool calls denied; task still finishes |
 | feedback-and-session-isolation | independent sessions, capture CLI, Memory store/recall |
 | audio-install-preserves-reference | actual reference installed; bad replacement refused |

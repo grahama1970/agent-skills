@@ -27,8 +27,8 @@ Usage:
   gh-ticket-tools.sh block ISSUE --reason FILE [--release] [--repo owner/name] [--dry-run]
   gh-ticket-tools.sh unblock ISSUE --reason FILE [--agent AGENT] [--repo owner/name] [--dry-run]
   gh-ticket-tools.sh release ISSUE --agent AGENT --reason FILE [--repo owner/name] [--dry-run]
-  gh-ticket-tools.sh close ISSUE --proof FILE [--review FILE] [--reason completed|not-planned] [--repo owner/name] [--dry-run]
-  gh-ticket-tools.sh close-duplicate ISSUE --duplicate-of ISSUE --proof FILE [--review FILE] [--repo owner/name] [--dry-run]
+  gh-ticket-tools.sh close ISSUE --proof FILE [--review FILE] [--receipt FILE] [--reason completed|not-planned] [--repo owner/name] [--dry-run]
+  gh-ticket-tools.sh close-duplicate ISSUE --duplicate-of ISSUE --proof FILE [--review FILE] [--receipt FILE] [--repo owner/name] [--dry-run]
   gh-ticket-tools.sh proof-template [proof|blocker|progress|review]
 
 Agent workflow:
@@ -107,6 +107,30 @@ require_file() {
     local file="$2"
     [[ -f "$file" ]] || die "$label file not found: $file"
     [[ -s "$file" ]] || die "$label file is empty: $file"
+}
+
+write_closure_receipt() {
+    local receipt="$1" action="$2" issue="$3" repo="$4" reason="$5" proof="$6" state="$7"
+    [[ "$DRY_RUN" == "1" ]] && return 0
+    mkdir -p "$(dirname "$receipt")"
+    RECEIPT="$receipt" ACTION="$action" ISSUE="$issue" REPO="$repo" REASON="$reason" PROOF="$proof" STATE="$state" python3 - <<'PY'
+import hashlib, json, os
+from datetime import datetime, timezone
+from pathlib import Path
+proof = Path(os.environ["PROOF"])
+data = {
+    "schema": "ticket.closure_receipt.v1",
+    "action": os.environ["ACTION"],
+    "issue": os.environ["ISSUE"],
+    "repo": os.environ["REPO"],
+    "reason": os.environ["REASON"],
+    "state": os.environ["STATE"],
+    "proof_path": str(proof),
+    "proof_sha256": "sha256:" + hashlib.sha256(proof.read_bytes()).hexdigest(),
+    "closed_at": datetime.now(timezone.utc).isoformat(),
+}
+Path(os.environ["RECEIPT"]).write_text(json.dumps(data, indent=2) + "\n")
+PY
 }
 
 issue_target_paths() {
@@ -490,6 +514,7 @@ cmd_close() {
     local issue="$1"; shift
     local proof=""
     local review=""
+    local receipt=""
     local reason="completed"
     while [[ $# -gt 0 ]]; do
         parse_common_flag "$@"
@@ -501,6 +526,9 @@ cmd_close() {
             --review)
                 [[ $# -ge 2 ]] || die "--review requires a file"
                 review="$2"; shift 2 ;;
+            --receipt)
+                [[ $# -ge 2 ]] || die "--receipt requires a file"
+                receipt="$2"; shift 2 ;;
             --reason)
                 [[ $# -ge 2 ]] || die "--reason requires a value"
                 reason="$(normalize_close_reason "$2")"; shift 2 ;;
@@ -519,13 +547,19 @@ cmd_close() {
     # Keep the lease if close fails. Recovery can retry the same proof without
     # reacquiring an issue that became unleased in the old failure window.
     run_gh gh issue close "$issue" "${repo_args[@]}" --reason "$reason"
+    local observed_state="CLOSED"
     if [[ "$DRY_RUN" != "1" ]]; then
-        local observed_state
         observed_state="$(gh issue view "$issue" "${repo_args[@]}" --json state --jq '.state')"
         [[ "$observed_state" == "CLOSED" ]] || die "close readback is not CLOSED; lease retained"
     fi
     run_gh gh issue edit "$issue" "${repo_args[@]}" --remove-label maintainer-active
-    json_ok close issue "$issue" reason "$reason" proof "$proof"
+    if [[ "$DRY_RUN" != "1" ]]; then
+        local repo_name="${repo_args[1]:-}"
+        [[ -n "$repo_name" ]] || repo_name="$(gh repo view --json nameWithOwner --jq '.nameWithOwner')"
+        [[ -n "$receipt" ]] || receipt=".artifacts/ticket/issue-${issue}-closure-receipt.json"
+        write_closure_receipt "$receipt" close "$issue" "$repo_name" "$reason" "$proof" "$observed_state"
+    fi
+    json_ok close issue "$issue" reason "$reason" proof "$proof" receipt "$receipt"
 }
 
 cmd_close_duplicate() {
@@ -534,6 +568,7 @@ cmd_close_duplicate() {
     local duplicate_of=""
     local proof=""
     local review=""
+    local receipt=""
     while [[ $# -gt 0 ]]; do
         parse_common_flag "$@"
         if [[ "$PARSED" -gt 0 ]]; then shift "$PARSED"; continue; fi
@@ -547,6 +582,9 @@ cmd_close_duplicate() {
             --review)
                 [[ $# -ge 2 ]] || die "--review requires a file"
                 review="$2"; shift 2 ;;
+            --receipt)
+                [[ $# -ge 2 ]] || die "--receipt requires a file"
+                receipt="$2"; shift 2 ;;
             *) die "unknown close-duplicate arg: $1" ;;
         esac
     done
@@ -566,7 +604,16 @@ cmd_close_duplicate() {
     else
         run_gh gh issue close "$issue" "${repo_args[@]}" --reason "not planned"
     fi
-    json_ok close-duplicate issue "$issue" duplicate_of "$duplicate_of" proof "$proof"
+    local observed_state="CLOSED"
+    if [[ "$DRY_RUN" != "1" ]]; then
+        observed_state="$(gh issue view "$issue" "${repo_args[@]}" --json state --jq '.state')"
+        [[ "$observed_state" == "CLOSED" ]] || die "duplicate close readback is not CLOSED"
+        local repo_name="${repo_args[1]:-}"
+        [[ -n "$repo_name" ]] || repo_name="$(gh repo view --json nameWithOwner --jq '.nameWithOwner')"
+        [[ -n "$receipt" ]] || receipt=".artifacts/ticket/issue-${issue}-closure-receipt.json"
+        write_closure_receipt "$receipt" close-duplicate "$issue" "$repo_name" "duplicate-of-${duplicate_of}" "$proof" "$observed_state"
+    fi
+    json_ok close-duplicate issue "$issue" duplicate_of "$duplicate_of" proof "$proof" receipt "$receipt"
 }
 
 cmd_ensure_labels() {

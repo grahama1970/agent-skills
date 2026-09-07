@@ -240,6 +240,38 @@ function sha256(value: string): string {
   return "sha256:" + createHash("sha256").update(value).digest("hex");
 }
 
+function nonEmptyText(value: unknown): string | null {
+  const text = String(value ?? "").trim();
+  return text ? text : null;
+}
+
+function normalizeTriageCode(value: unknown): string | null {
+  const text = nonEmptyText(value);
+  if (!text) return null;
+  let normalized = "";
+  for (const ch of text) normalized += ch === "-" ? "_" : ch.toLowerCase();
+  return normalized;
+}
+
+function trustedGoalIdentity(status: any): string | null {
+  const goalHash = nonEmptyText(status?.goal_hash);
+  if (goalHash) return `goal_hash:${goalHash.toLowerCase()}`;
+  const goalId = nonEmptyText(status?.goal_id);
+  if (goalId) return `goal_id:${goalId}`;
+  return null;
+}
+
+function failedOperationIdentity(status: any, triage: any): string {
+  const verified = Array.isArray(status?.verified) ? status.verified : [];
+  for (const item of verified) {
+    const command = nonEmptyText(item?.command);
+    if (command) return `verified_command:${command}`;
+  }
+  const nextCommand = nonEmptyText(triage?.next_command);
+  if (nextCommand) return `triage_next_command:${nextCommand}`;
+  return "operation:unspecified";
+}
+
 function parseCheckerPayload(stdout: string, stderr: string, status: number | null): CheckResult {
   let payload: any = null;
   try { payload = JSON.parse(String(stdout || "{}")); } catch { payload = null; }
@@ -410,10 +442,13 @@ function evaluateContinuationGuard(statusState: string | undefined): CheckResult
 function statusFailureFingerprint(status: any): string | null {
   const triage = status?.failure?.triage;
   if (status?.state !== "failed" || !triage?.code) return null;
+  const goalIdentity = trustedGoalIdentity(status);
+  const triageCode = normalizeTriageCode(triage.code);
+  if (!goalIdentity || !triageCode) return null;
   return sha256([
-    status.goal_hash || status.goal_id || status.goal || "unknown-goal",
-    triage.code,
-    triage.cause || "unknown-cause",
+    goalIdentity,
+    `triage_code:${triageCode}`,
+    failedOperationIdentity(status, triage),
   ].map(String).join("\n"));
 }
 
@@ -473,6 +508,7 @@ function evaluateRepeatedFailureGuard(status: any, failureCounts: Map<string, nu
     repeatedFailure.count = 0;
     return null;
   }
+  if (fingerprint && fingerprint !== repeatedFailure.fingerprint) return null;
 
   return {
     schema: "lazy_report_shame.report_check.v2",

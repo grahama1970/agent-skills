@@ -1,0 +1,135 @@
+{
+  "schema_version": "create_architecture.delivery.v1",
+  "status": "DRAFT",
+  "route": {
+    "skill": "create-figure",
+    "mode": "executable",
+    "view": "structure",
+    "surface": "publication",
+    "reason": "Render a source-authored component/dependency graph.",
+    "instructions": "/home/graham/workspace/experiments/agent-skills/skills/create-figure/SKILL.md"
+  },
+  "request": {
+    "path": "/mnt/storage12tb/skills/create-architecture/outputs/shame-ecosystem-20260907T1205Z/request.json",
+    "sha256": "7815a65077c7d801e90b523920dee4eb153aad78925f900f0fc788ee6bba8511",
+    "bytes": 3543
+  },
+  "native_input": {
+    "path": "/mnt/storage12tb/skills/create-architecture/outputs/shame-ecosystem-20260907T1205Z/input.json",
+    "sha256": "f07a64f26e2fb820a35f71645b405ea1604dd4ac52517710fca5f5c4c05daea1",
+    "bytes": 1763
+  },
+  "artifact": {
+    "path": "/mnt/storage12tb/skills/create-architecture/outputs/shame-ecosystem-20260907T1205Z/diagram.svg",
+    "sha256": "c5ff1e8b0c3f4e7046070b2a4780457d3ccc51ef63605373dc7611a4b4d94fad",
+    "bytes": 13049
+  },
+  "preview": {
+    "path": "/mnt/storage12tb/skills/create-architecture/outputs/shame-ecosystem-20260907T1205Z/preview.html",
+    "sha256": "43afef6ee74aa5607af397e2187a45f51dacdb8ce0adfa6efab92cf52e8b10cb",
+    "bytes": 555
+  },
+  "sources": [
+    {
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/shame/run.sh",
+      "sha256": "a30a3fd2a8cd0420beec1996c17616cce9fd0bc25d0af5f0c5bf81ea437c264f",
+      "start_line": 1,
+      "end_line": 59
+    },
+    {
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/agent_status_schema.py",
+      "sha256": "bb791e530c5bcbe4e11bd6b82de7caf0870dfc0aa9bd29e0aafa48dd741af3fa",
+      "start_line": 1,
+      "end_line": 385
+    },
+    {
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/continuation_guard_schema.py",
+      "sha256": "2d57af47062a4c474d04fc7b7cda2277a74f329756cc1ffc2058c320095fc8ba",
+      "start_line": 1,
+      "end_line": 75
+    },
+    {
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/collab_acceptance_schema.py",
+      "sha256": "6e17c04721175e03bf7f6e6da8eee5b198d0a6a0bd3f6100f9c9caf70da3036d",
+      "start_line": 1,
+      "end_line": 174
+    },
+    {
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/capture-last-assistant.mjs",
+      "sha256": "8a5ed8e3e2cb6b48d1afacfd0d61a44e72877027f677937846b7c433200d7554",
+      "start_line": 1,
+      "end_line": 294
+    },
+    {
+      "path": "/home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/index.ts",
+      "sha256": "3d4f51fbe3e31c7ecc2e515fa274d562ca6fda3e47901bcee42dafd210d21c14",
+      "start_line": 1,
+      "end_line": 1250
+    },
+    {
+      "path": "/home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs",
+      "sha256": "ce77507a01df88b97df5fe3db88bbcbf001ab4c23f78baaaa18b91266843fbef",
+      "start_line": 1,
+      "end_line": 220
+    },
+    {
+      "path": "/home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/compile-status-command.mjs",
+      "sha256": "2b076bb01f534ab15ac55021ca57a60a0f1841a4d7e6632aa17379b5daed89cc",
+      "start_line": 1,
+      "end_line": 78
+    },
+    {
+      "path": "/home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/failure-history.mjs",
+      "sha256": "f2446343e7a7a780dd3caa6616ffd5d3bbc026eca961fb639f35d8126849aa4e",
+      "start_line": 1,
+      "end_line": 76
+    },
+    {
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/shame/immutable_goal.json",
+      "sha256": "d38010680ca8517c6923c16716de0ee3bd1ca3eed61c2135d2c258087e3ea170",
+      "start_line": 1,
+      "end_line": 176
+    },
+    {
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/shame/fixtures/EVALUATION.md",
+      "sha256": "c88668e87d7d9dc9389c2cef9b22b52837b5abc4c1de6f935b2a154569ad2eb8",
+      "start_line": 1,
+      "end_line": 72
+    }
+  ],
+  "commands": [
+    [
+      "/home/graham/workspace/experiments/agent-skills/skills/create-figure/run.sh",
+      "architecture",
+      "--project",
+      "/mnt/storage12tb/skills/create-architecture/outputs/.architecture-9mx29yco/input.json",
+      "--output",
+      "/mnt/storage12tb/skills/create-architecture/outputs/.architecture-9mx29yco/diagram.svg",
+      "--format",
+      "svg",
+      "--backend",
+      "graphviz"
+    ],
+    [
+      "/home/graham/workspace/experiments/agent-skills/skills/create-svg/run.sh",
+      "preview",
+      "/mnt/storage12tb/skills/create-architecture/outputs/.architecture-9mx29yco/diagram.svg",
+      "/mnt/storage12tb/skills/create-architecture/outputs/.architecture-9mx29yco/preview.html"
+    ]
+  ],
+  "created_at": "2026-09-07T12:03:24.072586Z",
+  "mocked": false,
+  "live": true,
+  "visual_review": "NOT_RUN",
+  "semantic_review": "NOT_ESTABLISHED",
+  "proof_scope": "Real renderer invocation, input/artifact hashes, current source fingerprints, and structural validation. Not semantic accuracy or visual acceptance.",
+  "limitations": [
+    "This is a component dependency view, not an execution trace.",
+    "Extension internals are summarized as one node to keep the graph within create-figure limits.",
+    "Draft only: complete the selected skill's human and visual gates before publication."
+  ],
+  "seam_validation": {
+    "kind": "source-to-diagram-draft",
+    "status": "PASS"
+  }
+}

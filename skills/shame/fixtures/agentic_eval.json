@@ -111,6 +111,22 @@
       "evidence_required": {
         "adversarial_live_e2e": true
       }
+    },
+    {
+      "id": "shame.escalation_ladder_data_contract",
+      "description": "Escalation is data-gated: brave-search parent evidence precedes a cross-family Ask model, and WebGPT requires typed brave-search plus Ask parent refs.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.done_receipt_binding",
+      "description": "Done status requires each verified claim to be backed by one valid proof record; unrelated text, malformed JSON, unknown receipt schemas, and failed receipts cannot authorize completion.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "cases": [
@@ -481,6 +497,70 @@
         "stdout_excludes": [
           "Traceback",
           "provider_error"
+        ]
+      }
+    },
+    {
+      "name": "escalation-ladder-data-contract",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.escalation_ladder_data_contract"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--with",
+        "pydantic",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-escalation-ladder.py"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "lazy_report_shame.escalation_ladder_eval.v1",
+          "needs_agent rejects missing brave-search parent_ref",
+          "needs_agent rejects same-family first Ask handler",
+          "needs_webgpt requires brave-search and ask parent_refs"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "AssertionError"
+        ]
+      }
+    },
+    {
+      "name": "done-receipt-binding",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.done_receipt_binding"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--with",
+        "pydantic",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-done-receipt-binding.py"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "lazy_report_shame.done_receipt_binding_eval.v1",
+          "unrelated text cannot authorize done",
+          "malformed JSON proof is rejected",
+          "unknown JSON proof schema is rejected",
+          "READY agentic eval receipt can authorize a matching verified item",
+          "ticket closure receipt can authorize a close readback"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "AssertionError"
         ]
       }
     }

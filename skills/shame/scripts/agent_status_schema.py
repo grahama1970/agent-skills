@@ -69,14 +69,32 @@ def import_collab_acceptance() -> Any:
     return import_module(Path(__file__).with_name("collab_acceptance_schema.py"), "collab_acceptance_schema")
 
 
-def validate_known_receipt(path: Path, text: str) -> None:
+def parse_proof_json(path: Path, text: str) -> dict[str, Any] | None:
+    stripped = text.strip()
+    if not stripped:
+        return None
     try:
-        data = json.loads(text)
+        data = json.loads(stripped)
     except Exception:
-        return
+        if stripped[:1] in "[{":
+            raise PydanticCustomError(
+                "proof_json_malformed",
+                "JSON-looking proof is malformed and cannot authorize done",
+                {"proof": str(path)},
+            )
+        return None
     if not isinstance(data, dict):
-        return
+        raise PydanticCustomError("proof_json_not_object", "JSON proof must be an object", {"proof": str(path)})
+    return data
+
+
+def validate_known_receipt(path: Path, text: str) -> dict[str, Any] | None:
+    data = parse_proof_json(path, text)
+    if data is None:
+        return None
     schema = data.get("schema")
+    if not schema:
+        raise PydanticCustomError("proof_json_schema_missing", "JSON proof must declare a known schema", {"proof": str(path)})
     if schema == "agentic_evals.report.v2":
         counts = data.get("outcome_counts") or {}
         if data.get("readiness") != "READY" or any(counts.get(k, 0) for k in ("FAIL", "BLOCKED", "NOT_TESTED")):
@@ -97,12 +115,61 @@ def validate_known_receipt(path: Path, text: str) -> None:
     elif schema == "pi.receipt_envelope.v1":
         import_receipt_envelope().ReceiptEnvelope.model_validate(data)
     elif schema == "debugger.proof.v1":
-        if not any(k in data for k in ("breakpoints", "frames", "locals")):
+        if not any(data.get(k) for k in ("breakpoints", "frames", "locals")):
             raise PydanticCustomError(
                 "debugger_proof_missing_runtime_evidence",
                 "debugger proof has no breakpoint/frame/local evidence",
                 {"proof": str(path)},
             )
+    elif schema == "ticket.closure_receipt.v1":
+        if data.get("action") not in {"close", "close-duplicate"} or data.get("state") != "CLOSED":
+            raise PydanticCustomError(
+                "ticket_closure_receipt_not_closed",
+                "ticket closure receipt must record a CLOSED issue",
+                {"proof": str(path)},
+            )
+        if not data.get("issue") or not data.get("repo") or not data.get("proof_sha256"):
+            raise PydanticCustomError(
+                "ticket_closure_receipt_incomplete",
+                "ticket closure receipt must bind issue, repo, and proof_sha256",
+                {"proof": str(path)},
+            )
+    else:
+        raise PydanticCustomError(
+            "proof_schema_unsupported",
+            "JSON proof schema is not an accepted completion authority",
+            {"proof": str(path), "schema": str(schema)},
+        )
+    return data
+
+
+def receipt_supports_verified(data: dict[str, Any], item: "VerifiedItem") -> bool:
+    schema = data.get("schema")
+    if schema == "agentic_evals.report.v2":
+        if item.result not in {str(data.get("readiness")), "PASS"}:
+            return False
+        for case in data.get("cases") or []:
+            if not isinstance(case, dict):
+                continue
+            argv = " ".join(str(part) for part in case.get("argv") or [])
+            if item.command in argv and case.get("outcome") == "PASS":
+                return True
+        return False
+    if schema == "lazy_report_shame.report_check.v2":
+        return item.command in {"status-json-check", "lazy_report_shame.report_check.v2"} and item.result == "pass"
+    if schema == "lazy_report_shame.collab_acceptance.v1":
+        return data.get("verified_command") == item.command and data.get("verified_result") == item.result
+    if schema == "ticket.closure_receipt.v1":
+        command_text = f"{data.get('action')} {data.get('repo')}#{data.get('issue')} {data.get('proof_path', '')}"
+        return item.command in command_text and item.result == data.get("state")
+    if schema in {"pi.receipt_envelope.v1", "debugger.proof.v1"}:
+        text = json.dumps(data, sort_keys=True)
+        return item.command in text and item.result in text
+    return False
+
+
+def artifact_supports_verified(text: str, item: "VerifiedItem") -> bool:
+    return item.command.startswith(("read ", "inspect ")) and item.result in text
 
 
 class ParentRef(BaseModel):
@@ -167,18 +234,62 @@ class NeedsBraveSearch(BaseModel):
     queries: list[str] = Field(min_length=1)
 
 
+def has_parent_producer(refs: list[ParentRef], producer: str) -> bool:
+    return any(ref.expected_producer == producer for ref in refs)
+
+
 class NeedsAgent(BaseModel):
-    """Cross-provider-family fast single-call when the project agent is spiraling."""
+    """Cross-provider-family fast single-call after brave-search evidence exists."""
     model_config = ConfigDict(extra="forbid")
-    handler: str = Field(min_length=1, description="Cross-family handler, e.g. claude-fable-low")
+    project_agent_family: Literal["openai", "claude"]
+    handler: str = Field(min_length=1, description="Cross-family handler, e.g. claude-fable-low or gpt-5.5-high")
     question: str = Field(min_length=1)
+    parent_refs: list[ParentRef] = Field(min_length=1, description="Must include the brave-search receipt that failed to unblock")
+
+    @model_validator(mode="after")
+    def enforce_cross_family_after_brave(self) -> "NeedsAgent":
+        if not has_parent_producer(self.parent_refs, "brave-search"):
+            raise PydanticCustomError(
+                "needs_agent_requires_brave_parent",
+                "state=needs_agent requires a typed brave-search parent_ref",
+                {"expected_producer": "brave-search"},
+            )
+        if self.project_agent_family == "openai" and not self.handler.startswith("claude-"):
+            raise PydanticCustomError(
+                "needs_agent_requires_cross_family_handler",
+                "OpenAI/Codex-family agents must escalate first to a Claude-family Ask handler",
+                {"allowed_handler": "claude-fable-low"},
+            )
+        if self.project_agent_family == "claude" and not self.handler.startswith("gpt-"):
+            raise PydanticCustomError(
+                "needs_agent_requires_cross_family_handler",
+                "Claude-family agents must escalate first to a GPT-family Ask handler",
+                {"allowed_handler": "gpt-5.5-high"},
+            )
+        return self
 
 
 class NeedsWebgpt(BaseModel):
     """Only legal after brave-search and cross-family agent rungs failed to unblock."""
     model_config = ConfigDict(extra="forbid")
     question: str = Field(min_length=1)
-    parent_refs: list[ParentRef] = Field(min_length=2, description="Typed rung-0/rung-1 evidence refs; no ad hoc receipt paths")
+    parent_refs: list[ParentRef] = Field(min_length=2, description="Must include typed brave-search and ask receipt refs")
+
+    @model_validator(mode="after")
+    def enforce_prior_rungs(self) -> "NeedsWebgpt":
+        if not has_parent_producer(self.parent_refs, "brave-search"):
+            raise PydanticCustomError(
+                "needs_webgpt_requires_brave_parent",
+                "state=needs_webgpt requires a typed brave-search parent_ref",
+                {"expected_producer": "brave-search"},
+            )
+        if not has_parent_producer(self.parent_refs, "ask"):
+            raise PydanticCustomError(
+                "needs_webgpt_requires_ask_parent",
+                "state=needs_webgpt requires a typed ask parent_ref",
+                {"expected_producer": "ask"},
+            )
+        return self
 
 
 class NeedsRoundtable(BaseModel):
@@ -289,7 +400,7 @@ class AgentStatus(BaseModel):
                     "state=done forbids not_done; use state=continuing or state=needs_human",
                     {"next_field": "not_done[0].next_command"},
                 )
-            proof_text = ""
+            proof_records: list[tuple[dict[str, Any] | None, str]] = []
             for proof in self.proof:
                 path = local_proof_path(proof)
                 if path is None:
@@ -305,16 +416,18 @@ class AgentStatus(BaseModel):
                 text = read_proof_text(path)
                 if not text.strip():
                     raise PydanticCustomError("proof_empty", "proof file has no evidence text", {"proof": proof})
-                validate_known_receipt(path, text)
-                proof_text += "\n" + text
-            if proof_text:
-                for item in self.verified:
-                    if item.command not in proof_text or item.result not in proof_text:
-                        raise PydanticCustomError(
-                            "verified_not_backed_by_proof",
-                            "verified item is not backed by proof text",
-                            {"command": item.command, "result": item.result},
-                        )
+                proof_records.append((validate_known_receipt(path, text), text))
+            for item in self.verified:
+                backed = any(
+                    receipt_supports_verified(record, item) if record is not None else artifact_supports_verified(text, item)
+                    for record, text in proof_records
+                )
+                if not backed:
+                    raise PydanticCustomError(
+                        "verified_not_backed_by_proof",
+                        "verified item is not backed by one proof record",
+                        {"command": item.command, "result": item.result},
+                    )
         return self
 
 

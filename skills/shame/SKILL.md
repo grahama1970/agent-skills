@@ -102,16 +102,18 @@ when appropriate). State-specific data:
 | `needs_human` | exact `needs_human.action` and `reason` |
 | `failed` | `failure.triage.code` from triage-error or minted `*_unclassified_<8hex>` |
 | `needs_brave_search` | `queries[]` |
-| `needs_agent` | `handler` and `question`; use a cross-family handler |
-| `needs_webgpt` | `question` and typed prior-rung `parent_refs[]` |
+| `needs_agent` | `project_agent_family`, cross-family `handler`, `question`, and a `brave-search` typed `parent_refs[]` entry |
+| `needs_webgpt` | `question` and typed `parent_refs[]` entries from both `brave-search` and `ask` |
 | `needs_roundtable` | immutable goal, question, at least three handlers |
 | `needs_competition` | immutable goal, task, at least two handlers, criteria |
 
 `not_done` is legal only with `continuing`; human actions belong in `needs_human`.
 For `done`, proofs must be non-empty local files. Materialize URLs/digests through
-the owning skill first. Known receipt schemas must pass their checks, and each
-verified command/result pair must appear in proof text. This proves consistency,
-not authenticity of arbitrary agent-writable evidence or universal obedience.
+the owning skill first. JSON proofs must declare a supported receipt schema and pass
+that schema's checks, including `ticket.closure_receipt.v1` for ticket closure.
+Each verified command/result pair must be backed by one proof record; unrelated
+text matches across files do not authorize completion. This proves consistency,
+not OS-level authenticity or universal obedience.
 
 ## Failure history versus human labels
 
