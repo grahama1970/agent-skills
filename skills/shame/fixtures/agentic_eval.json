@@ -345,10 +345,15 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "PASS_COLLAB_REQUIRES_PEER_ACCEPTANCE",
-          "missing_acceptance_rejected",
-          "self_acceptance_rejected",
-          "status_proof_checked_known_receipt"
+          "PASS_COLLAB_REQUIRES_VALIDATED_JSON_BOUNDARY",
+          "\"prose_rejected\": true",
+          "\"question_validated\": true",
+          "\"answer_not_allowed_rejected\": true",
+          "\"exchange_mismatch_rejected\": true",
+          "\"missing_acceptance_rejected\": true",
+          "\"self_acceptance_rejected\": true",
+          "\"status_proof_checked_known_receipt\": true",
+          "\"envelope_compatible\": true"
         ],
         "stdout_excludes": [
           "Traceback",

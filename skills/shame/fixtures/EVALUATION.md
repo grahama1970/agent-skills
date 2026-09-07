@@ -24,7 +24,7 @@ explicitly synthetic label on a real captured turn, not a human quality judgment
 | missing-verification-recovery | incomplete done data refused and corrected |
 | data-not-prose-decides | misleading prose cannot override valid status data |
 | question-turn-requires-answer | terminal question turns require `answer` and render it before status metadata |
-| collab-requires-peer-acceptance | collaborator-mediated closure requires a typed peer acceptance receipt, not implementer self-closure |
+| collab-requires-peer-acceptance | collaborator-mediated closure requires validated JSON question/answer packets, a peer acceptance receipt, and envelope-compatible closure |
 | task-scope-and-acceptance | injected out-of-scope tool calls denied; task still finishes |
 | feedback-and-session-isolation | independent sessions, capture CLI, Memory store/recall |
 | audio-install-preserves-reference | actual reference installed; bad replacement refused |
@@ -48,8 +48,13 @@ Useful negative intent was moved to real workflow faults above. This is NOT
 one large case secretly invoking the removed unit tests. The question-answer
 case is intentionally narrow: it covers the real failure where a valid status
 report can bury the answer to a human's question behind receipt metadata. The
-collaboration acceptance case proves the recorded loop shape and rejects
-self-acceptance; it does not prove the peer's judgment was independent.
+collaboration acceptance case proves the recorded loop shape, rejects prose
+boundary traffic, validates collab question/answer packets, rejects self-acceptance,
+and checks `pi.receipt_envelope.v1` compatibility for the authority-changing closure;
+it does not prove the peer's judgment was independent or that every transport adapter
+enforces the schema yet. `CollabAnswer` validates against the `allowed_answers` list
+inside the packet; consumers must compare it to the originating `CollabQuestion` when
+resolving cross-packet trust.
 
 ## Remaining proof limits
 

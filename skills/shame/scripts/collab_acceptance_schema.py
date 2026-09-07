@@ -1,14 +1,78 @@
 #!/usr/bin/env python3
-"""Validate lazy_report_shame.collab_acceptance.v1 receipts."""
+"""Validate lazy_report_shame collaboration JSON packets."""
 from __future__ import annotations
 
 import json
 import sys
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 from pydantic_core import PydanticCustomError
+
+
+def is_minted_code(value: str) -> bool:
+    marker = "_unclassified_"
+    idx = value.rfind(marker)
+    if idx <= 0:
+        return False
+    suffix = value[idx + len(marker):]
+    return len(suffix) == 8 and all(c in "0123456789abcdef" for c in suffix)
+
+
+class CollabTriage(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    code: str = Field(min_length=1)
+    layer: str = Field(min_length=1)
+    cause: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def code_shape(self) -> "CollabTriage":
+        # ponytail: shape-only minted-code gate; use triage-error catalog import if non-minted codes need strict validation here.
+        if is_minted_code(self.code) or self.code in {"missing_answer_to_question", "collab_acceptor_must_differ"}:
+            return self
+        raise PydanticCustomError("collab_triage_code_unrecognized", "triage.code must be minted or known", {"field": "triage.code"})
+
+
+class CollabQuestion(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    schema_: Literal["lazy_report_shame.collab_question.v1"] = Field(alias="schema")
+    question_id: str = Field(min_length=1)
+    triage: CollabTriage
+    question: str = Field(min_length=1)
+    required_response_schema: Literal["lazy_report_shame.collab_answer.v1"]
+    allowed_answers: list[str] = Field(min_length=1)
+
+
+class SmallestPatch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    files: list[str] = Field(default_factory=list)
+    changes: list[str] = Field(default_factory=list)
+    proof_command: str | None = Field(default=None, min_length=1)
+
+
+class CollabAnswer(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    schema_: Literal["lazy_report_shame.collab_answer.v1"] = Field(alias="schema")
+    question_id: str = Field(min_length=1)
+    answer: str = Field(min_length=1)
+    triage: CollabTriage
+    allowed_answers: list[str] = Field(min_length=1)
+    smallest_patch: SmallestPatch | None = None
+    proof_boundary: str | None = Field(default=None, min_length=1)
+
+    @model_validator(mode="after")
+    def answer_allowed(self) -> "CollabAnswer":
+        if self.answer not in self.allowed_answers:
+            raise PydanticCustomError("collab_answer_not_allowed", "answer must be one of allowed_answers", {"field": "answer"})
+        return self
+
+
+class ExchangeRef(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    question_id: str = Field(min_length=1)
+    question_valid: bool
+    answer_valid: bool
 
 
 class CollabAcceptance(BaseModel):
@@ -20,21 +84,27 @@ class CollabAcceptance(BaseModel):
     peer_rejection_msg_id: str = Field(min_length=1)
     changed_action: str = Field(min_length=1)
     acceptance_msg_id: str = Field(min_length=1)
+    exchange_refs: list[ExchangeRef] = Field(default_factory=list)
     verified_command: str | None = Field(default=None, min_length=1)
     verified_result: str | None = Field(default=None, min_length=1)
 
     @model_validator(mode="after")
     def peer_must_accept(self) -> "CollabAcceptance":
         if self.acceptor == self.implementer:
-            raise PydanticCustomError(
-                "collab_acceptor_must_differ",
-                "acceptor must differ from implementer",
-                {"field": "acceptor"},
-            )
+            raise PydanticCustomError("collab_acceptor_must_differ", "acceptor must differ from implementer", {"field": "acceptor"})
+        if any(not (ref.question_valid and ref.answer_valid) for ref in self.exchange_refs):
+            raise PydanticCustomError("collab_exchange_not_validated", "exchange_refs must be valid", {"field": "exchange_refs"})
         return self
 
 
-def invalid(errors: list[dict]) -> dict:
+SCHEMAS: dict[str, type[BaseModel]] = {
+    "lazy_report_shame.collab_question.v1": CollabQuestion,
+    "lazy_report_shame.collab_answer.v1": CollabAnswer,
+    "lazy_report_shame.collab_acceptance.v1": CollabAcceptance,
+}
+
+
+def invalid(errors: list[dict[str, Any]]) -> dict[str, Any]:
     return {
         "schema": "lazy_report_shame.collab_acceptance.validation_result.v1",
         "valid": False,
@@ -50,18 +120,27 @@ def invalid(errors: list[dict]) -> dict:
     }
 
 
+def validate_json(raw: str) -> BaseModel:
+    data = json.loads(raw)
+    model = SCHEMAS.get(data.get("schema") if isinstance(data, dict) else None)
+    if model is None:
+        raise PydanticCustomError("collab_schema_unknown", "unknown collaboration schema", {"field": "schema"})
+    return model.model_validate(data)
+
+
 def main() -> int:
     if len(sys.argv) != 3 or sys.argv[1] != "validate":
         print(__doc__, file=sys.stderr)
         return 2
     raw = sys.stdin.read() if sys.argv[2] == "-" else Path(sys.argv[2]).read_text()
     try:
-        CollabAcceptance.model_validate_json(raw)
+        validate_json(raw)
     except ValidationError as exc:
         print(json.dumps(invalid(exc.errors(include_url=False))))
         return 1
     except Exception as exc:
-        print(json.dumps(invalid([{"type": "invalid_json", "loc": [], "msg": str(exc), "ctx": {}}])))
+        error_type = getattr(exc, "type", "invalid_json")
+        print(json.dumps(invalid([{"type": error_type, "loc": [], "msg": str(exc), "ctx": {}}])))
         return 1
     print(json.dumps({"schema": "lazy_report_shame.collab_acceptance.validation_result.v1", "valid": True}))
     return 0
