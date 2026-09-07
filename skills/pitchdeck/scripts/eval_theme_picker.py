@@ -50,6 +50,11 @@ def main():
             created = command(str(SURF), 'window.new', BASE + '/?deck=' + url, '--unfocused', '--width', '1600', '--height', '1050')
             tab = re.search(r'\(tab (\d+)\)', created).group(1); result['tab_id'] = tab
             def js(code): return json.loads(command(str(SURF), 'js', 'return (async()=>{' + code + '})()', '--tab-id', tab, '--no-activate'))
+            def settled(name):
+                deadline = time.monotonic() + 20
+                while not js('return !document.querySelector(".theme-panel") && document.querySelector(`[data-qid="deck:theme:menu"]`)?.innerText.includes(' + json.dumps(name) + ')'):
+                    if time.monotonic() > deadline: raise RuntimeError('Theme mutation did not settle: ' + name)
+                    time.sleep(.1)
             setup = '''const q=s=>document.querySelector(`[data-qid="deck:theme:${s}"]`);const sleep=ms=>new Promise(r=>setTimeout(r,ms));const wait=async s=>{for(let i=0;i<100&&!q(s);i++)await sleep(100);if(!q(s))throw Error("missing "+s);return q(s)};const set=(s,v)=>{const e=q(s);Object.getOwnPropertyDescriptor(e.tagName==="SELECT"?HTMLSelectElement.prototype:HTMLInputElement.prototype,"value").set.call(e,v);e.dispatchEvent(new Event(e.tagName==="SELECT"?"change":"input",{bubbles:true}))};'''
             js(setup + '''await wait('menu');q('menu').click();await wait('preset');set('preset','grahama.co');await sleep(200);return document.documentElement.dataset.deckTheme''')
             command(str(SURF), 'snap', '--tab-id', tab, '--no-activate', '--output', str(run / 'preview.png'))
@@ -69,6 +74,7 @@ def main():
             result['primary_actions_visible'] = js(setup + "const panel=document.querySelector('.theme-panel').getBoundingClientRect();return ['apply','cancel'].every(k=>{const e=q(k),r=e.getBoundingClientRect();return r.top>=panel.top&&r.bottom<=panel.bottom&&e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))})")
             assert result['primary_actions_visible'], 'Apply/Cancel must remain visible with Customize expanded'
             js(setup + "q('apply').click();await sleep(1000);return q('menu').innerText")
+            settled(theme_name)
             after = json.loads(source.read_text()); assert stripped(after) == stripped(initial)
             assert after['deck']['theme_tokens']['header_opacity'] == .08, after['deck']
             assert after['deck']['theme_tokens']['accent'] == '#d1703c'
@@ -107,6 +113,7 @@ def main():
             js(setup + "q('menu').click();await wait('preset');set('preset','Legacy house');await sleep(100);set('preset'," + json.dumps(theme_name) + ");await sleep(100);return q('preset').value")
             assert source.read_bytes() == json.dumps(after, ensure_ascii=False, indent=1).encode()
             js(setup + "q('undo').click();await sleep(1000);return q('menu').innerText")
+            settled(initial_payload['theme'])
             assert json.loads(source.read_text()) == initial
             result.update(source_content_geometry_claims_animations_unchanged=True, asset_hashes=assets, pptx=str(run/'deck.pptx'), pdf=str(run/'deck.pdf'))
         result['status'] = 'PASS'

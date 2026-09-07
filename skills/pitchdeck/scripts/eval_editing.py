@@ -24,6 +24,10 @@ BASE = 'http://127.0.0.1:3006'
 
 
 def command(*args, timeout=240):
+    # These evals retain explicit snap checkpoints; implicit captures on every
+    # read/key took 14–25s each and exhausted the aggregate trial budget.
+    if str(args[0]) == str(SURF) and len(args) > 1 and args[1] in {'js', 'key', 'click', 'type', 'scroll'}:
+        args = (*args, '--no-screenshot')
     p = subprocess.run(args, cwd=ROOT, capture_output=True, text=True, timeout=timeout)
     if p.returncode:
         raise RuntimeError(p.stdout + p.stderr)

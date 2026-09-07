@@ -567,6 +567,7 @@ def emit_document_pptx(
         receipt["brandmark"] = {"removed_inherited_marks": pending_brandmark_removed}
     root = Frame(0.0, 0.0, SLIDE_W_IN, SLIDE_H_IN)
     band_cfg = theme.get("chrome", {}).get("header_band", {})
+    slide_pairs: list[tuple] = []  # (pptx slide, slide_doc) for p:timing emission after all shapes exist
     for slide_doc in document.slides:
         if slide_doc.hidden:
             continue
@@ -588,6 +589,7 @@ def emit_document_pptx(
             })
         else:
             slide = presentation.slides.add_slide(blank)
+        slide_pairs.append((slide, slide_doc))
         # House chrome parity with the HTML renderer (render-oracle finding
         # 2026-08-07: PPTX shipped without the band — cross-target drift):
         # banded recipes get the petrol band with the white title inside it,
@@ -709,6 +711,17 @@ def emit_document_pptx(
             _emit_element(slide.shapes, element, root, palette=palette, scale=scale, assets=assets, asset_base=asset_base, receipt=receipt)
         receipt["slides"].append({"id": slide_doc.id, "elements": sum(1 for _ in __import__("pitchdeck.document", fromlist=["iter_tree"]).iter_tree(slide_doc.elements))})
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    from .pptx_timing import apply_slide_timing, spid_resolver
+
+    timing_receipts = []
+    for slide_obj, slide_doc in slide_pairs:
+        if not slide_doc.animations:
+            continue
+        timing_receipt = apply_slide_timing(slide_obj, slide_doc.animations, spid_resolver(slide_obj))
+        timing_receipt["id"] = slide_doc.id
+        timing_receipts.append(timing_receipt)
+    if timing_receipts:
+        receipt["animations"] = timing_receipts
     from .theme_style import apply_presentation_theme
     apply_presentation_theme(presentation, document.deck.theme_tokens, [e.text or "" for slide in document.slides for e in slide.elements if e.role == "title"])
     presentation.save(str(output_path))

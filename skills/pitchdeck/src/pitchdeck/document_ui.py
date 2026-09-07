@@ -46,8 +46,9 @@ def _element_payload(element, assets=None, asset_dir: str = "assets") -> dict[st
         "bold": bool(style and style.bold),
         "color": (style.color if style else None),
         "align": (style.align if style else "left") or "left",
-        "entrance": "none",
-        "entrance_delay_ms": 0,
+        "entrance": element.entrance.effect,
+        "fragment_index": element.entrance.fragment_index,
+        "entrance_delay_ms": element.entrance.delay_ms,
         "bbox": {"x": element.bbox.x, "y": element.bbox.y, "w": element.bbox.w, "h": element.bbox.h},
     }
     if element.kind is DocElementKind.TEXT and element.text:
@@ -87,8 +88,12 @@ def _element_payload(element, assets=None, asset_dir: str = "assets") -> dict[st
                 for edge in element.diagram.edges
             ],
         }
+    if element.shape:
+        payload["shape"] = element.shape.model_dump(mode="json")
+    if element.rotation_deg:
+        payload["rotation_deg"] = element.rotation_deg
     if element.children:
-        payload["children"] = [_element_payload(child) for child in element.children]
+        payload["children"] = [_element_payload(child, assets, asset_dir) for child in element.children]
     return payload
 
 
@@ -150,7 +155,7 @@ def project_document_to_ui(document: DeckDocument, *, asset_dir: str = "assets")
             # re-deriving a layout the document already decided
             "elements": [_element_payload(e, assets=assets, asset_dir=asset_dir)
                           for e in sorted(slide.elements, key=lambda e: e.z)
-                          if e.kind in {DocElementKind.TEXT, DocElementKind.IMAGE, DocElementKind.DIAGRAM}
+                          if e.kind in {DocElementKind.TEXT, DocElementKind.IMAGE, DocElementKind.DIAGRAM, DocElementKind.GROUP, DocElementKind.SHAPE}
                           # band-duty titles are absorbed by the chrome band,
                           # exactly as the PPTX emitter absorbs them (skip_title)
                           and not (e.role == "title" and e.bbox.y < 0.15)],
@@ -159,6 +164,8 @@ def project_document_to_ui(document: DeckDocument, *, asset_dir: str = "assets")
             "transition": slide.transition.value if hasattr(slide.transition, "value") else str(slide.transition),
             "transition_duration_ms": slide.transition_duration_ms,
             "reveal": slide.reveal.value if hasattr(slide.reveal, "value") else str(slide.reveal),
+            "animations": [a.model_dump() for a in slide.animations],
+            "reveal_order": slide.intent.reveal_order if slide.intent else [],
             "hidden": False,
             "claims": sorted({b.claim_id for b in slide.bindings if b.claim_id} | set(slide.claim_ids)),
             "source_ids": [],

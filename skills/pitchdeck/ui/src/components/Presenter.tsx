@@ -1,7 +1,9 @@
+import { useBuildNavigation } from '../animations'
+import { useKeyboardNav } from '../hooks'
 import { ChevronLeft, ChevronRight, Clock, Database, ExternalLink, FastForward, Minimize2, MessageSquare, Monitor, Pause, Play, Repeat, RotateCcw, ShieldAlert, ShieldCheck, ShieldQuestion, Type, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { FragmentContext, SlideBody, fragmentCount } from '../layouts/SlideLayouts'
+import { FragmentContext, SlideBody } from '../layouts/SlideLayouts'
 import { CANVAS_HEIGHT, CANVAS_WIDTH, type UiSlide } from '../types'
 // Direct import, never a barrel file (best-practices-react).
 import { Button } from './ui/button'
@@ -177,26 +179,11 @@ export function PresenterOverlay({
   const [showEvidence, setShowEvidence] = useState(false)
   const timer = usePresenterTimer()
 
-  const [fragment, setFragment] = useState(0)
-  const currentSlide = slides[index]
-  const total = currentSlide ? fragmentCount(currentSlide) : 0
-  const next = useCallback(() => {
-    if (total > 0 && fragment < total) {
-      setFragment((value) => value + 1)
-      return
-    }
-    setIndex((value) => Math.min(value + 1, slides.length - 1))
-    setFragment(0)
-  }, [slides.length, fragment, total])
-  const prev = useCallback(() => {
-    if (total > 0 && fragment > 0) {
-      setFragment((value) => value - 1)
-      return
-    }
-    setIndex((value) => Math.max(value - 1, 0))
-    setFragment(0)
-  }, [fragment, total])
-  const first = useCallback(() => setIndex(0), [])
+  const { fragment, total, go, jump } = useBuildNavigation(slides, index, setIndex)
+  const next = useCallback(() => go(index + 1), [go, index])
+  const prev = useCallback(() => go(index - 1), [go, index])
+  const first = useCallback(() => jump(0), [jump])
+  useKeyboardNav(slides.length, index, go, !poppedOut, jump)
   const auto = useAutoAdvance(slides.length, index, next, first)
 
   useEffect(() => {
@@ -207,12 +194,6 @@ export function PresenterOverlay({
       if (event.key === 'Escape') {
         event.preventDefault()
         onClose()
-      } else if (event.key === 'ArrowRight' || event.key === 'PageDown' || event.key === ' ') {
-        event.preventDefault()
-        next()
-      } else if (event.key === 'ArrowLeft' || event.key === 'PageUp') {
-        event.preventDefault()
-        prev()
       } else if (event.key.toLowerCase() === 'e') {
         setShowEvidence((value) => !value)
       }
@@ -225,7 +206,7 @@ export function PresenterOverlay({
   const upNext = slides[index + 1]
 
   const body = (
-    <div className="presenter-shell flex h-full w-full select-none flex-col overflow-hidden bg-slate-950 text-slate-100">
+    <div onKeyDown={event => { if (!poppedOut) return; const e = event.nativeEvent; if ((e.target as HTMLElement).closest('input,textarea,select,button,a,[contenteditable=true]')) return; if (['ArrowRight','ArrowDown','PageDown',' ','Enter','n'].includes(e.key)) { e.preventDefault(); next() } else if (['ArrowLeft','ArrowUp','PageUp','Backspace','p'].includes(e.key)) { e.preventDefault(); prev() } else if (e.key === 'Home') jump(0); else if (e.key === 'End') jump(slides.length-1, true) }} className="presenter-shell flex h-full w-full select-none flex-col overflow-hidden bg-slate-950 text-slate-100">
       <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-slate-800 bg-slate-900 px-6">
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-2 font-mono text-xs font-semibold text-cyan-400">

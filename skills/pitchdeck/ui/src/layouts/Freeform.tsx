@@ -1,3 +1,4 @@
+import { FragmentContext } from '../animations'
 import { useContext, useEffect, useState } from 'react'
 import { Rnd } from 'react-rnd'
 import { CanonicalDiagram } from '../components/CanonicalDiagram'
@@ -114,7 +115,9 @@ async function postFrame(slideId: string, elementId: string, frame: { x: number;
 }
 
 function ElementContent({ element, responsive = false }: { element: UiElement; responsive?: boolean }) {
-  if (element.diagram) return <CanonicalDiagram diagram={element.diagram} responsive={responsive} />
+  if (element.children) return <div className="relative h-full w-full">{element.children.map(child => <div key={child.id} data-animation-target={child.id} className="absolute" style={{ left: `${child.x * 100}%`, top: `${child.y * 100}%`, width: `${child.w * 100}%`, height: `${child.h * 100}%`, transform: child.rotation_deg ? `rotate(${child.rotation_deg}deg)` : undefined }}><ElementContent element={child} responsive={responsive} /></div>)}</div>
+  if (element.shape) return <div className="h-full w-full" style={{ background: 'var(--deck-accent)', border: '2px solid var(--deck-diagram-accent)', borderRadius: element.shape.preset === 'ellipse' ? '50%' : element.shape.preset === 'round_rect' ? 20 : 0, clipPath: element.shape.preset === 'triangle' ? 'polygon(50% 0%,100% 100%,0% 100%)' : element.shape.preset === 'diamond' ? 'polygon(50% 0%,100% 50%,50% 100%,0% 50%)' : undefined }} />
+  if (element.diagram) return <CanonicalDiagram elementId={element.id} diagram={element.diagram} responsive={responsive} />
   if (element.type === 'asset' && element.asset) {
     if (element.asset.missing || !element.asset.file) {
       return (
@@ -163,12 +166,17 @@ function ElementContent({ element, responsive = false }: { element: UiElement; r
 
 export function Freeform({ slide, responsive = false }: { slide: UiSlide; responsive?: boolean }) {
   const { editing, request, selectedElementId: selectedId, selectElement, previewElement } = useContext(EditContext)
+  const build = useContext(FragmentContext)
   const canvasScale = useContext(CanvasScaleContext)
   const [error, setError] = useState<string | null>(null)
   const [frames, setFrames] = useState<Record<string, { x: number; y: number; w: number; h: number }>>({})
   const [guides, setGuides] = useState<Guide[]>([])
   const { refresh } = useContext(EditContext)
   useEffect(() => { setFrames({}) }, [slide.elements])
+  const headerTitle = slide.elements.find((element) =>
+    element.type === 'text' && element.y >= 0 && element.y + element.h <= 0.12 &&
+    element.text?.replace(/\s+/g, ' ').trim() === slide.title.replace(/\s+/g, ' ').trim())
+  const reflowHeader = responsive && !editing ? headerTitle : undefined
 
   const save = (element: UiElement, frame: { x: number; y: number; w: number; h: number }) => {
     setFrames((prev) => ({ ...prev, [element.id]: frame }))
@@ -183,7 +191,14 @@ export function Freeform({ slide, responsive = false }: { slide: UiSlide; respon
         className="freeform-band absolute left-0 top-0 z-0 flex w-full items-center px-10"
         style={{ height: 0.11 * CANVAS_HEIGHT, background: 'var(--deck-header-background, #076889)' }}
       >
-        <span className="text-4xl font-semibold" style={{ color: 'var(--deck-header-text, white)', fontFamily: 'var(--deck-heading-font, Arial)' }}>{slide.title}</span>
+        {!headerTitle || reflowHeader ? (
+          <span
+            data-element-id={reflowHeader?.id}
+            data-animation-target={reflowHeader?.id}
+            className={`text-4xl font-semibold ${reflowHeader && Number.isFinite(build) && slide.reveal !== 'step' && !slide.animations?.length && reflowHeader.entrance && reflowHeader.entrance !== 'none' ? `entrance-${reflowHeader.entrance}` : ''}`}
+            style={{ color: 'var(--deck-header-text, white)', fontFamily: 'var(--deck-heading-font, Arial)', animationDelay: reflowHeader?.entrance_delay_ms ? `${reflowHeader.entrance_delay_ms}ms` : undefined }}
+          >{slide.title}</span>
+        ) : null}
       </div>
       <div className="freeform-brand absolute bottom-3 left-10 z-0 text-xl font-bold" style={{ color: 'var(--deck-diagram-accent, #076889)' }}>
         grahama.co
@@ -197,6 +212,7 @@ export function Freeform({ slide, responsive = false }: { slide: UiSlide; respon
       {responsive && slide.footer ? <p className="freeform-footer">{slide.footer}</p> : null}
       <SnapGuideOverlay guides={guides} />
       {slide.elements.map((element) => {
+        if (element === reflowHeader) return null
         const proposed = editing && previewElement?.id === element.id ? previewElement : undefined
         const frame = proposed ?? frames[element.id] ?? { x: element.x, y: element.y, w: element.w, h: element.h }
         if (!editing) {
@@ -204,8 +220,10 @@ export function Freeform({ slide, responsive = false }: { slide: UiSlide; respon
             <div
               key={element.id}
               data-element-id={element.id}
-              className={`freeform-element ${responsive ? '' : 'absolute'} ${element.entrance && element.entrance !== 'none' ? `entrance-${element.entrance}` : ''}`}
+              data-animation-target={element.id}
+              className={`freeform-element ${responsive ? '' : 'absolute'} ${Number.isFinite(build) && slide.reveal !== 'step' && !slide.animations?.length && element.entrance && element.entrance !== 'none' ? `entrance-${element.entrance}` : ''}`}
               style={{
+                transform: element.rotation_deg ? `rotate(${element.rotation_deg}deg)` : undefined,
                 left: responsive ? undefined : frame.x * CANVAS_WIDTH,
                 top: responsive ? undefined : frame.y * CANVAS_HEIGHT,
                 width: responsive ? undefined : frame.w * CANVAS_WIDTH,

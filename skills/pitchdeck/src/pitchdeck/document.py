@@ -27,6 +27,7 @@ from pydantic import Field, model_validator
 
 from .models import (
     AssetSpec,
+    AnimationEffect,
     Claim,
     ContentReveal,
     DeckManifest,
@@ -462,6 +463,7 @@ class DocSlide(StrictModel):
     transition: SlideTransition = SlideTransition.SLIDE
     transition_duration_ms: int = Field(default=400, ge=200, le=1200)
     reveal: ContentReveal = ContentReveal.STAGGER_UP
+    animations: list[AnimationEffect] = Field(default_factory=list)
     hidden: bool = False
     notes: str = ""
     intent: SlideIntent | None = None
@@ -709,6 +711,7 @@ def _compile_slide(slide: SlideSpec, reveal_steps: bool) -> DocSlide:
         transition=slide.transition,
         transition_duration_ms=slide.transition_duration_ms,
         reveal=slide.reveal,
+        animations=slide.animations,
         hidden=slide.hidden,
         notes=slide.notes,
     )

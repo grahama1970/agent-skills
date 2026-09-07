@@ -23,6 +23,8 @@ SURF = ROOT / "skills/surf/run.sh"
 
 
 def run(*args: str) -> str:
+    if str(args[0]) == str(SURF) and len(args) > 1 and args[1] in {'js', 'key', 'click', 'type', 'scroll'}:
+        args = (*args, '--no-screenshot')
     result = subprocess.run(args, cwd=ROOT, text=True, capture_output=True, timeout=180)
     if result.returncode:
         raise RuntimeError(f"{args[0]} {args[1]}: {result.stdout}\n{result.stderr}")
@@ -48,7 +50,7 @@ const slides = deck.slides.filter(s => !s.hidden);
 q('deck:view:overview').click();
 await waitFor(() => q('deck:overview:slide:' + slides[0].id), 'overview did not open');
 q('deck:overview:slide:' + slides[0].id).click();
-await waitFor(() => document.querySelector('.slide-viewport')?.dataset.slideId === slides[0].id, 'first-slide selection failed');
+await waitFor(() => document.querySelector('.slide-viewport')?.dataset.slideId === slides[0].id && document.querySelector('.slide-viewport')?.firstElementChild, 'first-slide selection failed');
 const results = [];
 const textStrings = slide => slide.layout === 'freeform'
   ? [slide.title, slide.footer, ...slide.elements.flatMap(e => [e.text,
@@ -66,11 +68,15 @@ for (const slide of slides) {
   await sleep(100);
   const pane = document.querySelector('.slide-viewport');
   assert(pane?.dataset.slideId === slide.id, 'navigation failed: ' + slide.id);
-  // Consume click-gated builds without crossing to the next slide.
-  if (slide.reveal === 'step') {
-    for (let step = 0; step < Math.max(slide.body.length, slide.visual.items.length); step++) {
-      q('deck:nav:next').click(); await sleep(100);
-    }
+  // Consume the player's real concept groups, including freeform/diagram
+  // targets. The former body/card count did not cover the completed mechanism.
+  const surface = () => pane.querySelector('[data-animation-slide]');
+  const total = Number(surface()?.dataset.buildTotal || 0);
+  for (let step = 0; step < total && Number(surface()?.dataset.build || 0) < total; step++) {
+    const before = Number(surface().dataset.build);
+    q('deck:nav:next').click();
+    await waitFor(() => Number(surface()?.dataset.build) > before, 'build did not advance');
+    assert(pane.dataset.slideId === slide.id, 'build crossed slide boundary');
   }
   await Promise.all(pane.getAnimations({subtree:true})
     .filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => {})));
@@ -108,6 +114,9 @@ q('deck:view:overview').click(); await sleep(100);
 q('deck:overview:slide:' + slides[0].id).click(); await sleep(150);
 let pane = document.querySelector('.slide-viewport');
 assert(pane.dataset.slideId === slides[0].id, 'overview selection lost to fragment state');
+for (let i = 0, n = Number(pane.querySelector('[data-animation-slide]')?.dataset.buildTotal || 0); i < n; i++) {
+  q('deck:nav:next').click(); await sleep(100);
+}
 pane.focus(); pane.dispatchEvent(new KeyboardEvent('keydown', {key:'ArrowRight', bubbles:true})); await sleep(150);
 assert(document.querySelector('.slide-viewport').dataset.slideId === slides[1].id, 'keyboard next failed');
 q('deck:nav:prev').click(); await sleep(150);
@@ -221,8 +230,11 @@ def main() -> int:
             surf("go", url)
             ready(url)
             try:
-                # Inject after PROBE's first-slide reset, which remounts the canvas.
-                js(PROBE.replace('const results = [];', "document.querySelector('.responsive-slide').style.transform='scale(0.2)';\nconst results = [];"))
+                # Inject on the inspected live content node, after the overview
+                # remount and mode settlement, not a transient CSS-class lookup.
+                needle = "assert(getComputedStyle(pane.firstElementChild).transform === 'none'"
+                assert needle in PROBE
+                js(PROBE.replace(needle, "pane.firstElementChild.style.transform='scale(0.2)';\n    " + needle))
             except RuntimeError as exc:
                 assert "whole-slide scaling instead of reflow" in str(exc), str(exc)
             else:

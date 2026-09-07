@@ -1,5 +1,141 @@
 {
   "$defs": {
+    "AnimationEffect": {
+      "additionalProperties": false,
+      "description": "Ordered, multi-target behavior shared by browser and native exporters.\n\nTargets are element IDs or semantic body:N / visual:N, with diagram\nsubtargets ELEMENT/node/ID and ELEMENT/edge/ID. One row is one concept.",
+      "properties": {
+        "id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "targets": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 200,
+          "minItems": 1,
+          "title": "Targets",
+          "type": "array"
+        },
+        "effect": {
+          "default": "appear",
+          "enum": [
+            "appear",
+            "fade",
+            "fly",
+            "wipe",
+            "zoom",
+            "peek",
+            "split",
+            "expand",
+            "stretch",
+            "rise",
+            "grow-turn",
+            "spin",
+            "grow-shrink",
+            "transparency",
+            "dim",
+            "pulse",
+            "font-color",
+            "fill-color",
+            "line-color",
+            "motion-line",
+            "blinds",
+            "box",
+            "bars",
+            "checker",
+            "strips"
+          ],
+          "title": "Effect",
+          "type": "string"
+        },
+        "phase": {
+          "default": "entrance",
+          "enum": [
+            "entrance",
+            "exit",
+            "emphasis",
+            "motion"
+          ],
+          "title": "Phase",
+          "type": "string"
+        },
+        "direction": {
+          "default": "left",
+          "enum": [
+            "left",
+            "right",
+            "up",
+            "down",
+            "horizontal",
+            "vertical",
+            "in",
+            "out"
+          ],
+          "title": "Direction",
+          "type": "string"
+        },
+        "start": {
+          "default": "on-click",
+          "enum": [
+            "on-click",
+            "with-previous",
+            "after-previous"
+          ],
+          "title": "Start",
+          "type": "string"
+        },
+        "duration_ms": {
+          "default": 400,
+          "maximum": 10000,
+          "minimum": 0,
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "delay_ms": {
+          "default": 0,
+          "maximum": 10000,
+          "minimum": 0,
+          "title": "Delay Ms",
+          "type": "integer"
+        },
+        "amount": {
+          "default": 0.5,
+          "maximum": 4,
+          "minimum": 0,
+          "title": "Amount",
+          "type": "number"
+        },
+        "color": {
+          "default": "#808080",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "title": "Color",
+          "type": "string"
+        },
+        "dx": {
+          "default": 0.1,
+          "maximum": 2,
+          "minimum": -2,
+          "title": "Dx",
+          "type": "number"
+        },
+        "dy": {
+          "default": 0,
+          "maximum": 2,
+          "minimum": -2,
+          "title": "Dy",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "targets"
+      ],
+      "title": "AnimationEffect",
+      "type": "object"
+    },
     "AssetKind": {
       "enum": [
         "screenshot",
@@ -1069,6 +1205,13 @@
         "reveal": {
           "$ref": "#/$defs/ContentReveal",
           "default": "stagger_up"
+        },
+        "animations": {
+          "items": {
+            "$ref": "#/$defs/AnimationEffect"
+          },
+          "title": "Animations",
+          "type": "array"
         },
         "hidden": {
           "default": false,

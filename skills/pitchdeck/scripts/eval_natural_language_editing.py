@@ -24,6 +24,8 @@ OUT = Path('/mnt/storage12tb/skills/pitchdeck/outputs/natural-language-editing')
 
 
 def run(*args, **kwargs):
+    if args and args[0] == str(SURF) and len(args) > 1 and args[1] in {'js', 'key', 'click', 'type', 'scroll'}:
+        args = (*args, '--no-screenshot')
     p = subprocess.run(args, cwd=ROOT, text=True, capture_output=True, timeout=240, **kwargs)
     if p.returncode:
         raise RuntimeError(p.stderr + p.stdout)
@@ -111,7 +113,7 @@ def main():
             result['checks'].append({'required_qualifier_removal_refused': qualifier_refusal})
             # Same production boundary, deliberately invalid provider config.
             with (directory / 'unavailable-server.log').open('w') as log:
-                process = subprocess.Popen(['pnpm', 'dev', '--host', '127.0.0.1', '--port', '3017', '--strictPort'], cwd=SKILL / 'ui', stdout=log, stderr=log, start_new_session=True, env={**os.environ, 'PITCHDECK_AGENT_HANDLER': 'missing-pitchdeck-eval-handler', 'PITCHDECK_AGENT_TIMEOUT_SECONDS': '15'})
+                process = subprocess.Popen(['pnpm', 'dev', '--host', '127.0.0.1', '--port', '3017', '--strictPort'], cwd=SKILL / 'ui', stdout=log, stderr=log, start_new_session=True, env={**os.environ, 'CHOKIDAR_USEPOLLING': '1', 'CHOKIDAR_INTERVAL': '1000', 'PITCHDECK_AGENT_HANDLER': 'missing-pitchdeck-eval-handler', 'PITCHDECK_AGENT_TIMEOUT_SECONDS': '15'})
                 for _ in range(60):
                     if process.poll() is not None: raise RuntimeError('Failure-probe server exited; read unavailable-server.log')
                     try:
@@ -136,8 +138,14 @@ def main():
                     except RuntimeError as e:
                         if 'context' not in str(e): raise
                     time.sleep(.2)
+                result['wait_failure'] = js('return {url:location.href,ready:document.readyState,body:document.body.innerText.slice(-1000),navigation:performance.getEntriesByType("navigation").map(n=>({dom:n.domContentLoadedEventEnd,load:n.loadEventEnd}))};')
                 raise RuntimeError('UI condition did not settle: ' + code)
-            wait('return !!document.querySelector(".slide-viewport");', 20)
+            def mounted():
+                # The retained failed reload reached DOMContentLoaded at 22.9s.
+                # Navigation and app mounting have separate bounded budgets.
+                wait('return document.readyState === "complete";', 60)
+                wait('return !!document.querySelector(".slide-viewport");', 20)
+            mounted()
             # Capture actual fetch responses without replacing their behavior.
             js('window.nlEvidence=[]; const originalFetch=window.fetch; window.fetch=async(...a)=>{const r=await originalFetch(...a);if(String(a[0]).startsWith("/api/element-agent/")){const copy=r.clone();copy.json().then(v=>window.nlEvidence.push({url:a[0],request:JSON.parse(a[1].body),status:r.status,response:v}));}return r;};return true;')
             def click(qid): js('document.querySelector(' + json.dumps(f'[data-qid="{qid}"]') + ').click();return true;')
@@ -185,7 +193,7 @@ def main():
                     if old['id'] != slide['id'] or a['id'] != element['id']: assert a == b, 'non-target changed'
             result['checks'].append({'prompt': prompt, 'proposal': proposed, 'only_selected_element_changed': True, 'screenshot': str(screenshot)})
             # Reload must keep the committed change and offer guarded Undo after reselecting.
-            surf('tab.reload'); wait('return !!document.querySelector(".slide-viewport");', 20)
+            surf('tab.reload'); mounted()
             click('deck:mode:design'); time.sleep(.3); click(qid)
             wait('return !!document.querySelector("[data-qid=\\"deck:agent:undo\\"]");')
             click('deck:agent:undo')
@@ -203,7 +211,11 @@ def main():
     finally:
         if process:
             import signal
-            os.killpg(process.pid, signal.SIGTERM)
+            if process.poll() is None:
+                try:
+                    os.killpg(process.pid, signal.SIGTERM)
+                except ProcessLookupError:
+                    result['cleanup_already_exited'] = True
             process.wait(timeout=10)
         if tab and result.get('status') == 'PASS': run(str(SURF), 'tab.close', tab)
         result['tab_id'] = tab

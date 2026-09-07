@@ -308,3 +308,13 @@ a:focus-visible {
 [data-deck-theme=custom] .deck-font [class*="border-cyan"] { border-color: var(--deck-accent); }
 [data-deck-theme=custom] .deck-font [class*="bg-slate-800"] { background: color-mix(in srgb, var(--deck-text) 8%, var(--deck-canvas)); }
 [data-deck-theme=custom] .deck-font [class*="bg-cyan-500"] { background: color-mix(in srgb, var(--deck-accent) 10%, var(--deck-canvas)); }
+
+.animation-panel.theme-panel { width: min(900px, 94vw); max-height: 88vh; overflow-y: auto; }
+.animation-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.animation-columns fieldset { max-height: 180px; overflow: auto; }
+.animation-columns fieldset label { display: flex; gap: 8px; align-items: center; }
+.animation-columns fieldset input { width: auto; }
+.animation-columns ol { max-height: 180px; overflow: auto; padding-left: 24px; }
+.animation-columns button[aria-pressed=true] { outline: 2px solid #22d3ee; }
+.animation-preview { height: 280px; width: 100%; }
+@media (max-width: 650px) { .animation-columns { grid-template-columns: 1fr; } }

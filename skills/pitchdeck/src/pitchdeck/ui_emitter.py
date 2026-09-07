@@ -86,6 +86,7 @@ class UiSlide(StrictModel):
     transition: str = "slide"
     transition_duration_ms: int = 400
     reveal: str = "stagger_up"
+    animations: list[dict] = Field(default_factory=list)
     hidden: bool = False
     claims: list[UiClaimBadge] = Field(default_factory=list)
     source_ids: list[str] = Field(default_factory=list)
@@ -277,6 +278,7 @@ def emit_ui_bundle(
                 transition=slide.transition.value,
                 transition_duration_ms=slide.transition_duration_ms,
                 reveal=slide.reveal.value,
+                animations=[a.model_dump() for a in slide.animations],
                 hidden=slide.hidden,
                 claims=badges,
                 source_ids=sorted({ref.source_id for ref in slide.source_refs}),

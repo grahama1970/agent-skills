@@ -1,4 +1,5 @@
-import { createContext, useContext } from 'react'
+import { useAnimationTimeline } from '../animations'
+export { FragmentContext, fragmentCount } from '../animations'
 import { assetUrl } from '../hooks'
 import { ImageOff } from 'lucide-react'
 import { MathBlock, MermaidDiagram } from '../components/DiagramRenderer'
@@ -7,17 +8,6 @@ import { Freeform } from './Freeform'
 import type { UiSlide, UiVisual } from '../types'
 
 /** Layout components for the 10 SlideLayout values in the deck manifest schema. */
-
-// Click-gated builds: Present mode provides how many fragments are revealed;
-// Infinity (default) means everything shows (Design mode, thumbnails, exports
-// that handle stepping themselves).
-export const FragmentContext = createContext<number>(Infinity)
-
-export function fragmentCount(slide: UiSlide): number {
-  if (slide.reveal !== 'step') return 0
-  const cards = slide.visual.items.length ? slide.visual.items.length : 0
-  return Math.max(slide.body.length, cards)
-}
 
 function Visual({ visual }: { visual: UiVisual }) {
   if (visual.type === 'none') return null
@@ -32,7 +22,7 @@ function Visual({ visual }: { visual: UiVisual }) {
       )
     }
     return (
-      <figure className="flex h-full w-full flex-col gap-3">
+      <figure data-animation-target="visual" className="flex h-full w-full flex-col gap-3">
         {visual.asset.kind === 'video' ? (
           <video
             src={assetUrl(visual.asset.file)}
@@ -57,7 +47,7 @@ function Visual({ visual }: { visual: UiVisual }) {
   }
   if (visual.type === 'mermaid' && visual.source) {
     return (
-      <figure className="flex h-full w-full flex-col gap-3">
+      <figure data-animation-target="visual" className="flex h-full w-full flex-col gap-3">
         <div className="min-h-0 flex-1">
           <MermaidDiagram source={visual.source} />
         </div>
@@ -67,7 +57,7 @@ function Visual({ visual }: { visual: UiVisual }) {
   }
   if (visual.type === 'math' && visual.source) {
     return (
-      <figure className="flex h-full w-full flex-col gap-3">
+      <figure data-animation-target="visual" className="flex h-full w-full flex-col gap-3">
         <div className="min-h-0 flex-1">
           <MathBlock source={visual.source} />
         </div>
@@ -79,7 +69,7 @@ function Visual({ visual }: { visual: UiVisual }) {
     return (
       <div className="native-flow flex h-full w-full items-center justify-center gap-6">
         {visual.items.map((item, i) => (
-          <div key={item} className="flex items-center gap-6">
+          <div key={i} data-animation-target={`visual:${i}`} className="flex items-center gap-6">
             {i > 0 ? <span aria-hidden className="text-5xl text-[var(--deck-accent,#67e8f9)]">→</span> : null}
             <div className="rounded-2xl border border-cyan-500/40 bg-cyan-500/10 px-8 py-6 text-center text-3xl font-medium">
               {item}
@@ -92,8 +82,8 @@ function Visual({ visual }: { visual: UiVisual }) {
   if (visual.type === 'cards') {
     return (
       <ul className="grid h-full w-full list-none grid-cols-2 content-center gap-6 p-0">
-        {visual.items.map((item) => (
-          <li key={item} className="rounded-2xl border border-slate-700 bg-slate-800/60 p-8 text-3xl">
+        {visual.items.map((item, i) => (
+          <li key={i} data-animation-target={`visual:${i}`} className="rounded-2xl border border-slate-700 bg-slate-800/60 p-8 text-3xl">
             {item}
           </li>
         ))}
@@ -104,13 +94,12 @@ function Visual({ visual }: { visual: UiVisual }) {
 }
 
 function BodyList({ slide, size = 'text-4xl' }: { slide: UiSlide; size?: string }) {
-  const revealed = useContext(FragmentContext)
   if (!slide.body.length) return null
   const step = slide.reveal === 'step'
   return (
     <ul className={`m-0 flex list-none flex-col gap-5 p-0 ${size} leading-snug text-slate-200 ${!step && slide.reveal !== 'none' ? `reveal-${slide.reveal}` : ''}`}>
       {slide.body.map((line, index) => (
-        <li key={line} style={{ '--i': index } as React.CSSProperties} className={`flex gap-4 ${step ? (index < revealed ? 'fragment-in' : 'fragment-hidden') : ''}`}>
+        <li key={line} style={{ '--i': index } as React.CSSProperties} data-animation-target={`body:${index}`} className="flex gap-4">
           <span aria-hidden className="mt-1 text-[var(--deck-accent,#67e8f9)]">▸</span>
           <span>
             <Editable slide={slide} field={`body:${index}`} label={`bullet ${index + 1}`} value={line}>
@@ -197,7 +186,6 @@ export function Screenshot({ slide }: { slide: UiSlide }) {
 }
 
 export function CardGrid({ slide }: { slide: UiSlide }) {
-  const revealed = useContext(FragmentContext)
   const cards = slide.visual.items.length ? slide.visual.items : slide.body
   return (
     <div className="relative flex h-full flex-col gap-12 px-24 py-20">
@@ -207,7 +195,7 @@ export function CardGrid({ slide }: { slide: UiSlide }) {
       </header>
       <ul className={`m-0 grid min-h-0 flex-1 list-none content-start gap-8 p-0 [grid-template-columns:repeat(auto-fit,minmax(480px,1fr))] ${slide.reveal !== 'none' && slide.reveal !== 'step' ? `reveal-${slide.reveal}` : ''}`}>
         {cards.map((card, cardIndex) => (
-          <li key={card} style={{ '--i': cardIndex } as React.CSSProperties} className={`rounded-2xl border border-slate-700 bg-slate-800/60 p-10 text-3xl leading-snug ${slide.reveal === 'step' ? (cardIndex < revealed ? 'fragment-in' : 'fragment-hidden') : ''}`}>
+          <li key={card} style={{ '--i': cardIndex } as React.CSSProperties} data-animation-target={`${slide.visual.items.length ? "visual" : "body"}:${cardIndex}`} className="rounded-2xl border border-slate-700 bg-slate-800/60 p-10 text-3xl leading-snug">
             {card}
           </li>
         ))}
@@ -251,9 +239,10 @@ const LAYOUTS: Record<string, (props: { slide: UiSlide; responsive?: boolean }) 
 }
 
 export function SlideBody({ slide, responsive = false }: { slide: UiSlide; responsive?: boolean }) {
+  const animationRef = useAnimationTimeline(slide)
   const Layout = LAYOUTS[slide.layout] ?? Split
   return (
-    <div className={`deck-font h-full w-full ${slide.layout === 'freeform' ? '' : 'semantic-slide'}`}>
+    <div ref={animationRef} data-animation-slide={slide.id} className={`deck-font h-full w-full ${slide.layout === 'freeform' ? '' : 'semantic-slide'}`}>
       <Layout slide={slide} responsive={responsive} />
     </div>
   )

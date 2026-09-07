@@ -155,6 +155,7 @@ def _add_panel(slide, x: float, y: float, w: float, h: float, *, color: str = Th
 
 
 def _add_body_rows(slide, items: list[str], x: float, y: float, w: float, h: float) -> None:
+    """Rows are named sem:body:N so authored animations can target them natively."""
     if not items:
         return
     row_h = h / len(items)
@@ -177,6 +178,7 @@ def _add_body_rows(slide, items: list[str], x: float, y: float, w: float, h: flo
         bar.fill.solid()
         bar.fill.fore_color.rgb = _rgb(Theme.teal if index % 2 == 0 else Theme.cyan)
         bar.line.fill.background()
+        bar.name = f"sem:body:{index}:bar"
         _add_text(
             slide,
             item,
@@ -187,7 +189,7 @@ def _add_body_rows(slide, items: list[str], x: float, y: float, w: float, h: flo
             size=body_size,
             color=Theme.text,
             valign=MSO_ANCHOR.MIDDLE,
-        )
+        ).name = f"sem:body:{index}"
 
 
 def _split_card_item(item: str) -> tuple[str, str]:
@@ -465,11 +467,14 @@ def _render_flow(slide, spec) -> None:
     gap = 0.18
     box_w = (available_w - gap * (len(items) - 1)) / len(items)
     y = 3.0
+    from_visual = bool(spec.visual.items)
     for index, item in enumerate(items):
+        sem = f"sem:{'visual' if from_visual else 'body'}:{index}"
         x = 0.72 + index * (box_w + gap)
         panel = _add_panel(slide, x, y, box_w, 1.95, color=Theme.panel_alt if index % 2 else Theme.panel)
         panel.line.color.rgb = _rgb(Theme.cyan if index == len(items) - 1 else Theme.line)
-        _add_text(slide, f"{index + 1:02d}", x + 0.18, y + 0.16, 0.42, 0.25, size=9, bold=True, color=Theme.cyan)
+        panel.name = sem
+        _add_text(slide, f"{index + 1:02d}", x + 0.18, y + 0.16, 0.42, 0.25, size=9, bold=True, color=Theme.cyan).name = f"{sem}:num"
         _add_text(
             slide,
             item,
@@ -480,7 +485,7 @@ def _render_flow(slide, spec) -> None:
             size=12.5 if len(items) > 4 else 14,
             bold=True,
             valign=MSO_ANCHOR.MIDDLE,
-        )
+        ).name = f"{sem}:label"
         if index < len(items) - 1:
             connector = slide.shapes.add_connector(
                 MSO_CONNECTOR.STRAIGHT,
@@ -515,20 +520,22 @@ def _render_cards(slide, spec, *, proof: bool = False) -> None:
     card_w = (11.9 - gap * (columns - 1)) / columns
     card_h = 3.7 / rows - 0.12
     for index, item in enumerate(items):
+        sem = f"sem:body:{index}"  # cards render body items; animationTargets maps them the same way
         row = index // columns
         col = index % columns
         x = 0.72 + col * (card_w + gap)
         y = 2.65 + row * (card_h + 0.18)
         panel = _add_panel(slide, x, y, card_w, card_h, color=Theme.panel_alt if index % 2 else Theme.panel)
         panel.line.color.rgb = _rgb(Theme.teal if proof else Theme.line)
+        panel.name = sem
         title, body = _split_card_item(item)
-        _add_text(slide, f"{index + 1:02d}", x + 0.22, y + 0.18, 0.46, 0.25, size=8.5, bold=True, color=Theme.cyan)
-        _add_text(slide, title, x + 0.22, y + 0.62, card_w - 0.44, 0.6, size=16, bold=True)
+        _add_text(slide, f"{index + 1:02d}", x + 0.22, y + 0.18, 0.46, 0.25, size=8.5, bold=True, color=Theme.cyan).name = f"{sem}:num"
+        _add_text(slide, title, x + 0.22, y + 0.62, card_w - 0.44, 0.6, size=16, bold=True).name = f"{sem}:title"
         if body != title:
             # Whole-string survival contract: the body frame carries the FULL
             # item string (not the post-split remainder) so the bound claim
             # text stays contiguous in the emitted artifact.
-            _add_text(slide, item, x + 0.22, y + 1.34, card_w - 0.44, card_h - 1.55, size=11.5, color=Theme.muted)
+            _add_text(slide, item, x + 0.22, y + 1.34, card_w - 0.44, card_h - 1.55, size=11.5, color=Theme.muted).name = f"{sem}:body"
 
 
 def _render_roadmap(slide, spec) -> None:
@@ -739,6 +746,7 @@ def _build_pptx_inner(
     presentation.slide_height = Inches(SLIDE_H)
     blank = presentation.slide_layouts[6]
     asset_map = {asset.id: asset for asset in assets.assets}
+    animation_receipts: list[dict] = []
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     visible_specs = [s for s in sorted(deck.slides, key=lambda value: value.order) if not s.hidden]
@@ -757,6 +765,20 @@ def _build_pptx_inner(
                 deck_tagline=deck.deck.subtitle,
             )
             _add_footer(slide, deck.deck.title, spec.order, spec.visibility)
+            if spec.animations:
+                from .pptx_timing import apply_slide_timing, spid_resolver
+
+                sem_resolve = spid_resolver(slide, prefix="sem:")
+                assets_resolve = spid_resolver(slide, prefix="asset:")
+
+                def resolve(target: str, _sem=sem_resolve, _asset=assets_resolve, _spec=spec):
+                    spids, reason = _sem(target)
+                    if not spids and target == "visual" and _spec.visual.asset:
+                        return _asset(_spec.visual.asset.id)
+                    return spids, reason
+
+                timing_receipt = apply_slide_timing(slide, spec.animations, resolve)
+                animation_receipts.append({"id": spec.id, **timing_receipt})
             if draft_watermark:
                 _add_text(
                     slide,
@@ -817,9 +839,13 @@ def _build_pptx_inner(
                 {ref.source_id for slide in deck.slides for ref in slide.source_refs}
             ),
             "validation_warnings": len(all_warnings),
+            "animated_slides": len(animation_receipts),
+            "animation_effects": sum(r["effects"] for r in animation_receipts),
         },
         gaps=[
             *all_warnings,
+            *(f"animation target skipped on {r['id']}: {s['target']} ({s['reason']})"
+              for r in animation_receipts for s in r["skipped"]),
             # Named limitation (#1231): whole-string scanning proves text bytes
             # survive; it does not prove visual fidelity between the browser
             # renderer and PPTX/LibreOffice output (geometry, wrap, legibility).

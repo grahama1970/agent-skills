@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "skill": "pitchdeck",
+  "trials": 2,
+  "proof_scope": "Live progressive reveal in Surf's real Chrome plus native export: manual next/prev builds over first/middle/last slides, group and diagram node/edge reveals with no orphan edges, On Click default plus With/After Previous timing with real delays, distinct mid-frame effects, GUI authoring with preview/apply/undo over canonical CAS persistence, reduced-motion override, inert hidden future items, typing-key protection, and structural p:timing verification of the exported PPTX with a static full-content PDF",
+  "claims": {
+    "proves": "Builds advance and reverse per keyboard/Home/End/rapid input including cancel of in-flight and delayed chains; revisit restores completed builds; a with-previous row shares its predecessor's click and can add a second action to the same object; GUI edits persist only animation metadata through the CAS API and undo restores the source; stale/unknown-target/invalid-timing/invalid-phase writes are refused with no file change; hidden future items are inert; typing in panel inputs never advances slides; the 25 effect primitives are distinct catalog entries with wipe/zoom/fly/pulse proven distinct at paused mid-frames; exported PPTX carries p:timing with correct shape targets, click order, node types and durations, zero-build slides carry none, nested diagram targets are receipted as skipped, the emission differs from an animation-free emission only by p:timing, and the LibreOffice PDF shows full readable content",
+    "does_not_prove": "Microsoft PowerPoint or Google Slides slideshow PLAYBACK (structural XML and a LibreOffice PDF are not playback evidence), OS-level prefers-reduced-motion emulation, mid-frame verification of every one of the 25 effects, or visual approval of motion design"
+  },
+  "cases": [
+    {
+      "name": "progressive-reveal-live-browser",
+      "type": "positive",
+      "real_world": true,
+      "command": ["python3", "../scripts/eval_progressive_reveal.py", "--out", "/tmp/pitchdeck-reveal-live.json"],
+      "timeout_seconds": 900,
+      "expected": {"exit_code": 0, "artifacts": [{"path": "/tmp/pitchdeck-reveal-live.json", "json_pointer": "/status", "equals": "PASS"}]}
+    },
+    {
+      "name": "reveal-rejects-stale-and-invalid-writes",
+      "type": "adversarial",
+      "real_world": true,
+      "command": ["python3", "../scripts/eval_progressive_reveal.py", "--negative", "--out", "/tmp/pitchdeck-reveal-negative.json"],
+      "timeout_seconds": 300,
+      "expected": {"exit_code": 0, "artifacts": [{"path": "/tmp/pitchdeck-reveal-negative.json", "json_pointer": "/status", "equals": "PASS"}]}
+    }
+  ]
+}

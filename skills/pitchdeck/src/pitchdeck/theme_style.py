@@ -22,7 +22,7 @@ def apply_presentation_theme(presentation, tokens, heading_texts=()):
     for slide in presentation.slides:
         slide.background.fill.solid()
         slide.background.fill.fore_color.rgb = rgb(tokens.canvas)
-        colors = {'065E7C': tokens.accent, '076889': tokens.accent, '36D6E7': tokens.accent, '22D3EE': tokens.accent, '08131F': tokens.canvas, '102437': tokens.canvas, '132D43': tokens.canvas, 'AFC2CF': tokens.muted, '595959': tokens.muted}
+        colors = {'065E7C': tokens.accent, '076889': tokens.accent, '36D6E7': tokens.accent, '22D3EE': tokens.accent, '08131F': tokens.canvas, '102437': tokens.canvas, '132D43': tokens.canvas, '071019': tokens.canvas, '2A455A': tokens.muted, 'AFC2CF': tokens.muted, '595959': tokens.muted}
         for node in slide._element.findall('.//{http://schemas.openxmlformats.org/drawingml/2006/main}srgbClr'):
             if node.get('val', '').upper() in colors: node.set('val', colors[node.get('val').upper()].lstrip('#'))
         band = next((s for s in slide.shapes if s.name == 'chrome:band'), None)

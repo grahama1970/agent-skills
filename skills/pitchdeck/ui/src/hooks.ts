@@ -60,11 +60,7 @@ export function useSlideScale(): { ref: React.RefObject<HTMLDivElement | null>; 
 }
 
 /** Arrow/space/home/end keyboard navigation. */
-export function useKeyboardNav(count: number, index: number, setIndex: (next: number) => void, enabled = true): void {
-  const clamp = useCallback(
-    (value: number) => Math.max(0, Math.min(count - 1, value)),
-    [count],
-  )
+export function useKeyboardNav(count: number, index: number, setIndex: (next: number) => void, enabled = true, jump: (next: number, end?: boolean) => void = setIndex): void {
   useEffect(() => {
     if (!enabled) return
     const onKey = (event: KeyboardEvent) => {
@@ -73,28 +69,38 @@ export function useKeyboardNav(count: number, index: number, setIndex: (next: nu
       // A focused reflowed slide is a reading region: vertical keys scroll it.
       if (target.closest('.slide-viewport[data-layout="responsive"]') && ['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', ' ', 'Home', 'End'].includes(event.key)) return
       switch (event.key) {
+        case 'Enter':
+        case 'n':
+        case 'N':
         case 'ArrowRight':
         case 'ArrowDown':
         case ' ':
         case 'PageDown':
-          setIndex(clamp(index + 1))
+          event.preventDefault()
+          setIndex(index + 1)
           break
+        case 'Backspace':
+        case 'p':
+        case 'P':
         case 'ArrowLeft':
         case 'ArrowUp':
         case 'PageUp':
-          setIndex(clamp(index - 1))
+          event.preventDefault()
+          setIndex(index - 1)
           break
         case 'Home':
-          setIndex(0)
+          event.preventDefault()
+          jump(0)
           break
         case 'End':
-          setIndex(count - 1)
+          event.preventDefault()
+          jump(count - 1, true)
           break
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [clamp, count, index, setIndex, enabled])
+  }, [count, index, setIndex, enabled, jump])
 }
 
 interface ActionSpec {

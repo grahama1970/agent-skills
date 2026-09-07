@@ -423,6 +423,36 @@ class ClaimGuard(StrictModel):
     forbidden_unqualified: list[str] = Field(default_factory=list)
 
 
+class AnimationEffect(StrictModel):
+    """Ordered, multi-target behavior shared by browser and native exporters.
+
+    Targets are element IDs or semantic body:N / visual:N, with diagram
+    subtargets ELEMENT/node/ID and ELEMENT/edge/ID. One row is one concept.
+    """
+    id: str = Field(min_length=1, max_length=100)
+    targets: list[str] = Field(min_length=1, max_length=200)
+    effect: Literal["appear", "fade", "fly", "wipe", "zoom", "peek", "split", "expand", "stretch", "rise", "grow-turn", "spin", "grow-shrink", "transparency", "dim", "pulse", "font-color", "fill-color", "line-color", "motion-line", "blinds", "box", "bars", "checker", "strips"] = "appear"
+    phase: Literal["entrance", "exit", "emphasis", "motion"] = "entrance"
+    direction: Literal["left", "right", "up", "down", "horizontal", "vertical", "in", "out"] = "left"
+    start: Literal["on-click", "with-previous", "after-previous"] = "on-click"
+    duration_ms: int = Field(default=400, ge=0, le=10000)
+    delay_ms: int = Field(default=0, ge=0, le=10000)
+    amount: float = Field(default=0.5, ge=0, le=4, allow_inf_nan=False)
+    color: str = Field(default="#808080", pattern=r"^#[0-9a-fA-F]{6}$")
+    dx: float = Field(default=0.1, ge=-2, le=2, allow_inf_nan=False)
+    dy: float = Field(default=0, ge=-2, le=2, allow_inf_nan=False)
+
+    @model_validator(mode="after")
+    def applicable(self):
+        emphasis = {"spin", "grow-shrink", "transparency", "dim", "pulse", "font-color", "fill-color", "line-color"}
+        expected = {"emphasis"} if self.effect in emphasis else {"motion"} if self.effect == "motion-line" else {"entrance", "exit"}
+        if self.phase not in expected:
+            raise ValueError(f"{self.effect} does not support {self.phase}")
+        if len(set(self.targets)) != len(self.targets):
+            raise ValueError("Duplicate animation targets")
+        return self
+
+
 class SlideSpec(StrictModel):
     id: str = Field(min_length=1)
     order: int = Field(ge=1)
@@ -441,6 +471,7 @@ class SlideSpec(StrictModel):
     transition: SlideTransition = SlideTransition.SLIDE
     transition_duration_ms: int = Field(default=400, ge=200, le=1200)
     reveal: ContentReveal = ContentReveal.STAGGER_UP
+    animations: list[AnimationEffect] = Field(default_factory=list)
     hidden: bool = False
     notes: str = ""
     footer: str | None = None

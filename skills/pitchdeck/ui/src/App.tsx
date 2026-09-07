@@ -1,3 +1,5 @@
+import { useBuildNavigation } from './animations'
+import { AnimationPanel } from './components/AnimationPanel'
 import { ChevronLeft, ChevronRight, Database, FileCode2, LayoutGrid, LayoutTemplate, Maximize2, MessageSquare, PanelLeft, PanelLeftOpen, PanelRight, Play, ShieldCheck, StickyNote } from 'lucide-react'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { ClaimReview } from './components/ClaimReview'
@@ -19,7 +21,7 @@ import { EditContext, type EditRequest } from './edit'
 import { lintSlide } from './lib/pptxLint'
 import { revisionStore, useDeck, useKeyboardNav, usePaneResize, useRegisterAction } from './hooks'
 import { useTopNavShortcuts } from './useTopNavShortcuts'
-import { FragmentContext, fragmentCount } from './layouts/SlideLayouts'
+import { FragmentContext } from './layouts/SlideLayouts'
 import { type UiDeckBundle, type UiElement } from './types'
 import type { ElementTarget } from './components/SelectedAmendment'
 // Direct import, never a barrel file (best-practices-react).
@@ -211,29 +213,10 @@ export function App() {
     description: 'Restore the previous committed bundle state (undo of undo = redo)',
   })
 
-  const [fragment, setFragment] = useState(0)
-  const fragmentTotal = useRef(0)
-
-  // Click-gated builds: forward advance consumes fragments before slides;
-  // backward un-reveals before retreating. Only in Present (not editing).
-  const go = useCallback(
-    (next: number) => {
-      if (!editing && fragmentTotal.current > 0) {
-        if (next > index && fragment < fragmentTotal.current) {
-          setFragment((value) => value + 1)
-          return
-        }
-        if (next < index && fragment > 0) {
-          setFragment((value) => value - 1)
-          return
-        }
-      }
-      setDirection(next >= index ? 'fwd' : 'back')
-      setIndex(next)
-      setFragment(0)
-    },
-    [index, editing, fragment, setIndex],
-  )
+  const buildSlides = deck ? (editing ? deck.slides : deck.slides.filter(s => !s.hidden)) : []
+  const { fragment, total: buildTotal, go: buildGo, jump } = useBuildNavigation(buildSlides, index, setIndex, editing)
+  const fragmentTotal = { current: buildTotal }
+  const go = useCallback((next: number) => { setDirection(next >= index ? 'fwd' : 'back'); buildGo(next) }, [index, buildGo])
 
   useEffect(() => {
     const onHash = () => setView(viewFromHash())
@@ -321,15 +304,8 @@ export function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  useEffect(() => {
-    if (deck) {
-      const navSlidesNow = editing ? deck.slides : deck.slides.filter((s) => !s.hidden)
-      const current = navSlidesNow[Math.min(index, navSlidesNow.length - 1)]
-      fragmentTotal.current = current ? fragmentCount(current) : 0
-    }
-  }, [deck, index, editing])
+  useKeyboardNav(buildSlides.length, index, go, !presenting, jump)
 
-  useKeyboardNav(deck ? (editing ? deck.slides.length : deck.slides.filter((s) => !s.hidden).length) : 0, index, go, !presenting)
 
 
   // Mode architecture (roundtable): Present | Design | Claims | Source as one
@@ -549,10 +525,11 @@ export function App() {
             <StickyNote aria-hidden className="h-4 w-4" /> <span className="hidden lg:inline">Notes</span>
           </Button>
           <ThemePicker deck={deck} onChanged={reloadAll} />
+          <AnimationPanel slide={slide} onChanged={reloadAll} />
           <ExportMenu />
         </nav>
       </header> : null}
-      {!rehearsing ? <DeckNavigator deck={deck} onSelect={id => { setMode('present'); location.hash = `#/slide/${encodeURIComponent(id)}`; setFragment(0) }} /> : null}
+      {!rehearsing ? <DeckNavigator deck={deck} onSelect={id => { setMode('present'); location.hash = `#/slide/${encodeURIComponent(id)}` }} /> : null}
       <div className="flex shrink-0 flex-wrap gap-2 border-b border-slate-800 p-2">
         <RehearsalControls active={rehearsing} onToggle={() => { setRehearsing(v => !v); setMode('present'); setPresenting(false); const url = new URL(location.href); if (rehearsing) url.searchParams.delete('rehearse'); else url.searchParams.set('rehearse', '1'); history.replaceState(null, '', url) }} />
         <DebuggerControls slideId={slide.id} />
@@ -571,8 +548,7 @@ export function App() {
         <Overview
           deck={{ ...deck, slides: navSlides }}
           onSelect={(next) => {
-            setIndex(next)
-            setFragment(0)
+            jump(next)
             setView('present')
           }}
         />
@@ -590,7 +566,7 @@ export function App() {
                 <SlideDrawer
                   deck={deck}
                   currentIndex={index}
-                  onSelect={go}
+                  onSelect={jump}
                   width={railCollapsed ? undefined : widths.rail}
                   onChanged={reloadAll}
                   collapsed={railCollapsed}

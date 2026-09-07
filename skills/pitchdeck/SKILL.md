@@ -412,9 +412,15 @@ See `docs/RESPONSIVE_BROWSER.md` and the retained live gate
 `fixtures/responsive_browser.json` for the scope and proof boundary.
 
 `ui/node_modules` is a symlink into `/mnt/storage12tb/skills/pitchdeck/`
-per the storage policy. The browser deck is the animation surface; PPTX stays
-animation-free by design (python-pptx has no animation API and Google Slides
-import drops PowerPoint animations).
+per the storage policy. The browser deck is the primary animation surface;
+native PPTX export now carries real `p:timing` click/timing trees for authored
+rows (canonical `emit-document-pptx` and legacy `build`), with per-effect
+coverage, preset confidence and named limits in `docs/ANIMATIONS.md` —
+structural XML proof, not slideshow playback proof; Google Slides import behavior
+remains unverified. PDF stays an explicitly static full-content rendering.
+Progressive reveal (builds, With/After Previous timing, GUI authoring with CAS
+persistence, reduced motion, export targets/timing/static completeness) is
+retained by the live gate `fixtures/progressive_reveal.json`.
 
 ## Active deck, slide links, rehearsal, and VS Code sync (ui/)
 
@@ -666,5 +672,7 @@ Fraunces but does not embed it: recipients may need to install the supplied
 Static PDF fonts use opsz=9; pixel-identical optical sizing across apps is not claimed.
 See `fonts/fraunces/README.md` for provenance and the OFL license.
 Raster illustrations retain their own colors. Existing animations are untouched;
-PPTX remains animation-free as documented above. PDF is rendered from PPTX, not
-independently themed. `fixtures/theme_picker.json` retains the live proof boundary.
+authored animation rows export as native `p:timing` trees as documented above
+(`docs/ANIMATIONS.md`). PDF is rendered from PPTX, remains static full-content,
+and is not independently themed. `fixtures/theme_picker.json` retains the live
+proof boundary.

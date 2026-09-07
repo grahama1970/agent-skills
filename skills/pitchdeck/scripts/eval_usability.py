@@ -24,6 +24,8 @@ BASE = 'http://127.0.0.1:3006'
 
 
 def command(*args):
+    if str(args[0]) == str(SURF) and len(args) > 1 and args[1] in {'js', 'key', 'click', 'type', 'scroll'}:
+        args = (*args, '--no-screenshot')
     p = subprocess.run(args, cwd=ROOT, capture_output=True, text=True, timeout=180)
     if p.returncode:
         raise RuntimeError(p.stdout + p.stderr)

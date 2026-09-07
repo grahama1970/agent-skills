@@ -25,6 +25,10 @@ export interface UiDiagram {
 }
 
 export interface UiElement {
+  children?: UiElement[]
+  shape?: { preset: string; fill_role?: string; stroke?: { width_pt: number } }
+  rotation_deg?: number
+  fragment_index?: number | null
   kind?: string
   role?: string
   diagram?: UiDiagram
@@ -55,7 +59,24 @@ export interface UiVisual {
   source?: string
 }
 
+export interface AnimationEffect {
+  id: string
+  targets: string[]
+  effect: string
+  phase: 'entrance' | 'exit' | 'emphasis' | 'motion'
+  direction: string
+  start: 'on-click' | 'with-previous' | 'after-previous'
+  duration_ms: number
+  delay_ms: number
+  amount?: number
+  color?: string
+  dx?: number
+  dy?: number
+}
+
 export interface UiSlide {
+  animations?: AnimationEffect[]
+  reveal_order?: string[]
   id: string
   order: number
   layout: string

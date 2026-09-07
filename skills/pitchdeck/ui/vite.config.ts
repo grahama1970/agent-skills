@@ -8,8 +8,9 @@ import { fileURLToPath } from 'node:url'
 import type { Plugin } from 'vite'
 import { defineConfig } from 'vite'
 import { bindDeck, deckContext, listDecks } from './server/deck-context'
-import { canonicalExport } from './server/canonical-export'
+import { animationWarnings, canonicalExport } from './server/canonical-export'
 import { debuggerApi } from './server/debugger-api'
+import { animationApi } from './server/animation-api'
 import { themeApi } from './server/theme-api'
 import { elementAgentApi } from './server/element-agent'
 
@@ -57,6 +58,7 @@ function slideEditApi(): Plugin {
       })
       server.middlewares.use((req, res, next) => bindDeck(publicDir, req, res, next))
       server.middlewares.use('/api/theme', themeApi(skillRoot))
+      server.middlewares.use('/api/animations', animationApi(skillRoot))
       server.middlewares.use('/api/element-agent', elementAgentApi(skillRoot))
       server.middlewares.use('/api/debugger', debuggerApi(skillRoot))
       server.middlewares.use('/api/insert', (req, res) => {
@@ -488,7 +490,15 @@ function slideEditApi(): Plugin {
                 return
               }
               const prefix = context.url.slice(0, -'deck.data.json'.length).replace(/\/$/, '')
-              res.end(JSON.stringify({ url: prefix + url, deck_id: context.deck.deck_id, revision: context.deck.revision }))
+              try {
+                const warnings = ['pptx', 'pptx-publish', 'pdf'].includes(String(format))
+                  ? animationWarnings(`${exportsDir}/${format === 'pptx' ? 'deck.draft' : 'deck'}.build-receipt.json`, String(format))
+                  : ['HTML/Markdown export does not carry the full authored animation sequence.']
+                res.end(JSON.stringify({ url: prefix + url, deck_id: context.deck.deck_id, revision: context.deck.revision, warnings }))
+              } catch (readError) {
+                res.statusCode = 422
+                res.end(JSON.stringify({ error: `Cannot verify export warnings: ${String(readError)}` }))
+              }
             }
             const buildArgs = [
               'build',

@@ -1,0 +1,44 @@
+{
+  "version": 2,
+  "skill": "pitchdeck",
+  "trials": 3,
+  "proof_scope": "Real emitted OAI consumer deck: Surf checks header-positioned title deduplication at wide/narrow viewports while preserving the centered closing hero and animation target; actual PPTX rebuild checks theme frame paint without changing media bytes or geometry.",
+  "claims": {
+    "proves": "The two reported OAI consumer visual regressions are detected and corrected on the exercised live paths.",
+    "does_not_prove": "Human visual approval, complete animation coverage, or arbitrary browser/export fidelity. Requires the OAI source bundle, its baseline PPTX snapshot, and dedicated viewer on port 3016."
+  },
+  "cases": [
+    {
+      "name": "live-oai-header-title-and-closing-hero",
+      "type": "adversarial",
+      "real_world": true,
+      "command": ["uv", "run", "--project", "..", "python", "../scripts/eval_consumer_visuals.py", "--case", "header", "--out", "/mnt/storage12tb/oai-trial/visual-fixes/header-eval.json"],
+      "timeout_seconds": 180,
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {"path": "/mnt/storage12tb/oai-trial/visual-fixes/header-eval.json", "json_pointer": "/status", "equals": "PASS"},
+          {"path": "/mnt/storage12tb/oai-trial/visual-fixes/header-eval.json", "json_pointer": "/evidence/checks/0/title_count", "equals": 1},
+          {"path": "/mnt/storage12tb/oai-trial/visual-fixes/header-eval.json", "json_pointer": "/evidence/checks/1/title_count", "equals": 2},
+          {"path": "/mnt/storage12tb/oai-trial/visual-fixes/header-eval.json", "json_pointer": "/evidence/checks/2/target_in_band", "equals": true}
+        ]
+      }
+    },
+    {
+      "name": "real-oai-pptx-frame-paint-preserves-images",
+      "type": "adversarial",
+      "real_world": true,
+      "command": ["uv", "run", "--project", "..", "python", "../scripts/eval_consumer_visuals.py", "--case", "frame", "--out", "/mnt/storage12tb/oai-trial/visual-fixes/frame-eval.json"],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {"path": "/mnt/storage12tb/oai-trial/visual-fixes/frame-eval.json", "json_pointer": "/status", "equals": "PASS"},
+          {"path": "/mnt/storage12tb/oai-trial/visual-fixes/frame-eval.json", "json_pointer": "/evidence/after_blue_nodes", "equals": 0},
+          {"path": "/mnt/storage12tb/oai-trial/visual-fixes/frame-eval.json", "json_pointer": "/evidence/media_unchanged", "equals": true},
+          {"path": "/mnt/storage12tb/oai-trial/visual-fixes/frame-eval.json", "json_pointer": "/evidence/geometry_unchanged", "equals": true}
+        ]
+      }
+    }
+  ]
+}

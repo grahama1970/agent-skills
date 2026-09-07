@@ -19,6 +19,7 @@ export function ExportMenu() {
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [warnings, setWarnings] = useState<string[]>([])
   const [source, setSource] = useState<string | null>(null)
   const ref = useRef<HTMLDivElement | null>(null)
 
@@ -36,19 +37,21 @@ export function ExportMenu() {
   const download = async (format: string) => {
     setBusy(format)
     setError(null)
+    setWarnings([])
     try {
       const response = await fetch('/api/export', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ format }),
       })
-      const data = (await response.json()) as { url?: string; error?: string }
+      const data = (await response.json()) as { url?: string; error?: string; warnings?: string[] }
       if (!response.ok || !data.url) throw new Error(data.error ?? `export failed (${response.status})`)
       const anchor = document.createElement('a')
       anchor.href = data.url
       anchor.download = data.url.split('/').pop() ?? 'deck'
       anchor.click()
-      setOpen(false)
+      setWarnings(data.warnings ?? [])
+      if (!data.warnings?.length) setOpen(false)
     } catch (err) {
       setError(String(err instanceof Error ? err.message : err))
     } finally {
@@ -92,6 +95,7 @@ export function ExportMenu() {
               {busy === format ? 'Building…' : source === 'emit-document-ui' && format === 'pptx' ? 'Editable PPTX (authoring preview)' : source === 'emit-document-ui' && format === 'pdf' ? 'PDF preview' : label}
             </Button>
           ))}
+          {warnings.length > 0 ? <div role="status" data-qid="deck:export:warnings" className="max-h-48 overflow-auto px-3 py-2 text-xs text-amber-200"><p>Downloaded with limitations:</p><ul>{warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul></div> : null}
           {error ? (
             <p role="alert" className="m-0 px-3 py-2 text-xs text-rose-300">
               {error}
