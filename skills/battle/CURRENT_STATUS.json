@@ -42,7 +42,7 @@
           "type:bug"
         ],
         "number": 1613,
-        "state": "OPEN",
+        "state": "CLOSED",
         "title": "Battle: bind CLI authorization to executed target",
         "url": "https://github.com/grahama1970/agent-skills/issues/1613"
       },
@@ -100,13 +100,12 @@
           "agent:agent-skill-maintainer",
           "battle",
           "lane:be",
-          "maintainer-active",
           "route:backend_python_or_skill_runtime",
           "skill-bug",
           "type:bug"
         ],
         "number": 1609,
-        "state": "OPEN",
+        "state": "CLOSED",
         "title": "Battle: current-status check must revalidate the proof chain",
         "url": "https://github.com/grahama1970/agent-skills/issues/1609"
       },
@@ -718,23 +717,8 @@
       "1144": "CLOSED",
       "1150": "CLOSED"
     },
-    "open_battle_label_count": 10,
+    "open_battle_label_count": 8,
     "open_battle_label_issues": [
-      {
-        "labels": [
-          "agent-work",
-          "agent:agent-skill-maintainer",
-          "battle",
-          "lane:be",
-          "route:backend_python_or_skill_runtime",
-          "skill-bug",
-          "type:bug"
-        ],
-        "number": 1613,
-        "state": "OPEN",
-        "title": "Battle: bind CLI authorization to executed target",
-        "url": "https://github.com/grahama1970/agent-skills/issues/1613"
-      },
       {
         "labels": [
           "agent-work",
@@ -782,22 +766,6 @@
         "state": "OPEN",
         "title": "Battle: enforce exact commentary-to-event references",
         "url": "https://github.com/grahama1970/agent-skills/issues/1610"
-      },
-      {
-        "labels": [
-          "agent-work",
-          "agent:agent-skill-maintainer",
-          "battle",
-          "lane:be",
-          "maintainer-active",
-          "route:backend_python_or_skill_runtime",
-          "skill-bug",
-          "type:bug"
-        ],
-        "number": 1609,
-        "state": "OPEN",
-        "title": "Battle: current-status check must revalidate the proof chain",
-        "url": "https://github.com/grahama1970/agent-skills/issues/1609"
       },
       {
         "labels": [
@@ -994,7 +962,7 @@
         "arena_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/arena-receipt.json",
         "blue_team_activity_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/blue-team-activity-receipt.json",
         "broadcast_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/provider-tau-lineage-broadcast-receipt.json",
-        "campaign_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/campaign-receipt.json",
+        "campaign_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/campaign-receipt.json",
         "checks": {
           "broadcast_passed": true,
           "campaign_passed": true,
@@ -1010,11 +978,11 @@
         "seed_count": 2,
         "sports_play_by_play_commentary_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/sports-play-by-play-commentary-receipt.json",
         "status": "PASS",
-        "visibility_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/generation-2/visibility-validation.json"
+        "visibility_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-2/visibility-validation.json"
       },
       "id": "provider_tau_seeded_lineage_spawn",
       "issue_refs": [],
-      "receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/campaign-receipt.json",
+      "receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/campaign-receipt.json",
       "status": "PASS"
     },
     {
@@ -1155,8 +1123,8 @@
   ],
   "schema": "battle.current_status.v1",
   "source": {
-    "battle_tree": "128e92f99f2aaeda3e956a3101d72e24c120822c",
-    "commit": "5b870c7c921a8e7b36a0308f57c0b701b6e188e5",
+    "battle_tree": "07647d37d865fbe8f4d7fa464dfbac7a35761c6c",
+    "commit": "4f671cf086a922ca969c7fd04e4b9e7429548f6b",
     "repository": "grahama1970/agent-skills"
   },
   "source_context": {
@@ -1326,7 +1294,7 @@
       "mocked": null,
       "path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/memory-promotion-eval/memory-promotion-live-receipt.json",
       "schema": "battle.memory_promotion_live_receipt.v1",
-      "sha256": "2cb5398ca04c2acdb1c7e3c7c4f6302b97fafc80820a3e83da9a04f01e8a234c",
+      "sha256": "536574cb98d1ed1fc4002d0471aec51aec1d0ea035a687f19fc0a3759141995e",
       "status": "PASS"
     },
     "provider_tau_seeded_broadcast": {
@@ -1335,16 +1303,16 @@
       "mocked": null,
       "path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/provider-tau-lineage-broadcast-receipt.json",
       "schema": "battle.provider_tau_lineage_broadcast.v1",
-      "sha256": "ab39f901f6bea23f6b0b89306fa445acba224bcee84724afe29b3cabee4b4bbd",
+      "sha256": "bcbe4614575dbb800ba2c1974c3a7cfa3fd490a5808427bd94be234e27186832",
       "status": "PASS"
     },
     "provider_tau_seeded_campaign": {
       "exists": true,
       "live": true,
       "mocked": false,
-      "path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/campaign-receipt.json",
+      "path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/campaign-receipt.json",
       "schema": "battle.adaptive_red_blue_lineage_canary.v1",
-      "sha256": "f749f00033b7dbb6f31514172dd15aff25a239fc3584596f4db4c549f64d33d6",
+      "sha256": "d7d52d2dd01640471ba1bdf3f152b5cda19b79361fe46a1b5082102649b96738",
       "status": "PASS"
     },
     "same_run_qualification": {
@@ -1388,5 +1356,5 @@
       "status": "UNSUPPORTED"
     }
   ],
-  "updated_at": "2026-09-07T14:50:50Z"
+  "updated_at": "2026-09-07T16:13:40Z"
 }
