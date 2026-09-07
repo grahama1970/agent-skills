@@ -74,8 +74,11 @@ Agents can read the same journal with the read-only `shame_failures` tool
   activates self-correction; mentioning those names in an advisory question does
   not. Strict mode remains an explicit opt-in. Actual mutations remain guarded.
 - Pydantic data decides status validity. Never classify status prose with regex
-  or an LLM. Strip model status prose/raw JSON; render the visible `Status Report`
-  from validated data. Trailing prose after valid JSON is ignored.
+  or an LLM. Strip model status prose/raw JSON; render the visible answer before
+  the `Status Report` metadata. Trailing prose after valid JSON is ignored.
+- Immutable-goal turns must lead with a decisive answer headline: `IMMUTABLE_GOAL:
+  COMPLETE`, `IMMUTABLE_GOAL: NOT_COMPLETE`, or `IMMUTABLE_GOAL: NEEDS_HUMAN`.
+  Do not bury the goal state under proof, commits, or status metadata.
 - Compile actionable status data once and dispatch at `agent_end`. Identical
   status text at distinct stops is legitimate; replaying one event is not.
 - Aborts, errors, length limits, and shutdown do not start reporting retries.

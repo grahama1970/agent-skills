@@ -73,6 +73,14 @@
       }
     },
     {
+      "id": "shame.immutable_goal_headline",
+      "description": "Immutable-goal reports must put COMPLETE, NOT_COMPLETE, or NEEDS_HUMAN in the first-class answer headline so the result cannot be buried under proof metadata.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
+    },
+    {
       "id": "shame.collab_peer_acceptance",
       "description": "Collaborator-mediated closure requires a typed peer acceptance receipt, not implementer self-closure.",
       "criticality": "critical",
@@ -318,6 +326,34 @@
           "\"missing_answer_rejected\": true",
           "\"failure_history_verified\": true",
           "Answer: COMPLETE per project_watchdog.goal_completion.v1"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "provider_error"
+        ]
+      }
+    },
+    {
+      "name": "immutable-goal-headline-enforced",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "shame.immutable_goal_headline"
+      ],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-immutable-goal-headline.py"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_IMMUTABLE_GOAL_HEADLINE_ENFORCED",
+          "\"vague_answer_rejected\": true",
+          "\"COMPLETE\"",
+          "\"NOT_COMPLETE\"",
+          "\"NEEDS_HUMAN\""
         ],
         "stdout_excludes": [
           "Traceback",

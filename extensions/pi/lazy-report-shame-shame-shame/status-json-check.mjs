@@ -9,7 +9,7 @@ import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-const CHECKER_VERSION = '2026-09-03.status-json-data-first.v10';
+const CHECKER_VERSION = '2026-09-07.status-json-data-first.v11';
 const TRUTHY_FLAG_VALUES = new Set(['1', 'true', 'yes']);
 const flagEnabled = (value) => TRUTHY_FLAG_VALUES.has(String(value || '').trim().toLowerCase());
 const MUTATING_TURN = flagEnabled(process.env.LRSSS_MUTATING_TURN);
@@ -185,7 +185,8 @@ if (verdict.valid !== true) {
 
 const parsedStatus = JSON.parse(statusJson);
 const terminalStates = new Set(['done', 'failed', 'needs_human']);
-if (USER_TEXT.includes('?') && terminalStates.has(String(verdict.state || '')) && !String(parsedStatus.answer || '').trim()) {
+const answer = String(parsedStatus.answer || '').trim();
+if (USER_TEXT.includes('?') && terminalStates.has(String(verdict.state || '')) && !answer) {
   emit('reject', ['missing_answer_to_question'], {
     state: verdict.state,
     status: parsedStatus,
@@ -196,6 +197,21 @@ if (USER_TEXT.includes('?') && terminalStates.has(String(verdict.state || '')) &
       steering: [{ code: 'missing_answer_to_question', loc: ['answer'], field: 'answer', action: 'add_required_field' }],
     },
   });
+}
+if (USER_TEXT.toLowerCase().includes('immutable goal') && terminalStates.has(String(verdict.state || ''))) {
+  const allowed = ['IMMUTABLE_GOAL: COMPLETE', 'IMMUTABLE_GOAL: NOT_COMPLETE', 'IMMUTABLE_GOAL: NEEDS_HUMAN'];
+  if (!allowed.some((prefix) => answer.startsWith(prefix))) {
+    emit('reject', ['missing_immutable_goal_headline'], {
+      state: verdict.state,
+      status: parsedStatus,
+      validation_result: {
+        schema: 'pi.agent_status.validation_result.v1',
+        valid: false,
+        errors: [{ type: 'missing_immutable_goal_headline', loc: ['answer'], msg: 'immutable-goal turns require answer to start with IMMUTABLE_GOAL: COMPLETE, NOT_COMPLETE, or NEEDS_HUMAN', ctx: { field: 'answer' } }],
+        steering: [{ code: 'missing_immutable_goal_headline', loc: ['answer'], field: 'answer', action: 'prefix_immutable_goal_answer' }],
+      },
+    });
+  }
 }
 emit('pass', ['valid_agent_status_json'], {
   state: verdict.state,
