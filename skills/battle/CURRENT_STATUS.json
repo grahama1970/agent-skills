@@ -131,6 +131,7 @@
           "agent:agent-skill-maintainer",
           "battle",
           "lane:be",
+          "maintainer-active",
           "route:backend_python_or_skill_runtime",
           "skill-bug",
           "type:bug"
@@ -151,7 +152,7 @@
           "type:bug"
         ],
         "number": 1606,
-        "state": "OPEN",
+        "state": "CLOSED",
         "title": "Battle: remove synthetic verdicts from live Judge authority",
         "url": "https://github.com/grahama1970/agent-skills/issues/1606"
       },
@@ -717,7 +718,7 @@
       "1144": "CLOSED",
       "1150": "CLOSED"
     },
-    "open_battle_label_count": 8,
+    "open_battle_label_count": 7,
     "open_battle_label_issues": [
       {
         "labels": [
@@ -789,6 +790,7 @@
           "agent:agent-skill-maintainer",
           "battle",
           "lane:be",
+          "maintainer-active",
           "route:backend_python_or_skill_runtime",
           "skill-bug",
           "type:bug"
@@ -797,21 +799,6 @@
         "state": "OPEN",
         "title": "Battle: hash finalized Judge receipt bytes",
         "url": "https://github.com/grahama1970/agent-skills/issues/1607"
-      },
-      {
-        "labels": [
-          "agent-work",
-          "agent:agent-skill-maintainer",
-          "battle",
-          "lane:be",
-          "route:backend_python_or_skill_runtime",
-          "skill-bug",
-          "type:bug"
-        ],
-        "number": 1606,
-        "state": "OPEN",
-        "title": "Battle: remove synthetic verdicts from live Judge authority",
-        "url": "https://github.com/grahama1970/agent-skills/issues/1606"
       },
       {
         "labels": [
@@ -1294,7 +1281,7 @@
       "mocked": null,
       "path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/memory-promotion-eval/memory-promotion-live-receipt.json",
       "schema": "battle.memory_promotion_live_receipt.v1",
-      "sha256": "536574cb98d1ed1fc4002d0471aec51aec1d0ea035a687f19fc0a3759141995e",
+      "sha256": "a698c349f230b6e6a5fa38b8b534dd33fe400944adbd4dbec4fb20237f912e24",
       "status": "PASS"
     },
     "provider_tau_seeded_broadcast": {
@@ -1303,7 +1290,7 @@
       "mocked": null,
       "path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/provider-tau-lineage-broadcast-receipt.json",
       "schema": "battle.provider_tau_lineage_broadcast.v1",
-      "sha256": "bcbe4614575dbb800ba2c1974c3a7cfa3fd490a5808427bd94be234e27186832",
+      "sha256": "e458efeab5ea69eebb2c291117534ba27810d8590693aed7ef3b0fd43ffef6f0",
       "status": "PASS"
     },
     "provider_tau_seeded_campaign": {
@@ -1312,7 +1299,7 @@
       "mocked": false,
       "path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/campaign-receipt.json",
       "schema": "battle.adaptive_red_blue_lineage_canary.v1",
-      "sha256": "d7d52d2dd01640471ba1bdf3f152b5cda19b79361fe46a1b5082102649b96738",
+      "sha256": "c73014da5b2de3aa9afd1dba982d9dc92203dff6e4eb813c5b2465abc0f5508c",
       "status": "PASS"
     },
     "same_run_qualification": {
@@ -1356,5 +1343,5 @@
       "status": "UNSUPPORTED"
     }
   ],
-  "updated_at": "2026-09-07T16:13:40Z"
+  "updated_at": "2026-09-07T17:24:13Z"
 }
