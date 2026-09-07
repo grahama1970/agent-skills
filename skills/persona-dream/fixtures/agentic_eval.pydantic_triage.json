@@ -1,0 +1,92 @@
+{
+  "version": 2,
+  "skill": "persona-dream",
+  "trials": 3,
+  "proof_scope": "fault-injected deterministic step-boundary validation only; not live dream quality or human perception proof",
+  "claims": {
+    "proves": "corrupt step JSON is blocked before execution with pydantic_errors[] and triage_errors[] carrying persona_dream_pydantic_step_gate_failed; valid schema envelope passes with no triage errors",
+    "does_not_prove": "full pipeline readiness, semantic dream quality, Chatterbox perceptual quality, or human-audible acceptance"
+  },
+  "capability_claims": [
+    {
+      "id": "persona_dream.pydantic_triage_step_boundary",
+      "description": "Every Persona Dream DAG step failure carries Pydantic error data plus triage-error {code,cause,next_command} classification instead of prose-only BLOCKED output.",
+      "criticality": "critical",
+      "evidence_required": {
+        "fault_injected_deterministic": true
+      }
+    }
+  ],
+  "seams": [],
+  "cases": [
+    {
+      "name": "pydantic-step-gate-triages-corrupt-input",
+      "type": "adversarial",
+      "real_world": true,
+      "required": true,
+      "supports_claims": [
+        "persona_dream.pydantic_triage_step_boundary"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d); echo '{\"not_schema\":1}' > \"$T/input.json\"; uv run --project .. python ../scripts/dag_step.py --node-id eval-gate --command noop --receipt \"$T/receipt.json\" --run-dir \"$T\" --consumes input.json --produces ''; ec=$?; cat \"$T/receipt.json\"; exit $((ec==1 ? 0 : 1))"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "pydantic_errors",
+          "triage_errors",
+          "persona_dream_pydantic_step_gate_failed",
+          "\"next_command\"",
+          "BLOCKED"
+        ]
+      },
+      "evidence_class": "fault_injected_deterministic"
+    },
+    {
+      "name": "pydantic-step-gate-passes-valid-envelope",
+      "type": "positive",
+      "real_world": true,
+      "required": true,
+      "supports_claims": [
+        "persona_dream.pydantic_triage_step_boundary"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d); echo '{\"schema\":\"some.thing.v1\"}' > \"$T/input.json\"; uv run --project .. python ../scripts/dag_step.py --node-id eval-gate2 --command help --receipt \"$T/receipt.json\" --run-dir \"$T\" --consumes input.json --produces '' >/dev/null; python3 -c \"import json;r=json.load(open('$T/receipt.json'));print('status',r['status']);print('gate_errors',len(r['pydantic_errors']));print('triage_errors',len(r['triage_errors']))\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "status PASS",
+          "gate_errors 0",
+          "triage_errors 0"
+        ]
+      },
+      "evidence_class": "fault_injected_deterministic"
+    },
+    {
+      "name": "triage-catalog-classifies-pydantic-step-error",
+      "type": "positive",
+      "real_world": true,
+      "required": true,
+      "supports_claims": [
+        "persona_dream.pydantic_triage_step_boundary"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "../../triage-error/run.sh classify --text \"pydantic_gate_input missing at ['input.json','schema']: Field required\" --layer persona-dream | python3 -c \"import json,sys;d=json.load(sys.stdin);print(d['code'], d['ambiguous'], bool(d['next_command']))\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "persona_dream_pydantic_step_gate_failed False True"
+        ]
+      },
+      "evidence_class": "fault_injected_deterministic"
+    }
+  ]
+}

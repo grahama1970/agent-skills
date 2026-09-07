@@ -66,6 +66,21 @@ C0_STRUCTURED_REFLECTION: same memory, same answer capsule, no active conflict
 C1_DREAM_JOURNAL: same memory and answer capsule, one journaled conflict
 ```
 
+Executable step boundary:
+
+```text
+every pipeline step
+-> validate consumed JSON with Pydantic before execution
+-> execute exactly one declared step
+-> validate produced JSON with Pydantic before downstream use
+-> classify every step failure through triage-error into {code, cause, next_command}
+-> write those pydantic_errors[] and triage_errors[] into the step receipt
+```
+
+A prose-only step instruction, prose failure, or generic BLOCKED/NEEDS_ATTENTION
+without typed Pydantic error data and triage-error classification is not valid
+pipeline evidence for this goal.
+
 `#1179` listener-study rerendering is no longer the active next step. It is a
 supporting perceptual lane that remains blocked/deferred until this paired
 technical proof exists. A listener result cannot establish the corrected goal

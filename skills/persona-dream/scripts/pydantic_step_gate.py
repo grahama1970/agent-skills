@@ -290,7 +290,7 @@ def pydantic_first_check(schema: dict[str, Any], value: Any) -> None:
         raise jsonschema.exceptions.ValidationError("; ".join(messages))
 
 
-def validate_artifact(path: Path) -> list[dict[str, Any]]:
+def validate_artifact(path: Path, require_schema: bool = False) -> list[dict[str, Any]]:
     """Return pydantic-style error dicts; empty list means PASS."""
     try:
         raw = json.loads(path.read_text(encoding="utf-8"))
@@ -310,6 +310,8 @@ def validate_artifact(path: Path) -> list[dict[str, Any]]:
             _load_generated_registry().get(declared)
             or REGISTRY.get(declared, ArtifactEnvelope)
         )
+    elif require_schema:
+        model = ArtifactEnvelope
     else:
         stem = path.name.removesuffix(".json").replace(".", "_").replace("-", "_") + "_schema"
         _load_generated_registry()
@@ -324,10 +326,12 @@ def validate_artifact(path: Path) -> list[dict[str, Any]]:
     return []
 
 
-def validate_artifacts(paths: list[Path], json_only: bool = True) -> list[dict[str, Any]]:
+def validate_artifacts(
+    paths: list[Path], json_only: bool = True, require_schema: bool = False
+) -> list[dict[str, Any]]:
     errors: list[dict[str, Any]] = []
     for path in paths:
         if json_only and path.suffix != ".json":
             continue
-        errors.extend(validate_artifact(path))
+        errors.extend(validate_artifact(path, require_schema=require_schema))
     return errors

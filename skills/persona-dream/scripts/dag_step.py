@@ -33,6 +33,7 @@ from pydantic_step_gate import validate_artifacts  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 RUN_SH = ROOT / "run.sh"
+TRIAGE_RUN = ROOT.parent / "triage-error" / "run.sh"
 NODE_RECEIPT_SCHEMA = "tau.generic_dag_node_receipt.v1"
 
 
@@ -42,6 +43,32 @@ class _PydanticGateBlocked(Exception):
 
 def _sha256(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _triage(signal: str) -> dict[str, Any]:
+    """Map a step failure to triage-error's typed code/cause/next_command JSON."""
+    try:
+        proc = subprocess.run(
+            [str(TRIAGE_RUN), "classify", "--text", signal, "--layer", "persona-dream"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if proc.returncode == 0:
+            return json.loads(proc.stdout)
+    except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError):
+        pass
+    digest = hashlib.sha256(signal.encode("utf-8")).hexdigest()[:8]
+    return {
+        "code": f"persona_dream_triage_unavailable_{digest}",
+        "layer": "persona-dream",
+        "cause": signal,
+        "next_command": f"Run {TRIAGE_RUN} classify --text <signal> --layer persona-dream",
+        "recoverable": None,
+        "not_this": [],
+        "ambiguous": True,
+        "matched_tokens": [],
+    }
 
 
 def main() -> int:
@@ -85,7 +112,7 @@ def main() -> int:
         {"type": "artifact_missing", "loc": [str(path)], "msg": "file not found"}
         for path in consumed if not path.is_file()
     ]
-    pydantic_errors += validate_artifacts([p for p in consumed if p.is_file()])
+    pydantic_errors += validate_artifacts([p for p in consumed if p.is_file()], require_schema=True)
     if pydantic_errors:
         errors.extend(
             f"pydantic_gate_input {e['type']} at {e['loc']}: {e.get('msg', '')}"
@@ -119,13 +146,16 @@ def main() -> int:
             errors.append(f"declared artifact not produced: {artifact_dir / name}")
     # Pydantic gate on produced JSON artifacts (producer-side seam validation).
     produced_errors = validate_artifacts(
-        [artifact_dir / n for n in produces if (artifact_dir / n).is_file()]
+        [artifact_dir / n for n in produces if (artifact_dir / n).is_file()],
+        require_schema=True,
     )
     errors.extend(
         f"pydantic_gate_output {e['type']} at {e['loc']}: {e.get('msg', '')}"
         for e in produced_errors
     )
     pydantic_errors.extend(produced_errors)
+
+    triage_errors = [_triage(err) for err in errors]
 
     ok = not errors
     receipt = {
@@ -138,6 +168,7 @@ def main() -> int:
         "commands_run": [{"argv": cmd, "exit_code": exit_code,
                           "elapsed_seconds": round(time.time() - started, 3)}],
         "errors": errors,
+        "triage_errors": triage_errors,
         "policy_exceptions": [],
         "handoff_summary": (
             f"{args.node_id}: produced {len(artifacts)}/{len(produces)} declared artifacts. "

@@ -3,6 +3,24 @@
   "note": "Canonical failure-code catalog across the model-calling pipeline (/ask -> /tau -> {/surf | /scillm}). Each entry maps a raw signal from any layer to ONE unambiguous {code, cause, next_command}. The triage skill grows this catalog as it classifies real ambiguous errors.",
   "codes": [
     {
+      "code": "persona_dream_pydantic_step_gate_failed",
+      "layer": "persona-dream",
+      "match": [
+        "pydantic_gate_input",
+        "pydantic_gate_output",
+        "artifact_missing",
+        "json_schema_constraint"
+      ],
+      "cause": "A Persona Dream pipeline step consumed or produced JSON that failed the pydantic-first step boundary contract, so the step cannot safely advance.",
+      "next_command": "Read the node receipt triage_errors[] and pydantic_errors[], repair the named consumed or produced artifact/schema, then rerun the same dag_step command.",
+      "recoverable": true,
+      "not_this": [
+        "human listener collection blocker",
+        "provider authentication failure",
+        "semantic reviewer disagreement"
+      ]
+    },
+    {
       "code": "persona_dream_status_surface_drift",
       "layer": "persona-dream",
       "match": [
@@ -390,6 +408,26 @@
         "no seat verdict",
         "closure PASS",
         "closure FAIL"
+      ]
+    },
+    {
+      "code": "project_watchdog_closure_audit_unverified_closed",
+      "layer": "project-watchdog",
+      "match": [
+        "project_watchdog_closure_audit_unverified_closed",
+        "left_closed_unverified",
+        "closure audit: NEEDS_ATTENTION",
+        "Closure audit: NEEDS_ATTENTION",
+        "left closed and unverified",
+        "could not be verified from the ticket thread"
+      ],
+      "cause": "A project-watchdog closure audit could not verify the ticket proof but left the issue closed as completed. Unverified closure must reopen or block the ticket; closure is a proof claim, not a default state.",
+      "next_command": "Reopen the issue, add agent-work plus needs-human, remove closure-verified/closure-unverified, then rerun the project-watchdog closure-audit regression eval and verify the tick receipt with pydantic.",
+      "recoverable": true,
+      "not_this": [
+        "closure PASS",
+        "closure FAIL already reopened the ticket",
+        "provider did not answer any verdict"
       ]
     },
     {
