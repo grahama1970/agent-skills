@@ -133,13 +133,44 @@ camera instruction + face-hidden negative were added (run T152608), after which
 her face was readable. This is a prompt-slot concern (camera/look slot), not a
 reference-image concern.
 
-## Rule 6: One clip, one action
+## Rule 6: Multi-clip dream sequences (3-4 clips, 5-7s each)
+
+A ~20-30s dream is 3-4 chained clips. Consistency across clips is enforced by
+construction, not hope:
+
+1. **The reference is the law.** Identical `elements[]` images in every clip.
+   Never regenerate or swap a reference mid-sequence.
+2. **Verbatim bindings.** The `@ElementN is <name>...` identity phrases are
+   copied byte-identical into every clip's prompt. Only the action/camera slot
+   changes. Kling treats paraphrased identity text as a new character.
+3. **Continuity mechanism, ranked.**
+   a. **Native multi-shot** (total <= 15s): one `multi_prompt` request, one
+      beat per entry (<=512 chars each) - all shots share one latent,
+      strongest consistency, nothing to chain.
+   b. **Video element chaining**: pass clip N as an element
+      (`{"video_url": <clip N url>}`) in clip N+1's request, alongside the
+      unchanged character image elements. Kling captures visual+audio
+      continuity from the actual footage. Slot math: 2 characters + video +
+      env ref = exactly the 4-slot cap.
+   c. **Last-frame chaining**: `ffmpeg -sseof -0.1 -i clipN.mp4 -frames:v 1
+      lastN.png` -> `start_image_url` of clip N+1. Cheapest; anchors set and
+      lighting at the first instant only. Use when the slot budget is needed
+      elsewhere.
+   Always keep the character image elements regardless of mechanism - a video
+   or frame alone can carry drift forward, and drift compounds.
+4. **Same environment ref** (`@Image1`) every clip when slots allow.
+6. **Audit each clip before chaining**: face shape, hair part, eye color,
+   wardrobe hue, distinguishing detail, body proportions. Two or more failures
+   -> regenerate with ONE variable changed; never color-grade drift away in
+   post, and never chain from a drifted clip - drift compounds.
+
+## Rule 7: One clip, one action
 
 5s clips fit ONE action beat. A prompt listing three sequential actions gets
 a mushy average. For sequences use `multi_prompt` (one beat per entry, each
 ≤512 chars) or separate keyframe→I2V clips per shot.
 
-## Rule 7: No silent retry
+## Rule 8: No silent retry
 
 A consumed paid attempt is history. A repair means a new request hash, new
 validation, new authorization. Never loop resubmits hoping for a better draw —
