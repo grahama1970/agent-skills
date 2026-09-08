@@ -159,7 +159,7 @@ construction, not hope:
    Always keep the character image elements regardless of mechanism - a video
    or frame alone can carry drift forward, and drift compounds.
 4. **Same environment ref** (`@Image1`) every clip when slots allow.
-6. **Audit each clip before chaining**: face shape, hair part, eye color,
+5. **Audit each clip before chaining**: face shape, hair part, eye color,
    wardrobe hue, distinguishing detail, body proportions. Two or more failures
    -> regenerate with ONE variable changed; never color-grade drift away in
    post, and never chain from a drifted clip - drift compounds.
