@@ -91,6 +91,41 @@ Identity does NOT go in prose — it travels in `elements[]`. Never spend prompt
 chars describing a character's appearance when a reference image carries it;
 prose descriptions compete with, and lose to, invented casting.
 
+Kling's actual capacity (brave-verified 2026-09-08): the API hard cap is
+2,500 chars each for prompt and negative prompt, but the EFFECTIVE budget is
+much smaller — guides converge on 50-150 words as the sweet spot (200-350
+words max for long prompts) and a per-clip complexity budget of roughly
+**3 visual components + 1 camera movement + 1 lighting + 1 mood**. Beyond
+that, Kling averages or drops constraints silently. The ~800-char slot budget
+above sits inside the sweet spot on purpose; the 2,500 cap is NOT an
+invitation.
+
+### Converting a scene table / scene graph to Kling
+
+The source of truth upstream is best-practices-scene-script-writing's
+`scene_script.scene_table.v1` (env header + element rows) and its
+`scene_graph_v2_design.md` (relation triples, criticality, roles). Kling
+never receives the table or graph — it receives a lossy, ranked rendering:
+
+1. **Filter by criticality.** Only `required` facts compete for prompt
+   chars; `desired` mood/style words go in the mood tail or get cut first.
+2. **Rank element rows** and keep at most ~3 in prose: speaker/primary actor
+   first, one foreground prop state, one background life cue (the dynamic
+   behaviors x3 slot). Everything else is carried by refs or dropped.
+3. **Identity never in prose** — element rows of type character map to
+   `elements[]` refs + verbatim `@ElementN` bindings; their `description`
+   fields are NOT rendered.
+4. **Relations render as one clause each**, physics verb included
+   (`env.wind causes_deformation_of umbrella` -> "storm wind shivers the
+   umbrella fabric"), never as JSON or lore names.
+5. **Env header compresses to one line**: location + time + the ONE force
+   that touches the scene; light_sources + light_behavior fill the
+   camera/look slot.
+6. **The full table/graph stays behind** as the VERIFICATION contract — the
+   post-generation audit ($watch + panel gate) checks every required row
+   against the clip, including the ones that didn't fit the prompt. Dropped
+   prompt facts are still enforced facts.
+
 Use `scripts/compile_kling_request.py` to do this deterministically from
 pipeline artifacts:
 
