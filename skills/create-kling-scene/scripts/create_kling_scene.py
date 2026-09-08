@@ -90,10 +90,20 @@ class KlingInstructions(BaseModel, extra="forbid"):
 
     @model_validator(mode="after")
     def _cross_checks(self) -> "KlingInstructions":
-        ref_names = {r.name for r in self.references}
-        unref = [c for c in self.characters if not any(n in c or c.endswith(n) for n in ref_names)]
-        if unref:
-            raise ValueError(f"characters without a reference image: {unref}")
+        # POSITIONAL identity binding (webgpt review 2026-09-08): @ElementN is positional in
+        # the Kling API, so references[i] MUST belong to characters[i]. Substring/set
+        # matching allowed a silent identity swap.
+        if len(self.references) != len(self.characters):
+            raise ValueError(
+                f"reference_set_mismatch: {len(self.characters)} characters vs {len(self.references)} references"
+            )
+        for i, (c, r) in enumerate(zip(self.characters, self.references), start=1):
+            if not (c == r.name or c.endswith(f"_{r.name}") or c.split("_", 1)[-1] == r.name):
+                raise ValueError(
+                    f"element_binding_order_mismatch: @Element{i} expected {c}, got reference '{r.name}'"
+                )
+        if len({r.name for r in self.references}) != len(self.references):
+            raise ValueError("duplicate_reference_name")
         for i, c in enumerate(self.characters, 1):
             if f"@Element{i}" not in self.slots.bindings:
                 raise ValueError(f"@Element{i} missing from bindings for {c}")
@@ -105,6 +115,16 @@ class KlingInstructions(BaseModel, extra="forbid"):
             if not any(v.name in c or c.endswith(v.name) for c in self.characters):
                 raise ValueError(f"voice wav '{v.name}' does not match any character")
         return self
+
+    def audio_plan(self) -> dict:
+        """Every validated voice MUST be consumed downstream (webgpt review: a valid WAV
+        silently vanishing from the packet is a hard failure, not a quiet success)."""
+        return {
+            "schema": "create_kling_scene.audio_plan.v1",
+            "voices": [{"name": v.name, "path": v.path, "purpose": v.purpose,
+                        "duration_s": v.duration_s} for v in self.voices],
+            "next_stage": "fal-ai/kling-video/lipsync/audio-to-video" if self.voices else None,
+        }
 
 
 class Stage(BaseModel, extra="forbid"):
@@ -237,11 +257,22 @@ def build(
     # Stage 2: media gate — every ref is a real decodable image, every wav a real bounded WAV
     table = json.loads(scene.read_text())
     characters = [e["element_id"] for e in table["elements"] if e["element_type"] == "character"]
-    ref_map = dict(kv.split("=", 1) for kv in refs)
+    pairs = [kv.split("=", 1) for kv in refs]
+    if len({k for k, _ in pairs}) != len(pairs):
+        _fail("reference_check", [{"type": "value_error", "msg": "duplicate_reference_name in --refs"}],
+              receipt, receipt_path)
+    # Order references by scene-table character order, NOT CLI order (positional @ElementN).
+    cli_map = dict(pairs)
     voice_map = dict(kv.split("=", 1) for kv in voice)
     media_errors: list[dict] = []
     images: list[ImageRef] = []
     wavs: list[VoiceWav] = []
+    ordered_names = []
+    for c in characters:
+        match = next((k for k in cli_map if k == c or c.endswith(f"_{k}") or c.split("_", 1)[-1] == k), None)
+        if match:
+            ordered_names.append(match)
+    ref_map = {k: cli_map[k] for k in ordered_names + [k for k in cli_map if k not in ordered_names]}
     for k, v in ref_map.items():
         try:
             images.append(ImageRef(name=k, path=v))
@@ -307,6 +338,10 @@ def build(
     }
     packet_path = out_dir / "kling_request.json"
     packet_path.write_text(json.dumps(packet, indent=1))
+    if instructions.voices:
+        # validated_voice_not_consumed guard: the packet has no audio field, so a durable
+        # audio plan MUST exist naming the follow-on lipsync stage for every voice.
+        (out_dir / "audio_plan.json").write_text(json.dumps(instructions.audio_plan(), indent=1))
     receipt["stages"].append({"stage": "compile", "prompt_chars": len(prompt),
                               "packet": str(packet_path)})
 

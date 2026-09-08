@@ -94,4 +94,23 @@ assert q["questions"][0]["id"] == "repair_decision", q
 assert r["seam_validation"]["status"] == "PASS"
 print("PASS escalation-control interview handoff")
 PYEOF
+# binding-swap control: CLI refs in REVERSED character order must still bind positionally
+python3 -c "
+import json
+chars=[e['element_id'] for e in json.load(open('$T/scene.json'))['elements'] if e['element_type']=='character']
+print(len(chars))" > /dev/null
+REV=(); for c in $(echo $CHARS | tr ' ' '\n' | tac); do REV+=(--refs "$c=$T/$c.png"); done
+./run.sh build --scene "$T/scene.json" "${REV[@]}" --out-dir "$T/run7" >/dev/null
+python3 -c "
+import json
+i=json.load(open('$T/run7/kling_instructions.json'))
+chars=[e['element_id'] for e in json.load(open('$T/scene.json'))['elements'] if e['element_type']=='character']
+for n,(c,r) in enumerate(zip(i['characters'], i['references']),1):
+    assert c==r['name'] or c.endswith('_'+r['name']) or c.split('_',1)[-1]==r['name'], (n,c,r['name'])
+print('PASS binding-order-control (reversed CLI order rebinds positionally)')"
+# voice consumption: audio_plan.json must exist when a voice was validated
+python3 -c "
+import json; a=json.load(open('$T/run6/audio_plan.json'))
+assert a['voices'][0]['name']=='embry' and a['next_stage'], a
+print('PASS voice-consumption audio_plan emitted')"
 echo "ALL SANITY PASS"
