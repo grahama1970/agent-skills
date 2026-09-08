@@ -212,6 +212,14 @@ tables: `references/workflows.md`.
   `references/diagnosis.md` and dispatch on the owning receipt before theorising.
 - Direct WebGPT oracle routing (`$ask chatgpt`, `--oracle-backend webgpt`,
   `--webgpt-*`) fails closed; Tau browser handlers remain supported.
+- **Follow-up continuity:** every browser lane's node receipt / `response.meta.json`
+  must carry `controlled_tab_id` and the conversation URL; a null tab id is a
+  failed handoff. When the human may ask clarifying or follow-up questions,
+  run with `--browser-tab-lifecycle fresh-keep` (or `reuse-bound`) — the default
+  `auto`/fresh-temporary CLOSES the window after the run, killing the
+  conversation. After the run, report the tab id + conversation URL and bind
+  them (`skills/browser-oracle/run.sh bind <project> --backend <b> --tab-id <id>
+  --url <url> --manual`) so the follow-up targets the same session.
 - `webclaude` is a claude.ai chat tab, testing-only — NOT agentic Claude. Prefer
   `claude-fable-low`, then `claude-opus-4-8-high` (see
   `references/seats-and-audits.md`).

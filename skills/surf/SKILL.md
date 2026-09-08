@@ -260,6 +260,13 @@ require explicit `--tab-id`/`--url`/`--create-tab`, key next steps off `proof_st
 in `response.meta.json`, and never treat `.submitted.md` or prose as delivery proof.
 Recovery of a completed tab uses `webgpt.extract` with the round's exact sentinel.
 
+**Follow-up continuity:** every `*.submit` meta must record `controlled_tab_id`
+(and conversation URL when the provider exposes one) — null is a failed
+handoff. Do not close or let the caller close the controlled tab when the human
+may ask follow-up questions; report the tab id + URL so the next round targets
+the same conversation (`--tab-id <id> --expect-url <url>`), and persist it with
+`$browser-oracle bind` for reuse across sessions.
+
 ### Other Providers And Cursor Browser
 
 Payload rules, attachment limits, fresh-chat rotation, and recovery for
