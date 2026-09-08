@@ -8,7 +8,9 @@ import hashlib
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
+
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 PASS_STATUS = "PASS_VIDEO_PROVIDER_PACKET_DRY_RUN"
@@ -28,6 +30,78 @@ FAL_ROUTES = {
         "packet_kind": "fal_seedance_multimodal_text_to_video",
     },
 }
+
+
+class Claims(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    proves: list[str] = Field(min_length=1)
+    does_not_prove: list[str] = Field(min_length=1)
+
+
+class VideoProviderPacket(BaseModel):
+    """Fail-closed producer seam for video_provider_packet.json."""
+
+    model_config = ConfigDict(extra="forbid")
+    schema_version: Literal["persona-dream.video-provider-packet.v1"]
+    generated_at: str
+    status: Literal[PASS_STATUS, BLOCKED_STATUS]
+    provider_id: str
+    provider_route: str | None
+    packet_kind: str | None
+    fal_model_endpoint: str | None
+    run_id: Any = None
+    revision_id: Any = None
+    scene_id: Any = None
+    scene_contract_path: str
+    scene_contract_sha256: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    video_provider_scorecard_path: str
+    video_provider_scorecard_sha256: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    media_lock_path: str
+    media_lock_sha256: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    provider_payload: dict[str, Any]
+    provider_live: Literal[False]
+    paid_call_authorized: Literal[False]
+    provider_accessible_url_created: Literal[False]
+    submitted: Literal[False]
+    external_task_id: None
+    provider_ready: Literal[False]
+    live_submit_ready: Literal[False]
+    blockers: list[str]
+    claims: Claims
+
+    @model_validator(mode="after")
+    def _dry_run_payload_is_consistent(self) -> "VideoProviderPacket":
+        if self.status == PASS_STATUS and self.blockers:
+            raise ValueError("pass_status_with_blockers")
+        if self.status == BLOCKED_STATUS and not self.blockers:
+            raise ValueError("blocked_status_without_blockers")
+        payload_submitted = self.provider_payload.get("submitted") if isinstance(self.provider_payload, dict) else None
+        if self.provider_payload and payload_submitted is not False:
+            raise ValueError("provider_payload_submitted_not_false")
+        return self
+
+
+class ProviderPayloadMappingReceipt(BaseModel):
+    """Fail-closed producer seam for provider_payload_mapping_receipt.json."""
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+    schema_: Literal["persona_dream.video_provider_payload_mapping_receipt.v1"] = Field(alias="schema")
+    generated_at: str
+    status: Literal[PASS_STATUS, BLOCKED_STATUS]
+    provider_id: str
+    provider_route: str | None
+    fal_model_endpoint: str | None
+    request_body_path: str
+    submitted: Literal[False]
+    external_task_id: None
+    actual_provider_call_attempts: Literal[0]
+    provider_live: Literal[False]
+    paid_call_authorized: Literal[False]
+    provider_ready: Literal[False]
+    live_submit_ready: Literal[False]
+    blockers: list[str]
+    claims: Claims
+
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -200,6 +274,8 @@ def write_provider_packet(
         "blockers": blockers,
         "claims": packet["claims"],
     }
+    VideoProviderPacket.model_validate(packet)
+    ProviderPayloadMappingReceipt.model_validate(mapping)
     write_json(packet_path, packet)
     write_json(mapping_path, mapping)
     return {
