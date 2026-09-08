@@ -214,8 +214,14 @@ Lip-sync pass gotchas (paid for 2026-09-08):
   reply via the multi-face lane.
 - Chatterbox docker only reads ref audio from allowed roots (`/data`,
   `/voices`); `docker cp` the reference in first.
-Dialogue shot design: prefer one speaker per clip (shot/reverse-shot) so the
-simple single-audio lipsync pass is deterministic about whose mouth moves.
+**Dialogue shot grammar (default):** one speaker per clip, shot/reverse-shot.
+The generation prompt frames the speaker favored (face toward camera, mouth
+visible) and the listener reacting (profile or over-shoulder). Then the
+single-audio lipsync pass is deterministic about whose mouth moves, the cut
+carries conversational rhythm, and the whole exchange runs on fal alone. A
+same-frame two-speaker exchange is both the weaker cinematic form and the
+only case requiring direct-Kling `identify_face`/`face_choose` credits -
+reserve it for shots that dramatically need both faces reacting mid-line.
 
 ## Provider routing: fal by default, direct Kling API for gaps
 
