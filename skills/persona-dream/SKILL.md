@@ -238,7 +238,8 @@ specialist validators, provider lanes, and historical commands. Use
 | `./run.sh read` | Read back a produced packet | None |
 | `./run.sh check-current-state-consistency --strict` | Fail closed when current-state surfaces contradict receipts | None |
 | `./run.sh session-mood-voice-recognition` | Score session-mood renders for Embry identity | None; requires a speaker backend |
-| `./run.sh test-suite` | Deterministic contract suite | None |
+| `./run.sh check-agentic-eval-no-pytest fixtures/agentic_eval.json --json` | Fail if agentic-evals delegates proof to pytest/unit tests | None |
+| `./run.sh test-suite` | Legacy pytest net for local development only; not completion proof | None |
 
 Current phase, blockers, and next step are NOT in this file. Read
 [`CURRENT_STATUS.json`](CURRENT_STATUS.json).
@@ -1186,10 +1187,11 @@ Run:
 ./sanity.sh
 ```
 
-The sanity gate runs a positive-control fixture and verifies that the required
-packet artifacts exist, that `contact_sheet.png` is a real PNG, and that memory
-writeback is skipped without `--write-memory`. It also runs a `video_plan`
-fixture and verifies the deterministic 30-second planning contract.
+The sanity gate runs positive and negative command-level checks, then enforces
+`check-agentic-eval-no-pytest` and runs `$agentic-evals` against
+`fixtures/agentic_eval.json`. Agentic evals are the completion driver for
+pipeline-step readiness; pytest/unit tests are legacy local development noise
+and must not be used as proof that a step works.
 
 ## Project Knowledge
 

@@ -21,7 +21,7 @@ Commands:
   write-dream-journal  Write the persona_journal.v1 entry (spine step 2)
   read                 Print PROJECT_KNOWLEDGE.md before running pipeline phases
   doctor               Preflight the whole dream chain (tau nodes, insightface, scillm, GMO, anchors); fails loud with fixes
-  test-suite           Run the deterministic pytest contract suite (CI guard; no paid/live calls)
+  test-suite           Legacy pytest contract suite (not a completion proof; use agentic-evals)
   check-pctom-measurement-validity-v2  Gate: PCTOM-R measurement must be falsifiable before live spend
   run-pctom-v2-validity-lane  Rebuild the frozen PCTOM-R v2 corpus + estimator and re-prove the validity-v2 gate
   build-pctom-v2-corpus  Build the condition-blind PCTOM-R v2 corpus from hidden simulator state
@@ -205,6 +205,7 @@ Commands:
   analyze-blinded-listener-study  Analyze completed human listener responses with signed interpretation
   validate-sparta-arc-bias-handoff Validate the SPARTA consumer contract for session_arc_bias
   check-pipeline-contract  Validate the canonical executable dream spine contract
+  check-agentic-eval-no-pytest  Reject agentic-eval fixtures that use pytest as proof driver
   write-phase10-reproducibility-receipt  Prove Phase 10 committed artifacts are canonically reproducible
   repair-semantic-mix-revision Create, Memory-verify, and activate a new explicit-human-idea revision
   bootstrap-phase11-payload-binding Create the active-revision Standard payload binding without provider calls
@@ -810,6 +811,9 @@ case "$COMMAND" in
     ;;
   check-pipeline-contract|check-persona-dream-pipeline-contract)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_persona_dream_pipeline_contract.py" "$@"
+    ;;
+  check-agentic-eval-no-pytest)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_agentic_eval_no_pytest.py" "$@"
     ;;
   write-phase10-reproducibility-receipt)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_phase10_reproducibility_receipt.py" "$@"

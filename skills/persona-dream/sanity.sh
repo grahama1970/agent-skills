@@ -274,8 +274,26 @@ echo "== enforcing current-state/receipt consistency (check-current-state-consis
 echo "== enforcing Tau-only model-routing boundary (check-tau-routing-boundary --strict) =="
 "${SCRIPT_DIR}/run.sh" check-tau-routing-boundary --strict
 
-# CI guard: deterministic contract suite must stay green. This is the offline
-# regression net that catches contract/schema/fixture rot (e.g. omitted vendored
-# schemas or relocated agent-contract paths). No paid or live provider calls.
-echo "== running deterministic contract suite (run.sh test-suite) =="
-"${SCRIPT_DIR}/run.sh" test-suite
+# Completion proof is agentic-evals, not self-authored pytest. The fixture must
+# execute real run.sh/script entrypoints and artifact readbacks; a pytest command
+# in the agentic fixture is a blocked self-serving proof driver.
+echo "== enforcing agentic-evals proof driver (no pytest commands) =="
+"${SCRIPT_DIR}/run.sh" check-agentic-eval-no-pytest "${SCRIPT_DIR}/fixtures/agentic_eval.json" --json >/dev/null
+
+echo "== running agentic-evals pipeline driver =="
+(
+  cd "${SCRIPT_DIR}/../agentic-evals"
+  ./run.sh run "../persona-dream/fixtures/agentic_eval.json" \
+    --output /tmp/persona-dream-agentic-eval-main.json >/tmp/persona-dream-agentic-eval-main.stdout
+)
+"${PYTHON[@]}" - <<'PY'
+import json
+report = json.load(open('/tmp/persona-dream-agentic-eval-main.json'))
+print(json.dumps({
+    "status": "ok",
+    "driver": "agentic-evals",
+    "readiness": report["readiness"],
+    "outcome_counts": report["outcome_counts"],
+    "case_count": report["case_count"],
+}, indent=2))
+PY
