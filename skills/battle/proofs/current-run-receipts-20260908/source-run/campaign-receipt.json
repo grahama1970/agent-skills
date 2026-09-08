@@ -1,0 +1,1368 @@
+{
+  "agentic": true,
+  "arena": {
+    "generation_1_target_sha256": "b91d9c40e3a0c28ef53df7891503b9d3eed77449d2db708d5724c41f76edb02d",
+    "generation_2_target_sha256": "b91d9c40e3a0c28ef53df7891503b9d3eed77449d2db708d5724c41f76edb02d",
+    "scenario_id": "arena-zip-slip-import-001"
+  },
+  "artifact_integrity": {
+    "created_at": "2026-09-06T13:08:49Z",
+    "judge_replays": [
+      {
+        "actual_sha256": "46c7eef7c42e672ae37130bf5b2b90f64eec9d16d748ca32c869293ad67ad474",
+        "expected_generation": 1,
+        "expected_sha256": "46c7eef7c42e672ae37130bf5b2b90f64eec9d16d748ca32c869293ad67ad474",
+        "generation": 1,
+        "inside_run_root": true,
+        "matched": true,
+        "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-1/judge-exact-replay/exact-replay-receipt.json",
+        "receipt_valid": true,
+        "regular_file": true,
+        "status": "PASS"
+      },
+      {
+        "actual_sha256": "79fb1df3c9005eb233dca4f0b36dbac282a966d03e9698f7e530d6a0a0308ec1",
+        "expected_generation": 2,
+        "expected_sha256": "79fb1df3c9005eb233dca4f0b36dbac282a966d03e9698f7e530d6a0a0308ec1",
+        "generation": 2,
+        "inside_run_root": true,
+        "matched": true,
+        "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/judge-exact-replay/exact-replay-receipt.json",
+        "receipt_valid": true,
+        "regular_file": true,
+        "status": "PASS"
+      }
+    ],
+    "matched_replay_count": 2,
+    "matched_slot_count": 4,
+    "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/artifact-integrity-receipt.json",
+    "reason": "artifact_integrity_pass",
+    "required_replay_count": 2,
+    "required_slot_count": 4,
+    "schema": "battle.adaptive_artifact_integrity.v1",
+    "sha256": "8000893124ae0b8d2092beaffbf8ce3a376c85c9b8ce3a5066bf640d7ae01e04",
+    "slots": [
+      {
+        "actual_sha256": "094a192188fe2719a9f541a4cab75b1a73d8bf73efe321d3fdd4811081612ad8",
+        "expected_sha256": "094a192188fe2719a9f541a4cab75b1a73d8bf73efe321d3fdd4811081612ad8",
+        "generation": 1,
+        "inside_run_root": true,
+        "matched": true,
+        "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-1/reviewed/immutable-slots/generation-1-red.py",
+        "regular_file": true,
+        "slot_key": "generation-1:red",
+        "team": "red"
+      },
+      {
+        "actual_sha256": "876f61c94cefb9cd33f070d2980dd3899d910b696d2e4389f8c48dfb6a92bcd8",
+        "expected_sha256": "876f61c94cefb9cd33f070d2980dd3899d910b696d2e4389f8c48dfb6a92bcd8",
+        "generation": 1,
+        "inside_run_root": true,
+        "matched": true,
+        "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-1/reviewed/immutable-slots/generation-1-blue.py",
+        "regular_file": true,
+        "slot_key": "generation-1:blue",
+        "team": "blue"
+      },
+      {
+        "actual_sha256": "17c12a210f00b8b3f4aa0ef9b5b9b1d1209e25bb3839b72ba15135e2cadfa5e6",
+        "expected_sha256": "17c12a210f00b8b3f4aa0ef9b5b9b1d1209e25bb3839b72ba15135e2cadfa5e6",
+        "generation": 2,
+        "inside_run_root": true,
+        "matched": true,
+        "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/reviewed/immutable-slots/generation-2-red.py",
+        "regular_file": true,
+        "slot_key": "generation-2:red",
+        "team": "red"
+      },
+      {
+        "actual_sha256": "db49bea212c21cdd3db8b7975a85fb232fc9629a7f101371f47ee79e588cc304",
+        "expected_sha256": "db49bea212c21cdd3db8b7975a85fb232fc9629a7f101371f47ee79e588cc304",
+        "generation": 2,
+        "inside_run_root": true,
+        "matched": true,
+        "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/reviewed/immutable-slots/generation-2-blue.py",
+        "regular_file": true,
+        "slot_key": "generation-2:blue",
+        "team": "blue"
+      }
+    ],
+    "status": "PASS",
+    "unique_replay_paths": true,
+    "unique_slot_paths": true
+  },
+  "authorization": {
+    "docker_invoked": false,
+    "errors": [],
+    "execution_started": false,
+    "expected_target": "battle-004@sha256:3dcad359038c37246c97ff054adffdd8a043059ec0861a602af02d3cdf4fad0e",
+    "legal_non_opinion": true,
+    "manifest_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/authorization.json",
+    "manifest_sha256": "67aec6bd9d96baafac39de57e82de4a62bfa1da112c960a0c20c887e267ff839",
+    "network_invoked": false,
+    "qemu_invoked": false,
+    "requested_action": "battle",
+    "requested_port": null,
+    "requested_probe_class": "path_traversal",
+    "requested_runtime_mode": "docker",
+    "requested_target_url": null,
+    "schema": "security.target_authorization_validation_receipt.v1",
+    "status": "PASS",
+    "subprocess_invoked": false,
+    "target_identity": "battle-004@sha256:3dcad359038c37246c97ff054adffdd8a043059ec0861a602af02d3cdf4fad0e",
+    "valid": true,
+    "validation_time": "2026-09-06T13:06:36.655304+00:00",
+    "validator_version": "security.target-authorization-validator.v1"
+  },
+  "battle_id": "battle-004",
+  "claims": {
+    "does_not_prove": [
+      "Both children improved on their parents.",
+      "A high-throughput genetic engine is production-ready.",
+      "Multiple vulnerabilities were evaluated.",
+      "Durable memory promotion occurred."
+    ],
+    "proves": [
+      "Two simultaneous Red/Blue generations were executed through Tau/SciLLM against one Arena target.",
+      "Both Generation 2 workers received evidence-derived inherited knowledge packets.",
+      "Both Generation 2 workers received source-bearing Tau-routed external research receipts.",
+      "Both generations produced materialized artifacts and Docker Judge receipts.",
+      "Battle performed deterministic cross-generation selection."
+    ]
+  },
+  "created_at": "2026-09-06T13:08:49Z",
+  "elapsed_seconds": 133.206938,
+  "event_journal": {
+    "event_count": 26,
+    "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/events.jsonl",
+    "sha256": "9d1bb785b8da5c0259b9f54df466276aefb333e09155af876f51f99442bb9b13"
+  },
+  "fitness": {
+    "generation_1": {
+      "blue": {
+        "battle_id": "battle-004",
+        "claims": {
+          "does_not_prove": [
+            "A child improved unless selection establishes it."
+          ],
+          "proves": [
+            "Battle computed a reproducible fitness vector from cited evidence."
+          ]
+        },
+        "components": {
+          "artifact_changed_from_parent": "NOT_APPLICABLE",
+          "compile_pass": true,
+          "exploit_blocked_after_patch": true,
+          "exploit_confirmed_before_patch": true,
+          "functionality_preserved": true,
+          "judge_outcome": {
+            "label": "BLUE_SUCCESS",
+            "rank": 2
+          },
+          "provider_attempt_count": 1,
+          "runtime_evaluated": true,
+          "semantic_genome_changed_from_parent": "NOT_APPLICABLE"
+        },
+        "eligibility": {
+          "disqualifiers": [],
+          "eligible_for_selection": true
+        },
+        "fitness_id": "battle-seeded-provider-tau-20260906T130635Z-blue-g1-fitness",
+        "generation": 1,
+        "genome_sha256": "8889a5cbbfebb338de51da4c1acc29080b2c86a0c0fd8a61e7ab003f53aa4a0c",
+        "judge_receipt_sha256": "976119d6c8d37684477c4746279332b1792a2bb15fb7dc1015ddd4a6fed49b39",
+        "observation_receipt_sha256": "d5cb7906e3becc679081c732f071f5d89900e812d6f0f3f3f51e5908edebedb6",
+        "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-1/blue/fitness-vector.json",
+        "pipeline_handoff_sha256": "bcb0dfb77bd6f2e2ad6ae9eb8f735122828186481608c5aa0e2318dadc993219",
+        "policy_id": "battle-adaptive-fitness-lexicographic-v1",
+        "policy_sha256": "548d64cf4d14d496c1a0e6861bc356bd0f417b2be68f266eba097be14ce675b8",
+        "run_id": "battle-seeded-provider-tau-20260906T130635Z",
+        "schema": "battle.fitness_vector.v1",
+        "selected_artifact_sha256": "876f61c94cefb9cd33f070d2980dd3899d910b696d2e4389f8c48dfb6a92bcd8",
+        "selection_key": [
+          2,
+          1,
+          0,
+          -1
+        ],
+        "sha256": "b0a69c262e9bf4461915e005df41fa23ec513ac4616d0e159a8f233175cc45e6",
+        "status": "PASS",
+        "team": "blue"
+      },
+      "red": {
+        "battle_id": "battle-004",
+        "claims": {
+          "does_not_prove": [
+            "A child improved unless selection establishes it."
+          ],
+          "proves": [
+            "Battle computed a reproducible fitness vector from cited evidence."
+          ]
+        },
+        "components": {
+          "artifact_changed_from_parent": "NOT_APPLICABLE",
+          "compile_pass": true,
+          "exploit_blocked_after_patch": true,
+          "exploit_confirmed_before_patch": true,
+          "functionality_preserved": true,
+          "judge_outcome": {
+            "label": "BLUE_SUCCESS",
+            "rank": 1
+          },
+          "provider_attempt_count": 1,
+          "runtime_evaluated": true,
+          "semantic_genome_changed_from_parent": "NOT_APPLICABLE"
+        },
+        "eligibility": {
+          "disqualifiers": [],
+          "eligible_for_selection": true
+        },
+        "fitness_id": "battle-seeded-provider-tau-20260906T130635Z-red-g1-fitness",
+        "generation": 1,
+        "genome_sha256": "3fd8714a0ecc768e051a84382d256a8c3543afc0731aed5e4de8f541931740e2",
+        "judge_receipt_sha256": "976119d6c8d37684477c4746279332b1792a2bb15fb7dc1015ddd4a6fed49b39",
+        "observation_receipt_sha256": "93fabe7f93d19fe023ce04dc0c93bb6be10d075d3869496acde097ced396b32e",
+        "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-1/red/fitness-vector.json",
+        "pipeline_handoff_sha256": "d0946d5cabb9fa5881f79eed9640cd880d4960aed43b12af89a6307e8eba47c2",
+        "policy_id": "battle-adaptive-fitness-lexicographic-v1",
+        "policy_sha256": "548d64cf4d14d496c1a0e6861bc356bd0f417b2be68f266eba097be14ce675b8",
+        "run_id": "battle-seeded-provider-tau-20260906T130635Z",
+        "schema": "battle.fitness_vector.v1",
+        "selected_artifact_sha256": "094a192188fe2719a9f541a4cab75b1a73d8bf73efe321d3fdd4811081612ad8",
+        "selection_key": [
+          1,
+          1,
+          0,
+          -1
+        ],
+        "sha256": "00d6786c5e94da5fd2b2f13600465ec996c671e8d2d26a96f09dece29ab0bcea",
+        "status": "PASS",
+        "team": "red"
+      }
+    },
+    "generation_2": {
+      "blue": {
+        "battle_id": "battle-004",
+        "claims": {
+          "does_not_prove": [
+            "A child improved unless selection establishes it."
+          ],
+          "proves": [
+            "Battle computed a reproducible fitness vector from cited evidence."
+          ]
+        },
+        "components": {
+          "artifact_changed_from_parent": true,
+          "compile_pass": true,
+          "exploit_blocked_after_patch": true,
+          "exploit_confirmed_before_patch": true,
+          "functionality_preserved": true,
+          "judge_outcome": {
+            "label": "BLUE_SUCCESS",
+            "rank": 2
+          },
+          "provider_attempt_count": 1,
+          "runtime_evaluated": true,
+          "semantic_genome_changed_from_parent": true
+        },
+        "eligibility": {
+          "disqualifiers": [],
+          "eligible_for_selection": true
+        },
+        "fitness_id": "battle-seeded-provider-tau-20260906T130635Z-blue-g2-fitness",
+        "generation": 2,
+        "genome_sha256": "6242315c82368ea65a4755852b0e150c1046ef994f32e76f2ef4e742e0eafbe3",
+        "judge_receipt_sha256": "54f814669f1862c88edfd05ee5b608ce34df521fc4ab7d33a5a009c83f73b7e0",
+        "observation_receipt_sha256": "8e5d6dd17f02caa09731cad7e8f40137e06f72a3e936bff4573371e2246a1bb1",
+        "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/blue/fitness-vector.json",
+        "pipeline_handoff_sha256": "14db2271110b311279d9c3ffac2cd0c1210733eb43a39c3ff40410d1519f0fc0",
+        "policy_id": "battle-adaptive-fitness-lexicographic-v1",
+        "policy_sha256": "548d64cf4d14d496c1a0e6861bc356bd0f417b2be68f266eba097be14ce675b8",
+        "run_id": "battle-seeded-provider-tau-20260906T130635Z",
+        "schema": "battle.fitness_vector.v1",
+        "selected_artifact_sha256": "db49bea212c21cdd3db8b7975a85fb232fc9629a7f101371f47ee79e588cc304",
+        "selection_key": [
+          2,
+          1,
+          1,
+          -1
+        ],
+        "sha256": "0eb2cdfbee088147fe0fbe87670f5196cba082a9ebffe7aaaa0915739388a2d4",
+        "status": "PASS",
+        "team": "blue"
+      },
+      "red": {
+        "battle_id": "battle-004",
+        "claims": {
+          "does_not_prove": [
+            "A child improved unless selection establishes it."
+          ],
+          "proves": [
+            "Battle computed a reproducible fitness vector from cited evidence."
+          ]
+        },
+        "components": {
+          "artifact_changed_from_parent": true,
+          "compile_pass": true,
+          "exploit_blocked_after_patch": true,
+          "exploit_confirmed_before_patch": true,
+          "functionality_preserved": true,
+          "judge_outcome": {
+            "label": "BLUE_SUCCESS",
+            "rank": 1
+          },
+          "provider_attempt_count": 1,
+          "runtime_evaluated": true,
+          "semantic_genome_changed_from_parent": true
+        },
+        "eligibility": {
+          "disqualifiers": [],
+          "eligible_for_selection": true
+        },
+        "fitness_id": "battle-seeded-provider-tau-20260906T130635Z-red-g2-fitness",
+        "generation": 2,
+        "genome_sha256": "6d3302dac07c61e6862ac75d5e44dfcfde14a22a78af5637b3b27df49aada0e1",
+        "judge_receipt_sha256": "54f814669f1862c88edfd05ee5b608ce34df521fc4ab7d33a5a009c83f73b7e0",
+        "observation_receipt_sha256": "dc8239f5451d9a3e5e5b39db6bc4e4b955dcb655e8032fc4ad24f4fd953b98b4",
+        "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/red/fitness-vector.json",
+        "pipeline_handoff_sha256": "60d2216b0662bdd47c7093a18c4f49684ba813e426843ac5e4c59186f770b412",
+        "policy_id": "battle-adaptive-fitness-lexicographic-v1",
+        "policy_sha256": "548d64cf4d14d496c1a0e6861bc356bd0f417b2be68f266eba097be14ce675b8",
+        "run_id": "battle-seeded-provider-tau-20260906T130635Z",
+        "schema": "battle.fitness_vector.v1",
+        "selected_artifact_sha256": "17c12a210f00b8b3f4aa0ef9b5b9b1d1209e25bb3839b72ba15135e2cadfa5e6",
+        "selection_key": [
+          1,
+          1,
+          1,
+          -1
+        ],
+        "sha256": "6bd9dbeb7ea57166c80b3402ceda240598ce23ef843922ed0fc7a4971d2cd9f2",
+        "status": "PASS",
+        "team": "red"
+      }
+    }
+  },
+  "fixture_fallback_used": false,
+  "generations": [
+    {
+      "artifact_pipelines": {
+        "blue": {
+          "compile_receipt_sha256": "b7f3bb26d16328678626f9629dc745cbfd3290ea6b6efbb13994a21b4357e4ea",
+          "handoff_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-1/reviewed/blue/team-artifact-pipeline-receipt.json",
+          "handoff_sha256": "bcb0dfb77bd6f2e2ad6ae9eb8f735122828186481608c5aa0e2318dadc993219",
+          "immutable_slot": {
+            "expected_sha256": "876f61c94cefb9cd33f070d2980dd3899d910b696d2e4389f8c48dfb6a92bcd8",
+            "generation": 1,
+            "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-1/reviewed/immutable-slots/generation-1-blue.py",
+            "preserved_sha256": "876f61c94cefb9cd33f070d2980dd3899d910b696d2e4389f8c48dfb6a92bcd8",
+            "regular_file": true,
+            "slot_key": "generation-1:blue",
+            "source_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-1/reviewed/blue/app.py",
+            "team": "blue"
+          },
+          "review_receipt_sha256": "5295bf513e2aa855bb5c3eb0cf9f61755724b595d96099c225791801d6fe7c82",
+          "selected_artifact_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-1/reviewed/immutable-slots/generation-1-blue.py",
+          "selected_artifact_sha256": "876f61c94cefb9cd33f070d2980dd3899d910b696d2e4389f8c48dfb6a92bcd8",
+          "selected_artifact_source_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-1/reviewed/blue/app.py",
+          "status": "PASS"
+        },
+        "red": {
+          "compile_receipt_sha256": "5e70c0b4c9b1bd4c35664e654fc4c0fcd2e897bbc713e521474ddcd1811c3040",
+          "handoff_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-1/reviewed/red/team-artifact-pipeline-receipt.json",
+          "handoff_sha256": "d0946d5cabb9fa5881f79eed9640cd880d4960aed43b12af89a6307e8eba47c2",
+          "immutable_slot": {
+            "expected_sha256": "094a192188fe2719a9f541a4cab75b1a73d8bf73efe321d3fdd4811081612ad8",
+            "generation": 1,
+            "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-1/reviewed/immutable-slots/generation-1-red.py",
+            "preserved_sha256": "094a192188fe2719a9f541a4cab75b1a73d8bf73efe321d3fdd4811081612ad8",
+            "regular_file": true,
+            "slot_key": "generation-1:red",
+            "source_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-1/reviewed/red/red_exploit_submission.py",
+            "team": "red"
+          },
+          "review_receipt_sha256": "137756a218eb962e11c73da47d335c93bb98179d7c1ddf8cf0a36b2c190d86da",
+          "selected_artifact_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-1/reviewed/immutable-slots/generation-1-red.py",
+          "selected_artifact_sha256": "094a192188fe2719a9f541a4cab75b1a73d8bf73efe321d3fdd4811081612ad8",
+          "selected_artifact_source_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-1/reviewed/red/red_exploit_submission.py",
+          "status": "PASS"
+        }
+      },
+      "blue_artifact_sha256": "876f61c94cefb9cd33f070d2980dd3899d910b696d2e4389f8c48dfb6a92bcd8",
+      "generation": 1,
+      "judge_status": "PASS",
+      "judge_verdict": "BLUE_SUCCESS",
+      "judged_pair_count": 1,
+      "red_artifact_sha256": "094a192188fe2719a9f541a4cab75b1a73d8bf73efe321d3fdd4811081612ad8",
+      "tau_status": "PASS"
+    },
+    {
+      "artifact_pipelines": {
+        "blue": {
+          "compile_receipt_sha256": "ab119382ca957ea3c602560e3043326215068ee1d8f12f015ca4dedea1cee756",
+          "handoff_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/reviewed/blue/team-artifact-pipeline-receipt.json",
+          "handoff_sha256": "14db2271110b311279d9c3ffac2cd0c1210733eb43a39c3ff40410d1519f0fc0",
+          "immutable_slot": {
+            "expected_sha256": "db49bea212c21cdd3db8b7975a85fb232fc9629a7f101371f47ee79e588cc304",
+            "generation": 2,
+            "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/reviewed/immutable-slots/generation-2-blue.py",
+            "preserved_sha256": "db49bea212c21cdd3db8b7975a85fb232fc9629a7f101371f47ee79e588cc304",
+            "regular_file": true,
+            "slot_key": "generation-2:blue",
+            "source_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/reviewed/blue/app.py",
+            "team": "blue"
+          },
+          "review_receipt_sha256": "c5267ae353369d92d163d37ec885b855aa18064b5dfeb47f8d6a356448b1c4ff",
+          "selected_artifact_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/reviewed/immutable-slots/generation-2-blue.py",
+          "selected_artifact_sha256": "db49bea212c21cdd3db8b7975a85fb232fc9629a7f101371f47ee79e588cc304",
+          "selected_artifact_source_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/reviewed/blue/app.py",
+          "status": "PASS"
+        },
+        "red": {
+          "compile_receipt_sha256": "82c7dc7106488423984c883bd592274c2104524a8688ec56b1e24d101f682782",
+          "handoff_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/reviewed/red/team-artifact-pipeline-receipt.json",
+          "handoff_sha256": "60d2216b0662bdd47c7093a18c4f49684ba813e426843ac5e4c59186f770b412",
+          "immutable_slot": {
+            "expected_sha256": "17c12a210f00b8b3f4aa0ef9b5b9b1d1209e25bb3839b72ba15135e2cadfa5e6",
+            "generation": 2,
+            "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/reviewed/immutable-slots/generation-2-red.py",
+            "preserved_sha256": "17c12a210f00b8b3f4aa0ef9b5b9b1d1209e25bb3839b72ba15135e2cadfa5e6",
+            "regular_file": true,
+            "slot_key": "generation-2:red",
+            "source_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/reviewed/red/red_exploit_submission.py",
+            "team": "red"
+          },
+          "review_receipt_sha256": "8e63d45965bae065d4742b3c3f52d6e194ec53036dc8c8470fd15c2582a624c3",
+          "selected_artifact_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/reviewed/immutable-slots/generation-2-red.py",
+          "selected_artifact_sha256": "17c12a210f00b8b3f4aa0ef9b5b9b1d1209e25bb3839b72ba15135e2cadfa5e6",
+          "selected_artifact_source_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/reviewed/red/red_exploit_submission.py",
+          "status": "PASS"
+        }
+      },
+      "blue_artifact_sha256": "db49bea212c21cdd3db8b7975a85fb232fc9629a7f101371f47ee79e588cc304",
+      "generation": 2,
+      "judge_status": "PASS",
+      "judge_verdict": "BLUE_SUCCESS",
+      "judged_pair_count": 1,
+      "red_artifact_sha256": "17c12a210f00b8b3f4aa0ef9b5b9b1d1209e25bb3839b72ba15135e2cadfa5e6",
+      "tau_status": "PASS"
+    }
+  ],
+  "genome_deltas": {
+    "blue": {
+      "added_methods": [
+        "create parents before streaming archive bytes",
+        "preserve import_zip callable return of written paths",
+        "reject Windows absolute paths and drive-qualified paths",
+        "reject absolute POSIX paths",
+        "reject empty dot and dot-dot path components",
+        "validate PurePosixPath member parts before filesystem join"
+      ],
+      "battle_id": "battle-004",
+      "canonicalization_policy_id": "battle-semantic-genome-canonicalization-v1",
+      "canonicalization_policy_sha256": "004a65ba6854305c85cae8b8180d70b910a4d811cda9410bf3ea742ef1e69e32",
+      "child_genome_sha256": "6242315c82368ea65a4755852b0e150c1046ef994f32e76f2ef4e742e0eafbe3",
+      "child_semantic_sha256": "6e328d89c12c0a6897e5a56a1453ec1d4c0a4243059e1123eef24370949e1178",
+      "claims": {
+        "does_not_prove": [
+          "The semantic change improved fitness or exploit success."
+        ],
+        "proves": [
+          "The child provider genome differs semantically from its parent."
+        ]
+      },
+      "delta_id": "battle-seeded-provider-tau-20260906T130635Z-blue-g1-g2-delta",
+      "expected_observation": {
+        "changed": true,
+        "child_sha256": "55f7a9ad1e8777a83631c9ed71fea6828824fdaffb2d2885fe9f31fd97eb64fb",
+        "parent_sha256": "301ba3d34a3133fb339de73ac9f3ba046a673f928916fb87dd2364cd65dd77fb"
+      },
+      "from_generation": 1,
+      "mutation_origin": {
+        "changed": true,
+        "child": "Adapted from the parent safe-extraction strategy using the inherited Judge observation that the previous patch blocked the exploit while preserving functionality, with an added Windows drive-qualified path rejection for cross-platform robustness.",
+        "parent": "public vulnerable app.py joined dest/name without validation; patched according to public safe patch shape for archive path traversal."
+      },
+      "newly_rejected_methods": [
+        "changing public function signature",
+        "post-write cleanup",
+        "shelling out to external unzip",
+        "silent path traversal sanitization",
+        "string prefix normalization only"
+      ],
+      "no_longer_rejected_methods": [
+        "allowing unsafe members to be silently extracted",
+        "blindly joining destination with archive member name",
+        "post-write cleanup of escaped files",
+        "trusting only zipfile extract behavior"
+      ],
+      "nonempty_semantic_delta": true,
+      "parameter_changes": [
+        {
+          "child": "ZipFile.open to binary output",
+          "name": "copy_mode",
+          "parent": null
+        },
+        {
+          "child": "create and record",
+          "name": "directory_entries",
+          "parent": "create directory and do not append to written"
+        },
+        {
+          "child": "import_zip(zip_path, destination)",
+          "name": "interface",
+          "parent": null
+        },
+        {
+          "child": null,
+          "name": "return_value",
+          "parent": "list of written file paths"
+        },
+        {
+          "child": null,
+          "name": "unsafe_member_action",
+          "parent": "raise ValueError"
+        },
+        {
+          "child": "ValueError",
+          "name": "unsafe_member_exception",
+          "parent": null
+        }
+      ],
+      "parent_genome_sha256": "8889a5cbbfebb338de51da4c1acc29080b2c86a0c0fd8a61e7ab003f53aa4a0c",
+      "parent_semantic_sha256": "09fd94d5a46e1ec68d800569bd055b7f260902bec3ee996158400a57adaa32b8",
+      "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/blue/genome-delta.json",
+      "removed_methods": [
+        "enforce target relative_to destination before write",
+        "normalize archive member separators with chr(92) replacement",
+        "reject empty absolute parent traversal and drive-like path components",
+        "resolve destination and target paths",
+        "stream copy file contents after validation"
+      ],
+      "retained_methods": [],
+      "run_id": "battle-seeded-provider-tau-20260906T130635Z",
+      "schema": "battle.semantic_genome_delta.v1",
+      "semantic_change_count": 28,
+      "sha256": "80f90e5bbe2da47166d18850a6c796d6b5c147d69775a64f5ec7531929e6f0e7",
+      "status": "PASS",
+      "team": "blue",
+      "to_generation": 2
+    },
+    "red": {
+      "added_methods": [
+        "direct local binding via `from app import import_zip`",
+        "filesystem verification of escaped file outside destination",
+        "standard-library-only execution path",
+        "temporary zip creation with `../arena_escape.txt` traversal member"
+      ],
+      "battle_id": "battle-004",
+      "canonicalization_policy_id": "battle-semantic-genome-canonicalization-v1",
+      "canonicalization_policy_sha256": "004a65ba6854305c85cae8b8180d70b910a4d811cda9410bf3ea742ef1e69e32",
+      "child_genome_sha256": "6d3302dac07c61e6862ac75d5e44dfcfde14a22a78af5637b3b27df49aada0e1",
+      "child_semantic_sha256": "d1674109781283bf89d95b96f00afee2c06da5a1bc48b4e16f7abc04a84d6a6b",
+      "claims": {
+        "does_not_prove": [
+          "The semantic change improved fitness or exploit success."
+        ],
+        "proves": [
+          "The child provider genome differs semantically from its parent."
+        ]
+      },
+      "delta_id": "battle-seeded-provider-tau-20260906T130635Z-red-g1-g2-delta",
+      "expected_observation": {
+        "changed": true,
+        "child_sha256": "98a4af0aa30e7f6c695d04ed253dd1ae42a747b5fbe3fce902398bda40fdccbd",
+        "parent_sha256": "062b0062c1d117db6b5703d935de346249ffbb9702d7653df869bb64219ffb64"
+      },
+      "from_generation": 1,
+      "mutation_origin": {
+        "changed": true,
+        "child": "Adapted from the inherited successful-before-patch observation by simplifying target contact to the required public local import binding and using a minimal deterministic traversal payload.",
+        "parent": "Derived from the public target implementation that writes dest / name for every ZipFile member without traversal validation."
+      },
+      "newly_rejected_methods": [
+        "HTTP/API probing",
+        "absolute-path payloads",
+        "dynamic importlib file loading",
+        "localhost assumptions",
+        "network libraries"
+      ],
+      "no_longer_rejected_methods": [
+        "HTTP endpoint probing",
+        "absolute-path traversal",
+        "importlib local-file loading",
+        "network clients"
+      ],
+      "nonempty_semantic_delta": true,
+      "parameter_changes": [
+        {
+          "child": null,
+          "name": "confirmation_token",
+          "parent": "RED_EXPLOIT_CONFIRMED"
+        },
+        {
+          "child": "import_workspace",
+          "name": "destination_subdir",
+          "parent": null
+        },
+        {
+          "child": null,
+          "name": "execution_mode",
+          "parent": "python red_exploit_submission.py --expect-vulnerable"
+        },
+        {
+          "child": "zip-slip-confirmation-payload",
+          "name": "marker",
+          "parent": null
+        },
+        {
+          "child": "RED_EXPLOIT_CONFIRMED",
+          "name": "success_token",
+          "parent": null
+        }
+      ],
+      "parent_genome_sha256": "3fd8714a0ecc768e051a84382d256a8c3543afc0731aed5e4de8f541931740e2",
+      "parent_semantic_sha256": "5af0bd63ec6d111885ca93121fb514f7e49c40ca258ac8ad069cdc0fc4b6c6e9",
+      "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/red/genome-delta.json",
+      "removed_methods": [
+        "direct public binding via from app import import_zip",
+        "filesystem side-effect verification outside destination",
+        "path traversal member ../arena_escape.txt",
+        "standard-library ZipFile payload creation"
+      ],
+      "retained_methods": [],
+      "run_id": "battle-seeded-provider-tau-20260906T130635Z",
+      "schema": "battle.semantic_genome_delta.v1",
+      "semantic_change_count": 24,
+      "sha256": "e50bc0637906b2a9ad3e87cfd621db17dfa75681a78b9a70903f21ee82a90ad3",
+      "status": "PASS",
+      "team": "red",
+      "to_generation": 2
+    }
+  },
+  "inheritance": {
+    "blue": {
+      "artifact_changed": true,
+      "child_artifact_sha256": "db49bea212c21cdd3db8b7975a85fb232fc9629a7f101371f47ee79e588cc304",
+      "claims": {
+        "does_not_prove": [
+          "The child improved."
+        ],
+        "proves": [
+          "The provider response cited inherited evidence and external research, then materialized a changed artifact."
+        ]
+      },
+      "external_research_cited_in_provider_response": true,
+      "external_research_receipt_sha256": "5882fdf203a3477fc55f0ba1b88bdf40f18531f60951729ace305abd104691b3",
+      "first_plan_action_declared": true,
+      "inherited_genome_cited": true,
+      "inherited_observation_cited": true,
+      "mutation_seed_citations": [
+        {
+          "cited_in_provider_response": true,
+          "kind": "dogpile",
+          "sha256": "06c27a77608d2aa9a4d8b46c7b7419404026cb7512270dc2fdb45ea508a21d55"
+        },
+        {
+          "cited_in_provider_response": true,
+          "kind": "memory",
+          "sha256": "945986e9eac8281740eb0bd2f734f0f5b8212a5f27312089a6c77f36f732232b"
+        }
+      ],
+      "mutation_seed_receipts_cited_in_provider_response": true,
+      "packet_cited_in_provider_response": true,
+      "packet_id": "battle-004-blue-generation-2-knowledge",
+      "parent_artifact_sha256": "876f61c94cefb9cd33f070d2980dd3899d910b696d2e4389f8c48dfb6a92bcd8",
+      "provider_response_sha256": "2be7e9d638adb93759eba88b59739f3aa8bb33db78c7ad915471fdc1d1380ea3",
+      "schema": "battle.inherited_knowledge_acknowledgement.v1",
+      "status": "PASS",
+      "team": "blue"
+    },
+    "red": {
+      "artifact_changed": true,
+      "child_artifact_sha256": "17c12a210f00b8b3f4aa0ef9b5b9b1d1209e25bb3839b72ba15135e2cadfa5e6",
+      "claims": {
+        "does_not_prove": [
+          "The child improved."
+        ],
+        "proves": [
+          "The provider response cited inherited evidence and external research, then materialized a changed artifact."
+        ]
+      },
+      "external_research_cited_in_provider_response": true,
+      "external_research_receipt_sha256": "609aa6da8a125323748081cf5912215181b039443e9c836d15ea45941f6f682d",
+      "first_plan_action_declared": true,
+      "inherited_genome_cited": true,
+      "inherited_observation_cited": true,
+      "mutation_seed_citations": [
+        {
+          "cited_in_provider_response": true,
+          "kind": "dogpile",
+          "sha256": "06c27a77608d2aa9a4d8b46c7b7419404026cb7512270dc2fdb45ea508a21d55"
+        },
+        {
+          "cited_in_provider_response": true,
+          "kind": "memory",
+          "sha256": "945986e9eac8281740eb0bd2f734f0f5b8212a5f27312089a6c77f36f732232b"
+        }
+      ],
+      "mutation_seed_receipts_cited_in_provider_response": true,
+      "packet_cited_in_provider_response": true,
+      "packet_id": "battle-004-red-generation-2-knowledge",
+      "parent_artifact_sha256": "094a192188fe2719a9f541a4cab75b1a73d8bf73efe321d3fdd4811081612ad8",
+      "provider_response_sha256": "89a4a36d4a4ebdda57075fda8c284e3a827e21b8a83edf211a80cd97f60e7b49",
+      "schema": "battle.inherited_knowledge_acknowledgement.v1",
+      "status": "PASS",
+      "team": "red"
+    }
+  },
+  "judge_verified_exploits": 0,
+  "live": true,
+  "live_mode": "tau_scillm_docker_judge_two_generation_red_blue",
+  "memory_evaluation": {
+    "battle_id": "battle-004",
+    "claims": {
+      "does_not_prove": [
+        "Memory was written, promoted, or durably recalled."
+      ],
+      "proves": [
+        "Battle evaluated selected evidence under the memory policy."
+      ]
+    },
+    "evaluation_id": "battle-seeded-provider-tau-20260906T130635Z-memory-evaluation",
+    "evaluations": [
+      {
+        "decision": "NO_PROMOTION",
+        "durable_recall_proven": false,
+        "eligible_decisions": [
+          "NO_PROMOTION"
+        ],
+        "evidence_classification": "neutral",
+        "fitness_receipt_sha256": "6bd9dbeb7ea57166c80b3402ceda240598ce23ef843922ed0fc7a4971d2cd9f2",
+        "genome_delta_sha256": "e50bc0637906b2a9ad3e87cfd621db17dfa75681a78b9a70903f21ee82a90ad3",
+        "judge_receipt_sha256": "54f814669f1862c88edfd05ee5b608ce34df521fc4ab7d33a5a009c83f73b7e0",
+        "judge_requirement_satisfied": true,
+        "memory_write_receipt_sha256": null,
+        "memory_write_required": false,
+        "reason_codes": [
+          "evaluate_only_canary",
+          "durable_write_out_of_scope"
+        ],
+        "selected_generation": 2,
+        "team": "red",
+        "visibility_scope": "red_only"
+      },
+      {
+        "decision": "NO_PROMOTION",
+        "durable_recall_proven": false,
+        "eligible_decisions": [
+          "NO_PROMOTION"
+        ],
+        "evidence_classification": "neutral",
+        "fitness_receipt_sha256": "0eb2cdfbee088147fe0fbe87670f5196cba082a9ebffe7aaaa0915739388a2d4",
+        "genome_delta_sha256": "80f90e5bbe2da47166d18850a6c796d6b5c147d69775a64f5ec7531929e6f0e7",
+        "judge_receipt_sha256": "54f814669f1862c88edfd05ee5b608ce34df521fc4ab7d33a5a009c83f73b7e0",
+        "judge_requirement_satisfied": true,
+        "memory_write_receipt_sha256": null,
+        "memory_write_required": false,
+        "reason_codes": [
+          "evaluate_only_canary",
+          "durable_write_out_of_scope"
+        ],
+        "selected_generation": 2,
+        "team": "blue",
+        "visibility_scope": "blue_only"
+      }
+    ],
+    "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/memory-promotion-evaluation.json",
+    "policy_id": "battle-memory-promotion-evaluate-only-v1",
+    "policy_mode": "evaluate_only",
+    "policy_sha256": "1c17aa6c109ad8718acdbb84a7f035f1d381f6834a6c4522e701de79338a0b5d",
+    "run_id": "battle-seeded-provider-tau-20260906T130635Z",
+    "schema": "battle.memory_promotion_evaluation.v1",
+    "selection_receipt_sha256": "14e805814dec2b5b7f070ca22b2a9e744453218b6f04fd1397f8265749901b3d",
+    "sha256": "4e27bc4f876eef8082683812bef5a532af75bfab84b1a2632c36b4a47b82c1df",
+    "status": "PASS"
+  },
+  "mocked": false,
+  "mutation_seed_bundle_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/arena/team-public/knowledge/mutation-seed-bundle.json",
+  "mutation_seed_receipts": {
+    "claims": {
+      "does_not_prove": [
+        "The seeded child improved; Judge and selection decide that."
+      ],
+      "proves": [
+        "Battle bound external Dogpile and/or memory readback hashes into the Generation 2 mutation prompt."
+      ]
+    },
+    "receipts": [
+      {
+        "bytes": 25475,
+        "kind": "dogpile",
+        "path": "/mnt/storage12tb/skills/battle/dogpile-seed-probe-20260906T125204Z/dogpile-security-packet.json",
+        "provider_statuses": [
+          {
+            "artifact_path": "providers/stage1-arxiv.json",
+            "artifact_sha256": "6c201e061c9080cd90d040cae562e52bc25d2bdd103d4edd8e86dc9da7a7bdb9",
+            "provider": "arxiv",
+            "query": "Zip Slip archive traversal mitigation Python safe extraction",
+            "stage": "stage1",
+            "status": "ok"
+          },
+          {
+            "artifact_path": "providers/stage1-brave.json",
+            "artifact_sha256": "66767843ea217f5fe8c967f3a0ceeeacecf8a23ac736a9e9f5e62f569f494fb9",
+            "provider": "brave",
+            "query": "Zip Slip archive traversal mitigation Python safe extraction",
+            "stage": "stage1",
+            "status": "ok"
+          },
+          {
+            "artifact_path": "providers/stage1-brave_questions.json",
+            "artifact_sha256": "ca8d4504abab0b7a9ecf621856f8e61337286df51a1c9edd90e8e3090523a4fc",
+            "provider": "brave_questions",
+            "query": "Zip Slip archive traversal mitigation Python safe extraction",
+            "stage": "stage1",
+            "status": "ok"
+          },
+          {
+            "artifact_path": "providers/stage1-codex_knowledge.json",
+            "artifact_sha256": "26feb833bc8fcaff59e1b789eb4c431b9893e604b85f226c42a00fb2e7486da6",
+            "error": "Error: scillm HTTP 401: {\"error\":{\"message\":\"Invalid API key\",\"type\":\"authentication_error\",\"code\":401,\"advice\":\"Auth failed. Use 'Authorization: Bearer <configured proxy key>' where the key is SCILLM_PROXY_KEY, SCILLM_MASTER_KEY, or LITELLM_MASTER_KEY for this running proxy. The dev default is vali",
+            "provider": "codex_knowledge",
+            "query": null,
+            "stage": "stage1",
+            "status": "error"
+          },
+          {
+            "artifact_path": "providers/stage1-context7.json",
+            "artifact_sha256": "2727d2082bbb906c7a0dc96573af7feaff084d66f2559945bc35e3115fae8223",
+            "provider": "context7",
+            "query": null,
+            "skip_reason": "Context7 library documentation lookup is disabled by default.",
+            "stage": "stage1",
+            "status": "skipped"
+          },
+          {
+            "artifact_path": "providers/stage1-feeds.json",
+            "artifact_sha256": "40352d4fe711a9d212098d179368a2f3ea937648b5ac1b8dc7a5bf3ee66eef85",
+            "provider": "feeds",
+            "query": null,
+            "skip_reason": "Feed monitors are disabled by default.",
+            "stage": "stage1",
+            "status": "skipped"
+          },
+          {
+            "artifact_path": "providers/stage1-github.json",
+            "artifact_sha256": "4084a1cc25b8429962ec6bdeffb72f0df0633419e881edf54b16660f36b16dff",
+            "provider": "github",
+            "query": "Zip Slip archive traversal mitigation Python safe extraction",
+            "stage": "stage1",
+            "status": "ok"
+          },
+          {
+            "artifact_path": "providers/stage1-perplexity.json",
+            "artifact_sha256": "fab43b5b28885d9bbbdc0898f0a5c97ddf53cd3a577f19ca6876ce475f95d157",
+            "provider": "perplexity",
+            "query": "Zip Slip archive traversal mitigation Python safe extraction",
+            "skip_reason": "Perplexity is retired for Dogpile; API calls are disabled.",
+            "stage": "stage1",
+            "status": "skipped"
+          },
+          {
+            "artifact_path": "providers/stage1-readarr.json",
+            "artifact_sha256": "382919d8d5c95dff6d6c58082792d9dd6da3e03992d6841b65adfb1431b4c70a",
+            "provider": "readarr",
+            "query": "Zip Slip archive traversal mitigation Python safe extraction",
+            "skip_reason": "Readarr/Usenet is disabled by default.",
+            "stage": "stage1",
+            "status": "skipped"
+          },
+          {
+            "artifact_path": "providers/stage1-wayback.json",
+            "artifact_sha256": "eec3a3dc57903f0aebf4e5705bb5b760c5c395b53f4b48b2b25e4926d4ec0b0b",
+            "provider": "wayback",
+            "query": null,
+            "skip_reason": "Wayback archive lookup is disabled by default.",
+            "stage": "stage1",
+            "status": "skipped"
+          },
+          {
+            "artifact_path": "providers/stage1-youtube.json",
+            "artifact_sha256": "f0fbd716254850e0c95eb468f4ff546488adaad48b01b390bfdcaa8f2761c0df",
+            "provider": "youtube",
+            "query": "Zip Slip archive traversal mitigation Python safe extraction",
+            "stage": "stage1",
+            "status": "ok"
+          },
+          {
+            "artifact_path": "providers/stage2-arxiv.json",
+            "artifact_sha256": "91a65b2350866067815f51e818cf0b475d080c78f0cdd1f1acf2481f473f9f3c",
+            "provider": "arxiv",
+            "query": "Zip Slip archive traversal mitigation Python safe extraction",
+            "stage": "stage2",
+            "status": "ok"
+          },
+          {
+            "artifact_path": "providers/stage2-brave.json",
+            "artifact_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+            "provider": "brave",
+            "query": "Zip Slip archive traversal mitigation Python safe extraction",
+            "stage": "stage2",
+            "status": "ok"
+          },
+          {
+            "artifact_path": "providers/stage2-github.json",
+            "artifact_sha256": "19c255533aec26420a6a64e4d0b333cce882ddf8186ee9dd24e4f021f56042eb",
+            "provider": "github",
+            "query": "Zip Slip archive traversal mitigation Python safe extraction",
+            "stage": "stage2",
+            "status": "ok"
+          },
+          {
+            "artifact_path": "providers/stage2-synthesis.json",
+            "artifact_sha256": "baa590f00768b74320758012777ce4c55726b0c11bfd304dedbef36efe0f4907",
+            "error": "Error: scillm HTTP 401: {\"error\":{\"message\":\"Invalid API key\",\"type\":\"authentication_error\",\"code\":401,\"advice\":\"Auth failed. Use 'Authorization: Bearer <configured proxy key>' where the key is SCILLM_PROXY_KEY, SCILLM_MASTER_KEY, or LITELLM_MASTER_KEY for this running proxy. The dev default is valid only when no key override is configured.\",\"skill\":\"/best-practices-scillm\"}}",
+            "provider": "synthesis",
+            "query": null,
+            "stage": "stage2",
+            "status": "error"
+          },
+          {
+            "artifact_path": "providers/stage2-youtube.json",
+            "artifact_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+            "provider": "youtube",
+            "query": "Zip Slip archive traversal mitigation Python safe extraction",
+            "stage": "stage2",
+            "status": "ok"
+          }
+        ],
+        "schema": "dogpile.security_research_packet.v1",
+        "sha256": "06c27a77608d2aa9a4d8b46c7b7419404026cb7512270dc2fdb45ea508a21d55",
+        "source_bearing_evidence_count": 14
+      },
+      {
+        "bytes": 5632,
+        "kind": "memory",
+        "path": "/mnt/storage12tb/skills/battle/memory-seed-probe-20260906T125724Z/memory-recall.txt",
+        "sha256": "945986e9eac8281740eb0bd2f734f0f5b8212a5f27312089a6c77f36f732232b"
+      }
+    ],
+    "schema": "battle.mutation_seed_receipt_bundle.v1",
+    "status": "PASS"
+  },
+  "normalized_fixture": {
+    "fixture_id": "battle-004-adaptive-lineage-v13",
+    "fixture_sha256": "7ace0b3ee146a9dc872839ada58284ecbc3b40cc753037768a80c6bc2b158bc0",
+    "local_public_byte_identical": true,
+    "status": "PASS"
+  },
+  "observations": {
+    "generation_1": {
+      "blue": {
+        "artifact": {
+          "compile_receipt_sha256": "b7f3bb26d16328678626f9629dc745cbfd3290ea6b6efbb13994a21b4357e4ea",
+          "genome_sha256": "8889a5cbbfebb338de51da4c1acc29080b2c86a0c0fd8a61e7ab003f53aa4a0c",
+          "pipeline_handoff_sha256": "bcb0dfb77bd6f2e2ad6ae9eb8f735122828186481608c5aa0e2318dadc993219",
+          "review_receipt_sha256": "5295bf513e2aa855bb5c3eb0cf9f61755724b595d96099c225791801d6fe7c82",
+          "selected_artifact_sha256": "876f61c94cefb9cd33f070d2980dd3899d910b696d2e4389f8c48dfb6a92bcd8"
+        },
+        "battle_id": "battle-004",
+        "claims": {
+          "does_not_prove": [
+            "The team improved or achieved exploit success beyond the cited Judge verdict."
+          ],
+          "proves": [
+            "Battle projected measured pipeline and Judge evidence for one team generation."
+          ]
+        },
+        "generation": 1,
+        "judge": {
+          "judge_receipt_sha256": "976119d6c8d37684477c4746279332b1792a2bb15fb7dc1015ddd4a6fed49b39",
+          "judged_pair_count": 1,
+          "reviewed_judge_input_sha256": "a00d1724b0c1e0d195ddd4722cad121528b659556d749e25669b04c74c0165fc",
+          "status": "PASS",
+          "verdict": "BLUE_SUCCESS"
+        },
+        "measurements": {
+          "compile_status": "PASS",
+          "execution_elapsed_seconds": "UNKNOWN",
+          "exploit_blocked_after_patch": true,
+          "exploit_confirmed_before_patch": true,
+          "functionality_preserved": true,
+          "provider_attempt_count": 1,
+          "repair_attempt_count": 0,
+          "review_status": "PASS",
+          "runtime_status": "PASS",
+          "target_contact": "UNKNOWN"
+        },
+        "observed_elapsed_seconds": 45.375015,
+        "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-1/blue/generation-observation-receipt.json",
+        "receipt_id": "battle-seeded-provider-tau-20260906T130635Z-blue-g1-observation",
+        "run_id": "battle-seeded-provider-tau-20260906T130635Z",
+        "schema": "battle.generation_observation_receipt.v1",
+        "sha256": "d5cb7906e3becc679081c732f071f5d89900e812d6f0f3f3f51e5908edebedb6",
+        "status": "PASS",
+        "target_identity": {
+          "original_target_tree_sha256": "b91d9c40e3a0c28ef53df7891503b9d3eed77449d2db708d5724c41f76edb02d",
+          "patched_target_tree_sha256": "9187b0a9f5b4f319b0df97ed4862f77b971a6bbc3be3f50b183c95ee6f17daa9"
+        },
+        "team": "blue"
+      },
+      "red": {
+        "artifact": {
+          "compile_receipt_sha256": "5e70c0b4c9b1bd4c35664e654fc4c0fcd2e897bbc713e521474ddcd1811c3040",
+          "genome_sha256": "3fd8714a0ecc768e051a84382d256a8c3543afc0731aed5e4de8f541931740e2",
+          "pipeline_handoff_sha256": "d0946d5cabb9fa5881f79eed9640cd880d4960aed43b12af89a6307e8eba47c2",
+          "review_receipt_sha256": "137756a218eb962e11c73da47d335c93bb98179d7c1ddf8cf0a36b2c190d86da",
+          "selected_artifact_sha256": "094a192188fe2719a9f541a4cab75b1a73d8bf73efe321d3fdd4811081612ad8"
+        },
+        "battle_id": "battle-004",
+        "claims": {
+          "does_not_prove": [
+            "The team improved or achieved exploit success beyond the cited Judge verdict."
+          ],
+          "proves": [
+            "Battle projected measured pipeline and Judge evidence for one team generation."
+          ]
+        },
+        "generation": 1,
+        "judge": {
+          "judge_receipt_sha256": "976119d6c8d37684477c4746279332b1792a2bb15fb7dc1015ddd4a6fed49b39",
+          "judged_pair_count": 1,
+          "reviewed_judge_input_sha256": "a00d1724b0c1e0d195ddd4722cad121528b659556d749e25669b04c74c0165fc",
+          "status": "PASS",
+          "verdict": "BLUE_SUCCESS"
+        },
+        "measurements": {
+          "compile_status": "PASS",
+          "execution_elapsed_seconds": "UNKNOWN",
+          "exploit_blocked_after_patch": true,
+          "exploit_confirmed_before_patch": true,
+          "functionality_preserved": true,
+          "provider_attempt_count": 1,
+          "repair_attempt_count": 0,
+          "review_status": "PASS",
+          "runtime_status": "PASS",
+          "target_contact": "UNKNOWN"
+        },
+        "observed_elapsed_seconds": 45.300879,
+        "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-1/red/generation-observation-receipt.json",
+        "receipt_id": "battle-seeded-provider-tau-20260906T130635Z-red-g1-observation",
+        "run_id": "battle-seeded-provider-tau-20260906T130635Z",
+        "schema": "battle.generation_observation_receipt.v1",
+        "sha256": "93fabe7f93d19fe023ce04dc0c93bb6be10d075d3869496acde097ced396b32e",
+        "status": "PASS",
+        "target_identity": {
+          "original_target_tree_sha256": "b91d9c40e3a0c28ef53df7891503b9d3eed77449d2db708d5724c41f76edb02d",
+          "patched_target_tree_sha256": "9187b0a9f5b4f319b0df97ed4862f77b971a6bbc3be3f50b183c95ee6f17daa9"
+        },
+        "team": "red"
+      }
+    },
+    "generation_2": {
+      "blue": {
+        "artifact": {
+          "compile_receipt_sha256": "ab119382ca957ea3c602560e3043326215068ee1d8f12f015ca4dedea1cee756",
+          "genome_sha256": "6242315c82368ea65a4755852b0e150c1046ef994f32e76f2ef4e742e0eafbe3",
+          "pipeline_handoff_sha256": "14db2271110b311279d9c3ffac2cd0c1210733eb43a39c3ff40410d1519f0fc0",
+          "review_receipt_sha256": "c5267ae353369d92d163d37ec885b855aa18064b5dfeb47f8d6a356448b1c4ff",
+          "selected_artifact_sha256": "db49bea212c21cdd3db8b7975a85fb232fc9629a7f101371f47ee79e588cc304"
+        },
+        "battle_id": "battle-004",
+        "claims": {
+          "does_not_prove": [
+            "The team improved or achieved exploit success beyond the cited Judge verdict."
+          ],
+          "proves": [
+            "Battle projected measured pipeline and Judge evidence for one team generation."
+          ]
+        },
+        "generation": 2,
+        "judge": {
+          "judge_receipt_sha256": "54f814669f1862c88edfd05ee5b608ce34df521fc4ab7d33a5a009c83f73b7e0",
+          "judged_pair_count": 1,
+          "reviewed_judge_input_sha256": "9841f0529845c6df43250f40ea43920b587265a720c1e6dcde2a8428b9b6ee2a",
+          "status": "PASS",
+          "verdict": "BLUE_SUCCESS"
+        },
+        "measurements": {
+          "compile_status": "PASS",
+          "execution_elapsed_seconds": "UNKNOWN",
+          "exploit_blocked_after_patch": true,
+          "exploit_confirmed_before_patch": true,
+          "functionality_preserved": true,
+          "provider_attempt_count": 1,
+          "repair_attempt_count": 0,
+          "review_status": "PASS",
+          "runtime_status": "PASS",
+          "target_contact": "UNKNOWN"
+        },
+        "observed_elapsed_seconds": 133.103688,
+        "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/blue/generation-observation-receipt.json",
+        "receipt_id": "battle-seeded-provider-tau-20260906T130635Z-blue-g2-observation",
+        "run_id": "battle-seeded-provider-tau-20260906T130635Z",
+        "schema": "battle.generation_observation_receipt.v1",
+        "sha256": "8e5d6dd17f02caa09731cad7e8f40137e06f72a3e936bff4573371e2246a1bb1",
+        "status": "PASS",
+        "target_identity": {
+          "original_target_tree_sha256": "b91d9c40e3a0c28ef53df7891503b9d3eed77449d2db708d5724c41f76edb02d",
+          "patched_target_tree_sha256": "39a46717ae8d0e7e27193730cabab27ee7ffee5128cc1aea1e4514be6ff5df6c"
+        },
+        "team": "blue"
+      },
+      "red": {
+        "artifact": {
+          "compile_receipt_sha256": "82c7dc7106488423984c883bd592274c2104524a8688ec56b1e24d101f682782",
+          "genome_sha256": "6d3302dac07c61e6862ac75d5e44dfcfde14a22a78af5637b3b27df49aada0e1",
+          "pipeline_handoff_sha256": "60d2216b0662bdd47c7093a18c4f49684ba813e426843ac5e4c59186f770b412",
+          "review_receipt_sha256": "8e63d45965bae065d4742b3c3f52d6e194ec53036dc8c8470fd15c2582a624c3",
+          "selected_artifact_sha256": "17c12a210f00b8b3f4aa0ef9b5b9b1d1209e25bb3839b72ba15135e2cadfa5e6"
+        },
+        "battle_id": "battle-004",
+        "claims": {
+          "does_not_prove": [
+            "The team improved or achieved exploit success beyond the cited Judge verdict."
+          ],
+          "proves": [
+            "Battle projected measured pipeline and Judge evidence for one team generation."
+          ]
+        },
+        "generation": 2,
+        "judge": {
+          "judge_receipt_sha256": "54f814669f1862c88edfd05ee5b608ce34df521fc4ab7d33a5a009c83f73b7e0",
+          "judged_pair_count": 1,
+          "reviewed_judge_input_sha256": "9841f0529845c6df43250f40ea43920b587265a720c1e6dcde2a8428b9b6ee2a",
+          "status": "PASS",
+          "verdict": "BLUE_SUCCESS"
+        },
+        "measurements": {
+          "compile_status": "PASS",
+          "execution_elapsed_seconds": "UNKNOWN",
+          "exploit_blocked_after_patch": true,
+          "exploit_confirmed_before_patch": true,
+          "functionality_preserved": true,
+          "provider_attempt_count": 1,
+          "repair_attempt_count": 0,
+          "review_status": "PASS",
+          "runtime_status": "PASS",
+          "target_contact": "UNKNOWN"
+        },
+        "observed_elapsed_seconds": 133.070221,
+        "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/red/generation-observation-receipt.json",
+        "receipt_id": "battle-seeded-provider-tau-20260906T130635Z-red-g2-observation",
+        "run_id": "battle-seeded-provider-tau-20260906T130635Z",
+        "schema": "battle.generation_observation_receipt.v1",
+        "sha256": "dc8239f5451d9a3e5e5b39db6bc4e4b955dcb655e8032fc4ad24f4fd953b98b4",
+        "status": "PASS",
+        "target_identity": {
+          "original_target_tree_sha256": "b91d9c40e3a0c28ef53df7891503b9d3eed77449d2db708d5724c41f76edb02d",
+          "patched_target_tree_sha256": "39a46717ae8d0e7e27193730cabab27ee7ffee5128cc1aea1e4514be6ff5df6c"
+        },
+        "team": "red"
+      }
+    }
+  },
+  "reason": "two_generation_red_blue_lineage_evaluated",
+  "research": {
+    "blue": {
+      "external_tool_called": true,
+      "method": "brave-search",
+      "query_safety_receipt_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/arena/team-public/research/blue/research-query-safety-receipt.json",
+      "query_safety_receipt_sha256": "507c62b720d152e6d27fbde9a1c02aa818e38b3310cab4395bc4298cf6164c2f",
+      "source_count": 5,
+      "source_receipt_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/arena/team-public/research/blue/external-research-receipt.json",
+      "source_receipt_sha256": "5882fdf203a3477fc55f0ba1b88bdf40f18531f60951729ace305abd104691b3",
+      "status": "PASS",
+      "team": "blue"
+    },
+    "red": {
+      "external_tool_called": true,
+      "method": "brave-search",
+      "query_safety_receipt_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/arena/team-public/research/red/research-query-safety-receipt.json",
+      "query_safety_receipt_sha256": "ee6765c0cd5aba7815c2db74e1df80475183b69eb2c1871be5f60c5250ce5441",
+      "source_count": 5,
+      "source_receipt_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/arena/team-public/research/red/external-research-receipt.json",
+      "source_receipt_sha256": "609aa6da8a125323748081cf5912215181b039443e9c836d15ea45941f6f682d",
+      "status": "PASS",
+      "team": "red"
+    }
+  },
+  "run_id": "battle-seeded-provider-tau-20260906T130635Z",
+  "schema": "battle.adaptive_red_blue_lineage_canary.v1",
+  "selection": {
+    "battle_id": "battle-004",
+    "claims": {
+      "does_not_prove": [
+        "Exploit success beyond Judge evidence or population-scale evolution."
+      ],
+      "proves": [
+        "Battle compared two generations for both teams using four bound fitness receipts."
+      ]
+    },
+    "disqualifying_regressions": [],
+    "improvement_claimed": false,
+    "improvement_dimensions": [],
+    "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/selection-receipt.json",
+    "policy_id": "battle-adaptive-selection-lexicographic-v1",
+    "policy_sha256": "651bfd8663a953e11918dd1bf28f35830149febc19f1bf0793e4b22895fe91c4",
+    "run_id": "battle-seeded-provider-tau-20260906T130635Z",
+    "schema": "battle.adaptive_selection_receipt.v1",
+    "selection_id": "battle-seeded-provider-tau-20260906T130635Z-selection",
+    "sha256": "14e805814dec2b5b7f070ca22b2a9e744453218b6f04fd1397f8265749901b3d",
+    "status": "PASS",
+    "teams": {
+      "blue": {
+        "component_comparison": [
+          {
+            "component": "selection_key",
+            "generation_1": [
+              2,
+              1,
+              0,
+              -1
+            ],
+            "generation_2": [
+              2,
+              1,
+              1,
+              -1
+            ]
+          }
+        ],
+        "generation_1_fitness_receipt_sha256": "b0a69c262e9bf4461915e005df41fa23ec513ac4616d0e159a8f233175cc45e6",
+        "generation_2_fitness_receipt_sha256": "0eb2cdfbee088147fe0fbe87670f5196cba082a9ebffe7aaaa0915739388a2d4",
+        "retention_decision": "GENERATION_2_SELECTED",
+        "selected_generation": 2,
+        "tie_break_reason": null
+      },
+      "red": {
+        "component_comparison": [
+          {
+            "component": "selection_key",
+            "generation_1": [
+              1,
+              1,
+              0,
+              -1
+            ],
+            "generation_2": [
+              1,
+              1,
+              1,
+              -1
+            ]
+          }
+        ],
+        "generation_1_fitness_receipt_sha256": "00d6786c5e94da5fd2b2f13600465ec996c671e8d2d26a96f09dece29ab0bcea",
+        "generation_2_fitness_receipt_sha256": "6bd9dbeb7ea57166c80b3402ceda240598ce23ef843922ed0fc7a4971d2cd9f2",
+        "retention_decision": "GENERATION_2_SELECTED",
+        "selected_generation": 2,
+        "tie_break_reason": null
+      }
+    }
+  },
+  "source_commit": "70e81690e2443edc7cb2cb64a87a9a81764a8c98",
+  "source_tree": "ab2353588d6f98007c0e73fba76975e390312628",
+  "spawn": {
+    "blue": {
+      "claims": {
+        "does_not_prove": [
+          "The child improved."
+        ],
+        "proves": [
+          "Battle authorized one bounded child after parent Judge evaluation."
+        ]
+      },
+      "decision": "ALLOWED_EVALUATED_PARENT",
+      "judge_verdict": "BLUE_SUCCESS",
+      "parent_artifact_sha256": "876f61c94cefb9cd33f070d2980dd3899d910b696d2e4389f8c48dfb6a92bcd8",
+      "parent_terminal": false,
+      "reason_codes": [
+        "parent_judge_evaluated",
+        "bounded_second_generation_requested",
+        "remaining_budget_available"
+      ],
+      "receipt_id": "battle-seeded-provider-tau-20260906T130635Z-blue-spawn-policy-decision",
+      "schema": "battle.adaptive_spawn_policy_decision.v1",
+      "source_receipts": [
+        {
+          "kind": "parent_spawn_request",
+          "sha256": "cd456c53316db7754cdaf01c1b17b356799937252a709501421ebb5a984412c7"
+        },
+        {
+          "kind": "generation_observation",
+          "sha256": "d5cb7906e3becc679081c732f071f5d89900e812d6f0f3f3f51e5908edebedb6"
+        },
+        {
+          "kind": "fitness_vector",
+          "sha256": "b0a69c262e9bf4461915e005df41fa23ec513ac4616d0e159a8f233175cc45e6"
+        },
+        {
+          "kind": "parent_genome",
+          "sha256": "8889a5cbbfebb338de51da4c1acc29080b2c86a0c0fd8a61e7ab003f53aa4a0c"
+        },
+        {
+          "kind": "pipeline_handoff",
+          "sha256": "bcb0dfb77bd6f2e2ad6ae9eb8f735122828186481608c5aa0e2318dadc993219"
+        },
+        {
+          "kind": "judge_receipt",
+          "sha256": "976119d6c8d37684477c4746279332b1792a2bb15fb7dc1015ddd4a6fed49b39"
+        }
+      ],
+      "status": "PASS",
+      "team": "blue"
+    },
+    "red": {
+      "claims": {
+        "does_not_prove": [
+          "The child improved."
+        ],
+        "proves": [
+          "Battle authorized one bounded child after parent Judge evaluation."
+        ]
+      },
+      "decision": "ALLOWED_EVALUATED_PARENT",
+      "judge_verdict": "BLUE_SUCCESS",
+      "parent_artifact_sha256": "094a192188fe2719a9f541a4cab75b1a73d8bf73efe321d3fdd4811081612ad8",
+      "parent_terminal": false,
+      "reason_codes": [
+        "parent_judge_evaluated",
+        "bounded_second_generation_requested",
+        "remaining_budget_available"
+      ],
+      "receipt_id": "battle-seeded-provider-tau-20260906T130635Z-red-spawn-policy-decision",
+      "schema": "battle.adaptive_spawn_policy_decision.v1",
+      "source_receipts": [
+        {
+          "kind": "parent_spawn_request",
+          "sha256": "27b153991177129b2b80ed31eb7168fcd891cac1f4541ccc852241771b229e89"
+        },
+        {
+          "kind": "generation_observation",
+          "sha256": "93fabe7f93d19fe023ce04dc0c93bb6be10d075d3869496acde097ced396b32e"
+        },
+        {
+          "kind": "fitness_vector",
+          "sha256": "00d6786c5e94da5fd2b2f13600465ec996c671e8d2d26a96f09dece29ab0bcea"
+        },
+        {
+          "kind": "parent_genome",
+          "sha256": "3fd8714a0ecc768e051a84382d256a8c3543afc0731aed5e4de8f541931740e2"
+        },
+        {
+          "kind": "pipeline_handoff",
+          "sha256": "d0946d5cabb9fa5881f79eed9640cd880d4960aed43b12af89a6307e8eba47c2"
+        },
+        {
+          "kind": "judge_receipt",
+          "sha256": "976119d6c8d37684477c4746279332b1792a2bb15fb7dc1015ddd4a6fed49b39"
+        }
+      ],
+      "status": "PASS",
+      "team": "red"
+    }
+  },
+  "status": "PASS"
+}

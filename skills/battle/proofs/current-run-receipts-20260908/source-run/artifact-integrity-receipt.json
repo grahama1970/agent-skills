@@ -1,0 +1,84 @@
+{
+  "created_at": "2026-09-06T13:08:49Z",
+  "judge_replays": [
+    {
+      "actual_sha256": "46c7eef7c42e672ae37130bf5b2b90f64eec9d16d748ca32c869293ad67ad474",
+      "expected_generation": 1,
+      "expected_sha256": "46c7eef7c42e672ae37130bf5b2b90f64eec9d16d748ca32c869293ad67ad474",
+      "generation": 1,
+      "inside_run_root": true,
+      "matched": true,
+      "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-1/judge-exact-replay/exact-replay-receipt.json",
+      "receipt_valid": true,
+      "regular_file": true,
+      "status": "PASS"
+    },
+    {
+      "actual_sha256": "79fb1df3c9005eb233dca4f0b36dbac282a966d03e9698f7e530d6a0a0308ec1",
+      "expected_generation": 2,
+      "expected_sha256": "79fb1df3c9005eb233dca4f0b36dbac282a966d03e9698f7e530d6a0a0308ec1",
+      "generation": 2,
+      "inside_run_root": true,
+      "matched": true,
+      "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/judge-exact-replay/exact-replay-receipt.json",
+      "receipt_valid": true,
+      "regular_file": true,
+      "status": "PASS"
+    }
+  ],
+  "matched_replay_count": 2,
+  "matched_slot_count": 4,
+  "reason": "artifact_integrity_pass",
+  "required_replay_count": 2,
+  "required_slot_count": 4,
+  "schema": "battle.adaptive_artifact_integrity.v1",
+  "slots": [
+    {
+      "actual_sha256": "094a192188fe2719a9f541a4cab75b1a73d8bf73efe321d3fdd4811081612ad8",
+      "expected_sha256": "094a192188fe2719a9f541a4cab75b1a73d8bf73efe321d3fdd4811081612ad8",
+      "generation": 1,
+      "inside_run_root": true,
+      "matched": true,
+      "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-1/reviewed/immutable-slots/generation-1-red.py",
+      "regular_file": true,
+      "slot_key": "generation-1:red",
+      "team": "red"
+    },
+    {
+      "actual_sha256": "876f61c94cefb9cd33f070d2980dd3899d910b696d2e4389f8c48dfb6a92bcd8",
+      "expected_sha256": "876f61c94cefb9cd33f070d2980dd3899d910b696d2e4389f8c48dfb6a92bcd8",
+      "generation": 1,
+      "inside_run_root": true,
+      "matched": true,
+      "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-1/reviewed/immutable-slots/generation-1-blue.py",
+      "regular_file": true,
+      "slot_key": "generation-1:blue",
+      "team": "blue"
+    },
+    {
+      "actual_sha256": "17c12a210f00b8b3f4aa0ef9b5b9b1d1209e25bb3839b72ba15135e2cadfa5e6",
+      "expected_sha256": "17c12a210f00b8b3f4aa0ef9b5b9b1d1209e25bb3839b72ba15135e2cadfa5e6",
+      "generation": 2,
+      "inside_run_root": true,
+      "matched": true,
+      "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/reviewed/immutable-slots/generation-2-red.py",
+      "regular_file": true,
+      "slot_key": "generation-2:red",
+      "team": "red"
+    },
+    {
+      "actual_sha256": "db49bea212c21cdd3db8b7975a85fb232fc9629a7f101371f47ee79e588cc304",
+      "expected_sha256": "db49bea212c21cdd3db8b7975a85fb232fc9629a7f101371f47ee79e588cc304",
+      "generation": 2,
+      "inside_run_root": true,
+      "matched": true,
+      "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/reviewed/immutable-slots/generation-2-blue.py",
+      "regular_file": true,
+      "slot_key": "generation-2:blue",
+      "team": "blue"
+    }
+  ],
+  "status": "PASS",
+  "unique_replay_paths": true,
+  "unique_slot_paths": true
+}

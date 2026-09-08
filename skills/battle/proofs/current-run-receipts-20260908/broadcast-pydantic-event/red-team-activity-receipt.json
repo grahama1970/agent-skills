@@ -1,0 +1,104 @@
+{
+  "activities": [
+    {
+      "artifact_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-1/reviewed/immutable-slots/generation-1-red.py",
+      "artifact_sha256": "094a192188fe2719a9f541a4cab75b1a73d8bf73efe321d3fdd4811081612ad8",
+      "compile_receipt_sha256": "5e70c0b4c9b1bd4c35664e654fc4c0fcd2e897bbc713e521474ddcd1811c3040",
+      "event_type": "specimen_materialized",
+      "generation": 1,
+      "judge_verdict": "BLUE_SUCCESS",
+      "retention_decision": null,
+      "seed_citations": [],
+      "selected_generation": null,
+      "semantic_change_count": null,
+      "source": "campaign_receipt",
+      "spawn_decision": null
+    },
+    {
+      "artifact_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/reviewed/immutable-slots/generation-2-red.py",
+      "artifact_sha256": "17c12a210f00b8b3f4aa0ef9b5b9b1d1209e25bb3839b72ba15135e2cadfa5e6",
+      "compile_receipt_sha256": "82c7dc7106488423984c883bd592274c2104524a8688ec56b1e24d101f682782",
+      "event_type": "specimen_materialized",
+      "generation": 2,
+      "judge_verdict": "BLUE_SUCCESS",
+      "retention_decision": null,
+      "seed_citations": [],
+      "selected_generation": null,
+      "semantic_change_count": null,
+      "source": "campaign_receipt",
+      "spawn_decision": null
+    },
+    {
+      "artifact_path": null,
+      "artifact_sha256": null,
+      "compile_receipt_sha256": null,
+      "event_type": "spawn_policy",
+      "generation": null,
+      "judge_verdict": "BLUE_SUCCESS",
+      "retention_decision": null,
+      "seed_citations": [],
+      "selected_generation": null,
+      "semantic_change_count": null,
+      "source": "campaign_receipt",
+      "spawn_decision": "ALLOWED_EVALUATED_PARENT"
+    },
+    {
+      "artifact_path": null,
+      "artifact_sha256": null,
+      "compile_receipt_sha256": null,
+      "event_type": "provider_seed_ack",
+      "generation": null,
+      "judge_verdict": null,
+      "retention_decision": null,
+      "seed_citations": [
+        {
+          "cited_in_provider_response": true,
+          "kind": "dogpile",
+          "sha256": "06c27a77608d2aa9a4d8b46c7b7419404026cb7512270dc2fdb45ea508a21d55"
+        },
+        {
+          "cited_in_provider_response": true,
+          "kind": "memory",
+          "sha256": "945986e9eac8281740eb0bd2f734f0f5b8212a5f27312089a6c77f36f732232b"
+        }
+      ],
+      "selected_generation": null,
+      "semantic_change_count": null,
+      "source": "campaign_receipt",
+      "spawn_decision": null
+    },
+    {
+      "artifact_path": null,
+      "artifact_sha256": "e50bc0637906b2a9ad3e87cfd621db17dfa75681a78b9a70903f21ee82a90ad3",
+      "compile_receipt_sha256": null,
+      "event_type": "genome_mutated",
+      "generation": null,
+      "judge_verdict": null,
+      "retention_decision": null,
+      "seed_citations": [],
+      "selected_generation": null,
+      "semantic_change_count": 24,
+      "source": "campaign_receipt",
+      "spawn_decision": null
+    },
+    {
+      "artifact_path": null,
+      "artifact_sha256": null,
+      "compile_receipt_sha256": null,
+      "event_type": "selection_decision",
+      "generation": null,
+      "judge_verdict": null,
+      "retention_decision": "GENERATION_2_SELECTED",
+      "seed_citations": [],
+      "selected_generation": 2,
+      "semantic_change_count": null,
+      "source": "campaign_receipt",
+      "spawn_decision": null
+    }
+  ],
+  "campaign_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/campaign-receipt.json",
+  "campaign_receipt_sha256": "e441c6030b29ffa8fa64ba714a2e3f2d9fcf6a5f63e5cb8f4f4cf914326d75f4",
+  "schema": "battle.team_activity_receipt.v1",
+  "status": "PASS",
+  "team": "red"
+}

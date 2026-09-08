@@ -1,0 +1,38 @@
+{
+  "schema": "surf.webgpt_transport_summary.v1",
+  "artifact_dir": "/mnt/storage12tb/skills/ask/outputs/battle-webgpt-postfix-closure/battle-webgpt-postfix-closure-20260908T161915Z/node-artifacts/handler-webgpt",
+  "requested_tab_id": "837435286",
+  "requested_url": null,
+  "controlled_tab_id": "837435286",
+  "submit_receipt_status": "submitted_to_chatgpt",
+  "submitted_to_chatgpt": true,
+  "prepared_prompt_is_transport_proof": false,
+  "response_raw_path": "/mnt/storage12tb/skills/ask/outputs/battle-webgpt-postfix-closure/battle-webgpt-postfix-closure-20260908T161915Z/node-artifacts/handler-webgpt/response.raw.md",
+  "response_meta_path": "/mnt/storage12tb/skills/ask/outputs/battle-webgpt-postfix-closure/battle-webgpt-postfix-closure-20260908T161915Z/node-artifacts/handler-webgpt/response.meta.json",
+  "response_receipt_path": "/mnt/storage12tb/skills/ask/outputs/battle-webgpt-postfix-closure/battle-webgpt-postfix-closure-20260908T161915Z/node-artifacts/handler-webgpt/response.md.receipt.json",
+  "submitted_path": "/mnt/storage12tb/skills/ask/outputs/battle-webgpt-postfix-closure/battle-webgpt-postfix-closure-20260908T161915Z/node-artifacts/handler-webgpt/response.md.submitted.md",
+  "sentinel": "<<<WEBGPT_DONE:20260908T162001Z:d2e9dc7d>>>",
+  "raw_sentinel_present": true,
+  "focus_changed": true,
+  "transport_degraded": true,
+  "raw_response_advisory": false,
+  "final_transport_state": "completed_with_focus_drift",
+  "proof_status": "response_proven",
+  "agent_diagnosis": "ChatGPT returned the current sentinel-bearing assistant response from the controlled tab; focus changed during no-activate mode, so background focus proof is degraded.",
+  "agent_action": "Use raw_output, output, and meta_output as response evidence; preserve focus_drift_warning and do not claim clean background focus invariance.",
+  "next_command": "surf webgpt.recover --artifact-dir /mnt/storage12tb/skills/ask/outputs/battle-webgpt-postfix-closure/battle-webgpt-postfix-closure-20260908T161915Z/node-artifacts/handler-webgpt --audit",
+  "do_not_do": [
+    "do_not_treat_focus_drift_as_transport_failure_when_sentinel_matches"
+  ],
+  "needs_attention": null,
+  "claim": {
+    "available": false,
+    "tab_id": "837435286",
+    "sentinel": "<<<WEBGPT_DONE:20260908T162001Z:d2e9dc7d>>>",
+    "output": "/mnt/storage12tb/skills/ask/outputs/battle-webgpt-postfix-closure/battle-webgpt-postfix-closure-20260908T161915Z/node-artifacts/handler-webgpt/response.md",
+    "raw_output": "/mnt/storage12tb/skills/ask/outputs/battle-webgpt-postfix-closure/battle-webgpt-postfix-closure-20260908T161915Z/node-artifacts/handler-webgpt/response.raw.md",
+    "meta_output": "/mnt/storage12tb/skills/ask/outputs/battle-webgpt-postfix-closure/battle-webgpt-postfix-closure-20260908T161915Z/node-artifacts/handler-webgpt/response.meta.json",
+    "wait": true,
+    "stable_polls": 3
+  }
+}

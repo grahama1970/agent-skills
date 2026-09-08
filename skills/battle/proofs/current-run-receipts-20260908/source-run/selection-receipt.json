@@ -1,0 +1,70 @@
+{
+  "battle_id": "battle-004",
+  "claims": {
+    "does_not_prove": [
+      "Exploit success beyond Judge evidence or population-scale evolution."
+    ],
+    "proves": [
+      "Battle compared two generations for both teams using four bound fitness receipts."
+    ]
+  },
+  "disqualifying_regressions": [],
+  "improvement_claimed": false,
+  "improvement_dimensions": [],
+  "policy_id": "battle-adaptive-selection-lexicographic-v1",
+  "policy_sha256": "651bfd8663a953e11918dd1bf28f35830149febc19f1bf0793e4b22895fe91c4",
+  "run_id": "battle-seeded-provider-tau-20260906T130635Z",
+  "schema": "battle.adaptive_selection_receipt.v1",
+  "selection_id": "battle-seeded-provider-tau-20260906T130635Z-selection",
+  "status": "PASS",
+  "teams": {
+    "blue": {
+      "component_comparison": [
+        {
+          "component": "selection_key",
+          "generation_1": [
+            2,
+            1,
+            0,
+            -1
+          ],
+          "generation_2": [
+            2,
+            1,
+            1,
+            -1
+          ]
+        }
+      ],
+      "generation_1_fitness_receipt_sha256": "b0a69c262e9bf4461915e005df41fa23ec513ac4616d0e159a8f233175cc45e6",
+      "generation_2_fitness_receipt_sha256": "0eb2cdfbee088147fe0fbe87670f5196cba082a9ebffe7aaaa0915739388a2d4",
+      "retention_decision": "GENERATION_2_SELECTED",
+      "selected_generation": 2,
+      "tie_break_reason": null
+    },
+    "red": {
+      "component_comparison": [
+        {
+          "component": "selection_key",
+          "generation_1": [
+            1,
+            1,
+            0,
+            -1
+          ],
+          "generation_2": [
+            1,
+            1,
+            1,
+            -1
+          ]
+        }
+      ],
+      "generation_1_fitness_receipt_sha256": "00d6786c5e94da5fd2b2f13600465ec996c671e8d2d26a96f09dece29ab0bcea",
+      "generation_2_fitness_receipt_sha256": "6bd9dbeb7ea57166c80b3402ceda240598ce23ef843922ed0fc7a4971d2cd9f2",
+      "retention_decision": "GENERATION_2_SELECTED",
+      "selected_generation": 2,
+      "tie_break_reason": null
+    }
+  }
+}

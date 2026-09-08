@@ -1,0 +1,61 @@
+{
+  "allowed_actions": [
+    "authorization-preflight",
+    "battle"
+  ],
+  "allowed_cidrs": [
+    "127.0.0.0/8"
+  ],
+  "allowed_ports": [
+    80,
+    443
+  ],
+  "allowed_probe_classes": [
+    "path_traversal"
+  ],
+  "allowed_target_urls": [
+    "http://127.0.0.1"
+  ],
+  "approver": "agent-skills fixture maintainer",
+  "artifact_root": "/tmp/battle-reactive-judge-round",
+  "authorization_id": "battle-reactive-judge-fixture",
+  "denied_probe_classes": [
+    "destructive",
+    "credential",
+    "denial_of_service",
+    "persistence"
+  ],
+  "egress_policy": "deny_external",
+  "expires_at": "2099-01-01T00:00:00Z",
+  "issued_at": "2026-07-29T00:00:00Z",
+  "issuer": "agent-skills fixture",
+  "legal_non_opinion_ack": true,
+  "limits": {
+    "cpu": 1,
+    "duration_seconds": 60,
+    "max_concurrency": 1,
+    "memory_mb": 256,
+    "requests_per_second": 1,
+    "storage_mb": 128
+  },
+  "network_policy": "none",
+  "permissions": {
+    "credential": false,
+    "denial_of_service": false,
+    "destructive": false,
+    "nonlocal": false,
+    "persistence": false
+  },
+  "redaction_policy": "fixture contains no secrets",
+  "runtime_modes": [
+    "docker"
+  ],
+  "schema": "security.target_authorization.v1",
+  "target": {
+    "canonical_id": "battle-004",
+    "commit": "sha256:reactive-judge-v1",
+    "immutable_ref": "sha256:3dcad359038c37246c97ff054adffdd8a043059ec0861a602af02d3cdf4fad0e",
+    "kind": "repository",
+    "repository_url": "file:///skills/battle/fixtures/reactive-judge/target"
+  }
+}

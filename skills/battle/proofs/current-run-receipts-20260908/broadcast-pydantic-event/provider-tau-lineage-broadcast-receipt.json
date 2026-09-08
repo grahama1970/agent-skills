@@ -1,0 +1,251 @@
+{
+  "arena_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/arena-receipt.json",
+  "arena_receipt_sha256": "b092db8d61cd64cd2b6461913035e4809b4e25a766d6029120f851e1203e7f4d",
+  "blue_team_activity_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/blue-team-activity-receipt.json",
+  "blue_team_activity_receipt_sha256": "e27a50e16872d3734c7a7675b58d96d5b7cd46ca73efd56fd4c711b2ac76351c",
+  "campaign_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/campaign-receipt.json",
+  "campaign_receipt_sha256": "e441c6030b29ffa8fa64ba714a2e3f2d9fcf6a5f63e5cb8f4f4cf914326d75f4",
+  "checks": [
+    {
+      "name": "campaign_live_provider_tau",
+      "status": "PASS"
+    },
+    {
+      "name": "authorization_passed",
+      "status": "PASS"
+    },
+    {
+      "name": "research_receipts_bound",
+      "status": "PASS"
+    },
+    {
+      "campaign_seed_count": 2,
+      "external_seed_count": 2,
+      "name": "seed_receipts_bound",
+      "status": "PASS"
+    },
+    {
+      "citations": [
+        {
+          "cited_in_provider_response": true,
+          "kind": "dogpile",
+          "sha256": "06c27a77608d2aa9a4d8b46c7b7419404026cb7512270dc2fdb45ea508a21d55"
+        },
+        {
+          "cited_in_provider_response": true,
+          "kind": "memory",
+          "sha256": "945986e9eac8281740eb0bd2f734f0f5b8212a5f27312089a6c77f36f732232b"
+        },
+        {
+          "cited_in_provider_response": true,
+          "kind": "dogpile",
+          "sha256": "06c27a77608d2aa9a4d8b46c7b7419404026cb7512270dc2fdb45ea508a21d55"
+        },
+        {
+          "cited_in_provider_response": true,
+          "kind": "memory",
+          "sha256": "945986e9eac8281740eb0bd2f734f0f5b8212a5f27312089a6c77f36f732232b"
+        }
+      ],
+      "name": "seed_hashes_cited_by_provider",
+      "status": "PASS"
+    },
+    {
+      "name": "children_materialized",
+      "status": "PASS"
+    },
+    {
+      "artifact_integrity": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/artifact-integrity-receipt.json",
+      "name": "docker_judge_replays_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "selection_promoted_children",
+      "status": "PASS"
+    },
+    {
+      "arena_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/arena-receipt.json",
+      "blue_team_activity_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/blue-team-activity-receipt.json",
+      "name": "pydantic_arena_team_commentary_receipts",
+      "red_team_activity_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/red-team-activity-receipt.json",
+      "sports_play_by_play_commentary_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/sports-play-by-play-commentary-receipt.json",
+      "status": "PASS"
+    }
+  ],
+  "claims": {
+    "does_not_prove": [
+      "External target exploitability.",
+      "Durable memory promotion.",
+      "Overnight production throughput."
+    ],
+    "proves": [
+      "Provider/Tau adaptive-lineage child artifacts were narrated from campaign receipts.",
+      "Dogpile and/or memory seed receipts are bound when supplied and campaign seed citations are checked when present.",
+      "Arena, Red activity, Blue activity, and sports play-by-play commentary are Pydantic-validated JSON receipts."
+    ]
+  },
+  "created_at": "2026-09-06T14:18:12Z",
+  "event_ledger": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/provider-tau-event-ledger.jsonl",
+  "event_ledger_sha256": "f2b21e8e6adf44e629d41af9d54b3360472c472ea568bbb28090ad4587837b1a",
+  "red_team_activity_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/red-team-activity-receipt.json",
+  "red_team_activity_receipt_sha256": "0c8b2c2dde81b1f9a5062ae9a9a9951ab6eccb43fced953ddbf775c8c58ced3e",
+  "report": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/PROVIDER_TAU_LINEAGE_REPORT.md",
+  "report_sha256": "57645c9088450bbd6392c235cb339f6e3aa5ca6b3fe5bc812ee00932793c3913",
+  "schema": "battle.provider_tau_lineage_broadcast.v1",
+  "seed_receipts": [
+    {
+      "bytes": 25475,
+      "kind": "dogpile",
+      "path": "/mnt/storage12tb/skills/battle/dogpile-seed-probe-20260906T125204Z/dogpile-security-packet.json",
+      "provider_statuses": [
+        {
+          "artifact_path": "providers/stage1-arxiv.json",
+          "artifact_sha256": "6c201e061c9080cd90d040cae562e52bc25d2bdd103d4edd8e86dc9da7a7bdb9",
+          "provider": "arxiv",
+          "query": "Zip Slip archive traversal mitigation Python safe extraction",
+          "stage": "stage1",
+          "status": "ok"
+        },
+        {
+          "artifact_path": "providers/stage1-brave.json",
+          "artifact_sha256": "66767843ea217f5fe8c967f3a0ceeeacecf8a23ac736a9e9f5e62f569f494fb9",
+          "provider": "brave",
+          "query": "Zip Slip archive traversal mitigation Python safe extraction",
+          "stage": "stage1",
+          "status": "ok"
+        },
+        {
+          "artifact_path": "providers/stage1-brave_questions.json",
+          "artifact_sha256": "ca8d4504abab0b7a9ecf621856f8e61337286df51a1c9edd90e8e3090523a4fc",
+          "provider": "brave_questions",
+          "query": "Zip Slip archive traversal mitigation Python safe extraction",
+          "stage": "stage1",
+          "status": "ok"
+        },
+        {
+          "artifact_path": "providers/stage1-codex_knowledge.json",
+          "artifact_sha256": "26feb833bc8fcaff59e1b789eb4c431b9893e604b85f226c42a00fb2e7486da6",
+          "error": "Error: scillm HTTP 401: {\"error\":{\"message\":\"Invalid API key\",\"type\":\"authentication_error\",\"code\":401,\"advice\":\"Auth failed. Use 'Authorization: Bearer <configured proxy key>' where the key is SCILLM_PROXY_KEY, SCILLM_MASTER_KEY, or LITELLM_MASTER_KEY for this running proxy. The dev default is vali",
+          "provider": "codex_knowledge",
+          "query": null,
+          "stage": "stage1",
+          "status": "error"
+        },
+        {
+          "artifact_path": "providers/stage1-context7.json",
+          "artifact_sha256": "2727d2082bbb906c7a0dc96573af7feaff084d66f2559945bc35e3115fae8223",
+          "provider": "context7",
+          "query": null,
+          "skip_reason": "Context7 library documentation lookup is disabled by default.",
+          "stage": "stage1",
+          "status": "skipped"
+        },
+        {
+          "artifact_path": "providers/stage1-feeds.json",
+          "artifact_sha256": "40352d4fe711a9d212098d179368a2f3ea937648b5ac1b8dc7a5bf3ee66eef85",
+          "provider": "feeds",
+          "query": null,
+          "skip_reason": "Feed monitors are disabled by default.",
+          "stage": "stage1",
+          "status": "skipped"
+        },
+        {
+          "artifact_path": "providers/stage1-github.json",
+          "artifact_sha256": "4084a1cc25b8429962ec6bdeffb72f0df0633419e881edf54b16660f36b16dff",
+          "provider": "github",
+          "query": "Zip Slip archive traversal mitigation Python safe extraction",
+          "stage": "stage1",
+          "status": "ok"
+        },
+        {
+          "artifact_path": "providers/stage1-perplexity.json",
+          "artifact_sha256": "fab43b5b28885d9bbbdc0898f0a5c97ddf53cd3a577f19ca6876ce475f95d157",
+          "provider": "perplexity",
+          "query": "Zip Slip archive traversal mitigation Python safe extraction",
+          "skip_reason": "Perplexity is retired for Dogpile; API calls are disabled.",
+          "stage": "stage1",
+          "status": "skipped"
+        },
+        {
+          "artifact_path": "providers/stage1-readarr.json",
+          "artifact_sha256": "382919d8d5c95dff6d6c58082792d9dd6da3e03992d6841b65adfb1431b4c70a",
+          "provider": "readarr",
+          "query": "Zip Slip archive traversal mitigation Python safe extraction",
+          "skip_reason": "Readarr/Usenet is disabled by default.",
+          "stage": "stage1",
+          "status": "skipped"
+        },
+        {
+          "artifact_path": "providers/stage1-wayback.json",
+          "artifact_sha256": "eec3a3dc57903f0aebf4e5705bb5b760c5c395b53f4b48b2b25e4926d4ec0b0b",
+          "provider": "wayback",
+          "query": null,
+          "skip_reason": "Wayback archive lookup is disabled by default.",
+          "stage": "stage1",
+          "status": "skipped"
+        },
+        {
+          "artifact_path": "providers/stage1-youtube.json",
+          "artifact_sha256": "f0fbd716254850e0c95eb468f4ff546488adaad48b01b390bfdcaa8f2761c0df",
+          "provider": "youtube",
+          "query": "Zip Slip archive traversal mitigation Python safe extraction",
+          "stage": "stage1",
+          "status": "ok"
+        },
+        {
+          "artifact_path": "providers/stage2-arxiv.json",
+          "artifact_sha256": "91a65b2350866067815f51e818cf0b475d080c78f0cdd1f1acf2481f473f9f3c",
+          "provider": "arxiv",
+          "query": "Zip Slip archive traversal mitigation Python safe extraction",
+          "stage": "stage2",
+          "status": "ok"
+        },
+        {
+          "artifact_path": "providers/stage2-brave.json",
+          "artifact_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "provider": "brave",
+          "query": "Zip Slip archive traversal mitigation Python safe extraction",
+          "stage": "stage2",
+          "status": "ok"
+        },
+        {
+          "artifact_path": "providers/stage2-github.json",
+          "artifact_sha256": "19c255533aec26420a6a64e4d0b333cce882ddf8186ee9dd24e4f021f56042eb",
+          "provider": "github",
+          "query": "Zip Slip archive traversal mitigation Python safe extraction",
+          "stage": "stage2",
+          "status": "ok"
+        },
+        {
+          "artifact_path": "providers/stage2-synthesis.json",
+          "artifact_sha256": "baa590f00768b74320758012777ce4c55726b0c11bfd304dedbef36efe0f4907",
+          "error": "Error: scillm HTTP 401: {\"error\":{\"message\":\"Invalid API key\",\"type\":\"authentication_error\",\"code\":401,\"advice\":\"Auth failed. Use 'Authorization: Bearer <configured proxy key>' where the key is SCILLM_PROXY_KEY, SCILLM_MASTER_KEY, or LITELLM_MASTER_KEY for this running proxy. The dev default is valid only when no key override is configured.\",\"skill\":\"/best-practices-scillm\"}}",
+          "provider": "synthesis",
+          "query": null,
+          "stage": "stage2",
+          "status": "error"
+        },
+        {
+          "artifact_path": "providers/stage2-youtube.json",
+          "artifact_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "provider": "youtube",
+          "query": "Zip Slip archive traversal mitigation Python safe extraction",
+          "stage": "stage2",
+          "status": "ok"
+        }
+      ],
+      "schema": "dogpile.security_research_packet.v1",
+      "sha256": "06c27a77608d2aa9a4d8b46c7b7419404026cb7512270dc2fdb45ea508a21d55",
+      "source_bearing_evidence_count": 14
+    },
+    {
+      "bytes": 5632,
+      "kind": "memory",
+      "path": "/mnt/storage12tb/skills/battle/memory-seed-probe-20260906T125724Z/memory-recall.txt",
+      "sha256": "945986e9eac8281740eb0bd2f734f0f5b8212a5f27312089a6c77f36f732232b"
+    }
+  ],
+  "sports_play_by_play_commentary_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/sports-play-by-play-commentary-receipt.json",
+  "sports_play_by_play_commentary_receipt_sha256": "8c89a606caa987ebdd1e6ba534a6a29b27fc56b70895b0d7432060dce3b4375b",
+  "status": "PASS"
+}

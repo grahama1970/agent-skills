@@ -1,0 +1,54 @@
+{
+  "battle_id": "battle-004",
+  "campaign_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/campaign-receipt.json",
+  "campaign_receipt_sha256": "e441c6030b29ffa8fa64ba714a2e3f2d9fcf6a5f63e5cb8f4f4cf914326d75f4",
+  "claims": {
+    "does_not_prove": [
+      "Memory ranking quality.",
+      "Cross-battle automatic reuse.",
+      "External target exploitability."
+    ],
+    "proves": [
+      "Selected provider/Tau Red and Blue lineage children were written through the Memory skill and independently recalled."
+    ]
+  },
+  "created_at": "2026-09-06T13:42:05Z",
+  "errors": [],
+  "promotions": [
+    {
+      "learn": {
+        "exit_code": 0,
+        "stderr": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/memory-promotion-v3/red/memory-learn.stderr.txt",
+        "stdout": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/memory-promotion-v3/red/memory-learn.stdout.txt"
+      },
+      "problem": "CWE-22 Zip Slip path traversal Battle adaptive-lineage promotion battle-memory-promotion:battle-seeded-provider-tau-20260906T130635Z:red:generation-2: red generation 2 was selected after Docker/Judge replay verdict BLUE_SUCCESS.",
+      "recall": {
+        "exit_code": 0,
+        "marker_found": true,
+        "stderr": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/memory-promotion-v3/red/memory-recall.stderr.txt",
+        "stdout": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/memory-promotion-v3/red/memory-recall.stdout.txt"
+      },
+      "solution_sha256": "5e52a265e67108b549f14479675efd60946a86f1bfc297e5e69cfb787da8913f",
+      "team": "red"
+    },
+    {
+      "learn": {
+        "exit_code": 0,
+        "stderr": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/memory-promotion-v3/blue/memory-learn.stderr.txt",
+        "stdout": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/memory-promotion-v3/blue/memory-learn.stdout.txt"
+      },
+      "problem": "CWE-22 Zip Slip path traversal Battle adaptive-lineage promotion battle-memory-promotion:battle-seeded-provider-tau-20260906T130635Z:blue:generation-2: blue generation 2 was selected after Docker/Judge replay verdict BLUE_SUCCESS.",
+      "recall": {
+        "exit_code": 0,
+        "marker_found": true,
+        "stderr": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/memory-promotion-v3/blue/memory-recall.stderr.txt",
+        "stdout": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/memory-promotion-v3/blue/memory-recall.stdout.txt"
+      },
+      "solution_sha256": "a8b24b2a21f014d91fd766d07c4b145b49f6a71091dd006456726eb3cba74e4c",
+      "team": "blue"
+    }
+  ],
+  "run_id": "battle-seeded-provider-tau-20260906T130635Z",
+  "schema": "battle.memory_promotion_live_receipt.v1",
+  "status": "PASS"
+}
