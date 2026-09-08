@@ -91,6 +91,15 @@
       "evidence_class": "deterministic"
     },
     {
+      "name": "react-cockpit-ui-builds",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "-c", "cd ../ui && npm install --package-lock-only && npm run build"],
+      "expected": {"exit_code": 0, "stdout_contains": ["built in"]},
+      "readback": true,
+      "evidence_class": "deterministic"
+    },
+    {
       "name": "ui-contract-static-check",
       "type": "positive",
       "real_world": true,

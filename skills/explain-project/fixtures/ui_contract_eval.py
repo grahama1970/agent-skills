@@ -204,6 +204,29 @@ def main() -> None:
         encoding="utf-8"
     )
 
+    package_json = (
+        root.parent
+        / "package.json"
+    ).read_text(
+        encoding="utf-8"
+    )
+    main = (root / "main.tsx").read_text(
+        encoding="utf-8"
+    )
+    style = (root / "style.css").read_text(
+        encoding="utf-8"
+    )
+
+    require(
+        (
+            '"react"' in package_json
+            and '"vite"' in package_json
+            and "createRoot" in main
+            and "min-height: 44px" in style
+        ),
+        "React browser harness or qid target sizing is missing",
+    )
+
     require(
         (
             "interaction-manifest" in cli
