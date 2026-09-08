@@ -36,16 +36,26 @@ specific inputs and everything else is deterministic:
 ```text
 INPUT 1: scene table   (scene_script.scene_table.v1 — must pass the
                         scene-script-writing pydantic gate)
-INPUT 2: references    (one single-subject crop per character row)
+INPUT 2: references    (one single-subject crop per character row —
+                        validated as real decodable PNG/JPEG, magic bytes,
+                        >=1KB, not just an existing path)
+INPUT 3: voice wavs    (optional --voice name=/path.wav — validated as real
+                        RIFF/WAVE within Kling bounds: 2-60s lipsync,
+                        5-30s voice_clone)
    |
    v
 ./run.sh build --scene scene.json --refs embry=/path/embry.png --out-dir /path/run
    |
    1. scene_table_gate    scene-script-writing pydantic validate (fail-closed)
    2. reference_check     every character row has exactly one existing ref
-   3. compile             slot-budget prompt RENDERED from the validated table
-                          (bindings + prose + closed-cast guard, <=790 chars)
-   4. kling_packet_gate   kling-video pydantic validate (endpoint/element/
+   3. instructions_gate   create_kling_scene.instructions.v1 — typed FINAL
+                          instructions (per-slot char budgets, @ElementN
+                          binding coverage, character<->ref<->voice cross-
+                          checks) validated BEFORE any Kling-format
+                          conversion; emitted as kling_instructions.json
+   4. compile             MECHANICAL instructions -> kling_video.request.v1
+                          (no decisions below the validated layer)
+   5. kling_packet_gate   kling-video pydantic validate (endpoint/element/
                           budget/URL rules)
    |
    v

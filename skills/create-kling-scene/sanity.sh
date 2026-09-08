@@ -5,9 +5,24 @@ T=$(mktemp -d)
 trap 'rm -rf "$T"' EXIT
 # positive control: valid tea scene table + existing ref files
 cp ../best-practices-scene-script-writing/fixtures/scene_table_tea.json "$T/scene.json"
-printf 'x' > "$T/embry.png"; printf 'x' > "$T/horus.png"
+python3 -c "
+import zlib, struct, wave, sys
+def png(p):
+    raw = b'\\x89PNG\\r\\n\\x1a\\n'
+    def chunk(t, d): return struct.pack('>I', len(d)) + t + d + struct.pack('>I', zlib.crc32(t + d))
+    ihdr = chunk(b'IHDR', struct.pack('>IIBBBBB', 64, 64, 8, 0, 0, 0, 0))
+    row = b'\\x00' + b'\\x80' * 64
+    idat = chunk(b'IDAT', zlib.compress(row * 64, 0))
+    open(p, 'wb').write(raw + ihdr + idat + chunk(b'IEND', b''))
+def wav(p, secs):
+    with wave.open(p, 'wb') as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(8000)
+        w.writeframes(b'\\x00\\x00' * int(8000 * secs))
+png('$T/embry.png'); png('$T/horus.png')
+wav('$T/embry.wav', 6); wav('$T/short.wav', 0.5)
+"
 CHARS=$(python3 -c "import json; print(' '.join(e['element_id'].split('_',1)[-1] for e in json.load(open('$T/scene.json'))['elements'] if e['element_type']=='character'))")
-REFS=(); for c in $CHARS; do REFS+=(--refs "$c=$T/$c.png"); printf 'x' > "$T/$c.png"; done
+REFS=(); for c in $CHARS; do REFS+=(--refs "$c=$T/$c.png"); cp "$T/embry.png" "$T/$c.png" 2>/dev/null || true; done
 ./run.sh build --scene "$T/scene.json" "${REFS[@]}" --out-dir "$T/run" >/dev/null
 python3 -c "
 import json; r=json.load(open('$T/run/receipt.json'))
@@ -34,6 +49,30 @@ python3 -c "
 import json; r=json.load(open('$T/run3/receipt.json'))
 assert r['failed_stage']=='reference_check', r
 print('PASS negative-control reference check')"
+# negative control: fake PNG (text bytes) rejected at media gate
+printf 'not an image, definitely large enough? no' > "$T/fake.png"
+if ./run.sh build --scene "$T/scene.json" --refs embry=$T/fake.png --refs horus=$T/horus.png --out-dir "$T/run4" >/dev/null 2>&1; then
+  echo "FAIL: fake png accepted"; exit 1; fi
+python3 -c "
+import json; r=json.load(open('$T/run4/receipt.json'))
+assert r['failed_stage']=='reference_check', r
+assert any('magic bytes' in str(e) for e in r['errors']), r['errors']
+print('PASS negative-control fake image rejected')"
+# negative control: 0.5s wav outside lipsync bounds
+if ./run.sh build --scene "$T/scene.json" "${REFS[@]}" --voice embry=$T/short.wav --out-dir "$T/run5" >/dev/null 2>&1; then
+  echo "FAIL: short wav accepted"; exit 1; fi
+python3 -c "
+import json; r=json.load(open('$T/run5/receipt.json'))
+assert any('bounds' in str(e) for e in r['errors']), r['errors']
+print('PASS negative-control short wav rejected')"
+# positive: valid wav accepted + typed instructions artifact emitted
+./run.sh build --scene "$T/scene.json" "${REFS[@]}" --voice embry=$T/embry.wav --out-dir "$T/run6" >/dev/null
+python3 -c "
+import json; i=json.load(open('$T/run6/kling_instructions.json'))
+assert i['schema']=='create_kling_scene.instructions.v1', i
+assert i['voices'][0]['duration_s']==6.0, i['voices']
+assert json.load(open('$T/run6/receipt.json'))['status']=='PASS'
+print('PASS positive-control voice wav + instructions artifact')"
 # escalation control: unresolvable triage (minted code) -> interview questions + needs_attention
 python3 - <<'PYEOF'
 import json, sys

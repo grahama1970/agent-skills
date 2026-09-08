@@ -1137,13 +1137,37 @@
       ]
     },
     {
-      "code": "create_kling_scene_unclassified_c7622bb6",
+      "code": "create_kling_scene_unclassified_05df7ade",
       "layer": "create_kling_scene",
       "match": [
-        "create_kling_scene_unclassified_c7622bb6",
-        "missing character reference: character_embry; missing character reference: character_horus"
+        "create_kling_scene_unclassified_05df7ade",
+        "value_error: missing character reference: character_embry; value_error: missing character reference: character_horus"
       ],
-      "cause": "Unclassified error signal: missing character reference: character_embry; missing character reference: character_horus",
+      "cause": "Unclassified error signal: value_error: missing character reference: character_embry; value_error: missing character reference: character_horus",
+      "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
+      "recoverable": true,
+      "not_this": []
+    },
+    {
+      "code": "create_kling_scene_unclassified_935323ca",
+      "layer": "create_kling_scene",
+      "match": [
+        "create_kling_scene_unclassified_935323ca",
+        "value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.6hLp9w0Hmw/fake.png"
+      ],
+      "cause": "Unclassified error signal: value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.6hLp9w0Hmw/fake.png",
+      "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
+      "recoverable": true,
+      "not_this": []
+    },
+    {
+      "code": "create_kling_scene_unclassified_3ab0c21a",
+      "layer": "create_kling_scene",
+      "match": [
+        "create_kling_scene_unclassified_3ab0c21a",
+        "value_error: Value error, embry: wav duration 0.5s outside Kling lipsync bounds 2.0-60.0s"
+      ],
+      "cause": "Unclassified error signal: value_error: Value error, embry: wav duration 0.5s outside Kling lipsync bounds 2.0-60.0s",
       "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
       "recoverable": true,
       "not_this": []
