@@ -14,6 +14,7 @@ from phart_dag_chart.dag_validate import validation_report, validate_dag
 from phart_dag_chart.errors import DagChartError
 from phart_dag_chart.load import load_dag_file
 from phart_dag_chart.watch import progress_path_from_options, render_watch_frame, watch_until_terminal
+from phart_dag_chart.workflow import detect_chart_view, render_workflow_chart
 
 app = typer.Typer(
     name="phart-dag-chart",
@@ -74,18 +75,27 @@ def cmd_validate(
 
 @app.command("chart")
 def cmd_chart(
-    dag_file: Annotated[Path, typer.Argument(help="Path to DAG JSON file")],
-    no_validate: Annotated[bool, typer.Option("--no-validate", help="Skip validation (not recommended)")] = False,
+    dag_file: Annotated[Path, typer.Argument(help="Path to DAG JSON file or typed receipt")],
+    no_validate: Annotated[bool, typer.Option("--no-validate", help="Skip structure validation (not recommended)")] = False,
     plain: Annotated[bool, typer.Option("--plain", help="Raw ASCII without markdown fences")] = False,
-    show_meta: Annotated[bool, typer.Option("--show-meta", help="Show agent/model/skill/attempt metadata in node labels")] = False,
-    compact_loops: Annotated[bool, typer.Option("--compact-loops", help="Summarize repeated attempt-N chains as bounded loops")] = False,
+    view: Annotated[str, typer.Option("--view", help="auto, workflow, or structure")] = "auto",
+    evidence: Annotated[list[Path], typer.Option("--evidence", help="Extra receipt/proof/eval/issue JSON evidence; repeatable")] = [],
+    show_evidence: Annotated[bool, typer.Option("--show-evidence", help="Append evidence hashes and pointers for workflow view")] = False,
+    show_meta: Annotated[bool, typer.Option("--show-meta", help="Show agent/model/skill/attempt metadata in structure labels")] = False,
+    compact_loops: Annotated[bool, typer.Option("--compact-loops", help="Summarize repeated attempt-N chains as bounded loops in structure view")] = False,
 ) -> None:
-    """Render DAG as PHART ASCII decision tree (stdout)."""
+    """Render a DAG structure or a receipt-backed observed workflow chart."""
     try:
         raw = load_dag_file(dag_file)
-        if not no_validate:
-            validate_dag(raw, chart_only=True)
-        typer.echo(render_chart(raw, validate=not no_validate, plain=plain, show_meta=show_meta, compact_loops=compact_loops))
+        selected = detect_chart_view(raw) if view == "auto" else view
+        if selected not in {"workflow", "structure"}:
+            raise DagChartError("--view must be auto, workflow, or structure", code="invalid_view")
+        if selected == "workflow":
+            typer.echo(render_workflow_chart(raw, dag_file, evidence, plain=plain, show_evidence=show_evidence))
+        else:
+            if not no_validate:
+                validate_dag(raw, chart_only=True)
+            typer.echo(render_chart(raw, validate=not no_validate, plain=plain, show_meta=show_meta, compact_loops=compact_loops))
         raise typer.Exit(code=EXIT_OK)
     except DagChartError as exc:
         _emit_error(exc)

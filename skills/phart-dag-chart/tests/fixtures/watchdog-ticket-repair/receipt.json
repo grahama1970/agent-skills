@@ -1,0 +1,507 @@
+{
+  "apply": true,
+  "cron_log_file": "/home/graham/.local/state/project-watchdog/logs/cron.log",
+  "errors": [],
+  "excluded_counts": {},
+  "excluded_issue_refs": {},
+  "excluded_issues": {},
+  "foreign_lease_observations": [
+    {
+      "issues": [
+        1220
+      ],
+      "known_targets": [
+        "skills/ask/README.md",
+        "skills/ask/SKILL.md",
+        "skills/ask/src/ask/tau_dag.py"
+      ],
+      "released": false,
+      "repo": "grahama1970/agent-skills"
+    }
+  ],
+  "handled_count": 1,
+  "handled_issues": [
+    {
+      "action": "ticket_repair",
+      "artifacts": [
+        "/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260908T153952Z-cb85b983382a/native-ticket-proof.md",
+        "/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260908T153952Z-cb85b983382a/native-ticket-review.md",
+        "/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260908T153952Z-cb85b983382a/repair-proof-gate.json",
+        "/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260908T153952Z-cb85b983382a/tau-stream-monitor.json"
+      ],
+      "commands": [
+        {
+          "command": [
+            "/home/graham/workspace/experiments/agent-skills/skills/best-practices-github-ticket/scripts/gh-ticket-tools.sh",
+            "close",
+            "1627",
+            "--repo",
+            "grahama1970/agent-skills",
+            "--proof",
+            "/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260908T153952Z-cb85b983382a/native-ticket-proof.md",
+            "--review",
+            "/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260908T153952Z-cb85b983382a/native-ticket-review.md",
+            "--reason",
+            "completed"
+          ],
+          "cwd": "/home/graham/workspace/experiments/agent-skills",
+          "duration_seconds": 5.980356,
+          "exit_code": 0,
+          "stderr": "{\"ok\":true,\"repo\":\"/home/graham/workspace/experiments/agent-skills\",\"total\":1,\"tmp\":0,\"detached\":0,\"prunable\":0,\"dirty_secondary\":0,\"dirty_secondary_ignored\":0,\"scope_paths\":[\"extensions/pi/lazy-report-shame-shame-shame/README.md\"],\"tmp_paths\":[],\"prunable_paths\":[],\"dirty_secondary_paths\":[],\"dirty_secondary_ignored_paths\":[]}\n\u2713 Closed issue grahama1970/agent-skills#1627 (Prove shame spiral watchdog routable exact target 20260908T153947Z)\n",
+          "stdout": "https://github.com/grahama1970/agent-skills/issues/1627#issuecomment-5587876224\nhttps://github.com/grahama1970/agent-skills/issues/1627#issuecomment-5587876417\nhttps://github.com/grahama1970/agent-skills/issues/1627\n{\"ok\":true,\"action\":\"close\",\"issue\":\"1627\",\"reason\":\"completed\",\"proof\":\"/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260908T153952Z-cb85b983382a/native-ticket-proof.md\",\"receipt\":\".artifacts/ticket/issue-1627-closure-receipt.json\"}\n"
+        }
+      ],
+      "commit": "f162d3efde9577df7a65a8f16ebd84cc14cfc978",
+      "execution_lock": "/home/graham/.local/state/project-watchdog/execution-locks/extensions_pi_lazy-report-shame-shame-shame_README.md-658c8fa751eda2ba",
+      "execution_lock_targets": [
+        "extensions/pi/lazy-report-shame-shame-shame/README.md"
+      ],
+      "issue_number": 1627,
+      "issue_url": "https://github.com/grahama1970/agent-skills/issues/1627",
+      "ok": true,
+      "preservation_scope": "target files and target index entries; unrelated cron changes are not attributed to this run",
+      "project_id": "agent-skills",
+      "proof_gate": "/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260908T153952Z-cb85b983382a/repair-proof-gate.json",
+      "repo": "grahama1970/agent-skills",
+      "requires_human_input": false,
+      "seats": {
+        "creator": "gpt-5.5-high",
+        "creator_handler": "codex",
+        "reviewer": "claude-fable-low",
+        "reviewer_handler": "claude-fable-low"
+      },
+      "selected_agent": null,
+      "status": "COMPLETED",
+      "summary": "native ticket verification and completed closure read back",
+      "target_ownership": {
+        "extensions/pi/lazy-report-shame-shame-shame/README.md": "verified_remote_identical"
+      },
+      "targets": [
+        "extensions/pi/lazy-report-shame-shame-shame/README.md"
+      ],
+      "ticket_closed": true,
+      "worktree_readiness": {
+        "branch": "main",
+        "git_common_dir": "/home/graham/workspace/experiments/agent-skills/.git",
+        "ready": true,
+        "reasons": [],
+        "scope": [
+          "extensions/pi/lazy-report-shame-shame-shame/README.md"
+        ],
+        "worktree": "/home/graham/workspace/experiments/agent-skills"
+      }
+    }
+  ],
+  "in_flight": {
+    "issues": [
+      1220
+    ],
+    "leases": [
+      {
+        "issue_number": 1220,
+        "leases": [
+          {
+            "acquired_at": "2026-09-06T18:14:14Z",
+            "age_seconds": 163539,
+            "label": "maintainer-active",
+            "reason": "lease_expired_liveness_unproven",
+            "stale_after_seconds": 86400,
+            "timestamp_source": "github_label_event"
+          }
+        ]
+      }
+    ],
+    "targets": [
+      "skills/ask/README.md",
+      "skills/ask/SKILL.md",
+      "skills/ask/src/ask/tau_dag.py"
+    ]
+  },
+  "issue_scans": [
+    {
+      "dependency_unblocks": [],
+      "excluded": {},
+      "excluded_issues": {},
+      "project_id": "agent-skills",
+      "repo": "grahama1970/agent-skills",
+      "scanned": 1
+    }
+  ],
+  "lease_staleness": {
+    "stale": [],
+    "stale_after_seconds": 86400,
+    "unknown_acquisition_time": []
+  },
+  "live": true,
+  "log_file": "/home/graham/.local/state/project-watchdog/logs/project-watchdog.log",
+  "mocked": false,
+  "ok": true,
+  "project_id": "agent-skills",
+  "receipt_dir": "/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260908T153952Z-cb85b983382a",
+  "receipt_path": "/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260908T153952Z-cb85b983382a/receipt.json",
+  "reclaimed_leases": [],
+  "rotation": {
+    "mode": "strict",
+    "requested": "agent-skills",
+    "selected": "agent-skills",
+    "skipped": []
+  },
+  "run_id": "project-watchdog-20260908T153952Z-cb85b983382a",
+  "scanned_issues": [
+    {
+      "active_lock_reason": null,
+      "assignee": null,
+      "assignees": [],
+      "author_association": "OWNER",
+      "body": "## Type\n\nmaintenance\n\n## Target\n\nextensions/pi/lazy-report-shame-shame-shame/README.md\n\n## Target paths\n\n- extensions/pi/lazy-report-shame-shame-shame/README.md\n\n## Current state\n\nExercise the spiral-ticket-request self-repair path with a real project-watchdog targeted tick on a clean exact target.\n\n## Requested outcome\n\nPreserve invariant: A shame retry exhaustion creates repair work that project-watchdog can route through ticket_repair.\n\n## Required proof\n\nskills/agentic-evals/run.sh run skills/shame/fixtures/agentic_eval.json --case spiral-ticket-request --output /tmp/shame-spiral-ticket-watchdog-eval.json\n\n## Route\n\nbackend_python_or_skill_runtime\n\n## Maintainer route\n\nbackend_python_or_skill_runtime\n\n## Requested repair agent\n\nagent-skill-maintainer\n\n## Non-goals\n\nNo unrelated refactors or scope expansion.\n\n## Ticket type details\n\n- **Invariant to preserve:** A shame retry exhaustion creates repair work that project-watchdog can route through ticket_repair.\n- **Cleanup target:** Exercise the spiral-ticket-request self-repair path with a real project-watchdog targeted tick on a clean exact target.\n- **Scoped files:** extensions/pi/lazy-report-shame-shame-shame/README.md\n\n## Orientation for a stateless agent\n\nYou are running from cron with no prior context. Build context in this order\nbefore changing anything. Do not start by grepping the repository.\n\n1. **Recall first.** `skills/memory/run.sh recall --q \"<target or symptom>\"`\n   Prior work on this exact problem may already exist. This is cheapest and\n   most often decisive.\n2. **Project state.** `skills/project-state/run.sh --json`\n   Readiness, infrastructure health, doc-code drift, and known gaps in one\n   command.\n3. **Curated current state.** Read `PROJECT_KNOWLEDGE.md` in the target skill or\n   repo when present. It records open blockers and decisions that the code does\n   not.\n\nThen use the narrowest tool for the actual question:\n\n| Need | Use |\n| --- | --- |\n| Locate code by symbol or structure | `skills/treesitter/run.sh` |\n| Find prior art in other repos | `skills/github-search/run.sh` |\n| External research on a load-bearing claim | `skills/dogpile/run.sh \"<claim>\"`, else `skills/brave-search/run.sh web \"<query>\"` |\n| Diagnose a failing test or traceback | load the `debugger` skill |\n| Run the target's suites | `skills/test/run.sh` |\n\nLoad the skill's own `SKILL.md` before using it; do not infer its interface.\nRecord what you actually ran. A tool's success response is not proof \u2014 read\nback the artifact it claims to have produced.\n\n<!-- ticket-skill\ntype: maintenance\ntarget: extensions/pi/lazy-report-shame-shame-shame/README.md\nroute: backend_python_or_skill_runtime\nagent: agent-skill-maintainer\n-->\n\nThis ticket must be resolved under `best-practices-github-ticket`. Closure requires deterministic proof; WebGPT review or CI green alone is not closure proof.\n",
+      "closedAt": null,
+      "closed_at": null,
+      "closed_by": null,
+      "comments": 0,
+      "comments_url": "https://api.github.com/repos/grahama1970/agent-skills/issues/1627/comments",
+      "createdAt": "2026-09-08T15:39:48Z",
+      "created_at": "2026-09-08T15:39:48Z",
+      "events_url": "https://api.github.com/repos/grahama1970/agent-skills/issues/1627/events",
+      "html_url": "https://github.com/grahama1970/agent-skills/issues/1627",
+      "id": 5388803106,
+      "issue_dependencies_summary": {
+        "blocked_by": 0,
+        "blocking": 0,
+        "total_blocked_by": 0,
+        "total_blocking": 0
+      },
+      "labels": [
+        {
+          "color": "cfd3d7",
+          "default": false,
+          "description": "Cleanup or invariant-preserving work",
+          "id": 11215515692,
+          "name": "type:maintenance",
+          "node_id": "LA_kwDOQ31KU88AAAACnH8wLA",
+          "url": "https://api.github.com/repos/grahama1970/agent-skills/labels/type:maintenance"
+        },
+        {
+          "color": "1d76db",
+          "default": false,
+          "description": "Maintainer route: backend Python or skill runtime",
+          "id": 11228532509,
+          "name": "route:backend_python_or_skill_runtime",
+          "node_id": "LA_kwDOQ31KU88AAAACnUXPHQ",
+          "url": "https://api.github.com/repos/grahama1970/agent-skills/labels/route:backend_python_or_skill_runtime"
+        },
+        {
+          "color": "5319e7",
+          "default": false,
+          "description": "Requested repair agent: agent-skill-maintainer",
+          "id": 11378557536,
+          "name": "agent:agent-skill-maintainer",
+          "node_id": "LA_kwDOQ31KU88AAAACpjcCYA",
+          "url": "https://api.github.com/repos/grahama1970/agent-skills/labels/agent:agent-skill-maintainer"
+        },
+        {
+          "color": "0052cc",
+          "default": false,
+          "description": "Ticket is routable to a cron-dispatched repair agent",
+          "id": 11643581383,
+          "name": "agent-work",
+          "node_id": "LA_kwDOQ31KU88AAAACtgLzxw",
+          "url": "https://api.github.com/repos/grahama1970/agent-skills/labels/agent-work"
+        },
+        {
+          "color": "c2e0c6",
+          "default": false,
+          "description": "Concurrency lane: backend",
+          "id": 11657156146,
+          "name": "lane:be",
+          "node_id": "LA_kwDOQ31KU88AAAACttIWMg",
+          "url": "https://api.github.com/repos/grahama1970/agent-skills/labels/lane:be"
+        }
+      ],
+      "labels_url": "https://api.github.com/repos/grahama1970/agent-skills/issues/1627/labels{/name}",
+      "locked": false,
+      "milestone": null,
+      "node_id": "I_kwDOQ31KU88AAAABQTKcIg",
+      "number": 1627,
+      "performed_via_github_app": null,
+      "pinned_comment": null,
+      "reactions": {
+        "+1": 0,
+        "-1": 0,
+        "confused": 0,
+        "eyes": 0,
+        "heart": 0,
+        "hooray": 0,
+        "laugh": 0,
+        "rocket": 0,
+        "total_count": 0,
+        "url": "https://api.github.com/repos/grahama1970/agent-skills/issues/1627/reactions"
+      },
+      "repository_url": "https://api.github.com/repos/grahama1970/agent-skills",
+      "state": "OPEN",
+      "stateReason": "",
+      "state_reason": null,
+      "sub_issues_summary": {
+        "completed": 0,
+        "percent_completed": 0,
+        "total": 0
+      },
+      "timeline_url": "https://api.github.com/repos/grahama1970/agent-skills/issues/1627/timeline",
+      "title": "Prove shame spiral watchdog routable exact target 20260908T153947Z",
+      "updatedAt": "2026-09-08T15:39:48Z",
+      "updated_at": "2026-09-08T15:39:48Z",
+      "url": "https://github.com/grahama1970/agent-skills/issues/1627",
+      "user": {
+        "avatar_url": "https://avatars.githubusercontent.com/u/152222635?v=4",
+        "events_url": "https://api.github.com/users/grahama1970/events{/privacy}",
+        "followers_url": "https://api.github.com/users/grahama1970/followers",
+        "following_url": "https://api.github.com/users/grahama1970/following{/other_user}",
+        "gists_url": "https://api.github.com/users/grahama1970/gists{/gist_id}",
+        "gravatar_id": "",
+        "html_url": "https://github.com/grahama1970",
+        "id": 152222635,
+        "login": "grahama1970",
+        "node_id": "U_kgDOCRK7qw",
+        "organizations_url": "https://api.github.com/users/grahama1970/orgs",
+        "received_events_url": "https://api.github.com/users/grahama1970/received_events",
+        "repos_url": "https://api.github.com/users/grahama1970/repos",
+        "site_admin": false,
+        "starred_url": "https://api.github.com/users/grahama1970/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/grahama1970/subscriptions",
+        "type": "User",
+        "url": "https://api.github.com/users/grahama1970",
+        "user_view_type": "public"
+      },
+      "watchdog_action": "ticket_repair",
+      "watchdog_targets": [
+        "extensions/pi/lazy-report-shame-shame-shame/README.md"
+      ]
+    }
+  ],
+  "scheduler_lock_released_before_dispatch": true,
+  "schema": "agent_skills.project_watchdog.tick_receipt.v1",
+  "schema_validation": {
+    "model": "TickReceipt",
+    "valid": true
+  },
+  "state_snapshot": {
+    "closure_audit_attempts": {
+      "grahama1970/agent-skills#1231": 1786545365.1459277,
+      "grahama1970/agent-skills#1232": 1786550825.6106622,
+      "grahama1970/agent-skills#1243": 1786623845.8280442,
+      "grahama1970/agent-skills#1245": 1786629005.0198333,
+      "grahama1970/agent-skills#1246": 1786627565.1693177,
+      "grahama1970/agent-skills#1247": 1786626304.5893972,
+      "grahama1970/agent-skills#1252": 1786625886.1759312,
+      "grahama1970/agent-skills#1257": 1786625705.6727972,
+      "grahama1970/agent-skills#1259": 1786626184.9884968,
+      "grahama1970/agent-skills#1260": 1786626545.7139149,
+      "grahama1970/agent-skills#1261": 1786626665.015035,
+      "grahama1970/agent-skills#1263": 1786626785.8984635,
+      "grahama1970/agent-skills#1265": 1786626904.3022244,
+      "grahama1970/agent-skills#1266": 1786690804.6453712,
+      "grahama1970/agent-skills#1267": 1786627144.3874397,
+      "grahama1970/agent-skills#1268": 1786627805.5978327,
+      "grahama1970/agent-skills#1269": 1786627325.3052506,
+      "grahama1970/agent-skills#1274": 1786627986.7315755,
+      "grahama1970/agent-skills#1275": 1786628284.9549446,
+      "grahama1970/agent-skills#1276": 1786628464.6724362,
+      "grahama1970/agent-skills#1288": 1786628105.1064394,
+      "grahama1970/agent-skills#1490": 1788035135.270404,
+      "grahama1970/agent-skills#1491": 1788033034.8403137,
+      "grahama1970/agent-skills#1492": 1788033334.776532,
+      "grahama1970/agent-skills#1493": 1788033939.2282429,
+      "grahama1970/agent-skills#1494": 1788033640.6671867,
+      "grahama1970/agent-skills#1495": 1788034238.2116942,
+      "grahama1970/agent-skills#1496": 1788034536.0770812,
+      "grahama1970/agent-skills#1497": 1788034835.3310595,
+      "grahama1970/agent-skills#1498": 1788035434.0244703,
+      "grahama1970/agent-skills#1499": 1788036633.0769947,
+      "grahama1970/agent-skills#1500": 1788784239.645322,
+      "grahama1970/agent-skills#1501": 1788784541.0309987,
+      "grahama1970/agent-skills#1505": 1788036037.8270214,
+      "grahama1970/agent-skills#1506": 1788111338.077861,
+      "grahama1970/agent-skills#1508": 1788111636.5785682,
+      "grahama1970/agent-skills#1509": 1788111937.0816348,
+      "grahama1970/agent-skills#1510": 1788036336.402811,
+      "grahama1970/agent-skills#1511": 1788111035.925305,
+      "grahama1970/agent-skills#1517": 1788177937.7189445,
+      "grahama1970/agent-skills#1518": 1788178238.9323676,
+      "grahama1970/agent-skills#1519": 1788178536.9505837,
+      "grahama1970/agent-skills#1520": 1788179137.7185903,
+      "grahama1970/agent-skills#1521": 1788178836.00938,
+      "grahama1970/agent-skills#1522": 1788179435.9841752,
+      "grahama1970/agent-skills#1523": 1788179737.365935,
+      "grahama1970/agent-skills#1524": 1788119736.9057755,
+      "grahama1970/agent-skills#1525": 1788176133.414318,
+      "grahama1970/agent-skills#1526": 1788120334.5488684,
+      "grahama1970/agent-skills#1527": 1788120637.5659041,
+      "grahama1970/agent-skills#1576": 1788782441.6372325,
+      "grahama1970/agent-skills#1603": 1788782680.912825,
+      "grahama1970/agent-skills#1604": 1788786341.7313216,
+      "grahama1970/agent-skills#1605": 1788786940.4643025,
+      "grahama1970/agent-skills#1606": 1788786639.172547,
+      "grahama1970/agent-skills#1607": 1788783338.7529407,
+      "grahama1970/agent-skills#1608": 1788785139.9466667,
+      "grahama1970/agent-skills#1609": 1788802219.61577,
+      "grahama1970/agent-skills#1610": 1788785441.556233,
+      "grahama1970/agent-skills#1611": 1788784842.0398057,
+      "grahama1970/agent-skills#1612": 1788785740.430536,
+      "grahama1970/agent-skills#1613": 1788786043.3200438,
+      "grahama1970/graph-memory-operator#130": 1788012330.8793592,
+      "grahama1970/graph-memory-operator#131": 1787976028.1884518,
+      "grahama1970/graph-memory-operator#132": 1788048338.6465557,
+      "grahama1970/graph-memory-operator#133": 1788103835.2216682,
+      "grahama1970/graph-memory-operator#134": 1788001529.38682,
+      "grahama1970/graph-memory-operator#135": 1788012631.6200986,
+      "grahama1970/graph-memory-operator#138": 1788101737.1042364,
+      "grahama1970/graph-memory-operator#139": 1788102637.7314496,
+      "grahama1970/graph-memory-operator#140": 1788102939.736287,
+      "grahama1970/graph-memory-operator#141": 1788103533.5826027,
+      "grahama1970/graph-memory-operator#142": 1787970330.8041303,
+      "grahama1970/graph-memory-operator#143": 1788102037.178241,
+      "grahama1970/graph-memory-operator#144": 1788102337.0963886,
+      "grahama1970/graph-memory-operator#146": 1788104137.9636638,
+      "grahama1970/graph-memory-operator#147": 1788105038.331845,
+      "grahama1970/graph-memory-operator#148": 1788101438.1686902,
+      "grahama1970/graph-memory-operator#149": 1788010829.8323538,
+      "grahama1970/graph-memory-operator#150": 1788104738.1718974,
+      "grahama1970/graph-memory-operator#151": 1788104439.7875109,
+      "grahama1970/graph-memory-operator#152": 1788103234.5903606,
+      "grahama1970/graph-memory-operator#157": 1788449427.7950022,
+      "grahama1970/tau#182": 1785533707.567846,
+      "grahama1970/tau#183": 1785533647.1282246,
+      "grahama1970/tau#184": 1785533767.1324015,
+      "grahama1970/tau#185": 1785533887.4284008,
+      "grahama1970/tau#196": 1785533947.847353,
+      "grahama1970/tau#197": 1785534007.468815,
+      "grahama1970/tau#198": 1785534067.3421674,
+      "grahama1970/tau#200": 1785530529.852353,
+      "grahama1970/tau#201": 1785530588.277708,
+      "grahama1970/tau#202": 1785530647.65865,
+      "grahama1970/tau#203": 1785530708.0639524,
+      "grahama1970/tau#204": 1785272767.5938919,
+      "grahama1970/tau#206": 1785532087.6068995,
+      "grahama1970/tau#207": 1785531187.873871,
+      "grahama1970/tau#208": 1785531966.8613613,
+      "grahama1970/tau#209": 1785531247.811181,
+      "grahama1970/tau#210": 1785530826.778395,
+      "grahama1970/tau#211": 1785531727.3727949,
+      "grahama1970/tau#212": 1785530767.4852111,
+      "grahama1970/tau#215": 1785531608.0118513,
+      "grahama1970/tau#216": 1785530947.2701,
+      "grahama1970/tau#217": 1785531487.7355554,
+      "grahama1970/tau#218": 1785531306.9454064,
+      "grahama1970/tau#219": 1785531366.9441135,
+      "grahama1970/tau#220": 1785531847.05113,
+      "grahama1970/tau#222": 1785532266.9313464,
+      "grahama1970/tau#223": 1785532627.7393427,
+      "grahama1970/tau#224": 1785532507.4927318,
+      "grahama1970/tau#225": 1785532387.6431453,
+      "grahama1970/tau#233": 1785532748.2451434,
+      "grahama1970/tau#234": 1785532868.0970364,
+      "grahama1970/tau#235": 1785532988.1033478,
+      "grahama1970/tau#236": 1785533106.8979437,
+      "grahama1970/tau#237": 1785533226.8770807,
+      "grahama1970/tau#238": 1785533287.1355107,
+      "grahama1970/tau#239": 1785533347.151327,
+      "grahama1970/tau#240": 1785533407.557908,
+      "grahama1970/tau#251": 1785533467.5835261,
+      "grahama1970/tau#252": 1785533587.927173,
+      "grahama1970/tau#253": 1785533827.266536,
+      "grahama1970/tau#326": 1788096493.1909444,
+      "grahama1970/tau#330": 1788648341.8813684,
+      "grahama1970/tau#340": 1788874234.5798414
+    },
+    "completion_attested_at": {
+      "tau": {
+        "answered": true,
+        "at": 1788098976.9078135
+      }
+    },
+    "global": {
+      "reason": "agent-skills#1603 closed; restore watchdog cron after exclusive targeted run",
+      "resume_allowed_by": [
+        "human"
+      ],
+      "resume_requires": [
+        "dispatcher-implementation",
+        "dry-run-scan-receipt",
+        "no-live-mutation-without-apply"
+      ],
+      "state": "active"
+    },
+    "last_served_project": "agent-skills",
+    "projects": {
+      "agent-skills": {
+        "reason": "Battle repair queue 1606 1607 1613 closed completed; restore broad agent-skills lane",
+        "resume_requires": [
+          "clean-worktree-policy",
+          "valid-github-auth"
+        ],
+        "state": "active"
+      },
+      "battle": {
+        "reason": "agent-skills#1603 closed; restore temporary exclusive pause",
+        "state": "active"
+      },
+      "chatgpt-lab": {
+        "reason": "Existing PhatGPT watchdog needs an adapter to the shared lease and receipt protocol before global scheduling.",
+        "resume_requires": [
+          "shared-lease-adapter",
+          "valid-github-auth"
+        ],
+        "state": "paused"
+      },
+      "memory": {
+        "reason": "agent-skills#1603 closed; restore temporary exclusive pause",
+        "resume_requires": [
+          "bounded-issue-runner",
+          "routing-label-contract",
+          "valid-github-auth"
+        ],
+        "state": "active"
+      },
+      "pdf_oxide": {
+        "reason": "agent-skills#1603 closed; restore temporary exclusive pause",
+        "state": "active"
+      },
+      "pi-mono": {
+        "reason": "Registered as a reference project; safe bounded issue runner is not confirmed.",
+        "resume_requires": [
+          "safe-bounded-runner",
+          "valid-github-auth"
+        ],
+        "state": "paused"
+      },
+      "scillm": {
+        "reason": "Registered for future issue routing; bounded watchdog command contract is not proven yet.",
+        "resume_requires": [
+          "project-command-contract",
+          "valid-github-auth"
+        ],
+        "state": "paused"
+      },
+      "sparta": {
+        "reason": "agent-skills#1603 closed; restore temporary exclusive pause",
+        "state": "active"
+      },
+      "tau": {
+        "last_operator": "human-approved-development-session",
+        "reason": "agent-skills#1603 closed; restore temporary exclusive pause",
+        "resume_requires": [
+          "valid-goal-file",
+          "valid-github-auth"
+        ],
+        "state": "active"
+      },
+      "watchdog-probe": {
+        "reason": "agent-skills#1603 closed; restore temporary exclusive pause",
+        "state": "active"
+      }
+    },
+    "repair_dispatch_attempts": {},
+    "schema": "agent_skills.project_watchdog.state.v1",
+    "updated_at": "2026-09-07"
+  },
+  "status": "COMPLETED"
+}

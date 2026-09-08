@@ -1,0 +1,93 @@
+{
+  "schema": "agentic_evals.report.v2",
+  "source": "skills/shame/fixtures/agentic_eval.json",
+  "run_id": "8f887b84caf2",
+  "fixture_sha256": "sha256:328123aaf260cffc58db5d7d2bbe52d7b058fb2dc61bb927d27f5f7f4f3db6de",
+  "repo": {
+    "sha": "3d55823b61d8a56ed78addf94663536f2708f427",
+    "ref": "main"
+  },
+  "mocked": false,
+  "fixture_backed": true,
+  "live": true,
+  "proof_scope": "Failure-backed agentic workflows through real Pi, CLI, filesystem and Memory entrypoints; no mock-Pi callback runners or fabricated PASS proof files.",
+  "claims": {
+    "proves": "Only the named workflows and their independently read-back effects. Each capability requires live evidence; fixture counts do not establish ecosystem readiness.",
+    "does_not_prove": "All parser variants, every escalation provider, interactive review-picker UX, OS-level tamper resistance, universal instruction obedience, or arbitrary project completion. Faults are explicitly injected into real runtime messages; the audio case uses real CLI/file operations rather than a new voice render."
+  },
+  "what_was_exercised": "local commands declared in the fixture manifest",
+  "what_remains_unverified": "semantic correctness, live services, LLM judge behavior, and release readiness",
+  "readiness": "READY",
+  "case_readiness": "READY",
+  "capability_readiness": null,
+  "claims_coverage": "partial: focused --case run",
+  "focused_cases": [
+    "spiral-ticket-request"
+  ],
+  "generated_at": "2026-09-08T15:45:16.865981+00:00",
+  "case_count": 1,
+  "required_case_count": 1,
+  "outcome_counts": {
+    "PASS": 1,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "NOT_TESTED": 0
+  },
+  "trial_count": 2,
+  "cases": [
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "spiral-ticket-request",
+      "type": "adversarial",
+      "case_id": "8f887b84caf2-c000",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "uv",
+        "run",
+        "--with",
+        "pydantic",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-spiral-ticket-request.py"
+      ],
+      "declared_evidence_class": "deterministic",
+      "effective_evidence_class": "deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "shame.spiral_ticket_request"
+      ],
+      "seams": [],
+      "passed_trials": 2,
+      "total_trials": 2,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 54.204,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "{\n  \"schema\": \"lazy_report_shame.spiral_ticket_request_eval.v1\",\n  \"status\": \"PASS\",\n  \"checked\": [\n    \"retry exhaustion is a distinct report_retry_exhausted event\",\n    \"spiral ticket requests target skills/shame\",\n    \"ticket command creates an agent-work maintenance ticket\",\n    \"ticket apply is automatic unless disabled by environment\",\n    \"project-watchdog route is ticket_repair\"\n  ]\n}\n",
+          "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `/home/graham/workspace/experiments/agent-skills/skills/intent-mapper/pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
+          "duration_ms": 57.135,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "8f887b84caf2-c000-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\n  \"schema\": \"lazy_report_shame.spiral_ticket_request_eval.v1\",\n  \"status\": \"PASS\",\n  \"checked\": [\n    \"retry exhaustion is a distinct report_retry_exhausted event\",\n    \"spiral ticket requests target skills/shame\",\n    \"ticket command creates an agent-work maintenance ticket\",\n    \"ticket apply is automatic unless disabled by environment\",\n    \"project-watchdog route is ticket_repair\"\n  ]\n}\n",
+          "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `/home/graham/workspace/experiments/agent-skills/skills/intent-mapper/pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
+          "duration_ms": 51.273,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "8f887b84caf2-c000-t01",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    }
+  ]
+}

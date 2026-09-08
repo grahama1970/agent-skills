@@ -2,7 +2,7 @@
 
 > **Disciplines:** agentic-orchestration · developer-tooling
 
-Validate **ask.dag.v1** / **scillm.exec.graph.v1** / **tau.dag_contract.v1** JSON, render PHART 1.5 ASCII decision-tree charts, and watch Tau `dag-progress.json` as a compact terminal status view.
+Validate **ask.dag.v1** / **scillm.exec.graph.v1** / **tau.dag_contract.v1** JSON, render PHART 1.5 ASCII decision-tree charts, and render receipt-backed workflow charts for actual runs such as project-watchdog ticket repair. Watch Tau `dag-progress.json` as a compact terminal status view.
 
 ## Requirements
 
@@ -15,6 +15,7 @@ Validate **ask.dag.v1** / **scillm.exec.graph.v1** / **tau.dag_contract.v1** JSO
 ./run.sh validate path/to/plan.dag.json
 ./run.sh validate path/to/plan.dag.json --json
 ./run.sh chart path/to/plan.dag.json
+./run.sh chart path/to/project-watchdog-receipt.json --evidence repair-proof-gate.json --evidence agentic-eval.json --plain
 ./run.sh watch path/to/plan.dag.json --progress /tmp/tau-run/dag-progress.json
 ./run.sh watch path/to/plan.dag.json --run-dir /tmp/tau-run --once --no-chart
 ./sanity.sh
@@ -33,6 +34,7 @@ Validate **ask.dag.v1** / **scillm.exec.graph.v1** / **tau.dag_contract.v1** JSO
 - React Flow remains the rich live DAG UX.
 - `watch` is a terminal fallback for agents/operators who need a simple loop until Tau reaches `PASS`, `FAIL`, `BLOCKED`, or `NEEDS_ATTENTION`.
 - Tau `dag-progress.json` / receipts are authoritative; this skill only renders them.
+- `chart --view auto` renders receipts as observed workflows. Use `--view structure` only when you explicitly need handler topology.
 
 ## Composed by
 

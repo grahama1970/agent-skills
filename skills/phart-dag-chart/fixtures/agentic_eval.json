@@ -91,6 +91,35 @@
      "MARKERS-RENDERED"
     ]
    }
+  },
+  {
+   "name": "watchdog-receipt-workflow-projection-real-world",
+   "type": "positive",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "../run.sh chart ../tests/fixtures/watchdog-ticket-repair/receipt.json --evidence ../tests/fixtures/watchdog-ticket-repair/issue.json --evidence ../tests/fixtures/watchdog-ticket-repair/repair-proof.json --evidence ../tests/fixtures/watchdog-ticket-repair/agentic-eval.json --plain"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "ticket #1627",
+     "ticket_repair",
+     "gpt-5.5-high",
+     "claude-fable-low",
+     "READY",
+     "PASS",
+     "2/2",
+     "ticket_closed=true",
+     "COMPLETED",
+     "ok=true"
+    ],
+    "stdout_excludes": [
+     "\njoin\n",
+     "\nhuman\n"
+    ]
+   }
   }
  ]
 }

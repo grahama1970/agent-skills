@@ -1,0 +1,127 @@
+{
+  "artifact_results": [
+    {
+      "exists": true,
+      "failing_values": [],
+      "fresh": true,
+      "machine_readable": true,
+      "mtime": 1788882192.2238758,
+      "passed": true,
+      "passing_values": [
+        "PASS",
+        "READY"
+      ],
+      "path": "/tmp/shame-spiral-ticket-watchdog-eval.json",
+      "reason": "reports PASS, READY",
+      "size": 4465,
+      "unknown_values": []
+    }
+  ],
+  "checked_at": "2026-09-08T15:45:16Z",
+  "commit_binding_warnings": [],
+  "commits_ahead": null,
+  "coverage": {
+    "skills/agentic-evals/run.sh run skills/shame/fixtures/agentic_eval.json --case spiral-ticket-request --output /tmp/shame-spiral-ticket-watchdog-eval.json": "command 1 reruns the exact required proof and command 2 reads back /tmp/shame-spiral-ticket-watchdog-eval.json asserting READY, mocked=false, live=true, single required case spiral-ticket-request with PASS outcome and all trials passing"
+  },
+  "declared_proof_artifacts": [
+    "/tmp/shame-spiral-ticket-watchdog-eval.json"
+  ],
+  "native_artifacts": [
+    {
+      "exists": true,
+      "failing_values": [],
+      "fresh": true,
+      "machine_readable": true,
+      "mtime": 1788882316.8724453,
+      "passed": true,
+      "passing_values": [
+        "PASS",
+        "READY"
+      ],
+      "path": "/tmp/shame-spiral-ticket-watchdog-eval.json",
+      "reason": "reports PASS, READY",
+      "size": 4466,
+      "unknown_values": []
+    }
+  ],
+  "native_verification": [
+    {
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/ticket/run.sh",
+        "verify",
+        "1627",
+        "--cmd",
+        "cd /home/graham/workspace/experiments/agent-skills && skills/agentic-evals/run.sh run skills/shame/fixtures/agentic_eval.json --case spiral-ticket-request --output /tmp/shame-spiral-ticket-watchdog-eval.json"
+      ],
+      "cwd": "/home/graham/workspace/experiments/agent-skills",
+      "duration_seconds": 0.447967,
+      "exit_code": 0,
+      "stderr": "Resolved 16 packages in 0.91ms\nAudited 13 packages in 0.17ms\n",
+      "stdout": "/tmp/issue-1627-proof.md\n"
+    },
+    {
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/ticket/run.sh",
+        "verify",
+        "1627",
+        "--cmd",
+        "jq -e '.readiness == \"READY\" and .mocked == false and .live == true and .case_count == 1 and .outcome_counts.PASS == 1 and .cases[0].name == \"spiral-ticket-request\" and .cases[0].outcome == \"PASS\" and .cases[0].passed_trials == .cases[0].total_trials' /tmp/shame-spiral-ticket-watchdog-eval.json"
+      ],
+      "cwd": "/home/graham/workspace/experiments/agent-skills",
+      "duration_seconds": 0.200754,
+      "exit_code": 0,
+      "stderr": "Resolved 16 packages in 0.95ms\nUninstalled 3 packages in 3ms\nInstalled 2 packages in 8ms\n - annotated-doc==0.0.5\n + annotated-doc==0.0.4\n - python-dotenv==1.2.2\n - typer==0.27.0\n + typer==0.26.8\n",
+      "stdout": "/tmp/issue-1627-proof.md\n"
+    },
+    {
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/ticket/run.sh",
+        "verify",
+        "1627",
+        "--cmd",
+        "jq -e '([.. | strings | select(startswith(\"extensions/\"))] | unique) == [\"extensions/pi/lazy-report-shame-shame-shame/README.md\"]' /home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260908T153952Z-cb85b983382a/authored-commit.json"
+      ],
+      "cwd": "/home/graham/workspace/experiments/agent-skills",
+      "duration_seconds": 0.151851,
+      "exit_code": 0,
+      "stderr": "Resolved 16 packages in 0.87ms\nAudited 13 packages in 0.18ms\n",
+      "stdout": "/tmp/issue-1627-proof.md\n"
+    },
+    {
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/ticket/run.sh",
+        "verify",
+        "1627",
+        "--cmd",
+        "cd /home/graham/workspace/experiments/agent-skills && python3 skills/best-practices-pi-extension/scripts/validate_contract.py extensions/pi/lazy-report-shame-shame-shame"
+      ],
+      "cwd": "/home/graham/workspace/experiments/agent-skills",
+      "duration_seconds": 0.171296,
+      "exit_code": 0,
+      "stderr": "Resolved 16 packages in 0.90ms\nAudited 13 packages in 0.18ms\n",
+      "stdout": "/tmp/issue-1627-proof.md\n"
+    }
+  ],
+  "ok": true,
+  "reasons": [],
+  "required_proof_artifacts": [
+    "/tmp/shame-spiral-ticket-watchdog-eval.json"
+  ],
+  "reviewed_commit": "ff0922a7adc77ab2778eed00ba68f6b1ef105143",
+  "schema": "agent_skills.project_watchdog.repair_proof_gate.v1",
+  "seat_verdicts": {
+    "creator": {
+      "handler": "codex",
+      "node_id": "handler-codex",
+      "responded": true,
+      "verdict": "PASS"
+    },
+    "reviewer": {
+      "handler": "claude-fable-low",
+      "node_id": "handler-claude-fable-low",
+      "responded": true,
+      "verdict": "PASS"
+    }
+  },
+  "verification_plan_source": "reviewer"
+}

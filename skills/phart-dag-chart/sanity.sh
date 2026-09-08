@@ -61,7 +61,19 @@ else
   FAIL=1
 fi
 
-echo "5. pytest..."
+echo "5. workflow chart from project-watchdog receipt..."
+workflow_out=$(./run.sh chart tests/fixtures/watchdog-ticket-repair/receipt.json \
+  --evidence tests/fixtures/watchdog-ticket-repair/repair-proof.json \
+  --evidence tests/fixtures/watchdog-ticket-repair/agentic-eval.json \
+  --plain)
+if echo "$workflow_out" | grep -q "ticket #1627" && echo "$workflow_out" | grep -q "ticket_repair" && echo "$workflow_out" | grep -q "ticket_closed=true"; then
+  echo "   PASS"
+else
+  echo "   FAIL"
+  FAIL=1
+fi
+
+echo "6. pytest..."
 if uv run --project "$SCRIPT_DIR" pytest -q; then
   echo "   PASS"
 else

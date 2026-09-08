@@ -1,0 +1,128 @@
+{
+  "active_lock_reason": null,
+  "assignee": null,
+  "assignees": [],
+  "author_association": "OWNER",
+  "body": "## Type\n\nmaintenance\n\n## Target\n\nextensions/pi/lazy-report-shame-shame-shame/README.md\n\n## Target paths\n\n- extensions/pi/lazy-report-shame-shame-shame/README.md\n\n## Current state\n\nExercise the spiral-ticket-request self-repair path with a real project-watchdog targeted tick on a clean exact target.\n\n## Requested outcome\n\nPreserve invariant: A shame retry exhaustion creates repair work that project-watchdog can route through ticket_repair.\n\n## Required proof\n\nskills/agentic-evals/run.sh run skills/shame/fixtures/agentic_eval.json --case spiral-ticket-request --output /tmp/shame-spiral-ticket-watchdog-eval.json\n\n## Route\n\nbackend_python_or_skill_runtime\n\n## Maintainer route\n\nbackend_python_or_skill_runtime\n\n## Requested repair agent\n\nagent-skill-maintainer\n\n## Non-goals\n\nNo unrelated refactors or scope expansion.\n\n## Ticket type details\n\n- **Invariant to preserve:** A shame retry exhaustion creates repair work that project-watchdog can route through ticket_repair.\n- **Cleanup target:** Exercise the spiral-ticket-request self-repair path with a real project-watchdog targeted tick on a clean exact target.\n- **Scoped files:** extensions/pi/lazy-report-shame-shame-shame/README.md\n\n## Orientation for a stateless agent\n\nYou are running from cron with no prior context. Build context in this order\nbefore changing anything. Do not start by grepping the repository.\n\n1. **Recall first.** `skills/memory/run.sh recall --q \"<target or symptom>\"`\n   Prior work on this exact problem may already exist. This is cheapest and\n   most often decisive.\n2. **Project state.** `skills/project-state/run.sh --json`\n   Readiness, infrastructure health, doc-code drift, and known gaps in one\n   command.\n3. **Curated current state.** Read `PROJECT_KNOWLEDGE.md` in the target skill or\n   repo when present. It records open blockers and decisions that the code does\n   not.\n\nThen use the narrowest tool for the actual question:\n\n| Need | Use |\n| --- | --- |\n| Locate code by symbol or structure | `skills/treesitter/run.sh` |\n| Find prior art in other repos | `skills/github-search/run.sh` |\n| External research on a load-bearing claim | `skills/dogpile/run.sh \"<claim>\"`, else `skills/brave-search/run.sh web \"<query>\"` |\n| Diagnose a failing test or traceback | load the `debugger` skill |\n| Run the target's suites | `skills/test/run.sh` |\n\nLoad the skill's own `SKILL.md` before using it; do not infer its interface.\nRecord what you actually ran. A tool's success response is not proof \u2014 read\nback the artifact it claims to have produced.\n\n<!-- ticket-skill\ntype: maintenance\ntarget: extensions/pi/lazy-report-shame-shame-shame/README.md\nroute: backend_python_or_skill_runtime\nagent: agent-skill-maintainer\n-->\n\nThis ticket must be resolved under `best-practices-github-ticket`. Closure requires deterministic proof; WebGPT review or CI green alone is not closure proof.\n",
+  "closedAt": null,
+  "closed_at": null,
+  "closed_by": null,
+  "comments": 0,
+  "comments_url": "https://api.github.com/repos/grahama1970/agent-skills/issues/1627/comments",
+  "createdAt": "2026-09-08T15:39:48Z",
+  "created_at": "2026-09-08T15:39:48Z",
+  "events_url": "https://api.github.com/repos/grahama1970/agent-skills/issues/1627/events",
+  "html_url": "https://github.com/grahama1970/agent-skills/issues/1627",
+  "id": 5388803106,
+  "issue_dependencies_summary": {
+    "blocked_by": 0,
+    "blocking": 0,
+    "total_blocked_by": 0,
+    "total_blocking": 0
+  },
+  "labels": [
+    {
+      "color": "cfd3d7",
+      "default": false,
+      "description": "Cleanup or invariant-preserving work",
+      "id": 11215515692,
+      "name": "type:maintenance",
+      "node_id": "LA_kwDOQ31KU88AAAACnH8wLA",
+      "url": "https://api.github.com/repos/grahama1970/agent-skills/labels/type:maintenance"
+    },
+    {
+      "color": "1d76db",
+      "default": false,
+      "description": "Maintainer route: backend Python or skill runtime",
+      "id": 11228532509,
+      "name": "route:backend_python_or_skill_runtime",
+      "node_id": "LA_kwDOQ31KU88AAAACnUXPHQ",
+      "url": "https://api.github.com/repos/grahama1970/agent-skills/labels/route:backend_python_or_skill_runtime"
+    },
+    {
+      "color": "5319e7",
+      "default": false,
+      "description": "Requested repair agent: agent-skill-maintainer",
+      "id": 11378557536,
+      "name": "agent:agent-skill-maintainer",
+      "node_id": "LA_kwDOQ31KU88AAAACpjcCYA",
+      "url": "https://api.github.com/repos/grahama1970/agent-skills/labels/agent:agent-skill-maintainer"
+    },
+    {
+      "color": "0052cc",
+      "default": false,
+      "description": "Ticket is routable to a cron-dispatched repair agent",
+      "id": 11643581383,
+      "name": "agent-work",
+      "node_id": "LA_kwDOQ31KU88AAAACtgLzxw",
+      "url": "https://api.github.com/repos/grahama1970/agent-skills/labels/agent-work"
+    },
+    {
+      "color": "c2e0c6",
+      "default": false,
+      "description": "Concurrency lane: backend",
+      "id": 11657156146,
+      "name": "lane:be",
+      "node_id": "LA_kwDOQ31KU88AAAACttIWMg",
+      "url": "https://api.github.com/repos/grahama1970/agent-skills/labels/lane:be"
+    }
+  ],
+  "labels_url": "https://api.github.com/repos/grahama1970/agent-skills/issues/1627/labels{/name}",
+  "locked": false,
+  "milestone": null,
+  "node_id": "I_kwDOQ31KU88AAAABQTKcIg",
+  "number": 1627,
+  "performed_via_github_app": null,
+  "pinned_comment": null,
+  "reactions": {
+    "+1": 0,
+    "-1": 0,
+    "confused": 0,
+    "eyes": 0,
+    "heart": 0,
+    "hooray": 0,
+    "laugh": 0,
+    "rocket": 0,
+    "total_count": 0,
+    "url": "https://api.github.com/repos/grahama1970/agent-skills/issues/1627/reactions"
+  },
+  "repository_url": "https://api.github.com/repos/grahama1970/agent-skills",
+  "state": "OPEN",
+  "stateReason": "",
+  "state_reason": null,
+  "sub_issues_summary": {
+    "completed": 0,
+    "percent_completed": 0,
+    "total": 0
+  },
+  "timeline_url": "https://api.github.com/repos/grahama1970/agent-skills/issues/1627/timeline",
+  "title": "Prove shame spiral watchdog routable exact target 20260908T153947Z",
+  "updatedAt": "2026-09-08T15:39:48Z",
+  "updated_at": "2026-09-08T15:39:48Z",
+  "url": "https://github.com/grahama1970/agent-skills/issues/1627",
+  "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/152222635?v=4",
+    "events_url": "https://api.github.com/users/grahama1970/events{/privacy}",
+    "followers_url": "https://api.github.com/users/grahama1970/followers",
+    "following_url": "https://api.github.com/users/grahama1970/following{/other_user}",
+    "gists_url": "https://api.github.com/users/grahama1970/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/grahama1970",
+    "id": 152222635,
+    "login": "grahama1970",
+    "node_id": "U_kgDOCRK7qw",
+    "organizations_url": "https://api.github.com/users/grahama1970/orgs",
+    "received_events_url": "https://api.github.com/users/grahama1970/received_events",
+    "repos_url": "https://api.github.com/users/grahama1970/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/grahama1970/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/grahama1970/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/grahama1970",
+    "user_view_type": "public"
+  },
+  "watchdog_action": "ticket_repair",
+  "watchdog_targets": [
+    "extensions/pi/lazy-report-shame-shame-shame/README.md"
+  ]
+}
