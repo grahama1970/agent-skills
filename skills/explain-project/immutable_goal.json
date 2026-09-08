@@ -1,0 +1,48 @@
+{
+  "schema": "explain_project.immutable_goal.v1",
+  "goal_id": "explain-project-interview-cockpit-v1",
+  "outcome": "Make explain-project produce and run a reusable React/Tailwind/shadcn interview cockpit that lets a human find or paste an explainer, step left/right through concise slide-like explanation steps on a 15-inch 1080p teleprompter, and keep Live Evidence question intake, VS Code/source reveal, debugger breakpoint targets/proofs, and Excalidraw/SVG diagram highlights synchronized by one typed cockpit state revision.",
+  "primary_proof": {
+    "command": "cd /home/graham/workspace/experiments/agent-skills && skills/explain-project/run.sh cockpit --repo fixtures/cockpit/project --explainers fixtures/cockpit/project/docs/explain/explainers.jsonl --headless --script fixtures/cockpit/scripts/worker-crash-walkthrough.json --out /tmp/explain-project-cockpit-proof.json && python3 skills/explain-project/scripts/validate_cockpit_proof.py /tmp/explain-project-cockpit-proof.json --expect-valid && skills/agentic-evals/run.sh run skills/explain-project/fixtures/agentic_eval.json --output /tmp/explain-project-agentic-eval.json",
+    "expected": "The headless cockpit proof validates: strict explainer JSONL accepted, invalid/ambiguous values classified through triage-error, manual and replayed live_evidence.question_candidate.v1 inputs route correctly, ArrowRight/ArrowLeft change one cockpit_state revision, teleprompter/source/debugger/diagram projections stay in sync, VS Code/debugger/ops-excalidraw intents or receipts bind to the active revision, and agentic-evals reports READY with zero FAIL/BLOCKED cases."
+  },
+  "completion_criteria": [
+    "Pydantic models validate project.feature_explainer.v1, explain_project.question_input.v1, explain_project.cockpit_state.v1, VS Code/debugger/diagram intents, adapter receipts, and cockpit proof artifacts with extra=forbid at trust boundaries.",
+    "Pydantic validation failures and ambiguous field values are recorded and classified through skills/triage-error/run.sh classify or triage; no generic invalid/timeout/ambiguous prose is emitted as terminal truth.",
+    "The React/Tailwind/shadcn cockpit is optimized for a 1920x1080 15-inch teleprompter: oversized concise bullets, step title, proof boundary, confidence, route status, and keyboard-visible controls.",
+    "Every interactive cockpit element has data-qid, data-qs-action, title, and top-level useRegisterAction registration where the shared React contract requires it.",
+    "A human can search existing explainers, select one, paste a new question, and paste or import a new explainer record without breaking strict validation.",
+    "Manual question input and replayed live_evidence.question_candidate.v1 input both normalize to explain_project.question_input.v1 and route to MATCHED, AMBIGUOUS, or NO_MATCH without defaulting to the first record.",
+    "ArrowLeft and ArrowRight are active and drive the single reducer; every step change increments or preserves revision according to the frozen reducer contract and updates all projections from that revision only.",
+    "Each explainer step behaves like a technical slide: concise teleprompter points, breakpoint/source explanation, expected locals/watches, diagram node/path highlight, and proof boundary.",
+    "VS Code/source reveal uses debugger-owned bridge or CLI intent receipts and reports honestly whether it dispatched, revealed, or was blocked; it never claims GUI display proof without readback.",
+    "Debugger integration can prepare breakpoint targets per step and can run/step only through explicit cockpit controls; runtime proof appears only after debugger proof validates.",
+    "Ops Excalidraw integration treats .excalidraw as editable source, rendered SVG as portable display, highlights step-bound nodes, and uses proposal-safe board updates when cockpit changes the live whiteboard.",
+    "Docstring guidance exists: after-agent explains which referenced functions/classes lack concise purpose/state-transition/failure-boundary docstrings and suggests bounded amendments without turning docstrings into scripts.",
+    "Retained fixtures cover valid explainers, invalid extra fields, invalid steps, path escapes, unknown diagram nodes, SVG/binding digest mismatch, ambiguous routing, live-evidence replay, Arrow navigation, debugger non-auto-run, VS Code receipt boundaries, ops-excalidraw proposal boundaries, and docstring audit suggestions."
+  ],
+  "allowed_scope": [
+    "skills/explain-project/**",
+    "skills/best-practices-explain-project/**",
+    "skills/debugger integration only through its documented run.sh/bridge contracts",
+    "skills/ops-excalidraw integration only through validate/render-board/push-board proposal-safe contracts",
+    "skills/live-evidence integration only through replayed or live question candidate APIs and documented policy gates",
+    "skills/triage-error/failure_codes.json only when new explain-project failure codes are required",
+    "shared UI/action-registration helpers only when directly needed by the cockpit UI"
+  ],
+  "forbidden_drift": [
+    "Do not build a generic desktop automation framework, monitor placer, or window manager before the cockpit proof passes.",
+    "Do not auto-run debugger, execute code, mutate Excalidraw boards, or start audio capture from ArrowLeft/ArrowRight alone.",
+    "Do not claim live Live Evidence, visible VS Code, debugger, or Excalidraw behavior from replay fixtures or dispatch receipts.",
+    "Do not replace strict Pydantic validation with LLM routing, regex-only parsing, or prose interpretation.",
+    "Do not add sales-deck/export features, broad project dashboards, or unrelated pitchdeck/watch/SPARTA redesign work unless required by the primary proof.",
+    "Do not weaken existing pitchdeck, debugger, ops-excalidraw, live-evidence, triage-error, or best-practices-react contracts to make this goal pass."
+  ],
+  "retry_stop_rule": {
+    "attempts_per_blocker": 2,
+    "stop_condition": "If the same primary-proof blocker survives two focused attempts, stop implementation and emit a blocker report with the failed command, exact output/error, changed files, artifact paths, hypothesis, and one recommended next command; route ambiguous failures through triage-error first."
+  },
+  "proof_boundary": "The primary proof establishes deterministic cockpit synchronization and adapter contract behavior. It does not by itself prove real microphone transcription, real meeting consent, arbitrary VS Code GUI display, arbitrary debugger language adapters, or human-approved Excalidraw live edits unless those live receipts are explicitly present.",
+  "final_report_rule": "A final report may claim this goal is met only after the primary proof passes, the agentic-evals report is READY with zero failing outcomes, and the report names any live integrations that were not exercised.",
+  "goal_hash": "sha256:ffcc1465f1e222c3043e3730a5113de05b898aa5f398dbb5f87d3f9cb0b9c00d"
+}
