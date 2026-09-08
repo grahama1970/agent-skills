@@ -10,6 +10,8 @@ We needed it during the OpenAI work-trial interview prep because the submission 
 
 ![Question to cockpit flow](assets/readme/cockpit-flow.svg)
 
+Read [`DESIGN.md`](DESIGN.md) for the cockpit visual contract and [`PROJECT_KNOWLEDGE.md`](PROJECT_KNOWLEDGE.md) for the current proof boundary.
+
 ## Start here
 
 | Need | Run or read |
@@ -34,6 +36,12 @@ We needed it during the OpenAI work-trial interview prep because the submission 
 | [`surf`](../surf/SKILL.md) | Captures browser proof and screenshots of the real cockpit surface. |
 | [`agentic-evals`](../agentic-evals/SKILL.md) | Retains the proof suite that prevents regression of cockpit contracts. |
 
+## Prerequisites
+
+- Python runtime through `uv`; `run.sh` supplies the isolated Python dependencies.
+- Node/npm only for `ui/` browser builds and local preview.
+- Browser screenshot proof uses [`surf`](../surf/SKILL.md); live question intake uses [`live-evidence`](../live-evidence/SKILL.md) only after consent.
+
 ## What lives where
 
 | Path | Purpose |
@@ -54,6 +62,16 @@ We needed it during the OpenAI work-trial interview prep because the submission 
 | [`$live-evidence`](../live-evidence/SKILL.md) | Accepts typed/replayed `live_evidence.question_candidate.v1` and suppresses duplicates. | [`proofs/current-proof-summary.json`](proofs/current-proof-summary.json). |
 | React cockpit | 15-inch 1080p teleprompter layout, qid controls, keyboard navigation, native page/slider controls. | [`proofs/current-proof-summary.json`](proofs/current-proof-summary.json) and current Surf screenshot `assets/readme/cockpit-screenshot.png`. |
 
+## Outputs
+
+| Output | Meaning |
+| --- | --- |
+| `explain_project.cockpit_proof.v1` | Deterministic reducer proof for question routing, step navigation, and synchronized projections. |
+| `explain_project.adapter_receipt.v1` | Cockpit-ingested receipt from source reveal, debugger proof, or Excalidraw proposal adapters. |
+| `agentic_evals.report.v2` | Retained regression suite result for the skill. |
+| `assets/readme/cockpit-screenshot.png` | Surf-captured current interface screenshot for README orientation. |
+| `assets/readme/cockpit-flow.svg` | README-safe create-svg diagram of the cockpit flow. |
+
 ## Proof and non-claims
 
 Verified in the latest local readback:
@@ -61,11 +79,20 @@ Verified in the latest local readback:
 - `skills/explain-project/run.sh cockpit ... --headless ...` produced `explain_project.cockpit_proof.v1` with `status=PASS`.
 - `skills/agentic-evals/run.sh run skills/explain-project/fixtures/agentic_eval.json` produced `agentic_evals.report.v2` with `readiness=READY`, `PASS=15`, `FAIL=0`, `BLOCKED=0`.
 - [`proofs/current-proof-summary.json`](proofs/current-proof-summary.json) records the current receipt summary for README readers.
+- [`proofs/webkimi-readme-review.md`](proofs/webkimi-readme-review.md) records the `$ask webkimi` README review verdict: `VERDICT: PASS`.
 
 Not claimed:
 
-- independent WebGPT final acceptance of this exact committed state unless the current review receipt is cited separately;
+- independent WebGPT final acceptance of this exact committed state;
 - real microphone transcription into Live Evidence;
 - human acceptance of an Excalidraw proposal in the browser;
 - arbitrary visible VS Code GUI control;
 - arbitrary debugger adapter support beyond the validated debugger proof contract.
+
+## Troubleshooting
+
+| Symptom | Next check |
+| --- | --- |
+| Cockpit proof is not `PASS` | Read the proof JSON `failures` field before changing code. |
+| Browser UI cannot load | Start `run.sh cockpit` first, then run the Vite UI with `EXPLAIN_PROJECT_API_URL` pointed at that API. |
+| Web reviewer rejects README attachments | Use a sanitized review packet; browser preflight rejects raw local path targets even when repo links are valid. |
