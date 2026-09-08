@@ -147,15 +147,19 @@ construction, not hope:
    a. **Native multi-shot** (total <= 15s): one `multi_prompt` request, one
       beat per entry (<=512 chars each) - all shots share one latent,
       strongest consistency, nothing to chain.
-   b. **Video element chaining**: pass clip N as an element
-      (`{"video_url": <clip N url>}`) in clip N+1's request, alongside the
-      unchanged character image elements. Kling captures visual+audio
-      continuity from the actual footage. Slot math: 2 characters + video +
-      env ref = exactly the 4-slot cap.
-   c. **Last-frame chaining**: `ffmpeg -sseof -0.1 -i clipN.mp4 -frames:v 1
-      lastN.png` -> `start_image_url` of clip N+1. Cheapest; anchors set and
-      lighting at the first instant only. Use when the slot budget is needed
-      elsewhere.
+   b. **Last-frame chaining (Kling's own extend mechanism)**: `ffmpeg -sseof
+      -0.1 -i clipN.mp4 -frames:v 1 lastN.png` -> `start_image_url` of clip
+      N+1. This is what Kling's native "extend" feature does internally; it is
+      the documented mechanism for temporal continuation - clip N+1 starts
+      exactly where N ended (set, lighting, positions).
+   c. **Video element** (`{"video_url": <clip N>}`): an identity/ACTION
+      reference, not continuation - "character actions will be consistent
+      with this reference video" (fal docs). It does NOT make the new clip
+      start where the old one ended. Spend a slot on it only when motion-style
+      continuity matters more than the environment ref (2 characters + video +
+      env = the 4-slot cap).
+   Default chained recipe: start_image_url from last frame (continuation) +
+   unchanged character image elements (identity) + env ref when slots allow.
    Always keep the character image elements regardless of mechanism - a video
    or frame alone can carry drift forward, and drift compounds.
 4. **Same environment ref** (`@Image1`) every clip when slots allow.
