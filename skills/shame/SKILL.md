@@ -68,6 +68,24 @@ status checker before spending a terminal retry; preflight never authorizes fina
 completion, because the final stop revalidates current proof bytes.
 `/shame-task` and `/lazy-report-shame-shame-shame` remain compatibility commands.
 
+## Agent compliance recipe (do this, avoid the spiral)
+
+The observed spiral: author the status footer from memory, get rejected, spend
+the one blocked-tools `UNLAZY_FORCED_RETRY` on another guess, exhaust the
+budget. The mechanical exit:
+
+1. Always end a mutating or `$shame`-invoked terminal reply with one fenced
+   ```` ```json ```` block containing `pi.agent_status.v1`. Prose "Status
+   Report" lists never parse.
+2. For `state=done` with a plain-text proof file, verified items must be
+   `{"command": "read <proof-file>", "result": "<exact substring of file>"}`.
+   Shell command/result pairs validate only against typed JSON receipts
+   (`agentic_evals.report.v2`, `lazy_report_shame.report_check.v2`,
+   `ticket.closure_receipt.v1`, `pi.receipt_envelope.v1`, `debugger.proof.v1`).
+3. Preflight before stopping, while tools are still available:
+   `skills/shame/run.sh preflight /tmp/candidate.md` — stop only on
+   `decision: pass`. Never spend the retry on an unpreflighted guess.
+
 ## Stop-boundary behavior
 
 - Preserve intermediate responses and tool calls. Validate only terminal
