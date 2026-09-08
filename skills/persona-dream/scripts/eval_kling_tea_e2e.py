@@ -13,6 +13,8 @@ import sys
 import time
 import urllib.error
 import urllib.request
+
+from PIL import Image
 from pathlib import Path
 from typing import Any, Literal
 
@@ -26,7 +28,8 @@ IDEA = (
     "Embry and Horus have tea on a void world, discussing SPARTA Explorer "
     "casually as friends, with the Zeitch Eye and Tyranids in the background."
 )
-MODEL_ID = "fal-ai/kling-video/v3/standard/text-to-video"
+MODEL_ID = "fal-ai/kling-video/v3/standard/image-to-video"
+REFERENCE_ASSETS = ROOT / "reports" / "assets"
 
 
 class Phase(BaseModel):
@@ -79,6 +82,48 @@ def resolve_chatterbox_audio(source: str) -> Path | None:
         if host.is_file():
             return host
     return None
+
+
+def crop_start_frame(run_dir: Path) -> Path:
+    src = REFERENCE_ASSETS / "storyboard_board.png"
+    out = run_dir / "kling_start_frame.png"
+    # Panel 10 image crop from the accepted board: Horus + Embry + SPARTA table, no labels.
+    Image.open(src).crop((1536, 570, 1920, 904)).save(out)
+    return out
+
+
+def upload_reference_assets(run_dir: Path, fal_client: Any) -> dict[str, Any]:
+    local = {
+        "start_frame": crop_start_frame(run_dir),
+        "horus_front": REFERENCE_ASSETS / "element_packs" / "horus" / "horus_q1_front.png",
+        "horus_face": REFERENCE_ASSETS / "element_packs" / "horus" / "horus_q4_face.png",
+        "embry_front": REFERENCE_ASSETS / "element_packs" / "embry" / "embry_q1_front.png",
+        "embry_face": REFERENCE_ASSETS / "element_packs" / "embry" / "embry_q4_face.png",
+        "tyranid_front": REFERENCE_ASSETS / "element_packs" / "tyranid_environment" / "tyranid_environment_q1_front.png",
+        "tyranid_side": REFERENCE_ASSETS / "element_packs" / "tyranid_environment" / "tyranid_environment_q3_side.png",
+    }
+    missing = [str(path) for path in local.values() if not path.is_file()]
+    if missing:
+        raise RuntimeError("missing_reference_assets:" + ",".join(missing))
+    uploaded = {name: fal_client.upload_file(path) for name, path in local.items()}
+    elements = [
+        {"frontal_image_url": uploaded["horus_front"], "reference_image_urls": [uploaded["horus_face"]]},
+        {"frontal_image_url": uploaded["embry_front"], "reference_image_urls": [uploaded["embry_face"]]},
+        {"frontal_image_url": uploaded["tyranid_front"], "reference_image_urls": [uploaded["tyranid_side"]]},
+    ]
+    receipt = {
+        "schema": "persona_dream.kling_reference_binding.v1",
+        "status": "PASS_REFERENCE_BOUND_KLING_REQUEST",
+        "model_id": MODEL_ID,
+        "start_frame": str(local["start_frame"]),
+        "start_frame_sha256": sha256(local["start_frame"]),
+        "element_count": len(elements),
+        "prompt_refs": ["@Element1", "@Element2", "@Element3"],
+        "local_assets": {k: str(v) for k, v in local.items()},
+        "uploaded_assets": uploaded,
+    }
+    write_json(run_dir / "kling_reference_binding_receipt.json", receipt)
+    return {"start_image_url": uploaded["start_frame"], "elements": elements, "receipt": receipt}
 
 
 def render_journal_audio(run_dir: Path, run_id: str, text: str) -> Path:
@@ -166,19 +211,37 @@ def main() -> int:
         return 2
     phase(run_dir, "kling_preflight", "PASS_KLING_PREFLIGHT", live=True, model_id=MODEL_ID)
 
+    try:
+        binding = upload_reference_assets(run_dir, fal_client)
+    except Exception as exc:
+        phase(run_dir, "kling_reference_binding", "BLOCKED_KLING_REFERENCE_BINDING", live=True, error=str(exc)[:1000])
+        print(f"BLOCKED_KLING_REFERENCE_BINDING run={run_dir}")
+        return 2
+    phase(run_dir, "kling_reference_binding", "PASS_REFERENCE_BOUND_KLING_REQUEST", live=True, artifacts=[str(run_dir / "kling_reference_binding_receipt.json")])
+
     prompt = (
-        "Cinematic dream, 5 seconds, 16:9. Embry Lawson and Horus Lupercal sit as friends at a small tea table "
-        "on a Warhammer-like void world. They casually discuss a glowing SPARTA Explorer evidence map hovering "
-        "between teacups. The Zeitch Eye glows in the storm sky. Distant Tyranids move in the background but do "
-        "not attack. Intimate, strange, warm, synthetic dream logic, no text overlays."
+        "[@Element1] Horus Lupercal, bald giant in black and gold armor, sits calmly with [@Element2] Embry Lawson, "
+        "brown-haired woman in a gray tactical jacket, at the same tea table as the start frame. "
+        "They lean toward a glowing SPARTA Explorer evidence map between teacups. "
+        "Background movement: the Zeitch Eye glows in the storm sky while [@Element3] distant Tyranids cross behind them without attacking. "
+        "Camera: slow intimate push-in, warm uncanny friendship, preserve both character identities, no text overlays."
     )
-    request = {"prompt": prompt, "duration": "5", "aspect_ratio": "16:9", "generate_audio": False, "negative_prompt": "text, subtitles, gore"}
-    write_json(run_dir / "kling_request.json", {"schema": "persona_dream.kling_tea_request.v1", "model_id": MODEL_ID, "request": request})
+    request = {
+        "prompt": prompt,
+        "start_image_url": binding["start_image_url"],
+        "duration": "5",
+        "generate_audio": False,
+        "elements": binding["elements"],
+        "negative_prompt": "text, subtitles, gore, extra people, generic space marines, bald blue aliens, changed faces, changed armor, changed jacket",
+        "cfg_scale": 0.75,
+    }
+    write_json(run_dir / "kling_request.json", {"schema": "persona_dream.kling_tea_request.v1", "model_id": MODEL_ID, "reference_binding": str(run_dir / "kling_reference_binding_receipt.json"), "request": request})
     try:
         response = fal_client.subscribe(MODEL_ID, arguments=request, with_logs=True)  # type: ignore[attr-defined]
     except Exception as exc:
-        code = "BLOCKED_KLING_PROVIDER_TOP_UP" if "TOP_UP" in str(exc) else "BLOCKED_KLING_PROVIDER_ERROR"
-        phase(run_dir, "kling_dream_video", code, live=True, error=str(exc)[:1000])
+        error = str(exc)
+        code = "BLOCKED_KLING_PROVIDER_TOP_UP" if ("TOP_UP" in error or "Exhausted balance" in error or "Top up your balance" in error) else "BLOCKED_KLING_PROVIDER_ERROR"
+        phase(run_dir, "kling_dream_video", code, live=True, error=error[:1000])
         print(f"{code} run={run_dir}")
         return 2
     write_json(run_dir / "kling_response.json", response)

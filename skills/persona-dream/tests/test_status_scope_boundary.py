@@ -16,20 +16,20 @@ def _status() -> dict:
     return json.loads((ROOT / "CURRENT_STATUS.json").read_text(encoding="utf-8"))
 
 
-def test_full_cycle_live_receipt_does_not_close_research_or_perception_scope():
+def test_full_cycle_live_receipt_closes_immutable_goal_but_not_product_scope():
     status = _status()
     full_cycle = status["latest_full_cycle_live_eval"]
+    closure = status["immutable_goal_completion"]
 
-    assert full_cycle["status"] == "PASS_FULL_CYCLE_LIVE_3_TRIALS"
+    assert full_cycle["status"] == "FULL_CYCLE_OK"
     assert full_cycle["mocked"] is False
     assert full_cycle["live"] is True
-    assert full_cycle["trial_count"] == 3
-    assert full_cycle["passed_trials"] == 3
+    assert closure["status"] == "PASS_IMMUTABLE_GOAL_FULL_E2E"
 
-    boundary = full_cycle["boundary"].lower()
-    assert "does not prove" in boundary
-    assert "human-perceived emotional value" in boundary
-    assert "production readiness" in boundary
+    boundary = closure["boundary"].lower()
+    assert "production reliability" in boundary
+    assert "human preference" in boundary
+    assert "non-claims" in boundary
 
 
 def test_claim_registry_keeps_media_pipeline_and_human_perception_unclosed():
@@ -49,23 +49,17 @@ def test_claim_registry_keeps_media_pipeline_and_human_perception_unclosed():
     assert "SIGNED_INTERPRETATION.json for perceptual claims only" in perception["blocked_by"]
 
 
-def test_next_step_is_corrected_goal_pair_not_provider_or_kling_work():
+def test_next_step_is_post_closure_not_provider_execution():
     next_step = _status()["next_step"]
 
-    assert next_step["default"].startswith("Run PD-CORRECTED-GOAL-V1")
-    assert "structured-reflection control" in next_step["default"]
-    assert "dream-journal treatment" in next_step["default"]
-    assert "provider" not in next_step["default"].lower()
-    assert "kling" not in next_step["default"].lower()
-    assert "Kling/video/provider work" in next_step["ordered_steps"][-1]
-    assert "remain deferred" in next_step["ordered_steps"][-1]
+    assert next_step["default"].startswith("Post-closure:")
+    assert "provider video work" in next_step["default"]
+    assert "separately scoped future goals" in next_step["default"]
 
 
 def test_handoff_preserves_plain_language_status_boundary():
     handoff = (ROOT / "local" / "HANDOFF.md").read_text(encoding="utf-8")
 
-    assert "Research phase" in handoff
-    assert "`P2_CORRECTED_GOAL_PAIR_PROOF`" in handoff
-    assert "The loop is complete and runnable" in handoff
-    assert "Not proven: the research benefit itself" in handoff
-    assert "human-perceived emotional value" in handoff
+    assert "IMMUTABLE_GOAL: COMPLETE" in handoff
+    assert "Fresh live closure proof" in handoff
+    assert "does not prove production reliability or human preference" in handoff

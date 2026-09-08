@@ -51,10 +51,10 @@ Figures, receipt paths, and revision ids are in
 run `./run.sh generate-readme-research-state`. Full claim dispositions live in
 the JSON, not here.*
 
-- **Phase:** `P2_CORRECTED_GOAL_PAIR_PROOF`
+- **Phase:** `IMMUTABLE_GOAL_FULL_E2E_CLOSURE`
 - **Open claims:** #1058 (Blinded listener study), #1128 (Continuity reliability soak), #1129 (Restart / recovery)
-- **Current blocker:** #1058 is ready for human listener collection from the current v2 bundle: rater page, stimulus validation, and technical screen pass, but analysis rem…
-- **Next step:** Run PD-CORRECTED-GOAL-V1: one paired structured-reflection control and dream-journal treatment through the existing dynamic Horus/Embry and Chatterbo…
+- **Current blocker:** #1058 human listener collection remains open for human-perception wording only: 0/20 valid rows and SIGNED_INTERPRETATION.json missing; not an immuta…
+- **Next step:** Post-closure: keep production reliability, human listener preference, and provider video work as separately scoped future goals.
 
 <!-- END GENERATED CURRENT RESEARCH STATE -->
 

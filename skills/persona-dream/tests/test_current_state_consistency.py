@@ -223,6 +223,8 @@ def test_superseded_marker_exempts_the_historical_p24_section(tmp_path, monkeypa
     marked = tmp_path / "PROJECT_KNOWLEDGE.md"
     marked.write_text(
         "# Project Knowledge: persona-dream\n\n"
+        "## CURRENT SUMMARY\n\n"
+        "Current phase: IMMUTABLE_GOAL_FULL_E2E_CLOSURE.\n\n"
         "## CURRENT NEXT STEP\n\n"
         "1. #1037 recognition gate; successors #1128, #1058, #1008, #1130.\n\n"
         "## SUPERSEDED - P2.4 voice-recognition preflight blocks on missing backend\n\n"

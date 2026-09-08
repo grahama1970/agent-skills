@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "persona-dream",
   "trials": 2,
-  "proof_scope": "live end-to-end human idea to Kling dream video, Embry journal, and Chatterbox Horus/Embry discussion; uses paid/live provider credentials when available",
+  "proof_scope": "live end-to-end human idea to reference-bound Kling dream video, Embry journal, and Chatterbox Horus/Embry discussion; uses paid/live provider credentials when available",
   "claims": {
-    "proves": "The specified human idea can execute through a live Kling text-to-video dream, journal artifact creation, Chatterbox journal audio, and a dynamic voiced Horus/Embry conversation with read-back artifacts.",
+    "proves": "The specified human idea can execute through a live reference-bound Kling image-to-video dream, journal artifact creation, Chatterbox journal audio, and a dynamic voiced Horus/Embry conversation with read-back artifacts.",
     "does_not_prove": "Production reliability, human preference, or that every historical Persona Dream media lane is complete."
   },
   "capability_claims": [
@@ -39,6 +39,9 @@
           {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/KlingTeaE2E.RECEIPT.json", "json_pointer": "/status", "equals": "PASS_KLING_TEA_E2E"},
           {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/KlingTeaE2E.RECEIPT.json", "json_pointer": "/live", "equals": true},
           {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/KlingTeaE2E.RECEIPT.json", "json_pointer": "/mocked", "equals": false},
+          {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_request.json", "json_pointer": "/model_id", "equals": "fal-ai/kling-video/v3/standard/image-to-video"},
+          {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_reference_binding_receipt.json", "json_pointer": "/status", "equals": "PASS_REFERENCE_BOUND_KLING_REQUEST"},
+          {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_reference_binding_receipt.json", "json_pointer": "/element_count", "equals": 3},
           {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream.mp4", "min_bytes": 100000},
           {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/journal.wav", "min_bytes": 10000},
           {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/dynamic_conversation_receipt.v1.json", "json_pointer": "/status", "equals": "PASS_DYNAMIC_CONVERSATION"}

@@ -1,0 +1,7 @@
+{
+  "live": false,
+  "mocked": true,
+  "ok": true,
+  "schema": "persona_dream.fixture_selector_node_receipt.v1",
+  "status": "PASS_FIXTURE_SELECTOR"
+}

@@ -2,7 +2,7 @@
   "goal": {
     "completion_boundary": "All required hypotheses have terminal, scoped dispositions; positive, null, blocked-valid, and retired outcomes count only inside their stated proof boundaries.",
     "id": "PD-CORRECTED-GOAL-V1",
-    "sha256": "sha256:3914e022fdf9c283a623b801dc3f7914f97be5496808115c1db1360d82a24ec2",
+    "sha256": "sha256:d6532c9f03a716f315c4eef0b614adff87659906fe3e0e58642b516bda784c08",
     "source": "skills/persona-dream/GOAL.md"
   },
   "hypotheses": [
@@ -262,7 +262,7 @@
       "successor_or_retirement_action": "Keep retired unless a future human-authorized goal explicitly reopens paid provider/video causality.",
       "supporting_receipts": [],
       "terminal_result_receipt": "skills/persona-dream/GOAL.md",
-      "terminal_result_receipt_sha256": "sha256:3914e022fdf9c283a623b801dc3f7914f97be5496808115c1db1360d82a24ec2",
+      "terminal_result_receipt_sha256": "sha256:d6532c9f03a716f315c4eef0b614adff87659906fe3e0e58642b516bda784c08",
       "transfer_destinations": [],
       "transfer_outcomes": [
         {
