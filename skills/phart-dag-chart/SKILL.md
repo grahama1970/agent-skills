@@ -71,7 +71,7 @@ No raw Python tracebacks for expected failures.
 
 `chart` defaults to `--view auto`.
 
-Use **workflow** view when the input is a typed execution receipt or the request is about an actual run, ticket, classification, repair, proof, closure, or final receipt. If both a Tau/Ask DAG and receipts exist, receipts win; the DAG is supporting evidence about one execution phase.
+Use **workflow** view when the input is a typed execution receipt or the request is about an actual run, ticket, classification, repair, proof, closure, or final receipt. If a watchdog receipt has `handled_issues[].workflow_phases[]`, render those observed phases directly; older receipts fall back to a conservative derived workflow. If both a Tau/Ask DAG and receipts exist, receipts win; the DAG is supporting evidence about one execution phase.
 
 Use **structure** view when the user explicitly asks for handlers, dependencies, fanout, joins, retries, planned topology, or when the only authoritative input is a DAG contract.
 

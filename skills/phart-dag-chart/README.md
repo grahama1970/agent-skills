@@ -34,7 +34,7 @@ Validate **ask.dag.v1** / **scillm.exec.graph.v1** / **tau.dag_contract.v1** JSO
 - React Flow remains the rich live DAG UX.
 - `watch` is a terminal fallback for agents/operators who need a simple loop until Tau reaches `PASS`, `FAIL`, `BLOCKED`, or `NEEDS_ATTENTION`.
 - Tau `dag-progress.json` / receipts are authoritative; this skill only renders them.
-- `chart --view auto` renders receipts as observed workflows. Use `--view structure` only when you explicitly need handler topology.
+- `chart --view auto` renders `handled_issues[].workflow_phases[]` when present, or derives a conservative receipt workflow for older watchdog receipts. Use `--view structure` only when you explicitly need handler topology.
 
 ## Composed by
 

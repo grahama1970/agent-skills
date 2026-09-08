@@ -64,7 +64,37 @@ def handle_issue(run_id: str, receipt_dir: Path, project: dict[str, Any], issue:
         return primary.failure(project, issue, str(exc), human=getattr(exc, "human", False))
 
 
+def _issue_label_names(issue: dict[str, Any]) -> list[str]:
+    names: list[str] = []
+    for label in issue.get("labels") or []:
+        if isinstance(label, dict) and label.get("name"):
+            names.append(str(label["name"]))
+        elif isinstance(label, str):
+            names.append(label)
+    return names
+
+
+def _phase(phase_id: str, *, agent: str, skill: str, executor: str, status: str = "OBSERVED",
+           depends_on: list[str] | None = None, details: list[str] | None = None) -> dict[str, Any]:
+    return {
+        "id": phase_id,
+        "agent": agent,
+        "skill": skill,
+        "executor": executor,
+        "status": status,
+        "depends_on": depends_on or [],
+        "details": details or [],
+    }
+
+
+def _append_phase(result: dict[str, Any], phase: dict[str, Any]) -> None:
+    phases = result.setdefault("workflow_phases", [])
+    if not any(existing.get("id") == phase["id"] for existing in phases if isinstance(existing, dict)):
+        phases.append(phase)
+
+
 def _new_result(project: dict[str, Any], issue: dict[str, Any], action: str) -> dict[str, Any]:
+    labels = _issue_label_names(issue)
     return {
         "project_id": project.get("project_id"),
         "repo": project_repo(project),
@@ -75,6 +105,13 @@ def _new_result(project: dict[str, Any], issue: dict[str, Any], action: str) -> 
         "ok": False,
         "commands": [],
         "artifacts": [],
+        "workflow_phases": [
+            _phase("issue_observed", agent="GitHub issue", skill="ticket", executor="issue scan",
+                   details=[f"issue=#{int(issue['number'])}", f"labels={','.join(labels) or 'none'}"]),
+            _phase("route_classified", agent="project-watchdog router", skill="project-watchdog",
+                   executor="registry.classify_issue_with_reason", depends_on=["issue_observed"],
+                   details=[f"action={action}", "eligible_next_tick=agent-work and no hold labels"]),
+        ],
     }
 
 
@@ -1070,6 +1107,9 @@ def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[
     legacy = primary.legacy_inventory(root, number)
     write_json(receipt_dir / "legacy-repair.json", legacy)
     native_ticket.acquire(primary.current(), result, primary.checkpoint)
+    _append_phase(result, _phase("native_lease_acquired", agent="native ticket helper", skill="ticket lease",
+                                 executor="maintainer-active owned lifecycle", status="COMPLETED",
+                                 depends_on=["route_classified"]))
     # Close the snapshot/lease race without rehashing the monorepo.
     current_pin = content.remote_pin(root)
     if content.remote_entries(root, current_pin, targets) != content.remote_entries(root, pin, targets):
@@ -1083,6 +1123,10 @@ def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[
         "creator_handler": creator_handler,
         "reviewer_handler": reviewer_handler,
     }
+    _append_phase(result, _phase("fixer_agent", agent=f"fixer: {creator_handler}", skill="$ask tau-dag",
+                                 executor=f"repair_creator={creator}", depends_on=["native_lease_acquired"]))
+    _append_phase(result, _phase("reviewer_agent", agent=f"reviewer: {reviewer_handler}", skill="$ask tau-dag",
+                                 executor=f"repair_reviewer={reviewer}", depends_on=["fixer_agent"]))
     task = build_repair_task(repo=repo, issue_number=number, issue_title=str(issue.get("title", "")),
                              issue_body=str(issue.get("body") or ""), targets=targets)
     import shlex
@@ -1138,6 +1182,9 @@ def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[
     if not stream.get("terminal"):
         raise primary.Refusal("native Tau run is not settled; recover the same retained run")
     primary.checkpoint("settled", tau_settled=True)
+    _append_phase(result, _phase("tau_terminal", agent="Tau runner", skill="tau", executor=f"terminal={stream.get('terminal_status')}",
+                                 status="COMPLETED" if stream.get("terminal_status") in {"PASS", "COMPLETED"} else "NEEDS_ATTENTION",
+                                 depends_on=["reviewer_agent"]))
     if execution.get("exit_code") != 0 or execution.get("timed_out"):
         raise primary.Refusal("Ask process failed or timed out despite terminal-looking stream; no closure")
     return finish_primary_operation(primary.current())
@@ -2171,6 +2218,10 @@ def finish_primary_operation(record) -> dict[str, Any]:
             "verification_plan_source": plan_source,
             "commit_binding_warnings": commit_binding_warnings}
     write_json(gate_path, gate)
+    result_for_phases = record.result or _new_result(project, issue, record.action)
+    _append_phase(result_for_phases, _phase("proof_gate", agent="deterministic proof checker", skill="agentic-evals",
+                                            executor="fresh required artifacts + reviewer PASS", status="COMPLETED",
+                                            depends_on=["tau_terminal"]))
     remote_required = bool(config.auto_land_main(project))
     commit = content.publish(root, before, after, receipt_dir, record.run_id, record.issue_number,
                              remote_required=remote_required)
@@ -2187,9 +2238,15 @@ def finish_primary_operation(record) -> dict[str, Any]:
         remote_required=remote_required, scope=record.targets, content=after)
     primary.checkpoint("closing", closure=encoded(closure))
     closed = native_ticket.close(primary.current())
-    result = {**(record.result or _new_result(project, issue, record.action)), **closed,
+    result = {**result_for_phases, **closed,
               "requires_human_input": False, "proof_gate": str(gate_path),
               "artifacts": [str(proof), str(review), str(gate_path), str(receipt_dir / "tau-stream-monitor.json")],
               "preservation_scope": "target files and target index entries; unrelated cron changes are not attributed to this run"}
+    _append_phase(result, _phase("native_close", agent="native ticket helper", skill="ticket close",
+                                 executor="ticket.closure_receipt.v1", status="COMPLETED",
+                                 depends_on=["proof_gate"]))
+    _append_phase(result, _phase("watchdog_receipt", agent="project-watchdog", skill="receipt writer",
+                                 executor="agent_skills.project_watchdog.tick_receipt.v1", status="COMPLETED",
+                                 depends_on=["native_close"]))
     primary.checkpoint("releasing", result=result)
     return result

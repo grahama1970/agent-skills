@@ -89,7 +89,125 @@
           "extensions/pi/lazy-report-shame-shame-shame/README.md"
         ],
         "worktree": "/home/graham/workspace/experiments/agent-skills"
-      }
+      },
+      "workflow_phases": [
+        {
+          "id": "issue_observed",
+          "agent": "GitHub issue",
+          "skill": "ticket",
+          "executor": "issue scan",
+          "status": "OBSERVED",
+          "depends_on": [],
+          "details": [
+            "issue=#1627",
+            "labels=agent-work,route:backend_python_or_skill_runtime,lane:be"
+          ]
+        },
+        {
+          "id": "route_classified",
+          "agent": "project-watchdog router",
+          "skill": "project-watchdog",
+          "executor": "registry.classify_issue_with_reason",
+          "status": "OBSERVED",
+          "depends_on": [
+            "issue_observed"
+          ],
+          "details": [
+            "action=ticket_repair",
+            "eligible_next_tick=agent-work and no hold labels"
+          ]
+        },
+        {
+          "id": "native_lease_acquired",
+          "agent": "native ticket helper",
+          "skill": "ticket lease",
+          "executor": "maintainer-active owned lifecycle",
+          "status": "COMPLETED",
+          "depends_on": [
+            "route_classified"
+          ],
+          "details": []
+        },
+        {
+          "id": "fixer_agent",
+          "agent": "fixer: codex",
+          "skill": "$ask tau-dag",
+          "executor": "repair_creator=gpt-5.5-high",
+          "status": "COMPLETED",
+          "depends_on": [
+            "native_lease_acquired"
+          ],
+          "details": []
+        },
+        {
+          "id": "reviewer_agent",
+          "agent": "reviewer: claude-fable-low",
+          "skill": "$ask tau-dag",
+          "executor": "repair_reviewer=claude-fable-low",
+          "status": "COMPLETED",
+          "depends_on": [
+            "fixer_agent"
+          ],
+          "details": []
+        },
+        {
+          "id": "tau_terminal",
+          "agent": "Tau runner",
+          "skill": "tau",
+          "executor": "terminal=PASS",
+          "status": "COMPLETED",
+          "depends_on": [
+            "reviewer_agent"
+          ],
+          "details": []
+        },
+        {
+          "id": "proof_gate",
+          "agent": "deterministic proof checker",
+          "skill": "agentic-evals",
+          "executor": "fresh required artifacts + reviewer PASS",
+          "status": "COMPLETED",
+          "depends_on": [
+            "tau_terminal"
+          ],
+          "details": []
+        },
+        {
+          "id": "native_close",
+          "agent": "native ticket helper",
+          "skill": "ticket close",
+          "executor": "ticket.closure_receipt.v1",
+          "status": "COMPLETED",
+          "depends_on": [
+            "proof_gate"
+          ],
+          "details": []
+        },
+        {
+          "id": "watchdog_receipt",
+          "agent": "project-watchdog",
+          "skill": "receipt writer",
+          "executor": "agent_skills.project_watchdog.tick_receipt.v1",
+          "status": "COMPLETED",
+          "depends_on": [
+            "native_close"
+          ],
+          "details": []
+        },
+        {
+          "id": "ops_discord_alert",
+          "agent": "ops-discord",
+          "skill": "ops-discord notify",
+          "executor": "watchdog alert at core.finish",
+          "status": "SKIPPED",
+          "depends_on": [
+            "watchdog_receipt"
+          ],
+          "details": [
+            "alerts only for BLOCKED, NEEDS_ATTENTION, or idle_streak_exceeded; COMPLETED does not alert"
+          ]
+        }
+      ]
     }
   ],
   "in_flight": {

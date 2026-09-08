@@ -142,6 +142,14 @@ The runtime is deliberately narrow:
 6. Post the receipt or refusal back to GitHub.
 7. Exit or move to the next project within the configured ticket limit.
 
+Receipts expose this as `handled_issues[].workflow_phases[]` so diagram tools
+can render the observed workflow instead of inferring it from Tau internals:
+issue observed, route classified, native lease, fixer seat, reviewer seat, Tau
+terminal state, deterministic proof gate, native close, receipt write, and the
+`ops-discord` alert decision. `COMPLETED` receipts record the alert phase as
+`SKIPPED`; `BLOCKED`, `NEEDS_ATTENTION`, and idle-streak outcomes are the only
+alert-worthy states.
+
 The watchdog must not perform unbounded repair, invent missing routing, or make
 global completion claims. It should stop for the human only when the receipt says
 `requires_human_input: true` or the next step is a real operator decision. A

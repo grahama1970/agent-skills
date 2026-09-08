@@ -1,0 +1,8 @@
+{
+  "skill": "project-infographic",
+  "mode": "agent-handoff",
+  "view": "lifecycle",
+  "surface": "document",
+  "reason": "Compose a source-grounded explanation through the existing agent workflow. Archify is deferred.",
+  "instructions": "/home/graham/workspace/experiments/agent-skills/skills/project-infographic/SKILL.md"
+}

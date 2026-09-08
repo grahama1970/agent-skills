@@ -113,7 +113,8 @@
      "2/2",
      "ticket_closed=true",
      "COMPLETED",
-     "ok=true"
+     "ok=true",
+     "phase=ops_discord_alert"
     ],
     "stdout_excludes": [
      "\njoin\n",

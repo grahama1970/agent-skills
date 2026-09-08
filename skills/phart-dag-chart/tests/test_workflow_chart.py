@@ -35,11 +35,13 @@ def test_watchdog_receipt_defaults_to_workflow_view() -> None:
     out = result.stdout
     for expected in [
         "ticket #1627",
-        "ticket_1627_filed_agent_work",
+        "issue_observed",
+        "route_classified",
         "ticket_repair",
-        "codex",
+        "fixer: codex",
         "gpt-5.5-high",
-        "claude-fable-low",
+        "reviewer: claude-fable-low",
+        "ops_discord_alert",
         "READY",
         "PASS",
         "2/2",
@@ -73,5 +75,5 @@ def test_ticket_closed_false_does_not_render_close_success(tmp_path: Path) -> No
     result = run_chart(str(path), "--plain")
 
     assert result.returncode == 0, result.stderr
-    assert "native_close_1627_ticket_closed_true" not in result.stdout
+    assert "native_close" not in result.stdout
     assert "ticket_closed=false" in result.stdout

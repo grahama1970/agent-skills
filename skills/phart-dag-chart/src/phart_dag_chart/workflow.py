@@ -105,6 +105,48 @@ def _eval_counts(eval_report: dict[str, Any] | None) -> str | None:
     return None
 
 
+def _phase_dag(receipt: dict[str, Any], handled: dict[str, Any]) -> dict[str, Any] | None:
+    phases = handled.get("workflow_phases") or []
+    if not isinstance(phases, list) or not phases:
+        return None
+    nodes = []
+    skipped = {"native_close"} if handled.get("ticket_closed") is not True else set()
+    for phase in phases:
+        if not isinstance(phase, dict) or not phase.get("id"):
+            continue
+        phase_id = str(phase.get("id"))
+        if phase_id in skipped:
+            continue
+        depends_on = phase.get("depends_on") or []
+        clean_deps = []
+        for item in depends_on:
+            dep = str(item)
+            if dep in skipped:
+                clean_deps.append("proof_gate")
+            else:
+                clean_deps.append(dep[:80])
+        nodes.append({
+            "id": phase_id[:80],
+            "type": "skill.run",
+            "depends_on": clean_deps,
+            "role": "terminal" if str(phase.get("id")) == "watchdog_receipt" else None,
+            "input": {
+                "skill": str(phase.get("skill") or "project-watchdog"),
+                "agent": str(phase.get("agent") or ""),
+                "executor": str(phase.get("executor") or ""),
+                "model": str(phase.get("model") or ""),
+            },
+        })
+    if not nodes:
+        return None
+    return {
+        "schema_version": "ask.dag.v1",
+        "graph_id": str(receipt.get("run_id") or "project-watchdog-workflow"),
+        "description": "receipt-backed project-watchdog workflow_phases projection",
+        "nodes": nodes,
+    }
+
+
 def watchdog_workflow_projection(receipt: dict[str, Any], receipt_path: Path, evidence_paths: list[Path]) -> tuple[dict[str, Any], list[str]]:
     if receipt.get("schema") != WATCHDOG_TICK_SCHEMA:
         raise DagChartError("Workflow view currently supports only project-watchdog tick receipts.", code="unsupported_workflow_schema")
@@ -133,35 +175,36 @@ def watchdog_workflow_projection(receipt: dict[str, Any], receipt_path: Path, ev
     creator_handler = seats.get("creator_handler")
     reviewer = seats.get("reviewer")
 
-    nodes = [
-        {"id": f"ticket_{issue_no}_filed_agent_work", "type": "skill.run", "depends_on": []},
-        {"id": "watchdog_selected_ticket", "type": "skill.run", "depends_on": [f"ticket_{issue_no}_filed_agent_work"]},
-        {"id": f"classified_{handled.get('action') or 'unknown'}", "type": "skill.run", "depends_on": ["watchdog_selected_ticket"]},
-    ]
-    last = nodes[-1]["id"]
-    if creator_handler or creator:
-        node_id = f"creator_{creator_handler or 'handler'}_{creator or 'model'}".replace("-", "_").replace(".", "_")[:80]
-        nodes.append({"id": node_id, "type": "skill.run", "depends_on": [last]})
-        last = node_id
-    if reviewer:
-        node_id = f"reviewer_{reviewer}".replace("-", "_").replace(".", "_")[:80]
-        nodes.append({"id": node_id, "type": "skill.run", "depends_on": [last]})
-        last = node_id
-    if proof or eval_report:
-        node_id = "proof_PASS_READY" if proof_passed and eval_detail else "proof_NOT_PROVEN"
-        nodes.append({"id": node_id, "type": "skill.run", "depends_on": [last]})
-        last = node_id
-    if ticket_closed:
-        nodes.append({"id": f"native_close_{issue_no}_ticket_closed_true", "type": "skill.run", "depends_on": [last]})
+    dag = _phase_dag(receipt, handled)
+    if dag is None:
+        nodes = [
+            {"id": f"ticket_{issue_no}_filed_agent_work", "type": "skill.run", "depends_on": []},
+            {"id": "watchdog_selected_ticket", "type": "skill.run", "depends_on": [f"ticket_{issue_no}_filed_agent_work"]},
+            {"id": f"classified_{handled.get('action') or 'unknown'}", "type": "skill.run", "depends_on": ["watchdog_selected_ticket"]},
+        ]
         last = nodes[-1]["id"]
-    nodes.append({"id": f"watchdog_receipt_{terminal_status}_ok_{str(terminal_ok).lower()}", "type": "skill.run", "depends_on": [last]})
-
-    dag = {
-        "schema_version": "ask.dag.v1",
-        "graph_id": str(receipt.get("run_id") or "project-watchdog-workflow"),
-        "description": "receipt-backed project-watchdog workflow projection",
-        "nodes": nodes,
-    }
+        if creator_handler or creator:
+            node_id = f"creator_{creator_handler or 'handler'}_{creator or 'model'}".replace("-", "_").replace(".", "_")[:80]
+            nodes.append({"id": node_id, "type": "skill.run", "depends_on": [last]})
+            last = node_id
+        if reviewer:
+            node_id = f"reviewer_{reviewer}".replace("-", "_").replace(".", "_")[:80]
+            nodes.append({"id": node_id, "type": "skill.run", "depends_on": [last]})
+            last = node_id
+        if proof or eval_report:
+            node_id = "proof_PASS_READY" if proof_passed and eval_detail else "proof_NOT_PROVEN"
+            nodes.append({"id": node_id, "type": "skill.run", "depends_on": [last]})
+            last = node_id
+        if ticket_closed:
+            nodes.append({"id": f"native_close_{issue_no}_ticket_closed_true", "type": "skill.run", "depends_on": [last]})
+            last = nodes[-1]["id"]
+        nodes.append({"id": f"watchdog_receipt_{terminal_status}_ok_{str(terminal_ok).lower()}", "type": "skill.run", "depends_on": [last]})
+        dag = {
+            "schema_version": "ask.dag.v1",
+            "graph_id": str(receipt.get("run_id") or "project-watchdog-workflow"),
+            "description": "receipt-backed project-watchdog workflow projection",
+            "nodes": nodes,
+        }
 
     details = [
         f"Workflow projection · {dag['graph_id']}",
@@ -182,6 +225,12 @@ def watchdog_workflow_projection(receipt: dict[str, Any], receipt_path: Path, ev
         details.append("proof=NOT PROVEN: eval report not supplied")
     details.append(f"ticket_closed={str(ticket_closed).lower()}")
     details.append(f"terminal={terminal_status} · ok={str(terminal_ok).lower()}")
+    for phase in handled.get("workflow_phases") or []:
+        if isinstance(phase, dict):
+            if str(phase.get("id")) == "native_close" and ticket_closed is not True:
+                continue
+            phase_details = "; ".join(str(item) for item in phase.get("details") or [])
+            details.append(f"phase={phase.get('id')} status={phase.get('status')} agent={phase.get('agent')} exec={phase.get('executor')}{(': ' + phase_details) if phase_details else ''}")
     details.append("rule: receipt facts are observations; DAG nodes are only structure/enrichment")
     details.append("evidence_hashes:")
     for path, digest in sorted(hashes.items()):
@@ -191,7 +240,7 @@ def watchdog_workflow_projection(receipt: dict[str, Any], receipt_path: Path, ev
 
 def render_workflow_chart(receipt: dict[str, Any], receipt_path: Path, evidence_paths: list[Path], *, plain: bool, show_evidence: bool) -> str:
     dag, details = watchdog_workflow_projection(receipt, receipt_path, evidence_paths)
-    chart = render_chart(dag, validate=True, plain=True)
+    chart = render_chart(dag, validate=True, plain=True, show_meta=True)
     visible = details if show_evidence else details[: details.index("evidence_hashes:")]
     body = chart + "\n\n" + "\n".join(visible)
     if plain:

@@ -243,11 +243,26 @@ def failure(project: dict[str, Any], issue: dict[str, Any], message: str,
         classification["classifier_response"] = raw_triage
     from .registry import project_worktree
     command = recovery_command(project_worktree(project))
+    action = issue.get("watchdog_action", "ticket_repair")
+    labels = [str(label.get("name")) for label in issue.get("labels", []) if isinstance(label, dict) and label.get("name")]
     return {"project_id": project["project_id"], "repo": project["repo"],
-            "issue_number": int(issue["number"]), "action": issue.get("watchdog_action", "ticket_repair"),
+            "issue_number": int(issue["number"]), "action": action,
             "ok": False, "status": "NEEDS_ATTENTION", "summary": message,
             "requires_human_input": human, **classification,
-            "authorized_agent_next_steps": [command], "commands": [], "artifacts": []}
+            "authorized_agent_next_steps": [command], "commands": [], "artifacts": [],
+            "workflow_phases": [
+                {"id": "issue_observed", "agent": "GitHub issue", "skill": "ticket", "executor": "issue scan",
+                 "status": "OBSERVED", "depends_on": [], "details": [f"issue=#{int(issue['number'])}", f"labels={','.join(labels) or 'none'}"]},
+                {"id": "route_classified", "agent": "project-watchdog router", "skill": "project-watchdog",
+                 "executor": "registry.classify_issue_with_reason", "status": "OBSERVED", "depends_on": ["issue_observed"],
+                 "details": [f"action={action}", "eligible_next_tick=agent-work and no hold labels"]},
+                {"id": "failure_triaged", "agent": "triage-error classifier", "skill": "triage-error",
+                 "executor": classification.get("triage", {}).get("code", "classification_error"), "status": "NEEDS_ATTENTION",
+                 "depends_on": ["route_classified"], "details": [message[:240]]},
+                {"id": "ops_discord_alert", "agent": "ops-discord", "skill": "ops-discord notify",
+                 "executor": "watchdog alert at core.finish", "status": "PENDING", "depends_on": ["failure_triaged"],
+                 "details": ["alerts only for BLOCKED, NEEDS_ATTENTION, or idle_streak_exceeded; COMPLETED does not alert"]},
+            ]}
 
 
 def _finish_release(record: Operation) -> bool:

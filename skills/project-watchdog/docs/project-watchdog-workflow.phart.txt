@@ -1,0 +1,116 @@
+DAG decision tree · project-watchdog-20260908T153952Z-cb85b983382a (phart 1.5 git)
+schema=ask.dag.v1
+
+                ┌────────────────────┐
+                │ issue_observed     │
+                │ agent:GitHub issue │
+                │ skill:ticket       │
+                │ exec:issue scan    │
+                └────────────────────┘
+                           │
+                           │
+                           v
+     ┌──────────────────────────────────────────┐
+     │ route_classified                         │
+     │ agent:project-watchdog router            │
+     │ skill:project-watchdog                   │
+     │ exec:registry.classify_issue_with_reason │
+     └──────────────────────────────────────────┘
+                           │
+                           │
+                           v
+      ┌────────────────────────────────────────┐
+      │ native_lease_acquired                  │
+      │ agent:native ticket helper             │
+      │ skill:ticket lease                     │
+      │ exec:maintainer-active owned lifecycle │
+      └────────────────────────────────────────┘
+                           │
+                           │
+                           v
+         ┌──────────────────────────────────┐
+         │ fixer_agent                      │
+         │ agent:fixer: codex               │
+         │ skill:$ask tau-dag               │
+         │ exec:repair_creator=gpt-5.5-high │
+         └──────────────────────────────────┘
+                          ┌┘
+                          │
+                          v
+      ┌───────────────────────────────────────┐
+      │ reviewer_agent                        │
+      │ agent:reviewer: claude-fable-low      │
+      │ skill:$ask tau-dag                    │
+      │ exec:repair_reviewer=claude-fable-low │
+      └───────────────────────────────────────┘
+                          └┐
+                           │
+                           v
+                ┌────────────────────┐
+                │ tau_terminal       │
+                │ agent:Tau runner   │
+                │ skill:tau          │
+                │ exec:terminal=PASS │
+                └────────────────────┘
+                          ┌┘
+                          │
+                          v
+  ┌───────────────────────────────────────────────┐
+  │ proof_gate                                    │
+  │ agent:deterministic proof checker             │
+  │ skill:agentic-evals                           │
+  │ exec:fresh required artifacts + reviewer PASS │
+  └───────────────────────────────────────────────┘
+                          └┐
+                           │
+                           v
+          ┌────────────────────────────────┐
+          │ native_close                   │
+          │ agent:native ticket helper     │
+          │ skill:ticket close             │
+          │ exec:ticket.closure_receipt.v1 │
+          └────────────────────────────────┘
+                           │
+                           │
+                           v
+┌────────────────────────────────────────────────────┐
+│ watchdog_receipt =proof=                           │
+│ agent:project-watchdog                             │
+│ skill:receipt writer                               │
+│ exec:agent_skills.project_watchdog.tick_receipt.v1 │
+└────────────────────────────────────────────────────┘
+                           │
+                           │
+                           v
+        ┌────────────────────────────────────┐
+        │ ops_discord_alert                  │
+        │ agent:ops-discord                  │
+        │ skill:ops-discord notify           │
+        │ exec:watchdog alert at core.finish │
+        └────────────────────────────────────┘
+
+renderer: phart@github.com/scottvr/phart · layout=layered · bboxes
+
+Workflow projection · project-watchdog-20260908T153952Z-cb85b983382a
+source=agent_skills.project_watchdog.tick_receipt.v1
+ticket #1627: Prove shame spiral watchdog routable exact target 20260908T153947Z
+target=extensions/pi/lazy-report-shame-shame-shame/README.md
+labels=type:maintenance, route:backend_python_or_skill_runtime, agent:agent-skill-maintainer, agent-work, lane:be
+classification=ticket_repair
+creator=codex / gpt-5.5-high
+reviewer=claude-fable-low
+seat_verdicts={"creator": {"handler": "codex", "node_id": "handler-codex", "responded": true, "verdict": "PASS"}, "reviewer": {"handler": "claude-fable-low", "node_id": "handler-claude-fable-low", "responded": true, "verdict": "PASS"}}
+proof=spiral-ticket-request: READY / PASS · 2/2 trials
+ticket_closed=true
+terminal=COMPLETED · ok=true
+phase=issue_observed status=OBSERVED agent=GitHub issue exec=issue scan: issue=#1627; labels=agent-work,route:backend_python_or_skill_runtime,lane:be
+phase=route_classified status=OBSERVED agent=project-watchdog router exec=registry.classify_issue_with_reason: action=ticket_repair; eligible_next_tick=agent-work and no hold labels
+phase=native_lease_acquired status=COMPLETED agent=native ticket helper exec=maintainer-active owned lifecycle
+phase=fixer_agent status=COMPLETED agent=fixer: codex exec=repair_creator=gpt-5.5-high
+phase=reviewer_agent status=COMPLETED agent=reviewer: claude-fable-low exec=repair_reviewer=claude-fable-low
+phase=tau_terminal status=COMPLETED agent=Tau runner exec=terminal=PASS
+phase=proof_gate status=COMPLETED agent=deterministic proof checker exec=fresh required artifacts + reviewer PASS
+phase=native_close status=COMPLETED agent=native ticket helper exec=ticket.closure_receipt.v1
+phase=watchdog_receipt status=COMPLETED agent=project-watchdog exec=agent_skills.project_watchdog.tick_receipt.v1
+phase=ops_discord_alert status=SKIPPED agent=ops-discord exec=watchdog alert at core.finish: alerts only for BLOCKED, NEEDS_ATTENTION, or idle_streak_exceeded; COMPLETED does not alert
+rule: receipt facts are observations; DAG nodes are only structure/enrichment

@@ -454,6 +454,22 @@ def finish(
     from . import alerts
 
     alerts.maybe_alert(receipt)
+    alert_status = str((receipt.get("alert") or {}).get("status") or ("SKIPPED" if receipt.get("status") in {"COMPLETED", "NOOP", "SKIPPED"} else "UNKNOWN"))
+    for handled in receipt.get("handled_issues") or []:
+        if not isinstance(handled, dict):
+            continue
+        phases = handled.setdefault("workflow_phases", [])
+        existing = next((p for p in phases if isinstance(p, dict) and p.get("id") == "ops_discord_alert"), None)
+        phase = existing if existing is not None else {"id": "ops_discord_alert", "depends_on": ["watchdog_receipt"]}
+        phase.update({
+            "agent": "ops-discord",
+            "skill": "ops-discord notify",
+            "executor": "watchdog alert at core.finish",
+            "status": alert_status,
+            "details": ["alerts only for BLOCKED, NEEDS_ATTENTION, or idle_streak_exceeded; COMPLETED does not alert"],
+        })
+        if existing is None:
+            phases.append(phase)
     # Re-validate the FINAL shape after alerting mutated the receipt, so
     # schema_validation describes what is actually persisted, not a
     # pre-mutation snapshot (gpt-5.6-sol review finding 2, 2026-09-03).

@@ -1,0 +1,48 @@
+{
+  "version": 2,
+  "skill": "project-watchdog",
+  "trials": 2,
+  "proof_scope": "entrypoint-backed workflow phase regression for project-watchdog receipts",
+  "claims": {
+    "proves": "project-watchdog emits explicit workflow_phases for route classification and failure alert policy through its real Python package/tests.",
+    "does_not_prove": "a live cron tick dispatched, a provider repaired a ticket, or GitHub was mutated."
+  },
+  "cases": [
+    {
+      "name": "workflow-phases-contract-real-world",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "uv run --project .. pytest ../tests/test_workflow_phases.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      }
+    },
+    {
+      "name": "workflow-phases-negative-needs-attention-alert-policy",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "uv run --project .. python - <<'PY'\nimport sys\nfrom pathlib import Path\nsys.path.insert(0, str(Path('../scripts').resolve()))\nfrom watchdog import primary\nproject={'project_id':'p','repo':'o/r','worktree':'/tmp'}\nissue={'number':1,'labels':[{'name':'agent-work'}], 'watchdog_action':'ticket_repair'}\nr=primary.failure(project, issue, 'boom')\nph={p['id']: p for p in r['workflow_phases']}\nassert r['status']=='NEEDS_ATTENTION'\nassert ph['ops_discord_alert']['status']=='PENDING'\nassert 'COMPLETED does not alert' in ph['ops_discord_alert']['details'][0]\nprint('NEGATIVE-POLICY-PASS')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "NEGATIVE-POLICY-PASS"
+        ]
+      }
+    }
+  ]
+}
