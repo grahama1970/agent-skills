@@ -100,6 +100,15 @@
       "evidence_class": "deterministic"
     },
     {
+      "name": "debugger-source-reveal-receipt-boundary",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "-c", "cd .. && python3 - <<'PY' >/tmp/explain-project-debugger-reveal-status.json\nimport json\nprint(json.dumps({\"id\":\"debugger-reveal-fixture-12345\",\"requestHash\":\"a\"*64,\"proofValid\":True,\"status\":\"revealed\",\"reveal\":{\"file\":\"/tmp/explain-project-workspace/src/anonymization_trial/pipeline.py\",\"line\":210,\"selected\":True,\"api\":[\"workspace.openTextDocument\",\"window.showTextDocument(preserveFocus)\",\"TextEditor.selection\",\"TextEditor.revealRange\"]}}))\nPY\nmkdir -p /tmp/explain-project-workspace/src/anonymization_trial && ./run.sh debugger-source-reveal-receipt --status /tmp/explain-project-debugger-reveal-status.json --workspace /tmp/explain-project-workspace --source-file src/anonymization_trial/pipeline.py --start-line 180 --end-line 220 --feature-id publish.report_last --step-id staging --request-revision 1 | tee /tmp/explain-project-debugger-source-reveal-receipt.json && python3 - <<'PY'\nimport json\nd=json.load(open('/tmp/explain-project-debugger-source-reveal-receipt.json'))\nassert d['schema'] == 'explain_project.adapter_receipt.v1'\nassert d['adapter'] == 'source_reveal'\nassert d['status'] == 'REVEALED'\nprint('EXPLAIN_PROJECT_DEBUGGER_SOURCE_REVEAL_RECEIPT_OK')\nPY"],
+      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_DEBUGGER_SOURCE_REVEAL_RECEIPT_OK"]},
+      "readback": true,
+      "evidence_class": "deterministic"
+    },
+    {
       "name": "ui-contract-static-check",
       "type": "positive",
       "real_world": true,

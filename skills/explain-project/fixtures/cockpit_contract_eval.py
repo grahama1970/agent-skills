@@ -11,6 +11,7 @@ from explain_project_core.adapters import (
 )
 from explain_project_core.catalog import sample_record
 from explain_project_core.models import (
+    AdapterReceipt,
     COCKPIT_EVENT_ADAPTER,
     LiveEvidenceQuestionPayload,
     QuestionInput,
@@ -309,6 +310,55 @@ def main() -> None:
             )
         ),
         "source reveal was not intent-only",
+    )
+
+    reveal_receipt_event = (
+        COCKPIT_EVENT_ADAPTER
+        .validate_python(
+            {
+                "schema": (
+                    "explain_project."
+                    "cockpit_event.v1"
+                ),
+                "event_id": "evt-source-receipt",
+                "type": "adapter.receipt",
+                "expected_revision": reveal_state.revision,
+                "payload": {
+                    "receipt": AdapterReceipt(
+                        receipt_id="source-reveal-receipt-12345",
+                        adapter="source_reveal",
+                        request_revision=reveal_state.revision,
+                        feature_id=(
+                            reveal_state.selection.feature_id
+                        ),
+                        step_id=reveal_state.selection.step_id,
+                        status="REVEALED",
+                        detail=(
+                            "debugger_status=/tmp/status.json; "
+                            "revealed=src/anonymization_trial/"
+                            "pipeline.py:210"
+                        ),
+                    ).model_dump(
+                        by_alias=True,
+                        mode="json",
+                    )
+                },
+            }
+        )
+    )
+
+    receipt_state = reduce_cockpit(
+        reveal_state,
+        reveal_receipt_event,
+        rows,
+    )
+
+    require(
+        (
+            receipt_state.integration_health.source_reveal
+            == "READY"
+        ),
+        "source reveal receipt did not mark source health READY",
     )
 
     prepare_event = (

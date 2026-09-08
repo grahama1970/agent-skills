@@ -373,6 +373,41 @@ class DebuggerProofReference(StrictModel):
     proves: str = Field(min_length=1)
 
 
+class DebuggerRevealLocation(StrictModel):
+    file: str = Field(min_length=1)
+    line: int = Field(ge=1)
+    column: int | None = Field(default=None, ge=1)
+    endLine: int | None = Field(default=None, ge=1)
+    endColumn: int | None = Field(default=None, ge=1)
+    selected: Literal[True]
+    api: list[str] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def api_proves_preserve_focus_reveal(self) -> "DebuggerRevealLocation":
+        required = {
+            "window.showTextDocument(preserveFocus)",
+            "TextEditor.revealRange",
+        }
+        if not required.issubset(set(self.api)):
+            raise ValueError(
+                "debugger reveal must use preserve-focus revealRange API"
+            )
+        return self
+
+
+class DebuggerRevealStatus(StrictModel):
+    """Debugger VS Code bridge source-reveal status boundary."""
+
+    id: str = Field(min_length=1)
+    requestHash: str = Field(min_length=64, max_length=64)
+    proofValid: Literal[True]
+    status: Literal["revealed"]
+    reveal: DebuggerRevealLocation
+    authority: dict[str, Any] | None = None
+    artifactLocations: dict[str, str] | None = None
+    updatedAt: str | None = None
+
+
 class AdapterReceipt(StrictModel):
     """External adapter readback bound to the intent revision."""
 

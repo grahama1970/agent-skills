@@ -6,6 +6,7 @@ or start the local cockpit API. Product logic lives in package modules.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -20,8 +21,10 @@ from .catalog import (
     write_sample,
 )
 from .models import (
+    AdapterReceipt,
     CockpitProof,
     CockpitScript,
+    DebuggerRevealStatus,
     FailureCode,
     FeatureExplainer,
     TriagedFailure,
@@ -319,6 +322,124 @@ def interaction_manifest_command(
                 }
             ],
         }
+    )
+
+
+@app.command("debugger-source-reveal-receipt")
+def debugger_source_reveal_receipt_command(
+    status: Path = typer.Option(
+        ...,
+        "--status",
+        help="Debugger VS Code bridge status JSON.",
+    ),
+    workspace: Path = typer.Option(
+        Path("."),
+        "--workspace",
+        help="Workspace root used to resolve relative source paths.",
+    ),
+    source_file: Path = typer.Option(
+        ...,
+        "--source-file",
+    ),
+    start_line: int = typer.Option(
+        ...,
+        "--start-line",
+        min=1,
+    ),
+    end_line: int = typer.Option(
+        ...,
+        "--end-line",
+        min=1,
+    ),
+    feature_id: str = typer.Option(
+        ...,
+        "--feature-id",
+    ),
+    step_id: str = typer.Option(
+        ...,
+        "--step-id",
+    ),
+    request_revision: int = typer.Option(
+        ...,
+        "--request-revision",
+        min=0,
+    ),
+) -> None:
+    """Validate a $debugger source reveal status and emit a cockpit receipt."""
+
+    if end_line < start_line:
+        _emit(
+            TriagedFailure(
+                failure_code=(
+                    FailureCode
+                    .PYDANTIC_VALIDATION_FAILED
+                ),
+                message="end_line must be >= start_line",
+            )
+        )
+        raise typer.Exit(2)
+
+    try:
+        raw = status.read_text(
+            encoding="utf-8"
+        )
+        reveal_status = DebuggerRevealStatus.model_validate_json(
+            raw
+        )
+    except ValidationError as error:
+        _emit(
+            TriagedFailure(
+                failure_code=(
+                    FailureCode
+                    .PYDANTIC_VALIDATION_FAILED
+                ),
+                message="debugger reveal status validation failed",
+                errors=_validation_errors(error),
+            )
+        )
+        raise typer.Exit(1)
+
+    expected = source_file
+    if not expected.is_absolute():
+        expected = workspace / expected
+
+    actual = Path(reveal_status.reveal.file)
+
+    if actual.resolve() != expected.resolve() or not (
+        start_line <= reveal_status.reveal.line <= end_line
+    ):
+        _emit(
+            TriagedFailure(
+                failure_code=(
+                    FailureCode
+                    .ADAPTER_RECEIPT_MISMATCH
+                ),
+                message=(
+                    "debugger reveal status does not match "
+                    "the requested source range"
+                ),
+            )
+        )
+        raise typer.Exit(1)
+
+    digest = hashlib.sha256(
+        raw.encode("utf-8")
+    ).hexdigest()
+
+    _emit(
+        AdapterReceipt(
+            receipt_id=reveal_status.id,
+            adapter="source_reveal",
+            request_revision=request_revision,
+            feature_id=feature_id,
+            step_id=step_id,
+            status="REVEALED",
+            detail=(
+                f"debugger_status={status}; "
+                f"sha256:{digest}; "
+                f"revealed={actual}:{reveal_status.reveal.line}"
+            ),
+        )
     )
 
 
