@@ -168,6 +168,14 @@
         "deterministic": true,
         "live_e2e": true
       }
+    },
+    {
+      "id": "shame.spiral_ticket_request",
+      "description": "Shame retry exhaustion is retained as a distinct failure event and converted into a ticket request for agent-work project-watchdog repair routing.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "cases": [
@@ -804,6 +812,36 @@
         ],
         "stdout_excludes": [
           "Traceback"
+        ]
+      }
+    },
+    {
+      "name": "spiral-ticket-request",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.spiral_ticket_request"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--with",
+        "pydantic",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-spiral-ticket-request.py"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "lazy_report_shame.spiral_ticket_request_eval.v1",
+          "ticket command creates an agent-work maintenance ticket",
+          "project-watchdog route is ticket_repair"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "AssertionError"
         ]
       }
     }

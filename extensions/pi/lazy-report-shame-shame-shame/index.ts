@@ -17,6 +17,7 @@ const REPORT_CHECK = join(EXTENSION_DIR, "status-json-check.mjs");
 const SHAME_AUDIO = process.env.LAZY_REPORT_SHAME_AUDIO || join(EXTENSION_DIR, "shame.wav");
 const TRAINING_JSONL = process.env.LAZY_REPORT_SHAME_TRAINING_JSONL || "/mnt/storage12tb/skills/shame/training/classifier-feedback.jsonl";
 const PENDING_REVIEW_PACKET = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || "/mnt/storage12tb/skills/shame/training/pending-review-packet.json";
+const SPIRAL_TICKET_OUTBOX = process.env.LAZY_REPORT_SHAME_SPIRAL_TICKET_OUTBOX || "/mnt/storage12tb/skills/shame/ticket-outbox";
 const CONFIGURED_MEMORY_URL = process.env.MEMORY_SERVICE_URL || process.env.MEMORY_API_URL || "";
 const MEMORY_URL = (CONFIGURED_MEMORY_URL.startsWith("unix://") ? "http://127.0.0.1:8601" : (CONFIGURED_MEMORY_URL || "http://127.0.0.1:8601")).replace(/\/+$/, "");
 const MEMORY_COLLECTION = process.env.SHAME_MEMORY_COLLECTION || "shame_training_examples";
@@ -256,6 +257,164 @@ function normalizeTriageCode(value: unknown): string | null {
   return normalized;
 }
 
+function stripCommandPunctuation(value: string): string {
+  let text = value.trim();
+  const wrappers = new Set(["`", "'", "\"", "(", ")", "[", "]", "{", "}", ",", ";", ":"]);
+  while (text && wrappers.has(text[0])) text = text.slice(1);
+  while (text && wrappers.has(text[text.length - 1])) text = text.slice(0, -1);
+  return text;
+}
+
+function commandTokens(value: unknown): string[] {
+  return tokenize(value).map(stripCommandPunctuation).filter(Boolean);
+}
+
+function isCommandPath(token: string): boolean {
+  return token.includes("/")
+    || token.endsWith(".sh")
+    || token.endsWith(".py")
+    || token.endsWith(".mjs")
+    || token.endsWith(".js")
+    || token.endsWith(".ts");
+}
+
+function isCommandRunner(token: string): boolean {
+  return new Set(["uv", "python", "python3", "node", "bash", "sh", "npm", "pnpm", "pytest", "git", "gh"]).has(token);
+}
+
+function isEnvironmentAssignment(token: string): boolean {
+  return !token.startsWith("-") && token.includes("=") && token.indexOf("=") > 0;
+}
+
+function skipEnvPrefix(tokens: string[]): number {
+  if (tokens[0] !== "env") return 0;
+  let i = 1;
+  while (i < tokens.length) {
+    const token = tokens[i];
+    if (isEnvironmentAssignment(token)) {
+      i += 1;
+    } else if (token === "-u" || token === "--unset") {
+      i += 2;
+    } else if (token.startsWith("-")) {
+      i += 1;
+    } else {
+      break;
+    }
+  }
+  return i;
+}
+
+function skipUvRunPrefix(tokens: string[], start: number): number {
+  if (tokens[start] !== "uv" || tokens[start + 1] !== "run") return start;
+  let i = start + 2;
+  const valueOptions = new Set([
+    "-p",
+    "--config-file",
+    "--directory",
+    "--env-file",
+    "--from",
+    "--index",
+    "--index-url",
+    "--keyring-provider",
+    "--link-mode",
+    "--package",
+    "--project",
+    "--python",
+    "--resolution",
+    "--with",
+    "--with-editable",
+    "--with-requirements",
+  ]);
+  while (i < tokens.length) {
+    const token = tokens[i];
+    if (token === "--") return i + 1;
+    if (isEnvironmentAssignment(token)) {
+      i += 1;
+    } else if (valueOptions.has(token)) {
+      i += 2;
+    } else if ([...valueOptions].some((option) => token.startsWith(`${option}=`))) {
+      i += 1;
+    } else if (token.startsWith("-")) {
+      i += 1;
+    } else {
+      break;
+    }
+  }
+  return i;
+}
+
+function pythonScriptIndex(tokens: string[], start: number): number {
+  let i = start + 1;
+  const valueOptions = new Set(["-c", "-m", "-W", "-X"]);
+  while (i < tokens.length) {
+    const token = tokens[i];
+    if (token === "--") return i + 1;
+    if (valueOptions.has(token)) return token === "-m" ? i : i + 1;
+    if ([...valueOptions].some((option) => token.startsWith(`${option}`) && token.length > option.length)) return i;
+    if (token.startsWith("-")) {
+      i += 1;
+    } else {
+      return i;
+    }
+  }
+  return start;
+}
+
+function substantiveCommandIndex(tokens: string[]): number {
+  let start = skipEnvPrefix(tokens);
+  start = skipUvRunPrefix(tokens, start);
+  const token = tokens[start];
+  if (token === "python" || token === "python3") return pythonScriptIndex(tokens, start);
+  if (["node", "bash", "sh"].includes(token) && tokens[start + 1]) return start + 1;
+  if (start < tokens.length) return start;
+  return -1;
+}
+
+function flagValueToken(token: string, flag: string): string | null {
+  const prefix = `${flag}=`;
+  return token.startsWith(prefix) && token.length > prefix.length ? token.slice(prefix.length) : null;
+}
+
+function stableCommandIdentity(kind: string, value: unknown): string | null {
+  const tokens = commandTokens(value);
+  if (!tokens.length) return null;
+
+  let commandIndex = substantiveCommandIndex(tokens);
+  if (commandIndex >= 0 && tokens[commandIndex - 1] === "-m") commandIndex -= 1;
+  if (commandIndex >= 0 && tokens[commandIndex - 1] === "-c") commandIndex -= 1;
+  if (commandIndex >= 0 && !isCommandPath(tokens[commandIndex]) && !isCommandRunner(tokens[commandIndex]) && !["-m", "-c"].includes(tokens[commandIndex])) commandIndex = -1;
+  if (commandIndex < 0) {
+    for (let i = 0; i < tokens.length; i += 1) {
+      if (isCommandPath(tokens[i])) {
+        commandIndex = i;
+        break;
+      }
+    }
+  }
+  if (commandIndex < 0) {
+    commandIndex = tokens.findIndex(isCommandRunner);
+  }
+  if (commandIndex < 0) return null;
+
+  const command = tokens[commandIndex] === "-m" && tokens[commandIndex + 1]
+    ? `python_module:${tokens[commandIndex + 1]}`
+    : (tokens[commandIndex] === "-c" ? "python_inline" : tokens[commandIndex]);
+  const subcommandIndex = tokens[commandIndex] === "-m" ? commandIndex + 2 : commandIndex + 1;
+  const pieces = [`${kind}:${command}`];
+  const subcommand = tokens[subcommandIndex];
+  if (subcommand && !subcommand.startsWith("-")) pieces.push(`subcommand:${subcommand}`);
+
+  for (let i = commandIndex + 1; i < tokens.length; i += 1) {
+    const token = tokens[i];
+    for (const flag of ["--case", "--check", "--target", "--id"]) {
+      const inline = flagValueToken(token, flag);
+      if (inline) pieces.push(`${flag}:${inline}`);
+      else if (token === flag && tokens[i + 1]) pieces.push(`${flag}:${tokens[i + 1]}`);
+    }
+  }
+  return pieces.join("\n");
+}
+
 function trustedGoalIdentity(status: any): string | null {
   const goalHash = nonEmptyText(status?.goal_hash);
   if (goalHash) return `goal_hash:${goalHash.toLowerCase()}`;
@@ -267,11 +426,11 @@ function trustedGoalIdentity(status: any): string | null {
 function failedOperationIdentity(status: any, triage: any): string {
   const verified = Array.isArray(status?.verified) ? status.verified : [];
   for (const item of verified) {
-    const command = nonEmptyText(item?.command);
-    if (command) return `verified_command:${command}`;
+    const command = stableCommandIdentity("verified_command", item?.command);
+    if (command) return command;
   }
-  const nextCommand = nonEmptyText(triage?.next_command);
-  if (nextCommand) return `triage_next_command:${nextCommand}`;
+  const nextCommand = stableCommandIdentity("triage_next_command", triage?.next_command);
+  if (nextCommand) return nextCommand;
   return "operation:unspecified";
 }
 
@@ -752,6 +911,66 @@ function retryEvidenceSnapshot(candidate: Candidate, check: CheckResult): Array<
   });
 }
 
+function writeSpiralTicketRequest(candidate: Candidate, check: CheckResult, reviewPacketPath: string, decision: Record<string, unknown>): string {
+  const fingerprint = sha256([candidate.session_id || candidate.session_file || "unknown-session", candidate.turn_id, ...check.reason_codes].join("\n"));
+  const id = fingerprint.slice(7, 23);
+  mkdirSync(SPIRAL_TICKET_OUTBOX, { recursive: true });
+  const requestPath = join(SPIRAL_TICKET_OUTBOX, `${id}.json`);
+  if (existsSync(requestPath)) return requestPath;
+  const bodyPath = join(SPIRAL_TICKET_OUTBOX, `${id}.md`);
+  const title = `Fix shame spiral ${id}`;
+  const body = [
+    `# ${title}`,
+    "",
+    "## Current state",
+    "A shame report repair exhausted its bounded retry budget. This should be rare and must become repair work instead of chat-only noise.",
+    "",
+    "## Failure codes",
+    ...check.reason_codes.map((code) => `- ${code}`),
+    "",
+    "## Required proof",
+    "Run a retained shame eval that reproduces the spiral class and proves the fix prevents the same retry exhaustion.",
+    "",
+    "## Context",
+    `- review_packet: ${reviewPacketPath}`,
+    `- candidate_hash: ${candidate.response_sha256}`,
+    `- checker: ${check.checker_version}`,
+  ].join("\n");
+  writeFileSync(bodyPath, body + "\n");
+  const ticketCommand = [
+    "skills/ticket/run.sh maintenance",
+    JSON.stringify(title),
+    "--target skills/shame",
+    "--invariant", JSON.stringify("Shame spirals are converted into tracked repair work instead of silently exhausting retries."),
+    "--cleanup", JSON.stringify(check.reason_codes.join(", ")),
+    "--scoped-files skills/shame",
+    "--proof", JSON.stringify("retained shame eval for the reported spiral class"),
+    "--route backend_python_or_skill_runtime",
+    "--agent agent-skill-maintainer",
+    "--label agent-work",
+    "--apply",
+  ].join(" ");
+  const request = {
+    schema: "lazy_report_shame.spiral_ticket_request.v1",
+    fingerprint,
+    title,
+    target: "skills/shame",
+    route: "backend_python_or_skill_runtime",
+    agent: "agent-skill-maintainer",
+    labels: ["agent-work"],
+    reason_codes: check.reason_codes,
+    candidate_hash: candidate.response_sha256,
+    checker: check.checker_version,
+    review_packet: reviewPacketPath,
+    recovery_decision: decision,
+    body_path: bodyPath,
+    ticket_command: ticketCommand,
+    watchdog_route: "project-watchdog -> ticket_repair",
+  };
+  writeFileSync(requestPath, JSON.stringify(request, null, 2) + "\n");
+  return requestPath;
+}
+
 function retryPrompt(candidate: Candidate, check: CheckResult, reviewPacketPath: string, decision: Record<string, unknown>, taskBudget?: object): string {
   const packet = {
     schema: "lazy_report_shame.retry_request.v1",
@@ -1190,10 +1409,15 @@ export default function lazyReportShameShameShame(pi: any) {
         ctx?.ui?.notify?.(`lazy-report-shame-shame-shame could not write review packet: ${error instanceof Error ? error.message : String(error)}`, "warning");
       }
 
-      recordFailure(ctx, { kind: "report_rejected", goal: status?.goal || null, candidate_hash: lastCandidate.response_sha256,
-        reason_codes: check.reason_codes, checker_version: check.checker_version, review_packet: reviewPacketPath,
-        excerpt: candidateExcerpt(lastCandidate), retry: { planned: !alreadyRetried, reason: pipelineClaim.reason } });
       const finalDecision = recoveryDecision(check, alreadyRetried, budget.current?.phase);
+      let spiralTicketRequestPath: string | null = null;
+      if (alreadyRetried) {
+        try { spiralTicketRequestPath = writeSpiralTicketRequest(lastCandidate, check, reviewPacketPath, finalDecision); }
+        catch (error) { recordFailure(ctx, { kind: "spiral_ticket_request_failed", error_excerpt: String(error).slice(0, 1000), reason_codes: check.reason_codes }); }
+      }
+      recordFailure(ctx, { kind: alreadyRetried ? "report_retry_exhausted" : "report_rejected", goal: status?.goal || null, candidate_hash: lastCandidate.response_sha256,
+        reason_codes: check.reason_codes, checker_version: check.checker_version, review_packet: reviewPacketPath,
+        excerpt: candidateExcerpt(lastCandidate), retry: { planned: !alreadyRetried, reason: pipelineClaim.reason }, spiral_ticket_request: spiralTicketRequestPath });
       const notice = rejectionNotice(lastCandidate, check, alreadyRetried, reviewPacketPath, finalDecision);
       playShameAudio(lastAudioPlayedAt);
       if (!alreadyRetried) {

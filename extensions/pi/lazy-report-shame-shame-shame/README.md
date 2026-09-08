@@ -152,6 +152,11 @@ The raw file remains available for older history. New history starts when this
 runtime loads; old session transcripts are not automatically backfilled.
 
 Log-write failures produce visible warnings without starting another retry loop.
+When report repair is exhausted, the event is recorded as `report_retry_exhausted`
+and a `lazy_report_shame.spiral_ticket_request.v1` record is written under
+`/mnt/storage12tb/skills/shame/ticket-outbox/`. The record contains the `$ticket`
+maintenance command for an `agent-work` issue targeting `skills/shame`; once applied,
+`$project-watchdog` handles it through `ticket_repair`.
 Journal files are created owner-only. Retained proof lives in
 canonical cases `invalid-proof-recovery` and `feedback-and-session-isolation`.
 

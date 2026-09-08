@@ -160,7 +160,11 @@ An agent-reported failure is not independent proof of its underlying cause.
 History reads default to the current session when available; `--all` requests all
 sessions. The reader scans the last 4 MiB and bounds returned JSON to 32 KiB;
 `tail_limited`, `output_limited`, and `malformed_lines` expose incomplete reads.
-A log-write error is visible and does not create another retry loop. No automatic
+A log-write error is visible and does not create another retry loop. Retry exhaustion
+is rare by design; when it occurs, the extension records `report_retry_exhausted`
+and writes a `lazy_report_shame.spiral_ticket_request.v1` outbox entry for a
+`skills/shame` maintenance ticket with `agent-work` routing, so project-watchdog can
+pick it up through `ticket_repair` after the ticket is applied. No automatic
 backfill or classifier labeling is performed.
 
 Latest candidate recovery remains session-scoped and atomic:
