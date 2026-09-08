@@ -20,9 +20,8 @@ Composes the accepted successor observation packet
 Only Tau may reach scillm: all VLM calls go through
 ``tau_vlm_review_adapter``. Whisper/ffmpeg run locally. No paid provider calls.
 
-``assemble_packet`` is a pure function (deterministic, no live calls) exercised
-by the test-suite with fixtures. ``main`` performs the live enrichment and
-writes the accepted packet.
+``assemble_packet`` is a pure function (deterministic, no live calls).
+``main`` performs the live enrichment and writes the accepted packet.
 """
 from __future__ import annotations
 

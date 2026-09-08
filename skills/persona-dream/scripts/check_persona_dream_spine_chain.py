@@ -15,8 +15,8 @@ from typing import Any, Mapping
 ROOT = Path(__file__).resolve().parents[1]
 REPO = ROOT.parents[1]
 VALIDATOR = ROOT / "scripts/validate_persona_dream_spine_chain.py"
-GOOD_MANIFEST = ROOT / "tests/fixtures/spine_chain/good/spine_chain_manifest.v1.json"
-NEGATIVE_ROOT = ROOT / "tests/fixtures/spine_chain/negative"
+GOOD_MANIFEST = ROOT / "fixtures/contract/spine_chain/good/spine_chain_manifest.v1.json"
+NEGATIVE_ROOT = ROOT / "fixtures/contract/spine_chain/negative"
 GOAL_HASH = "sha256:3df4d7875d50b0b81c30ac57b55eaf18800d97e6c15add11f040ea69da975147"
 
 
@@ -116,7 +116,7 @@ def main() -> int:
     context = start_payload.get("context") if isinstance(start_payload.get("context"), Mapping) else {}
     current_node = str(context.get("dag_node_id") or context.get("dag_agent_role") or "")
     if current_node == "review-checker":
-        manifest_path = ROOT / "tests/fixtures/spine_chain/good/spine_chain_manifest.v1.json"
+        manifest_path = ROOT / "fixtures/contract/spine_chain/good/spine_chain_manifest.v1.json"
         handoff = {
             "schema": "tau.agent_handoff.v1",
             "github": _github(start_payload),

@@ -16,7 +16,7 @@ from phase07_storyboard_tau_node import _generate_image, _run_phase07_live_prefl
 
 
 ROOT = Path(__file__).resolve().parents[1]
-GOOD_CHAIN = ROOT / "tests/fixtures/spine_chain/good"
+GOOD_CHAIN = ROOT / "fixtures/contract/spine_chain/good"
 
 
 CASES = {
@@ -142,7 +142,7 @@ def _run_case(name: str, run_root: Path) -> dict[str, Any]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--fixtures-root", type=Path, default=ROOT / "tests/fixtures/phase07_live_preflight")
+    parser.add_argument("--fixtures-root", type=Path, default=ROOT / "fixtures/contract/phase07_live_preflight")
     parser.add_argument("--receipt-out", type=Path)
     args = parser.parse_args()
     start_payload = _read_start_payload()

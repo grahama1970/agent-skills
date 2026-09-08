@@ -5,7 +5,7 @@ The three external reviews all flagged the same defect: README/GOAL/HANDOFF are
 supersession stacks a reader must replay top-to-bottom to find current truth.
 This generator reads the authority receipts and emits one current-truth page.
 Run with --check to fail (exit 1) when the committed CURRENT_STATE.md drifts
-from the receipts; wired into run.sh test-suite so drift is a test failure.
+from the receipts; wire that command into agentic-evals when it is readiness-relevant.
 """
 from __future__ import annotations
 

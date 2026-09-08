@@ -239,7 +239,6 @@ specialist validators, provider lanes, and historical commands. Use
 | `./run.sh check-current-state-consistency --strict` | Fail closed when current-state surfaces contradict receipts | None |
 | `./run.sh session-mood-voice-recognition` | Score session-mood renders for Embry identity | None; requires a speaker backend |
 | `./run.sh check-agentic-eval-no-pytest fixtures/agentic_eval.json --json` | Fail if agentic-evals delegates proof to pytest/unit tests | None |
-| `./run.sh test-suite` | Legacy pytest net for local development only; not completion proof | None |
 
 Current phase, blockers, and next step are NOT in this file. Read
 [`CURRENT_STATUS.json`](CURRENT_STATUS.json).
@@ -533,9 +532,9 @@ a panel's composition contract deliberately makes a character's face non-readabl
 on one frame (e.g. a visible-speaker lip-sync-avoidance requirement), that same
 frame cannot also be required to pass a full frontal face-identity check — the two
 gates have no overlap and no generation can satisfy both. The resolution is the
-scoped **anchored-identity waiver** (`scripts/anchored_identity_waiver.py`,
-unit-tested in `tests/test_anchored_identity_waiver.py`), which implements the
-recorded design decision from the step-38 composition delta, not a new policy.
+scoped **anchored-identity waiver** (`scripts/anchored_identity_waiver.py`),
+which implements the recorded design decision from the step-38 composition
+delta, not a new policy.
 
 A character's end-frame identity check may be waived **only** when ALL of:
 
@@ -1190,8 +1189,8 @@ Run:
 The sanity gate runs positive and negative command-level checks, then enforces
 `check-agentic-eval-no-pytest` and runs `$agentic-evals` against
 `fixtures/agentic_eval.json`. Agentic evals are the completion driver for
-pipeline-step readiness; pytest/unit tests are legacy local development noise
-and must not be used as proof that a step works.
+pipeline-step readiness. The old pytest unit-test pile was culled because it was
+self-serving inventory noise, not proof that a pipeline step works.
 
 ## Project Knowledge
 

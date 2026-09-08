@@ -22,8 +22,8 @@ vision) degrade explicitly: the blocker is recorded per capability and the
 remaining validation still runs. No output is faked.
 
 The pure functions (``build_observation_packet``, ``validate_observation_packet``,
-``evaluate_validation``) contain no live calls and are exercised by
-``tests/test_watch_post_return_gauntlet.py``.
+``evaluate_validation``) contain no live calls; readiness-relevant checks belong
+in agentic-evals.
 """
 from __future__ import annotations
 

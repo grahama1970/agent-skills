@@ -21,7 +21,6 @@ Commands:
   write-dream-journal  Write the persona_journal.v1 entry (spine step 2)
   read                 Print PROJECT_KNOWLEDGE.md before running pipeline phases
   doctor               Preflight the whole dream chain (tau nodes, insightface, scillm, GMO, anchors); fails loud with fixes
-  test-suite           Legacy pytest contract suite (not a completion proof; use agentic-evals)
   check-pctom-measurement-validity-v2  Gate: PCTOM-R measurement must be falsifiable before live spend
   run-pctom-v2-validity-lane  Rebuild the frozen PCTOM-R v2 corpus + estimator and re-prove the validity-v2 gate
   build-pctom-v2-corpus  Build the condition-blind PCTOM-R v2 corpus from hidden simulator state
@@ -277,22 +276,22 @@ Examples:
   ./run.sh convert-accepted-storyboard-to-kling --storyboard-packet /mnt/storage12tb/persona-dream/phase07_tau_runs/<run-id>/work/storyboard_packet.json --output-root /mnt/storage12tb/persona-dream/phase07_tau_runs/<run-id>/work/phase08_kling_scene_packet --json
   ./run.sh validate-kling-scene-packet /mnt/storage12tb/persona-dream/phase07_tau_runs/<run-id>/work/phase08_kling_scene_packet/kling_scene_packet.json --receipt-out /tmp/kling_scene_packet_validation_receipt.json --json
   ./run.sh check-kling-scene-packet-dry-run-gate --storyboard-packet /mnt/storage12tb/persona-dream/phase07_tau_runs/<run-id>/work/storyboard_packet.json --output-root /mnt/storage12tb/persona-dream/phase07_tau_runs/<run-id>/work/phase08_kling_scene_packet --receipt-out /tmp/kling_scene_packet_dry_run_gate_receipt.json --json
-  ./run.sh check-respawn-plan --fixtures-root tests/fixtures/respawn --receipt-out /tmp/persona-dream-respawn/check_receipt.json --json
-  ./run.sh check-stale-write-fence --fixtures-root tests/fixtures/stale-write-fence --receipt-out /tmp/persona-dream-stale-write-fence/check_receipt.json --json
-  ./run.sh check-global-progress-rollup --fixtures-root tests/fixtures/global-progress-rollup --receipt-out /tmp/persona-dream-global-progress/check_receipt.json --json
-  ./run.sh check-dynamic-respawn-events --fixtures-root tests/fixtures/dynamic-respawn-events --receipt-out /tmp/persona-dream-dynamic-respawn/check_receipt.json --json
-  ./run.sh check-creator-reviewer-respawn-loop --fixtures-root tests/fixtures/creator-reviewer-respawn-loop --receipt-out /tmp/persona-dream-creator-reviewer-loop/check_receipt.json --json
-  ./run.sh check-persona-dream-run-state --fixtures-root tests/fixtures/run-state --receipt-out /tmp/persona-dream-run-state/check_receipt.json --json
+  ./run.sh check-respawn-plan --fixtures-root fixtures/contract/respawn --receipt-out /tmp/persona-dream-respawn/check_receipt.json --json
+  ./run.sh check-stale-write-fence --fixtures-root fixtures/contract/stale-write-fence --receipt-out /tmp/persona-dream-stale-write-fence/check_receipt.json --json
+  ./run.sh check-global-progress-rollup --fixtures-root fixtures/contract/global-progress-rollup --receipt-out /tmp/persona-dream-global-progress/check_receipt.json --json
+  ./run.sh check-dynamic-respawn-events --fixtures-root fixtures/contract/dynamic-respawn-events --receipt-out /tmp/persona-dream-dynamic-respawn/check_receipt.json --json
+  ./run.sh check-creator-reviewer-respawn-loop --fixtures-root fixtures/contract/creator-reviewer-respawn-loop --receipt-out /tmp/persona-dream-creator-reviewer-loop/check_receipt.json --json
+  ./run.sh check-persona-dream-run-state --fixtures-root fixtures/contract/run-state --receipt-out /tmp/persona-dream-run-state/check_receipt.json --json
   ./run.sh write-run-state-from-run-root --run-root /mnt/storage12tb/skills/persona-dream/outputs/<run-id> --output /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/dream_run_state.v1.json --progress-source-out /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/global_progress_sources.v1.json --json
-  ./run.sh check-run-root-state --fixtures-root tests/fixtures/run-root-state --receipt-out /tmp/persona-dream-run-root-state/check_receipt.json --json
+  ./run.sh check-run-root-state --fixtures-root fixtures/contract/run-root-state --receipt-out /tmp/persona-dream-run-root-state/check_receipt.json --json
   ./run.sh select-video-provider --scene-contract /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/video_scene_contract.v1.json --output /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/video_provider_scorecard.v1.json --json
-  ./run.sh check-video-provider-selection --fixtures-root tests/fixtures/video-provider-selection --receipt-out /tmp/persona-dream-video-provider-selection/check_receipt.json --json
+  ./run.sh check-video-provider-selection --fixtures-root fixtures/contract/video-provider-selection --receipt-out /tmp/persona-dream-video-provider-selection/check_receipt.json --json
   ./run.sh refresh-video-provider-registry --live-brave-search --receipt-out /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/provider_registry_refresh_receipt.v1.json --json
-  ./run.sh check-video-provider-registry-refresh --fixtures-root tests/fixtures/video-provider-registry-refresh --receipt-out /tmp/persona-dream-video-provider-refresh/check_receipt.json --json
+  ./run.sh check-video-provider-registry-refresh --fixtures-root fixtures/contract/video-provider-registry-refresh --receipt-out /tmp/persona-dream-video-provider-refresh/check_receipt.json --json
   ./run.sh write-video-provider-packet --scene-contract /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/video_scene_contract.v1.json --scorecard /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/video_provider_scorecard.v1.json --media-lock /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/media_lock_manifest.v1.json --output-root /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/video_provider_packet --json
-  ./run.sh check-video-provider-packet-routing --fixtures-root tests/fixtures/video-provider-packet-routing --receipt-out /tmp/persona-dream-video-provider-packet-routing/check_receipt.json --json
+  ./run.sh check-video-provider-packet-routing --fixtures-root fixtures/contract/video-provider-packet-routing --receipt-out /tmp/persona-dream-video-provider-packet-routing/check_receipt.json --json
   ./run.sh check-fal-api-preflight --live --receipt-out /tmp/persona-dream-fal-api-preflight/live_receipt.json --json
-  ./run.sh check-fal-api-preflight-fixtures --fixtures-root tests/fixtures/fal-api-preflight --receipt-out /tmp/persona-dream-fal-api-preflight/check_receipt.json --json
+  ./run.sh check-fal-api-preflight-fixtures --fixtures-root fixtures/contract/fal-api-preflight --receipt-out /tmp/persona-dream-fal-api-preflight/check_receipt.json --json
   ./run.sh check-pipeline-robustness --output-root /tmp/persona-dream-robustness --json
   ./run.sh check-pipeline-contract --json
   ./run.sh write-phase10-reproducibility-receipt --json
@@ -1051,11 +1050,6 @@ case "$COMMAND" in
     # Static journal + chat page for one or more run dirs. Self-contained HTML,
     # opens from file://; no backend, no network references.
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/ux/render_journal_ux.py" "$@"
-    ;;
-  test-suite)
-    # Deterministic contract suite. Runs offline (no paid/live provider calls);
-    # any test that needs a live route must sit behind an opt-in marker, not here.
-    exec "${PYTHON[@]}" -m pytest "${SCRIPT_DIR}/tests" -q "$@"
     ;;
   help|--help|-h)
     usage

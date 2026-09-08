@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Persist the GREEN_CANONICAL_LANE CI-contract reconciliation to Memory.
+"""Persist the historical GREEN_CANONICAL_LANE reconciliation to Memory.
 
-Writes a governance record (persona_dream_governance) describing the restore-vs-retire
-decision, triage, and final pytest counts, then proves exact reread by _key.
-Fail-closed: exact reread mismatch aborts. No paid or live provider calls.
+Writes a governance record (persona_dream_governance) describing the old
+restore-vs-retire decision, then proves exact reread by _key. This is historical
+only; current readiness uses agentic-evals, not pytest counts.
 """
 from __future__ import annotations
 
@@ -35,8 +35,8 @@ def sha256_file(path: Path) -> str:
 
 def build_gov_doc(sha: str, at: str) -> dict[str, Any]:
     text = (
-        "Persona Dream GREEN_CANONICAL_LANE gate CLOSED (2026-07-19): the default pytest suite went from "
-        "29 failed / 313 passed to 0 failed / 342 passed, stable across two runs, zero skips. Decision: "
+        "Persona Dream GREEN_CANONICAL_LANE gate CLOSED (2026-07-19): the historical pytest suite once went from "
+        "29 failed / 313 passed to 0 failed / 342 passed, stable across two runs, zero skips. Decision at that time: "
         "RESTORE, not retire. Root cause was incomplete vendoring of the b68bf3d1 (2026-07-11) one-scene "
         "dry-run pipeline harness into skills/persona-dream/: schemas/kling_scene_packet.schema.json was "
         "referenced from day one but never committed; five subagent-contract AGENTS.md files were never "
@@ -49,10 +49,10 @@ def build_gov_doc(sha: str, at: str) -> dict[str, Any]:
         "Draft-2020-12 kling_scene_packet.schema.json (value gates stay in the Python validators, not "
         "const-pinned); (2) recreated the omitted fixture PNG and re-locked its sha256 in two receipts; "
         "(3) repointed the writers to skill-owned agents/ and created five real subagent contracts; (4) "
-        "corrected the stale PROJECT_KNOWLEDGE header expectation in test_run_sh_read; (5) resynced the "
+        "corrected the stale PROJECT_KNOWLEDGE header expectation; (5) resynced the "
         "MANIFEST SHA-256 patch-bundle (only the kling schema entry drifted, 4704->4108 bytes; "
-        "verify_manifest passes); (6) added ./run.sh test-suite and wired it into sanity.sh as the CI "
-        "guard. No revision/rung/qualification gate weakened, no assertion deleted, no paid/live calls."
+        "verify_manifest passes). Current readiness is agentic-evals; the pytest pile was culled. "
+        "No revision/rung/qualification gate weakened, no paid/live calls."
     )
     return {
         "_key": GOV_KEY,
@@ -79,7 +79,7 @@ def build_gov_doc(sha: str, at: str) -> dict[str, Any]:
             "fix_relocated_agent_contract_path": 7,
             "expectation_drift": 1,
         },
-        "ci_guard": "run.sh test-suite (wired into sanity.sh)",
+        "ci_guard": "agentic-evals fixture with command/artifact readbacks",
         "memory_write_method": "/upsert",
         "tags": [
             "persona-dream",

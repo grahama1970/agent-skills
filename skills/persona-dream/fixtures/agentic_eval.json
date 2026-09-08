@@ -54,7 +54,7 @@
       "real_world": true,
       "required": true,
       "supports_claims": ["persona_dream.agentic_pipeline_driver"],
-      "command": ["bash", "-lc", "OUT=/tmp/persona-dream-video-provider-packet-routing-agentic.json; bash ../run.sh check-video-provider-packet-routing --fixtures-root ../tests/fixtures/video-provider-packet-routing --receipt-out \"$OUT\" --json >/dev/null; python3 - <<'PY'\nimport json\nr=json.load(open('/tmp/persona-dream-video-provider-packet-routing-agentic.json'))\nassert r['status']=='PASS_VIDEO_PROVIDER_PACKET_ROUTING', r\nassert r['fixture_count']==3, r\nassert r['actual_provider_call_attempts']==0 and r['submitted'] is False, r\nprint('PROVIDER_PACKET_ROUTING_READBACK_OK')\nPY"],
+      "command": ["bash", "-lc", "OUT=/tmp/persona-dream-video-provider-packet-routing-agentic.json; bash ../run.sh check-video-provider-packet-routing --fixtures-root ../fixtures/contract/video-provider-packet-routing --receipt-out \"$OUT\" --json >/dev/null; python3 - <<'PY'\nimport json\nr=json.load(open('/tmp/persona-dream-video-provider-packet-routing-agentic.json'))\nassert r['status']=='PASS_VIDEO_PROVIDER_PACKET_ROUTING', r\nassert r['fixture_count']==3, r\nassert r['actual_provider_call_attempts']==0 and r['submitted'] is False, r\nprint('PROVIDER_PACKET_ROUTING_READBACK_OK')\nPY"],
       "expected": {"exit_code": 0, "stdout_contains": ["PROVIDER_PACKET_ROUTING_READBACK_OK"]}
     },
     {

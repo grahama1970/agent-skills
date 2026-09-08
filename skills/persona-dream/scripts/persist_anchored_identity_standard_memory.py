@@ -28,7 +28,6 @@ REVISION_ID = "rev_successor_943b01ecd9a3"
 REV_REL = f"reports/pipeline-complete/.persona-dream/revisions/{REVISION_ID}"
 DELTA_REL = f"{REV_REL}/step38_sb_003_composition_delta_proposal.v1.json"
 MODULE_REL = "scripts/anchored_identity_waiver.py"
-TESTS_REL = "tests/test_anchored_identity_waiver.py"
 DRIVER_REL = "scripts/lane_c_regenerate_sb_003_end_frame_waiver.py"
 
 KEY = f"persona_dream:{RUN_ID}:{REVISION_ID}:anchored_identity_standard"
@@ -39,15 +38,15 @@ def sha256_file(path: Path) -> str:
     return f"sha256:{hashlib.sha256(path.read_bytes()).hexdigest()}"
 
 
-def build_doc(at: str, contract_sha: str, module_sha: str, tests_sha: str) -> dict[str, Any]:
+def build_doc(at: str, contract_sha: str, module_sha: str) -> dict[str, Any]:
     text = (
         f"Persona Dream anchored-identity standard adopted (run {RUN_ID} revision {REVISION_ID}). "
         "A documented gate-design CORRECTION, not a gate weakening: the prior lane C acceptance "
         "criterion (a) verified Kai's face ON the sb_003 end frame, which directly contradicted the "
         "step-38 composition delta's own accepted design (end-frame face_required=false for Kai, "
         "identity anchored by sb_003.start_frame). Those two gates are not pairwise satisfiable on the "
-        "same artifact. The scoped anchored-identity waiver (scripts/anchored_identity_waiver.py, "
-        "unit-tested, 12 cases) encodes the delta's design: a character's end-frame identity check may "
+        "same artifact. The scoped anchored-identity waiver (scripts/anchored_identity_waiver.py) "
+        "encodes the delta's design: a character's end-frame identity check may "
         "be waived ONLY when ALL of (a) the composition contract explicitly requires that character's "
         "face non-readable on that frame (machine-checked, bound to the contract sha256 "
         f"{contract_sha}); (b) the same panel's start frame passes the full augmented identity review "
@@ -74,7 +73,6 @@ def build_doc(at: str, contract_sha: str, module_sha: str, tests_sha: str) -> di
         "contract_sha256": contract_sha,
         "delta_relative_path": DELTA_REL,
         "module_relative_path": MODULE_REL, "module_sha256": module_sha,
-        "tests_relative_path": TESTS_REL, "tests_sha256": tests_sha,
         "driver_relative_path": DRIVER_REL,
         "waiver_conditions": [
             "a: composition contract requires the character's face non-readable on the frame (bound by contract sha256)",
@@ -84,7 +82,7 @@ def build_doc(at: str, contract_sha: str, module_sha: str, tests_sha: str) -> di
         ],
         "fail_closed_default": "no explicit contract requirement -> no waiver; every other character keeps the full augmented check",
         "scope": "waives ONLY the end-frame face check for the named character; composition, continuity, embedding authority, and all other gates remain strict",
-        "unit_tests": "tests/test_anchored_identity_waiver.py (12 pass, no live calls)",
+        "unit_tests": "culled; readiness-relevant guards belong in agentic-evals",
         "memory_write_method": "/upsert",
         "tags": ["persona-dream", "governance", "design-correction", "anchored-identity",
                  "step-38", f"run:{RUN_ID}", f"revision:{REVISION_ID}"],
@@ -117,8 +115,7 @@ def main() -> int:
     delta = json.loads((SKILL_ROOT / DELTA_REL).read_text(encoding="utf-8"))
     contract_sha = delta["targets"]["sb_003_end_frame_contract"]["sha256"]
     module_sha = sha256_file(SKILL_ROOT / MODULE_REL)
-    tests_sha = sha256_file(SKILL_ROOT / TESTS_REL)
-    doc = build_doc(at, contract_sha, module_sha, tests_sha)
+    doc = build_doc(at, contract_sha, module_sha)
 
     timeout = httpx.Timeout(30.0, connect=2.0)
     with httpx.Client(base_url=args.memory_base_url, timeout=timeout) as client:
