@@ -14,6 +14,7 @@ triggers:
 provides:
   - kling-scene-composition
 composes:
+  - interview
   - best-practices-scene-script-writing
   - best-practices-kling-video
   - triage-error
@@ -54,7 +55,12 @@ receipt.json (create_kling_scene.receipt.v1) + kling_request.json
 
 Every stage failure carries pydantic `errors[]` AND a triage-error
 classification (`{code, cause, next_command}`); ambiguous signals self-heal by
-minting a provisional catalog code. The receipt is machine data, never prose.
+minting a provisional catalog code. When triage cannot fix it (unrecoverable,
+freshly minted unclassified code, or classifier unavailable), the receipt gains
+`needs_attention` with an $interview handoff: `interview_questions.json` is
+written beside the receipt and `resume_hint` runs the interview. The receipt is
+typed (`create_kling_scene.receipt.v1`, pydantic extra=forbid, producer-side
+seam_validation stamp), never prose.
 
 ## What this skill refuses to do
 

@@ -1147,6 +1147,18 @@
       "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
       "recoverable": true,
       "not_this": []
+    },
+    {
+      "code": "create_kling_scene_unclassified_c856157e",
+      "layer": "create_kling_scene",
+      "match": [
+        "create_kling_scene_unclassified_c856157e",
+        "completely novel unresolvable failure zzqx-77"
+      ],
+      "cause": "Unclassified error signal: completely novel unresolvable failure zzqx-77",
+      "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
+      "recoverable": true,
+      "not_this": []
     }
   ],
   "aliases": {}

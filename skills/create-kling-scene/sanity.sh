@@ -34,4 +34,25 @@ python3 -c "
 import json; r=json.load(open('$T/run3/receipt.json'))
 assert r['failed_stage']=='reference_check', r
 print('PASS negative-control reference check')"
+# escalation control: unresolvable triage (minted code) -> interview questions + needs_attention
+python3 - <<'PYEOF'
+import json, sys
+sys.path.insert(0, 'scripts')
+from pathlib import Path
+import create_kling_scene as cks
+import tempfile, typer
+T = Path(tempfile.mkdtemp())
+receipt = {"schema": "create_kling_scene.receipt.v1", "stages": []}
+try:
+    cks._fail("reference_check", ["completely novel unresolvable failure zzqx-77"], receipt, T/"receipt.json")
+except typer.Exit:
+    pass
+r = json.loads((T/"receipt.json").read_text())
+assert r["needs_attention"][0]["reason"] == "triage_unresolvable", r
+assert "interview" in r["needs_attention"][0]["resume_hint"], r
+q = json.loads((T/"interview_questions.json").read_text())
+assert q["questions"][0]["id"] == "repair_decision", q
+assert r["seam_validation"]["status"] == "PASS"
+print("PASS escalation-control interview handoff")
+PYEOF
 echo "ALL SANITY PASS"

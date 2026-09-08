@@ -15,8 +15,39 @@ import subprocess
 from pathlib import Path
 
 import typer
+from pydantic import BaseModel, Field
 
 SKILLS = Path(__file__).resolve().parents[2]
+INTERVIEW = SKILLS / "interview" / "run.sh"
+
+
+class Stage(BaseModel, extra="forbid"):
+    stage: str
+    result: dict | None = None
+    characters: list[str] | None = None
+    refs: dict | None = None
+    missing: list | None = None
+    prompt_chars: int | None = None
+    packet: str | None = None
+
+
+class Receipt(BaseModel, extra="forbid"):
+    """Producer-side typed seam: every receipt write validates first (fail-closed)."""
+    schema_: str = Field(alias="schema", default="create_kling_scene.receipt.v1")
+    stages: list[Stage]
+    status: str = Field(default="IN_PROGRESS", pattern="^(IN_PROGRESS|PASS|BLOCKED)$")
+    failed_stage: str | None = None
+    errors: list | None = None
+    triage: dict | None = None
+    needs_attention: list[dict] | None = None
+    packet: str | None = None
+    next_command: str | None = None
+    seam_validation: dict = Field(default={"kind": "create_kling_scene.receipt.v1", "status": "PASS"})
+
+
+def _write_receipt(receipt: dict, out: Path) -> None:
+    validated = Receipt.model_validate(receipt)  # raises on drift; never warn-and-continue
+    out.write_text(validated.model_dump_json(by_alias=True, indent=1))
 SCENE = SKILLS / "best-practices-scene-script-writing" / "scripts" / "scene_table.py"
 KLING = SKILLS / "best-practices-kling-video" / "run.sh"
 TRIAGE = SKILLS / "triage-error" / "run.sh"
@@ -57,8 +88,40 @@ def _fail(stage: str, errors: list, receipt: dict, out: Path) -> None:
         f"{e.get('type', '')}: {e.get('msg', e)}" if isinstance(e, dict) else str(e)
         for e in errors
     )
-    receipt["triage"] = _triage(signal, layer=STAGE_LAYER.get(stage, "create_kling_scene"))
-    out.write_text(json.dumps(receipt, indent=1, default=str))
+    triage = _triage(signal, layer=STAGE_LAYER.get(stage, "create_kling_scene"))
+    receipt["triage"] = triage
+    # Escalate to $interview when triage-error cannot fix it: an unrecoverable code,
+    # a freshly minted unclassified code, or an unavailable classifier all mean no
+    # deterministic next_command exists — a human decision is required.
+    unresolvable = (
+        triage.get("recoverable") is False
+        or "_unclassified_" in str(triage.get("code", ""))
+        or triage.get("code") == "triage_unavailable"
+    )
+    if unresolvable:
+        questions = {
+            "title": "create-kling-scene blocked: human decision required",
+            "context": f"Stage {stage} failed with triage code {triage.get('code')} and no deterministic repair.",
+            "questions": [{
+                "id": "repair_decision",
+                "header": "Repair",
+                "text": f"Stage '{stage}' failed: {signal[:300]}. How should this proceed?",
+                "options": [
+                    {"label": "Fix the input and rerun", "description": "Edit the scene table / refs per the errors and rerun build"},
+                    {"label": "Accept as intentional exception", "description": "Record a human-accepted exception for this requirement"},
+                    {"label": "Abandon this scene", "description": "Stop; do not generate"},
+                ],
+                "multi_select": False,
+            }],
+        }
+        qpath = out.parent / "interview_questions.json"
+        qpath.write_text(json.dumps(questions, indent=1))
+        receipt["needs_attention"] = [{
+            "reason": "triage_unresolvable",
+            "safe_default": "do_not_generate",
+            "resume_hint": f"{INTERVIEW} --file {qpath}",
+        }]
+    _write_receipt(receipt, out)
     typer.echo(json.dumps(receipt, default=str))
     raise typer.Exit(1)
 
@@ -141,7 +204,7 @@ def build(
     receipt["next_command"] = (
         f"{KLING} submit {packet_path} --out-dir {out_dir}  # PAID; uploads local refs first"
     )
-    receipt_path.write_text(json.dumps(receipt, indent=1, default=str))
+    _write_receipt(receipt, receipt_path)
     typer.echo(json.dumps(receipt, default=str))
 
 
