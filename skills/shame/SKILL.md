@@ -109,8 +109,10 @@ budget. The mechanical exit:
   status text at distinct stops is legitimate; replaying one event is not.
 - Aborts, errors, length limits, and shutdown do not start reporting retries.
 - Every report-repair episode allows one output-only correction, armed or unarmed.
-  `UNLAZY_FORCED_RETRY` identifies that correction: all tools are blocked and a
-  failed correction cannot queue another. A typed `lazy_report_shame.recovery_decision.v1`
+  `UNLAZY_FORCED_RETRY` identifies that correction: all tools are blocked and the
+  reply must be exactly one fenced `pi.agent_status.v1` JSON block. Guard-internal
+  `lazy_report_shame.*` schemas in that reply are rejected as `format_retry_wrong_schema`.
+  A failed correction cannot queue another. A typed `lazy_report_shame.recovery_decision.v1`
   separates formatting repair from missing evidence, unresolved work, and validator
   failure before any retry prompt is sent. Fresh human input clears correction
   and skill-read flags. Formatting repair cannot reopen accepted work.

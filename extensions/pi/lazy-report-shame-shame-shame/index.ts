@@ -460,7 +460,7 @@ function parseCheckerPayload(stdout: string, stderr: string, status: number | nu
   };
 }
 
-function checkReport(text: string, forceStatus: boolean, mutatingTurn: boolean, strictStatus = false, userText = ""): CheckResult {
+function checkReport(text: string, forceStatus: boolean, mutatingTurn: boolean, strictStatus = false, userText = "", formatOnlyRetry = false): CheckResult {
   const result = spawnSync("node", [REPORT_CHECK], {
     input: text,
     encoding: "utf8",
@@ -471,6 +471,7 @@ function checkReport(text: string, forceStatus: boolean, mutatingTurn: boolean, 
       LRSSS_STRICT_STATUS: strictStatus ? "1" : "0",
       LRSSS_MUTATING_TURN: mutatingTurn ? "1" : "0",
       LRSSS_USER_TEXT: userText,
+      LRSSS_FORMAT_ONLY_RETRY: formatOnlyRetry ? "1" : "0",
     },
   });
   if (result.error) {
@@ -999,6 +1000,9 @@ function retryPrompt(candidate: Candidate, check: CheckResult, reviewPacketPath:
     next: rejectionAction(decision),
   };
   return `UNLAZY_FORCED_RETRY
+You have one output-only correction. Tools are forbidden.
+Your entire reply must be exactly one fenced json block whose object has "schema":"pi.agent_status.v1".
+Do not output lazy_report_shame.rejection_notice.v1 or any other lazy_report_shame.* schema; those are guard-internal receipts, not assistant status.
 \`\`\`json
 ${JSON.stringify(packet)}
 \`\`\``;
@@ -1304,7 +1308,7 @@ export default function lazyReportShameShameShame(pi: any) {
     const text = contentToText(event.message.content);
     const forceStatus = Boolean(budget.current) || sessionMode === "strict" || mutatingTurn || sessionGuardActive || turnGuardActive || Boolean(activeContinuationState());
     const strictStatus = shameSelfCorrectTurn;
-    let check = checkReport(text, forceStatus, mutatingTurn, strictStatus, currentUserText);
+    let check = checkReport(text, forceStatus, mutatingTurn, strictStatus, currentUserText, formatRepairTurn);
     const statusState = typeof (check as any)?.features?.state === "string" ? String((check as any).features.state) : undefined;
     const status = (check as any)?.features?.status;
     const continuationCheck = evaluateContinuationGuard(statusState);

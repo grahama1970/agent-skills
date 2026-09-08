@@ -844,6 +844,26 @@
           "AssertionError"
         ]
       }
+    },
+    {
+      "name": "format-only-retry-contract",
+      "type": "adversarial",
+      "command": [
+        "uv",
+        "run",
+        "--with",
+        "pydantic",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-format-only-retry-contract.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "lazy_report_shame.format_only_retry_contract_eval.v1",
+          "PASS",
+          "format-only retry rejects lazy_report_shame.rejection_notice.v1"
+        ]
+      }
     }
   ]
 }
