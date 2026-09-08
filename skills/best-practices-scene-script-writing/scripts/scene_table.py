@@ -6,7 +6,10 @@ Schema: scene_script.scene_table.v1
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
+
+TRIAGE = Path(__file__).resolve().parents[2] / "triage-error" / "run.sh"
 
 import typer
 from pydantic import BaseModel, Field, model_validator
@@ -95,8 +98,22 @@ def validate(path: Path):
         typer.echo(json.dumps({"status": "PASS", "elements": len(t.elements)}))
     except Exception as e:
         errors = e.errors() if hasattr(e, "errors") else [{"msg": str(e)}]
-        typer.echo(json.dumps({"status": "FAIL", "errors": errors}, default=str))
+        out = {"status": "FAIL", "errors": errors}
+        out["triage"] = _triage("; ".join(str(err.get("msg", err)) for err in errors))
+        typer.echo(json.dumps(out, default=str))
         raise typer.Exit(1)
+
+
+def _triage(signal: str) -> dict:
+    """Route the raw failure signal through triage-error (never emit a bare generic code)."""
+    try:
+        r = subprocess.run(
+            [str(TRIAGE), "classify", "--text", signal[:2000], "--layer", "scene_script"],
+            capture_output=True, text=True, timeout=30,
+        )
+        return json.loads(r.stdout)
+    except Exception as exc:  # ponytail: triage unavailable degrades to a note, validation still fails closed
+        return {"code": "triage_unavailable", "cause": str(exc)}
 
 
 @app.command()

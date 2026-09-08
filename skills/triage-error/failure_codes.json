@@ -1,1005 +1,1053 @@
 {
-  "schema": "triage_error.catalog.v1",
-  "note": "Canonical failure-code catalog across the model-calling pipeline (/ask -> /tau -> {/surf | /scillm}). Each entry maps a raw signal from any layer to ONE unambiguous {code, cause, next_command}. The triage skill grows this catalog as it classifies real ambiguous errors.",
-  "codes": [
-    {
-      "code": "persona_dream_kling_provider_top_up_required",
-      "layer": "persona-dream",
-      "match": [
-        "BLOCKED_KLING_PROVIDER_TOP_UP",
-        "User is locked. Reason: TOP_UP",
-        "Fal/Kling provider returned User is locked"
-      ],
-      "cause": "The live Kling/Fal provider account is locked until a top-up, so Persona Dream cannot complete a fresh paid Kling generation step.",
-      "next_command": "Top up or unlock the Fal/Kling account, then rerun skills/agentic-evals/run.sh run skills/persona-dream/fixtures/agentic_eval.kling_tea_e2e.json --output /tmp/persona-dream-kling-tea-e2e-agentic-report.json.",
-      "recoverable": true,
-      "not_this": [
-        "Chatterbox synthesis failure",
-        "Pydantic step boundary failure",
-        "dry-run provider gate"
-      ]
-    },
-    {
-      "code": "persona_dream_pydantic_step_gate_failed",
-      "layer": "persona-dream",
-      "match": [
-        "pydantic_gate_input",
-        "pydantic_gate_output",
-        "artifact_missing",
-        "json_schema_constraint"
-      ],
-      "cause": "A Persona Dream pipeline step consumed or produced JSON that failed the pydantic-first step boundary contract, so the step cannot safely advance.",
-      "next_command": "Read the node receipt triage_errors[] and pydantic_errors[], repair the named consumed or produced artifact/schema, then rerun the same dag_step command.",
-      "recoverable": true,
-      "not_this": [
-        "human listener collection blocker",
-        "provider authentication failure",
-        "semantic reviewer disagreement"
-      ]
-    },
-    {
-      "code": "persona_dream_status_surface_drift",
-      "layer": "persona-dream",
-      "match": [
-        "README generated block drifts from CURRENT_STATUS.json",
-        "README current-research-state block drifts from CURRENT_STATUS.json",
-        "receipt_status_does_not_support_claim:Chatterbox voice expression",
-        "surface_missing_active_successor",
-        "local/HANDOFF.md missing expected",
-        "handoff missing Research phase",
-        "Research phase",
-        "PASS_STIMULUS_TECHNICAL_SCREEN"
-      ],
-      "cause": "Persona Dream status or proof-boundary prose drifted from CURRENT_STATUS.json and receipt-backed claim bindings after a related pipeline update.",
-      "next_command": "Run skills/persona-dream/run.sh generate-readme-research-state, repair docs/EVIDENCE.md and local/HANDOFF.md against CURRENT_STATUS.json, then rerun skills/persona-dream/sanity.sh and skills/persona-dream/run.sh check-current-state-consistency --strict.",
-      "recoverable": true,
-      "not_this": [
-        "Tau DAG runtime execution failure",
-        "provider authentication failure",
-        "human listener collection blocker"
-      ]
-    },
-    {
-      "code": "tau_node_sanity_check_contract_invalid",
-      "layer": "tau.project_dag",
-      "match": [
-        "node_sanity_check_contract_invalid",
-        "tau.node_sanity_check.v1",
-        "sanity_checks"
-      ],
-      "cause": "A Tau project DAG node_sanity_check declaration is malformed, uses an unsupported check_type, or includes unknown keys such as regex/prose gates.",
-      "next_command": "Read the dag_error evidence for the invalid nodes[*].sanity_checks entry, replace it with a schema=tau.node_sanity_check.v1 object using a supported check_type, then rerun the tau_node_sanity_checks_agentic_eval fixture.",
-      "recoverable": true,
-      "not_this": [
-        "reviewer semantic disagreement",
-        "provider timeout",
-        "visual reviewer rejection"
-      ]
-    },
-    {
-      "code": "tau_node_sanity_check_failed",
-      "layer": "tau.project_dag",
-      "match": [
-        "node_sanity_check_failed",
-        "mocked proof evidence",
-        "rejected mocked proof"
-      ],
-      "cause": "A Tau project DAG node response violated a declared node sanity check, such as using mocked proof where live/path-backed evidence was required.",
-      "next_command": "Read the node receipt named in the Tau dag_error, replace mocked or malformed evidence with path-backed live evidence for the same goal_hash, then rerun the same DAG and the tau_node_sanity_checks_agentic_eval fixture.",
-      "recoverable": true,
-      "not_this": [
-        "contract declaration syntax",
-        "provider authentication",
-        "human acceptance"
-      ]
-    },
-    {
-      "code": "tau_reviewer_artifact_binding_missing",
-      "layer": "tau.project_dag",
-      "match": [
-        "reviewer_artifact_binding_missing",
-        "did not bind to the reviewed node artifact",
-        "reviewed_artifact"
-      ],
-      "cause": "A reviewer PASS did not bind itself to the reviewed creator artifact path and sha256, so Tau cannot prove which artifact was reviewed.",
-      "next_command": "Regenerate the reviewer_verdict with reviewed_artifact.path and reviewed_artifact.sha256 matching the creator_artifact evidence from the reviewed node receipt; rerun the DAG and preserve the dag-receipt.json.",
-      "recoverable": true,
-      "not_this": [
-        "reviewer FAIL verdict",
-        "missing screenshot",
-        "join topology bypass"
-      ]
-    },
-    {
-      "code": "tau_reviewer_artifact_hash_mismatch",
-      "layer": "tau.project_dag",
-      "match": [
-        "reviewer_artifact_hash_mismatch",
-        "artifact binding did not match",
-        "expected_sha256",
-        "observed_sha256"
-      ],
-      "cause": "A reviewer verdict cited an artifact path or sha256 that does not match the reviewed creator node artifact bytes.",
-      "next_command": "Read the creator_artifact path from the reviewed node receipt, recompute sha256 over the file bytes, update the reviewer_verdict reviewed_artifact binding to that exact path/hash, and rerun the DAG.",
-      "recoverable": true,
-      "not_this": [
-        "missing reviewer verdict",
-        "visual gate NOT_READY",
-        "provider cooldown"
-      ]
-    },
-    {
-      "code": "tau_reviewer_attempt_binding_mismatch",
-      "layer": "tau.project_dag",
-      "match": [
-        "reviewer_attempt_binding_mismatch",
-        "did not bind to the reviewed node attempt",
-        "reviewed_attempt_id"
-      ],
-      "cause": "A reviewer verdict omitted or mismatched the reviewed creator attempt id, so Tau cannot prove the review applies to the accepted attempt rather than a stale attempt.",
-      "next_command": "Read the creator_artifact attempt_id from the reviewed node receipt, set reviewer_verdict.reviewed_attempt_id to the same value, then rerun the DAG and tau_node_sanity_checks_agentic_eval fixture.",
-      "recoverable": true,
-      "not_this": [
-        "artifact hash mismatch",
-        "reviewer identity mismatch",
-        "human handoff"
-      ]
-    },
-    {
-      "code": "tau_project_dag_missing_required_evidence",
-      "layer": "tau.project_dag",
-      "match": [
-        "missing_required_evidence",
-        "node response did not include required evidence",
-        "required evidence",
-        "MISSING_REQUIRED_EVIDENCE"
-      ],
-      "cause": "A required Tau DAG node response omitted one or more evidence kinds declared by node.required_evidence, so downstream DAG progress must stay blocked.",
-      "next_command": "Open the failed-step receipt named in pipeline_self_repair.failed_step_receipt; repair the same node handler so result.evidence includes every missing kind with the active goal_hash; run the retained agentic eval; mark the repair ledger CATEGORY_GREEN; rerun tau dag-run against the same receipt directory.",
-      "recoverable": true,
-      "not_this": [
-        "provider authentication",
-        "Discord delivery failure",
-        "watchdog dispatch failure"
-      ]
-    },
-    {
-      "code": "tau_project_dag_ops_discord_notification_failed",
-      "layer": "tau.project_dag",
-      "match": [
-        "OPS_DISCORD_NOTIFICATION_FAILED",
-        "CHANNEL_NOT_FOUND",
-        "SEND_FAILED",
-        "ops_discord_notification_ok",
-        "ops-discord notification"
-      ],
-      "cause": "Tau reached the human-adjudication route, but the ops-discord notification receipt reported a delivery failure or missing channel.",
-      "next_command": "Read the ops_discord.notification_receipt.v1 path from the repair projection, fix the Discord channel/token/policy through the ops-discord skill, then rerun the same Tau repair notification path and verify the viewer exposes SENT or a typed failure.",
-      "recoverable": true,
-      "not_this": [
-        "handler evidence missing",
-        "repair category closed",
-        "status receipt unblocks repair"
-      ]
-    },
-    {
-      "code": "tau_project_dag_human_adjudication_required",
-      "layer": "tau.project_dag",
-      "match": [
-        "HUMAN_ADJUDICATION_REQUIRED",
-        "AWAITING_ADJUDICATION",
-        "WAITING_FOR_HUMAN",
-        "human adjudication",
-        "human_adjudication_required"
-      ],
-      "cause": "A Tau repair category requires a typed human decision before the same semantic node can rerun or downstream nodes can advance.",
-      "next_command": "Send or inspect the ops-discord question receipt; accept only a tau.discord_human_answer.v1 receipt matching question_id, run_id, node_id, goal_hash, and allowed answer; do not treat status text as an unblock.",
-      "recoverable": true,
-      "not_this": [
-        "agentic eval proof",
-        "GitHub ticket closure",
-        "provider semantic pass"
-      ]
-    },
-    {
-      "code": "tau_project_dag_ticket_watchdog_repair_not_green",
-      "layer": "tau.project_dag",
-      "match": [
-        "ticket_skipped",
-        "watchdog dispatch disabled",
-        "watchdog",
-        "ticket disposition",
-        "lacks ticket disposition",
-        "repair_state=TICKETED",
-        "repair_state=WATCHDOG_DISPATCHED"
-      ],
-      "cause": "A Tau repair category has not completed the durable ticket/watchdog/eval closure path required for CATEGORY_GREEN.",
-      "next_command": "Bind or create the focused GitHub ticket with the repair category marker, run project-watchdog for the exact issue or record its refusal receipt, attach the retained agentic-evals report, then run pipeline-self-repair mark-repaired and validate-ledger --require-agentic-eval.",
-      "recoverable": true,
-      "not_this": [
-        "Discord delivery only",
-        "local status JSON only",
-        "pytest-only proof"
-      ]
-    },
-    {
-      "code": "tau_project_dag_agentic_eval_not_ready",
-      "layer": "tau.project_dag",
-      "match": [
-        "agentic-evals",
-        "readiness",
-        "NOT_READY",
-        "BLOCKED",
-        "fixture rejected",
-        "low-value ('slop')"
-      ],
-      "cause": "A Tau repair closure proof lacks a retained READY/PASS agentic-evals report or the eval fixture was rejected as low value.",
-      "next_command": "Repair the eval fixture so it has a real_world adversarial case, rerun skills/agentic-evals/run.sh run for the Tau manifest, read back readiness=READY, then attach that report to the repair ledger before rerun.",
-      "recoverable": true,
-      "not_this": [
-        "pytest green",
-        "manual reviewer prose",
-        "Discord status update"
-      ]
-    },
-    {
-      "code": "pi_research_gate_tool_result_input_missing",
-      "layer": "pi",
-      "match": [
-        "tool_result event omitted input",
-        "tool_result events omit the original input",
-        "result event omitted input",
-        "successful memory tool result",
-        "missing_memory_recall_gate after exact memory recall"
-      ],
-      "cause": "The Pi research-routing guard saw the tool call but the corresponding tool_result event did not carry the original input, so successful gate evidence was lost unless the extension correlates the result to the prior tool_call by toolCallId.",
-      "next_command": "Patch the research-routing-gates Pi extension to cache classified tool_call evidence by toolCallId and reuse it for input-less tool_result events; rerun the extension_hook_tool_result_without_input_uses_call_classification e2e case and the research-routing-gates agentic eval.",
-      "recoverable": true,
-      "not_this": [
-        "memory service outage",
-        "agent skipped Memory",
-        "browser provider cooldown"
-      ]
-    },
-    {
-      "code": "pi_research_gate_retry_command_mismatch",
-      "layer": "pi",
-      "match": [
-        "pi_research_gate_retry_command_mismatch",
-        "paraphrased memory query instead of the exact next_command",
-        "did not run exact next_command",
-        "retry command mismatch"
-      ],
-      "cause": "The research-routing retry receipt prescribed an exact next_commands entry, but the agent ran a different or paraphrased command before final-answering, so the retry did not satisfy the deterministic gate contract.",
-      "next_command": "Run the exact command from the RESEARCH_ROUTING_GATE_RETRY next_commands array, preserve its JSON receipt, then answer from that receipt; if the gate still rejects, classify pi_research_gate_tool_result_input_missing with the retry receipt attached.",
-      "recoverable": true,
-      "not_this": [
-        "memory service outage",
-        "research-routing false negative after exact command",
-        "provider cooldown"
-      ]
-    },
-    {
-      "code": "webgpt_attachment_bundle_rejected",
-      "layer": "surf",
-      "match": [
-        "attach_file_preflight_failed",
-        "maximum is",
-        "zip contains"
-      ],
-      "cause": "The WebGPT provider rejected the attachment bundle SHAPE before browser dispatch (e.g. zip file-count over the provider limit).",
-      "next_command": "Rebuild the SAME content as one provider-compatible attachment (concatenate to a single markdown, or a zip with <= max files), then resubmit with --attach-file.",
-      "recoverable": true,
-      "not_this": [
-        "tab binding",
-        "open-bind",
-        "rebind"
-      ]
-    },
-    {
-      "code": "scillm_api_base_double_version_segment",
-      "layer": "scillm",
-      "match": [
-        "/v4/v1/chat/completions",
-        "paas/v4/v1",
-        "_with_openai_v1_suffix"
-      ],
-      "cause": "scillm appended /v1 to an api_base whose path already ends in a /vN version segment (e.g. z.ai /api/paas/v4), producing a 404 path.",
-      "next_command": "Skip the /v1 append when the base path already ends in /vN (scillm/proxy/config.py _with_openai_v1_suffix).",
-      "recoverable": true,
-      "not_this": [
-        "api key",
-        "model name",
-        "endpoint host"
-      ]
-    },
-    {
-      "code": "scillm_empty_response_200",
-      "layer": "ask",
-      "match": [
-        "scillm_empty_response_200",
-        "\"submit_meta_status\": 200",
-        "\"submit_meta_status\":200"
-      ],
-      "cause": "Ask received a successful SciLLM HTTP response, but the selected handler produced zero assistant content, so the roundtable seat had no usable answer.",
-      "next_command": "Read the handler response.raw.md and response.meta.json; if choices[0].message.content is empty, rerun with another healthy handler or repair the SciLLM response-shape adapter before retrying the same lane.",
-      "recoverable": true,
-      "not_this": [
-        "provider authentication",
-        "model not found",
-        "browser submit failure"
-      ]
-    },
-    {
-      "code": "surf_native_host_stale_cjs",
-      "layer": "surf",
-      "match": [
-        "edits.*no effect",
-        "stale.*host",
-        "host.cjs.*cache"
-      ],
-      "cause": "The surf native host require-caches chatgpt-client.cjs at process start; a long-running host runs pre-edit code.",
-      "next_command": "Kill the host (pgrep -f surf-cli/native/host.cjs; kill PID) so Chrome respawns it fresh; doctor logs go to /tmp/surf-host.log.",
-      "recoverable": true,
-      "not_this": [
-        "code was wrong",
-        "deployment gap"
-      ]
-    },
-    {
-      "code": "webgpt_preflight_composer_missing",
-      "layer": "surf",
-      "match": [
-        "composer_selector_drift_all_missing",
-        "preflight_composer"
-      ],
-      "cause": "The ChatGPT composer selector did not resolve on the live page (all layered selectors missing).",
-      "next_command": "Inspect the live DOM; the composer markup changed. Update SELECTORS in preflight_doctor.js / chatgpt-client.cjs, or hand off if logged-out.",
-      "recoverable": false,
-      "not_this": [
-        "send button (advisory pre-typing)"
-      ]
-    },
-    {
-      "code": "webgpt_preflight_logged_out",
-      "layer": "surf",
-      "match": [
-        "preflight_logged_out",
-        "auth/login",
-        "logged_out"
-      ],
-      "cause": "The controlled ChatGPT tab is logged out; no submit is possible.",
-      "next_command": "Hand off to the human to log the reviewer tab back in; do not retry automatically.",
-      "recoverable": false,
-      "not_this": []
-    },
-    {
-      "code": "monitor_opportunities_linkedin_source_accounting_failed",
-      "layer": "monitor-opportunities",
-      "match": [
-        "linkedin_top_applicant_status_accounted",
-        "linkedin_premium_status_accounted",
-        "browser_capture_linkedin",
-        "source_accounting"
-      ],
-      "cause": "A monitor-opportunities nightly exited zero but failed to account for required LinkedIn signal sources such as Top Applicant, Easy Apply, or Premium low-competition lanes.",
-      "next_command": "Inspect the scheduler-exec-check receipt source_accounting block and the browser-capture LinkedIn receipts, repair the failing capture or browser-control dependency, then rerun skills/monitor-opportunities/run.sh scheduler-exec-check and keep the pipeline-self-repair ledger attached until the failed check passes.",
-      "recoverable": true,
-      "not_this": [
-        "nightly revision mismatch",
-        "no opportunities found after a successful source count",
-        "human declined LinkedIn authorization"
-      ]
-    },
-    {
-      "code": "monitor_opportunities_nightly_revision_mismatch",
-      "layer": "monitor-opportunities",
-      "match": [
-        "nightly_revision_mismatch",
-        "NIGHTLY_REVISION_MISMATCH"
-      ],
-      "cause": "The scheduler invoked monitor-opportunities with a stale --expected-revision pin, so cron refused to publish a nightly report from code that no longer matched the registered revision.",
-      "next_command": "Run skills/monitor-opportunities/run.sh schedule --promoted-stage0 from the intended agent-skills worktree, read back ~/.pi/scheduler/jobs.json for monitor-opportunities-nightly, then file a skills/ticket bug with route:ops_or_scheduler if the next scheduler log still emits NIGHTLY_REVISION_MISMATCH so project-watchdog can dispatch the repair.",
-      "recoverable": true,
-      "not_this": [
-        "no opportunities found",
-        "LinkedIn empty",
-        "source ranking threshold"
-      ]
-    },
-    {
-      "code": "project_watchdog_closure_audit_artifact_unreadable",
-      "layer": "project-watchdog",
-      "match": [
-        "project_watchdog_closure_audit_artifact_unreadable",
-        "proof artifact not readable",
-        "NOT READABLE",
-        "closure_artifacts",
-        "No such file or directory"
-      ],
-      "cause": "Project-watchdog closure audit could not read a proof artifact named by the closure evidence, so the proof is unverifiable until the artifact path is repaired or the proof is rerun.",
-      "next_command": "Fix project-watchdog closure artifact collection or rerun the ticket proof so the closure comment cites readable artifacts; reopen without needs-human, keep agent-work, include authorized_agent_next_steps, then rerun the closure-audit regression eval and validate the tick receipt with pydantic.",
-      "recoverable": true,
-      "not_this": [
-        "human policy decision",
-        "closure FAIL showing the work is wrong",
-        "provider did not answer any verdict"
-      ]
-    },
-    {
-      "code": "project_watchdog_closure_audit_nonzero_needs_attention",
-      "layer": "project-watchdog",
-      "match": [
-        "project_watchdog_closure_audit_nonzero_needs_attention",
-        "wrapper exit",
-        "VERDICT: NEEDS_ATTENTION",
-        "closure-unverified",
-        "Ask/Tau exited nonzero"
-      ],
-      "cause": "Ask/Tau exited nonzero while closure-audit seats declared VERDICT: NEEDS_ATTENTION. The semantic verdict is usable; project-watchdog must make it durable with closure-unverified or cooldown instead of reporting no usable panel verdict.",
-      "next_command": "Run skills/ticket/run.sh ensure-labels --repo <owner/repo>, then run cd skills/agentic-evals && ./run.sh run ../project-watchdog/fixtures/agentic_eval.json --only-category closure-audit-nonzero-needs-attention and read back READY before resuming project-watchdog.",
-      "recoverable": true,
-      "not_this": [
-        "provider did not answer",
-        "no seat verdict",
-        "closure PASS",
-        "closure FAIL"
-      ]
-    },
-    {
-      "code": "project_watchdog_closure_audit_unverified_closed",
-      "layer": "project-watchdog",
-      "match": [
-        "project_watchdog_closure_audit_unverified_closed",
-        "left_closed_unverified",
-        "closure audit: NEEDS_ATTENTION",
-        "Closure audit: NEEDS_ATTENTION",
-        "left closed and unverified",
-        "could not be verified from the ticket thread"
-      ],
-      "cause": "A project-watchdog closure audit could not verify the ticket proof but left the issue closed as completed. Unverified closure must reopen or block the ticket; closure is a proof claim, not a default state.",
-      "next_command": "Reopen the issue, add agent-work plus needs-human, remove closure-verified/closure-unverified, then rerun the project-watchdog closure-audit regression eval and verify the tick receipt with pydantic.",
-      "recoverable": true,
-      "not_this": [
-        "closure PASS",
-        "closure FAIL already reopened the ticket",
-        "provider did not answer any verdict"
-      ]
-    },
-    {
-      "code": "create_svg_variant_count_invalid",
-      "layer": "create-svg",
-      "match": [
-        "create_svg_variant_count_invalid"
-      ],
-      "cause": "A Tau SVG variant fanout requested fewer than two or more than five concurrent creator candidates.",
-      "next_command": "Edit the variant spec to contain 2..5 variants, then rerun skills/create-svg/run.sh tau-variant-loop before any provider execution.",
-      "recoverable": true,
-      "not_this": [
-        "provider failure",
-        "visual reviewer rejection",
-        "Surf screenshot failure"
-      ]
-    },
-    {
-      "code": "create_svg_variant_handler_count_mismatch",
-      "layer": "create-svg",
-      "match": [
-        "create_svg_variant_handler_count_mismatch"
-      ],
-      "cause": "The Tau SVG variant fanout could not bind exactly one creator handler to each requested variant direction.",
-      "next_command": "Pass one --creator-handler per variant, or put handler on every variants.yml entry, then rerun skills/create-svg/run.sh tau-variant-loop.",
-      "recoverable": true,
-      "not_this": [
-        "provider failure",
-        "visual reviewer rejection",
-        "Tau runtime failure"
-      ]
-    },
-    {
-      "code": "create_svg_variant_handler_family_overlap",
-      "layer": "create-svg",
-      "match": [
-        "create_svg_variant_handler_family_overlap"
-      ],
-      "cause": "The Tau SVG variant fanout reused the same provider family for a creator and the judge, weakening independent visual adjudication.",
-      "next_command": "Choose a --judge-handler from a different provider family than every creator handler, then rerun skills/create-svg/run.sh tau-variant-loop.",
-      "recoverable": true,
-      "not_this": [
-        "variant count",
-        "handler count",
-        "visual reviewer rejection"
-      ]
-    },
-    {
-      "code": "create_svg_tau_provenance_missing_candidate_receipt",
-      "layer": "create-svg",
-      "match": [
-        "create_svg_tau_provenance_missing_candidate_receipt"
-      ],
-      "cause": "A proposed Tau SVG output lacks a readable create_svg.variant_candidate.v1 receipt binding the SVG to a creator node and Tau run.",
-      "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
-      "recoverable": true,
-      "not_this": [
-        "visual design rejection",
-        "provider cooldown",
-        "ordinary SVG validation failure"
-      ]
-    },
-    {
-      "code": "create_svg_tau_provenance_missing_node_receipt",
-      "layer": "create-svg",
-      "match": [
-        "create_svg_tau_provenance_missing_node_receipt"
-      ],
-      "cause": "A proposed Tau SVG output lacks a PASS creator node receipt under the referenced Tau run directory.",
-      "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
-      "recoverable": true,
-      "not_this": [
-        "visual design rejection",
-        "provider cooldown",
-        "ordinary SVG validation failure"
-      ]
-    },
-    {
-      "code": "create_svg_tau_provenance_missing_judge_receipt",
-      "layer": "create-svg",
-      "match": [
-        "create_svg_tau_provenance_missing_judge_receipt"
-      ],
-      "cause": "A proposed Tau SVG output lacks a PASS judge/reviewer node receipt under the referenced Tau run directory.",
-      "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
-      "recoverable": true,
-      "not_this": [
-        "visual design rejection",
-        "provider cooldown",
-        "ordinary SVG validation failure"
-      ]
-    },
-    {
-      "code": "create_svg_tau_provenance_visual_gate_missing",
-      "layer": "create-svg",
-      "match": [
-        "create_svg_tau_provenance_visual_gate_missing"
-      ],
-      "cause": "A proposed Tau SVG output lacks a screenshot-bound create_svg.visual_gate.v1 receipt.",
-      "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
-      "recoverable": true,
-      "not_this": [
-        "visual design rejection",
-        "provider cooldown",
-        "ordinary SVG validation failure"
-      ]
-    },
-    {
-      "code": "create_svg_tau_provenance_visual_gate_not_pass",
-      "layer": "create-svg",
-      "match": [
-        "create_svg_tau_provenance_visual_gate_not_pass"
-      ],
-      "cause": "The create_svg.visual_gate.v1 receipt exists but is not PASS for goal representation and target-size attractiveness.",
-      "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
-      "recoverable": true,
-      "not_this": [
-        "visual design rejection",
-        "provider cooldown",
-        "ordinary SVG validation failure"
-      ]
-    },
-    {
-      "code": "create_svg_tau_provenance_hash_mismatch",
-      "layer": "create-svg",
-      "match": [
-        "create_svg_tau_provenance_hash_mismatch"
-      ],
-      "cause": "A proposed Tau SVG output has an SVG or screenshot sha256 that does not match the bytes on disk.",
-      "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
-      "recoverable": true,
-      "not_this": [
-        "visual design rejection",
-        "provider cooldown",
-        "ordinary SVG validation failure"
-      ]
-    },
-    {
-      "code": "create_svg_tau_provenance_binding_mismatch",
-      "layer": "create-svg",
-      "match": [
-        "create_svg_tau_provenance_binding_mismatch"
-      ],
-      "cause": "A proposed Tau SVG output has mismatched Tau run, creator node, candidate, visual gate, goal, target, or target-size bindings.",
-      "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
-      "recoverable": true,
-      "not_this": [
-        "visual design rejection",
-        "provider cooldown",
-        "ordinary SVG validation failure"
-      ]
-    },
-    {
-      "code": "create_svg_tau_provenance_missing_tau_receipt",
-      "layer": "create-svg",
-      "match": [
-        "create_svg_tau_provenance_missing_tau_receipt"
-      ],
-      "cause": "A proposed Tau SVG output lacks a PASS Tau dag-receipt.json/dag-progress.json under the launch receipt run_dir.",
-      "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
-      "recoverable": true,
-      "not_this": [
-        "visual design rejection",
-        "provider cooldown",
-        "ordinary SVG validation failure"
-      ]
-    },
-    {
-      "code": "create_svg_tau_provenance_missing_launch_receipt",
-      "layer": "create-svg",
-      "match": [
-        "create_svg_tau_provenance_missing_launch_receipt"
-      ],
-      "cause": "A proposed Tau SVG output lacks a readable create_svg.tau_variant_loop_plan.v1 launch receipt.",
-      "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
-      "recoverable": true,
-      "not_this": [
-        "visual design rejection",
-        "provider cooldown",
-        "ordinary SVG validation failure"
-      ]
-    },
-    {
-      "code": "create_svg_browser_submit_not_accepted",
-      "layer": "create-svg",
-      "match": [
-        "browser_submit_not_accepted",
-        "Kimi prompt composer did not receive inserted text",
-        "composer did not receive inserted text",
-        "transport_blocker:browser_submit_not_accepted",
-        "PRIOR_HANDLER_RECEIPTS_NOT_READY"
-      ],
-      "cause": "A Tau SVG creator lane could not submit its prompt to the browser-backed provider, so no live candidate artifact or screenshot-bound review exists for that lane.",
-      "next_command": "Read node-artifacts/<handler>/browser-recovery-packet.json and run its next_command to rebind/recover the browser provider, then rerun skills/create-svg/run.sh tau-variant-loop --execute; do not use local preview SVGs as substitutes for Tau node artifacts.",
-      "recoverable": true,
-      "not_this": [
-        "variant spec validation",
-        "visual gate NOT_READY",
-        "successful Tau candidate artifact"
-      ]
-    },
-    {
-      "code": "create_svg_tau_compile_or_execute_failed",
-      "layer": "create-svg",
-      "match": [
-        "create_svg_tau_compile_or_execute_failed"
-      ],
-      "cause": "The create-svg Tau variant loop compile or execute command returned non-zero or did not emit a readable Tau run directory.",
-      "next_command": "Read the launch receipt plus .ask.stderr.txt/.ask.stdout.json, then run skills/triage-error/run.sh classify --receipt <receipt.ask.stderr.txt> --layer create-svg; if still ambiguous, file a skills/ticket bug with the receipt and scaffold an agentic eval.",
-      "recoverable": true,
-      "not_this": [
-        "visual gate NOT_READY",
-        "human aesthetic rejection",
-        "variant spec validation"
-      ]
-    },
-    {
-      "code": "create_svg_visual_gate_not_ready",
-      "layer": "create-svg",
-      "match": [
-        "create_svg_visual_gate_not_ready",
-        "\"status\": \"NOT_READY\"",
-        "create_svg.visual_gate.v1"
-      ],
-      "cause": "A rendered SVG candidate was screenshot-reviewed and failed goal representation or target-size attractiveness.",
-      "next_command": "Use the visual-gate receipt issues and next_edit fields as the next variant direction; do not classify this as a runtime/tool defect unless the gate receipt itself is malformed.",
-      "recoverable": true,
-      "not_this": [
-        "Tau compile failure",
-        "provider authentication",
-        "missing screenshot file"
-      ]
-    },
-    {
-      "code": "herdr_pane_unaddressable",
-      "layer": "ops-herdr.bridge",
-      "match": [
-        "pane_unreadable",
-        "target_not_in_roster_or_no_pane",
-        "deferred message exceeded TTL",
-        "none addressable",
-        "pane(s) named",
-        "but none addressable"
-      ],
-      "cause": "A Herdr bridge message targeted a pane that is dead, unreadable, or no longer in the roster; queued delivery expired to dead-letter.",
-      "next_command": "node skills/ops-herdr/pi-herdr-bridge/bridge-cli.mjs list  # confirm the live session, then resend to the current pane/session-ref",
-      "recoverable": true,
-      "not_this": [
-        "provider rate limit",
-        "intercom broker outage"
-      ]
-    },
-    {
-      "code": "tau_dag_requested_handler_substituted",
-      "layer": "tau.project_dag",
-      "match": [
-        "tau_dag_requested_handler_substituted",
-        "requested handler identities",
-        "fallback is not authorized",
-        "handler nodes do not match"
-      ],
-      "cause": "A Tau DAG requested exact browser/API handlers, but the compiled handler nodes used a different handler identity and no explicit fallback authorization was present.",
-      "next_command": "Read dag-receipt.json alerts for expected_handler_nodes and actual_handler_nodes, regenerate the DAG with exact requested handler node ids or set handler_fallback_authorized only after an explicit policy decision, then rerun the tau_create_svg_origin_gates_agentic_eval fixture.",
-      "recoverable": true,
-      "not_this": [
-        "provider timeout",
-        "browser submit failure",
-        "reviewer semantic disagreement"
-      ]
-    },
-    {
-      "code": "create_svg_required_payload_missing",
-      "layer": "tau.project_dag",
-      "match": [
-        "create_svg_required_payload_missing",
-        "path-backed SVG artifact",
-        "create_svg.variant_candidate.v1",
-        "prose without svg payload"
-      ],
-      "cause": "A create-svg Tau creator node reported progress without emitting a machine-readable create_svg.variant_candidate.v1 receipt containing a path-backed SVG artifact.",
-      "next_command": "Read the creator node receipt, require create_svg.variant_candidate.v1 evidence with svg_path and svg_sha256, and rerun the DAG plus tau_create_svg_origin_gates_agentic_eval before presenting visual progress.",
-      "recoverable": true,
-      "not_this": [
-        "human visual rejection",
-        "final acceptance signature missing",
-        "provider quota exhaustion"
-      ]
-    },
-    {
-      "code": "create_svg_candidate_receipt_invalid",
-      "layer": "tau.project_dag",
-      "match": [
-        "create_svg_candidate_receipt_invalid",
-        "variant_candidate receipt cannot be accepted",
-        "mocked",
-        "live"
-      ],
-      "cause": "A create-svg variant candidate receipt is malformed, mocked, non-live, carries a failure_code, or has an invalid SVG path/hash binding.",
-      "next_command": "Regenerate the create-svg candidate from a live Tau node, ensure mocked=false, live=true, no failure_code, and svg_sha256 matches the SVG bytes, then rerun the DAG and retained eval.",
-      "recoverable": true,
-      "not_this": [
-        "handler identity substitution",
-        "missing visual gate",
-        "browser submit not accepted"
-      ]
-    },
-    {
-      "code": "create_svg_artifact_origin_invalid",
-      "layer": "tau.project_dag",
-      "match": [
-        "create_svg_artifact_origin_invalid",
-        "Tau node artifact area",
-        "origin-bound",
-        "local-preview.svg"
-      ],
-      "cause": "A create-svg SVG artifact was outside Tau node artifact custody or lacked explicit origin_node_id/origin binding to the creator node.",
-      "next_command": "Do not surface the local preview as Tau progress. Re-run the Tau node so the SVG is written under the run ready-queue node artifact area or emit origin=tau_node_artifact with origin_node_id matching the creator node, then rerun the provenance eval.",
-      "recoverable": true,
-      "not_this": [
-        "SVG visual quality failure",
-        "missing human acceptance",
-        "reviewer artifact hash mismatch"
-      ]
-    },
-    {
-      "code": "tau_dag_verification_contract_incomplete",
-      "layer": "tau.project_dag",
-      "match": [
-        "tau_dag_verification_contract_incomplete",
-        "verification contract is incomplete",
-        "route to $interview",
-        "requires_human_acceptance"
-      ],
-      "cause": "A Tau DAG declares human verification or acceptance but omits an executable tau.verification_contract.v1 with verifier_nodes and required_receipts.",
-      "next_command": "Run $interview to collect the missing verifier contract, then regenerate the DAG with verifier_nodes and required_receipts before execution.",
-      "recoverable": true,
-      "not_this": [
-        "provider timeout",
-        "browser transport failure",
-        "semantic reviewer disagreement"
-      ]
-    },
-    {
-      "code": "tau_dag_self_verification_forbidden",
-      "layer": "tau.project_dag",
-      "match": [
-        "tau_dag_self_verification_forbidden",
-        "self verification",
-        "verify its own output",
-        "verifies_node"
-      ],
-      "cause": "A Tau DAG verifier node attempts to verify its own output, which would let the same untrusted agent certify itself.",
-      "next_command": "Regenerate the DAG so every verifier node verifies a different producer node, then rerun Tau before accepting any PASS.",
-      "recoverable": true,
-      "not_this": [
-        "provider timeout",
-        "browser transport failure",
-        "semantic reviewer disagreement"
-      ]
-    },
-    {
-      "code": "tau_model_claim_without_receipt",
-      "layer": "tau.project_dag",
-      "match": [
-        "tau_model_claim_without_receipt",
-        "claim without receipt",
-        "prose completion claim",
-        "machine-readable receipt"
-      ],
-      "cause": "A model made a completion or proof claim without a machine-readable receipt that Tau can validate independently.",
-      "next_command": "Require the node to emit the relevant receipt evidence, then rerun the same DAG node; do not accept prose as proof.",
-      "recoverable": true,
-      "not_this": [
-        "provider timeout",
-        "browser transport failure",
-        "semantic reviewer disagreement"
-      ]
-    },
-    {
-      "code": "tau_model_artifact_path_missing",
-      "layer": "tau.project_dag",
-      "match": [
-        "tau_model_artifact_path_missing",
-        "artifact path could not be read",
-        "without a path-backed artifact",
-        "missing artifact path"
-      ],
-      "cause": "A model claimed an artifact but omitted a readable path, or the path could not be read back from disk.",
-      "next_command": "Read the node response, make it emit a path-backed artifact evidence object, verify the file exists, and rerun the DAG.",
-      "recoverable": true,
-      "not_this": [
-        "provider timeout",
-        "browser transport failure",
-        "semantic reviewer disagreement"
-      ]
-    },
-    {
-      "code": "tau_model_artifact_hash_mismatch",
-      "layer": "tau.project_dag",
-      "match": [
-        "tau_model_artifact_hash_mismatch",
-        "artifact hash did not match",
-        "actual_sha256",
-        "observed_sha256"
-      ],
-      "cause": "A model artifact receipt supplied a sha256 that does not match the artifact bytes read back from disk.",
-      "next_command": "Recompute sha256 over the artifact bytes, fix or regenerate the artifact receipt, and rerun the DAG.",
-      "recoverable": true,
-      "not_this": [
-        "provider timeout",
-        "browser transport failure",
-        "semantic reviewer disagreement"
-      ]
-    },
-    {
-      "code": "tau_model_proof_command_unverified",
-      "layer": "tau.project_dag",
-      "match": [
-        "tau_model_proof_command_unverified",
-        "proof command receipt",
-        "exit_code 0",
-        "stdout hash"
-      ],
-      "cause": "A model claimed a proof command passed, but the proof command receipt was missing, malformed, non-PASS, nonzero exit, or lacked a stdout hash.",
-      "next_command": "Run the proof command through the verifier path so it emits tau.proof_command_receipt.v1 with status=PASS, exit_code=0, command, and stdout_sha256, then rerun Tau.",
-      "recoverable": true,
-      "not_this": [
-        "provider timeout",
-        "browser transport failure",
-        "semantic reviewer disagreement"
-      ]
-    },
-    {
-      "code": "tau_join_unadmitted_evidence",
-      "layer": "tau.project_dag",
-      "match": [
-        "tau_join_unadmitted_evidence",
-        "unadmitted evidence",
-        "admitted_nodes",
-        "join node cited evidence"
-      ],
-      "cause": "A join node cited evidence from a node not admitted by the DAG join contract.",
-      "next_command": "Remove unadmitted evidence from the join output or update the DAG join contract with explicit admitted_nodes, then rerun the join.",
-      "recoverable": true,
-      "not_this": [
-        "provider timeout",
-        "browser transport failure",
-        "semantic reviewer disagreement"
-      ]
-    },
-    {
-      "code": "tau_recovery_without_failed_path_rerun",
-      "layer": "tau.project_dag",
-      "match": [
-        "tau_recovery_without_failed_path_rerun",
-        "failed path was rerun",
-        "recovery receipt",
-        "rerun_node_ids"
-      ],
-      "cause": "A recovery node claimed repair progress without proving that the failed path was rerun.",
-      "next_command": "Rerun the failed path and emit recovery_receipt.rerun_node_ids including the failed_node_id before continuing.",
-      "recoverable": true,
-      "not_this": [
-        "provider timeout",
-        "browser transport failure",
-        "semantic reviewer disagreement"
-      ]
-    },
-    {
-      "code": "tau_human_acceptance_receipt_missing",
-      "layer": "tau.project_dag",
-      "match": [
-        "tau_human_acceptance_receipt_missing",
-        "human acceptance receipt",
-        "Needs Human",
-        "accepted_by"
-      ],
-      "cause": "A DAG reached a human acceptance/signature gate without a first-class tau.human_acceptance_receipt.v1 signer receipt.",
-      "next_command": "Route to $interview or the configured human acceptance UI, capture tau.human_acceptance_receipt.v1 with accepted_by, then rerun/verify.",
-      "recoverable": true,
-      "not_this": [
-        "provider timeout",
-        "browser transport failure",
-        "semantic reviewer disagreement"
-      ]
-    },
-    {
-      "code": "create_report_pydantic_validation_failed",
-      "layer": "create-report",
-      "match": [
-        "create-report pydantic validation failed",
-        "create_report.report.v1 validation failed",
-        "validation error for CreateReport",
-        "validation errors for CreateReport"
-      ],
-      "cause": "A create-report JSON payload failed the pydantic create_report.report.v1 contract, so it cannot be rendered or used as a report source of truth.",
-      "next_command": "Run skills/create-report/run.sh repair <bad-report.json> --output <repaired-report.json>, replace repair-skeleton fields with evidence-backed data, then rerun skills/create-report/run.sh validate <repaired-report.json>.",
-      "recoverable": true,
-      "not_this": [
-        "missing reviewer receipt",
-        "provider timeout",
-        "visual screenshot failure"
-      ]
-    },
-    {
-      "code": "project_state_pydantic_validation_failed",
-      "layer": "project-state",
-      "match": [
-        "project-state pydantic validation failed",
-        "project_state.report.v1 validation failed",
-        "validation error for ProjectStateReport",
-        "validation errors for ProjectStateReport"
-      ],
-      "cause": "A project-state JSON payload failed its pydantic contract, so it cannot be rendered or used as the state source of truth without repair.",
-      "next_command": "Run skills/project-state/run.sh repair-report <bad-report.json> --output <repaired-report.json>, inspect the embedded Phase 6 critical gap, then rerun skills/project-state/run.sh validate-report <repaired-report.json>.",
-      "recoverable": true,
-      "not_this": [
-        "memory recall unavailable",
-        "best-practices finding",
-        "external research timeout"
-      ]
-    },
-    {
-      "code": "triage_classifier_unreachable",
-      "layer": "triage-error",
-      "match": [
-        "triage_classifier_unreachable",
-        "triage-error classify could not be invoked"
-      ],
-      "cause": "A caller tried to route a raw failure signal through triage-error classify, but the classifier CLI could not be invoked (missing runner, timeout, or bad JSON output).",
-      "next_command": "skills/triage-error/run.sh classify --text probe --layer triage-error",
-      "recoverable": true,
-      "not_this": [
-        "the underlying failure the caller was trying to classify"
-      ]
-    }
-  ],
-  "aliases": {}
+ "schema": "triage_error.catalog.v1",
+ "note": "Canonical failure-code catalog across the model-calling pipeline (/ask -> /tau -> {/surf | /scillm}). Each entry maps a raw signal from any layer to ONE unambiguous {code, cause, next_command}. The triage skill grows this catalog as it classifies real ambiguous errors.",
+ "codes": [
+  {
+   "code": "persona_dream_kling_provider_top_up_required",
+   "layer": "persona-dream",
+   "match": [
+    "BLOCKED_KLING_PROVIDER_TOP_UP",
+    "User is locked. Reason: TOP_UP",
+    "User is locked. Reason: Exhausted balance",
+    "Top up your balance at fal.ai/dashboard/billing",
+    "Fal/Kling provider returned User is locked"
+   ],
+   "cause": "The live Kling/Fal provider account is locked until a top-up, so Persona Dream cannot complete a fresh paid Kling generation step.",
+   "next_command": "Top up or unlock the Fal/Kling account, then rerun skills/agentic-evals/run.sh run skills/persona-dream/fixtures/agentic_eval.kling_tea_e2e.json --output /tmp/persona-dream-kling-tea-e2e-agentic-report.json.",
+   "recoverable": true,
+   "not_this": [
+    "Chatterbox synthesis failure",
+    "Pydantic step boundary failure",
+    "dry-run provider gate"
+   ]
+  },
+  {
+   "code": "persona_dream_pydantic_step_gate_failed",
+   "layer": "persona-dream",
+   "match": [
+    "pydantic_gate_input",
+    "pydantic_gate_output",
+    "artifact_missing",
+    "json_schema_constraint"
+   ],
+   "cause": "A Persona Dream pipeline step consumed or produced JSON that failed the pydantic-first step boundary contract, so the step cannot safely advance.",
+   "next_command": "Read the node receipt triage_errors[] and pydantic_errors[], repair the named consumed or produced artifact/schema, then rerun the same dag_step command.",
+   "recoverable": true,
+   "not_this": [
+    "human listener collection blocker",
+    "provider authentication failure",
+    "semantic reviewer disagreement"
+   ]
+  },
+  {
+   "code": "persona_dream_status_surface_drift",
+   "layer": "persona-dream",
+   "match": [
+    "README generated block drifts from CURRENT_STATUS.json",
+    "README current-research-state block drifts from CURRENT_STATUS.json",
+    "receipt_status_does_not_support_claim:Chatterbox voice expression",
+    "surface_missing_active_successor",
+    "local/HANDOFF.md missing expected",
+    "handoff missing Research phase",
+    "Research phase",
+    "PASS_STIMULUS_TECHNICAL_SCREEN"
+   ],
+   "cause": "Persona Dream status or proof-boundary prose drifted from CURRENT_STATUS.json and receipt-backed claim bindings after a related pipeline update.",
+   "next_command": "Run skills/persona-dream/run.sh generate-readme-research-state, repair docs/EVIDENCE.md and local/HANDOFF.md against CURRENT_STATUS.json, then rerun skills/persona-dream/sanity.sh and skills/persona-dream/run.sh check-current-state-consistency --strict.",
+   "recoverable": true,
+   "not_this": [
+    "Tau DAG runtime execution failure",
+    "provider authentication failure",
+    "human listener collection blocker"
+   ]
+  },
+  {
+   "code": "tau_node_sanity_check_contract_invalid",
+   "layer": "tau.project_dag",
+   "match": [
+    "node_sanity_check_contract_invalid",
+    "tau.node_sanity_check.v1",
+    "sanity_checks"
+   ],
+   "cause": "A Tau project DAG node_sanity_check declaration is malformed, uses an unsupported check_type, or includes unknown keys such as regex/prose gates.",
+   "next_command": "Read the dag_error evidence for the invalid nodes[*].sanity_checks entry, replace it with a schema=tau.node_sanity_check.v1 object using a supported check_type, then rerun the tau_node_sanity_checks_agentic_eval fixture.",
+   "recoverable": true,
+   "not_this": [
+    "reviewer semantic disagreement",
+    "provider timeout",
+    "visual reviewer rejection"
+   ]
+  },
+  {
+   "code": "tau_node_sanity_check_failed",
+   "layer": "tau.project_dag",
+   "match": [
+    "node_sanity_check_failed",
+    "mocked proof evidence",
+    "rejected mocked proof"
+   ],
+   "cause": "A Tau project DAG node response violated a declared node sanity check, such as using mocked proof where live/path-backed evidence was required.",
+   "next_command": "Read the node receipt named in the Tau dag_error, replace mocked or malformed evidence with path-backed live evidence for the same goal_hash, then rerun the same DAG and the tau_node_sanity_checks_agentic_eval fixture.",
+   "recoverable": true,
+   "not_this": [
+    "contract declaration syntax",
+    "provider authentication",
+    "human acceptance"
+   ]
+  },
+  {
+   "code": "tau_reviewer_artifact_binding_missing",
+   "layer": "tau.project_dag",
+   "match": [
+    "reviewer_artifact_binding_missing",
+    "did not bind to the reviewed node artifact",
+    "reviewed_artifact"
+   ],
+   "cause": "A reviewer PASS did not bind itself to the reviewed creator artifact path and sha256, so Tau cannot prove which artifact was reviewed.",
+   "next_command": "Regenerate the reviewer_verdict with reviewed_artifact.path and reviewed_artifact.sha256 matching the creator_artifact evidence from the reviewed node receipt; rerun the DAG and preserve the dag-receipt.json.",
+   "recoverable": true,
+   "not_this": [
+    "reviewer FAIL verdict",
+    "missing screenshot",
+    "join topology bypass"
+   ]
+  },
+  {
+   "code": "tau_reviewer_artifact_hash_mismatch",
+   "layer": "tau.project_dag",
+   "match": [
+    "reviewer_artifact_hash_mismatch",
+    "artifact binding did not match",
+    "expected_sha256",
+    "observed_sha256"
+   ],
+   "cause": "A reviewer verdict cited an artifact path or sha256 that does not match the reviewed creator node artifact bytes.",
+   "next_command": "Read the creator_artifact path from the reviewed node receipt, recompute sha256 over the file bytes, update the reviewer_verdict reviewed_artifact binding to that exact path/hash, and rerun the DAG.",
+   "recoverable": true,
+   "not_this": [
+    "missing reviewer verdict",
+    "visual gate NOT_READY",
+    "provider cooldown"
+   ]
+  },
+  {
+   "code": "tau_reviewer_attempt_binding_mismatch",
+   "layer": "tau.project_dag",
+   "match": [
+    "reviewer_attempt_binding_mismatch",
+    "did not bind to the reviewed node attempt",
+    "reviewed_attempt_id"
+   ],
+   "cause": "A reviewer verdict omitted or mismatched the reviewed creator attempt id, so Tau cannot prove the review applies to the accepted attempt rather than a stale attempt.",
+   "next_command": "Read the creator_artifact attempt_id from the reviewed node receipt, set reviewer_verdict.reviewed_attempt_id to the same value, then rerun the DAG and tau_node_sanity_checks_agentic_eval fixture.",
+   "recoverable": true,
+   "not_this": [
+    "artifact hash mismatch",
+    "reviewer identity mismatch",
+    "human handoff"
+   ]
+  },
+  {
+   "code": "tau_project_dag_missing_required_evidence",
+   "layer": "tau.project_dag",
+   "match": [
+    "missing_required_evidence",
+    "node response did not include required evidence",
+    "required evidence",
+    "MISSING_REQUIRED_EVIDENCE"
+   ],
+   "cause": "A required Tau DAG node response omitted one or more evidence kinds declared by node.required_evidence, so downstream DAG progress must stay blocked.",
+   "next_command": "Open the failed-step receipt named in pipeline_self_repair.failed_step_receipt; repair the same node handler so result.evidence includes every missing kind with the active goal_hash; run the retained agentic eval; mark the repair ledger CATEGORY_GREEN; rerun tau dag-run against the same receipt directory.",
+   "recoverable": true,
+   "not_this": [
+    "provider authentication",
+    "Discord delivery failure",
+    "watchdog dispatch failure"
+   ]
+  },
+  {
+   "code": "tau_project_dag_ops_discord_notification_failed",
+   "layer": "tau.project_dag",
+   "match": [
+    "OPS_DISCORD_NOTIFICATION_FAILED",
+    "CHANNEL_NOT_FOUND",
+    "SEND_FAILED",
+    "ops_discord_notification_ok",
+    "ops-discord notification"
+   ],
+   "cause": "Tau reached the human-adjudication route, but the ops-discord notification receipt reported a delivery failure or missing channel.",
+   "next_command": "Read the ops_discord.notification_receipt.v1 path from the repair projection, fix the Discord channel/token/policy through the ops-discord skill, then rerun the same Tau repair notification path and verify the viewer exposes SENT or a typed failure.",
+   "recoverable": true,
+   "not_this": [
+    "handler evidence missing",
+    "repair category closed",
+    "status receipt unblocks repair"
+   ]
+  },
+  {
+   "code": "tau_project_dag_human_adjudication_required",
+   "layer": "tau.project_dag",
+   "match": [
+    "HUMAN_ADJUDICATION_REQUIRED",
+    "AWAITING_ADJUDICATION",
+    "WAITING_FOR_HUMAN",
+    "human adjudication",
+    "human_adjudication_required"
+   ],
+   "cause": "A Tau repair category requires a typed human decision before the same semantic node can rerun or downstream nodes can advance.",
+   "next_command": "Send or inspect the ops-discord question receipt; accept only a tau.discord_human_answer.v1 receipt matching question_id, run_id, node_id, goal_hash, and allowed answer; do not treat status text as an unblock.",
+   "recoverable": true,
+   "not_this": [
+    "agentic eval proof",
+    "GitHub ticket closure",
+    "provider semantic pass"
+   ]
+  },
+  {
+   "code": "tau_project_dag_ticket_watchdog_repair_not_green",
+   "layer": "tau.project_dag",
+   "match": [
+    "ticket_skipped",
+    "watchdog dispatch disabled",
+    "watchdog",
+    "ticket disposition",
+    "lacks ticket disposition",
+    "repair_state=TICKETED",
+    "repair_state=WATCHDOG_DISPATCHED"
+   ],
+   "cause": "A Tau repair category has not completed the durable ticket/watchdog/eval closure path required for CATEGORY_GREEN.",
+   "next_command": "Bind or create the focused GitHub ticket with the repair category marker, run project-watchdog for the exact issue or record its refusal receipt, attach the retained agentic-evals report, then run pipeline-self-repair mark-repaired and validate-ledger --require-agentic-eval.",
+   "recoverable": true,
+   "not_this": [
+    "Discord delivery only",
+    "local status JSON only",
+    "pytest-only proof"
+   ]
+  },
+  {
+   "code": "tau_project_dag_agentic_eval_not_ready",
+   "layer": "tau.project_dag",
+   "match": [
+    "agentic-evals",
+    "readiness",
+    "NOT_READY",
+    "BLOCKED",
+    "fixture rejected",
+    "low-value ('slop')"
+   ],
+   "cause": "A Tau repair closure proof lacks a retained READY/PASS agentic-evals report or the eval fixture was rejected as low value.",
+   "next_command": "Repair the eval fixture so it has a real_world adversarial case, rerun skills/agentic-evals/run.sh run for the Tau manifest, read back readiness=READY, then attach that report to the repair ledger before rerun.",
+   "recoverable": true,
+   "not_this": [
+    "pytest green",
+    "manual reviewer prose",
+    "Discord status update"
+   ]
+  },
+  {
+   "code": "pi_research_gate_tool_result_input_missing",
+   "layer": "pi",
+   "match": [
+    "tool_result event omitted input",
+    "tool_result events omit the original input",
+    "result event omitted input",
+    "successful memory tool result",
+    "missing_memory_recall_gate after exact memory recall"
+   ],
+   "cause": "The Pi research-routing guard saw the tool call but the corresponding tool_result event did not carry the original input, so successful gate evidence was lost unless the extension correlates the result to the prior tool_call by toolCallId.",
+   "next_command": "Patch the research-routing-gates Pi extension to cache classified tool_call evidence by toolCallId and reuse it for input-less tool_result events; rerun the extension_hook_tool_result_without_input_uses_call_classification e2e case and the research-routing-gates agentic eval.",
+   "recoverable": true,
+   "not_this": [
+    "memory service outage",
+    "agent skipped Memory",
+    "browser provider cooldown"
+   ]
+  },
+  {
+   "code": "pi_research_gate_retry_command_mismatch",
+   "layer": "pi",
+   "match": [
+    "pi_research_gate_retry_command_mismatch",
+    "paraphrased memory query instead of the exact next_command",
+    "did not run exact next_command",
+    "retry command mismatch"
+   ],
+   "cause": "The research-routing retry receipt prescribed an exact next_commands entry, but the agent ran a different or paraphrased command before final-answering, so the retry did not satisfy the deterministic gate contract.",
+   "next_command": "Run the exact command from the RESEARCH_ROUTING_GATE_RETRY next_commands array, preserve its JSON receipt, then answer from that receipt; if the gate still rejects, classify pi_research_gate_tool_result_input_missing with the retry receipt attached.",
+   "recoverable": true,
+   "not_this": [
+    "memory service outage",
+    "research-routing false negative after exact command",
+    "provider cooldown"
+   ]
+  },
+  {
+   "code": "webgpt_attachment_bundle_rejected",
+   "layer": "surf",
+   "match": [
+    "attach_file_preflight_failed",
+    "maximum is",
+    "zip contains"
+   ],
+   "cause": "The WebGPT provider rejected the attachment bundle SHAPE before browser dispatch (e.g. zip file-count over the provider limit).",
+   "next_command": "Rebuild the SAME content as one provider-compatible attachment (concatenate to a single markdown, or a zip with <= max files), then resubmit with --attach-file.",
+   "recoverable": true,
+   "not_this": [
+    "tab binding",
+    "open-bind",
+    "rebind"
+   ]
+  },
+  {
+   "code": "scillm_api_base_double_version_segment",
+   "layer": "scillm",
+   "match": [
+    "/v4/v1/chat/completions",
+    "paas/v4/v1",
+    "_with_openai_v1_suffix"
+   ],
+   "cause": "scillm appended /v1 to an api_base whose path already ends in a /vN version segment (e.g. z.ai /api/paas/v4), producing a 404 path.",
+   "next_command": "Skip the /v1 append when the base path already ends in /vN (scillm/proxy/config.py _with_openai_v1_suffix).",
+   "recoverable": true,
+   "not_this": [
+    "api key",
+    "model name",
+    "endpoint host"
+   ]
+  },
+  {
+   "code": "scillm_empty_response_200",
+   "layer": "ask",
+   "match": [
+    "scillm_empty_response_200",
+    "\"submit_meta_status\": 200",
+    "\"submit_meta_status\":200"
+   ],
+   "cause": "Ask received a successful SciLLM HTTP response, but the selected handler produced zero assistant content, so the roundtable seat had no usable answer.",
+   "next_command": "Read the handler response.raw.md and response.meta.json; if choices[0].message.content is empty, rerun with another healthy handler or repair the SciLLM response-shape adapter before retrying the same lane.",
+   "recoverable": true,
+   "not_this": [
+    "provider authentication",
+    "model not found",
+    "browser submit failure"
+   ]
+  },
+  {
+   "code": "surf_native_host_stale_cjs",
+   "layer": "surf",
+   "match": [
+    "edits.*no effect",
+    "stale.*host",
+    "host.cjs.*cache"
+   ],
+   "cause": "The surf native host require-caches chatgpt-client.cjs at process start; a long-running host runs pre-edit code.",
+   "next_command": "Kill the host (pgrep -f surf-cli/native/host.cjs; kill PID) so Chrome respawns it fresh; doctor logs go to /tmp/surf-host.log.",
+   "recoverable": true,
+   "not_this": [
+    "code was wrong",
+    "deployment gap"
+   ]
+  },
+  {
+   "code": "webgpt_preflight_composer_missing",
+   "layer": "surf",
+   "match": [
+    "composer_selector_drift_all_missing",
+    "preflight_composer"
+   ],
+   "cause": "The ChatGPT composer selector did not resolve on the live page (all layered selectors missing).",
+   "next_command": "Inspect the live DOM; the composer markup changed. Update SELECTORS in preflight_doctor.js / chatgpt-client.cjs, or hand off if logged-out.",
+   "recoverable": false,
+   "not_this": [
+    "send button (advisory pre-typing)"
+   ]
+  },
+  {
+   "code": "webgpt_preflight_logged_out",
+   "layer": "surf",
+   "match": [
+    "preflight_logged_out",
+    "auth/login",
+    "logged_out"
+   ],
+   "cause": "The controlled ChatGPT tab is logged out; no submit is possible.",
+   "next_command": "Hand off to the human to log the reviewer tab back in; do not retry automatically.",
+   "recoverable": false,
+   "not_this": []
+  },
+  {
+   "code": "monitor_opportunities_linkedin_source_accounting_failed",
+   "layer": "monitor-opportunities",
+   "match": [
+    "linkedin_top_applicant_status_accounted",
+    "linkedin_premium_status_accounted",
+    "browser_capture_linkedin",
+    "source_accounting"
+   ],
+   "cause": "A monitor-opportunities nightly exited zero but failed to account for required LinkedIn signal sources such as Top Applicant, Easy Apply, or Premium low-competition lanes.",
+   "next_command": "Inspect the scheduler-exec-check receipt source_accounting block and the browser-capture LinkedIn receipts, repair the failing capture or browser-control dependency, then rerun skills/monitor-opportunities/run.sh scheduler-exec-check and keep the pipeline-self-repair ledger attached until the failed check passes.",
+   "recoverable": true,
+   "not_this": [
+    "nightly revision mismatch",
+    "no opportunities found after a successful source count",
+    "human declined LinkedIn authorization"
+   ]
+  },
+  {
+   "code": "monitor_opportunities_nightly_revision_mismatch",
+   "layer": "monitor-opportunities",
+   "match": [
+    "nightly_revision_mismatch",
+    "NIGHTLY_REVISION_MISMATCH"
+   ],
+   "cause": "The scheduler invoked monitor-opportunities with a stale --expected-revision pin, so cron refused to publish a nightly report from code that no longer matched the registered revision.",
+   "next_command": "Run skills/monitor-opportunities/run.sh schedule --promoted-stage0 from the intended agent-skills worktree, read back ~/.pi/scheduler/jobs.json for monitor-opportunities-nightly, then file a skills/ticket bug with route:ops_or_scheduler if the next scheduler log still emits NIGHTLY_REVISION_MISMATCH so project-watchdog can dispatch the repair.",
+   "recoverable": true,
+   "not_this": [
+    "no opportunities found",
+    "LinkedIn empty",
+    "source ranking threshold"
+   ]
+  },
+  {
+   "code": "project_watchdog_closure_audit_artifact_unreadable",
+   "layer": "project-watchdog",
+   "match": [
+    "project_watchdog_closure_audit_artifact_unreadable",
+    "proof artifact not readable",
+    "NOT READABLE",
+    "closure_artifacts",
+    "No such file or directory"
+   ],
+   "cause": "Project-watchdog closure audit could not read a proof artifact named by the closure evidence, so the proof is unverifiable until the artifact path is repaired or the proof is rerun.",
+   "next_command": "Fix project-watchdog closure artifact collection or rerun the ticket proof so the closure comment cites readable artifacts; reopen without needs-human, keep agent-work, include authorized_agent_next_steps, then rerun the closure-audit regression eval and validate the tick receipt with pydantic.",
+   "recoverable": true,
+   "not_this": [
+    "human policy decision",
+    "closure FAIL showing the work is wrong",
+    "provider did not answer any verdict"
+   ]
+  },
+  {
+   "code": "project_watchdog_closure_audit_nonzero_needs_attention",
+   "layer": "project-watchdog",
+   "match": [
+    "project_watchdog_closure_audit_nonzero_needs_attention",
+    "wrapper exit",
+    "VERDICT: NEEDS_ATTENTION",
+    "closure-unverified",
+    "Ask/Tau exited nonzero"
+   ],
+   "cause": "Ask/Tau exited nonzero while closure-audit seats declared VERDICT: NEEDS_ATTENTION. The semantic verdict is usable; project-watchdog must make it durable with closure-unverified or cooldown instead of reporting no usable panel verdict.",
+   "next_command": "Run skills/ticket/run.sh ensure-labels --repo <owner/repo>, then run cd skills/agentic-evals && ./run.sh run ../project-watchdog/fixtures/agentic_eval.json --only-category closure-audit-nonzero-needs-attention and read back READY before resuming project-watchdog.",
+   "recoverable": true,
+   "not_this": [
+    "provider did not answer",
+    "no seat verdict",
+    "closure PASS",
+    "closure FAIL"
+   ]
+  },
+  {
+   "code": "project_watchdog_closure_audit_unverified_closed",
+   "layer": "project-watchdog",
+   "match": [
+    "project_watchdog_closure_audit_unverified_closed",
+    "left_closed_unverified",
+    "closure audit: NEEDS_ATTENTION",
+    "Closure audit: NEEDS_ATTENTION",
+    "left closed and unverified",
+    "could not be verified from the ticket thread"
+   ],
+   "cause": "A project-watchdog closure audit could not verify the ticket proof but left the issue closed as completed. Unverified closure must reopen or block the ticket; closure is a proof claim, not a default state.",
+   "next_command": "Reopen the issue, add agent-work plus needs-human, remove closure-verified/closure-unverified, then rerun the project-watchdog closure-audit regression eval and verify the tick receipt with pydantic.",
+   "recoverable": true,
+   "not_this": [
+    "closure PASS",
+    "closure FAIL already reopened the ticket",
+    "provider did not answer any verdict"
+   ]
+  },
+  {
+   "code": "create_svg_variant_count_invalid",
+   "layer": "create-svg",
+   "match": [
+    "create_svg_variant_count_invalid"
+   ],
+   "cause": "A Tau SVG variant fanout requested fewer than two or more than five concurrent creator candidates.",
+   "next_command": "Edit the variant spec to contain 2..5 variants, then rerun skills/create-svg/run.sh tau-variant-loop before any provider execution.",
+   "recoverable": true,
+   "not_this": [
+    "provider failure",
+    "visual reviewer rejection",
+    "Surf screenshot failure"
+   ]
+  },
+  {
+   "code": "create_svg_variant_handler_count_mismatch",
+   "layer": "create-svg",
+   "match": [
+    "create_svg_variant_handler_count_mismatch"
+   ],
+   "cause": "The Tau SVG variant fanout could not bind exactly one creator handler to each requested variant direction.",
+   "next_command": "Pass one --creator-handler per variant, or put handler on every variants.yml entry, then rerun skills/create-svg/run.sh tau-variant-loop.",
+   "recoverable": true,
+   "not_this": [
+    "provider failure",
+    "visual reviewer rejection",
+    "Tau runtime failure"
+   ]
+  },
+  {
+   "code": "create_svg_variant_handler_family_overlap",
+   "layer": "create-svg",
+   "match": [
+    "create_svg_variant_handler_family_overlap"
+   ],
+   "cause": "The Tau SVG variant fanout reused the same provider family for a creator and the judge, weakening independent visual adjudication.",
+   "next_command": "Choose a --judge-handler from a different provider family than every creator handler, then rerun skills/create-svg/run.sh tau-variant-loop.",
+   "recoverable": true,
+   "not_this": [
+    "variant count",
+    "handler count",
+    "visual reviewer rejection"
+   ]
+  },
+  {
+   "code": "create_svg_tau_provenance_missing_candidate_receipt",
+   "layer": "create-svg",
+   "match": [
+    "create_svg_tau_provenance_missing_candidate_receipt"
+   ],
+   "cause": "A proposed Tau SVG output lacks a readable create_svg.variant_candidate.v1 receipt binding the SVG to a creator node and Tau run.",
+   "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
+   "recoverable": true,
+   "not_this": [
+    "visual design rejection",
+    "provider cooldown",
+    "ordinary SVG validation failure"
+   ]
+  },
+  {
+   "code": "create_svg_tau_provenance_missing_node_receipt",
+   "layer": "create-svg",
+   "match": [
+    "create_svg_tau_provenance_missing_node_receipt"
+   ],
+   "cause": "A proposed Tau SVG output lacks a PASS creator node receipt under the referenced Tau run directory.",
+   "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
+   "recoverable": true,
+   "not_this": [
+    "visual design rejection",
+    "provider cooldown",
+    "ordinary SVG validation failure"
+   ]
+  },
+  {
+   "code": "create_svg_tau_provenance_missing_judge_receipt",
+   "layer": "create-svg",
+   "match": [
+    "create_svg_tau_provenance_missing_judge_receipt"
+   ],
+   "cause": "A proposed Tau SVG output lacks a PASS judge/reviewer node receipt under the referenced Tau run directory.",
+   "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
+   "recoverable": true,
+   "not_this": [
+    "visual design rejection",
+    "provider cooldown",
+    "ordinary SVG validation failure"
+   ]
+  },
+  {
+   "code": "create_svg_tau_provenance_visual_gate_missing",
+   "layer": "create-svg",
+   "match": [
+    "create_svg_tau_provenance_visual_gate_missing"
+   ],
+   "cause": "A proposed Tau SVG output lacks a screenshot-bound create_svg.visual_gate.v1 receipt.",
+   "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
+   "recoverable": true,
+   "not_this": [
+    "visual design rejection",
+    "provider cooldown",
+    "ordinary SVG validation failure"
+   ]
+  },
+  {
+   "code": "create_svg_tau_provenance_visual_gate_not_pass",
+   "layer": "create-svg",
+   "match": [
+    "create_svg_tau_provenance_visual_gate_not_pass"
+   ],
+   "cause": "The create_svg.visual_gate.v1 receipt exists but is not PASS for goal representation and target-size attractiveness.",
+   "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
+   "recoverable": true,
+   "not_this": [
+    "visual design rejection",
+    "provider cooldown",
+    "ordinary SVG validation failure"
+   ]
+  },
+  {
+   "code": "create_svg_tau_provenance_hash_mismatch",
+   "layer": "create-svg",
+   "match": [
+    "create_svg_tau_provenance_hash_mismatch"
+   ],
+   "cause": "A proposed Tau SVG output has an SVG or screenshot sha256 that does not match the bytes on disk.",
+   "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
+   "recoverable": true,
+   "not_this": [
+    "visual design rejection",
+    "provider cooldown",
+    "ordinary SVG validation failure"
+   ]
+  },
+  {
+   "code": "create_svg_tau_provenance_binding_mismatch",
+   "layer": "create-svg",
+   "match": [
+    "create_svg_tau_provenance_binding_mismatch"
+   ],
+   "cause": "A proposed Tau SVG output has mismatched Tau run, creator node, candidate, visual gate, goal, target, or target-size bindings.",
+   "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
+   "recoverable": true,
+   "not_this": [
+    "visual design rejection",
+    "provider cooldown",
+    "ordinary SVG validation failure"
+   ]
+  },
+  {
+   "code": "create_svg_tau_provenance_missing_tau_receipt",
+   "layer": "create-svg",
+   "match": [
+    "create_svg_tau_provenance_missing_tau_receipt"
+   ],
+   "cause": "A proposed Tau SVG output lacks a PASS Tau dag-receipt.json/dag-progress.json under the launch receipt run_dir.",
+   "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
+   "recoverable": true,
+   "not_this": [
+    "visual design rejection",
+    "provider cooldown",
+    "ordinary SVG validation failure"
+   ]
+  },
+  {
+   "code": "create_svg_tau_provenance_missing_launch_receipt",
+   "layer": "create-svg",
+   "match": [
+    "create_svg_tau_provenance_missing_launch_receipt"
+   ],
+   "cause": "A proposed Tau SVG output lacks a readable create_svg.tau_variant_loop_plan.v1 launch receipt.",
+   "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
+   "recoverable": true,
+   "not_this": [
+    "visual design rejection",
+    "provider cooldown",
+    "ordinary SVG validation failure"
+   ]
+  },
+  {
+   "code": "create_svg_browser_submit_not_accepted",
+   "layer": "create-svg",
+   "match": [
+    "browser_submit_not_accepted",
+    "Kimi prompt composer did not receive inserted text",
+    "composer did not receive inserted text",
+    "transport_blocker:browser_submit_not_accepted",
+    "PRIOR_HANDLER_RECEIPTS_NOT_READY"
+   ],
+   "cause": "A Tau SVG creator lane could not submit its prompt to the browser-backed provider, so no live candidate artifact or screenshot-bound review exists for that lane.",
+   "next_command": "Read node-artifacts/<handler>/browser-recovery-packet.json and run its next_command to rebind/recover the browser provider, then rerun skills/create-svg/run.sh tau-variant-loop --execute; do not use local preview SVGs as substitutes for Tau node artifacts.",
+   "recoverable": true,
+   "not_this": [
+    "variant spec validation",
+    "visual gate NOT_READY",
+    "successful Tau candidate artifact"
+   ]
+  },
+  {
+   "code": "create_svg_tau_compile_or_execute_failed",
+   "layer": "create-svg",
+   "match": [
+    "create_svg_tau_compile_or_execute_failed"
+   ],
+   "cause": "The create-svg Tau variant loop compile or execute command returned non-zero or did not emit a readable Tau run directory.",
+   "next_command": "Read the launch receipt plus .ask.stderr.txt/.ask.stdout.json, then run skills/triage-error/run.sh classify --receipt <receipt.ask.stderr.txt> --layer create-svg; if still ambiguous, file a skills/ticket bug with the receipt and scaffold an agentic eval.",
+   "recoverable": true,
+   "not_this": [
+    "visual gate NOT_READY",
+    "human aesthetic rejection",
+    "variant spec validation"
+   ]
+  },
+  {
+   "code": "create_svg_visual_gate_not_ready",
+   "layer": "create-svg",
+   "match": [
+    "create_svg_visual_gate_not_ready",
+    "\"status\": \"NOT_READY\"",
+    "create_svg.visual_gate.v1"
+   ],
+   "cause": "A rendered SVG candidate was screenshot-reviewed and failed goal representation or target-size attractiveness.",
+   "next_command": "Use the visual-gate receipt issues and next_edit fields as the next variant direction; do not classify this as a runtime/tool defect unless the gate receipt itself is malformed.",
+   "recoverable": true,
+   "not_this": [
+    "Tau compile failure",
+    "provider authentication",
+    "missing screenshot file"
+   ]
+  },
+  {
+   "code": "herdr_pane_unaddressable",
+   "layer": "ops-herdr.bridge",
+   "match": [
+    "pane_unreadable",
+    "target_not_in_roster_or_no_pane",
+    "deferred message exceeded TTL",
+    "none addressable",
+    "pane(s) named",
+    "but none addressable"
+   ],
+   "cause": "A Herdr bridge message targeted a pane that is dead, unreadable, or no longer in the roster; queued delivery expired to dead-letter.",
+   "next_command": "node skills/ops-herdr/pi-herdr-bridge/bridge-cli.mjs list  # confirm the live session, then resend to the current pane/session-ref",
+   "recoverable": true,
+   "not_this": [
+    "provider rate limit",
+    "intercom broker outage"
+   ]
+  },
+  {
+   "code": "tau_dag_requested_handler_substituted",
+   "layer": "tau.project_dag",
+   "match": [
+    "tau_dag_requested_handler_substituted",
+    "requested handler identities",
+    "fallback is not authorized",
+    "handler nodes do not match"
+   ],
+   "cause": "A Tau DAG requested exact browser/API handlers, but the compiled handler nodes used a different handler identity and no explicit fallback authorization was present.",
+   "next_command": "Read dag-receipt.json alerts for expected_handler_nodes and actual_handler_nodes, regenerate the DAG with exact requested handler node ids or set handler_fallback_authorized only after an explicit policy decision, then rerun the tau_create_svg_origin_gates_agentic_eval fixture.",
+   "recoverable": true,
+   "not_this": [
+    "provider timeout",
+    "browser submit failure",
+    "reviewer semantic disagreement"
+   ]
+  },
+  {
+   "code": "create_svg_required_payload_missing",
+   "layer": "tau.project_dag",
+   "match": [
+    "create_svg_required_payload_missing",
+    "path-backed SVG artifact",
+    "create_svg.variant_candidate.v1",
+    "prose without svg payload"
+   ],
+   "cause": "A create-svg Tau creator node reported progress without emitting a machine-readable create_svg.variant_candidate.v1 receipt containing a path-backed SVG artifact.",
+   "next_command": "Read the creator node receipt, require create_svg.variant_candidate.v1 evidence with svg_path and svg_sha256, and rerun the DAG plus tau_create_svg_origin_gates_agentic_eval before presenting visual progress.",
+   "recoverable": true,
+   "not_this": [
+    "human visual rejection",
+    "final acceptance signature missing",
+    "provider quota exhaustion"
+   ]
+  },
+  {
+   "code": "create_svg_candidate_receipt_invalid",
+   "layer": "tau.project_dag",
+   "match": [
+    "create_svg_candidate_receipt_invalid",
+    "variant_candidate receipt cannot be accepted",
+    "mocked",
+    "live"
+   ],
+   "cause": "A create-svg variant candidate receipt is malformed, mocked, non-live, carries a failure_code, or has an invalid SVG path/hash binding.",
+   "next_command": "Regenerate the create-svg candidate from a live Tau node, ensure mocked=false, live=true, no failure_code, and svg_sha256 matches the SVG bytes, then rerun the DAG and retained eval.",
+   "recoverable": true,
+   "not_this": [
+    "handler identity substitution",
+    "missing visual gate",
+    "browser submit not accepted"
+   ]
+  },
+  {
+   "code": "create_svg_artifact_origin_invalid",
+   "layer": "tau.project_dag",
+   "match": [
+    "create_svg_artifact_origin_invalid",
+    "Tau node artifact area",
+    "origin-bound",
+    "local-preview.svg"
+   ],
+   "cause": "A create-svg SVG artifact was outside Tau node artifact custody or lacked explicit origin_node_id/origin binding to the creator node.",
+   "next_command": "Do not surface the local preview as Tau progress. Re-run the Tau node so the SVG is written under the run ready-queue node artifact area or emit origin=tau_node_artifact with origin_node_id matching the creator node, then rerun the provenance eval.",
+   "recoverable": true,
+   "not_this": [
+    "SVG visual quality failure",
+    "missing human acceptance",
+    "reviewer artifact hash mismatch"
+   ]
+  },
+  {
+   "code": "tau_dag_verification_contract_incomplete",
+   "layer": "tau.project_dag",
+   "match": [
+    "tau_dag_verification_contract_incomplete",
+    "verification contract is incomplete",
+    "route to $interview",
+    "requires_human_acceptance"
+   ],
+   "cause": "A Tau DAG declares human verification or acceptance but omits an executable tau.verification_contract.v1 with verifier_nodes and required_receipts.",
+   "next_command": "Run $interview to collect the missing verifier contract, then regenerate the DAG with verifier_nodes and required_receipts before execution.",
+   "recoverable": true,
+   "not_this": [
+    "provider timeout",
+    "browser transport failure",
+    "semantic reviewer disagreement"
+   ]
+  },
+  {
+   "code": "tau_dag_self_verification_forbidden",
+   "layer": "tau.project_dag",
+   "match": [
+    "tau_dag_self_verification_forbidden",
+    "self verification",
+    "verify its own output",
+    "verifies_node"
+   ],
+   "cause": "A Tau DAG verifier node attempts to verify its own output, which would let the same untrusted agent certify itself.",
+   "next_command": "Regenerate the DAG so every verifier node verifies a different producer node, then rerun Tau before accepting any PASS.",
+   "recoverable": true,
+   "not_this": [
+    "provider timeout",
+    "browser transport failure",
+    "semantic reviewer disagreement"
+   ]
+  },
+  {
+   "code": "tau_model_claim_without_receipt",
+   "layer": "tau.project_dag",
+   "match": [
+    "tau_model_claim_without_receipt",
+    "claim without receipt",
+    "prose completion claim",
+    "machine-readable receipt"
+   ],
+   "cause": "A model made a completion or proof claim without a machine-readable receipt that Tau can validate independently.",
+   "next_command": "Require the node to emit the relevant receipt evidence, then rerun the same DAG node; do not accept prose as proof.",
+   "recoverable": true,
+   "not_this": [
+    "provider timeout",
+    "browser transport failure",
+    "semantic reviewer disagreement"
+   ]
+  },
+  {
+   "code": "tau_model_artifact_path_missing",
+   "layer": "tau.project_dag",
+   "match": [
+    "tau_model_artifact_path_missing",
+    "artifact path could not be read",
+    "without a path-backed artifact",
+    "missing artifact path"
+   ],
+   "cause": "A model claimed an artifact but omitted a readable path, or the path could not be read back from disk.",
+   "next_command": "Read the node response, make it emit a path-backed artifact evidence object, verify the file exists, and rerun the DAG.",
+   "recoverable": true,
+   "not_this": [
+    "provider timeout",
+    "browser transport failure",
+    "semantic reviewer disagreement"
+   ]
+  },
+  {
+   "code": "tau_model_artifact_hash_mismatch",
+   "layer": "tau.project_dag",
+   "match": [
+    "tau_model_artifact_hash_mismatch",
+    "artifact hash did not match",
+    "actual_sha256",
+    "observed_sha256"
+   ],
+   "cause": "A model artifact receipt supplied a sha256 that does not match the artifact bytes read back from disk.",
+   "next_command": "Recompute sha256 over the artifact bytes, fix or regenerate the artifact receipt, and rerun the DAG.",
+   "recoverable": true,
+   "not_this": [
+    "provider timeout",
+    "browser transport failure",
+    "semantic reviewer disagreement"
+   ]
+  },
+  {
+   "code": "tau_model_proof_command_unverified",
+   "layer": "tau.project_dag",
+   "match": [
+    "tau_model_proof_command_unverified",
+    "proof command receipt",
+    "exit_code 0",
+    "stdout hash"
+   ],
+   "cause": "A model claimed a proof command passed, but the proof command receipt was missing, malformed, non-PASS, nonzero exit, or lacked a stdout hash.",
+   "next_command": "Run the proof command through the verifier path so it emits tau.proof_command_receipt.v1 with status=PASS, exit_code=0, command, and stdout_sha256, then rerun Tau.",
+   "recoverable": true,
+   "not_this": [
+    "provider timeout",
+    "browser transport failure",
+    "semantic reviewer disagreement"
+   ]
+  },
+  {
+   "code": "tau_join_unadmitted_evidence",
+   "layer": "tau.project_dag",
+   "match": [
+    "tau_join_unadmitted_evidence",
+    "unadmitted evidence",
+    "admitted_nodes",
+    "join node cited evidence"
+   ],
+   "cause": "A join node cited evidence from a node not admitted by the DAG join contract.",
+   "next_command": "Remove unadmitted evidence from the join output or update the DAG join contract with explicit admitted_nodes, then rerun the join.",
+   "recoverable": true,
+   "not_this": [
+    "provider timeout",
+    "browser transport failure",
+    "semantic reviewer disagreement"
+   ]
+  },
+  {
+   "code": "tau_recovery_without_failed_path_rerun",
+   "layer": "tau.project_dag",
+   "match": [
+    "tau_recovery_without_failed_path_rerun",
+    "failed path was rerun",
+    "recovery receipt",
+    "rerun_node_ids"
+   ],
+   "cause": "A recovery node claimed repair progress without proving that the failed path was rerun.",
+   "next_command": "Rerun the failed path and emit recovery_receipt.rerun_node_ids including the failed_node_id before continuing.",
+   "recoverable": true,
+   "not_this": [
+    "provider timeout",
+    "browser transport failure",
+    "semantic reviewer disagreement"
+   ]
+  },
+  {
+   "code": "tau_human_acceptance_receipt_missing",
+   "layer": "tau.project_dag",
+   "match": [
+    "tau_human_acceptance_receipt_missing",
+    "human acceptance receipt",
+    "Needs Human",
+    "accepted_by"
+   ],
+   "cause": "A DAG reached a human acceptance/signature gate without a first-class tau.human_acceptance_receipt.v1 signer receipt.",
+   "next_command": "Route to $interview or the configured human acceptance UI, capture tau.human_acceptance_receipt.v1 with accepted_by, then rerun/verify.",
+   "recoverable": true,
+   "not_this": [
+    "provider timeout",
+    "browser transport failure",
+    "semantic reviewer disagreement"
+   ]
+  },
+  {
+   "code": "create_report_pydantic_validation_failed",
+   "layer": "create-report",
+   "match": [
+    "create-report pydantic validation failed",
+    "create_report.report.v1 validation failed",
+    "validation error for CreateReport",
+    "validation errors for CreateReport"
+   ],
+   "cause": "A create-report JSON payload failed the pydantic create_report.report.v1 contract, so it cannot be rendered or used as a report source of truth.",
+   "next_command": "Run skills/create-report/run.sh repair <bad-report.json> --output <repaired-report.json>, replace repair-skeleton fields with evidence-backed data, then rerun skills/create-report/run.sh validate <repaired-report.json>.",
+   "recoverable": true,
+   "not_this": [
+    "missing reviewer receipt",
+    "provider timeout",
+    "visual screenshot failure"
+   ]
+  },
+  {
+   "code": "project_state_pydantic_validation_failed",
+   "layer": "project-state",
+   "match": [
+    "project-state pydantic validation failed",
+    "project_state.report.v1 validation failed",
+    "validation error for ProjectStateReport",
+    "validation errors for ProjectStateReport"
+   ],
+   "cause": "A project-state JSON payload failed its pydantic contract, so it cannot be rendered or used as the state source of truth without repair.",
+   "next_command": "Run skills/project-state/run.sh repair-report <bad-report.json> --output <repaired-report.json>, inspect the embedded Phase 6 critical gap, then rerun skills/project-state/run.sh validate-report <repaired-report.json>.",
+   "recoverable": true,
+   "not_this": [
+    "memory recall unavailable",
+    "best-practices finding",
+    "external research timeout"
+   ]
+  },
+  {
+   "code": "triage_classifier_unreachable",
+   "layer": "triage-error",
+   "match": [
+    "triage_classifier_unreachable",
+    "triage-error classify could not be invoked"
+   ],
+   "cause": "A caller tried to route a raw failure signal through triage-error classify, but the classifier CLI could not be invoked (missing runner, timeout, or bad JSON output).",
+   "next_command": "skills/triage-error/run.sh classify --text probe --layer triage-error",
+   "recoverable": true,
+   "not_this": [
+    "the underlying failure the caller was trying to classify"
+   ]
+  },
+  {
+   "code": "scene_table_interaction_filler",
+   "layer": "scene_script",
+   "match": [
+    "environment_interaction is filler",
+    "environment_interaction too thin"
+   ],
+   "cause": "An element row's environment_interaction is filler or too thin; the scene table requires force+effect or stillness+reason per element.",
+   "next_command": "Edit the element row's environment_interaction to a concrete force+effect (e.g. 'umbrella fabric shivers in the storm wind'), then rerun scripts/scene_table.py validate.",
+   "recoverable": true,
+   "not_this": [
+    "missing required field",
+    "vague adjective"
+   ]
+  },
+  {
+   "code": "scene_table_vague_adjective",
+   "layer": "scene_script",
+   "match": [
+    "vague adjective",
+    "does the work a physical fact should do"
+   ],
+   "cause": "A description or interaction uses a vague adjective (cinematic/epic/atmospheric...) where a physical state/force/effect is required.",
+   "next_command": "Replace the vague adjective with a physical fact in the flagged field, then rerun scripts/scene_table.py validate.",
+   "recoverable": true,
+   "not_this": [
+    "filler interaction",
+    "missing field"
+   ]
+  },
+  {
+   "code": "scene_table_missing_required_field",
+   "layer": "scene_script",
+   "match": [
+    "Field required",
+    "characters require an action beat",
+    "string_too_short"
+   ],
+   "cause": "The scene table is missing a required environment header field, element field, or a character's action beat.",
+   "next_command": "Add the missing field named in the pydantic loc to the scene table JSON, then rerun scripts/scene_table.py validate.",
+   "recoverable": true,
+   "not_this": [
+    "filler interaction",
+    "vague adjective"
+   ]
+  }
+ ],
+ "aliases": {}
 }
