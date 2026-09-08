@@ -203,11 +203,19 @@ def project_state(
         step.step_id,
         "debugger_prepare",
     )
-    diagram_receipt = _latest_step_receipt(
-        safe_receipts,
-        row.feature_id,
-        step.step_id,
-        "diagram_highlight",
+    diagram_receipt = (
+        _latest_step_receipt(
+            safe_receipts,
+            row.feature_id,
+            step.step_id,
+            "diagram_highlight",
+        )
+        or _latest_step_receipt(
+            safe_receipts,
+            row.feature_id,
+            step.step_id,
+            "excalidraw_proposal",
+        )
     )
 
     debugger_status = "NONE"

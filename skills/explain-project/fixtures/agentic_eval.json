@@ -118,6 +118,15 @@
       "evidence_class": "deterministic"
     },
     {
+      "name": "excalidraw-proposal-receipt-boundary",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "-c", "cd .. && python3 - <<'PY' >/tmp/explain-project-ops-excalidraw-proposal.json\nimport json\nprint(json.dumps({\"schema\":\"ops_excalidraw.push_board.v1\",\"status\":\"PASS\",\"mode\":\"proposal\",\"version\":1,\"elements\":3}))\nPY\n./run.sh excalidraw-proposal-receipt --receipt /tmp/explain-project-ops-excalidraw-proposal.json --feature-id publish.report_last --step-id staging --request-revision 1 | tee /tmp/explain-project-excalidraw-proposal-receipt.json && python3 - <<'PY'\nimport json\nd=json.load(open('/tmp/explain-project-excalidraw-proposal-receipt.json'))\nassert d['schema'] == 'explain_project.adapter_receipt.v1'\nassert d['adapter'] == 'excalidraw_proposal'\nassert d['status'] == 'PROPOSED'\nprint('EXPLAIN_PROJECT_EXCALIDRAW_PROPOSAL_RECEIPT_OK')\nPY"],
+      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_EXCALIDRAW_PROPOSAL_RECEIPT_OK"]},
+      "readback": true,
+      "evidence_class": "deterministic"
+    },
+    {
       "name": "ui-contract-static-check",
       "type": "positive",
       "real_world": true,

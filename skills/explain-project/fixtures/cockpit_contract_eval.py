@@ -423,6 +423,56 @@ def main() -> None:
         "debugger proof receipt did not update cockpit proof state",
     )
 
+    proposal_receipt_event = (
+        COCKPIT_EVENT_ADAPTER
+        .validate_python(
+            {
+                "schema": (
+                    "explain_project."
+                    "cockpit_event.v1"
+                ),
+                "event_id": "evt-excalidraw-proposal",
+                "type": "adapter.receipt",
+                "expected_revision": reveal_state.revision,
+                "payload": {
+                    "receipt": AdapterReceipt(
+                        receipt_id=(
+                            "excalidraw-proposal-12345"
+                        ),
+                        adapter="excalidraw_proposal",
+                        request_revision=reveal_state.revision,
+                        feature_id=(
+                            reveal_state.selection.feature_id
+                        ),
+                        step_id=reveal_state.selection.step_id,
+                        status="PROPOSED",
+                        detail=(
+                            "ops_excalidraw_receipt=/tmp/"
+                            "proposal.json; version=1"
+                        ),
+                    ).model_dump(
+                        by_alias=True,
+                        mode="json",
+                    )
+                },
+            }
+        )
+    )
+
+    proposal_state = reduce_cockpit(
+        reveal_state,
+        proposal_receipt_event,
+        rows,
+    )
+
+    require(
+        (
+            proposal_state.integration_health.diagram
+            == "READY"
+        ),
+        "excalidraw proposal receipt did not mark diagram health READY",
+    )
+
     prepare_event = (
         COCKPIT_EVENT_ADAPTER
         .validate_python(

@@ -26,6 +26,7 @@ from .models import (
     CockpitScript,
     DebuggerProofReference,
     DebuggerRevealStatus,
+    ExcalidrawProposalStatus,
     FailureCode,
     FeatureExplainer,
     TriagedFailure,
@@ -439,6 +440,61 @@ def debugger_source_reveal_receipt_command(
                 f"debugger_status={status}; "
                 f"sha256:{digest}; "
                 f"revealed={actual}:{reveal_status.reveal.line}"
+            ),
+        )
+    )
+
+
+@app.command("excalidraw-proposal-receipt")
+def excalidraw_proposal_receipt_command(
+    receipt: Path = typer.Option(
+        ...,
+        "--receipt",
+        help="ops-excalidraw push-board/describe proposal receipt JSON.",
+    ),
+    feature_id: str = typer.Option(..., "--feature-id"),
+    step_id: str = typer.Option(..., "--step-id"),
+    request_revision: int = typer.Option(
+        ...,
+        "--request-revision",
+        min=0,
+    ),
+) -> None:
+    """Convert an ops-excalidraw proposal receipt into cockpit state."""
+
+    try:
+        raw = receipt.read_text(encoding="utf-8")
+        proposal = ExcalidrawProposalStatus.model_validate_json(raw)
+    except ValidationError as error:
+        _emit(
+            TriagedFailure(
+                failure_code=(
+                    FailureCode
+                    .PYDANTIC_VALIDATION_FAILED
+                ),
+                message=(
+                    "ops-excalidraw proposal receipt validation failed"
+                ),
+                errors=_validation_errors(error),
+            )
+        )
+        raise typer.Exit(1)
+
+    digest = hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+    _emit(
+        AdapterReceipt(
+            receipt_id=f"excalidraw-proposal-{digest[:16]}",
+            adapter="excalidraw_proposal",
+            request_revision=request_revision,
+            feature_id=feature_id,
+            step_id=step_id,
+            status="PROPOSED",
+            detail=(
+                f"ops_excalidraw_receipt={receipt}; "
+                f"sha256:{digest}; "
+                f"version={proposal.version}; "
+                f"elements={proposal.elements}"
             ),
         )
     )

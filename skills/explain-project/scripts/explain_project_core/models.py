@@ -408,6 +408,19 @@ class DebuggerRevealStatus(StrictModel):
     updatedAt: str | None = None
 
 
+class ExcalidrawProposalStatus(StrictModel):
+    """ops-excalidraw safe proposal receipt boundary."""
+
+    schema_: Literal[
+        "ops_excalidraw.push_board.v1",
+        "ops_excalidraw.describe.v1",
+    ] = Field(alias="schema")
+    status: Literal["PASS"]
+    mode: Literal["proposal"]
+    version: int = Field(ge=1)
+    elements: int = Field(ge=1)
+
+
 class AdapterReceipt(StrictModel):
     """External adapter readback bound to the intent revision."""
 
@@ -421,6 +434,7 @@ class AdapterReceipt(StrictModel):
         "debugger_prepare",
         "debugger_proof",
         "diagram_highlight",
+        "excalidraw_proposal",
     ]
     request_revision: int = Field(ge=0)
     feature_id: str = Field(min_length=1)
@@ -431,6 +445,7 @@ class AdapterReceipt(StrictModel):
         "BLOCKED",
         "PROOF_RECEIVED",
         "HIGHLIGHTED",
+        "PROPOSED",
         "REFUSED",
     ]
     detail: str | None = None
