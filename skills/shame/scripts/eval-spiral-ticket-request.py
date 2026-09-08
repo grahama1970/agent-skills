@@ -14,6 +14,8 @@ def main() -> None:
     assert "writeSpiralTicketRequest" in source
     assert "report_retry_exhausted" in source
     assert "lazy_report_shame.spiral_ticket_request.v1" in source
+    assert "LAZY_REPORT_SHAME_SPIRAL_TICKET_APPLY" in source
+    assert "spawnSync(\"bash\"" in source
     request = {
         "schema": "lazy_report_shame.spiral_ticket_request.v1",
         "fingerprint": "sha256:" + "a" * 64,
@@ -53,6 +55,7 @@ def main() -> None:
             "retry exhaustion is a distinct report_retry_exhausted event",
             "spiral ticket requests target skills/shame",
             "ticket command creates an agent-work maintenance ticket",
+            "ticket apply is automatic unless disabled by environment",
             "project-watchdog route is ticket_repair",
         ],
     }, indent=2))

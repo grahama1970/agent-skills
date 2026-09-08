@@ -163,9 +163,10 @@ sessions. The reader scans the last 4 MiB and bounds returned JSON to 32 KiB;
 A log-write error is visible and does not create another retry loop. Retry exhaustion
 is rare by design; when it occurs, the extension records `report_retry_exhausted`
 and writes a `lazy_report_shame.spiral_ticket_request.v1` outbox entry for a
-`skills/shame` maintenance ticket with `agent-work` routing, so project-watchdog can
-pick it up through `ticket_repair` after the ticket is applied. No automatic
-backfill or classifier labeling is performed.
+`skills/shame` maintenance ticket with `agent-work` routing. By default it also
+runs the contained `$ticket` command; set `LAZY_REPORT_SHAME_SPIRAL_TICKET_APPLY=0`
+to retain only the outbox record. project-watchdog picks up the created issue through
+`ticket_repair`. No automatic backfill or classifier labeling is performed.
 
 Latest candidate recovery remains session-scoped and atomic:
 `/mnt/storage12tb/skills/shame/training/pending-review-packet.json.sessions/<sha256(session-id)>.json`.

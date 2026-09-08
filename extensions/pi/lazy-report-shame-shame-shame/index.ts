@@ -18,6 +18,7 @@ const SHAME_AUDIO = process.env.LAZY_REPORT_SHAME_AUDIO || join(EXTENSION_DIR, "
 const TRAINING_JSONL = process.env.LAZY_REPORT_SHAME_TRAINING_JSONL || "/mnt/storage12tb/skills/shame/training/classifier-feedback.jsonl";
 const PENDING_REVIEW_PACKET = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || "/mnt/storage12tb/skills/shame/training/pending-review-packet.json";
 const SPIRAL_TICKET_OUTBOX = process.env.LAZY_REPORT_SHAME_SPIRAL_TICKET_OUTBOX || "/mnt/storage12tb/skills/shame/ticket-outbox";
+const AGENT_SKILLS_ROOT = process.env.AGENT_SKILLS_ROOT || "/home/graham/workspace/experiments/agent-skills";
 const CONFIGURED_MEMORY_URL = process.env.MEMORY_SERVICE_URL || process.env.MEMORY_API_URL || "";
 const MEMORY_URL = (CONFIGURED_MEMORY_URL.startsWith("unix://") ? "http://127.0.0.1:8601" : (CONFIGURED_MEMORY_URL || "http://127.0.0.1:8601")).replace(/\/+$/, "");
 const MEMORY_COLLECTION = process.env.SHAME_MEMORY_COLLECTION || "shame_training_examples";
@@ -967,6 +968,15 @@ function writeSpiralTicketRequest(candidate: Candidate, check: CheckResult, revi
     ticket_command: ticketCommand,
     watchdog_route: "project-watchdog -> ticket_repair",
   };
+  if (!flagDisabled(process.env.LAZY_REPORT_SHAME_SPIRAL_TICKET_APPLY ?? "1")) {
+    const applied = spawnSync("bash", ["-lc", ticketCommand], { cwd: AGENT_SKILLS_ROOT, encoding: "utf8", timeout: 30000 });
+    (request as any).ticket_apply = {
+      attempted: true,
+      exit_code: applied.status,
+      stdout_excerpt: String(applied.stdout || "").slice(0, 2000),
+      stderr_excerpt: String(applied.stderr || "").slice(0, 2000),
+    };
+  }
   writeFileSync(requestPath, JSON.stringify(request, null, 2) + "\n");
   return requestPath;
 }
