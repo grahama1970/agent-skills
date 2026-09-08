@@ -23,6 +23,7 @@ provides:
   - kling-endpoint-routing
 composes:
   - brave-search
+  - watch
   - agentic-evals
 complies:
   - best-practices-skills
@@ -167,6 +168,11 @@ construction, not hope:
    wardrobe hue, distinguishing detail, body proportions. Two or more failures
    -> regenerate with ONE variable changed; never color-grade drift away in
    post, and never chain from a drifted clip - drift compounds.
+   Use `$watch` as the audit mechanism, not eyeballs: `watch <clip.mp4>
+   --scene-change` yields per-shot frames plus VLM visual descriptions to
+   check required characters are visible and matching; watch's YOLO identity
+   ledger keeps detector observations separate from accepted identity. A clip
+   whose frames fail required-entity visibility does not feed the chain.
 
 ## Rule 7: One clip, one action
 
