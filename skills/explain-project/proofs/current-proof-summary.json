@@ -52,5 +52,28 @@
     "human acceptance of an Excalidraw proposal",
     "arbitrary visible VS Code GUI control",
     "arbitrary debugger adapter support"
-  ]
+  ],
+  "browser_interaction_receipt": {
+    "path": "skills/explain-project/proofs/browser-interaction-receipt.json",
+    "schema": "explain_project.browser_interaction_receipt.v1",
+    "status": "PASS",
+    "proves": "Rendered React cockpit imported a pasted explainer, routed a manual question, advanced to the next step, and displayed synchronized teleprompter/source/diagram/integration-health state from Revision 10."
+  },
+  "browser_interaction_trace_receipt": {
+    "path": "skills/explain-project/proofs/browser-interaction-trace-receipt.json",
+    "schema": "explain_project.browser_interaction_trace_receipt.v1",
+    "status": "PASS",
+    "proves": "Rendered React cockpit imported a unique pasted explainer, selected it, routed a manual question to MATCHED, clicked next and previous, and checked teleprompter/source/diagram/integration-health DOM projections against the same typed revisions 15-18."
+  },
+  "external_reviews": {
+    "webkimi_readme_review": {
+      "path": "skills/explain-project/proofs/webkimi-readme-review.md",
+      "verdict": "PASS"
+    },
+    "webgpt_immutable_goal_review": {
+      "path": "skills/explain-project/proofs/webgpt-immutable-goal-review.md",
+      "verdict": "PASS",
+      "boundary": "evaluates supplied evidence summaries, not independent hash-artifact reruns"
+    }
+  }
 }

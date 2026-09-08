@@ -1,0 +1,384 @@
+{
+  "final_assertions": {
+    "manual_question_matched_imported_explainer": true,
+    "next_incremented_revision_and_step": true,
+    "previous_incremented_revision_and_step": true,
+    "projection_checks_all_passed": true
+  },
+  "production_browser": true,
+  "rendered_ui_origin": "http://127.0.0.1:15174",
+  "schema": "explain_project.browser_interaction_trace_receipt.v1",
+  "status": "PASS",
+  "trace": [
+    {
+      "action": "start",
+      "revision": 13,
+      "selection": null
+    },
+    {
+      "action": "paste_import",
+      "catalog_has_feature": false,
+      "pasted_feature_id": "readme.unique_closure_v3",
+      "revision": 14
+    },
+    {
+      "action": "select_imported_explainer",
+      "checks": {
+        "domDiagramMatchesState": true,
+        "domHealthMatchesState": true,
+        "domRevisionMatchesState": true,
+        "domSourceMatchesState": true,
+        "domStepMatchesState": true,
+        "domTitleMatchesState": true,
+        "sameRevisionAcrossState": true
+      },
+      "clicked_qid": "cockpit:explainer:select:readme.unique_closure_v3",
+      "dom": {
+        "revisionText": "Revision 15",
+        "stepText": "1 / 2",
+        "title": "Review backs the README"
+      },
+      "expected_feature_id": "readme.unique_closure_v3",
+      "state": {
+        "diagram": {
+          "active_node_ids": [
+            "teleprompter"
+          ],
+          "highlight_intent": {
+            "active_node_ids": [
+              "teleprompter"
+            ],
+            "mode": "display_highlight_only",
+            "mutation_allowed": false,
+            "rendered_svg_path": "assets/readme/cockpit-flow.svg",
+            "revision": 15,
+            "schema": "explain_project.diagram_highlight_intent.v1",
+            "source_kind": "svg",
+            "source_path": "assets/readme/cockpit-flow.svg"
+          },
+          "node_ids": [
+            "teleprompter",
+            "source",
+            "debugger"
+          ],
+          "rendered_svg_path": "assets/readme/cockpit-flow.svg",
+          "revision": 15,
+          "source_kind": "svg",
+          "source_path": "assets/readme/cockpit-flow.svg",
+          "verified_binding": true
+        },
+        "integration_health": {
+          "debugger_target": "NOT_CONFIGURED",
+          "diagram": "READY",
+          "live_evidence": "NOT_CONFIGURED",
+          "source_reveal": "NOT_CONFIGURED"
+        },
+        "revision": 15,
+        "selection": {
+          "feature_id": "readme.unique_closure_v3",
+          "step_count": 2,
+          "step_id": "review",
+          "step_index": 0
+        },
+        "source": {
+          "explanation": "README states purpose, OpenAI context, helper skills, proof, and non-claims.",
+          "location": {
+            "end_line": 90,
+            "file": "skills/explain-project/README.md",
+            "start_line": 1,
+            "symbol": "README"
+          },
+          "reveal_intent": null,
+          "revision": 15
+        },
+        "teleprompter": {
+          "bullets": [
+            "WebKimi returned VERDICT: PASS.",
+            "Follow-up added prerequisites and outputs."
+          ],
+          "confidence": "high",
+          "proof_boundary": "Reviewer verdict is advisory; local checks still own proof.",
+          "revision": 15,
+          "title": "Review backs the README",
+          "verification": "not_live_proof"
+        }
+      }
+    },
+    {
+      "action": "route_manual_question",
+      "checks": {
+        "domDiagramMatchesState": true,
+        "domHealthMatchesState": true,
+        "domRevisionMatchesState": true,
+        "domSourceMatchesState": true,
+        "domStepMatchesState": true,
+        "domTitleMatchesState": true,
+        "sameRevisionAcrossState": true
+      },
+      "clicked_qid": "cockpit:question:manual-submit",
+      "dom": {
+        "revisionText": "Revision 16",
+        "routeText": "MATCHED",
+        "stepText": "1 / 2",
+        "title": "Review backs the README"
+      },
+      "question": "What proves the unique closure cockpit helper map v3?",
+      "question_state": {
+        "input_id": "29fb0938-60bd-4e1d-a330-ba8929b7afad",
+        "provenance": "manual",
+        "schema": "explain_project.question_input.v1",
+        "source": "manual",
+        "source_fingerprint": null,
+        "source_ref": null,
+        "text": "What proves the unique closure cockpit helper map v3?"
+      },
+      "route": {
+        "candidates": [
+          "readme.unique_closure_v3"
+        ],
+        "matched_feature": "readme.unique_closure_v3",
+        "question": "What proves the unique closure cockpit helper map v3?",
+        "schema": "explain_project.route_decision.v1",
+        "scores": {
+          "publish.report_last": 1,
+          "readme.unique_closure_v3": 6,
+          "readme.webkimi_review": 2,
+          "readme.webkimi_review.v2": 2
+        },
+        "status": "MATCHED"
+      },
+      "state": {
+        "diagram": {
+          "active_node_ids": [
+            "teleprompter"
+          ],
+          "highlight_intent": {
+            "active_node_ids": [
+              "teleprompter"
+            ],
+            "mode": "display_highlight_only",
+            "mutation_allowed": false,
+            "rendered_svg_path": "assets/readme/cockpit-flow.svg",
+            "revision": 16,
+            "schema": "explain_project.diagram_highlight_intent.v1",
+            "source_kind": "svg",
+            "source_path": "assets/readme/cockpit-flow.svg"
+          },
+          "node_ids": [
+            "teleprompter",
+            "source",
+            "debugger"
+          ],
+          "rendered_svg_path": "assets/readme/cockpit-flow.svg",
+          "revision": 16,
+          "source_kind": "svg",
+          "source_path": "assets/readme/cockpit-flow.svg",
+          "verified_binding": true
+        },
+        "integration_health": {
+          "debugger_target": "NOT_CONFIGURED",
+          "diagram": "READY",
+          "live_evidence": "NOT_CONFIGURED",
+          "source_reveal": "NOT_CONFIGURED"
+        },
+        "revision": 16,
+        "selection": {
+          "feature_id": "readme.unique_closure_v3",
+          "step_count": 2,
+          "step_id": "review",
+          "step_index": 0
+        },
+        "source": {
+          "explanation": "README states purpose, OpenAI context, helper skills, proof, and non-claims.",
+          "location": {
+            "end_line": 90,
+            "file": "skills/explain-project/README.md",
+            "start_line": 1,
+            "symbol": "README"
+          },
+          "reveal_intent": null,
+          "revision": 16
+        },
+        "teleprompter": {
+          "bullets": [
+            "WebKimi returned VERDICT: PASS.",
+            "Follow-up added prerequisites and outputs."
+          ],
+          "confidence": "high",
+          "proof_boundary": "Reviewer verdict is advisory; local checks still own proof.",
+          "revision": 16,
+          "title": "Review backs the README",
+          "verification": "not_live_proof"
+        }
+      }
+    },
+    {
+      "action": "navigate_next",
+      "after_revision": 17,
+      "before_revision": 16,
+      "checks": {
+        "domDiagramMatchesState": true,
+        "domHealthMatchesState": true,
+        "domRevisionMatchesState": true,
+        "domSourceMatchesState": true,
+        "domStepMatchesState": true,
+        "domTitleMatchesState": true,
+        "sameRevisionAcrossState": true
+      },
+      "clicked_qid": "cockpit:step:next",
+      "dom": {
+        "revisionText": "Revision 17",
+        "stepText": "2 / 2",
+        "title": "Helper links are visible"
+      },
+      "state": {
+        "diagram": {
+          "active_node_ids": [
+            "source"
+          ],
+          "highlight_intent": {
+            "active_node_ids": [
+              "source"
+            ],
+            "mode": "display_highlight_only",
+            "mutation_allowed": false,
+            "rendered_svg_path": "assets/readme/cockpit-flow.svg",
+            "revision": 17,
+            "schema": "explain_project.diagram_highlight_intent.v1",
+            "source_kind": "svg",
+            "source_path": "assets/readme/cockpit-flow.svg"
+          },
+          "node_ids": [
+            "teleprompter",
+            "source",
+            "debugger"
+          ],
+          "rendered_svg_path": "assets/readme/cockpit-flow.svg",
+          "revision": 17,
+          "source_kind": "svg",
+          "source_path": "assets/readme/cockpit-flow.svg",
+          "verified_binding": true
+        },
+        "integration_health": {
+          "debugger_target": "NOT_CONFIGURED",
+          "diagram": "READY",
+          "live_evidence": "NOT_CONFIGURED",
+          "source_reveal": "NOT_CONFIGURED"
+        },
+        "revision": 17,
+        "selection": {
+          "feature_id": "readme.unique_closure_v3",
+          "step_count": 2,
+          "step_id": "links",
+          "step_index": 1
+        },
+        "source": {
+          "explanation": "Helper skills table links to sibling SKILL.md files.",
+          "location": {
+            "end_line": 90,
+            "file": "skills/explain-project/README.md",
+            "start_line": 1,
+            "symbol": "README"
+          },
+          "reveal_intent": null,
+          "revision": 17
+        },
+        "teleprompter": {
+          "bullets": [
+            "Each helper skill is linked.",
+            "A reader can jump to owning contracts."
+          ],
+          "confidence": "high",
+          "proof_boundary": "Local link check proves files exist.",
+          "revision": 17,
+          "title": "Helper links are visible",
+          "verification": "not_live_proof"
+        }
+      }
+    },
+    {
+      "action": "navigate_previous",
+      "after_revision": 18,
+      "before_revision": 17,
+      "checks": {
+        "domDiagramMatchesState": true,
+        "domHealthMatchesState": true,
+        "domRevisionMatchesState": true,
+        "domSourceMatchesState": true,
+        "domStepMatchesState": true,
+        "domTitleMatchesState": true,
+        "sameRevisionAcrossState": true
+      },
+      "clicked_qid": "cockpit:step:previous",
+      "dom": {
+        "revisionText": "Revision 18",
+        "stepText": "1 / 2",
+        "title": "Review backs the README"
+      },
+      "state": {
+        "diagram": {
+          "active_node_ids": [
+            "teleprompter"
+          ],
+          "highlight_intent": {
+            "active_node_ids": [
+              "teleprompter"
+            ],
+            "mode": "display_highlight_only",
+            "mutation_allowed": false,
+            "rendered_svg_path": "assets/readme/cockpit-flow.svg",
+            "revision": 18,
+            "schema": "explain_project.diagram_highlight_intent.v1",
+            "source_kind": "svg",
+            "source_path": "assets/readme/cockpit-flow.svg"
+          },
+          "node_ids": [
+            "teleprompter",
+            "source",
+            "debugger"
+          ],
+          "rendered_svg_path": "assets/readme/cockpit-flow.svg",
+          "revision": 18,
+          "source_kind": "svg",
+          "source_path": "assets/readme/cockpit-flow.svg",
+          "verified_binding": true
+        },
+        "integration_health": {
+          "debugger_target": "NOT_CONFIGURED",
+          "diagram": "READY",
+          "live_evidence": "NOT_CONFIGURED",
+          "source_reveal": "NOT_CONFIGURED"
+        },
+        "revision": 18,
+        "selection": {
+          "feature_id": "readme.unique_closure_v3",
+          "step_count": 2,
+          "step_id": "review",
+          "step_index": 0
+        },
+        "source": {
+          "explanation": "README states purpose, OpenAI context, helper skills, proof, and non-claims.",
+          "location": {
+            "end_line": 90,
+            "file": "skills/explain-project/README.md",
+            "start_line": 1,
+            "symbol": "README"
+          },
+          "reveal_intent": null,
+          "revision": 18
+        },
+        "teleprompter": {
+          "bullets": [
+            "WebKimi returned VERDICT: PASS.",
+            "Follow-up added prerequisites and outputs."
+          ],
+          "confidence": "high",
+          "proof_boundary": "Reviewer verdict is advisory; local checks still own proof.",
+          "revision": 18,
+          "title": "Review backs the README",
+          "verification": "not_live_proof"
+        }
+      }
+    }
+  ]
+}

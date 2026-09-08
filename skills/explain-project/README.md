@@ -79,11 +79,14 @@ Verified in the latest local readback:
 - `skills/explain-project/run.sh cockpit ... --headless ...` produced `explain_project.cockpit_proof.v1` with `status=PASS`.
 - `skills/agentic-evals/run.sh run skills/explain-project/fixtures/agentic_eval.json` produced `agentic_evals.report.v2` with `readiness=READY`, `PASS=15`, `FAIL=0`, `BLOCKED=0`.
 - [`proofs/current-proof-summary.json`](proofs/current-proof-summary.json) records the current receipt summary for README readers.
+- [`proofs/browser-interaction-receipt.json`](proofs/browser-interaction-receipt.json) records a Surf-driven rendered React interaction: paste/import explainer → route manual question → advance step → read synchronized teleprompter/source/diagram state.
+- [`proofs/browser-interaction-trace-receipt.json`](proofs/browser-interaction-trace-receipt.json) records the fuller browser trace with before/after revision checks for import, select, manual routing, next, previous, and DOM/state projection agreement.
 - [`proofs/webkimi-readme-review.md`](proofs/webkimi-readme-review.md) records the `$ask webkimi` README review verdict: `VERDICT: PASS`.
+- [`proofs/webgpt-immutable-goal-review.md`](proofs/webgpt-immutable-goal-review.md) records the final `$ask webgpt` immutable-goal review verdict: `VERDICT: PASS` under the stated proof boundary.
 
 Not claimed:
 
-- independent WebGPT final acceptance of this exact committed state;
+- WebGPT independently re-ran hashed local artifacts; its final PASS evaluates the supplied evidence summaries;
 - real microphone transcription into Live Evidence;
 - human acceptance of an Excalidraw proposal in the browser;
 - arbitrary visible VS Code GUI control;

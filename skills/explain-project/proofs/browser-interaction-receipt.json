@@ -1,0 +1,13 @@
+{
+  "hasDiagram": true,
+  "hasImportedExplainer": true,
+  "hasIntegrationHealth": true,
+  "hasSource": true,
+  "hasTeleprompter": true,
+  "revision": "Revision 10",
+  "schema": "explain_project.browser_interaction_receipt.v1",
+  "snippet": "MATCHED\nRevision 10\n2 / 2\nAsk\nExplainer\n1 / 1\nPaste explainer\nREADME review loopconfidence · 2 steps\nhigh confidenceNarrative only\nHelper links are visible\n• Each helper skill is linked.\n• A reader can jump to owning contracts.\nLocal link check proves files exist.\n← PreviousNext →\nIntegration health\nLive Evidence: NOT_CONFIGURED\nSource: NOT_CONFIGURED\nDebugger: NOT_CONFIGURED\nDiagram: READY\nSource\n\nskills/explain-project/README.md:1-90\n\nHelper skills table links to sibling SKILL.md files.\n\nReveal source\n\nNo reveal intent emitted.\n\nDebugger target only\n\nNo target\n\nPrepare target\n\nNONE\n\nDiagram\nteleprompter\nsource\ndebugger\n\nsource\n\nassets/readme/cockpit-flow.svg\n\nDisplay highlight only; mutation_allowed=false.",
+  "status": "PASS",
+  "step": "2 / 2",
+  "title": "Helper links are visible"
+}
