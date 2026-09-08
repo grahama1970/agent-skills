@@ -200,6 +200,20 @@ speech, muxing can never sync. Two real mechanisms, by readiness:
 
 Decision: VO-only -> mux. On-screen speech now -> lip-sync pass. Recurring
 voiced characters -> clone once, voice-bound elements everywhere.
+
+Lip-sync pass gotchas (paid for 2026-09-08):
+- **Verify voice provenance before syncing.** A WAV found on disk is not a
+  persona voice; require the TTS receipt showing voice conditioning
+  (Chatterbox `voice_conditioning.reference_audio` + `conditioning_prepared:
+  true`). The teaser `horus_H*.wav` files had no provenance and were not the
+  Horus voice.
+- **Lipsync governs mouths only during the audio window.** The base clip's
+  original mouth motion resurfaces after the audio ends (silent re-talk).
+  Either trim to the spoken beat + reaction tail, generate base clips with
+  closed-mouth listening beats after the line, or fill the tail with the
+  reply via the multi-face lane.
+- Chatterbox docker only reads ref audio from allowed roots (`/data`,
+  `/voices`); `docker cp` the reference in first.
 Dialogue shot design: prefer one speaker per clip (shot/reverse-shot) so the
 simple single-audio lipsync pass is deterministic about whose mouth moves.
 
