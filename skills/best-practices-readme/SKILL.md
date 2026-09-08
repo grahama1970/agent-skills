@@ -29,6 +29,7 @@ composes:
   - best-practices-security
   - project-knowledge
   - agentic-evals
+  - ask
 complies:
   - best-practices-skills
   - best-practices-agent
@@ -168,9 +169,34 @@ technical data, customer details, secrets, or deployment specifics.
 | Linking cards to pages without matching images | Make each card destination a real README surface |
 | Using inline CSS in GitHub README | Use Markdown, tables, images, `<br>`, `<sub>`, and `<em>` only |
 
+## External Reader Review
+
+After `$ask webgpt`, a project agent, or another drafting workflow has built the
+README plus its imagery and architecture explanation, run an automatic `$ask
+webkimi` README review before calling the surface complete. The review packet
+must include the README, the relevant imagery/diagram descriptions, the
+architecture context, and this `$best-practices-readme` contract.
+
+Ask WebKimi to check, at minimum:
+
+- clarity: can a cold developer understand what this is and where to start?
+- value proposition: does the README say why the project or skill needed to
+  exist?
+- organization: are navigation, file map, commands, proof, and non-claims easy
+  to find?
+- humanized prose: does it sound like one competent maintainer, not a generated
+  brochure?
+- evidence boundaries: are screenshots, diagrams, reports, receipts, and
+  non-claims separated cleanly?
+
+Treat `VERDICT: PASS` as reviewer evidence, not local proof. Apply useful notes,
+then run the local README/link/image/proof checks and preserve the WebKimi
+receipt.
+
 ## Subagent Use
 
 For substantial README work, use `agents/readme-maintainer` as the bounded
 subagent. It may inspect project knowledge, `SKILL.md`, and existing README
 files, then propose or draft changes with a receipt. The project agent owns the
-final patch, deterministic checks, commit, and push.
+final patch, deterministic checks, commit, push, and the `$ask webkimi` reader
+review above.
