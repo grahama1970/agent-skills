@@ -1,0 +1,49 @@
+{
+  "schema": "agentic_evals.fixture.v1",
+  "skill": "create-kling-scene",
+  "description": "Gated scene-table -> Kling packet composition: positive build, scene-gate rejection with canonical triage code, missing-reference rejection.",
+  "trials": 3,
+  "cases": [
+    {
+      "id": "positive-build",
+      "case_type": "positive",
+      "real_world": true,
+      "command": "bash sanity.sh",
+      "assertions": [
+        {"type": "exit_code", "value": 0},
+        {"type": "stdout_contains", "value": "PASS positive-control build"},
+        {"type": "stdout_contains", "value": "ALL SANITY PASS"}
+      ]
+    },
+    {
+      "id": "scene-gate-rejects-filler",
+      "case_type": "negative",
+      "real_world": true,
+      "command": "bash sanity.sh",
+      "assertions": [
+        {"type": "stdout_contains", "value": "PASS negative-control scene gate + triage code"}
+      ]
+    },
+    {
+      "id": "reference-check-rejects-missing-character",
+      "case_type": "adversarial",
+      "real_world": true,
+      "command": "bash sanity.sh",
+      "assertions": [
+        {"type": "stdout_contains", "value": "PASS negative-control reference check"}
+      ]
+    }
+  ],
+  "claims": {
+    "proves": [
+      "A valid scene table + refs deterministically compiles to a PASS receipt with a validated kling_request.json and a paid-submit next_command",
+      "A filler environment_interaction blocks at scene_table_gate with canonical triage code scene_table_interaction_filler",
+      "A character row without a reference image blocks at reference_check"
+    ],
+    "does_not_prove": [
+      "Live paid Kling submission or generated video quality",
+      "fal upload / public URL reachability",
+      "Post-generation clip audit ($watch)"
+    ]
+  }
+}

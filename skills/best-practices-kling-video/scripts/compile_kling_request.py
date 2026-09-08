@@ -5,8 +5,33 @@ Slot-budget condenser: identity travels in elements[], never prose.
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 from pathlib import Path
+
+TRIAGE = Path(__file__).resolve().parents[2] / "triage-error" / "run.sh"
+
+
+def _triage(signal: str) -> dict:
+    """Route raw validation failure through triage-error; self-heal on ambiguous (mint + persist code)."""
+    try:
+        r = subprocess.run(
+            [str(TRIAGE), "classify", "--text", signal[:2000], "--layer", "kling_video"],
+            capture_output=True, text=True, timeout=30,
+        )
+        result = json.loads(r.stdout)
+        if result.get("ambiguous"):
+            r2 = subprocess.run(
+                [str(TRIAGE), "triage", "--text", signal[:2000], "--layer", "kling_video"],
+                capture_output=True, text=True, timeout=60,
+            )
+            try:
+                result = json.loads(r2.stdout)
+            except Exception:
+                pass
+        return result
+    except Exception as exc:  # ponytail: triage unavailable degrades to a note; validation still fails closed
+        return {"code": "triage_unavailable", "cause": str(exc)}
 
 import typer
 
@@ -114,7 +139,8 @@ def validate(packet_path: Path):
         typer.echo(json.dumps({"status": "PASS"}))
     except Exception as e:  # pydantic ValidationError has .errors()
         errors = e.errors() if hasattr(e, "errors") else [{"msg": str(e)}]
-        typer.echo(json.dumps({"status": "FAIL", "errors": errors}, default=str))
+        triage = _triage("; ".join(f"{err.get('type', '')}: {err.get('msg', err)}" for err in errors))
+        typer.echo(json.dumps({"status": "FAIL", "errors": errors, "triage": triage}, default=str))
         raise typer.Exit(1)
 
 
