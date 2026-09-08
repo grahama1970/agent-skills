@@ -1,0 +1,27 @@
+{
+  "schema": "explain_project.cockpit_script.v1",
+  "steps": [
+    {
+      "action": "question.manual",
+      "payload": {
+        "text": "A worker crashes before success; what prevents incomplete release?"
+      }
+    },
+    {
+      "action": "key.ArrowRight",
+      "payload": {}
+    },
+    {
+      "action": "source.reveal.request",
+      "payload": {}
+    },
+    {
+      "action": "debugger.prepare.request",
+      "payload": {}
+    },
+    {
+      "action": "key.ArrowLeft",
+      "payload": {}
+    }
+  ]
+}

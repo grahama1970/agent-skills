@@ -76,8 +76,8 @@
       "name": "ui-contract-static-check",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "-c", "cd .. && grep -q 'useRegisterAction' ui/src/App.tsx && grep -q 'data-qid' ui/src/App.tsx && grep -q 'data-qs-action' ui/src/App.tsx && grep -q 'ArrowRight' ui/src/useCockpit.ts && echo EXPLAIN_PROJECT_UI_CONTRACT_OK"],
-      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_UI_CONTRACT_OK"]},
+      "command": ["bash", "-c", "cd .. && python3 fixtures/ui_contract_eval.py"],
+      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_UI_CONTRACT_EVAL_OK"]},
       "readback": true,
       "evidence_class": "deterministic"
     }

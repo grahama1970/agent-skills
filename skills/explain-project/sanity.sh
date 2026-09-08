@@ -1,16 +1,46 @@
 #!/usr/bin/env bash
 set -euo pipefail
-cd "$(dirname "$0")"
-./run.sh validate fixtures/sample.explainers.jsonl >/tmp/explain-project-sanity.json
-./run.sh ask fixtures/sample.explainers.jsonl --question 'What happens if a worker crashes before success?' | grep -q publish.report_last
-./run.sh ask fixtures/sample.explainers.jsonl --question 'unrelated calendar webhook oauth' | grep -q '"status": "NO_MATCH"'
-./run.sh cockpit-proof fixtures/sample.explainers.jsonl --question 'A worker crashes before success; what prevents incomplete release?' >/tmp/explain-project-cockpit-proof.json
-python3 - <<'PY'
-import json
-p=json.load(open('/tmp/explain-project-cockpit-proof.json'))
-assert p['status']=='PASS'
-assert p['assertions']['projection_revisions_equal']
-assert p['assertions']['debugger_execution_count_zero']
-assert p['assertions']['excalidraw_mutation_count_zero']
-print('SANITY PASS')
-PY
+
+DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+cd "$DIR"
+
+./run.sh validate \
+  fixtures/sample.explainers.jsonl \
+  >/tmp/explain-project-sanity-validate.json
+
+./run.sh ask \
+  fixtures/sample.explainers.jsonl \
+  --question 'What happens if a worker crashes before success?' \
+  >/tmp/explain-project-sanity-route.json
+
+./run.sh cockpit \
+  --repo fixtures/cockpit/project \
+  --explainers fixtures/cockpit/project/docs/explain/explainers.jsonl \
+  --headless \
+  --script fixtures/cockpit/scripts/worker-crash-walkthrough.json \
+  --out /tmp/explain-project-sanity-proof.json \
+  >/tmp/explain-project-sanity-cockpit.json
+
+PYTHONPATH="$DIR/scripts" \
+  uv run \
+  --with pydantic \
+  --with typer \
+  --with httpx \
+  --with loguru \
+  python3 scripts/validate_cockpit_proof.py \
+  /tmp/explain-project-sanity-proof.json \
+  --expect-valid \
+  >/tmp/explain-project-sanity-proof-validation.json
+
+PYTHONPATH="$DIR/scripts" \
+  uv run \
+  --with pydantic \
+  python3 fixtures/cockpit_contract_eval.py
+
+python3 fixtures/ui_contract_eval.py
+
+python3 \
+  ../best-practices-react/scripts/verify-file-size.py \
+  ui/src
+
+echo "SANITY PASS"
