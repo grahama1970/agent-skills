@@ -200,6 +200,27 @@ speech, muxing can never sync. Two real mechanisms, by readiness:
 
 Decision: VO-only -> mux. On-screen speech now -> lip-sync pass. Recurring
 voiced characters -> clone once, voice-bound elements everywhere.
+Dialogue shot design: prefer one speaker per clip (shot/reverse-shot) so the
+simple single-audio lipsync pass is deterministic about whose mouth moves.
+
+## Provider routing: fal by default, direct Kling API for gaps
+
+Default lane is fal: `fal_client.upload_file()` provides public hosting
+(direct Kling has NO upload endpoint and rejects localhost/file URLs), queue
+and auth are trivial, and validated packets target fal model ids.
+
+Go direct to `api-singapore.klingai.com` (JWT HS256, iss=AccessKey) only for
+features fal does not expose:
+
+- **Multi-face lipsync**: `identify_face` -> `FaceChoice[]` with per-face
+  `audio_url`, `sound_start/end/insert_time`, volumes - required when two
+  characters speak in the SAME shot.
+- **Custom voice clone** -> `voice_id` (voice_name <=20 chars, public
+  voice_url, async task poll).
+
+Hybrid trick: media uploaded via fal yields public `v3b.fal.media` URLs that
+the direct Kling API accepts - fal doubles as the hosting layer for direct
+calls.
 
 ## Rule 9: No silent retry
 
