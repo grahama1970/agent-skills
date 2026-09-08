@@ -11,8 +11,8 @@
     "score_status": "PASS",
     "status": "PASS"
   },
-  "event_count": 24,
-  "fixture_sha256": "695bac25f925d1eeed0e1a22e4a0889fe5137404539a63594f8ad8069ba5cac6",
+  "event_count": 26,
+  "fixture_sha256": "08bfa71e84016cd6eeb30ec0272e2e86b47ea1e0e0e750de113917364b5c9867",
   "lane_count": 4,
   "lineage_edge_count": 2,
   "local_public_byte_identical": true,

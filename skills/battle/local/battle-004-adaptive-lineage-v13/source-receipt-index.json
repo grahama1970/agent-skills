@@ -1,176 +1,190 @@
 {
   "battle_id": "battle-004",
-  "campaign_root_id": "battle-1503-20260905T172211Z",
+  "campaign_root_id": "source-run",
   "memory_evaluation": {
     "decisions": [
       "NO_PROMOTION",
       "NO_PROMOTION"
     ],
-    "receipt_id": "battle-1503-20260905T172211Z-memory-evaluation",
-    "sha256": "ccff7549129ce067eed86eefb4825bdf5e1b26119ab975c3535a03dce5526506"
+    "receipt_id": "review-ticket-live-rerun-memory-evaluation",
+    "sha256": "1a88e54ee8215d1e6efb6c72b4a3b003db175d2ac864c047d03313ae9f9bebff"
   },
   "public_receipts": [
     {
-      "receipt_id": "battle-1503-20260905T172211Z-red-g1-observation",
+      "receipt_id": "review-ticket-live-rerun-red-g1-observation",
       "schema": "battle.generation_observation_receipt.v1",
-      "sha256": "ca9742f8a8b052abe53054b908a5c70b442a3c46f517041d39b890ef9e8b1a28",
+      "sha256": "4632ecdf099b587bac80e109bb56a8d02ff23a7cf513dfac6bb19e2447dffeb1",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-blue-g1-observation",
+      "receipt_id": "review-ticket-live-rerun-blue-g1-observation",
       "schema": "battle.generation_observation_receipt.v1",
-      "sha256": "4fb604e61bb379c92234ce7bce3c02aed132fe0ec953e6fe222603d10e3180f6",
+      "sha256": "620c3a0cb6b7b737067fd9159e3e7530ec64f40837843344a70bfa80e9632fe5",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-red-g2-observation",
+      "receipt_id": "review-ticket-live-rerun-red-g2-observation",
       "schema": "battle.generation_observation_receipt.v1",
-      "sha256": "a675c7c2c0f3873ee46e74b62593930b41ace0a3571d554db605db3d62d64718",
+      "sha256": "2cbcaec4c2fe54d83913a842ec0ef7af9d4683dba872214dee2d857bb37f3822",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-blue-g2-observation",
+      "receipt_id": "review-ticket-live-rerun-blue-g2-observation",
       "schema": "battle.generation_observation_receipt.v1",
-      "sha256": "d78dbf178b91ce8f39202fa8b3f2fa0ca007bd81c77649c2a8dbdd9ed0f312e8",
+      "sha256": "277946b7bf3212447e31a7f5c93b2eec7991611d3ef0119c511553314aa28f8f",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-red-g1-fitness",
+      "receipt_id": "review-ticket-live-rerun-red-g1-fitness",
       "schema": "battle.fitness_vector.v1",
-      "sha256": "8a24f6dc4f60864b3af91d83c32e113c267f6235a4f4844132d1a12f134e5ceb",
+      "sha256": "85d7b9b1937e7bea339b64981c7ba2d3505ef9677bd05b5d31085244e348a241",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-blue-g1-fitness",
+      "receipt_id": "review-ticket-live-rerun-blue-g1-fitness",
       "schema": "battle.fitness_vector.v1",
-      "sha256": "f1c0af9085378c1a874413292dd4db1effce17ed697ce1e2a321af9918f228f1",
+      "sha256": "292961e687625ea23e50d07ea2e81b9d2bd3141549d75d4136df77073b3e44d0",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-red-g2-fitness",
+      "receipt_id": "review-ticket-live-rerun-red-g2-fitness",
       "schema": "battle.fitness_vector.v1",
-      "sha256": "7eb3bc1dcddc83cb00edba65f4b5dfedb2c810630e3ed6f417fdf6c880c7505e",
+      "sha256": "07cbfe67244fff94341d554fd2d365394c35fc15ded640d217ac879682ff9a6b",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-blue-g2-fitness",
+      "receipt_id": "review-ticket-live-rerun-blue-g2-fitness",
       "schema": "battle.fitness_vector.v1",
-      "sha256": "d42c6b1c285809f5d9a22d0f49a82a0c8210bb1a764711b2f921d332a06310b7",
+      "sha256": "6ec55215cc380b703000016543e3d7582d1e080da9744bcce22256e275bad7bd",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-red-parent-spawn-request",
+      "receipt_id": "review-ticket-live-rerun-red-parent-spawn-request",
       "schema": "battle.adaptive_spawn_request.v1",
-      "sha256": "45d7dc841239c93a9aca7c31567c8b68331b728d739028092f12bf4e0565e761",
+      "sha256": "276703d22e14c93a69f81282f9320796b19dd1a63b05977d92d3668e356ecf36",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-blue-parent-spawn-request",
+      "receipt_id": "review-ticket-live-rerun-blue-parent-spawn-request",
       "schema": "battle.adaptive_spawn_request.v1",
-      "sha256": "10735fe3a4b90a28204670aa21079dd4a887ec25bd6d1ca3d4ac3d5cb2b1828d",
+      "sha256": "a9fbc4eb6d171a9889eb70e72f05cdd46e0b85e10bc74f5a50101276de552e0d",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-red-g1-g2-delta",
+      "receipt_id": "review-ticket-live-rerun-red-g1-g2-delta",
       "schema": "battle.semantic_genome_delta.v1",
-      "sha256": "f3c601705c24248c83aaf77ffc7a67d9b0222bd2dbabc0fe84b3eccec043bb6c",
+      "sha256": "c8d8e69944098d45c0d8dc1a11d1c798033fa79ca5568827e03425f271b6fe96",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-blue-g1-g2-delta",
+      "receipt_id": "review-ticket-live-rerun-blue-g1-g2-delta",
       "schema": "battle.semantic_genome_delta.v1",
-      "sha256": "cdb2b0ff9dd7a70ec8d2c02b39f272a35a235ff6efc12f96e3c5f6c9153f2fcb",
+      "sha256": "d1df79318d98e7ad1add469577a093f83d340254c4ec00d793097a30ab5f649b",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-selection",
+      "receipt_id": "review-ticket-live-rerun-selection",
       "schema": "battle.adaptive_selection_receipt.v1",
-      "sha256": "e299803354f8c982d129b3be0f35ca9cc53e99fdbf607a3ae6de01f16a0f1854",
+      "sha256": "820cb78ea710e3b46ec0f3bb8979c0dc4a8d13d02eb4a37d793a3d3fb549aa1c",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-memory-evaluation",
+      "receipt_id": "review-ticket-live-rerun-memory-evaluation",
       "schema": "battle.memory_promotion_evaluation.v1",
-      "sha256": "ccff7549129ce067eed86eefb4825bdf5e1b26119ab975c3535a03dce5526506",
+      "sha256": "1a88e54ee8215d1e6efb6c72b4a3b003db175d2ac864c047d03313ae9f9bebff",
       "status": "PASS"
     },
     {
       "receipt_id": null,
       "schema": "battle.arena_tau_public_only_judge_receipt.v1",
-      "sha256": "156c69355512d226de561ca43ea50a1fc7b2452fb4e8793ce51d0582d6705048",
+      "sha256": "e84448393e6b9d84b0a3e561a82cbb65c1e5467bbc92fe91aafeb8fd7ee3d1a0",
       "status": "PASS",
       "verdict": "BLUE_SUCCESS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-red-spawn-policy-decision",
+      "receipt_id": "review-ticket-live-rerun-red-spawn-policy-decision",
       "schema": "battle.adaptive_spawn_policy_decision.v1",
-      "sha256": "585956bbaa835f4f376b8f4839f224ad49d021bc9b88e2374c73d0edb70f39c5",
+      "sha256": "7525962c9b03e9b473dbb7a6ce21d1f90fd487e25c27da30717e4d5846d1e24a",
       "status": "PASS",
       "verdict": null
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-blue-spawn-policy-decision",
+      "receipt_id": "review-ticket-live-rerun-blue-spawn-policy-decision",
       "schema": "battle.adaptive_spawn_policy_decision.v1",
-      "sha256": "a8d1dbdda87a9f36264dacd94260d4dc53a054829de399432034cebd963b9f13",
+      "sha256": "a24183e46f7004fb8669ada817083344462fe783520ca7c57774de062a140bcb",
       "status": "PASS",
       "verdict": null
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-red-knowledge-packet",
+      "receipt_id": "review-ticket-live-rerun-red-knowledge-packet",
       "schema": "battle.adaptive_team_knowledge_packet.v1",
-      "sha256": "17bdc06818de5013438e8357b8b69ac3d1d1afddf589ef66e269a3461b8e186d",
+      "sha256": "e52f4f6971b6781861bfd4c9e6a9ba0a377038a5504000455d04d6552da9eba8",
       "status": "PASS",
       "verdict": null
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-blue-knowledge-packet",
+      "receipt_id": "review-ticket-live-rerun-blue-knowledge-packet",
       "schema": "battle.adaptive_team_knowledge_packet.v1",
-      "sha256": "15557571fb7b825db58eec6cd95fcabbd3f833e3293f229385a2f93a1deff0af",
+      "sha256": "7668c3dd7f3661d991bdb2131a34afdd1ba4dc9bfb28a27f3549b4e1fe2819c0",
       "status": "PASS",
       "verdict": null
     },
     {
       "receipt_id": null,
       "schema": "tau.external_research_receipt.v1",
-      "sha256": "3ed07c875276b1463ec433289d3a08ae04d6df8f4d80d0b47566226e3de7f901",
+      "sha256": "b9455e86eab7d31f2016d4a0b158dab6d478e3e52e1e715a72cbb1290aaa20b4",
       "status": null,
       "verdict": null
     },
     {
       "receipt_id": null,
       "schema": "tau.external_research_receipt.v1",
-      "sha256": "55b329f66ad07e574567d17084e5d53683b352253c438615c7afa3a771a44594",
+      "sha256": "385a840e5df2453fa376a35c6570c4c4b5d202ec73d23d00564ef4646898c9d6",
+      "status": null,
+      "verdict": null
+    },
+    {
+      "receipt_id": null,
+      "schema": "dogpile.security_research_packet.v1",
+      "sha256": "06c27a77608d2aa9a4d8b46c7b7419404026cb7512270dc2fdb45ea508a21d55",
+      "status": null,
+      "verdict": null
+    },
+    {
+      "receipt_id": null,
+      "schema": null,
+      "sha256": "945986e9eac8281740eb0bd2f734f0f5b8212a5f27312089a6c77f36f732232b",
       "status": null,
       "verdict": null
     },
     {
       "receipt_id": null,
       "schema": "battle.arena_tau_public_only_judge_receipt.v1",
-      "sha256": "3ba72c23f34c15e90824364e0c1ce601c5e79d0ffd585e5652654ede2a861f2d",
+      "sha256": "fcf64a835e20556e292c53167107118c03a963570cfb56f65d4fc183968f4f1e",
       "status": "PASS",
       "verdict": "BLUE_SUCCESS"
     },
     {
       "receipt_id": null,
       "schema": "battle.inherited_knowledge_acknowledgement.v1",
-      "sha256": "656d14236f530e7f5f6a8a94e6216fcc9e262072e9b8020328c1cb54b959ef98",
+      "sha256": "1e7d31259a1a8460ffd3e46cb0f650a5e1aabcf4fee07516cf278f3842826988",
       "status": "PASS",
       "verdict": null
     },
     {
       "receipt_id": null,
       "schema": "battle.inherited_knowledge_acknowledgement.v1",
-      "sha256": "2ecf59f6bfb90cf4be0ff0cc0c90e1b04f7d9dd76eef39b07834dbe00aad6870",
+      "sha256": "b8c93689c202b2dcb5a01535d357c494657a65f8779bff10514981abb88cb679",
       "status": "PASS",
       "verdict": null
     }
   ],
-  "run_id": "battle-1503-20260905T172211Z",
+  "run_id": "review-ticket-live-rerun",
   "schema": "battle.adaptive_lineage_source_receipt_index.v1",
   "selection": {
     "improvement_claimed": false,
-    "receipt_id": "battle-1503-20260905T172211Z-selection",
-    "sha256": "e299803354f8c982d129b3be0f35ca9cc53e99fdbf607a3ae6de01f16a0f1854",
+    "receipt_id": "review-ticket-live-rerun-selection",
+    "sha256": "820cb78ea710e3b46ec0f3bb8979c0dc4a8d13d02eb4a37d793a3d3fb549aa1c",
     "teams": {
       "blue": {
         "component_comparison": [
@@ -190,8 +204,8 @@
             ]
           }
         ],
-        "generation_1_fitness_receipt_sha256": "f1c0af9085378c1a874413292dd4db1effce17ed697ce1e2a321af9918f228f1",
-        "generation_2_fitness_receipt_sha256": "d42c6b1c285809f5d9a22d0f49a82a0c8210bb1a764711b2f921d332a06310b7",
+        "generation_1_fitness_receipt_sha256": "292961e687625ea23e50d07ea2e81b9d2bd3141549d75d4136df77073b3e44d0",
+        "generation_2_fitness_receipt_sha256": "6ec55215cc380b703000016543e3d7582d1e080da9744bcce22256e275bad7bd",
         "retention_decision": "GENERATION_2_SELECTED",
         "selected_generation": 2,
         "tie_break_reason": null
@@ -214,8 +228,8 @@
             ]
           }
         ],
-        "generation_1_fitness_receipt_sha256": "8a24f6dc4f60864b3af91d83c32e113c267f6235a4f4844132d1a12f134e5ceb",
-        "generation_2_fitness_receipt_sha256": "7eb3bc1dcddc83cb00edba65f4b5dfedb2c810630e3ed6f417fdf6c880c7505e",
+        "generation_1_fitness_receipt_sha256": "85d7b9b1937e7bea339b64981c7ba2d3505ef9677bd05b5d31085244e348a241",
+        "generation_2_fitness_receipt_sha256": "07cbfe67244fff94341d554fd2d365394c35fc15ded640d217ac879682ff9a6b",
         "retention_decision": "GENERATION_2_SELECTED",
         "selected_generation": 2,
         "tie_break_reason": null

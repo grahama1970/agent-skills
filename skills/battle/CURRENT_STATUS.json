@@ -52,13 +52,12 @@
           "agent:agent-skill-maintainer",
           "battle",
           "lane:be",
-          "needs-human",
           "route:backend_python_or_skill_runtime",
           "skill-bug",
           "type:bug"
         ],
         "number": 1612,
-        "state": "OPEN",
+        "state": "CLOSED",
         "title": "Battle: bind Memory promotion to selected evidence",
         "url": "https://github.com/grahama1970/agent-skills/issues/1612"
       },
@@ -68,13 +67,12 @@
           "agent:agent-skill-maintainer",
           "battle",
           "lane:be",
-          "needs-human",
           "route:backend_python_or_skill_runtime",
           "skill-bug",
           "type:bug"
         ],
         "number": 1611,
-        "state": "OPEN",
+        "state": "CLOSED",
         "title": "Battle: separate selection reporting from child-promotion assertions",
         "url": "https://github.com/grahama1970/agent-skills/issues/1611"
       },
@@ -84,13 +82,12 @@
           "agent:agent-skill-maintainer",
           "battle",
           "lane:be",
-          "needs-human",
           "route:backend_python_or_skill_runtime",
           "skill-bug",
           "type:bug"
         ],
         "number": 1610,
-        "state": "OPEN",
+        "state": "CLOSED",
         "title": "Battle: enforce exact commentary-to-event references",
         "url": "https://github.com/grahama1970/agent-skills/issues/1610"
       },
@@ -115,13 +112,12 @@
           "agent:agent-skill-maintainer",
           "battle",
           "lane:be",
-          "needs-human",
           "route:backend_python_or_skill_runtime",
           "skill-bug",
           "type:bug"
         ],
         "number": 1608,
-        "state": "OPEN",
+        "state": "CLOSED",
         "title": "Battle: reject vacuous broadcast evidence checks",
         "url": "https://github.com/grahama1970/agent-skills/issues/1608"
       },
@@ -131,13 +127,12 @@
           "agent:agent-skill-maintainer",
           "battle",
           "lane:be",
-          "maintainer-active",
           "route:backend_python_or_skill_runtime",
           "skill-bug",
           "type:bug"
         ],
         "number": 1607,
-        "state": "OPEN",
+        "state": "CLOSED",
         "title": "Battle: hash finalized Judge receipt bytes",
         "url": "https://github.com/grahama1970/agent-skills/issues/1607"
       },
@@ -188,13 +183,12 @@
           "agent:frontend-coder",
           "battle",
           "lane:fe",
-          "needs-human",
           "route:frontend_code",
           "skill-bug",
           "type:bug"
         ],
         "number": 1501,
-        "state": "OPEN",
+        "state": "CLOSED",
         "title": "Battle: fix adaptive replay first-viewport pause_after_round failure state",
         "url": "https://github.com/grahama1970/agent-skills/issues/1501"
       },
@@ -204,12 +198,11 @@
           "agent:frontend-coder",
           "battle",
           "lane:fe",
-          "needs-human",
           "route:frontend_code",
           "type:feature"
         ],
         "number": 1500,
-        "state": "OPEN",
+        "state": "CLOSED",
         "title": "Battle: bind Pixi replay proof to durable adaptive-lineage receipt",
         "url": "https://github.com/grahama1970/agent-skills/issues/1500"
       },
@@ -718,120 +711,8 @@
       "1144": "CLOSED",
       "1150": "CLOSED"
     },
-    "open_battle_label_count": 7,
-    "open_battle_label_issues": [
-      {
-        "labels": [
-          "agent-work",
-          "agent:agent-skill-maintainer",
-          "battle",
-          "lane:be",
-          "needs-human",
-          "route:backend_python_or_skill_runtime",
-          "skill-bug",
-          "type:bug"
-        ],
-        "number": 1612,
-        "state": "OPEN",
-        "title": "Battle: bind Memory promotion to selected evidence",
-        "url": "https://github.com/grahama1970/agent-skills/issues/1612"
-      },
-      {
-        "labels": [
-          "agent-work",
-          "agent:agent-skill-maintainer",
-          "battle",
-          "lane:be",
-          "needs-human",
-          "route:backend_python_or_skill_runtime",
-          "skill-bug",
-          "type:bug"
-        ],
-        "number": 1611,
-        "state": "OPEN",
-        "title": "Battle: separate selection reporting from child-promotion assertions",
-        "url": "https://github.com/grahama1970/agent-skills/issues/1611"
-      },
-      {
-        "labels": [
-          "agent-work",
-          "agent:agent-skill-maintainer",
-          "battle",
-          "lane:be",
-          "needs-human",
-          "route:backend_python_or_skill_runtime",
-          "skill-bug",
-          "type:bug"
-        ],
-        "number": 1610,
-        "state": "OPEN",
-        "title": "Battle: enforce exact commentary-to-event references",
-        "url": "https://github.com/grahama1970/agent-skills/issues/1610"
-      },
-      {
-        "labels": [
-          "agent-work",
-          "agent:agent-skill-maintainer",
-          "battle",
-          "lane:be",
-          "needs-human",
-          "route:backend_python_or_skill_runtime",
-          "skill-bug",
-          "type:bug"
-        ],
-        "number": 1608,
-        "state": "OPEN",
-        "title": "Battle: reject vacuous broadcast evidence checks",
-        "url": "https://github.com/grahama1970/agent-skills/issues/1608"
-      },
-      {
-        "labels": [
-          "agent-work",
-          "agent:agent-skill-maintainer",
-          "battle",
-          "lane:be",
-          "maintainer-active",
-          "route:backend_python_or_skill_runtime",
-          "skill-bug",
-          "type:bug"
-        ],
-        "number": 1607,
-        "state": "OPEN",
-        "title": "Battle: hash finalized Judge receipt bytes",
-        "url": "https://github.com/grahama1970/agent-skills/issues/1607"
-      },
-      {
-        "labels": [
-          "agent-work",
-          "agent:frontend-coder",
-          "battle",
-          "lane:fe",
-          "needs-human",
-          "route:frontend_code",
-          "skill-bug",
-          "type:bug"
-        ],
-        "number": 1501,
-        "state": "OPEN",
-        "title": "Battle: fix adaptive replay first-viewport pause_after_round failure state",
-        "url": "https://github.com/grahama1970/agent-skills/issues/1501"
-      },
-      {
-        "labels": [
-          "agent-work",
-          "agent:frontend-coder",
-          "battle",
-          "lane:fe",
-          "needs-human",
-          "route:frontend_code",
-          "type:feature"
-        ],
-        "number": 1500,
-        "state": "OPEN",
-        "title": "Battle: bind Pixi replay proof to durable adaptive-lineage receipt",
-        "url": "https://github.com/grahama1970/agent-skills/issues/1500"
-      }
-    ]
+    "open_battle_label_count": 0,
+    "open_battle_label_issues": []
   },
   "non_claims": [
     "This status does not claim production deployment readiness.",
@@ -1110,8 +991,8 @@
   ],
   "schema": "battle.current_status.v1",
   "source": {
-    "battle_tree": "07647d37d865fbe8f4d7fa464dfbac7a35761c6c",
-    "commit": "4f671cf086a922ca969c7fd04e4b9e7429548f6b",
+    "battle_tree": "4ca182c7ef7c8b226d582b1dccfb29f0a681488f",
+    "commit": "3d55823b61d8a56ed78addf94663536f2708f427",
     "repository": "grahama1970/agent-skills"
   },
   "source_context": {
@@ -1183,7 +1064,7 @@
       "mocked": false,
       "path": "/tmp/battle-adaptive-lineage-v13-proof/proof-summary.json",
       "schema": "battle.adaptive_lineage_ui_proof.v1",
-      "sha256": "254e2073491817c95b8b36a252b4a2c2eb432442ff63fdd2eab3ecd61bde69c3",
+      "sha256": "492713465a8e0bdd30c5c839f4e5db8318bc46ae32f591f15e5e6a600daf2f15",
       "status": null
     },
     "backend_goal_combiner": {
@@ -1343,5 +1224,5 @@
       "status": "UNSUPPORTED"
     }
   ],
-  "updated_at": "2026-09-07T17:24:13Z"
+  "updated_at": "2026-09-08T16:17:10Z"
 }

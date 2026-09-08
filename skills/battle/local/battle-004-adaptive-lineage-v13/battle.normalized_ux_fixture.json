@@ -1,8 +1,8 @@
 {
   "battle_id": "battle-004",
   "campaign": {
-    "campaign_clock_id": "battle-1503-20260905T172211Z-clock",
-    "elapsed_seconds": 121.505984,
+    "campaign_clock_id": "review-ticket-live-rerun-clock",
+    "elapsed_seconds": 124.375634,
     "generation_count": 2,
     "generation_ids": [
       1,
@@ -47,8 +47,8 @@
         "red-g1",
         "blue-g1"
       ],
-      "elapsed_seconds": 44.254171,
-      "event_id": "battle-1503-20260905T172211Z-event-0001",
+      "elapsed_seconds": 32.371009,
+      "event_id": "review-ticket-live-rerun-event-0001",
       "event_type": "judge_verdict",
       "generation": 1,
       "lane_id": null,
@@ -58,21 +58,21 @@
       "receipt_ref": {
         "receipt_id": null,
         "schema": "battle.arena_tau_public_only_judge_receipt.v1",
-        "sha256": "156c69355512d226de561ca43ea50a1fc7b2452fb4e8793ce51d0582d6705048",
+        "sha256": "e84448393e6b9d84b0a3e561a82cbb65c1e5467bbc92fe91aafeb8fd7ee3d1a0",
         "status": "PASS",
         "verdict": "BLUE_SUCCESS"
       },
       "scope": "generation_pair",
       "seq": 1,
-      "source_created_at": "2026-09-05T17:23:45Z",
+      "source_created_at": "2026-09-07T17:22:09Z",
       "team": null
     },
     {
       "affected_lane_ids": [
         "red-g1"
       ],
-      "elapsed_seconds": 44.292289,
-      "event_id": "battle-1503-20260905T172211Z-event-0002",
+      "elapsed_seconds": 32.411168,
+      "event_id": "review-ticket-live-rerun-event-0002",
       "event_type": "parent_observation_materialized",
       "generation": 1,
       "lane_id": "red-g1",
@@ -80,23 +80,23 @@
         "judge_verdict": "BLUE_SUCCESS"
       },
       "receipt_ref": {
-        "receipt_id": "battle-1503-20260905T172211Z-red-g1-observation",
+        "receipt_id": "review-ticket-live-rerun-red-g1-observation",
         "schema": "battle.generation_observation_receipt.v1",
-        "sha256": "ca9742f8a8b052abe53054b908a5c70b442a3c46f517041d39b890ef9e8b1a28",
+        "sha256": "4632ecdf099b587bac80e109bb56a8d02ff23a7cf513dfac6bb19e2447dffeb1",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 2,
-      "source_created_at": "2026-09-05T17:23:45Z",
+      "source_created_at": "2026-09-07T17:22:09Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "red-g1"
       ],
-      "elapsed_seconds": 44.333637,
-      "event_id": "battle-1503-20260905T172211Z-event-0003",
+      "elapsed_seconds": 32.443757,
+      "event_id": "review-ticket-live-rerun-event-0003",
       "event_type": "fitness_materialized",
       "generation": 1,
       "lane_id": "red-g1",
@@ -109,23 +109,23 @@
         ]
       },
       "receipt_ref": {
-        "receipt_id": "battle-1503-20260905T172211Z-red-g1-fitness",
+        "receipt_id": "review-ticket-live-rerun-red-g1-fitness",
         "schema": "battle.fitness_vector.v1",
-        "sha256": "8a24f6dc4f60864b3af91d83c32e113c267f6235a4f4844132d1a12f134e5ceb",
+        "sha256": "85d7b9b1937e7bea339b64981c7ba2d3505ef9677bd05b5d31085244e348a241",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 3,
-      "source_created_at": "2026-09-05T17:23:45Z",
+      "source_created_at": "2026-09-07T17:22:09Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "blue-g1"
       ],
-      "elapsed_seconds": 44.375573,
-      "event_id": "battle-1503-20260905T172211Z-event-0004",
+      "elapsed_seconds": 32.477264,
+      "event_id": "review-ticket-live-rerun-event-0004",
       "event_type": "parent_observation_materialized",
       "generation": 1,
       "lane_id": "blue-g1",
@@ -133,23 +133,23 @@
         "judge_verdict": "BLUE_SUCCESS"
       },
       "receipt_ref": {
-        "receipt_id": "battle-1503-20260905T172211Z-blue-g1-observation",
+        "receipt_id": "review-ticket-live-rerun-blue-g1-observation",
         "schema": "battle.generation_observation_receipt.v1",
-        "sha256": "4fb604e61bb379c92234ce7bce3c02aed132fe0ec953e6fe222603d10e3180f6",
+        "sha256": "620c3a0cb6b7b737067fd9159e3e7530ec64f40837843344a70bfa80e9632fe5",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 4,
-      "source_created_at": "2026-09-05T17:23:45Z",
+      "source_created_at": "2026-09-07T17:22:09Z",
       "team": "blue"
     },
     {
       "affected_lane_ids": [
         "blue-g1"
       ],
-      "elapsed_seconds": 44.41728,
-      "event_id": "battle-1503-20260905T172211Z-event-0005",
+      "elapsed_seconds": 32.519529,
+      "event_id": "review-ticket-live-rerun-event-0005",
       "event_type": "fitness_materialized",
       "generation": 1,
       "lane_id": "blue-g1",
@@ -162,23 +162,23 @@
         ]
       },
       "receipt_ref": {
-        "receipt_id": "battle-1503-20260905T172211Z-blue-g1-fitness",
+        "receipt_id": "review-ticket-live-rerun-blue-g1-fitness",
         "schema": "battle.fitness_vector.v1",
-        "sha256": "f1c0af9085378c1a874413292dd4db1effce17ed697ce1e2a321af9918f228f1",
+        "sha256": "292961e687625ea23e50d07ea2e81b9d2bd3141549d75d4136df77073b3e44d0",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 5,
-      "source_created_at": "2026-09-05T17:23:45Z",
+      "source_created_at": "2026-09-07T17:22:09Z",
       "team": "blue"
     },
     {
       "affected_lane_ids": [
         "red-g1"
       ],
-      "elapsed_seconds": 67.988308,
-      "event_id": "battle-1503-20260905T172211Z-event-0006",
+      "elapsed_seconds": 55.261303,
+      "event_id": "review-ticket-live-rerun-event-0006",
       "event_type": "spawn_requested",
       "generation": 1,
       "lane_id": "red-g1",
@@ -186,23 +186,23 @@
         "requested_action": "SPAWN_CHILD"
       },
       "receipt_ref": {
-        "receipt_id": "battle-1503-20260905T172211Z-red-parent-spawn-request",
+        "receipt_id": "review-ticket-live-rerun-red-parent-spawn-request",
         "schema": "battle.adaptive_spawn_request.v1",
-        "sha256": "45d7dc841239c93a9aca7c31567c8b68331b728d739028092f12bf4e0565e761",
+        "sha256": "276703d22e14c93a69f81282f9320796b19dd1a63b05977d92d3668e356ecf36",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 6,
-      "source_created_at": "2026-09-05T17:24:09Z",
+      "source_created_at": "2026-09-07T17:22:32Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "blue-g1"
       ],
-      "elapsed_seconds": 68.036231,
-      "event_id": "battle-1503-20260905T172211Z-event-0007",
+      "elapsed_seconds": 55.295319,
+      "event_id": "review-ticket-live-rerun-event-0007",
       "event_type": "spawn_requested",
       "generation": 1,
       "lane_id": "blue-g1",
@@ -210,23 +210,23 @@
         "requested_action": "SPAWN_CHILD"
       },
       "receipt_ref": {
-        "receipt_id": "battle-1503-20260905T172211Z-blue-parent-spawn-request",
+        "receipt_id": "review-ticket-live-rerun-blue-parent-spawn-request",
         "schema": "battle.adaptive_spawn_request.v1",
-        "sha256": "10735fe3a4b90a28204670aa21079dd4a887ec25bd6d1ca3d4ac3d5cb2b1828d",
+        "sha256": "a9fbc4eb6d171a9889eb70e72f05cdd46e0b85e10bc74f5a50101276de552e0d",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 7,
-      "source_created_at": "2026-09-05T17:24:09Z",
+      "source_created_at": "2026-09-07T17:22:32Z",
       "team": "blue"
     },
     {
       "affected_lane_ids": [
         "red-g1"
       ],
-      "elapsed_seconds": 68.078339,
-      "event_id": "battle-1503-20260905T172211Z-event-0008",
+      "elapsed_seconds": 55.329272,
+      "event_id": "review-ticket-live-rerun-event-0008",
       "event_type": "spawn_authorized",
       "generation": 1,
       "lane_id": "red-g1",
@@ -234,23 +234,23 @@
         "decision": "ALLOWED_EVALUATED_PARENT"
       },
       "receipt_ref": {
-        "receipt_id": "battle-1503-20260905T172211Z-red-spawn-policy-decision",
+        "receipt_id": "review-ticket-live-rerun-red-spawn-policy-decision",
         "schema": "battle.adaptive_spawn_policy_decision.v1",
-        "sha256": "585956bbaa835f4f376b8f4839f224ad49d021bc9b88e2374c73d0edb70f39c5",
+        "sha256": "7525962c9b03e9b473dbb7a6ce21d1f90fd487e25c27da30717e4d5846d1e24a",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 8,
-      "source_created_at": "2026-09-05T17:24:09Z",
+      "source_created_at": "2026-09-07T17:22:32Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "blue-g1"
       ],
-      "elapsed_seconds": 68.119702,
-      "event_id": "battle-1503-20260905T172211Z-event-0009",
+      "elapsed_seconds": 55.362139,
+      "event_id": "review-ticket-live-rerun-event-0009",
       "event_type": "spawn_authorized",
       "generation": 1,
       "lane_id": "blue-g1",
@@ -258,23 +258,23 @@
         "decision": "ALLOWED_EVALUATED_PARENT"
       },
       "receipt_ref": {
-        "receipt_id": "battle-1503-20260905T172211Z-blue-spawn-policy-decision",
+        "receipt_id": "review-ticket-live-rerun-blue-spawn-policy-decision",
         "schema": "battle.adaptive_spawn_policy_decision.v1",
-        "sha256": "a8d1dbdda87a9f36264dacd94260d4dc53a054829de399432034cebd963b9f13",
+        "sha256": "a24183e46f7004fb8669ada817083344462fe783520ca7c57774de062a140bcb",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 9,
-      "source_created_at": "2026-09-05T17:24:09Z",
+      "source_created_at": "2026-09-07T17:22:32Z",
       "team": "blue"
     },
     {
       "affected_lane_ids": [
         "red-g2"
       ],
-      "elapsed_seconds": 68.17046,
-      "event_id": "battle-1503-20260905T172211Z-event-0010",
+      "elapsed_seconds": 55.40568,
+      "event_id": "review-ticket-live-rerun-event-0010",
       "event_type": "knowledge_packet_materialized",
       "generation": 2,
       "lane_id": "red-g2",
@@ -282,23 +282,23 @@
         "packet_id": "battle-004-red-generation-2-knowledge"
       },
       "receipt_ref": {
-        "receipt_id": "battle-1503-20260905T172211Z-red-knowledge-packet",
+        "receipt_id": "review-ticket-live-rerun-red-knowledge-packet",
         "schema": "battle.adaptive_team_knowledge_packet.v1",
-        "sha256": "17bdc06818de5013438e8357b8b69ac3d1d1afddf589ef66e269a3461b8e186d",
+        "sha256": "e52f4f6971b6781861bfd4c9e6a9ba0a377038a5504000455d04d6552da9eba8",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 10,
-      "source_created_at": "2026-09-05T17:24:09Z",
+      "source_created_at": "2026-09-07T17:22:32Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "blue-g2"
       ],
-      "elapsed_seconds": 68.194914,
-      "event_id": "battle-1503-20260905T172211Z-event-0011",
+      "elapsed_seconds": 55.445636,
+      "event_id": "review-ticket-live-rerun-event-0011",
       "event_type": "knowledge_packet_materialized",
       "generation": 2,
       "lane_id": "blue-g2",
@@ -306,23 +306,23 @@
         "packet_id": "battle-004-blue-generation-2-knowledge"
       },
       "receipt_ref": {
-        "receipt_id": "battle-1503-20260905T172211Z-blue-knowledge-packet",
+        "receipt_id": "review-ticket-live-rerun-blue-knowledge-packet",
         "schema": "battle.adaptive_team_knowledge_packet.v1",
-        "sha256": "15557571fb7b825db58eec6cd95fcabbd3f833e3293f229385a2f93a1deff0af",
+        "sha256": "7668c3dd7f3661d991bdb2131a34afdd1ba4dc9bfb28a27f3549b4e1fe2819c0",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 11,
-      "source_created_at": "2026-09-05T17:24:09Z",
+      "source_created_at": "2026-09-07T17:22:32Z",
       "team": "blue"
     },
     {
       "affected_lane_ids": [
         "red-g2"
       ],
-      "elapsed_seconds": 76.190326,
-      "event_id": "battle-1503-20260905T172211Z-event-0012",
+      "elapsed_seconds": 62.825011,
+      "event_id": "review-ticket-live-rerun-event-0012",
       "event_type": "child_research_materialized",
       "generation": 2,
       "lane_id": "red-g2",
@@ -332,21 +332,21 @@
       "receipt_ref": {
         "receipt_id": null,
         "schema": "tau.external_research_receipt.v1",
-        "sha256": "3ed07c875276b1463ec433289d3a08ae04d6df8f4d80d0b47566226e3de7f901",
+        "sha256": "b9455e86eab7d31f2016d4a0b158dab6d478e3e52e1e715a72cbb1290aaa20b4",
         "status": null,
         "verdict": null
       },
       "scope": "lane",
       "seq": 12,
-      "source_created_at": "2026-09-05T17:24:17Z",
+      "source_created_at": "2026-09-07T17:22:39Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "blue-g2"
       ],
-      "elapsed_seconds": 76.224409,
-      "event_id": "battle-1503-20260905T172211Z-event-0013",
+      "elapsed_seconds": 62.860087,
+      "event_id": "review-ticket-live-rerun-event-0013",
       "event_type": "child_research_materialized",
       "generation": 2,
       "lane_id": "blue-g2",
@@ -356,236 +356,13 @@
       "receipt_ref": {
         "receipt_id": null,
         "schema": "tau.external_research_receipt.v1",
-        "sha256": "55b329f66ad07e574567d17084e5d53683b352253c438615c7afa3a771a44594",
+        "sha256": "385a840e5df2453fa376a35c6570c4c4b5d202ec73d23d00564ef4646898c9d6",
         "status": null,
         "verdict": null
       },
       "scope": "lane",
       "seq": 13,
-      "source_created_at": "2026-09-05T17:24:17Z",
-      "team": "blue"
-    },
-    {
-      "affected_lane_ids": [
-        "red-g2",
-        "blue-g2"
-      ],
-      "elapsed_seconds": 121.130307,
-      "event_id": "battle-1503-20260905T172211Z-event-0014",
-      "event_type": "judge_verdict",
-      "generation": 2,
-      "lane_id": null,
-      "payload": {
-        "verdict": "BLUE_SUCCESS"
-      },
-      "receipt_ref": {
-        "receipt_id": null,
-        "schema": "battle.arena_tau_public_only_judge_receipt.v1",
-        "sha256": "3ba72c23f34c15e90824364e0c1ce601c5e79d0ffd585e5652654ede2a861f2d",
-        "status": "PASS",
-        "verdict": "BLUE_SUCCESS"
-      },
-      "scope": "generation_pair",
-      "seq": 14,
-      "source_created_at": "2026-09-05T17:25:02Z",
-      "team": null
-    },
-    {
-      "affected_lane_ids": [
-        "red-g2"
-      ],
-      "elapsed_seconds": 121.170859,
-      "event_id": "battle-1503-20260905T172211Z-event-0015",
-      "event_type": "child_knowledge_acknowledged",
-      "generation": 2,
-      "lane_id": "red-g2",
-      "payload": {},
-      "receipt_ref": {
-        "receipt_id": null,
-        "schema": "battle.inherited_knowledge_acknowledgement.v1",
-        "sha256": "656d14236f530e7f5f6a8a94e6216fcc9e262072e9b8020328c1cb54b959ef98",
-        "status": "PASS",
-        "verdict": null
-      },
-      "scope": "lane",
-      "seq": 15,
-      "source_created_at": "2026-09-05T17:25:02Z",
-      "team": "red"
-    },
-    {
-      "affected_lane_ids": [
-        "blue-g2"
-      ],
-      "elapsed_seconds": 121.194837,
-      "event_id": "battle-1503-20260905T172211Z-event-0016",
-      "event_type": "child_knowledge_acknowledged",
-      "generation": 2,
-      "lane_id": "blue-g2",
-      "payload": {},
-      "receipt_ref": {
-        "receipt_id": null,
-        "schema": "battle.inherited_knowledge_acknowledgement.v1",
-        "sha256": "2ecf59f6bfb90cf4be0ff0cc0c90e1b04f7d9dd76eef39b07834dbe00aad6870",
-        "status": "PASS",
-        "verdict": null
-      },
-      "scope": "lane",
-      "seq": 16,
-      "source_created_at": "2026-09-05T17:25:02Z",
-      "team": "blue"
-    },
-    {
-      "affected_lane_ids": [
-        "red-g2"
-      ],
-      "elapsed_seconds": 121.261962,
-      "event_id": "battle-1503-20260905T172211Z-event-0017",
-      "event_type": "genome_mutated",
-      "generation": 2,
-      "lane_id": "red-g2",
-      "payload": {
-        "semantic_change_count": 22
-      },
-      "receipt_ref": {
-        "receipt_id": "battle-1503-20260905T172211Z-red-g1-g2-delta",
-        "schema": "battle.semantic_genome_delta.v1",
-        "sha256": "f3c601705c24248c83aaf77ffc7a67d9b0222bd2dbabc0fe84b3eccec043bb6c",
-        "status": "PASS",
-        "verdict": null
-      },
-      "scope": "lane",
-      "seq": 17,
-      "source_created_at": "2026-09-05T17:25:02Z",
-      "team": "red"
-    },
-    {
-      "affected_lane_ids": [
-        "blue-g2"
-      ],
-      "elapsed_seconds": 121.287126,
-      "event_id": "battle-1503-20260905T172211Z-event-0018",
-      "event_type": "genome_mutated",
-      "generation": 2,
-      "lane_id": "blue-g2",
-      "payload": {
-        "semantic_change_count": 28
-      },
-      "receipt_ref": {
-        "receipt_id": "battle-1503-20260905T172211Z-blue-g1-g2-delta",
-        "schema": "battle.semantic_genome_delta.v1",
-        "sha256": "cdb2b0ff9dd7a70ec8d2c02b39f272a35a235ff6efc12f96e3c5f6c9153f2fcb",
-        "status": "PASS",
-        "verdict": null
-      },
-      "scope": "lane",
-      "seq": 18,
-      "source_created_at": "2026-09-05T17:25:02Z",
-      "team": "blue"
-    },
-    {
-      "affected_lane_ids": [
-        "red-g2"
-      ],
-      "elapsed_seconds": 121.329209,
-      "event_id": "battle-1503-20260905T172211Z-event-0019",
-      "event_type": "generation_observation_materialized",
-      "generation": 2,
-      "lane_id": "red-g2",
-      "payload": {
-        "judge_verdict": "BLUE_SUCCESS"
-      },
-      "receipt_ref": {
-        "receipt_id": "battle-1503-20260905T172211Z-red-g2-observation",
-        "schema": "battle.generation_observation_receipt.v1",
-        "sha256": "a675c7c2c0f3873ee46e74b62593930b41ace0a3571d554db605db3d62d64718",
-        "status": "PASS",
-        "verdict": null
-      },
-      "scope": "lane",
-      "seq": 19,
-      "source_created_at": "2026-09-05T17:25:02Z",
-      "team": "red"
-    },
-    {
-      "affected_lane_ids": [
-        "red-g2"
-      ],
-      "elapsed_seconds": 121.362474,
-      "event_id": "battle-1503-20260905T172211Z-event-0020",
-      "event_type": "fitness_materialized",
-      "generation": 2,
-      "lane_id": "red-g2",
-      "payload": {
-        "selection_key": [
-          1,
-          1,
-          1,
-          -1
-        ]
-      },
-      "receipt_ref": {
-        "receipt_id": "battle-1503-20260905T172211Z-red-g2-fitness",
-        "schema": "battle.fitness_vector.v1",
-        "sha256": "7eb3bc1dcddc83cb00edba65f4b5dfedb2c810630e3ed6f417fdf6c880c7505e",
-        "status": "PASS",
-        "verdict": null
-      },
-      "scope": "lane",
-      "seq": 20,
-      "source_created_at": "2026-09-05T17:25:02Z",
-      "team": "red"
-    },
-    {
-      "affected_lane_ids": [
-        "blue-g2"
-      ],
-      "elapsed_seconds": 121.395948,
-      "event_id": "battle-1503-20260905T172211Z-event-0021",
-      "event_type": "generation_observation_materialized",
-      "generation": 2,
-      "lane_id": "blue-g2",
-      "payload": {
-        "judge_verdict": "BLUE_SUCCESS"
-      },
-      "receipt_ref": {
-        "receipt_id": "battle-1503-20260905T172211Z-blue-g2-observation",
-        "schema": "battle.generation_observation_receipt.v1",
-        "sha256": "d78dbf178b91ce8f39202fa8b3f2fa0ca007bd81c77649c2a8dbdd9ed0f312e8",
-        "status": "PASS",
-        "verdict": null
-      },
-      "scope": "lane",
-      "seq": 21,
-      "source_created_at": "2026-09-05T17:25:02Z",
-      "team": "blue"
-    },
-    {
-      "affected_lane_ids": [
-        "blue-g2"
-      ],
-      "elapsed_seconds": 121.429515,
-      "event_id": "battle-1503-20260905T172211Z-event-0022",
-      "event_type": "fitness_materialized",
-      "generation": 2,
-      "lane_id": "blue-g2",
-      "payload": {
-        "selection_key": [
-          2,
-          1,
-          1,
-          -1
-        ]
-      },
-      "receipt_ref": {
-        "receipt_id": "battle-1503-20260905T172211Z-blue-g2-fitness",
-        "schema": "battle.fitness_vector.v1",
-        "sha256": "d42c6b1c285809f5d9a22d0f49a82a0c8210bb1a764711b2f921d332a06310b7",
-        "status": "PASS",
-        "verdict": null
-      },
-      "scope": "lane",
-      "seq": 22,
-      "source_created_at": "2026-09-05T17:25:02Z",
+      "source_created_at": "2026-09-07T17:22:39Z",
       "team": "blue"
     },
     {
@@ -595,8 +372,287 @@
         "red-g1",
         "red-g2"
       ],
-      "elapsed_seconds": 121.471102,
-      "event_id": "battle-1503-20260905T172211Z-event-0023",
+      "elapsed_seconds": 62.903059,
+      "event_id": "review-ticket-live-rerun-event-0014",
+      "event_type": "mutation_seed_bound",
+      "generation": 2,
+      "lane_id": null,
+      "payload": {
+        "kind": "dogpile",
+        "sha256": "06c27a77608d2aa9a4d8b46c7b7419404026cb7512270dc2fdb45ea508a21d55"
+      },
+      "receipt_ref": {
+        "receipt_id": null,
+        "schema": "dogpile.security_research_packet.v1",
+        "sha256": "06c27a77608d2aa9a4d8b46c7b7419404026cb7512270dc2fdb45ea508a21d55",
+        "status": null,
+        "verdict": null
+      },
+      "scope": "campaign",
+      "seq": 14,
+      "source_created_at": "2026-09-07T17:22:39Z",
+      "team": null
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g1",
+        "blue-g2",
+        "red-g1",
+        "red-g2"
+      ],
+      "elapsed_seconds": 62.94361,
+      "event_id": "review-ticket-live-rerun-event-0015",
+      "event_type": "mutation_seed_bound",
+      "generation": 2,
+      "lane_id": null,
+      "payload": {
+        "kind": "memory",
+        "sha256": "945986e9eac8281740eb0bd2f734f0f5b8212a5f27312089a6c77f36f732232b"
+      },
+      "receipt_ref": {
+        "receipt_id": null,
+        "schema": null,
+        "sha256": "945986e9eac8281740eb0bd2f734f0f5b8212a5f27312089a6c77f36f732232b",
+        "status": null,
+        "verdict": null
+      },
+      "scope": "campaign",
+      "seq": 15,
+      "source_created_at": "2026-09-07T17:22:39Z",
+      "team": null
+    },
+    {
+      "affected_lane_ids": [
+        "red-g2",
+        "blue-g2"
+      ],
+      "elapsed_seconds": 124.029501,
+      "event_id": "review-ticket-live-rerun-event-0016",
+      "event_type": "judge_verdict",
+      "generation": 2,
+      "lane_id": null,
+      "payload": {
+        "verdict": "BLUE_SUCCESS"
+      },
+      "receipt_ref": {
+        "receipt_id": null,
+        "schema": "battle.arena_tau_public_only_judge_receipt.v1",
+        "sha256": "fcf64a835e20556e292c53167107118c03a963570cfb56f65d4fc183968f4f1e",
+        "status": "PASS",
+        "verdict": "BLUE_SUCCESS"
+      },
+      "scope": "generation_pair",
+      "seq": 16,
+      "source_created_at": "2026-09-07T17:23:41Z",
+      "team": null
+    },
+    {
+      "affected_lane_ids": [
+        "red-g2"
+      ],
+      "elapsed_seconds": 124.066641,
+      "event_id": "review-ticket-live-rerun-event-0017",
+      "event_type": "child_knowledge_acknowledged",
+      "generation": 2,
+      "lane_id": "red-g2",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": null,
+        "schema": "battle.inherited_knowledge_acknowledgement.v1",
+        "sha256": "1e7d31259a1a8460ffd3e46cb0f650a5e1aabcf4fee07516cf278f3842826988",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 17,
+      "source_created_at": "2026-09-07T17:23:41Z",
+      "team": "red"
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g2"
+      ],
+      "elapsed_seconds": 124.09915,
+      "event_id": "review-ticket-live-rerun-event-0018",
+      "event_type": "child_knowledge_acknowledged",
+      "generation": 2,
+      "lane_id": "blue-g2",
+      "payload": {},
+      "receipt_ref": {
+        "receipt_id": null,
+        "schema": "battle.inherited_knowledge_acknowledgement.v1",
+        "sha256": "b8c93689c202b2dcb5a01535d357c494657a65f8779bff10514981abb88cb679",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 18,
+      "source_created_at": "2026-09-07T17:23:41Z",
+      "team": "blue"
+    },
+    {
+      "affected_lane_ids": [
+        "red-g2"
+      ],
+      "elapsed_seconds": 124.141441,
+      "event_id": "review-ticket-live-rerun-event-0019",
+      "event_type": "genome_mutated",
+      "generation": 2,
+      "lane_id": "red-g2",
+      "payload": {
+        "semantic_change_count": 25
+      },
+      "receipt_ref": {
+        "receipt_id": "review-ticket-live-rerun-red-g1-g2-delta",
+        "schema": "battle.semantic_genome_delta.v1",
+        "sha256": "c8d8e69944098d45c0d8dc1a11d1c798033fa79ca5568827e03425f271b6fe96",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 19,
+      "source_created_at": "2026-09-07T17:23:41Z",
+      "team": "red"
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g2"
+      ],
+      "elapsed_seconds": 124.174756,
+      "event_id": "review-ticket-live-rerun-event-0020",
+      "event_type": "genome_mutated",
+      "generation": 2,
+      "lane_id": "blue-g2",
+      "payload": {
+        "semantic_change_count": 27
+      },
+      "receipt_ref": {
+        "receipt_id": "review-ticket-live-rerun-blue-g1-g2-delta",
+        "schema": "battle.semantic_genome_delta.v1",
+        "sha256": "d1df79318d98e7ad1add469577a093f83d340254c4ec00d793097a30ab5f649b",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 20,
+      "source_created_at": "2026-09-07T17:23:41Z",
+      "team": "blue"
+    },
+    {
+      "affected_lane_ids": [
+        "red-g2"
+      ],
+      "elapsed_seconds": 124.208134,
+      "event_id": "review-ticket-live-rerun-event-0021",
+      "event_type": "generation_observation_materialized",
+      "generation": 2,
+      "lane_id": "red-g2",
+      "payload": {
+        "judge_verdict": "BLUE_SUCCESS"
+      },
+      "receipt_ref": {
+        "receipt_id": "review-ticket-live-rerun-red-g2-observation",
+        "schema": "battle.generation_observation_receipt.v1",
+        "sha256": "2cbcaec4c2fe54d83913a842ec0ef7af9d4683dba872214dee2d857bb37f3822",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 21,
+      "source_created_at": "2026-09-07T17:23:41Z",
+      "team": "red"
+    },
+    {
+      "affected_lane_ids": [
+        "red-g2"
+      ],
+      "elapsed_seconds": 124.241829,
+      "event_id": "review-ticket-live-rerun-event-0022",
+      "event_type": "fitness_materialized",
+      "generation": 2,
+      "lane_id": "red-g2",
+      "payload": {
+        "selection_key": [
+          1,
+          1,
+          1,
+          -1
+        ]
+      },
+      "receipt_ref": {
+        "receipt_id": "review-ticket-live-rerun-red-g2-fitness",
+        "schema": "battle.fitness_vector.v1",
+        "sha256": "07cbfe67244fff94341d554fd2d365394c35fc15ded640d217ac879682ff9a6b",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 22,
+      "source_created_at": "2026-09-07T17:23:41Z",
+      "team": "red"
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g2"
+      ],
+      "elapsed_seconds": 124.275309,
+      "event_id": "review-ticket-live-rerun-event-0023",
+      "event_type": "generation_observation_materialized",
+      "generation": 2,
+      "lane_id": "blue-g2",
+      "payload": {
+        "judge_verdict": "BLUE_SUCCESS"
+      },
+      "receipt_ref": {
+        "receipt_id": "review-ticket-live-rerun-blue-g2-observation",
+        "schema": "battle.generation_observation_receipt.v1",
+        "sha256": "277946b7bf3212447e31a7f5c93b2eec7991611d3ef0119c511553314aa28f8f",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 23,
+      "source_created_at": "2026-09-07T17:23:41Z",
+      "team": "blue"
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g2"
+      ],
+      "elapsed_seconds": 124.308594,
+      "event_id": "review-ticket-live-rerun-event-0024",
+      "event_type": "fitness_materialized",
+      "generation": 2,
+      "lane_id": "blue-g2",
+      "payload": {
+        "selection_key": [
+          2,
+          1,
+          1,
+          -1
+        ]
+      },
+      "receipt_ref": {
+        "receipt_id": "review-ticket-live-rerun-blue-g2-fitness",
+        "schema": "battle.fitness_vector.v1",
+        "sha256": "6ec55215cc380b703000016543e3d7582d1e080da9744bcce22256e275bad7bd",
+        "status": "PASS",
+        "verdict": null
+      },
+      "scope": "lane",
+      "seq": 24,
+      "source_created_at": "2026-09-07T17:23:41Z",
+      "team": "blue"
+    },
+    {
+      "affected_lane_ids": [
+        "blue-g1",
+        "blue-g2",
+        "red-g1",
+        "red-g2"
+      ],
+      "elapsed_seconds": 124.341991,
+      "event_id": "review-ticket-live-rerun-event-0025",
       "event_type": "selection_decision",
       "generation": null,
       "lane_id": null,
@@ -605,15 +661,15 @@
         "red_selected_generation": 2
       },
       "receipt_ref": {
-        "receipt_id": "battle-1503-20260905T172211Z-selection",
+        "receipt_id": "review-ticket-live-rerun-selection",
         "schema": "battle.adaptive_selection_receipt.v1",
-        "sha256": "e299803354f8c982d129b3be0f35ca9cc53e99fdbf607a3ae6de01f16a0f1854",
+        "sha256": "820cb78ea710e3b46ec0f3bb8979c0dc4a8d13d02eb4a37d793a3d3fb549aa1c",
         "status": "PASS",
         "verdict": null
       },
       "scope": "campaign",
-      "seq": 23,
-      "source_created_at": "2026-09-05T17:25:03Z",
+      "seq": 25,
+      "source_created_at": "2026-09-07T17:23:41Z",
       "team": null
     },
     {
@@ -623,8 +679,8 @@
         "red-g1",
         "red-g2"
       ],
-      "elapsed_seconds": 121.505984,
-      "event_id": "battle-1503-20260905T172211Z-event-0024",
+      "elapsed_seconds": 124.375634,
+      "event_id": "review-ticket-live-rerun-event-0026",
       "event_type": "memory_evaluation",
       "generation": null,
       "lane_id": null,
@@ -635,15 +691,15 @@
         ]
       },
       "receipt_ref": {
-        "receipt_id": "battle-1503-20260905T172211Z-memory-evaluation",
+        "receipt_id": "review-ticket-live-rerun-memory-evaluation",
         "schema": "battle.memory_promotion_evaluation.v1",
-        "sha256": "ccff7549129ce067eed86eefb4825bdf5e1b26119ab975c3535a03dce5526506",
+        "sha256": "1a88e54ee8215d1e6efb6c72b4a3b003db175d2ac864c047d03313ae9f9bebff",
         "status": "PASS",
         "verdict": null
       },
       "scope": "campaign",
-      "seq": 24,
-      "source_created_at": "2026-09-05T17:25:03Z",
+      "seq": 26,
+      "source_created_at": "2026-09-07T17:23:41Z",
       "team": null
     }
   ],
@@ -657,7 +713,7 @@
         "variant_id": "v13-shared-runner"
       },
       "display_name": "RED G1 PARENT",
-      "end_elapsed_seconds": 121.505984,
+      "end_elapsed_seconds": 124.375634,
       "generation": 1,
       "lane_id": "red-g1",
       "parent_lane_id": null,
@@ -666,20 +722,20 @@
       "visible_from_elapsed_seconds": 0.0
     },
     {
-      "active_from_elapsed_seconds": 76.190326,
+      "active_from_elapsed_seconds": 62.825011,
       "actor_visual": {
         "cosmetic_only": true,
         "semantic_authority": false,
         "variant_id": "v13-shared-runner"
       },
       "display_name": "RED G2 CHILD",
-      "end_elapsed_seconds": 121.505984,
+      "end_elapsed_seconds": 124.375634,
       "generation": 2,
       "lane_id": "red-g2",
       "parent_lane_id": "red-g1",
       "role": "child",
       "team": "red",
-      "visible_from_elapsed_seconds": 68.078339
+      "visible_from_elapsed_seconds": 55.329272
     },
     {
       "active_from_elapsed_seconds": 0.0,
@@ -689,7 +745,7 @@
         "variant_id": "v13-shared-runner"
       },
       "display_name": "BLUE G1 PARENT",
-      "end_elapsed_seconds": 121.505984,
+      "end_elapsed_seconds": 124.375634,
       "generation": 1,
       "lane_id": "blue-g1",
       "parent_lane_id": null,
@@ -698,28 +754,28 @@
       "visible_from_elapsed_seconds": 0.0
     },
     {
-      "active_from_elapsed_seconds": 76.224409,
+      "active_from_elapsed_seconds": 62.860087,
       "actor_visual": {
         "cosmetic_only": true,
         "semantic_authority": false,
         "variant_id": "v13-shared-runner"
       },
       "display_name": "BLUE G2 CHILD",
-      "end_elapsed_seconds": 121.505984,
+      "end_elapsed_seconds": 124.375634,
       "generation": 2,
       "lane_id": "blue-g2",
       "parent_lane_id": "blue-g1",
       "role": "child",
       "team": "blue",
-      "visible_from_elapsed_seconds": 68.119702
+      "visible_from_elapsed_seconds": 55.362139
     }
   ],
   "lineage_edges": [
     {
       "authorized_receipt_ref": {
-        "receipt_id": "battle-1503-20260905T172211Z-red-spawn-policy-decision",
+        "receipt_id": "review-ticket-live-rerun-red-spawn-policy-decision",
         "schema": "battle.adaptive_spawn_policy_decision.v1",
-        "sha256": "585956bbaa835f4f376b8f4839f224ad49d021bc9b88e2374c73d0edb70f39c5",
+        "sha256": "7525962c9b03e9b473dbb7a6ce21d1f90fd487e25c27da30717e4d5846d1e24a",
         "status": "PASS",
         "verdict": null
       },
@@ -728,20 +784,20 @@
       "edge_kind": "spawn",
       "parent_lane_id": "red-g1",
       "requested_receipt_ref": {
-        "receipt_id": "battle-1503-20260905T172211Z-red-parent-spawn-request",
+        "receipt_id": "review-ticket-live-rerun-red-parent-spawn-request",
         "schema": "battle.adaptive_spawn_request.v1",
-        "sha256": "45d7dc841239c93a9aca7c31567c8b68331b728d739028092f12bf4e0565e761",
+        "sha256": "276703d22e14c93a69f81282f9320796b19dd1a63b05977d92d3668e356ecf36",
         "status": "PASS",
         "verdict": null
       },
       "team": "red",
-      "visible_from_elapsed_seconds": 68.078339
+      "visible_from_elapsed_seconds": 55.329272
     },
     {
       "authorized_receipt_ref": {
-        "receipt_id": "battle-1503-20260905T172211Z-blue-spawn-policy-decision",
+        "receipt_id": "review-ticket-live-rerun-blue-spawn-policy-decision",
         "schema": "battle.adaptive_spawn_policy_decision.v1",
-        "sha256": "a8d1dbdda87a9f36264dacd94260d4dc53a054829de399432034cebd963b9f13",
+        "sha256": "a24183e46f7004fb8669ada817083344462fe783520ca7c57774de062a140bcb",
         "status": "PASS",
         "verdict": null
       },
@@ -750,14 +806,14 @@
       "edge_kind": "spawn",
       "parent_lane_id": "blue-g1",
       "requested_receipt_ref": {
-        "receipt_id": "battle-1503-20260905T172211Z-blue-parent-spawn-request",
+        "receipt_id": "review-ticket-live-rerun-blue-parent-spawn-request",
         "schema": "battle.adaptive_spawn_request.v1",
-        "sha256": "10735fe3a4b90a28204670aa21079dd4a887ec25bd6d1ca3d4ac3d5cb2b1828d",
+        "sha256": "a9fbc4eb6d171a9889eb70e72f05cdd46e0b85e10bc74f5a50101276de552e0d",
         "status": "PASS",
         "verdict": null
       },
       "team": "blue",
-      "visible_from_elapsed_seconds": 68.119702
+      "visible_from_elapsed_seconds": 55.362139
     }
   ],
   "live_source": "adaptive_red_blue_lineage_v2",
@@ -774,9 +830,9 @@
         "edges": [
           {
             "authorized_receipt_ref": {
-              "receipt_id": "battle-1503-20260905T172211Z-blue-spawn-policy-decision",
+              "receipt_id": "review-ticket-live-rerun-blue-spawn-policy-decision",
               "schema": "battle.adaptive_spawn_policy_decision.v1",
-              "sha256": "a8d1dbdda87a9f36264dacd94260d4dc53a054829de399432034cebd963b9f13",
+              "sha256": "a24183e46f7004fb8669ada817083344462fe783520ca7c57774de062a140bcb",
               "status": "PASS",
               "verdict": null
             },
@@ -785,22 +841,22 @@
             "edge_kind": "spawn",
             "parent_lane_id": "blue-g1",
             "requested_receipt_ref": {
-              "receipt_id": "battle-1503-20260905T172211Z-blue-parent-spawn-request",
+              "receipt_id": "review-ticket-live-rerun-blue-parent-spawn-request",
               "schema": "battle.adaptive_spawn_request.v1",
-              "sha256": "10735fe3a4b90a28204670aa21079dd4a887ec25bd6d1ca3d4ac3d5cb2b1828d",
+              "sha256": "a9fbc4eb6d171a9889eb70e72f05cdd46e0b85e10bc74f5a50101276de552e0d",
               "status": "PASS",
               "verdict": null
             },
             "team": "blue",
-            "visible_from_elapsed_seconds": 68.119702
+            "visible_from_elapsed_seconds": 55.362139
           }
         ],
         "nodes": [
           {
             "fitness_receipt_ref": {
-              "receipt_id": "battle-1503-20260905T172211Z-blue-g1-fitness",
+              "receipt_id": "review-ticket-live-rerun-blue-g1-fitness",
               "schema": "battle.fitness_vector.v1",
-              "sha256": "f1c0af9085378c1a874413292dd4db1effce17ed697ce1e2a321af9918f228f1",
+              "sha256": "292961e687625ea23e50d07ea2e81b9d2bd3141549d75d4136df77073b3e44d0",
               "status": "PASS",
               "verdict": null
             },
@@ -809,9 +865,9 @@
             "lane_id": "blue-g1",
             "mutation_operator": "ROOT",
             "observation_receipt_ref": {
-              "receipt_id": "battle-1503-20260905T172211Z-blue-g1-observation",
+              "receipt_id": "review-ticket-live-rerun-blue-g1-observation",
               "schema": "battle.generation_observation_receipt.v1",
-              "sha256": "4fb604e61bb379c92234ce7bce3c02aed132fe0ec953e6fe222603d10e3180f6",
+              "sha256": "620c3a0cb6b7b737067fd9159e3e7530ec64f40837843344a70bfa80e9632fe5",
               "status": "PASS",
               "verdict": null
             },
@@ -819,9 +875,9 @@
             "role": "parent",
             "selection_disposition": "NOT_SELECTED",
             "selection_receipt_ref": {
-              "receipt_id": "battle-1503-20260905T172211Z-selection",
+              "receipt_id": "review-ticket-live-rerun-selection",
               "schema": "battle.adaptive_selection_receipt.v1",
-              "sha256": "e299803354f8c982d129b3be0f35ca9cc53e99fdbf607a3ae6de01f16a0f1854",
+              "sha256": "820cb78ea710e3b46ec0f3bb8979c0dc4a8d13d02eb4a37d793a3d3fb549aa1c",
               "status": "PASS",
               "verdict": null
             },
@@ -829,26 +885,26 @@
           },
           {
             "fitness_receipt_ref": {
-              "receipt_id": "battle-1503-20260905T172211Z-blue-g2-fitness",
+              "receipt_id": "review-ticket-live-rerun-blue-g2-fitness",
               "schema": "battle.fitness_vector.v1",
-              "sha256": "d42c6b1c285809f5d9a22d0f49a82a0c8210bb1a764711b2f921d332a06310b7",
+              "sha256": "6ec55215cc380b703000016543e3d7582d1e080da9744bcce22256e275bad7bd",
               "status": "PASS",
               "verdict": null
             },
             "generation": 2,
             "genome_delta_receipt_ref": {
-              "receipt_id": "battle-1503-20260905T172211Z-blue-g1-g2-delta",
+              "receipt_id": "review-ticket-live-rerun-blue-g1-g2-delta",
               "schema": "battle.semantic_genome_delta.v1",
-              "sha256": "cdb2b0ff9dd7a70ec8d2c02b39f272a35a235ff6efc12f96e3c5f6c9153f2fcb",
+              "sha256": "d1df79318d98e7ad1add469577a093f83d340254c4ec00d793097a30ab5f649b",
               "status": "PASS",
               "verdict": null
             },
             "lane_id": "blue-g2",
             "mutation_operator": "semantic_genome_delta",
             "observation_receipt_ref": {
-              "receipt_id": "battle-1503-20260905T172211Z-blue-g2-observation",
+              "receipt_id": "review-ticket-live-rerun-blue-g2-observation",
               "schema": "battle.generation_observation_receipt.v1",
-              "sha256": "d78dbf178b91ce8f39202fa8b3f2fa0ca007bd81c77649c2a8dbdd9ed0f312e8",
+              "sha256": "277946b7bf3212447e31a7f5c93b2eec7991611d3ef0119c511553314aa28f8f",
               "status": "PASS",
               "verdict": null
             },
@@ -856,9 +912,9 @@
             "role": "child",
             "selection_disposition": "SELECTED",
             "selection_receipt_ref": {
-              "receipt_id": "battle-1503-20260905T172211Z-selection",
+              "receipt_id": "review-ticket-live-rerun-selection",
               "schema": "battle.adaptive_selection_receipt.v1",
-              "sha256": "e299803354f8c982d129b3be0f35ca9cc53e99fdbf607a3ae6de01f16a0f1854",
+              "sha256": "820cb78ea710e3b46ec0f3bb8979c0dc4a8d13d02eb4a37d793a3d3fb549aa1c",
               "status": "PASS",
               "verdict": null
             },
@@ -871,9 +927,9 @@
         "edges": [
           {
             "authorized_receipt_ref": {
-              "receipt_id": "battle-1503-20260905T172211Z-red-spawn-policy-decision",
+              "receipt_id": "review-ticket-live-rerun-red-spawn-policy-decision",
               "schema": "battle.adaptive_spawn_policy_decision.v1",
-              "sha256": "585956bbaa835f4f376b8f4839f224ad49d021bc9b88e2374c73d0edb70f39c5",
+              "sha256": "7525962c9b03e9b473dbb7a6ce21d1f90fd487e25c27da30717e4d5846d1e24a",
               "status": "PASS",
               "verdict": null
             },
@@ -882,22 +938,22 @@
             "edge_kind": "spawn",
             "parent_lane_id": "red-g1",
             "requested_receipt_ref": {
-              "receipt_id": "battle-1503-20260905T172211Z-red-parent-spawn-request",
+              "receipt_id": "review-ticket-live-rerun-red-parent-spawn-request",
               "schema": "battle.adaptive_spawn_request.v1",
-              "sha256": "45d7dc841239c93a9aca7c31567c8b68331b728d739028092f12bf4e0565e761",
+              "sha256": "276703d22e14c93a69f81282f9320796b19dd1a63b05977d92d3668e356ecf36",
               "status": "PASS",
               "verdict": null
             },
             "team": "red",
-            "visible_from_elapsed_seconds": 68.078339
+            "visible_from_elapsed_seconds": 55.329272
           }
         ],
         "nodes": [
           {
             "fitness_receipt_ref": {
-              "receipt_id": "battle-1503-20260905T172211Z-red-g1-fitness",
+              "receipt_id": "review-ticket-live-rerun-red-g1-fitness",
               "schema": "battle.fitness_vector.v1",
-              "sha256": "8a24f6dc4f60864b3af91d83c32e113c267f6235a4f4844132d1a12f134e5ceb",
+              "sha256": "85d7b9b1937e7bea339b64981c7ba2d3505ef9677bd05b5d31085244e348a241",
               "status": "PASS",
               "verdict": null
             },
@@ -906,9 +962,9 @@
             "lane_id": "red-g1",
             "mutation_operator": "ROOT",
             "observation_receipt_ref": {
-              "receipt_id": "battle-1503-20260905T172211Z-red-g1-observation",
+              "receipt_id": "review-ticket-live-rerun-red-g1-observation",
               "schema": "battle.generation_observation_receipt.v1",
-              "sha256": "ca9742f8a8b052abe53054b908a5c70b442a3c46f517041d39b890ef9e8b1a28",
+              "sha256": "4632ecdf099b587bac80e109bb56a8d02ff23a7cf513dfac6bb19e2447dffeb1",
               "status": "PASS",
               "verdict": null
             },
@@ -916,9 +972,9 @@
             "role": "parent",
             "selection_disposition": "NOT_SELECTED",
             "selection_receipt_ref": {
-              "receipt_id": "battle-1503-20260905T172211Z-selection",
+              "receipt_id": "review-ticket-live-rerun-selection",
               "schema": "battle.adaptive_selection_receipt.v1",
-              "sha256": "e299803354f8c982d129b3be0f35ca9cc53e99fdbf607a3ae6de01f16a0f1854",
+              "sha256": "820cb78ea710e3b46ec0f3bb8979c0dc4a8d13d02eb4a37d793a3d3fb549aa1c",
               "status": "PASS",
               "verdict": null
             },
@@ -926,26 +982,26 @@
           },
           {
             "fitness_receipt_ref": {
-              "receipt_id": "battle-1503-20260905T172211Z-red-g2-fitness",
+              "receipt_id": "review-ticket-live-rerun-red-g2-fitness",
               "schema": "battle.fitness_vector.v1",
-              "sha256": "7eb3bc1dcddc83cb00edba65f4b5dfedb2c810630e3ed6f417fdf6c880c7505e",
+              "sha256": "07cbfe67244fff94341d554fd2d365394c35fc15ded640d217ac879682ff9a6b",
               "status": "PASS",
               "verdict": null
             },
             "generation": 2,
             "genome_delta_receipt_ref": {
-              "receipt_id": "battle-1503-20260905T172211Z-red-g1-g2-delta",
+              "receipt_id": "review-ticket-live-rerun-red-g1-g2-delta",
               "schema": "battle.semantic_genome_delta.v1",
-              "sha256": "f3c601705c24248c83aaf77ffc7a67d9b0222bd2dbabc0fe84b3eccec043bb6c",
+              "sha256": "c8d8e69944098d45c0d8dc1a11d1c798033fa79ca5568827e03425f271b6fe96",
               "status": "PASS",
               "verdict": null
             },
             "lane_id": "red-g2",
             "mutation_operator": "semantic_genome_delta",
             "observation_receipt_ref": {
-              "receipt_id": "battle-1503-20260905T172211Z-red-g2-observation",
+              "receipt_id": "review-ticket-live-rerun-red-g2-observation",
               "schema": "battle.generation_observation_receipt.v1",
-              "sha256": "a675c7c2c0f3873ee46e74b62593930b41ace0a3571d554db605db3d62d64718",
+              "sha256": "2cbcaec4c2fe54d83913a842ec0ef7af9d4683dba872214dee2d857bb37f3822",
               "status": "PASS",
               "verdict": null
             },
@@ -953,9 +1009,9 @@
             "role": "child",
             "selection_disposition": "SELECTED",
             "selection_receipt_ref": {
-              "receipt_id": "battle-1503-20260905T172211Z-selection",
+              "receipt_id": "review-ticket-live-rerun-selection",
               "schema": "battle.adaptive_selection_receipt.v1",
-              "sha256": "e299803354f8c982d129b3be0f35ca9cc53e99fdbf607a3ae6de01f16a0f1854",
+              "sha256": "820cb78ea710e3b46ec0f3bb8979c0dc4a8d13d02eb4a37d793a3d3fb549aa1c",
               "status": "PASS",
               "verdict": null
             },
@@ -971,168 +1027,182 @@
       "NO_PROMOTION",
       "NO_PROMOTION"
     ],
-    "receipt_id": "battle-1503-20260905T172211Z-memory-evaluation",
-    "sha256": "ccff7549129ce067eed86eefb4825bdf5e1b26119ab975c3535a03dce5526506"
+    "receipt_id": "review-ticket-live-rerun-memory-evaluation",
+    "sha256": "1a88e54ee8215d1e6efb6c72b4a3b003db175d2ac864c047d03313ae9f9bebff"
   },
   "proof_mode": "receipt_backed_fixture",
   "provenance": {
     "projection_kind": "adaptive_lineage_v13",
     "raw_paths_redacted": true,
-    "source_proof_id": "battle-1503-20260905T172211Z",
+    "source_proof_id": "source-run",
     "source_run_count": 1
   },
   "receipt_refs": [
     {
-      "receipt_id": "battle-1503-20260905T172211Z-red-g1-observation",
+      "receipt_id": "review-ticket-live-rerun-red-g1-observation",
       "schema": "battle.generation_observation_receipt.v1",
-      "sha256": "ca9742f8a8b052abe53054b908a5c70b442a3c46f517041d39b890ef9e8b1a28",
+      "sha256": "4632ecdf099b587bac80e109bb56a8d02ff23a7cf513dfac6bb19e2447dffeb1",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-blue-g1-observation",
+      "receipt_id": "review-ticket-live-rerun-blue-g1-observation",
       "schema": "battle.generation_observation_receipt.v1",
-      "sha256": "4fb604e61bb379c92234ce7bce3c02aed132fe0ec953e6fe222603d10e3180f6",
+      "sha256": "620c3a0cb6b7b737067fd9159e3e7530ec64f40837843344a70bfa80e9632fe5",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-red-g2-observation",
+      "receipt_id": "review-ticket-live-rerun-red-g2-observation",
       "schema": "battle.generation_observation_receipt.v1",
-      "sha256": "a675c7c2c0f3873ee46e74b62593930b41ace0a3571d554db605db3d62d64718",
+      "sha256": "2cbcaec4c2fe54d83913a842ec0ef7af9d4683dba872214dee2d857bb37f3822",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-blue-g2-observation",
+      "receipt_id": "review-ticket-live-rerun-blue-g2-observation",
       "schema": "battle.generation_observation_receipt.v1",
-      "sha256": "d78dbf178b91ce8f39202fa8b3f2fa0ca007bd81c77649c2a8dbdd9ed0f312e8",
+      "sha256": "277946b7bf3212447e31a7f5c93b2eec7991611d3ef0119c511553314aa28f8f",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-red-g1-fitness",
+      "receipt_id": "review-ticket-live-rerun-red-g1-fitness",
       "schema": "battle.fitness_vector.v1",
-      "sha256": "8a24f6dc4f60864b3af91d83c32e113c267f6235a4f4844132d1a12f134e5ceb",
+      "sha256": "85d7b9b1937e7bea339b64981c7ba2d3505ef9677bd05b5d31085244e348a241",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-blue-g1-fitness",
+      "receipt_id": "review-ticket-live-rerun-blue-g1-fitness",
       "schema": "battle.fitness_vector.v1",
-      "sha256": "f1c0af9085378c1a874413292dd4db1effce17ed697ce1e2a321af9918f228f1",
+      "sha256": "292961e687625ea23e50d07ea2e81b9d2bd3141549d75d4136df77073b3e44d0",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-red-g2-fitness",
+      "receipt_id": "review-ticket-live-rerun-red-g2-fitness",
       "schema": "battle.fitness_vector.v1",
-      "sha256": "7eb3bc1dcddc83cb00edba65f4b5dfedb2c810630e3ed6f417fdf6c880c7505e",
+      "sha256": "07cbfe67244fff94341d554fd2d365394c35fc15ded640d217ac879682ff9a6b",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-blue-g2-fitness",
+      "receipt_id": "review-ticket-live-rerun-blue-g2-fitness",
       "schema": "battle.fitness_vector.v1",
-      "sha256": "d42c6b1c285809f5d9a22d0f49a82a0c8210bb1a764711b2f921d332a06310b7",
+      "sha256": "6ec55215cc380b703000016543e3d7582d1e080da9744bcce22256e275bad7bd",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-red-parent-spawn-request",
+      "receipt_id": "review-ticket-live-rerun-red-parent-spawn-request",
       "schema": "battle.adaptive_spawn_request.v1",
-      "sha256": "45d7dc841239c93a9aca7c31567c8b68331b728d739028092f12bf4e0565e761",
+      "sha256": "276703d22e14c93a69f81282f9320796b19dd1a63b05977d92d3668e356ecf36",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-blue-parent-spawn-request",
+      "receipt_id": "review-ticket-live-rerun-blue-parent-spawn-request",
       "schema": "battle.adaptive_spawn_request.v1",
-      "sha256": "10735fe3a4b90a28204670aa21079dd4a887ec25bd6d1ca3d4ac3d5cb2b1828d",
+      "sha256": "a9fbc4eb6d171a9889eb70e72f05cdd46e0b85e10bc74f5a50101276de552e0d",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-red-g1-g2-delta",
+      "receipt_id": "review-ticket-live-rerun-red-g1-g2-delta",
       "schema": "battle.semantic_genome_delta.v1",
-      "sha256": "f3c601705c24248c83aaf77ffc7a67d9b0222bd2dbabc0fe84b3eccec043bb6c",
+      "sha256": "c8d8e69944098d45c0d8dc1a11d1c798033fa79ca5568827e03425f271b6fe96",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-blue-g1-g2-delta",
+      "receipt_id": "review-ticket-live-rerun-blue-g1-g2-delta",
       "schema": "battle.semantic_genome_delta.v1",
-      "sha256": "cdb2b0ff9dd7a70ec8d2c02b39f272a35a235ff6efc12f96e3c5f6c9153f2fcb",
+      "sha256": "d1df79318d98e7ad1add469577a093f83d340254c4ec00d793097a30ab5f649b",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-selection",
+      "receipt_id": "review-ticket-live-rerun-selection",
       "schema": "battle.adaptive_selection_receipt.v1",
-      "sha256": "e299803354f8c982d129b3be0f35ca9cc53e99fdbf607a3ae6de01f16a0f1854",
+      "sha256": "820cb78ea710e3b46ec0f3bb8979c0dc4a8d13d02eb4a37d793a3d3fb549aa1c",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-memory-evaluation",
+      "receipt_id": "review-ticket-live-rerun-memory-evaluation",
       "schema": "battle.memory_promotion_evaluation.v1",
-      "sha256": "ccff7549129ce067eed86eefb4825bdf5e1b26119ab975c3535a03dce5526506",
+      "sha256": "1a88e54ee8215d1e6efb6c72b4a3b003db175d2ac864c047d03313ae9f9bebff",
       "status": "PASS"
     },
     {
       "receipt_id": null,
       "schema": "battle.arena_tau_public_only_judge_receipt.v1",
-      "sha256": "156c69355512d226de561ca43ea50a1fc7b2452fb4e8793ce51d0582d6705048",
+      "sha256": "e84448393e6b9d84b0a3e561a82cbb65c1e5467bbc92fe91aafeb8fd7ee3d1a0",
       "status": "PASS",
       "verdict": "BLUE_SUCCESS"
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-red-spawn-policy-decision",
+      "receipt_id": "review-ticket-live-rerun-red-spawn-policy-decision",
       "schema": "battle.adaptive_spawn_policy_decision.v1",
-      "sha256": "585956bbaa835f4f376b8f4839f224ad49d021bc9b88e2374c73d0edb70f39c5",
+      "sha256": "7525962c9b03e9b473dbb7a6ce21d1f90fd487e25c27da30717e4d5846d1e24a",
       "status": "PASS",
       "verdict": null
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-blue-spawn-policy-decision",
+      "receipt_id": "review-ticket-live-rerun-blue-spawn-policy-decision",
       "schema": "battle.adaptive_spawn_policy_decision.v1",
-      "sha256": "a8d1dbdda87a9f36264dacd94260d4dc53a054829de399432034cebd963b9f13",
+      "sha256": "a24183e46f7004fb8669ada817083344462fe783520ca7c57774de062a140bcb",
       "status": "PASS",
       "verdict": null
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-red-knowledge-packet",
+      "receipt_id": "review-ticket-live-rerun-red-knowledge-packet",
       "schema": "battle.adaptive_team_knowledge_packet.v1",
-      "sha256": "17bdc06818de5013438e8357b8b69ac3d1d1afddf589ef66e269a3461b8e186d",
+      "sha256": "e52f4f6971b6781861bfd4c9e6a9ba0a377038a5504000455d04d6552da9eba8",
       "status": "PASS",
       "verdict": null
     },
     {
-      "receipt_id": "battle-1503-20260905T172211Z-blue-knowledge-packet",
+      "receipt_id": "review-ticket-live-rerun-blue-knowledge-packet",
       "schema": "battle.adaptive_team_knowledge_packet.v1",
-      "sha256": "15557571fb7b825db58eec6cd95fcabbd3f833e3293f229385a2f93a1deff0af",
+      "sha256": "7668c3dd7f3661d991bdb2131a34afdd1ba4dc9bfb28a27f3549b4e1fe2819c0",
       "status": "PASS",
       "verdict": null
     },
     {
       "receipt_id": null,
       "schema": "tau.external_research_receipt.v1",
-      "sha256": "3ed07c875276b1463ec433289d3a08ae04d6df8f4d80d0b47566226e3de7f901",
+      "sha256": "b9455e86eab7d31f2016d4a0b158dab6d478e3e52e1e715a72cbb1290aaa20b4",
       "status": null,
       "verdict": null
     },
     {
       "receipt_id": null,
       "schema": "tau.external_research_receipt.v1",
-      "sha256": "55b329f66ad07e574567d17084e5d53683b352253c438615c7afa3a771a44594",
+      "sha256": "385a840e5df2453fa376a35c6570c4c4b5d202ec73d23d00564ef4646898c9d6",
+      "status": null,
+      "verdict": null
+    },
+    {
+      "receipt_id": null,
+      "schema": "dogpile.security_research_packet.v1",
+      "sha256": "06c27a77608d2aa9a4d8b46c7b7419404026cb7512270dc2fdb45ea508a21d55",
+      "status": null,
+      "verdict": null
+    },
+    {
+      "receipt_id": null,
+      "schema": null,
+      "sha256": "945986e9eac8281740eb0bd2f734f0f5b8212a5f27312089a6c77f36f732232b",
       "status": null,
       "verdict": null
     },
     {
       "receipt_id": null,
       "schema": "battle.arena_tau_public_only_judge_receipt.v1",
-      "sha256": "3ba72c23f34c15e90824364e0c1ce601c5e79d0ffd585e5652654ede2a861f2d",
+      "sha256": "fcf64a835e20556e292c53167107118c03a963570cfb56f65d4fc183968f4f1e",
       "status": "PASS",
       "verdict": "BLUE_SUCCESS"
     },
     {
       "receipt_id": null,
       "schema": "battle.inherited_knowledge_acknowledgement.v1",
-      "sha256": "656d14236f530e7f5f6a8a94e6216fcc9e262072e9b8020328c1cb54b959ef98",
+      "sha256": "1e7d31259a1a8460ffd3e46cb0f650a5e1aabcf4fee07516cf278f3842826988",
       "status": "PASS",
       "verdict": null
     },
     {
       "receipt_id": null,
       "schema": "battle.inherited_knowledge_acknowledgement.v1",
-      "sha256": "2ecf59f6bfb90cf4be0ff0cc0c90e1b04f7d9dd76eef39b07834dbe00aad6870",
+      "sha256": "b8c93689c202b2dcb5a01535d357c494657a65f8779bff10514981abb88cb679",
       "status": "PASS",
       "verdict": null
     }
@@ -1149,7 +1219,7 @@
     "sprite_identity_is_cosmetic_only": true,
     "time_authority": "event.elapsed_seconds_is_receipt_commit_time"
   },
-  "run_id": "battle-1503-20260905T172211Z",
+  "run_id": "review-ticket-live-rerun",
   "schema": "battle.normalized_adaptive_lineage_fixture.v1",
   "scoreboard": {
     "blue_score": 2,
@@ -1164,12 +1234,12 @@
     "inputs": [
       {
         "blue_delta": 1,
-        "event_id": "battle-1503-20260905T172211Z-event-0001",
+        "event_id": "review-ticket-live-rerun-event-0001",
         "generation": 1,
         "receipt_ref": {
           "receipt_id": null,
           "schema": "battle.arena_tau_public_only_judge_receipt.v1",
-          "sha256": "156c69355512d226de561ca43ea50a1fc7b2452fb4e8793ce51d0582d6705048",
+          "sha256": "e84448393e6b9d84b0a3e561a82cbb65c1e5467bbc92fe91aafeb8fd7ee3d1a0",
           "status": "PASS",
           "verdict": "BLUE_SUCCESS"
         },
@@ -1178,12 +1248,12 @@
       },
       {
         "blue_delta": 1,
-        "event_id": "battle-1503-20260905T172211Z-event-0014",
+        "event_id": "review-ticket-live-rerun-event-0016",
         "generation": 2,
         "receipt_ref": {
           "receipt_id": null,
           "schema": "battle.arena_tau_public_only_judge_receipt.v1",
-          "sha256": "3ba72c23f34c15e90824364e0c1ce601c5e79d0ffd585e5652654ede2a861f2d",
+          "sha256": "fcf64a835e20556e292c53167107118c03a963570cfb56f65d4fc183968f4f1e",
           "status": "PASS",
           "verdict": "BLUE_SUCCESS"
         },
@@ -1198,8 +1268,8 @@
   },
   "selection": {
     "improvement_claimed": false,
-    "receipt_id": "battle-1503-20260905T172211Z-selection",
-    "sha256": "e299803354f8c982d129b3be0f35ca9cc53e99fdbf607a3ae6de01f16a0f1854",
+    "receipt_id": "review-ticket-live-rerun-selection",
+    "sha256": "820cb78ea710e3b46ec0f3bb8979c0dc4a8d13d02eb4a37d793a3d3fb549aa1c",
     "teams": {
       "blue": {
         "component_comparison": [
@@ -1219,8 +1289,8 @@
             ]
           }
         ],
-        "generation_1_fitness_receipt_sha256": "f1c0af9085378c1a874413292dd4db1effce17ed697ce1e2a321af9918f228f1",
-        "generation_2_fitness_receipt_sha256": "d42c6b1c285809f5d9a22d0f49a82a0c8210bb1a764711b2f921d332a06310b7",
+        "generation_1_fitness_receipt_sha256": "292961e687625ea23e50d07ea2e81b9d2bd3141549d75d4136df77073b3e44d0",
+        "generation_2_fitness_receipt_sha256": "6ec55215cc380b703000016543e3d7582d1e080da9744bcce22256e275bad7bd",
         "retention_decision": "GENERATION_2_SELECTED",
         "selected_generation": 2,
         "tie_break_reason": null
@@ -1243,8 +1313,8 @@
             ]
           }
         ],
-        "generation_1_fitness_receipt_sha256": "8a24f6dc4f60864b3af91d83c32e113c267f6235a4f4844132d1a12f134e5ceb",
-        "generation_2_fitness_receipt_sha256": "7eb3bc1dcddc83cb00edba65f4b5dfedb2c810630e3ed6f417fdf6c880c7505e",
+        "generation_1_fitness_receipt_sha256": "85d7b9b1937e7bea339b64981c7ba2d3505ef9677bd05b5d31085244e348a241",
+        "generation_2_fitness_receipt_sha256": "07cbfe67244fff94341d554fd2d365394c35fc15ded640d217ac879682ff9a6b",
         "retention_decision": "GENERATION_2_SELECTED",
         "selected_generation": 2,
         "tie_break_reason": null

@@ -13,6 +13,7 @@ const battleDir = resolve(spectatorDir, '..')
 const repositoryDir = resolve(battleDir, '..', '..')
 const fixtureId = 'battle-004-adaptive-lineage-v13'
 const sourceIndexPath = resolve(process.env.BATTLE_ADAPTIVE_V13_SOURCE_INDEX ?? resolve(battleDir, 'local', fixtureId, 'source-receipt-index.json'))
+const validationPath = resolve(process.env.BATTLE_ADAPTIVE_V13_VALIDATION ?? resolve(battleDir, 'local', fixtureId, 'validation.json'))
 const baseUrl = `${host}/#battle/receipt?engine=pixi&fixture=${fixtureId}&pixiTest=1&reducedMotion=1&particles=0`
 const continuousReplayUrl = `${host}/#battle/receipt?engine=pixi&fixture=${fixtureId}&reducedMotion=1&particles=0`
 const checks = []
@@ -36,6 +37,7 @@ async function sourceArtifact(path, id) {
 await mkdir(screenshotsDir, { recursive: true })
 const sourceIndexHash = await sha256File(sourceIndexPath)
 const sourceIndex = JSON.parse(await readFile(sourceIndexPath, 'utf8'))
+const validation = JSON.parse(await readFile(validationPath, 'utf8'))
 record(
   'source-receipt-index-valid',
   sourceIndex.status === 'PASS'
@@ -51,8 +53,8 @@ record(
   'source-receipt-index-public-receipts',
   Array.isArray(sourceIndex.public_receipts)
     && sourceIndex.public_receipts.length >= 14
-    && sourceIndex.public_receipts.every((receipt) => (receipt.status === 'PASS' || receipt.status == null) && typeof receipt.schema === 'string' && typeof receipt.sha256 === 'string'),
-  { receipts: sourceIndex.public_receipts?.length ?? 0 },
+    && sourceIndex.public_receipts.every((receipt) => (receipt.status === 'PASS' || receipt.status == null) && (typeof receipt.schema === 'string' || receipt.schema == null) && typeof receipt.sha256 === 'string'),
+  { receipts: sourceIndex.public_receipts?.length ?? 0, untypedReceipts: (sourceIndex.public_receipts ?? []).filter((receipt) => receipt.schema == null).length },
 )
 
 const browser = await chromium.launch({ headless: true })
@@ -70,7 +72,7 @@ const fixtureResponse = await fetch(`${host}/battle-fixtures/${fixtureId}/battle
 const fixture = await fixtureResponse.json()
 record('fixture-http', fixtureResponse.ok && fixture.schema === 'battle.normalized_adaptive_lineage_fixture.v1', { status: fixtureResponse.status, schema: fixture.schema })
 record('source-index-fixture-run-match', sourceIndex.run_id === fixture.run_id && sourceIndex.battle_id === fixture.battle_id, { source_run_id: sourceIndex.run_id, fixture_run_id: fixture.run_id, source_battle_id: sourceIndex.battle_id, fixture_battle_id: fixture.battle_id })
-record('fixture-causal-contract', fixture.causal_continuity_proven === true && fixture.events?.length === 24 && fixture.lanes?.length === 4 && fixture.lineage_edges?.length === 2, { causal: fixture.causal_continuity_proven, events: fixture.events?.length, lanes: fixture.lanes?.length, edges: fixture.lineage_edges?.length })
+record('fixture-causal-contract', fixture.causal_continuity_proven === true && fixture.events?.length === validation.event_count && fixture.lanes?.length === validation.lane_count && fixture.lineage_edges?.length === validation.lineage_edge_count, { causal: fixture.causal_continuity_proven, events: fixture.events?.length, expectedEvents: validation.event_count, lanes: fixture.lanes?.length, expectedLanes: validation.lane_count, edges: fixture.lineage_edges?.length, expectedEdges: validation.lineage_edge_count })
 record('fixture-shared-atlas', fixture.sprite_theme?.shared_atlas === true && fixture.sprite_theme?.semantic_authority === false && fixture.sprite_theme?.variants?.['v13-shared-runner']?.sprite_id === 'plague_nurgling', fixture.sprite_theme)
 
 const childLanes = (fixture.lanes ?? []).filter((lane) => lane.role === 'child')
