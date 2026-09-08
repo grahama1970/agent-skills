@@ -50,7 +50,7 @@ from pathlib import Path
 
 output, action, requested, sink_vol, source_vol, jabra_rx, earbud_rx, receipt_path = sys.argv[1:]
 TARGETS = ["jabra-usb", "jabra-bt", "earbuds-bt", "wired"]
-FALLBACK = ["jabra-bt", "earbuds-bt", "wired", "jabra-usb"]
+FALLBACK = ["jabra-usb", "jabra-bt", "earbuds-bt", "wired"]
 
 
 def run(cmd: list[str], timeout: int = 8) -> tuple[int, str, str]:
@@ -84,9 +84,29 @@ def info() -> dict[str, str]:
     return data
 
 
+def bluetooth_names() -> dict[str, str]:
+    rc, out, _ = run(["bluetoothctl", "devices"])
+    names: dict[str, str] = {}
+    if rc != 0:
+        return names
+    for line in out.splitlines():
+        parts = line.split(maxsplit=2)
+        if len(parts) == 3 and parts[0] == "Device":
+            names[parts[1].replace(":", "_").upper()] = parts[2]
+    return names
+
+
+BT_NAMES = bluetooth_names()
+
+
+def bluez_label(name: str) -> str:
+    m = re.search(r"bluez_(?:input|output)\.([0-9A-Fa-f_]{17})\.", name)
+    return BT_NAMES.get(m.group(1).upper(), "") if m else ""
+
+
 def match(rows: list[dict[str, str]], target: str) -> dict[str, str] | None:
     def has(row: dict[str, str], rx: str) -> bool:
-        return re.search(rx, row["name"], re.I) is not None
+        return re.search(rx, row["name"], re.I) is not None or re.search(rx, bluez_label(row["name"]), re.I) is not None
 
     if target == "wired":
         choices = []
@@ -187,12 +207,24 @@ def write_override_marker(target: str) -> None:
     }, indent=2) + "\n")
 
 
+def unload_combine_sinks(commands: list[str]) -> None:
+    # Leftover module-combine-sink defaults (e.g. meeting_all_outputs) silently
+    # exclude devices plugged in after creation; kill them before switching.
+    _, out, _ = run(["pactl", "list", "modules", "short"])
+    for line in out.splitlines():
+        if "module-combine-sink" in line:
+            mod_id = line.split("\t")[0].strip()
+            commands.append(f"pactl unload-module {mod_id}")
+            run(["pactl", "unload-module", mod_id])
+
+
 def set_target(target: str) -> tuple[bool, list[str], list[str], dict[str, str | None]]:
     write_override_marker(target)
     sinks, sources = pulse("sinks"), pulse("sources")
     sink = match(sinks, target)
     source = match([s for s in sources if not s["name"].endswith(".monitor")], target)
     commands, errors = [], []
+    unload_combine_sinks(commands)
     if not sink:
         return False, commands, [f"no sink for {target}"], {"sink": None, "source": source["name"] if source else None}
     set_default("sink", sink["name"], commands, errors)
