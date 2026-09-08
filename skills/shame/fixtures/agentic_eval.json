@@ -159,6 +159,15 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "shame.spiral_guard",
+      "description": "The stop-boundary checker classifies the 2026-09-08 spiral candidate shapes correctly and accepts the documented compliant shape, so an agent following the compliance recipe cannot spiral.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      }
     }
   ],
   "cases": [
@@ -533,7 +542,7 @@
       }
     },
     {
-      "name": "escalation-ladder-data-contract",
+      "name": "escalation-parent-lineage",
       "type": "adversarial",
       "real_world": true,
       "evidence_class": "deterministic",
@@ -553,9 +562,14 @@
         "exit_code": 0,
         "stdout_contains": [
           "lazy_report_shame.escalation_ladder_eval.v1",
-          "needs_agent rejects missing brave-search parent_ref",
+          "needs_agent resolves parent_ref receipts before accepting brave-search lineage",
+          "declared parent_ref producer/schema strings are not authority",
+          "parent_ref digest mismatches are rejected",
+          "parent_ref goal_hash mismatches are rejected",
+          "needs_brave_search compiles every requested Brave query",
           "needs_agent rejects same-family first Ask handler",
-          "needs_webgpt requires brave-search and ask parent_refs"
+          "needs_webgpt requires a resolved Ask receipt descended from the Brave evidence",
+          "needs_webgpt preserves typed parent_refs as structured attachment data, not prompt prose"
         ],
         "stdout_excludes": [
           "Traceback",
@@ -715,6 +729,81 @@
         "stdout_excludes": [
           "Traceback",
           "AssertionError"
+        ]
+      }
+    },
+    {
+      "name": "spiral-prose-status-rejected",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "shame.spiral_guard"
+      ],
+      "command": [
+        "bash",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-spiral-regression.sh",
+        "prose-list"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "missing_agent_status_json",
+          "SPIRAL_GUARD_OK"
+        ],
+        "stdout_excludes": [
+          "Traceback"
+        ]
+      }
+    },
+    {
+      "name": "spiral-unbacked-verified-rejected",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "shame.spiral_guard"
+      ],
+      "command": [
+        "bash",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-spiral-regression.sh",
+        "unbacked-verified"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "verified_not_backed_by_proof",
+          "SPIRAL_GUARD_OK"
+        ],
+        "stdout_excludes": [
+          "Traceback"
+        ]
+      }
+    },
+    {
+      "name": "spiral-compliant-shape-accepted",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "shame.spiral_guard"
+      ],
+      "command": [
+        "bash",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-spiral-regression.sh",
+        "compliant"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "valid_agent_status_json",
+          "SPIRAL_GUARD_OK"
+        ],
+        "stdout_excludes": [
+          "Traceback"
         ]
       }
     }

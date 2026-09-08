@@ -1,0 +1,22 @@
+{
+  "schema": "agentic_evals.regressions.v1",
+  "skill": "shame",
+  "regressions": [
+    {
+      "id": "shame-spiral-20260908",
+      "incident": "2026-09-08 session 01a07bbf: five report rejections in one session (missing_agent_status_json x4, verified_not_backed_by_proof x2); agent authored status footers from memory and spent blocked-tools retries on guesses; retry budgets exhausted twice.",
+      "claims": [
+        "shame.spiral_guard"
+      ],
+      "seams": [
+        "stop-boundary-status-validation"
+      ],
+      "retained_case": "spiral-unbacked-verified-rejected",
+      "retained_fixture": "fixtures/agentic_eval.json",
+      "fail_before_fix": {
+        "proof_command": "bash /home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-spiral-regression.sh unbacked-verified >/dev/null 2>&1 && exit 1 || exit 0",
+        "note": "Guard non-vacuity: if the checker ever starts ACCEPTING an unbacked shell verified pair (the broken behavior), the retained case fails. This inverted command exits non-zero when the guard would no longer catch the spiral shape."
+      }
+    }
+  ]
+}
