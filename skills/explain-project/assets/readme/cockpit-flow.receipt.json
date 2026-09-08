@@ -1,0 +1,25 @@
+{
+  "browser": {
+    "animation_observed": false,
+    "changed_pixel_ratio": 0.0,
+    "details": "browser verification not requested",
+    "loaded": false,
+    "natural_height": 0,
+    "natural_width": 0,
+    "status": "NOT_RUN"
+  },
+  "deterministic_rebuild": true,
+  "does_not_prove": "pixel-perfect rendering on every browser, remote font availability, or future GitHub proxy behavior",
+  "findings": [],
+  "kind": "readme-svg-validation.v1",
+  "proof_scope": "XML safety, active-content rejection, references, accessibility, reduced motion, optional strict theme and Chromium img-mode motion",
+  "seam_validation": {
+    "kind": "scene-to-svg",
+    "status": "PASS"
+  },
+  "source_path": "/home/graham/workspace/experiments/agent-skills/skills/explain-project/assets/readme/cockpit-flow.svg",
+  "source_sha256": "08214f60dc1e64bea9defd093571b1ded1cb1e6e42531f8b494e82e151a9017c",
+  "status": "PASS",
+  "theme": "fixing-opus-neon-v1",
+  "tool_version": "0.1.0"
+}

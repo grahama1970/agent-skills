@@ -63,6 +63,10 @@ the question.
 
 ## Current scope
 
-This MVP validates/list/searches explainer JSONL and emits a sample. It does not
-launch the full multi-monitor cockpit, move windows, start Live Evidence, or run
-VS Code debugger sessions. Those consumers must use the validated records.
+The current implementation validates/list/searches explainer JSONL, runs a
+headless cockpit proof, serves a loopback cockpit API, and ships a React cockpit
+harness under `ui/`. It ingests typed Live Evidence question candidates,
+debugger source/proof receipts, and ops-excalidraw proposal receipts. It does not
+claim live microphone transcription, arbitrary visible VS Code control, debugger
+execution from navigation, or accepted Excalidraw board mutation without the
+owning skill receipts.

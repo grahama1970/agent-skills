@@ -1,6 +1,6 @@
 # Project Knowledge: agent-skills
 
-**Last updated:** 2026-08-17 11:20 by agent
+**Last updated:** 2026-09-08 12:25 by agent
 
 ## watch subagent
 
@@ -138,6 +138,7 @@
 - 2026-08-10 WebGPT review of best-practices-bespoke-design/grahama.co process succeeded through Surf fresh controlled tab 837381834 after Ask over-blocked WebGPT from stale 2026-08-09 ChatGPT Too many requests tab text. Proof artifacts: site/design-roundtable/provider-receipts/bespoke-design-skill-webgpt-review-r1/response.md, response.raw.md, response.meta.json, response.receipt.json. Surf meta: proof_status=response_proven, submitted_to_chatgpt=true, raw_contains_sentinel=true, clean_contains_sentinel=false, focus_changed=false, chatgpt_too_many_requests_detected=false, started_at=2026-08-10T12:07:59Z, finished_at=2026-08-10T12:18:08Z. Review verdict: NEEDS_ATTENTION. WebGPT agreed the skill is strong as an evidence/design standard but weak as an operational state machine. Keep: traceable transformation model, section/component/page-state crops, adversarial distinctiveness tests, fail-closed statuses, exact revisions/hashes/raw outputs, and reviewer/applier separation. Failure modes: one document doing philosophy/workflow/rubric/collaboration jobs; one-primary-lane rule without state machine; G11 combining corpus readiness, transport, fresh raters, raw output preservation, aggregation, and outcome thresholds; NOT_TESTED too opaque; transport acknowledgement resembling reviewer evidence; checker repair contaminating acceptance work. Recommended next executable slice: implement a G11 composite-state evaluator in skills/monitor-website/scripts/design_world_check.py with child states such as corpus_current PASS, fresh_rater_set_complete NOT_TESTED, evidence_pipeline_status, design_outcome_status, stable reason_code, exact counts, and deterministic next_action. For current grahama.co expected state remains overall NOT_TESTED, G11 NOT_TESTED, corpus_current PASS, fresh usable raters 0/5, reason_code=fresh_blind_raters_not_run_for_current_segmented_corpus. WebGPT also recommends a generated human-visible run-state JSON/Markdown ledger and a future v2 receipt schema rather than silently expanding v1.
 - 2026-08-10 best-practices-bespoke-design hardening: G11 should not require whole-site screenshots, 50 browser tabs, or multi-hour orchestration. The default path is section/component/page-state crops plus contact sheets, sent directly to a bounded fresh rater set across WebClaude/WebGPT/WebKimi/WebGemini when available, then aggregated into explicit G11 subgates. Whole-site screenshots are invalid primary evidence. Browser UX budget is one controlled reviewer tab per backend plus one local site tab; opening a new tab per rater/retry is a process failure. Stop a provider family after three same-signature transport/upload/context/rate-limit failures and record blocked_by_systemic_failure instead of spawning more tabs. For grahama.co issue 1358 the current valid local artifacts use responsive-section-corpus-20260810T141835Z and distinctiveness-blind-current-issue-1358-20260810T141835Z.png; stale corpora/raters must not be counted after visual source changes. Kimi upload/background behavior caused tab sprawl; future runs should reuse hydrated reviewer lanes or fail closed. Biased finish-review prompts can repeat stale defects; use neutral re-review plus deterministic source/screenshot counterevidence and preserve rejected reviews separately.
 - 2026-08-17 stale-working-tree incident (guard: scripts/check_tree_fresh.py, commit dbe768c3ed): the agent-skills primary checkout held a working tree that DELETED 24 tracked files present in HEAD (github_repo_intelligence.py, tau_semantic_prepare.py, tau_semantic_provider.py, report_acceptance.py, application_history.py, semantic_addenda.py and 18 more) and reverted 73 paths under skills/monitor-opportunities; repo-wide the same signature covered 209 files across 17 areas (.codex 27, artifacts 37, site 37, skills/best-practices-bespoke-design 30, skills/monitor-memory 29). A session read local/HANDOFF.md, built a relationship-expansion lane, and ran live proofs against that stale code; on real main the lane already produces relationship signals from GitHub repository intelligence, Meetup Buffalo capture, LinkedIn warm paths, and contact_changes.relationship_signals_from_memory (the 2026-08-16 promoted nightly receipt records 81 signals, 78 adjacent + 3 direct), so the relationship_signal_count: 0 in HANDOFF.md is a property of the stale tree, not of main. A docs commit made from the same tree (4b2b7e8ca7) silently reverted committed PROJECT_KNOWLEDGE content; restored in eee45fb278. Audit finding: every unique-looking line in the stale delta was an older commit's content plus edits already on main, so nothing was lost by restoring with git checkout HEAD.
+- explain-project cockpit: immutable goal explain-project-interview-cockpit-v1 has local deterministic proof recorded in skills/explain-project/proofs/current-proof-summary.json: cockpit proof PASS; agentic eval READY with PASS=15 FAIL=0. Skill-local README.md, DESIGN.md, and PROJECT_KNOWLEDGE.md document the developer map, visual cockpit contract, and proof boundary. WebGPT has historical implementation output; a fresh WebKimi README review was requested after the documentation update.
 
 ## Recent Decisions
 
@@ -194,4 +195,22 @@
 
 ## Infrastructure State
 
-<!-- Auto-populated from /project-state --quick -->
+```
+# project-knowledge Project State -- 2026-09-01 (quick mode, generic profile)
+
+## Phase 1: Infrastructure
+
+### Daemons: not applicable (target root is not an Embry-style project)
+
+### Tests: not applicable (target has no tests/ directory)
+
+### 3-Tier Cascade: not applicable (target root is not an Embry-style project)
+
+### Cascade Wiring: not applicable (target root is not an Embry-style project)
+
+### Skills: not applicable (target root owns no skills/ tree (not a skills workspace))
+
+### Deploy: 0 systemd units
+
+
+```

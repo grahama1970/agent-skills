@@ -1,0 +1,56 @@
+{
+  "schema": "explain_project.proof_summary.v1",
+  "checked_at": "2026-09-08",
+  "immutable_goal": {
+    "goal_id": "explain-project-interview-cockpit-v1",
+    "goal_hash": "sha256:ffcc1465f1e222c3043e3730a5113de05b898aa5f398dbb5f87d3f9cb0b9c00d"
+  },
+  "receipts": [
+    {
+      "name": "primary cockpit proof",
+      "schema": "explain_project.cockpit_proof.v1",
+      "status": "PASS"
+    },
+    {
+      "name": "agentic eval report",
+      "schema": "agentic_evals.report.v2",
+      "readiness": "READY",
+      "outcome_counts": {
+        "PASS": 15,
+        "FAIL": 0,
+        "BLOCKED": 0,
+        "NOT_TESTED": 0
+      }
+    },
+    {
+      "name": "ops-excalidraw owning receipt",
+      "schema": "ops_excalidraw.push_board.v1",
+      "status": "PASS",
+      "mode": "proposal"
+    },
+    {
+      "name": "cockpit Excalidraw adapter receipt",
+      "schema": "explain_project.adapter_receipt.v1",
+      "adapter": "excalidraw_proposal",
+      "status": "PROPOSED"
+    },
+    {
+      "name": "debugger source reveal adapter receipt",
+      "schema": "explain_project.adapter_receipt.v1",
+      "adapter": "source_reveal",
+      "status": "REVEALED"
+    },
+    {
+      "name": "debugger runtime proof adapter receipt",
+      "schema": "explain_project.adapter_receipt.v1",
+      "adapter": "debugger_proof",
+      "status": "PROOF_RECEIVED"
+    }
+  ],
+  "not_claimed": [
+    "real microphone transcription",
+    "human acceptance of an Excalidraw proposal",
+    "arbitrary visible VS Code GUI control",
+    "arbitrary debugger adapter support"
+  ]
+}

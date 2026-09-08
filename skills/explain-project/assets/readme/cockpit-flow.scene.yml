@@ -1,0 +1,72 @@
+schema_version: 1
+theme: fixing-opus-neon-v1
+template: fanout-anatomy
+metadata:
+  title: Explain Project cockpit flow
+  description: One question drives synchronized interview panes and safe adapter receipts.
+source:
+  title: Question + explainer
+  subtitle: one reducer revision
+targets:
+  - number: 1
+    heading: TELEPROMPTER
+    detail: concise 1080p cues
+    accent: cyan
+  - number: 2
+    heading: SOURCE
+    detail: exact file range reveal
+    accent: green
+  - number: 3
+    heading: DEBUGGER
+    detail: target then proof receipt
+    accent: amber
+  - number: 4
+    heading: EXCALIDRAW
+    detail: proposal-safe diagram update
+    accent: orange
+caption: QUESTION → REVISIONED COCKPIT STATE → SAFE RECEIPTS
+timeline:
+  cycle_ms: 12000
+  events:
+    - target: source-node
+      recipe: fade-slide-y
+      start_ms: 150
+      end_ms: 900
+      from_y: -24
+    - target: connector-0
+      recipe: draw-stroke
+      start_ms: 900
+      end_ms: 1350
+    - target: target-card-0
+      recipe: fade
+      start_ms: 1350
+      end_ms: 1800
+    - target: connector-1
+      recipe: draw-stroke
+      start_ms: 1100
+      end_ms: 1550
+    - target: target-card-1
+      recipe: fade
+      start_ms: 1550
+      end_ms: 2000
+    - target: connector-2
+      recipe: draw-stroke
+      start_ms: 1300
+      end_ms: 1750
+    - target: target-card-2
+      recipe: fade
+      start_ms: 1750
+      end_ms: 2200
+    - target: connector-3
+      recipe: draw-stroke
+      start_ms: 1500
+      end_ms: 1950
+    - target: target-card-3
+      recipe: fade
+      start_ms: 1950
+      end_ms: 2400
+    - target: source-glow
+      recipe: halo-pulse
+      start_ms: 7800
+      end_ms: 11600
+      peak_opacity: 0.35
