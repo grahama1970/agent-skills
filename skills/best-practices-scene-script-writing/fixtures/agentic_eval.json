@@ -1,0 +1,30 @@
+{
+  "schema": "agentic_eval.fixture.v1",
+  "skill": "best-practices-scene-script-writing",
+  "trials": 3,
+  "cases": [
+    {
+      "id": "standard-and-checklist-present",
+      "case_type": "positive",
+      "real_world": true,
+      "command": "bash sanity.sh",
+      "assert": ["exit_code == 0", "stdout contains 'ALL SANITY PASS'"],
+      "notes": "Writing rules + full element checklist retrievable; grounded in the 2026-09-08 static-tableau failure."
+    },
+    {
+      "id": "ownership-boundaries-hold",
+      "case_type": "negative-control",
+      "real_world": true,
+      "command": "bash sanity.sh",
+      "assert": ["stdout contains 'PASS ownership-boundary'"],
+      "notes": "No provider mechanics (kling-video's domain) or camera grammar (cinematography's domain) duplicated."
+    }
+  ],
+  "claims": {
+    "proves": ["the writing standard and per-element checklist exist, are boundary-clean, and are dated to a real failure"],
+    "does_not_prove": ["that scripts following the standard render livelier clips (requires live A/B generation + review)"]
+  },
+  "proof_scope": "offline deterministic",
+  "mocked": false,
+  "live": false
+}

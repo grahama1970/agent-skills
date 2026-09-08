@@ -23,6 +23,7 @@ provides:
   - kling-endpoint-routing
 composes:
   - brave-search
+  - best-practices-scene-script-writing
   - best-practices-cinematography
   - watch
   - agentic-evals
@@ -76,10 +77,14 @@ bible, look lock, script DNA). Kling gets a fixed slot budget instead:
 
 ```text
 1. element bindings      (@Element1 is X, @Element2 is Y)   ~80 chars
-2. action/blocking       (what they DO this clip)           ~200 chars
-3. environment           (3-5 concrete nouns)               ~150 chars
-4. camera/look           (from look_lock: shot, movement)   ~100 chars
-5. mood/style tail       (adjectives, "no text overlays")   ~100 chars
+2. action/blocking       (ONE physics-bearing beat)         ~200 chars
+3. dynamic behaviors x3  (actor detail, prop state,
+                          background life - per
+                          best-practices-scene-script-writing) ~180 chars
+4. environment+weather   (place, time, one force that
+                          touches the scene)                 ~150 chars
+5. camera/look+lighting  (shot, movement, light source)     ~100 chars
+6. mood/style tail       ("no text overlays")               ~70 chars
 ```
 
 Identity does NOT go in prose — it travels in `elements[]`. Never spend prompt
