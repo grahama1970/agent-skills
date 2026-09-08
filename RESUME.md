@@ -43,6 +43,7 @@ Jan 2024 - Feb 2025
 Sep 2020 - Dec 2023
 - Joined CS Group specifically for the 4-year DARPA ARCOS program (Automated Rapid Certification of Software), on the prime-contractor team, working alongside Honeywell, Lockheed Martin, MIT, GE Research, SRI, and other program collaborators.
 - Led design and delivery of ACERT (Automated Certification of Requirements Tool): architected the ArangoDB knowledge-graph schema and LLM-assisted reasoning pipeline for multi-hop compliance verification of mission-critical software against complex certification standards.
+- Built AI-automated extraction of engineering requirements from Boeing certification documents into a large datalake on AWS GovCloud, consumed across the ARCOS program (Boeing, GrammaTech, GE, Lockheed Martin, Honeywell).
 - Briefed the program and its collaborators at reviews and conferences nationally; split time roughly 50/50 between executive/technical briefings and hands-on architecture and code, authoring the decks and demos myself.
 
 ### Data Scientist | grahamaco (independent practice) | NYC · Remote
