@@ -1,0 +1,25 @@
+{
+  "version": 2,
+  "skill": "best-practices-explain-project",
+  "trials": 2,
+  "proof_scope": "Static contract readback: required explanation fields, Excalidraw/SVG/default diagram boundary, debugger boundary, and end-of-work lifecycle are present; fault injection proves omissions are caught by the retained check.",
+  "cases": [
+    {
+      "name": "skill-contract-names-required-boundaries",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "-c", "cd .. && ./run.sh validate"],
+      "expected": {"exit_code": 0, "stdout_contains": ["BEST_PRACTICES_EXPLAIN_PROJECT_CONTRACT_OK"]},
+      "readback": true,
+      "evidence_class": "deterministic"
+    },
+    {
+      "name": "missing-strict-schema-wording-is-refused",
+      "type": "negative",
+      "command": ["bash", "-c", "cd .. && T=$(mktemp -d) && cp SKILL.md $T/SKILL.md && python3 - <<'PY' $T/SKILL.md\nfrom pathlib import Path\nimport sys\np=Path(sys.argv[1]); p.write_text(p.read_text().replace('project.feature_explainer.v1','project.feature_explainer.vX'))\nPY\nif python3 - <<'PY' $T/SKILL.md\nfrom pathlib import Path\nimport sys\nt=Path(sys.argv[1]).read_text()\nfor s in ['project.feature_explainer.v1','extra=\"forbid\"','teleprompter_points','source_ranges','debugger_stops','ops-excalidraw','create-svg','End-of-work lifecycle']:\n    assert s in t, s\nPY\nthen exit 1; fi; echo BEST_PRACTICES_EXPLAIN_PROJECT_OMISSION_REFUSED"],
+      "expected": {"exit_code": 0, "stdout_contains": ["BEST_PRACTICES_EXPLAIN_PROJECT_OMISSION_REFUSED"]},
+      "readback": true,
+      "evidence_class": "fault_injected_deterministic"
+    }
+  ]
+}

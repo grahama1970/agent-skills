@@ -1,0 +1,43 @@
+{
+  "version": 2,
+  "skill": "explain-project",
+  "trials": 2,
+  "proof_scope": "Local deterministic validation of strict Pydantic JSONL explainers, question routing, sample generation, and fail-closed malformed fields. Does not launch VS Code, Live Evidence, Excalidraw, or debugger sessions.",
+  "cases": [
+    {
+      "name": "sample-jsonl-validates",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "-c", "cd .. && ./run.sh validate fixtures/sample.explainers.jsonl | tee /tmp/explain-project-validate.json && python3 - <<'PY'\nimport json\nd=json.load(open('/tmp/explain-project-validate.json'))\nassert d['status']=='PASS' and d['records']==1 and d['features']==['publish.report_last']\nprint('EXPLAIN_PROJECT_VALIDATE_OK')\nPY"],
+      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_VALIDATE_OK"]},
+      "readback": true,
+      "evidence_class": "deterministic"
+    },
+    {
+      "name": "question-routes-to-debugger-and-diagram-bindings",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "-c", "cd .. && ./run.sh ask fixtures/sample.explainers.jsonl --question 'A worker crashes before success; what prevents incomplete release?' | tee /tmp/explain-project-route.json && python3 - <<'PY'\nimport json\nd=json.load(open('/tmp/explain-project-route.json'))\nassert d['matched_feature']=='publish.report_last'\nassert d['diagram']['source_kind']=='excalidraw' and d['debugger_stops'][0]['locals']==['tmp','report_path','output_corpus']\nprint('EXPLAIN_PROJECT_ROUTE_OK')\nPY"],
+      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_ROUTE_OK"]},
+      "readback": true,
+      "evidence_class": "deterministic"
+    },
+    {
+      "name": "extra-field-refused",
+      "type": "negative",
+      "command": ["bash", "-c", "cd .. && T=$(mktemp -d) && cp fixtures/sample.explainers.jsonl $T/bad.jsonl && python3 - <<'PY' $T/bad.jsonl\nimport json,sys\np=sys.argv[1]\nd=json.loads(open(p).readline()); d['surprise']='nope'; open(p,'w').write(json.dumps(d)+'\\n')\nPY\nif ./run.sh validate $T/bad.jsonl >$T/out 2>$T/err; then exit 1; fi; grep -q extra_forbidden $T/out && echo EXPLAIN_PROJECT_EXTRA_REFUSED"],
+      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_EXTRA_REFUSED"]},
+      "readback": true,
+      "evidence_class": "fault_injected_deterministic"
+    },
+    {
+      "name": "sample-command-emits-valid-jsonl",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "-c", "cd .. && T=$(mktemp -d) && ./run.sh sample --output $T/explainers.jsonl && ./run.sh validate $T/explainers.jsonl | grep -q '\"status\": \"PASS\"' && echo EXPLAIN_PROJECT_SAMPLE_OK"],
+      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_SAMPLE_OK"]},
+      "readback": true,
+      "evidence_class": "deterministic"
+    }
+  ]
+}
