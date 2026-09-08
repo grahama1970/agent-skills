@@ -16,26 +16,32 @@ from pathlib import Path
 
 import typer
 from pydantic import BaseModel, Field, model_validator
+import hashlib
 
 SKILLS = Path(__file__).resolve().parents[2]
 INTERVIEW = SKILLS / "interview" / "run.sh"
 
 
 class ImageRef(BaseModel, extra="forbid"):
-    """A character reference image must be a real decodable PNG/JPEG, not just an existing path."""
+    """A character reference image must be real media, hash-bound to a semantic role."""
     name: str
     path: str
+    sha256: str | None = None
+    bytes: int | None = None
 
     @model_validator(mode="after")
     def _real_image(self) -> "ImageRef":
         p = Path(self.path)
         if not p.exists():
             raise ValueError(f"{self.name}: reference file not found: {self.path}")
-        head = p.read_bytes()[:12]
+        data = p.read_bytes()
+        head = data[:12]
         if not (head.startswith(b"\x89PNG\r\n\x1a\n") or head.startswith(b"\xff\xd8\xff")):
             raise ValueError(f"{self.name}: not a PNG or JPEG (bad magic bytes): {self.path}")
         if p.stat().st_size < 1024:
             raise ValueError(f"{self.name}: image under 1KB is not a usable reference: {self.path}")
+        self.sha256 = "sha256:" + hashlib.sha256(data).hexdigest()
+        self.bytes = len(data)
         return self
 
 
@@ -87,6 +93,9 @@ class KlingInstructions(BaseModel, extra="forbid"):
     references: list[ImageRef] = Field(min_length=1)
     voices: list[VoiceWav] = Field(default=[])
     slots: PromptSlots
+    required_fact_ids: list[str] = Field(min_length=1)
+    covered_fact_ids: list[str] = Field(min_length=1)
+    dropped_desired_fact_ids: list[str] = Field(default=[])
 
     @model_validator(mode="after")
     def _cross_checks(self) -> "KlingInstructions":
@@ -111,6 +120,9 @@ class KlingInstructions(BaseModel, extra="forbid"):
                                      self.slots.environment, self.slots.lighting, self.slots.cast_guard))
         if total > 790:
             raise ValueError(f"combined prompt slots {total} chars exceed ~800 effective budget")
+        missing = sorted(set(self.required_fact_ids) - set(self.covered_fact_ids))
+        if missing:
+            raise ValueError("required_fact_coverage_missing:" + ",".join(missing))
         for v in self.voices:
             if not any(v.name in c or c.endswith(v.name) for c in self.characters):
                 raise ValueError(f"voice wav '{v.name}' does not match any character")
@@ -237,7 +249,7 @@ def _fail(stage: str, errors: list, receipt: dict, out: Path) -> None:
 def build(
     scene: Path = typer.Option(..., help="scene_script.scene_table.v1 JSON"),
     refs: list[str] = typer.Option(..., help="name=/path/to/single_subject_crop.png per character"),
-    voice: list[str] = typer.Option([], help="name=/path/to/voice.wav (lipsync bounds 2-60s)"),
+    voice: list[str] = typer.Option([], help="name:purpose=/path/to/voice.wav, purpose=lipsync|voice_clone"),
     model_id: str = typer.Option("fal-ai/kling-video/o3/standard/reference-to-video"),
     out_dir: Path = typer.Option(...),
 ):
@@ -263,7 +275,14 @@ def build(
               receipt, receipt_path)
     # Order references by scene-table character order, NOT CLI order (positional @ElementN).
     cli_map = dict(pairs)
-    voice_map = dict(kv.split("=", 1) for kv in voice)
+    voice_map: dict[tuple[str, str], str] = {}
+    for kv in voice:
+        try:
+            left, path = kv.split("=", 1)
+            name, purpose = left.split(":", 1)
+        except ValueError:
+            _fail("reference_check", [{"type": "value_error", "msg": "voice must be name:purpose=/path.wav"}], receipt, receipt_path)
+        voice_map[(name, purpose)] = path
     media_errors: list[dict] = []
     images: list[ImageRef] = []
     wavs: list[VoiceWav] = []
@@ -278,9 +297,9 @@ def build(
             images.append(ImageRef(name=k, path=v))
         except Exception as e:
             media_errors.extend(e.errors() if hasattr(e, "errors") else [{"type": "value_error", "msg": str(e)}])
-    for k, v in voice_map.items():
+    for (k, purpose), v in voice_map.items():
         try:
-            wavs.append(VoiceWav(name=k, path=v))
+            wavs.append(VoiceWav(name=k, purpose=purpose, path=v))
         except Exception as e:
             media_errors.extend(e.errors() if hasattr(e, "errors") else [{"type": "value_error", "msg": str(e)}])
     missing = [c for c in characters if not any(k in c or c.endswith(k) for k in ref_map)]
@@ -296,6 +315,10 @@ def build(
     prose = r.stdout.strip()
     env = table["environment"]
     names = {c: i + 1 for i, c in enumerate(characters)}
+    required_fact_ids = [f"environment.{k}" for k in table["environment"] if table["environment"].get(k)]
+    required_fact_ids += [e["element_id"] for e in table["elements"]]
+    covered_fact_ids = list(required_fact_ids)
+
     try:
         instructions = KlingInstructions(
             scene_id=table["scene_id"],
@@ -303,6 +326,9 @@ def build(
             characters=characters,
             references=images,
             voices=wavs,
+            required_fact_ids=required_fact_ids,
+            covered_fact_ids=covered_fact_ids,
+            dropped_desired_fact_ids=[],
             slots=PromptSlots(
                 bindings=" ".join(f"@Element{i} is {c.split('_', 1)[-1]}." for c, i in names.items()),
                 action=prose[:260],

@@ -87,9 +87,37 @@ def resolve_chatterbox_audio(source: str) -> Path | None:
 def crop_start_frame(run_dir: Path) -> Path:
     src = REFERENCE_ASSETS / "storyboard_board.png"
     out = run_dir / "kling_start_frame.png"
-    # Panel 10 image crop from the accepted board: Horus + Embry + SPARTA table, no labels.
-    Image.open(src).crop((1536, 570, 1920, 904)).save(out)
+    crop_box = (1536, 570, 1920, 904)
+    if not src.is_file():
+        raise RuntimeError(f"missing_start_frame_source:{src}")
+    with Image.open(src) as image:
+        width, height = image.size
+        left, top, right, bottom = crop_box
+        if not (0 <= left < right <= width and 0 <= top < bottom <= height):
+            raise RuntimeError(f"start_frame_crop_out_of_bounds:source={width}x{height}:crop={crop_box}")
+        image.crop(crop_box).convert("RGB").save(out, format="PNG")
     return out
+
+
+def _image_receipt(path: Path) -> dict[str, Any]:
+    if path.stat().st_size < 1024:
+        raise RuntimeError(f"reference_asset_too_small:{path}")
+    try:
+        with Image.open(path) as image:
+            image.verify()
+        with Image.open(path) as image:
+            width, height = image.size
+            image_format = image.format
+    except Exception as exc:
+        raise RuntimeError(f"reference_asset_not_decodable:{path}:{exc}") from exc
+    return {
+        "path": str(path),
+        "sha256": sha256(path),
+        "bytes": path.stat().st_size,
+        "width": width,
+        "height": height,
+        "format": image_format,
+    }
 
 
 def upload_reference_assets(run_dir: Path, fal_client: Any) -> dict[str, Any]:
@@ -105,6 +133,7 @@ def upload_reference_assets(run_dir: Path, fal_client: Any) -> dict[str, Any]:
     missing = [str(path) for path in local.values() if not path.is_file()]
     if missing:
         raise RuntimeError("missing_reference_assets:" + ",".join(missing))
+    asset_receipts = {name: _image_receipt(path) for name, path in local.items()}
     uploaded = {name: fal_client.upload_file(path) for name, path in local.items()}
     elements = [
         {"frontal_image_url": uploaded["horus_front"], "reference_image_urls": [uploaded["horus_face"]]},
@@ -112,18 +141,40 @@ def upload_reference_assets(run_dir: Path, fal_client: Any) -> dict[str, Any]:
         {"frontal_image_url": uploaded["tyranid_front"], "reference_image_urls": [uploaded["tyranid_side"]]},
     ]
     receipt = {
-        "schema": "persona_dream.kling_reference_binding.v1",
-        "status": "PASS_REFERENCE_BOUND_KLING_REQUEST",
+        "schema": "persona_dream.kling_reference_assets.v1",
+        "status": "PASS_REFERENCE_ASSETS_UPLOADED",
         "model_id": MODEL_ID,
-        "start_frame": str(local["start_frame"]),
-        "start_frame_sha256": sha256(local["start_frame"]),
         "element_count": len(elements),
-        "prompt_refs": ["@Element1", "@Element2", "@Element3"],
-        "local_assets": {k: str(v) for k, v in local.items()},
+        "asset_receipts": asset_receipts,
         "uploaded_assets": uploaded,
+        "canonical_compiler": False,
     }
-    write_json(run_dir / "kling_reference_binding_receipt.json", receipt)
+    write_json(run_dir / "kling_reference_assets_receipt.json", receipt)
     return {"start_image_url": uploaded["start_frame"], "elements": elements, "receipt": receipt}
+
+
+def validate_direct_kling_smoke_request(run_dir: Path, request: dict[str, Any]) -> dict[str, Any]:
+    prompt = str(request.get("prompt", ""))
+    elements = request.get("elements")
+    if not isinstance(elements, list) or not elements:
+        raise RuntimeError("direct_kling_request_missing_elements")
+    expected_bindings = [f"@Element{index} is " for index in range(1, len(elements) + 1)]
+    missing_bindings = [binding for binding in expected_bindings if binding not in prompt]
+    if missing_bindings:
+        raise RuntimeError("direct_kling_request_missing_bindings:" + ",".join(missing_bindings))
+    if not request.get("start_image_url"):
+        raise RuntimeError("direct_kling_request_missing_start_image_url")
+    receipt = {
+        "schema": "persona_dream.kling_direct_request_validation.v1",
+        "status": "PASS_DIRECT_KLING_SMOKE_REQUEST",
+        "canonical_compiler": False,
+        "proof_boundary": "Direct provider smoke only; not Persona Dream -> scene table -> create-kling-scene proof.",
+        "prompt_chars": len(prompt),
+        "element_count": len(elements),
+        "bindings": expected_bindings,
+    }
+    write_json(run_dir / "kling_direct_request_validation_receipt.json", receipt)
+    return receipt
 
 
 def render_journal_audio(run_dir: Path, run_id: str, text: str) -> Path:
@@ -214,17 +265,18 @@ def main() -> int:
     try:
         binding = upload_reference_assets(run_dir, fal_client)
     except Exception as exc:
-        phase(run_dir, "kling_reference_binding", "BLOCKED_KLING_REFERENCE_BINDING", live=True, error=str(exc)[:1000])
-        print(f"BLOCKED_KLING_REFERENCE_BINDING run={run_dir}")
+        phase(run_dir, "kling_reference_assets", "BLOCKED_KLING_REFERENCE_ASSETS", live=True, error=str(exc)[:1000])
+        print(f"BLOCKED_KLING_REFERENCE_ASSETS run={run_dir}")
         return 2
-    phase(run_dir, "kling_reference_binding", "PASS_REFERENCE_BOUND_KLING_REQUEST", live=True, artifacts=[str(run_dir / "kling_reference_binding_receipt.json")])
+    phase(run_dir, "kling_reference_assets", "PASS_REFERENCE_ASSETS_UPLOADED", live=True, artifacts=[str(run_dir / "kling_reference_assets_receipt.json")])
 
     prompt = (
-        "[@Element1] Horus Lupercal, bald giant in black and gold armor, sits calmly with [@Element2] Embry Lawson, "
-        "brown-haired woman in a gray tactical jacket, at the same tea table as the start frame. "
-        "They lean toward a glowing SPARTA Explorer evidence map between teacups. "
-        "Background movement: the Zeitch Eye glows in the storm sky while [@Element3] distant Tyranids cross behind them without attacking. "
-        "Camera: slow intimate push-in, warm uncanny friendship, preserve both character identities, no text overlays."
+        "@Element1 is Horus Lupercal. @Element2 is Embry Lawson. Exactly two people sit at the tea table in the start frame; "
+        "both faces stay clearly visible in three-quarter view toward camera. They lean toward the glowing SPARTA Explorer evidence map. "
+        "Storm wind pushes across the table so tea steam tears sideways while purple lightning flickers across their faces. "
+        "@Element3 is one distant Tyranid creature crossing behind them without approaching. "
+        "A dark eclipsed black sphere ringed by a glowing purple corona hangs in the storm sky. "
+        "Camera: slow intimate push-in; warm uncanny friendship; no text overlays."
     )
     request = {
         "prompt": prompt,
@@ -232,10 +284,24 @@ def main() -> int:
         "duration": "5",
         "generate_audio": False,
         "elements": binding["elements"],
-        "negative_prompt": "text, subtitles, gore, extra people, generic space marines, bald blue aliens, changed faces, changed armor, changed jacket",
+        "negative_prompt": "text, subtitles, gore, extra people, third person, crowd, generic space marines, bald blue aliens, changed faces, changed armor, changed jacket, back of head only, face hidden",
         "cfg_scale": 0.75,
     }
-    write_json(run_dir / "kling_request.json", {"schema": "persona_dream.kling_tea_request.v1", "model_id": MODEL_ID, "reference_binding": str(run_dir / "kling_reference_binding_receipt.json"), "request": request})
+    try:
+        direct_validation = validate_direct_kling_smoke_request(run_dir, request)
+    except Exception as exc:
+        phase(run_dir, "kling_direct_request_validation", "BLOCKED_KLING_DIRECT_REQUEST", live=True, error=str(exc)[:1000])
+        print(f"BLOCKED_KLING_DIRECT_REQUEST run={run_dir}")
+        return 2
+    phase(run_dir, "kling_direct_request_validation", direct_validation["status"], live=True, artifacts=[str(run_dir / "kling_direct_request_validation_receipt.json")])
+    write_json(run_dir / "kling_request.json", {
+        "schema": "persona_dream.kling_tea_request.v1",
+        "model_id": MODEL_ID,
+        "reference_assets_receipt": str(run_dir / "kling_reference_assets_receipt.json"),
+        "direct_request_validation_receipt": str(run_dir / "kling_direct_request_validation_receipt.json"),
+        "canonical_compiler": False,
+        "request": request,
+    })
     try:
         response = fal_client.subscribe(MODEL_ID, arguments=request, with_logs=True)  # type: ignore[attr-defined]
     except Exception as exc:

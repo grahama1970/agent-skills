@@ -39,7 +39,7 @@ INPUT 1: scene table   (scene_script.scene_table.v1 — must pass the
 INPUT 2: references    (one single-subject crop per character row —
                         validated as real decodable PNG/JPEG, magic bytes,
                         >=1KB, not just an existing path)
-INPUT 3: voice wavs    (optional --voice name=/path.wav — validated as real
+INPUT 3: voice wavs    (optional --voice name:purpose=/path.wav — validated as real
                         RIFF/WAVE within Kling bounds: 2-60s lipsync,
                         5-30s voice_clone)
    |
@@ -51,7 +51,7 @@ INPUT 3: voice wavs    (optional --voice name=/path.wav — validated as real
    3. instructions_gate   create_kling_scene.instructions.v1 — typed FINAL
                           instructions (per-slot char budgets, @ElementN
                           binding coverage, character<->ref<->voice cross-
-                          checks) validated BEFORE any Kling-format
+                          checks, required_fact_ids coverage) validated BEFORE any Kling-format
                           conversion; emitted as kling_instructions.json
    4. compile             MECHANICAL instructions -> kling_video.request.v1
                           (no decisions below the validated layer)
@@ -72,6 +72,11 @@ written beside the receipt and `resume_hint` runs the interview. The receipt is
 typed (`create_kling_scene.receipt.v1`, pydantic extra=forbid, producer-side
 seam_validation stamp), never prose.
 
+## Fact coverage contract
+
+All environment header fields and every element row in the scene table become `required_fact_ids` by default.
+`kling_instructions.json` must list the same IDs in `covered_fact_ids`; otherwise `instructions_gate` BLOCKS before any provider packet is written. Lower-priority mood/style cuts belong in `dropped_desired_fact_ids`, never by silently losing required rows during prompt condensation.
+
 ## What this skill refuses to do
 
 - Accept prose instead of a scene table (no table -> `scene_table_gate` BLOCKED).
@@ -84,7 +89,7 @@ seam_validation stamp), never prose.
 ## Commands
 
 ```bash
-./run.sh build --scene scene.json --refs embry=/abs/embry.png horus=/abs/horus.png --out-dir /mnt/storage12tb/skills/create-kling-scene/outputs/<run>
+./run.sh build --scene scene.json --refs embry=/abs/embry.png horus=/abs/horus.png --voice embry:lipsync=/abs/embry.wav --out-dir /mnt/storage12tb/skills/create-kling-scene/outputs/<run>
 ./sanity.sh   # offline positive + negative fixtures
 ```
 

@@ -122,9 +122,11 @@ never receives the table or graph — it receives a lossy, ranked rendering:
    that touches the scene; light_sources + light_behavior fill the
    camera/look slot.
 6. **The full table/graph stays behind** as the VERIFICATION contract — the
-   post-generation audit ($watch + panel gate) checks every required row
-   against the clip, including the ones that didn't fit the prompt. Dropped
-   prompt facts are still enforced facts.
+   compiler emits `required_fact_ids`, `covered_fact_ids`, and
+   `dropped_desired_fact_ids`. Missing required coverage blocks before submit;
+   the post-generation audit ($watch + panel gate) checks every required row
+   against the clip, including the compressed ones. Dropped desired prompt facts
+   are recorded; dropped required facts are not legal.
 
 Use `scripts/compile_kling_request.py` to do this deterministically from
 pipeline artifacts:

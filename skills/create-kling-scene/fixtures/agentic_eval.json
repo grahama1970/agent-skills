@@ -1,49 +1,135 @@
 {
-  "schema": "agentic_evals.fixture.v1",
+  "version": 2,
   "skill": "create-kling-scene",
-  "description": "Gated scene-table -> Kling packet composition: positive build, scene-gate rejection with canonical triage code, missing-reference rejection.",
-  "trials": 3,
-  "cases": [
+  "trials": 2,
+  "proof_scope": "offline real-path scene_script.scene_table.v1 -> create-kling-scene -> best-practices-kling-video validation; no paid provider submit",
+  "claims": {
+    "proves": "A valid scene table + refs deterministically compiles to a PASS receipt with typed final instructions, required fact coverage, positional @ElementN binding, typed voice purpose validation, and a paid-submit next_command; invalid scene rows, missing refs, fake images, too-short WAVs, and unresolvable triage block fail-closed.",
+    "does_not_prove": "Live paid Kling submission, generated video quality, fal upload/public URL reachability, or post-generation clip audit."
+  },
+  "capability_claims": [
     {
-      "id": "positive-build",
-      "case_type": "positive",
-      "real_world": true,
-      "command": "bash sanity.sh",
-      "assertions": [
-        {"type": "exit_code", "value": 0},
-        {"type": "stdout_contains", "value": "PASS positive-control build"},
-        {"type": "stdout_contains", "value": "ALL SANITY PASS"}
-      ]
-    },
-    {
-      "id": "scene-gate-rejects-filler",
-      "case_type": "negative",
-      "real_world": true,
-      "command": "bash sanity.sh",
-      "assertions": [
-        {"type": "stdout_contains", "value": "PASS negative-control scene gate + triage code"}
-      ]
-    },
-    {
-      "id": "reference-check-rejects-missing-character",
-      "case_type": "adversarial",
-      "real_world": true,
-      "command": "bash sanity.sh",
-      "assertions": [
-        {"type": "stdout_contains", "value": "PASS negative-control reference check"}
-      ]
+      "id": "create_kling_scene.compiler_gate",
+      "description": "Canonical scene-table to validated Kling packet compiler gate with media/readback seams.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
-  "claims": {
-    "proves": [
-      "A valid scene table + refs deterministically compiles to a PASS receipt with a validated kling_request.json and a paid-submit next_command",
-      "A filler environment_interaction blocks at scene_table_gate with canonical triage code scene_table_interaction_filler",
-      "A character row without a reference image blocks at reference_check"
-    ],
-    "does_not_prove": [
-      "Live paid Kling submission or generated video quality",
-      "fal upload / public URL reachability",
-      "Post-generation clip audit ($watch)"
-    ]
-  }
+  "cases": [
+    {
+      "name": "nonfixture-real-path-compiler-gate",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": [
+        "create_kling_scene.compiler_gate"
+      ],
+      "seams": [
+        "scene_table_gate",
+        "reference_check",
+        "instructions_gate",
+        "kling_packet_gate"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && T=$(mktemp -d); trap 'rm -rf \"$T\"' EXIT; python3 - <<PY2\nimport json, zlib, struct\nscene={\"schema\":\"scene_script.scene_table.v1\",\"scene_id\":\"nonfixture-tea\",\"environment\":{\"location\":\"windy stone terrace\",\"time_of_day\":\"dusk\",\"weather\":\"dry electrical storm\",\"temperature\":\"cold air\",\"humidity\":\"arid air\",\"wind\":\"steady left-to-right wind\",\"light_sources\":[\"lightning\",\"table lantern\"],\"light_behavior\":\"lightning flickers across faces\",\"ambient_sound\":\"wind over stone\"},\"elements\":[{\"element_id\":\"character_embry\",\"element_type\":\"character\",\"description\":\"brown-haired woman in gray jacket\",\"environment_interaction\":\"wind moves loose hair strands\",\"action\":\"leans toward evidence map\"},{\"element_id\":\"character_horus\",\"element_type\":\"character\",\"description\":\"bald armored giant seated calmly\",\"environment_interaction\":\"lantern highlights gold armor edges\",\"action\":\"turns one teacup toward Embry\"},{\"element_id\":\"prop_tea\",\"element_type\":\"prop\",\"description\":\"white porcelain tea service\",\"environment_interaction\":\"steam bends sideways in wind\"}]}\njson.dump(scene, open('$T/scene.json','w'))\ndef png(p):\n    raw=b'\\x89PNG\\r\\n\\x1a\\n'\n    def chunk(t,d):\n        return struct.pack('>I',len(d))+t+d+struct.pack('>I',zlib.crc32(t+d)&0xffffffff)\n    ihdr=chunk(b'IHDR', struct.pack('>IIBBBBB',64,64,8,0,0,0,0)); row=b'\\x00'+b'\\x88'*64; idat=chunk(b'IDAT', zlib.compress(row*64,0)); open(p,'wb').write(raw+ihdr+idat+chunk(b'IEND',b''))\npng('$T/embry.png'); png('$T/horus.png')\nPY2\n./run.sh build --scene \"$T/scene.json\" --refs embry=\"$T/embry.png\" --refs horus=\"$T/horus.png\" --out-dir \"$T/out\" >/dev/null\npython3 - <<PY3\nimport json\nr=json.load(open('$T/out/receipt.json')); i=json.load(open('$T/out/kling_instructions.json'))\nassert r['status']=='PASS', r\nassert set(i['required_fact_ids']) <= set(i['covered_fact_ids']), i\nassert i['references'][0]['sha256'].startswith('sha256:'), i['references']\nprint('PASS nonfixture real-path compiler gate')\nPY3"
+      ],
+      "timeout_seconds": 240,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS nonfixture real-path compiler gate"
+        ]
+      }
+    },
+    {
+      "name": "scene-gate-negative",
+      "type": "negative",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": [
+        "create_kling_scene.compiler_gate"
+      ],
+      "seams": [
+        "scene_table_gate"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && bash sanity.sh"
+      ],
+      "timeout_seconds": 240,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS negative-control scene gate + triage code"
+        ]
+      }
+    },
+    {
+      "name": "media-gate-adversarial",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": [
+        "create_kling_scene.compiler_gate"
+      ],
+      "seams": [
+        "reference_check",
+        "instructions_gate"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && bash sanity.sh"
+      ],
+      "timeout_seconds": 240,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS negative-control fake image rejected",
+          "PASS negative-control short wav rejected",
+          "PASS binding-order-control (reversed CLI order rebinds positionally)",
+          "PASS voice-consumption audio_plan emitted"
+        ]
+      }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "scene_table_gate",
+      "seam_type": "validator",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "reference_check",
+      "seam_type": "media_validation",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "instructions_gate",
+      "seam_type": "compiler_contract",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "kling_packet_gate",
+      "seam_type": "provider_packet_validation",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    }
+  ]
 }

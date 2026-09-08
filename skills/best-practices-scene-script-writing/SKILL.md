@@ -156,3 +156,8 @@ gate (persona-dream) owns enforcement and receipts. Cinematography owns
 camera/coverage grammar. kling-video owns provider mechanics and prompt
 compilation. references/scene_element_checklist.md holds the per-element
 checklist tables.
+
+
+## Required fact coverage for video compilers
+
+For Kling-facing compilers, every environment header field and every element row is a required fact unless an upstream storyboard explicitly marks it desired. Required facts may be compressed, but they must be enumerated in `required_fact_ids` and accounted for in `covered_fact_ids`; dropped style/mood facts go in `dropped_desired_fact_ids`.

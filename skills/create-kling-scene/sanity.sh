@@ -59,14 +59,14 @@ assert r['failed_stage']=='reference_check', r
 assert any('magic bytes' in str(e) for e in r['errors']), r['errors']
 print('PASS negative-control fake image rejected')"
 # negative control: 0.5s wav outside lipsync bounds
-if ./run.sh build --scene "$T/scene.json" "${REFS[@]}" --voice embry=$T/short.wav --out-dir "$T/run5" >/dev/null 2>&1; then
+if ./run.sh build --scene "$T/scene.json" "${REFS[@]}" --voice embry:lipsync=$T/short.wav --out-dir "$T/run5" >/dev/null 2>&1; then
   echo "FAIL: short wav accepted"; exit 1; fi
 python3 -c "
 import json; r=json.load(open('$T/run5/receipt.json'))
 assert any('bounds' in str(e) for e in r['errors']), r['errors']
 print('PASS negative-control short wav rejected')"
 # positive: valid wav accepted + typed instructions artifact emitted
-./run.sh build --scene "$T/scene.json" "${REFS[@]}" --voice embry=$T/embry.wav --out-dir "$T/run6" >/dev/null
+./run.sh build --scene "$T/scene.json" "${REFS[@]}" --voice embry:lipsync=$T/embry.wav --out-dir "$T/run6" >/dev/null
 python3 -c "
 import json; i=json.load(open('$T/run6/kling_instructions.json'))
 assert i['schema']=='create_kling_scene.instructions.v1', i
@@ -74,7 +74,7 @@ assert i['voices'][0]['duration_s']==6.0, i['voices']
 assert json.load(open('$T/run6/receipt.json'))['status']=='PASS'
 print('PASS positive-control voice wav + instructions artifact')"
 # escalation control: unresolvable triage (minted code) -> interview questions + needs_attention
-python3 - <<'PYEOF'
+uv run --with pydantic --with typer python - <<'PYEOF'
 import json, sys
 sys.path.insert(0, 'scripts')
 from pathlib import Path
