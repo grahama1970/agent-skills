@@ -14,12 +14,18 @@ import {
   useRegisterAction,
 } from '../useRegisterAction'
 
+import {
+  ExplainerNavigator,
+} from './ExplainerNavigator'
+
 import type {
+  CockpitState,
   ExplainerSummary,
 } from '../types'
 
 interface Props {
   explainers: ExplainerSummary[]
+  state: CockpitState
   dispatch: Dispatch
   importRecord: (
     record: unknown,
@@ -87,6 +93,7 @@ function ExplainerButton({
 
 export function InputRail({
   explainers,
+  state,
   dispatch,
   importRecord,
 }: Props) {
@@ -243,6 +250,12 @@ export function InputRail({
           Ask
         </button>
       </div>
+
+      <ExplainerNavigator
+        explainers={explainers}
+        state={state}
+        dispatch={dispatch}
+      />
 
       <input
         data-qid="cockpit:explainer:search"

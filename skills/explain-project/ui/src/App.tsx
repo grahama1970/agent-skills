@@ -116,6 +116,7 @@ export function CockpitApp({
       >
         <InputRail
           explainers={explainers}
+          state={state}
           dispatch={dispatch}
           importRecord={importRecord}
         />

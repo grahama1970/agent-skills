@@ -117,6 +117,14 @@ def main() -> None:
         encoding="utf-8"
     )
 
+    navigator = (
+        root
+        / "components"
+        / "ExplainerNavigator.tsx"
+    ).read_text(
+        encoding="utf-8"
+    )
+
     hook = (
         root
         / "useRegisterAction.ts"
@@ -174,6 +182,17 @@ def main() -> None:
             and "state.integration_health.diagram" in health
         ),
         "integration health component does not read typed state",
+    )
+
+    require(
+        (
+            "type=\"range\"" in navigator
+            and "type=\"number\"" in navigator
+            and "EXPLAINER_SLIDER_SET" in navigator
+            and "EXPLAINER_PAGE_SET" in navigator
+            and "explainer.select" in navigator
+        ),
+        "explainer navigator lacks slider/page selection path",
     )
 
     require(
