@@ -1,0 +1,35 @@
+{
+  "schema": "scene_script.scene_table.v1",
+  "scene_id": "tea_dream_ots_embry",
+  "environment": {
+    "location": "gothic void-world terrace, flagstones, iron rail",
+    "time_of_day": "perpetual storm dusk",
+    "weather": "dry electrical storm, no rain",
+    "temperature": "cold; breath faintly visible",
+    "humidity": "arid; no condensation",
+    "wind": "steady wind left-to-right across frame",
+    "light_sources": ["laptop glow", "storm sky", "lightning"],
+    "light_behavior": "glow flickers; lightning overexposes for single beats",
+    "ambient_sound": "wind + distant creature calls"
+  },
+  "elements": [
+    {"element_id": "character_embry", "element_type": "character",
+     "description": "woman, identity carried by reference images",
+     "environment_interaction": "loose hair strands lift in the wind",
+     "action": "taps the table as she speaks a teasing line, then stills, mouth closed"},
+    {"element_id": "character_horus", "element_type": "character",
+     "description": "giant bald warrior, black-and-gold armor, ref-carried",
+     "environment_interaction": "armored pauldron catches lightning glints in near foreground",
+     "action": "listens motionless, seen from behind, out of focus"},
+    {"element_id": "prop_tea_service", "element_type": "prop",
+     "description": "porcelain teapot and cups, glaze reflecting lightning",
+     "environment_interaction": "tea trembles at her table-tap; steam tears sideways in the wind"},
+    {"element_id": "prop_umbrella", "element_type": "prop",
+     "description": "patio umbrella, taut canvas",
+     "environment_interaction": "fabric shivers in the storm wind"},
+    {"element_id": "creature_tyranid", "element_type": "creature",
+     "description": "massive chitinous bulk in the distant ruins",
+     "environment_interaction": "claws scrape stone, dust drifting",
+     "action": "drags past slowly, ignoring the patio, exits behind a spire"}
+  ]
+}

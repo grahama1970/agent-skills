@@ -35,4 +35,26 @@ if grep -qE "180-degree|shot/reverse-shot" SKILL.md; then
   echo "FAIL camera grammar duplicated from cinematography skill"; exit 1
 fi
 echo "PASS ownership-boundary"
+
+# Pydantic scene-table gate: positive + 4 ambiguity negative controls
+RUN="uv run --with pydantic --with typer python scripts/scene_table.py"
+$RUN validate fixtures/scene_table_tea.json | grep -q '"status": "PASS"' || { echo "FAIL positive scene table"; exit 1; }
+$RUN render fixtures/scene_table_tea.json | grep -q "steam tears sideways" || { echo "FAIL render"; exit 1; }
+python3 - <<'EOF'
+import json
+base = json.load(open("fixtures/scene_table_tea.json"))
+cases = {}
+b = json.loads(json.dumps(base)); b["elements"][3]["environment_interaction"] = "looks beautiful and atmospheric"; cases["vague"] = b
+b = json.loads(json.dumps(base)); b["elements"][2]["environment_interaction"] = "on table"; cases["thin"] = b
+b = json.loads(json.dumps(base)); del b["environment"]["temperature"]; cases["noenv"] = b
+b = json.loads(json.dumps(base)); del b["elements"][0]["action"]; cases["noaction"] = b
+for name, data in cases.items():
+    json.dump(data, open(f"/tmp/scene_sanity_{name}.json", "w"))
+EOF
+for c in vague thin noenv noaction; do
+  if $RUN validate /tmp/scene_sanity_$c.json >/dev/null 2>&1; then
+    echo "FAIL ambiguity accepted: $c"; exit 1
+  fi
+done
+echo "PASS scene-table-gate (positive + 4 ambiguity rejections)"
 echo "ALL SANITY PASS"

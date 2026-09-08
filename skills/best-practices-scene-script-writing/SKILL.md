@@ -29,6 +29,40 @@ runtime_self_improvement: none
 
 # Scene Script Writing Best Practices
 
+## Rule 0: The scene is a TABLE, prose is a rendering
+
+Every scene's source of truth is a structured table
+(`scene_script.scene_table.v1`, pydantic gate in `scripts/scene_table.py`),
+never hand-authored prose:
+
+**Environment header** (structured facts, one per scene):
+
+| Field | Example |
+|---|---|
+| location | gothic void-world terrace, flagstones, iron rail |
+| time_of_day | perpetual storm dusk |
+| weather | dry electrical storm, no rain |
+| temperature | cold; breath faintly visible |
+| humidity | arid; no condensation |
+| wind | steady wind left-to-right across frame |
+| light_sources | laptop glow, storm sky, lightning |
+| light_behavior | glow flickers; lightning overexposes single beats |
+| ambient_sound | wind + distant creature calls (when audio-bearing) |
+
+**Element rows** (one per relevant character/prop/creature/surface/effect):
+
+| element_id | type | description | environment_interaction | action |
+|---|---|---|---|---|
+| character_embry | character | woman, ref-carried identity | ponytail strands lift in the wind | taps table as she speaks |
+| prop_tea_service | prop | porcelain, glaze reflecting lightning | tea trembles at her table-tap; steam tears sideways | - |
+| creature_tyranid | creature | massive chitinous bulk | claws scrape stone, dust drifting | drags past slowly, ignoring patio, exits behind spire |
+
+Validation: `uv run --with pydantic --with typer python scripts/scene_table.py
+validate scene.json` (fail-closed, pydantic errors). Rendering:
+`... render scene.json` emits deterministic prose for prompt slots. Compilers
+consume the TABLE; humans review the TABLE; prose is derived output. A scene
+with no table fails review regardless of how good its prose reads.
+
 The writing layer under persona-dream's Panel Continuity Gate: that gate
 REJECTS scripts whose elements lack physical state and environmental
 interaction; this skill says how to WRITE scripts that pass. Paid-for origin
@@ -95,7 +129,9 @@ restating identity - references carry identity.
 
 ## Rule 6: Review = the panel gate, written down
 
-A beat description FAILS review if any of: a required element has no state
+Review the TABLE first (missing header fields, filler interactions, actionless
+characters are pydantic-level failures), then the rendered beat. A beat
+description FAILS review if any of: a required element has no state
 verb; weather/force named but touching nothing; unmotivated or sourceless
 light; an interaction claimed that the environment cannot support; stillness
 by omission; identity prose crowding out behavior slots. Repair the script
