@@ -35,6 +35,8 @@ PYTHONPATH="$DIR/scripts" \
 PYTHONPATH="$DIR/scripts" \
   uv run \
   --with pydantic \
+  --with httpx \
+  --with loguru \
   python3 fixtures/cockpit_contract_eval.py
 
 python3 fixtures/ui_contract_eval.py

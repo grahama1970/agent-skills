@@ -20,6 +20,7 @@ from explain_project_core.reducer import (
     reduce_cockpit,
 )
 from explain_project_core.routing import route
+from explain_project_core.server import CockpitSession
 
 
 def require(
@@ -417,6 +418,34 @@ def main() -> None:
             == "live_fingerprint"
         ),
         "live fingerprint normalization failed",
+    )
+
+    session = CockpitSession(
+        rows,
+        "http://127.0.0.1:8601",
+    )
+    accepted = session.intake_live_evidence(
+        candidate_payload()
+    )
+    duplicate_response = session.intake_live_evidence(
+        candidate_payload()
+    )
+
+    require(
+        accepted.status == "ACCEPTED"
+        and accepted.state.revision == 1
+        and accepted.state.question is not None
+        and accepted.state.question.source
+        == "live_evidence_replay",
+        "raw Live Evidence candidate intake failed",
+    )
+
+    require(
+        duplicate_response.status == "DUPLICATE"
+        and duplicate_response.duplicate is True
+        and duplicate_response.state.revision
+        == accepted.state.revision,
+        "Live Evidence duplicate changed state",
     )
 
     try:

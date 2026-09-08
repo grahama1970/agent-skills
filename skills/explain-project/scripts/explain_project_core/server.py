@@ -33,6 +33,9 @@ from .models import (
     ExplainerImportRequest,
     FailureCode,
     FeatureExplainer,
+    LiveEvidenceIntakeRequest,
+    LiveEvidenceIntakeResponse,
+    LiveEvidenceQuestionCandidate,
     TriagedFailure,
 )
 from .reducer import (
@@ -210,6 +213,7 @@ class CockpitSession:
     ) -> None:
         self._rows = list(rows)
         self._state = initial_state(self._rows)
+        self._seen_live_questions: set[str] = set()
         self._lock = threading.Lock()
         self.actions = ActionRegistry(memory_url)
 
@@ -235,6 +239,72 @@ class CockpitSession:
                 self._rows,
             )
             return self._state
+
+    @staticmethod
+    def _live_intake_request(
+        body: dict[str, Any],
+    ) -> LiveEvidenceIntakeRequest:
+        if (
+            body.get("schema")
+            == "live_evidence.question_candidate.v1"
+        ):
+            return LiveEvidenceIntakeRequest(
+                candidate=(
+                    LiveEvidenceQuestionCandidate
+                    .model_validate(body)
+                ),
+            )
+
+        return LiveEvidenceIntakeRequest.model_validate(body)
+
+    def intake_live_evidence(
+        self,
+        body: dict[str, Any],
+    ) -> LiveEvidenceIntakeResponse:
+        request = self._live_intake_request(body)
+        question_key = (
+            f"{request.candidate.question_id}:"
+            f"{request.candidate.fingerprint}"
+        )
+
+        with self._lock:
+            if question_key in self._seen_live_questions:
+                return LiveEvidenceIntakeResponse(
+                    status="DUPLICATE",
+                    duplicate=True,
+                    question_id=request.candidate.question_id,
+                    state=self._state,
+                )
+
+            event = COCKPIT_EVENT_ADAPTER.validate_python(
+                {
+                    "schema": "explain_project.cockpit_event.v1",
+                    "event_id": (
+                        "live-evidence:"
+                        f"{request.candidate.question_id}"
+                    ),
+                    "type": "question.live_evidence",
+                    "expected_revision": self._state.revision,
+                    "payload": request.model_dump(
+                        by_alias=True,
+                        mode="json",
+                        exclude={"schema_"},
+                    ),
+                }
+            )
+            self._state = reduce_cockpit(
+                self._state,
+                event,
+                self._rows,
+            )
+            self._seen_live_questions.add(question_key)
+
+            return LiveEvidenceIntakeResponse(
+                status="ACCEPTED",
+                duplicate=False,
+                question_id=request.candidate.question_id,
+                state=self._state,
+            )
 
     def import_explainer(
         self,
@@ -407,6 +477,16 @@ def _handler_factory(
                         session.import_explainer(
                             request
                         ),
+                    )
+                    return
+
+                if (
+                    self.path
+                    == "/api/intake/live-evidence"
+                ):
+                    self._json(
+                        HTTPStatus.OK,
+                        session.intake_live_evidence(body),
                     )
                     return
 

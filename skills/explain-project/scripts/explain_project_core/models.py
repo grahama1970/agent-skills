@@ -617,6 +617,38 @@ class BootstrapResponse(StrictModel):
     explainers: list[ExplainerSummary]
 
 
+class LiveEvidenceIntakeRequest(StrictModel):
+    """Cockpit-owned wrapper for live-evidence question intake."""
+
+    schema_: Literal["explain_project.live_evidence_intake.v1"] = Field(
+        alias="schema",
+        default="explain_project.live_evidence_intake.v1",
+    )
+    source: Literal[
+        "live_evidence_replay",
+        "live_evidence_live",
+    ] = "live_evidence_replay"
+    candidate: LiveEvidenceQuestionCandidate
+    source_fingerprint: str | None = Field(
+        default=None,
+        min_length=12,
+    )
+    live_receipt: LiveEvidenceReceipt | None = None
+
+
+class LiveEvidenceIntakeResponse(StrictModel):
+    """Result of a Live Evidence question intake post."""
+
+    schema_: Literal["explain_project.live_evidence_intake_response.v1"] = Field(
+        alias="schema",
+        default="explain_project.live_evidence_intake_response.v1",
+    )
+    status: Literal["ACCEPTED", "DUPLICATE"]
+    duplicate: bool
+    question_id: str
+    state: CockpitState
+
+
 class ActionDefinition(StrictModel):
     """QuerySpec-compatible UI action registration."""
 

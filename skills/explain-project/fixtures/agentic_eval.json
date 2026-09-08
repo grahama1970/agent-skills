@@ -73,6 +73,15 @@
       "evidence_class": "fault_injected_deterministic"
     },
     {
+      "name": "live-evidence-intake-deduplicates",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "-c", "cd .. && PYTHONPATH=scripts uv run --with pydantic --with httpx --with loguru python3 - <<'PY'\nfrom explain_project_core.catalog import sample_record\nfrom explain_project_core.server import CockpitSession\nfrom fixtures.cockpit_contract_eval import candidate_payload\n\nsession = CockpitSession([sample_record()], 'http://127.0.0.1:8601')\naccepted = session.intake_live_evidence(candidate_payload())\nduplicate = session.intake_live_evidence(candidate_payload())\nassert accepted.status == 'ACCEPTED'\nassert accepted.state.revision == 1\nassert accepted.state.question.source == 'live_evidence_replay'\nassert duplicate.status == 'DUPLICATE'\nassert duplicate.state.revision == accepted.state.revision\nprint('EXPLAIN_PROJECT_LIVE_INTAKE_DEDUP_OK')\nPY"],
+      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_LIVE_INTAKE_DEDUP_OK"]},
+      "readback": true,
+      "evidence_class": "deterministic"
+    },
+    {
       "name": "ui-contract-static-check",
       "type": "positive",
       "real_world": true,
