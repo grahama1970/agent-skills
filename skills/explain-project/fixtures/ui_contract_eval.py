@@ -231,6 +231,7 @@ def main() -> None:
         (
             "interaction-manifest" in cli
             and "debugger-source-reveal-receipt" in cli
+            and "debugger-runtime-proof-receipt" in cli
             and "DebuggerRevealStatus" in cli
             and "qid_only_executable_selectors" in cli
             and "cockpit:explainer:slider" in cli

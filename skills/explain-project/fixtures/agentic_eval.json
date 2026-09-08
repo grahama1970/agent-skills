@@ -109,6 +109,15 @@
       "evidence_class": "deterministic"
     },
     {
+      "name": "debugger-runtime-proof-receipt-boundary",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "-c", "cd .. && python3 - <<'PY' >/tmp/explain-project-debugger-proof.json\nimport json\nprint(json.dumps({\"schema\":\"debugger.proof.v1\",\"assessment\":{\"proofValid\":True,\"variableInspectionValid\":True},\"stopped\":{\"hit\":True,\"frame\":{\"file\":\"/tmp/explain-project-workspace/src/anonymization_trial/pipeline.py\",\"line\":205}},\"captures\":{\"locals\":{\"report_path\":\"/tmp/report.json\",\"output_corpus\":\"/tmp/corpus\"}}}))\nPY\nmkdir -p /tmp/explain-project-workspace/src/anonymization_trial && ./run.sh debugger-runtime-proof-receipt --proof /tmp/explain-project-debugger-proof.json --workspace /tmp/explain-project-workspace --target-file src/anonymization_trial/pipeline.py --start-line 180 --end-line 220 --feature-id publish.report_last --step-id staging --request-revision 1 --local report_path --local output_corpus --proves 'paused runtime captured' | tee /tmp/explain-project-debugger-runtime-proof-receipt.json && python3 - <<'PY'\nimport json\nd=json.load(open('/tmp/explain-project-debugger-runtime-proof-receipt.json'))\nassert d['schema'] == 'explain_project.adapter_receipt.v1'\nassert d['adapter'] == 'debugger_proof'\nassert d['status'] == 'PROOF_RECEIVED'\nassert d['proof']['validated'] is True\nprint('EXPLAIN_PROJECT_DEBUGGER_RUNTIME_PROOF_RECEIPT_OK')\nPY"],
+      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_DEBUGGER_RUNTIME_PROOF_RECEIPT_OK"]},
+      "readback": true,
+      "evidence_class": "deterministic"
+    },
+    {
       "name": "ui-contract-static-check",
       "type": "positive",
       "real_world": true,

@@ -24,6 +24,7 @@ from .models import (
     AdapterReceipt,
     CockpitProof,
     CockpitScript,
+    DebuggerProofReference,
     DebuggerRevealStatus,
     FailureCode,
     FeatureExplainer,
@@ -438,6 +439,167 @@ def debugger_source_reveal_receipt_command(
                 f"debugger_status={status}; "
                 f"sha256:{digest}; "
                 f"revealed={actual}:{reveal_status.reveal.line}"
+            ),
+        )
+    )
+
+
+@app.command("debugger-runtime-proof-receipt")
+def debugger_runtime_proof_receipt_command(
+    proof: Path = typer.Option(
+        ...,
+        "--proof",
+        help="Canonical debugger.proof.v1 JSON from $debugger validate.",
+    ),
+    workspace: Path = typer.Option(
+        Path("."),
+        "--workspace",
+        help="Workspace root used to resolve relative source paths.",
+    ),
+    target_file: Path = typer.Option(
+        ...,
+        "--target-file",
+    ),
+    start_line: int = typer.Option(
+        ...,
+        "--start-line",
+        min=1,
+    ),
+    end_line: int = typer.Option(
+        ...,
+        "--end-line",
+        min=1,
+    ),
+    feature_id: str = typer.Option(
+        ...,
+        "--feature-id",
+    ),
+    step_id: str = typer.Option(
+        ...,
+        "--step-id",
+    ),
+    request_revision: int = typer.Option(
+        ...,
+        "--request-revision",
+        min=0,
+    ),
+    local: list[str] | None = typer.Option(
+        None,
+        "--local",
+        help="Local variable required in the debugger proof. Repeatable.",
+    ),
+    proves: str = typer.Option(
+        ...,
+        "--proves",
+    ),
+) -> None:
+    """Convert validated $debugger runtime proof into a cockpit receipt."""
+
+    if end_line < start_line:
+        _emit(
+            TriagedFailure(
+                failure_code=(
+                    FailureCode
+                    .PYDANTIC_VALIDATION_FAILED
+                ),
+                message="end_line must be >= start_line",
+            )
+        )
+        raise typer.Exit(2)
+
+    try:
+        raw = proof.read_text(
+            encoding="utf-8"
+        )
+        data = json.loads(raw)
+    except (OSError, json.JSONDecodeError) as error:
+        _emit(
+            TriagedFailure(
+                failure_code=(
+                    FailureCode
+                    .PYDANTIC_VALIDATION_FAILED
+                ),
+                message=str(error),
+            )
+        )
+        raise typer.Exit(1)
+
+    expected = target_file
+    if not expected.is_absolute():
+        expected = workspace / expected
+
+    frame = (
+        data.get("stopped", {})
+        .get("frame", {})
+    )
+    captures = data.get("captures", {})
+    locals_map = captures.get("locals", {})
+    assessment = data.get("assessment", {})
+
+    actual = Path(str(frame.get("file", "")))
+    line = int(frame.get("line", 0) or 0)
+    missing_locals = [
+        name
+        for name in (local or [])
+        if name not in locals_map
+    ]
+
+    if (
+        data.get("schema") != "debugger.proof.v1"
+        or assessment.get("proofValid") is not True
+        or assessment.get("variableInspectionValid") is not True
+        or actual.resolve() != expected.resolve()
+        or not (start_line <= line <= end_line)
+        or missing_locals
+    ):
+        _emit(
+            TriagedFailure(
+                failure_code=(
+                    FailureCode
+                    .ADAPTER_RECEIPT_MISMATCH
+                ),
+                message=(
+                    "debugger runtime proof does not match "
+                    "the requested source range or locals"
+                ),
+                errors=[
+                    {
+                        "actual_file": str(actual),
+                        "actual_line": line,
+                        "expected_file": str(expected),
+                        "start_line": start_line,
+                        "end_line": end_line,
+                        "missing_locals": missing_locals,
+                    }
+                ],
+            )
+        )
+        raise typer.Exit(1)
+
+    digest = hashlib.sha256(
+        proof.read_bytes()
+    ).hexdigest()
+
+    _emit(
+        AdapterReceipt(
+            receipt_id=(
+                "debugger-proof-"
+                f"{digest[:16]}"
+            ),
+            adapter="debugger_proof",
+            request_revision=request_revision,
+            feature_id=feature_id,
+            step_id=step_id,
+            status="PROOF_RECEIVED",
+            detail=(
+                f"debugger_proof={proof}; "
+                f"stopped={actual}:{line}"
+            ),
+            proof=DebuggerProofReference(
+                proof_path=str(proof),
+                sha256=f"sha256:{digest}",
+                validated=True,
+                proves=proves,
             ),
         )
     )

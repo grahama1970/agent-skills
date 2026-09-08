@@ -13,6 +13,7 @@ from explain_project_core.catalog import sample_record
 from explain_project_core.models import (
     AdapterReceipt,
     COCKPIT_EVENT_ADAPTER,
+    DebuggerProofReference,
     LiveEvidenceQuestionPayload,
     QuestionInput,
 )
@@ -359,6 +360,67 @@ def main() -> None:
             == "READY"
         ),
         "source reveal receipt did not mark source health READY",
+    )
+
+    proof_receipt_event = (
+        COCKPIT_EVENT_ADAPTER
+        .validate_python(
+            {
+                "schema": (
+                    "explain_project."
+                    "cockpit_event.v1"
+                ),
+                "event_id": "evt-debugger-proof",
+                "type": "adapter.receipt",
+                "expected_revision": reveal_state.revision,
+                "payload": {
+                    "receipt": AdapterReceipt(
+                        receipt_id="debugger-proof-12345",
+                        adapter="debugger_proof",
+                        request_revision=reveal_state.revision,
+                        feature_id=(
+                            reveal_state.selection.feature_id
+                        ),
+                        step_id=reveal_state.selection.step_id,
+                        status="PROOF_RECEIVED",
+                        proof=DebuggerProofReference(
+                            proof_path=(
+                                "/tmp/debugger-proof.json"
+                            ),
+                            sha256=(
+                                "sha256:"
+                                + "a" * 64
+                            ),
+                            validated=True,
+                            proves=(
+                                "paused runtime captured"
+                            ),
+                        ),
+                    ).model_dump(
+                        by_alias=True,
+                        mode="json",
+                    )
+                },
+            }
+        )
+    )
+
+    proof_state = reduce_cockpit(
+        reveal_state,
+        proof_receipt_event,
+        rows,
+    )
+
+    require(
+        (
+            proof_state.integration_health.debugger_target
+            == "READY"
+            and proof_state.debugger.status
+            == "PROOF_RECEIVED"
+            and proof_state.teleprompter.verification
+            == "debugger_proof_received"
+        ),
+        "debugger proof receipt did not update cockpit proof state",
     )
 
     prepare_event = (
