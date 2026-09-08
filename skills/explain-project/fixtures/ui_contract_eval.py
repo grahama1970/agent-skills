@@ -109,6 +109,14 @@ def main() -> None:
         encoding="utf-8"
     )
 
+    health = (
+        root
+        / "components"
+        / "IntegrationHealth.tsx"
+    ).read_text(
+        encoding="utf-8"
+    )
+
     hook = (
         root
         / "useRegisterAction.ts"
@@ -156,6 +164,16 @@ def main() -> None:
             in diagram
         ),
         "diagram stage lacks revision-driven highlight diagnostics",
+    )
+
+    require(
+        (
+            "state.integration_health.live_evidence" in health
+            and "state.integration_health.source_reveal" in health
+            and "state.integration_health.debugger_target" in health
+            and "state.integration_health.diagram" in health
+        ),
+        "integration health component does not read typed state",
     )
 
     require(

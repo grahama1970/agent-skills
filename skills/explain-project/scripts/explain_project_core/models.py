@@ -62,6 +62,12 @@ QuestionSource: TypeAlias = Literal[
     "live_evidence_live",
 ]
 Confidence: TypeAlias = Literal["high", "medium", "low"]
+IntegrationStatus: TypeAlias = Literal[
+    "READY",
+    "STALE",
+    "FAILED",
+    "NOT_CONFIGURED",
+]
 
 
 class SourceRange(StrictModel):
@@ -466,6 +472,15 @@ class Selection(StrictModel):
     step_count: int = Field(ge=1)
 
 
+class IntegrationHealth(StrictModel):
+    """Compact adapter health derived from revision-bound state."""
+
+    live_evidence: IntegrationStatus = "NOT_CONFIGURED"
+    source_reveal: IntegrationStatus = "NOT_CONFIGURED"
+    debugger_target: IntegrationStatus = "NOT_CONFIGURED"
+    diagram: IntegrationStatus = "NOT_CONFIGURED"
+
+
 class CockpitState(StrictModel):
     """Single revisioned cockpit source of truth."""
 
@@ -481,6 +496,9 @@ class CockpitState(StrictModel):
     source: SourceProjection
     debugger: DebuggerProjection
     diagram: DiagramProjection
+    integration_health: IntegrationHealth = Field(
+        default_factory=IntegrationHealth,
+    )
     adapter_receipts: list[AdapterReceipt] = Field(default_factory=list)
 
     @model_validator(mode="after")

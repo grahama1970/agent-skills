@@ -8,6 +8,12 @@ export type Confidence =
   | 'medium'
   | 'low'
 
+export type IntegrationStatus =
+  | 'READY'
+  | 'STALE'
+  | 'FAILED'
+  | 'NOT_CONFIGURED'
+
 export interface SourceRange {
   file: string
   start_line: number
@@ -142,6 +148,13 @@ export interface CockpitState {
     active_node_ids: string[]
     verified_binding: boolean
     highlight_intent?: DiagramHighlightIntent | null
+  }
+
+  integration_health: {
+    live_evidence: IntegrationStatus
+    source_reveal: IntegrationStatus
+    debugger_target: IntegrationStatus
+    diagram: IntegrationStatus
   }
 
   adapter_receipts: unknown[]

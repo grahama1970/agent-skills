@@ -28,6 +28,7 @@ from .models import (
     ExplainerSelectEvent,
     FailureCode,
     FeatureExplainer,
+    IntegrationHealth,
     LiveEvidenceQuestionEvent,
     ManualQuestionEvent,
     QuestionInput,
@@ -69,6 +70,38 @@ def _row_by_feature(
         ),
         None,
     )
+
+
+def _latest_step_receipt(
+    receipts: list[AdapterReceipt],
+    feature_id: str,
+    step_id: str,
+    adapter: str,
+) -> AdapterReceipt | None:
+    matching = [
+        receipt
+        for receipt in receipts
+        if receipt.adapter == adapter
+        and receipt.feature_id == feature_id
+        and receipt.step_id == step_id
+    ]
+    return matching[-1] if matching else None
+
+
+def _receipt_health(
+    receipt: AdapterReceipt | None,
+    revision: int,
+) -> str:
+    if receipt is None:
+        return "NOT_CONFIGURED"
+
+    if receipt.request_revision != revision - 1:
+        return "STALE"
+
+    if receipt.status in {"BLOCKED", "REFUSED"}:
+        return "FAILED"
+
+    return "READY"
 
 
 def _latest_debugger_proof(
@@ -123,6 +156,14 @@ def project_state(
             diagram=DiagramProjection(
                 revision=revision,
             ),
+            integration_health=IntegrationHealth(
+                live_evidence=(
+                    "READY"
+                    if question is not None
+                    and question.source.startswith("live_evidence")
+                    else "NOT_CONFIGURED"
+                ),
+            ),
             adapter_receipts=safe_receipts,
         )
 
@@ -149,6 +190,24 @@ def project_state(
         safe_receipts,
         row.feature_id,
         step.step_id,
+    )
+    source_receipt = _latest_step_receipt(
+        safe_receipts,
+        row.feature_id,
+        step.step_id,
+        "source_reveal",
+    )
+    debugger_receipt = _latest_step_receipt(
+        safe_receipts,
+        row.feature_id,
+        step.step_id,
+        "debugger_prepare",
+    )
+    diagram_receipt = _latest_step_receipt(
+        safe_receipts,
+        row.feature_id,
+        step.step_id,
+        "diagram_highlight",
     )
 
     debugger_status = "NONE"
@@ -230,6 +289,32 @@ def project_state(
                 revision,
                 row.diagram,
                 step.diagram_node_ids,
+            ),
+        ),
+        integration_health=IntegrationHealth(
+            live_evidence=(
+                "READY"
+                if question is not None
+                and question.source.startswith("live_evidence")
+                else "NOT_CONFIGURED"
+            ),
+            source_reveal=_receipt_health(
+                source_receipt,
+                revision,
+            ),
+            debugger_target=(
+                "READY"
+                if proof is not None
+                else _receipt_health(debugger_receipt, revision)
+            ),
+            diagram=(
+                _receipt_health(diagram_receipt, revision)
+                if diagram_receipt is not None
+                else (
+                    "READY"
+                    if row.diagram.sha256
+                    else "NOT_CONFIGURED"
+                )
             ),
         ),
         adapter_receipts=safe_receipts,

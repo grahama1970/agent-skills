@@ -10,6 +10,10 @@ import {
   DiagramStage,
 } from './DiagramStage'
 
+import {
+  IntegrationHealth,
+} from './IntegrationHealth'
+
 import type {
   CockpitState,
 } from '../types'
@@ -54,6 +58,8 @@ export function EvidenceRail({
         'bg-zinc-900/70 p-3 text-sm',
       ].join(' ')}
     >
+      <IntegrationHealth state={state} />
+
       <section className="rounded-lg bg-zinc-950 p-3">
         <h2 className="font-semibold">
           Source

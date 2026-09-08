@@ -211,6 +211,17 @@ def main() -> None:
         "ArrowRight diagram intent could mutate",
     )
 
+    require(
+        (
+            right_state.integration_health.diagram == "READY"
+            and right_state.integration_health.source_reveal
+            == "NOT_CONFIGURED"
+            and right_state.integration_health.debugger_target
+            == "NOT_CONFIGURED"
+        ),
+        "integration health is not state-derived",
+    )
+
     left = COCKPIT_EVENT_ADAPTER.validate_python(
         {
             "schema": "explain_project.cockpit_event.v1",
@@ -436,7 +447,9 @@ def main() -> None:
         and accepted.state.revision == 1
         and accepted.state.question is not None
         and accepted.state.question.source
-        == "live_evidence_replay",
+        == "live_evidence_replay"
+        and accepted.state.integration_health.live_evidence
+        == "READY",
         "raw Live Evidence candidate intake failed",
     )
 
