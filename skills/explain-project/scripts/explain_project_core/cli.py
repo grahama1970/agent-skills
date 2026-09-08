@@ -259,6 +259,69 @@ def cockpit_proof_command(
         raise typer.Exit(1)
 
 
+@app.command("interaction-manifest")
+def interaction_manifest_command(
+    base_url: str = typer.Option(
+        "http://127.0.0.1:8766",
+        "--base-url",
+    ),
+) -> None:
+    """Emit a qid-only test-interactions manifest template."""
+
+    qids = [
+        "cockpit:question:manual-input",
+        "cockpit:question:manual-submit",
+        "cockpit:explainer:slider",
+        "cockpit:explainer:page-input",
+        "cockpit:explainer:search",
+        "cockpit:explainer:paste-toggle",
+        "cockpit:source:reveal",
+        "cockpit:debugger:prepare",
+        "cockpit:step:previous",
+        "cockpit:step:next",
+    ]
+
+    _emit(
+        {
+            "version": 1,
+            "app": "explain-project",
+            "base_url": base_url.rstrip("/"),
+            "discovery": {
+                "qid_only_executable_selectors": True,
+                "route_isolated": True,
+                "source": "explain-project static manifest",
+            },
+            "surfaces": [
+                {
+                    "name": "cockpit-main",
+                    "path": "/",
+                    "qid_compliance": True,
+                    "isolate_interactions": True,
+                    "elements": [
+                        {
+                            "name": qid.replace(":", "-"),
+                            "interactions": [
+                                {
+                                    "action": "click",
+                                    "target": f"[data-qid='{qid}']",
+                                    "description": (
+                                        "Exercise explain-project "
+                                        f"control {qid}"
+                                    ),
+                                    "assert_timing": "before",
+                                    "assert_title": f"[data-qid='{qid}']",
+                                    "assert_qs_action": f"[data-qid='{qid}']",
+                                }
+                            ],
+                        }
+                        for qid in qids
+                    ],
+                }
+            ],
+        }
+    )
+
+
 @app.command("cockpit")
 def cockpit_command(
     explainers: Path = typer.Option(

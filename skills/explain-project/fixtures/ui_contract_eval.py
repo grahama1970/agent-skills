@@ -195,6 +195,25 @@ def main() -> None:
         "explainer navigator lacks slider/page selection path",
     )
 
+    cli = (
+        root.parents[1]
+        / "scripts"
+        / "explain_project_core"
+        / "cli.py"
+    ).read_text(
+        encoding="utf-8"
+    )
+
+    require(
+        (
+            "interaction-manifest" in cli
+            and "qid_only_executable_selectors" in cli
+            and "cockpit:explainer:slider" in cli
+            and "cockpit:explainer:page-input" in cli
+        ),
+        "test-interactions manifest command lacks navigator selectors",
+    )
+
     require(
         (
             "useEffect(() =>" in hook

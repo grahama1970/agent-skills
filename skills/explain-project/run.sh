@@ -5,7 +5,7 @@ DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 
 if (($# == 0)); then
   echo \
-    "usage: $0 validate|list|ask|sample|cockpit-proof|cockpit|validate-proof ..." \
+    "usage: $0 validate|list|ask|sample|cockpit-proof|cockpit|validate-proof|interaction-manifest ..." \
     >&2
   exit 2
 fi
@@ -14,9 +14,10 @@ cmd=$1
 shift
 
 case "$cmd" in
-  validate|list|ask|sample|cockpit-proof|cockpit|validate-proof)
+  validate|list|ask|sample|cockpit-proof|cockpit|validate-proof|interaction-manifest)
     PYTHONPATH="$DIR/scripts" \
       uv run \
+      --isolated \
       --with pydantic \
       --with typer \
       --with httpx \
@@ -26,7 +27,7 @@ case "$cmd" in
     ;;
   *)
     echo \
-      "usage: $0 validate|list|ask|sample|cockpit-proof|cockpit|validate-proof ..." \
+      "usage: $0 validate|list|ask|sample|cockpit-proof|cockpit|validate-proof|interaction-manifest ..." \
       >&2
     exit 2
     ;;

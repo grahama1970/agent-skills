@@ -82,6 +82,15 @@
       "evidence_class": "deterministic"
     },
     {
+      "name": "interaction-manifest-qid-only",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "-c", "cd .. && ./run.sh interaction-manifest --base-url http://127.0.0.1:8766 | tee /tmp/explain-project-interaction-manifest.json && python3 - <<'PY'\nimport json\nm=json.load(open('/tmp/explain-project-interaction-manifest.json'))\nselectors=[i['target'] for s in m['surfaces'] for e in s['elements'] for i in e['interactions']]\nassert m['discovery']['qid_only_executable_selectors'] is True\nassert \"[data-qid='cockpit:explainer:slider']\" in selectors\nassert \"[data-qid='cockpit:explainer:page-input']\" in selectors\nassert all(sel.startswith('[data-qid=') for sel in selectors)\nprint('EXPLAIN_PROJECT_INTERACTION_MANIFEST_OK')\nPY"],
+      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_INTERACTION_MANIFEST_OK"]},
+      "readback": true,
+      "evidence_class": "deterministic"
+    },
+    {
       "name": "ui-contract-static-check",
       "type": "positive",
       "real_world": true,
