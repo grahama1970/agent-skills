@@ -101,6 +101,14 @@ def main() -> None:
         encoding="utf-8"
     )
 
+    diagram = (
+        root
+        / "components"
+        / "DiagramStage.tsx"
+    ).read_text(
+        encoding="utf-8"
+    )
+
     hook = (
         root
         / "useRegisterAction.ts"
@@ -136,6 +144,18 @@ def main() -> None:
     require(
         "useRegisterAction({" in evidence,
         "evidence actions are not registered",
+    )
+
+    require(
+        (
+            "data-active={isActive ? 'true' : 'false'}"
+            in diagram
+            and "data-diagram-diagnostic=\"missing-node\""
+            in diagram
+            and "mutation_allowed=false"
+            in diagram
+        ),
+        "diagram stage lacks revision-driven highlight diagnostics",
     )
 
     require(

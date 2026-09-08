@@ -223,6 +223,7 @@ def project_state(
             rendered_svg_path=(
                 row.diagram.rendered_svg_path
             ),
+            node_ids=row.diagram.node_ids,
             active_node_ids=step.diagram_node_ids,
             verified_binding=bool(row.diagram.sha256),
             highlight_intent=diagram_highlight_intent(

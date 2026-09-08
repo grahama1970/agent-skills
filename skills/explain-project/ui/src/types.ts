@@ -138,6 +138,7 @@ export interface CockpitState {
     source_kind?: 'excalidraw' | 'svg' | null
     source_path?: string | null
     rendered_svg_path?: string | null
+    node_ids: string[]
     active_node_ids: string[]
     verified_binding: boolean
     highlight_intent?: DiagramHighlightIntent | null

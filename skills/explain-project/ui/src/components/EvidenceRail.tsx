@@ -6,6 +6,10 @@ import {
   useRegisterAction,
 } from '../useRegisterAction'
 
+import {
+  DiagramStage,
+} from './DiagramStage'
+
 import type {
   CockpitState,
 } from '../types'
@@ -41,9 +45,6 @@ export function EvidenceRail({
 
   const location = state.source.location
   const debuggerTarget = state.debugger.target
-  const activeNodes = (
-    state.diagram.active_node_ids.join(' · ')
-  )
 
   return (
     <aside
@@ -147,27 +148,7 @@ export function EvidenceRail({
         </p>
       </section>
 
-      <section className="h-[300px] rounded-lg bg-zinc-950 p-3">
-        <h2 className="font-semibold">
-          Diagram
-        </h2>
-
-        <p className="mt-2 text-cyan-300">
-          {activeNodes || 'No active node'}
-        </p>
-
-        <p className="mt-2 text-zinc-500">
-          {state.diagram.rendered_svg_path
-            ?? state.diagram.source_path
-            ?? 'No diagram'}
-        </p>
-
-        <p className="mt-3 text-xs text-zinc-500">
-          {state.diagram.highlight_intent
-            ? 'Display highlight only; mutation_allowed=false.'
-            : 'No highlight intent.'}
-        </p>
-      </section>
+      <DiagramStage state={state} />
     </aside>
   )
 }

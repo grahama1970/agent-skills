@@ -453,6 +453,7 @@ class DiagramProjection(Projection):
     source_kind: Literal["excalidraw", "svg"] | None = None
     source_path: str | None = None
     rendered_svg_path: str | None = None
+    node_ids: list[str] = Field(default_factory=list)
     active_node_ids: list[str] = Field(default_factory=list)
     verified_binding: bool = False
     highlight_intent: DiagramHighlightIntent | None = None
