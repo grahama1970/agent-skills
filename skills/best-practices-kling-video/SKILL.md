@@ -180,7 +180,28 @@ construction, not hope:
 a mushy average. For sequences use `multi_prompt` (one beat per entry, each
 ≤512 chars) or separate keyframe→I2V clips per shot.
 
-## Rule 8: No silent retry
+## Rule 8: Audio and lip-sync
+
+Post-hoc muxing (ffmpeg map audio onto video) is legal ONLY for voice-over
+where nothing on screen speaks (dream journal narration). For on-screen
+speech, muxing can never sync. Two real mechanisms, by readiness:
+
+1. **Lip-sync pass (audio stays canonical)**:
+   `fal-ai/kling-video/lipsync/audio-to-video` takes the silent generated clip
+   + the rendered voice WAV (e.g. Chatterbox) and regenerates mouth movement
+   to match the audio. Video constraints: .mp4/.mov, 2-60s, <=100MB,
+   720p/1080p, width/height 720-1920px. The timed transcript decides which
+   WAV segment belongs to which clip.
+2. **Voice-bound elements (native)**: o3 Omni binds a voice to a character
+   element - create a custom voice via `fal-ai/kling-video/create-voice` from
+   a clean single-voice 5-30s sample, then reference the returned voice_id so
+   the character speaks lip-synced natively and sounds identical across every
+   clip. Requires provider voice IDs before submission (voice_list gate).
+
+Decision: VO-only -> mux. On-screen speech now -> lip-sync pass. Recurring
+voiced characters -> clone once, voice-bound elements everywhere.
+
+## Rule 9: No silent retry
 
 A consumed paid attempt is history. A repair means a new request hash, new
 validation, new authorization. Never loop resubmits hoping for a better draw —
