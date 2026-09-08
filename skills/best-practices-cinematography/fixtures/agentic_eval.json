@@ -1,0 +1,30 @@
+{
+  "schema": "agentic_eval.fixture.v1",
+  "skill": "best-practices-cinematography",
+  "trials": 3,
+  "cases": [
+    {
+      "id": "grammar-rules-present",
+      "case_type": "positive",
+      "real_world": true,
+      "command": "bash sanity.sh",
+      "assert": ["exit_code == 0", "stdout contains 'ALL SANITY PASS'"],
+      "notes": "Coverage, axis/eyeline, OTS binding, motivated lighting, and audit rules all present and dated."
+    },
+    {
+      "id": "ownership-boundary-holds",
+      "case_type": "negative-control",
+      "real_world": true,
+      "command": "bash sanity.sh",
+      "assert": ["stdout contains 'PASS ownership-boundary'"],
+      "notes": "Provider mechanics (fal fields, endpoints) must stay in best-practices-kling-video."
+    }
+  ],
+  "claims": {
+    "proves": ["grammar rules and dated AI failure modes are retrievable and boundary-clean"],
+    "does_not_prove": ["that a model following these rules produces acceptable footage (requires live generation + human review)"]
+  },
+  "proof_scope": "offline deterministic",
+  "mocked": false,
+  "live": false
+}

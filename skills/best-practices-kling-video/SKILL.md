@@ -23,6 +23,7 @@ provides:
   - kling-endpoint-routing
 composes:
   - brave-search
+  - best-practices-cinematography
   - watch
   - agentic-evals
 complies:
