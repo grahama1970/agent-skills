@@ -99,7 +99,8 @@ def validate(path: Path):
     except Exception as e:
         errors = e.errors() if hasattr(e, "errors") else [{"msg": str(e)}]
         out = {"status": "FAIL", "errors": errors}
-        out["triage"] = _triage("; ".join(str(err.get("msg", err)) for err in errors))
+        # Include pydantic's canonical error `type` so triage matches on stable tokens, not prose.
+        out["triage"] = _triage("; ".join(f"{err.get('type', '')}: {err.get('msg', err)}" for err in errors))
         typer.echo(json.dumps(out, default=str))
         raise typer.Exit(1)
 
@@ -111,7 +112,18 @@ def _triage(signal: str) -> dict:
             [str(TRIAGE), "classify", "--text", signal[:2000], "--layer", "scene_script"],
             capture_output=True, text=True, timeout=30,
         )
-        return json.loads(r.stdout)
+        result = json.loads(r.stdout)
+        if result.get("ambiguous"):
+            # Self-heal: mint + persist a provisional catalog code for the new signal.
+            r2 = subprocess.run(
+                [str(TRIAGE), "triage", "--text", signal[:2000], "--layer", "scene_script"],
+                capture_output=True, text=True, timeout=60,
+            )
+            try:
+                result = json.loads(r2.stdout)
+            except Exception:
+                pass  # keep classify result if triage output is not JSON
+        return result
     except Exception as exc:  # ponytail: triage unavailable degrades to a note, validation still fails closed
         return {"code": "triage_unavailable", "cause": str(exc)}
 

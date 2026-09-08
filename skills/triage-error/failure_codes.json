@@ -1047,6 +1047,32 @@
     "filler interaction",
     "vague adjective"
    ]
+  },
+  {
+   "code": "scene_table_unknown_field",
+   "layer": "scene_script",
+   "match": [
+    "extra_forbidden"
+   ],
+   "cause": "The scene table JSON contains a field not in the scene_script.scene_table.v1 schema (extra='forbid').",
+   "next_command": "Remove or rename the field named in the pydantic loc to match the schema, then rerun scripts/scene_table.py validate.",
+   "recoverable": true,
+   "not_this": [
+    "missing required field"
+   ]
+  },
+  {
+   "code": "scene_table_invalid_element_type",
+   "layer": "scene_script",
+   "match": [
+    "string_pattern_mismatch"
+   ],
+   "cause": "An element_type is outside the closed vocabulary character|prop|creature|surface|effect.",
+   "next_command": "Set element_type to one of character/prop/creature/surface/effect, then rerun scripts/scene_table.py validate.",
+   "recoverable": true,
+   "not_this": [
+    "unknown field"
+   ]
   }
  ],
  "aliases": {}
