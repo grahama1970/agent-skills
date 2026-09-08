@@ -4,11 +4,11 @@ DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 cmd=${1:-}
 shift || true
 case "$cmd" in
-  validate|list|ask|sample)
+  validate|list|ask|sample|cockpit-proof)
     uv run --with pydantic python3 "$DIR/scripts/explain_project.py" "$cmd" "$@"
     ;;
   *)
-    echo "usage: $0 validate|list|ask|sample ..." >&2
+    echo "usage: $0 validate|list|ask|sample|cockpit-proof ..." >&2
     exit 2
     ;;
 esac

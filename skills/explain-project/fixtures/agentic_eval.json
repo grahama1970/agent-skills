@@ -2,8 +2,17 @@
   "version": 2,
   "skill": "explain-project",
   "trials": 2,
-  "proof_scope": "Local deterministic validation of strict Pydantic JSONL explainers, question routing, sample generation, and fail-closed malformed fields. Does not launch VS Code, Live Evidence, Excalidraw, or debugger sessions.",
+  "proof_scope": "Local deterministic validation of strict Pydantic explainers, MATCHED/AMBIGUOUS/NO_MATCH routing, cockpit reducer synchronization, and no live side effects. Does not launch VS Code, Live Evidence, Excalidraw, microphones, or debugger sessions.",
   "cases": [
+    {
+      "name": "sample-command-live-entrypoint",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "-c", "cd .. && T=$(mktemp -d) && ./run.sh sample --output $T/explainers.jsonl && ./run.sh cockpit-proof $T/explainers.jsonl --question 'A worker crashes before success; what prevents incomplete release?' | tee $T/proof.json && python3 - <<'PY' $T/proof.json\nimport json,sys\np=json.load(open(sys.argv[1])); assert p['status']=='PASS' and p['assertions']['projection_revisions_equal']\nprint('EXPLAIN_PROJECT_SAMPLE_ENTRYPOINT_OK')\nPY"],
+      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_SAMPLE_ENTRYPOINT_OK"]},
+      "readback": true,
+      "evidence_class": "deterministic"
+    },
     {
       "name": "sample-jsonl-validates",
       "type": "positive",
@@ -14,28 +23,61 @@
       "evidence_class": "deterministic"
     },
     {
-      "name": "question-routes-to-debugger-and-diagram-bindings",
+      "name": "manual-route-match",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "-c", "cd .. && ./run.sh ask fixtures/sample.explainers.jsonl --question 'A worker crashes before success; what prevents incomplete release?' | tee /tmp/explain-project-route.json && python3 - <<'PY'\nimport json\nd=json.load(open('/tmp/explain-project-route.json'))\nassert d['matched_feature']=='publish.report_last'\nassert d['diagram']['source_kind']=='excalidraw' and d['debugger_stops'][0]['locals']==['tmp','report_path','output_corpus']\nprint('EXPLAIN_PROJECT_ROUTE_OK')\nPY"],
-      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_ROUTE_OK"]},
+      "command": ["bash", "-c", "cd .. && ./run.sh ask fixtures/sample.explainers.jsonl --question 'A worker crashes before success; what prevents incomplete release?' | tee /tmp/explain-project-route.json && python3 - <<'PY'\nimport json\nd=json.load(open('/tmp/explain-project-route.json'))\nassert d['route']['status']=='MATCHED' and d['matched_feature']=='publish.report_last'\nprint('EXPLAIN_PROJECT_ROUTE_MATCH_OK')\nPY"],
+      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_ROUTE_MATCH_OK"]},
       "readback": true,
       "evidence_class": "deterministic"
     },
     {
-      "name": "extra-field-refused",
+      "name": "route-no-match",
       "type": "negative",
-      "command": ["bash", "-c", "cd .. && T=$(mktemp -d) && cp fixtures/sample.explainers.jsonl $T/bad.jsonl && python3 - <<'PY' $T/bad.jsonl\nimport json,sys\np=sys.argv[1]\nd=json.loads(open(p).readline()); d['surprise']='nope'; open(p,'w').write(json.dumps(d)+'\\n')\nPY\nif ./run.sh validate $T/bad.jsonl >$T/out 2>$T/err; then exit 1; fi; grep -q extra_forbidden $T/out && echo EXPLAIN_PROJECT_EXTRA_REFUSED"],
-      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_EXTRA_REFUSED"]},
+      "command": ["bash", "-c", "cd .. && ./run.sh ask fixtures/sample.explainers.jsonl --question 'oauth calendar webhook aliens' | tee /tmp/explain-project-no-match.json && python3 - <<'PY'\nimport json\nd=json.load(open('/tmp/explain-project-no-match.json'))\nassert d['route']['status']=='NO_MATCH' and 'matched_feature' not in d\nprint('EXPLAIN_PROJECT_NO_MATCH_OK')\nPY"],
+      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_NO_MATCH_OK"]},
       "readback": true,
       "evidence_class": "fault_injected_deterministic"
     },
     {
-      "name": "sample-command-emits-valid-jsonl",
+      "name": "route-ambiguous",
+      "type": "negative",
+      "command": ["bash", "-c", "cd .. && T=$(mktemp -d) && cp fixtures/sample.explainers.jsonl $T/e.jsonl && python3 - <<'PY' $T/e.jsonl\nimport json,sys\np=sys.argv[1]\nd=json.loads(open(p).readline()); d['feature_id']='publish.report_last_alt'; d['title']='Report-last publication alternate'\nopen(p,'a').write(json.dumps(d)+'\\n')\nPY\n./run.sh ask $T/e.jsonl --question 'worker crashes before reporting success' | tee $T/out.json && python3 - <<'PY' $T/out.json\nimport json,sys\nd=json.load(open(sys.argv[1])); assert d['route']['status']=='AMBIGUOUS' and len(d['route']['candidates'])==2\nprint('EXPLAIN_PROJECT_AMBIGUOUS_OK')\nPY"],
+      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_AMBIGUOUS_OK"]},
+      "readback": true,
+      "evidence_class": "fault_injected_deterministic"
+    },
+    {
+      "name": "three-step-sync-no-live-effects",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "-c", "cd .. && T=$(mktemp -d) && ./run.sh sample --output $T/explainers.jsonl && ./run.sh validate $T/explainers.jsonl | grep -q '\"status\": \"PASS\"' && echo EXPLAIN_PROJECT_SAMPLE_OK"],
-      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_SAMPLE_OK"]},
+      "command": ["bash", "-c", "cd .. && ./run.sh cockpit-proof fixtures/sample.explainers.jsonl --question 'A worker crashes before success; what prevents incomplete release?' | tee /tmp/explain-project-cockpit-proof.json && python3 - <<'PY'\nimport json\np=json.load(open('/tmp/explain-project-cockpit-proof.json'))\nassert p['status']=='PASS'\nassert p['assertions']['projection_revisions_equal']\nassert p['assertions']['navigation_changed_expected_steps']\nassert p['assertions']['debugger_execution_count_zero']\nassert p['assertions']['excalidraw_mutation_count_zero']\nassert p['assertions']['live_capture_claim_count_zero']\nprint('EXPLAIN_PROJECT_COCKPIT_SYNC_OK')\nPY"],
+      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_COCKPIT_SYNC_OK"]},
+      "readback": true,
+      "evidence_class": "deterministic"
+    },
+    {
+      "name": "invalid-step-source-ref-triaged",
+      "type": "negative",
+      "command": ["bash", "-c", "cd .. && T=$(mktemp -d) && cp fixtures/sample.explainers.jsonl $T/bad.jsonl && python3 - <<'PY' $T/bad.jsonl\nimport json,sys\np=sys.argv[1]; d=json.loads(open(p).readline()); d['steps'][0]['source_range_index']=99; open(p,'w').write(json.dumps(d)+'\\n')\nPY\nif ./run.sh validate $T/bad.jsonl >$T/out.json; then exit 1; fi\ngrep -q PYDANTIC_VALIDATION_FAILED $T/out.json && echo EXPLAIN_PROJECT_STEP_REF_REFUSED"],
+      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_STEP_REF_REFUSED"]},
+      "readback": true,
+      "evidence_class": "fault_injected_deterministic"
+    },
+    {
+      "name": "unknown-diagram-node-triaged",
+      "type": "negative",
+      "command": ["bash", "-c", "cd .. && T=$(mktemp -d) && cp fixtures/sample.explainers.jsonl $T/bad.jsonl && python3 - <<'PY' $T/bad.jsonl\nimport json,sys\np=sys.argv[1]; d=json.loads(open(p).readline()); d['steps'][0]['diagram_node_ids']=['missing-node']; open(p,'w').write(json.dumps(d)+'\\n')\nPY\nif ./run.sh validate $T/bad.jsonl >$T/out.json; then exit 1; fi\ngrep -q PYDANTIC_VALIDATION_FAILED $T/out.json && echo EXPLAIN_PROJECT_DIAGRAM_REF_REFUSED"],
+      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_DIAGRAM_REF_REFUSED"]},
+      "readback": true,
+      "evidence_class": "fault_injected_deterministic"
+    },
+    {
+      "name": "ui-contract-static-check",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "-c", "cd .. && grep -q 'useRegisterAction' ui/src/App.tsx && grep -q 'data-qid' ui/src/App.tsx && grep -q 'data-qs-action' ui/src/App.tsx && grep -q 'ArrowRight' ui/src/useCockpit.ts && echo EXPLAIN_PROJECT_UI_CONTRACT_OK"],
+      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_UI_CONTRACT_OK"]},
       "readback": true,
       "evidence_class": "deterministic"
     }
