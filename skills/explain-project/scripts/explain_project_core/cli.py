@@ -39,6 +39,8 @@ from .proof import (
 from .routing import route
 from .server import serve
 
+SKILL_DIR = Path(__file__).resolve().parents[2]
+
 app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
@@ -85,8 +87,14 @@ def _resolve_input(
     if path.is_absolute():
         return path
 
-    if path.exists():
-        return path
+    for candidate in (
+        path,
+        repo / path,
+        SKILL_DIR / path,
+        SKILL_DIR / repo / path,
+    ):
+        if candidate.exists():
+            return candidate
 
     return repo / path
 
