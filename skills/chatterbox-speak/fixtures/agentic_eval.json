@@ -17,6 +17,12 @@
       "evidence_required": {"live_e2e": true}
     },
     {
+      "id": "speak.session.mood_hold",
+      "description": "session holds bounded mood + speaker across turns; a no-intensity turn keeps the held mood and last tone; speaker-tagged memory recall lands in the receipt",
+      "criticality": "critical",
+      "evidence_required": {"live_e2e": true}
+    },
+    {
       "id": "speak.fail_closed",
       "description": "unknown voice / dead service / non-live receipt fail closed with no artifact",
       "criticality": "critical",
@@ -53,6 +59,20 @@
         "receipt affect_effect.applied=true",
         "backend id is chatterbox_base_affect (explicit intensity routes off turbo)",
         "receipt analysis affect.estimated_arousal >= 0.4 (high intensity should measure as elevated arousal)"
+      ]
+    },
+    {
+      "id": "session-mood-holds-across-turns",
+      "case_type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": ["speak.session.mood_hold"],
+      "command": "S=eval-$RANDOM; ./run.sh speak --text 'I hear you.' --voice embry --intensity high --tone firm_boundary --session $S --to graham --recall-context && ./run.sh speak --text 'Still here.' --voice embry --session $S",
+      "assertions": [
+        "both turns exit 0",
+        "sessions/<S>.json has speaker=graham, mood_intensity=0.9, last_tone=firm_boundary, turns=2",
+        "turn-2 render routed to chatterbox_base_affect (held mood applied without explicit --intensity)",
+        "turn-1 receipt memory_context.found present with tags ['speaker:graham']"
       ]
     },
     {

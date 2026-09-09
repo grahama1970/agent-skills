@@ -17,6 +17,7 @@ provides:
 composes:
   - agentic-evals
   - analyze-chatterbox-emotions
+  - memory
 complies:
   - best-practices-skills
   - best-practices-python
@@ -62,6 +63,17 @@ and writes a receipt. It is NOT the conversation control plane — that is
 - `--analyze`: runs `/analyze-chatterbox-emotions` on the rendered WAV and embeds
   the waveform/affect analysis in the receipt. Agentic evals use this as the
   post-render evidence gate.
+- `--session <id> --to <speaker>`: persona-dream-style session continuity.
+  Holds a bounded mood (`mood_intensity` moves halfway toward each requested
+  intensity, clamped 0-1) and last tone across turns; a turn with no intensity
+  keeps speaking with the held mood. Session state is turn-scoped continuity in
+  `outputs/sessions/<id>.json` — it is NOT persona memory and is never written
+  to `$memory` (matches the memory delivery_context decay contract).
+- `--recall-context`: read-only `$memory /recall` with `speaker:<to>` tags;
+  top items land in the receipt as grounding evidence. It does not change
+  rendering — tone/intensity choice from context stays with the caller. `--to`
+  is caller-asserted; real voice identity belongs to `$memory /speaker/resolve`
+  in embry-voice-control.
 
 Receipts and copies of the WAV go to
 `/mnt/storage12tb/skills/chatterbox-speak/outputs/`.

@@ -34,6 +34,63 @@ VOICES = {
     "embry": "/data/embry_ref.wav",
 }
 INTENSITY = {"low": 0.3, "medium": 0.6, "high": 0.9}
+SESSIONS = OUT_DIR / "sessions"
+MEMORY_URL = "http://127.0.0.1:8601"
+MOOD_BLEND = 0.5  # ponytail: bounded arc delta — mood moves halfway toward each request, clamped 0-1
+
+
+class SessionState(BaseModel):
+    """Persona-dream-style session mood: turn-scoped, bounded, decays by default.
+
+    Not persona memory; never written to $memory unless separately promoted.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+    session_id: str
+    speaker: str | None = None  # who Embry is speaking to (caller-asserted, not identity proof)
+    mood_intensity: float | None = None
+    last_tone: str | None = None
+    turns: int = 0
+
+
+def _load_session(session_id: str) -> SessionState:
+    p = SESSIONS / f"{session_id}.json"
+    if p.is_file():
+        try:
+            return SessionState.model_validate_json(p.read_text())
+        except ValidationError as exc:
+            _fail(f"corrupt session state {p}: {exc.json()}")
+    return SessionState(session_id=session_id)
+
+
+def _save_session(state: SessionState) -> None:
+    SESSIONS.mkdir(parents=True, exist_ok=True)
+    (SESSIONS / f"{state.session_id}.json").write_text(state.model_dump_json(indent=2))
+
+
+def _recall_context(query: str, speaker: str | None) -> dict:
+    """Read-only $memory recall for speaker-scoped context; evidence for the receipt only."""
+    tags = [f"speaker:{speaker}"] if speaker else None
+    try:
+        resp = httpx.post(
+            f"{MEMORY_URL}/recall",
+            json={"q": query, "k": 3, **({"tags": tags} if tags else {})},
+            headers={"X-Caller-Skill": "chatterbox-speak"},
+            timeout=httpx.Timeout(10.0, connect=2.0),
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        return {
+            "found": data.get("found"),
+            "confidence": data.get("confidence"),
+            "items": [
+                {"problem": i.get("problem"), "solution": i.get("solution"), "tags": i.get("tags")}
+                for i in data.get("items", [])[:3]
+            ],
+            "tags": tags,
+        }
+    except httpx.HTTPError as exc:
+        return {"found": False, "error": f"memory recall unavailable: {exc}", "tags": tags}
 
 
 class SpeakRequest(BaseModel):
@@ -81,6 +138,9 @@ def speak(
     tone: str | None = typer.Option(None, help="Calibrated tone, e.g. neutral_warm, firm_boundary"),
     intensity: str | None = typer.Option(None, help="low|medium|high; routes to base-affect backend (tags become literal)"),
     context: str = typer.Option("", help="Grounding note stored in the receipt (does not change rendering)"),
+    session: str | None = typer.Option(None, help="Session id; holds bounded mood + speaker across turns (persona-dream-style continuity)"),
+    to: str | None = typer.Option(None, help="Who Embry is speaking to; stored in session/receipt and used as speaker:<id> recall tag"),
+    recall_context: bool = typer.Option(False, help="Fetch speaker-scoped context from $memory /recall into the receipt"),
     play: bool = typer.Option(False, help="Play locally via pw-play"),
     analyze: bool = typer.Option(False, help="Run /analyze-chatterbox-emotions on the WAV and embed the result in the receipt"),
 ) -> None:
@@ -91,9 +151,25 @@ def speak(
     if intensity is not None and intensity not in INTENSITY:
         _fail(f"intensity must be one of {sorted(INTENSITY)}")
 
+    state = _load_session(session) if session else None
+    if state and to:
+        state.speaker = to
+
+    requested = INTENSITY.get(intensity) if intensity else None
+    effective = requested
+    if state:
+        if requested is not None:
+            prev = state.mood_intensity if state.mood_intensity is not None else requested
+            effective = max(0.0, min(1.0, prev + MOOD_BLEND * (requested - prev)))
+            state.mood_intensity = effective
+        elif state.mood_intensity is not None:
+            effective = state.mood_intensity  # hold session mood when this turn specifies none
+        if tone is None:
+            tone = state.last_tone
+
     delivery = None
-    if intensity:
-        delivery = {"intensity": INTENSITY[intensity], "emotion_realization": "audible"}
+    if effective is not None:
+        delivery = {"intensity": round(effective, 3), "emotion_realization": "audible"}
 
     try:
         req = SpeakRequest(text=text, ref_audio=ref, tone=tone, voice_delivery=delivery)
@@ -124,12 +200,22 @@ def speak(
     wav_copy = out / host_wav.name
     shutil.copy2(host_wav, wav_copy)
 
+    if state:
+        state.last_tone = tone
+        state.turns += 1
+        _save_session(state)
+
+    memory_context = _recall_context(context or text, (state.speaker if state else to)) if recall_context else None
+
     full = resp.json()
     record = {
         "schema": "chatterbox_speak.receipt.v1",
         "voice": voice,
         "context": context,
         "requested_intensity": intensity,
+        "speaking_to": (state.speaker if state else to),
+        "session": state.model_dump() if state else None,
+        "memory_context": memory_context,
         "request": req.model_dump(exclude_none=True),
         "wav": str(wav_copy),
         "duration_seconds": receipt.duration_seconds,
