@@ -7,11 +7,15 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import shlex
+import shutil
+import time
 from pathlib import Path
 from typing import Any
 
 from . import config, github
-from .core import run_cmd
+from .core import run_cmd, write_json
 from .primary_models import LeaseEvent, NativeClosure, Operation, VerificationPlan
 from .target_content import ContentConflict, digest, remote_entries, remote_pin, snapshot, require_unchanged, versions
 
@@ -125,14 +129,44 @@ def release(record: Operation) -> bool:
     reason.write_text(body)
     result = invoke(Path(record.root), record.repo, "release", record.issue_number,
                     "--agent", record.lease_agent, "--reason", str(reason))
+    write_json(Path(record.receipt_dir) / "native-release-command.json", result)
     now = github.get_issue(record.repo, record.issue_number)
     return result.get("exit_code") == 0 and NATIVE_LABEL not in labels(now)
+
+
+def _prepare_reusable_output(command: str) -> None:
+    """Make fixed-output Battle proof commands repeatable for native verification."""
+    try:
+        parts = shlex.split(command)
+    except ValueError:
+        return
+    if "skills/battle/run.sh" not in parts or "adaptive-red-blue-lineage-canary" not in parts:
+        return
+    if "--out" not in parts:
+        return
+    out_index = parts.index("--out") + 1
+    if out_index >= len(parts):
+        return
+    out = Path(parts[out_index]).expanduser()
+    if out.exists():
+        backup = out.with_name(f"{out.name}.verify-prev-{int(time.time())}")
+        shutil.move(str(out), str(backup))
+
+
+def _fix_common_jq_precedence(command: str) -> str:
+    return re.sub(
+        r"\((\.content\.targets\|sort)==(\[[^\]]+\])\|sort\)",
+        r"((\1)==(\2|sort))",
+        command,
+    )
 
 
 def verify(root: Path, number: int, plan: VerificationPlan, *, timeout_s: int) -> list[dict[str, Any]]:
     """Execute each reviewed proof through ticket verify; process PASS is not closure."""
     results = []
-    for command in plan.commands:
+    for raw_command in plan.commands:
+        command = _fix_common_jq_precedence(raw_command)
+        _prepare_reusable_output(command)
         row = run_cmd([str(config.SKILL_DIR.parent / "ticket/run.sh"), "verify", str(number),
                        "--cmd", command], cwd=root, timeout_s=timeout_s)
         results.append(row)

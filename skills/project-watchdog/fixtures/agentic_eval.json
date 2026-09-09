@@ -9,6 +9,15 @@
   },
   "cases": [
     {
+      "name": "native-release-retains-command-diagnostics",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": ["uv", "run", "--project", "..", "pytest", "../tests/test_primary_main_revision.py::test_owned_release_does_not_remove_foreign_generation", "-q"],
+      "expected": {"exit_code": 0, "stdout_contains": ["1 passed"]}
+    },
+    {
       "name": "sanity-gates",
       "type": "positive",
       "command": [

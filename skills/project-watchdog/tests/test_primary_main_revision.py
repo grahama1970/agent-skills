@@ -448,6 +448,11 @@ def test_owned_release_does_not_remove_foreign_generation(closing_record, monkey
     monkeypatch.setattr(native_ticket, "lease_event", lambda *a: record.lease_event.model_copy(update={"id": 999}))
     monkeypatch.setattr(native_ticket, "invoke", lambda *a: pytest.fail("foreign release forbidden"))
     assert native_ticket.release(record) is False
+    monkeypatch.setattr(native_ticket, "lease_event", lambda *a: record.lease_event)
+    monkeypatch.setattr(native_ticket, "invoke", lambda *a: {"exit_code": 2, "stderr": "retention audit refused"})
+    assert native_ticket.release(record) is False
+    evidence = json.loads((Path(record.receipt_dir) / "native-release-command.json").read_text())
+    assert evidence == {"exit_code": 2, "stderr": "retention audit refused"}
 
 
 def test_closure_outbox_recovery_retries_native_close_without_new_provider(closing_record, monkeypatch):
