@@ -63,42 +63,45 @@ export function CockpitApp({
       data-revision={state.revision}
       className={[
         'h-dvh overflow-hidden',
-        'bg-zinc-950 p-4 text-zinc-50',
+        'bg-zinc-950 p-3.5 text-zinc-50',
       ].join(' ')}
     >
       <header
         className={[
-          'mb-3 flex h-14 items-center',
+          'mb-2.5 flex h-12 items-center',
           'justify-between rounded-xl',
           'border border-zinc-800',
           'bg-zinc-900/80 px-4',
         ].join(' ')}
       >
-        <div>
+        <div className="flex items-center gap-3">
           <div
             className={[
-              'text-xs font-semibold uppercase',
+              'text-xs font-bold uppercase',
               'tracking-[0.22em] text-cyan-300',
             ].join(' ')}
           >
-            Interview cockpit
+            Interview Cockpit
           </div>
-          <div className="text-xs text-zinc-400">
+          <span className="text-zinc-700">|</span>
+          <div className="text-xs text-zinc-400 truncate max-w-md">
             Answer follow-up questions from source, proof, and safe debugger targets.
           </div>
         </div>
 
-        <div className="text-xs font-mono font-semibold text-zinc-300">
-          Evidence state: {state.route?.status ?? 'NO_MATCH'} · r{state.revision}
-        </div>
-
-        <div className="text-xs font-mono text-zinc-400">
-          {state.selection
-            ? (
-                `Step ${state.selection.step_index + 1}`
-                + ` / ${state.selection.step_count}`
-              )
-            : 'No explainer selected'}
+        <div className="flex items-center gap-4 text-xs font-mono">
+          <span className="text-zinc-300 font-semibold">
+            Evidence: <span className="text-cyan-300">{state.route?.status ?? 'NO_MATCH'}</span> · r{state.revision}
+          </span>
+          <span className="text-zinc-600">•</span>
+          <span className="text-zinc-400">
+            {state.selection
+              ? (
+                  `Step ${state.selection.step_index + 1}`
+                  + ` / ${state.selection.step_count}`
+                )
+              : 'No explainer selected'}
+          </span>
         </div>
       </header>
 
@@ -118,9 +121,9 @@ export function CockpitApp({
 
       <section
         className={[
-          'grid h-[calc(100dvh-96px)]',
-          'grid-cols-[290px_minmax(0,1fr)_410px]',
-          'gap-4',
+          'grid h-[calc(100dvh-74px)]',
+          'grid-cols-[290px_minmax(0,1fr)_390px]',
+          'gap-3.5 overflow-hidden',
         ].join(' ')}
       >
         <InputRail

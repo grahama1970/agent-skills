@@ -66,9 +66,9 @@ function ExplainerButton({
       title={`Select ${explainer.title}`}
       aria-current={selected ? 'true' : undefined}
       className={[
-        'w-full block text-left rounded-lg border p-3 min-h-[44px] transition-all',
+        'w-full block text-left rounded-lg border p-2.5 min-h-[44px] transition-all',
         selected
-          ? 'border-cyan-400 bg-cyan-950/40 text-cyan-100 shadow-sm'
+          ? 'border-cyan-400 bg-cyan-950/40 text-cyan-100 shadow-sm shadow-cyan-950'
           : 'border-zinc-800 bg-zinc-950/60 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900',
       ].join(' ')}
       onClick={() => {
@@ -87,7 +87,7 @@ function ExplainerButton({
       <span className="mt-1 flex items-center gap-1.5 text-xs text-zinc-400 font-mono">
         <span>{explainer.question_family}</span>
         <span>·</span>
-        <span className="text-cyan-300">{explainer.steps} steps</span>
+        <span className="text-cyan-300 font-medium">{explainer.steps} steps</span>
       </span>
     </button>
   )
@@ -213,19 +213,19 @@ export function InputRail({
         <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">
           Question intake
         </h2>
-        <p className="mt-1 text-xs text-zinc-400">
+        <p className="mt-0.5 text-xs text-zinc-400">
           Route the interviewer’s question without changing the proof contract.
         </p>
       </div>
 
-      <div className="flex flex-row items-center gap-2 w-full">
+      <div className="flex flex-row items-center gap-1.5 w-full">
         <input
           data-qid="cockpit:question:manual-input"
           data-qs-action="QUESTION_MANUAL_EDIT"
           title="Paste or type an interview question"
           className={[
             'min-w-0 flex-1 rounded-lg border border-zinc-700',
-            'bg-zinc-950 px-3 py-2 text-xs text-zinc-100 min-h-[44px]',
+            'bg-zinc-950 px-2.5 py-1.5 text-xs text-zinc-100 min-h-[44px]',
             'placeholder-zinc-500 outline-none focus:border-cyan-500',
           ].join(' ')}
           placeholder="Paste interview question"
@@ -249,7 +249,7 @@ export function InputRail({
           title="Route the current interview question"
           className={[
             'shrink-0 min-h-[44px] rounded-lg border border-cyan-500/80',
-            'bg-cyan-500/10 px-4 py-2 text-xs font-semibold text-cyan-300',
+            'bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-300',
             'hover:bg-cyan-500 hover:text-zinc-950 transition-all',
           ].join(' ')}
           onClick={() => {
@@ -272,7 +272,7 @@ export function InputRail({
         title="Search existing explainers"
         className={[
           'w-full rounded-lg border border-zinc-800 bg-zinc-950',
-          'px-3 py-2 text-xs outline-none focus:border-cyan-500 min-h-[44px]',
+          'px-2.5 py-2 text-xs outline-none focus:border-cyan-500 min-h-[44px]',
         ].join(' ')}
         placeholder="Find explainer"
         value={query}
@@ -309,7 +309,7 @@ export function InputRail({
             data-qs-action="EXPLAINER_IMPORT_EDIT"
             title="Paste one project.feature_explainer.v1 JSON object"
             className={[
-              'h-36 w-full resize-none rounded-lg border border-zinc-800',
+              'h-32 w-full resize-none rounded-lg border border-zinc-800',
               'bg-zinc-950 p-2 font-mono text-xs text-zinc-200',
               'outline-none focus:border-cyan-500',
             ].join(' ')}
@@ -339,7 +339,7 @@ export function InputRail({
         </div>
       ) : null}
 
-      <div className="space-y-2 pt-1">
+      <div className="space-y-2 pt-0.5">
         {filtered.map((explainer) => (
           <ExplainerButton
             key={explainer.feature_id}

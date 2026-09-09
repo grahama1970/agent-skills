@@ -17,6 +17,7 @@ export function DiagramStage({
   useEffect(() => {
     setArtifact(rendered ? 'loading' : 'missing')
   }, [rendered, state.diagram.revision])
+
   const active = new Set(
     state.diagram.active_node_ids,
   )
@@ -27,31 +28,31 @@ export function DiagramStage({
   const nodes = state.diagram.node_ids.map(
     (nodeId, index) => ({
       nodeId,
-      y: 18 + index * 30,
+      y: 16 + index * 26,
     }),
   )
   const height = Math.max(
-    70,
-    24 + nodes.length * 30,
+    60,
+    20 + nodes.length * 26,
   )
 
   return (
     <section
       data-qid="cockpit:diagram:stage"
       data-revision={state.diagram.revision}
-      className="rounded-lg border border-zinc-800 bg-zinc-950 p-3"
+      className="rounded-lg border border-zinc-800 bg-zinc-950 p-2.5"
     >
       <h2 className="text-xs font-semibold uppercase tracking-wider text-cyan-300">
         Diagram
       </h2>
 
       {rendered && artifact !== 'missing' ? (
-        <div className="mt-2 overflow-hidden rounded border border-zinc-800 bg-white/95 p-1">
+        <div className="mt-2 overflow-hidden rounded-md border border-zinc-800 bg-zinc-900/90 p-1.5 flex justify-center">
           <img
             data-qid="cockpit:diagram:artifact"
             src={`/api/cockpit/diagram?rev=${state.diagram.revision}`}
             alt={`Rendered diagram ${rendered}`}
-            className="block max-h-52 w-full object-contain"
+            className="max-h-24 w-auto object-contain rounded bg-white/95 p-1"
             onLoad={() => setArtifact('shown')}
             onError={() => setArtifact('missing')}
           />
@@ -67,12 +68,12 @@ export function DiagramStage({
         </p>
       ) : null}
 
-      <div className="relative mt-2 overflow-hidden rounded border border-zinc-800 bg-zinc-900/90 p-2">
+      <div className="relative mt-2 overflow-hidden rounded border border-zinc-800 bg-zinc-900/90 p-1.5">
         <svg
           viewBox={`0 0 280 ${height}`}
           role="img"
           aria-label="Current explainer diagram highlights"
-          className="cockpit-diagram-preview block w-full max-h-36"
+          className="cockpit-diagram-preview block w-full max-h-28"
         >
           {nodes.length > 1 ? (
             <line
@@ -100,7 +101,7 @@ export function DiagramStage({
                   <circle
                     cx="22"
                     cy={y}
-                    r="10"
+                    r="9"
                     fill="none"
                     stroke="#22d3ee"
                     strokeWidth="1.5"
@@ -110,13 +111,13 @@ export function DiagramStage({
                 <circle
                   cx="22"
                   cy={y}
-                  r="5.5"
+                  r="5"
                   fill={isActive ? '#06b6d4' : '#27272a'}
                   stroke={isActive ? '#a5f3fc' : '#52525b'}
                   strokeWidth="2"
                 />
                 <text
-                  x="40"
+                  x="38"
                   y={y + 4}
                   fill={isActive ? '#cffafe' : '#a1a1aa'}
                   fontSize="12"
@@ -131,27 +132,27 @@ export function DiagramStage({
         </svg>
       </div>
 
-      <p className="mt-2 text-xs font-mono text-cyan-300">
+      <p className="mt-1.5 text-xs font-mono text-cyan-300">
         {state.diagram.active_node_ids.join(' · ')
           || 'No active node'}
       </p>
 
       {missing.length ? (
         <p
-          className="mt-2 text-xs font-mono text-red-400"
+          className="mt-1.5 text-xs font-mono text-red-400"
           data-diagram-diagnostic="missing-node"
         >
           Missing diagram node: {missing.join(', ')}
         </p>
       ) : null}
 
-      <p className="mt-2 truncate font-mono text-xs text-zinc-400" title={state.diagram.rendered_svg_path ?? state.diagram.source_path ?? ''}>
+      <p className="mt-1 truncate font-mono text-[11px] text-zinc-400" title={state.diagram.rendered_svg_path ?? state.diagram.source_path ?? ''}>
         {state.diagram.rendered_svg_path
           ?? state.diagram.source_path
           ?? 'No diagram'}
       </p>
 
-      <p className="mt-2 text-xs font-mono text-zinc-400">
+      <p className="mt-1 text-[11px] font-mono text-zinc-400">
         {state.diagram.highlight_intent
           ? 'Display highlight only; mutation_allowed=false.'
           : 'No highlight intent.'}

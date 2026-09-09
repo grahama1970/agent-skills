@@ -22,7 +22,6 @@ button, input, textarea {
 
 button {
   cursor: pointer;
-  min-height: 44px;
 }
 
 main[data-qid="cockpit:state:root"] {
@@ -33,7 +32,7 @@ main[data-qid="cockpit:state:root"] {
   overflow: hidden;
   background: #09090b;
   color: #f8fafc;
-  padding: 16px;
+  padding: 14px;
 }
 
 main[data-qid="cockpit:state:root"] > header {
@@ -44,16 +43,16 @@ main[data-qid="cockpit:state:root"] > header {
   border: 1px solid #27272a;
   border-radius: 12px;
   background: #131316;
-  padding: 12px 18px;
-  margin-bottom: 12px;
+  padding: 10px 16px;
+  margin-bottom: 10px;
 }
 
 main[data-qid="cockpit:state:root"] > section {
   flex: 1 1 0;
   min-height: 0;
   display: grid;
-  grid-template-columns: 290px minmax(0, 1fr) 410px;
-  gap: 16px;
+  grid-template-columns: 290px minmax(0, 1fr) 390px;
+  gap: 14px;
   overflow: hidden;
 }
 
@@ -71,7 +70,7 @@ section.cockpit-stage {
   flex-direction: column;
   justify-content: space-between;
   border-color: #0891b2;
-  background: radial-gradient(circle at 50% 0%, #0e74901f 0%, #09090b 70%);
+  background: radial-gradient(circle at 50% 0%, #0e749022 0%, #09090b 70%);
   padding: 24px 32px;
   box-shadow: inset 0 1px 0 #22d3ee33;
 }
@@ -99,7 +98,7 @@ section.cockpit-stage ul {
   font-size: clamp(1.25rem, 1.6vw, 1.85rem);
   line-height: 1.35;
   color: #e4e4e7;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
 }
 
 section.cockpit-stage li {
@@ -160,6 +159,15 @@ button:focus-visible {
   box-shadow: inset 3px 0 0 #22d3ee;
 }
 
+[data-qid="cockpit:diagram:stage"] img {
+  max-height: 90px;
+  object-fit: contain;
+  background-color: #18181b;
+  border-radius: 6px;
+  padding: 4px;
+  filter: invert(0.9) hue-rotate(180deg) contrast(1.1);
+}
+
 .cockpit-diagram-preview {
   display: block;
   width: 100%;
@@ -186,4 +194,10 @@ button:focus-visible {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Interaction targets stay touch-sized regardless of theme rounds. */
+button,
+[data-qid='cockpit:explainer:slider'] {
+  min-height: 44px;
 }

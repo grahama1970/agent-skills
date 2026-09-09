@@ -68,10 +68,10 @@ export function ExplainerNavigator({
   }
 
   return (
-    <section className="rounded-lg border border-zinc-800 bg-zinc-950/80 p-3">
-      <div className="mb-2 flex items-center justify-between text-xs">
+    <section className="rounded-lg border border-zinc-800 bg-zinc-950/80 p-2.5">
+      <div className="mb-1.5 flex items-center justify-between text-xs">
         <span className="font-semibold uppercase tracking-wider text-cyan-300">
-          Explainer Catalog
+          Explainer Index
         </span>
         <span className="font-mono font-bold text-cyan-400">
           {displayStep} / {totalCount}
