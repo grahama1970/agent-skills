@@ -14,8 +14,15 @@ cmd=$1
 shift
 
 case "$cmd" in
+  bridge)
+    PYTHONPATH="$DIR/scripts" uv run --isolated --with pydantic --with typer --with httpx --with loguru \
+      python3 -m explain_project_core.execution "$@"
+    ;;
   eval-browser-sync)
     uv run --isolated --with httpx python3 "$DIR/scripts/eval_browser_sync.py" "$@"
+    ;;
+  eval-bridge-execution)
+    uv run --isolated --with httpx python3 "$DIR/scripts/eval_bridge_execution.py" "$@"
     ;;
   validate|list|ask|sample|cockpit-proof|cockpit|validate-proof|interaction-manifest|debugger-source-reveal-receipt|debugger-runtime-proof-receipt|excalidraw-proposal-receipt)
     PYTHONPATH="$DIR/scripts" \

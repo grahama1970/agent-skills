@@ -138,6 +138,17 @@
       "expected": {"exit_code": 0, "stdout_contains": ["BROWSER_SYNC_PASS", "external-replay-updates-open-tab", "stale action not replayed", "late-snapshot-does-not-regress", "external import appears without reload"]}
     },
     {
+      "name": "bridge-execution-safety",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "readback": true,
+      "notes": "Production API + bridge worker on a generated workspace: cross-origin refusal, IDLE without intent, typed dry-run default, honest BLOCKED without a trusted VS Code bridge, and no dispatch of superseded intents. Live VS Code reveal readback is a separate operator-run mode (--live-vscode) and is not claimed here.",
+      "command": ["bash", "../run.sh", "eval-bridge-execution"],
+      "timeout_seconds": 300,
+      "expected": {"exit_code": 0, "stdout_contains": ["BRIDGE_EXECUTION_PASS", "cross-origin mutation refused", "without a trusted bridge the executor blocks honestly", "superseded intent is never dispatched as current"]}
+    },
+    {
       "name": "ui-contract-static-check",
       "type": "positive",
       "real_world": true,

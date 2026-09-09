@@ -47,6 +47,8 @@ skills/explain-project/run.sh list docs/explain/explainers.jsonl
 skills/explain-project/run.sh ask docs/explain/explainers.jsonl --question "What breaks first at scale?"
 skills/explain-project/run.sh sample --output docs/explain/explainers.jsonl
 skills/explain-project/run.sh eval-browser-sync --out-dir /tmp/explain-project-browser-sync
+skills/explain-project/run.sh bridge --repo <workspace> --base-url http://127.0.0.1:15174 --out-dir <artifacts> --execute
+skills/explain-project/run.sh eval-bridge-execution --out-dir /tmp/explain-project-bridge-eval
 ```
 
 ## Record contract
@@ -77,6 +79,20 @@ tab through Surf. It retains API/DOM snapshots for replay intake, deduplication,
 next/previous, a real stale-action 409, delayed response ordering, and external
 catalog imports. It closes only its own tab/processes. No capture devices,
 debugger execution, model providers, or whiteboard mutations are exercised.
+
+## Adapter bridge
+
+`bridge` fulfills the cockpit's explicit Reveal source / Prepare target intents
+through the owning `$debugger` skill: it reads the loopback API, dispatches one
+`$debugger request` (reveal or addBreakpoints) against the trusted workspace,
+validates the extension-owned native status artifact against the selected
+source range, and posts a revision-fenced `adapter.receipt` back. Dry-run is
+the default; `--watch` requires `--execute`; a named VS Code launch requires a
+separate one-shot `--run-breakpoint <config>` and a validated
+`debugger.proof.v1` before `PROOF_RECEIVED`. Superseded intents are never
+replayed (STALE/IDLE), failures post honest `BLOCKED` receipts, and cockpit
+mutations require loopback host + loopback origin + `application/json`.
+Imported explainer `runtime_launch` commands are never executed.
 
 ## Current scope
 

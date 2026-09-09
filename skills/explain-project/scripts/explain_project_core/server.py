@@ -19,6 +19,7 @@ from http.server import (
     ThreadingHTTPServer,
 )
 from typing import Any
+from urllib.parse import urlsplit
 
 import httpx
 from loguru import logger
@@ -402,6 +403,17 @@ def _handler_factory(
         def _read_json(
             self,
         ) -> dict[str, Any]:
+            loopback = {'127.0.0.1', 'localhost', '::1'}
+            host = self.headers.get('host', '')
+            origin = self.headers.get('origin')
+            # The dev/preview proxy rewrites Host, so require loopback on both
+            # sides rather than exact equality. Foreign-site origins still 403.
+            if (urlsplit(f'http://{host}').hostname not in loopback
+                    or (origin is not None
+                        and urlsplit(origin).hostname not in loopback)):
+                raise PermissionError('Cross-origin cockpit mutation refused')
+            if self.headers.get_content_type() != 'application/json':
+                raise ValueError('application/json required for cockpit mutations')
             raw_length = self.headers.get(
                 "content-length"
             )
@@ -444,7 +456,7 @@ def _handler_factory(
             if self.path == "/api/health":
                 self._json(
                     HTTPStatus.OK,
-                    {"status": "ok"},
+                    {"status": "ok", "mutation_policy": "loopback-same-origin-json"},
                 )
                 return
 
@@ -510,6 +522,11 @@ def _handler_factory(
                     HTTPStatus.NOT_FOUND,
                     {"status": "not_found"},
                 )
+
+            except PermissionError as error:
+                self._json(HTTPStatus.FORBIDDEN, {
+                    'status': 'FAIL', 'failure_code': 'ORIGIN_REFUSED', 'message': str(error),
+                })
 
             except ValidationError as error:
                 failure = TriagedFailure(

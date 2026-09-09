@@ -92,6 +92,11 @@ case "$cmd" in
         exec env DEBUGGER_VSCODE_WORKSPACE="$(default_workspace)" \
             uv run --project "$SKILL_DIR" python "$SKILL_DIR/scripts/vscode_bridge_session.py" "$@"
         ;;
+    request)
+        shift
+        # Typed bridge request writer; stdout identifies request/status artifacts.
+        exec uv run --project "$SKILL_DIR" python "$SKILL_DIR/scripts/request_vscode_bridge.py" "$@"
+        ;;
     open)
         shift
         [ "$#" -ge 1 ] || { echo "usage: ./run.sh open <file> --line N|--function F|--json-field K" >&2; exit 2; }
