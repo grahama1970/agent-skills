@@ -72,8 +72,10 @@ steps:
     command: autonomous-dream-cycle
     run_dir_arg: null
     args: ["--persona", "{persona}", "--cycle-id", "{cycle_id}", "--about", "{idea}"]
+    consumes: []
     produces: [storyboard_plan.json, selection_receipt.v1.json, residue_links.json,
                phase14_tom.json, observation_packet.json]
+    validation: {input: pydantic_first, output: pydantic_first, failure: triage-error}
     proves: residue was selected, dreamt, observed, interpreted, and persisted
     does_not_prove: that the dream is meaningful or that recall improves
 
@@ -82,7 +84,9 @@ steps:
     command: write-dream-journal
     run_dir_arg: null
     args: ["--cycle", "{cycle_id}", "--persona", "{persona}"]
+    consumes: [selection_receipt.v1.json, residue_links.json, phase14_tom.json, observation_packet.json]
     produces: [dream_journal.v1.json, dream_journal.md]
+    validation: {input: pydantic_first, output: pydantic_first, failure: triage-error}
     proves: she wrote an entry conforming to persona_journal.v1
     does_not_prove: that the entry is true of events
 
@@ -91,8 +95,10 @@ steps:
     command: speak-journal
     run_dir_arg: "--run-dir"
     args: []
+    consumes: [dream_journal.v1.json]
     produces: [journal_spoken.txt, JOURNAL_SPOKEN_TEXT_RECEIPT.json, journal.wav,
                JOURNAL_AUDIO_RECEIPT.json]
+    validation: {input: pydantic_first, output: pydantic_first, failure: triage-error}
     proves: the cycle-lane journal text was rendered to a hash-bound spoken journal artifact
     does_not_prove: that the requested tone was perceptually achieved or accepted by a human listener
 
@@ -101,7 +107,9 @@ steps:
     command: chatterbox-conversation
     run_dir_arg: "--run-dir"
     args: ["--turns", "3", "--opening-topic", "her dream last night, how today actually went, and how holding the two together moves her mood"]
+    consumes: [dream_journal.v1.json, JOURNAL_SPOKEN_TEXT_RECEIPT.json, JOURNAL_AUDIO_RECEIPT.json]
     produces: [conversation.jsonl, dynamic_conversation_receipt.v1.json]
+    validation: {input: pydantic_first, output: pydantic_first, failure: triage-error}
     proves: the spoken journal is followed by a grounded, voiced Horus and Embry Chatterbox conversation
     does_not_prove: that the conversation is human-approved, that perceived emotion matched the requested tone, or that synthetic dreaming outperforms controls
 

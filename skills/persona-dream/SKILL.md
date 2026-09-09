@@ -1160,6 +1160,14 @@ vectors for recall. Do not store vector arrays in memory/ArangoDB.
 
 ## Validation
 
+Every executable spine step must declare `consumes`, `produces`, and
+`validation: {input: pydantic_first, output: pydantic_first, failure: triage-error}`
+in `contracts/dream_spine.v1.yaml`. `scripts/build_dream_dag.py` refuses any
+step missing that contract, and `scripts/dag_step.py` validates consumed JSON
+before execution and produced JSON after execution. Any boundary failure writes
+`pydantic_errors[]` plus `$triage-error` `triage_errors[]` with `code`, `cause`,
+and `next_command`; a step cannot advance on exit-code-only success.
+
 After any step that writes artifacts into a revision, run the persistence
 audit gate. It verifies the active pointer, frozen-index integrity, classifies
 every unindexed on-disk file (machinery receipt or request-scoped Phase 11-13

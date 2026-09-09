@@ -41,6 +41,16 @@ class StoryboardPacket(ArtifactEnvelope):
     panels: list[dict[str, Any]] = Field(min_length=1)
 
 
+class TriageError(BaseModel):
+    """Typed triage-error classification embedded in blocked step receipts."""
+
+    model_config = ConfigDict(extra="allow")
+
+    code: str = Field(min_length=1)
+    cause: str = Field(min_length=1)
+    next_command: str = Field(min_length=1)
+
+
 class NodeReceipt(ArtifactEnvelope):
     schema_name: Literal["tau.generic_dag_node_receipt.v1"] = Field(alias="schema")
     node_id: str = Field(min_length=1)
@@ -48,7 +58,7 @@ class NodeReceipt(ArtifactEnvelope):
     verdict: Literal["PASS", "BLOCKED"]
     errors: list[str]
     pydantic_errors: list[dict[str, Any]]
-    triage_errors: list[dict[str, Any]]
+    triage_errors: list[TriageError]
 
     @model_validator(mode="after")
     def blocked_receipts_need_typed_error_data(self) -> "NodeReceipt":

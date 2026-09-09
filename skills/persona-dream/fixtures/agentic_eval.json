@@ -12,7 +12,10 @@
       "id": "persona_dream.agentic_pipeline_driver",
       "description": "Agentic-evals, not self-authored pytest suites, drives pipeline step readiness via runnable commands and artifact readbacks.",
       "criticality": "critical",
-      "evidence_required": {"deterministic": true, "fault_injected_deterministic": true}
+      "evidence_required": {
+        "deterministic": true,
+        "fault_injected_deterministic": true
+      }
     }
   ],
   "cases": [
@@ -22,9 +25,23 @@
       "evidence_class": "fault_injected_deterministic",
       "real_world": true,
       "required": true,
-      "supports_claims": ["persona_dream.agentic_pipeline_driver"],
-      "command": ["bash", "-c", "T=$(mktemp -d); echo '{\"not_schema\":1}' > \"$T/input.json\"; uv run --project .. python ../scripts/dag_step.py --node-id eval-gate --command noop --receipt \"$T/receipt.json\" --run-dir \"$T\" --consumes input.json --produces ''; ec=$?; cat \"$T/receipt.json\"; exit $((ec==1 ? 0 : 1))"],
-      "expected": {"exit_code": 0, "stdout_contains": ["pydantic_errors", "triage_errors", "persona_dream_pydantic_step_gate_failed", "BLOCKED"]}
+      "supports_claims": [
+        "persona_dream.agentic_pipeline_driver"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d); echo '{\"not_schema\":1}' > \"$T/input.json\"; uv run --project .. python ../scripts/dag_step.py --node-id eval-gate --command noop --receipt \"$T/receipt.json\" --run-dir \"$T\" --consumes input.json --produces ''; ec=$?; cat \"$T/receipt.json\"; exit $((ec==1 ? 0 : 1))"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "pydantic_errors",
+          "triage_errors",
+          "persona_dream_pydantic_step_gate_failed",
+          "BLOCKED"
+        ]
+      }
     },
     {
       "name": "video-plan-blocks-without-crew-casting",
@@ -32,9 +49,20 @@
       "evidence_class": "fault_injected_deterministic",
       "real_world": true,
       "required": true,
-      "supports_claims": ["persona_dream.agentic_pipeline_driver"],
-      "command": ["bash", "-lc", "D=$(mktemp -d /tmp/persona-dream-eval-nocrew.XXXXXX); set +e; bash ../run.sh generate --mode video_plan --persona horus --secondary-persona embry --fixture ../scripts/fixtures/sample_residue.json --about 'creating the SPARTA Explorer app' --scene 'Horus and Embry have tea under a patio umbrella on a void world.' --duration-seconds 30 --output-dir \"$D\" --run-id eval-nocrew --no-write-memory >/dev/null; RC=$?; set -e; python3 - \"$D\" \"$RC\" <<'PY'\nimport json, sys\nfrom pathlib import Path\nout=Path(sys.argv[1]); rc=int(sys.argv[2])\nassert rc == 3, rc\nresp=json.loads((out/'response.json').read_text())\nassert resp['status']=='blocked' and resp['reason']=='crew_casting_required', resp\nassert not (out/'storyboard.json').exists()\nprint('VIDEO_PLAN_CREW_GATE_BLOCKED_OK')\nPY"],
-      "expected": {"exit_code": 0, "stdout_contains": ["VIDEO_PLAN_CREW_GATE_BLOCKED_OK"]}
+      "supports_claims": [
+        "persona_dream.agentic_pipeline_driver"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "D=$(mktemp -d /tmp/persona-dream-eval-nocrew.XXXXXX); set +e; bash ../run.sh generate --mode video_plan --persona horus --secondary-persona embry --fixture ../scripts/fixtures/sample_residue.json --about 'creating the SPARTA Explorer app' --scene 'Horus and Embry have tea under a patio umbrella on a void world.' --duration-seconds 30 --output-dir \"$D\" --run-id eval-nocrew --no-write-memory >/dev/null; RC=$?; set -e; python3 - \"$D\" \"$RC\" <<'PY'\nimport json, sys\nfrom pathlib import Path\nout=Path(sys.argv[1]); rc=int(sys.argv[2])\nassert rc == 3, rc\nresp=json.loads((out/'response.json').read_text())\nassert resp['status']=='blocked' and resp['reason']=='crew_casting_required', resp\nassert not (out/'storyboard.json').exists()\nprint('VIDEO_PLAN_CREW_GATE_BLOCKED_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "VIDEO_PLAN_CREW_GATE_BLOCKED_OK"
+        ]
+      }
     },
     {
       "name": "video-plan-with-crew-produces-readback-artifacts",
@@ -42,10 +70,21 @@
       "evidence_class": "deterministic",
       "real_world": true,
       "required": true,
-      "supports_claims": ["persona_dream.agentic_pipeline_driver"],
+      "supports_claims": [
+        "persona_dream.agentic_pipeline_driver"
+      ],
       "timeout_seconds": 240,
-      "command": ["bash", "-lc", "D=$(mktemp -d /tmp/persona-dream-eval-video-plan.XXXXXX); bash ../run.sh generate --mode video_plan --persona horus --secondary-persona embry --fixture ../scripts/fixtures/sample_residue.json --crew-dir ../scripts/fixtures/crew --about 'creating the SPARTA Explorer app' --scene 'Horus and Embry have tea under a patio umbrella on a void world.' --duration-seconds 30 --output-dir \"$D\" --run-id eval-video-plan --no-write-memory >/dev/null; python3 - \"$D\" <<'PY'\nimport json, sys\nfrom pathlib import Path\nout=Path(sys.argv[1])\nfor name in ['storyboard.json','timed_transcript.json','multimodal_prompts.json','voice_handoff_plan.json','manifest.json']:\n    assert (out/name).is_file(), name\ntimed=json.loads((out/'timed_transcript.json').read_text())\nvoice=json.loads((out/'voice_handoff_plan.json').read_text())\nassert timed['duration_seconds']==30 and len(timed['shots'])==4, timed\nassert voice['owner']=='create-movie/audio-lane', voice\nprint('VIDEO_PLAN_CREW_ARTIFACT_READBACK_OK')\nPY"],
-      "expected": {"exit_code": 0, "stdout_contains": ["VIDEO_PLAN_CREW_ARTIFACT_READBACK_OK"]}
+      "command": [
+        "bash",
+        "-lc",
+        "D=$(mktemp -d /tmp/persona-dream-eval-video-plan.XXXXXX); bash ../run.sh generate --mode video_plan --persona horus --secondary-persona embry --fixture ../scripts/fixtures/sample_residue.json --crew-dir ../scripts/fixtures/crew --about 'creating the SPARTA Explorer app' --scene 'Horus and Embry have tea under a patio umbrella on a void world.' --duration-seconds 30 --output-dir \"$D\" --run-id eval-video-plan --no-write-memory >/dev/null; python3 - \"$D\" <<'PY'\nimport json, sys\nfrom pathlib import Path\nout=Path(sys.argv[1])\nfor name in ['storyboard.json','timed_transcript.json','multimodal_prompts.json','voice_handoff_plan.json','manifest.json']:\n    assert (out/name).is_file(), name\ntimed=json.loads((out/'timed_transcript.json').read_text())\nvoice=json.loads((out/'voice_handoff_plan.json').read_text())\nassert timed['duration_seconds']==30 and len(timed['shots'])==4, timed\nassert voice['owner']=='create-movie/audio-lane', voice\nprint('VIDEO_PLAN_CREW_ARTIFACT_READBACK_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "VIDEO_PLAN_CREW_ARTIFACT_READBACK_OK"
+        ]
+      }
     },
     {
       "name": "provider-packet-routing-readback",
@@ -53,9 +92,20 @@
       "evidence_class": "deterministic",
       "real_world": true,
       "required": true,
-      "supports_claims": ["persona_dream.agentic_pipeline_driver"],
-      "command": ["bash", "-lc", "OUT=/tmp/persona-dream-video-provider-packet-routing-agentic.json; bash ../run.sh check-video-provider-packet-routing --fixtures-root ../fixtures/contract/video-provider-packet-routing --receipt-out \"$OUT\" --json >/dev/null; python3 - <<'PY'\nimport json\nr=json.load(open('/tmp/persona-dream-video-provider-packet-routing-agentic.json'))\nassert r['status']=='PASS_VIDEO_PROVIDER_PACKET_ROUTING', r\nassert r['fixture_count']==3, r\nassert r['actual_provider_call_attempts']==0 and r['submitted'] is False, r\nprint('PROVIDER_PACKET_ROUTING_READBACK_OK')\nPY"],
-      "expected": {"exit_code": 0, "stdout_contains": ["PROVIDER_PACKET_ROUTING_READBACK_OK"]}
+      "supports_claims": [
+        "persona_dream.agentic_pipeline_driver"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "OUT=/tmp/persona-dream-video-provider-packet-routing-agentic.json; bash ../run.sh check-video-provider-packet-routing --fixtures-root ../fixtures/contract/video-provider-packet-routing --receipt-out \"$OUT\" --json >/dev/null; python3 - <<'PY'\nimport json\nr=json.load(open('/tmp/persona-dream-video-provider-packet-routing-agentic.json'))\nassert r['status']=='PASS_VIDEO_PROVIDER_PACKET_ROUTING', r\nassert r['fixture_count']==3, r\nassert r['actual_provider_call_attempts']==0 and r['submitted'] is False, r\nprint('PROVIDER_PACKET_ROUTING_READBACK_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PROVIDER_PACKET_ROUTING_READBACK_OK"
+        ]
+      }
     },
     {
       "name": "pipeline-integrity-audit-runs-without-pytest",
@@ -63,9 +113,41 @@
       "evidence_class": "deterministic",
       "real_world": true,
       "required": true,
-      "supports_claims": ["persona_dream.agentic_pipeline_driver"],
-      "command": ["bash", "-lc", "OUT=/tmp/persona-dream-pipeline-integrity-agentic.json; uv run --project .. python ../scripts/audit_pipeline_integrity.py --output \"$OUT\" --fail-on never >/dev/null; python3 - <<'PY'\nimport json\nr=json.load(open('/tmp/persona-dream-pipeline-integrity-agentic.json'))\nassert r['schema']=='persona_dream.pipeline_integrity_audit.v1', r\nassert r['file_count'] > 100, r\nprint('PIPELINE_INTEGRITY_AUDIT_READBACK_OK', r['finding_file_count'])\nPY"],
-      "expected": {"exit_code": 0, "stdout_contains": ["PIPELINE_INTEGRITY_AUDIT_READBACK_OK"]}
+      "supports_claims": [
+        "persona_dream.agentic_pipeline_driver"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "OUT=/tmp/persona-dream-pipeline-integrity-agentic.json; uv run --project .. python ../scripts/audit_pipeline_integrity.py --output \"$OUT\" --fail-on never >/dev/null; python3 - <<'PY'\nimport json\nr=json.load(open('/tmp/persona-dream-pipeline-integrity-agentic.json'))\nassert r['schema']=='persona_dream.pipeline_integrity_audit.v1', r\nassert r['file_count'] > 100, r\nprint('PIPELINE_INTEGRITY_AUDIT_READBACK_OK', r['finding_file_count'])\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PIPELINE_INTEGRITY_AUDIT_READBACK_OK"
+        ]
+      }
+    },
+    {
+      "name": "spine-contract-requires-pydantic-triage-step-boundaries",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "real_world": true,
+      "required": true,
+      "supports_claims": [
+        "persona_dream.agentic_pipeline_driver"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "OUT=/tmp/persona-dream-pipeline-contract-agentic.json; bash ../run.sh check-pipeline-contract --receipt-out \"$OUT\" --json >/dev/null; python3 - <<'PY2'\nimport json, yaml\nfrom pathlib import Path\nr=json.load(open('/tmp/persona-dream-pipeline-contract-agentic.json'))\nassert r['status']=='PASS_PERSONA_DREAM_PIPELINE_CONTRACT', r\nspine=yaml.safe_load(Path('../contracts/dream_spine.v1.yaml').read_text())\nfor step in spine['steps']:\n    assert isinstance(step.get('consumes'), list), step\n    assert step.get('validation') == {'input':'pydantic_first','output':'pydantic_first','failure':'triage-error'}, step\nprint('PYDANTIC_TRIAGE_STEP_BOUNDARIES_OK', len(spine['steps']))\nPY2"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PYDANTIC_TRIAGE_STEP_BOUNDARIES_OK"
+        ]
+      }
     }
   ]
 }

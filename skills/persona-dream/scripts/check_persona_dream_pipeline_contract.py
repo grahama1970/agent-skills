@@ -21,7 +21,9 @@ REQUIRED_STEP_FIELDS = (
     "name",
     "command",
     "args",
+    "consumes",
     "produces",
+    "validation",
     "proves",
     "does_not_prove",
 )
@@ -130,6 +132,12 @@ def check_pipeline_contract(path: Path = DEFAULT_CONTRACT) -> dict[str, Any]:
         command = str(step.get("command") or "")
         if command and command not in commands:
             blockers.append(f"BLOCKED_STEP_{step_id or index}_UNKNOWN_COMMAND:{command}")
+        consumes = step.get("consumes")
+        if not isinstance(consumes, list):
+            blockers.append(f"BLOCKED_STEP_{step_id or index}_CONSUMES_NOT_LIST")
+        validation = step.get("validation")
+        if validation != {"input": "pydantic_first", "output": "pydantic_first", "failure": "triage-error"}:
+            blockers.append(f"BLOCKED_STEP_{step_id or index}_VALIDATION_NOT_PYDANTIC_TRIAGE")
         produces = step.get("produces")
         if not isinstance(produces, list) or not produces:
             blockers.append(f"BLOCKED_STEP_{step_id or index}_NO_PRODUCES")
