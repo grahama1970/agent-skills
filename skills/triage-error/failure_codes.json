@@ -36,6 +36,23 @@
       ]
     },
     {
+      "code": "project_watchdog_target_ownership_conflict",
+      "layer": "project-watchdog",
+      "match": [
+        "target ownership conflict",
+        "unowned_target_edit",
+        "distinct_staged_target_intent"
+      ],
+      "cause": "A watchdog repair target differs from origin/main and is not already owned by this retained operation, so the scheduler must not adopt or overwrite it.",
+      "next_command": "read the receipt target-ownership.json, wait for or finish the owner of the target change, then rerun recover_primary.py for the same root; do not reset, stash, or widen the target set",
+      "recoverable": true,
+      "not_this": [
+        "repo-wide dirty checkout",
+        "unrelated untracked files",
+        "GitHub auth failure"
+      ]
+    },
+    {
       "code": "persona_dream_kling_provider_top_up_required",
       "layer": "persona-dream",
       "match": [
