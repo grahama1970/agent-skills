@@ -2099,15 +2099,22 @@ def legacy_route_task(project: dict[str, Any], issue: dict[str, Any], receipt_di
 
 def required_proof_clauses(body: str) -> list[str]:
     collecting, in_fence, clauses = False, False, []
+    proof_depth = 0
     for line in body.splitlines():
         stripped = line.strip()
-        heading = re.match(r"^#{1,6}\s+(.+)$", stripped)
-        if heading:
-            collecting = heading.group(1).strip().lower() == "required proof"
-            in_fence = False
-        elif collecting and stripped.startswith("```"):
+        if collecting and stripped.startswith("```"):
             in_fence = not in_fence
-        elif collecting and stripped and not in_fence:
+            continue
+        if in_fence:
+            continue
+        heading = re.match(r"^(#{1,6})\s+(.+)$", stripped)
+        if heading:
+            depth = len(heading.group(1))
+            if heading.group(2).strip().lower() == "required proof":
+                collecting, proof_depth = True, depth
+            elif collecting and depth <= proof_depth:
+                collecting = False
+        elif collecting and stripped:
             clauses.append(stripped)
     if not clauses:
         clauses = [m.group(1).strip() for m in re.finditer(r"(?im)^proof:\s*(.+)$", body)]

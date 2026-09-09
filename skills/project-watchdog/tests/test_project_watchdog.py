@@ -766,15 +766,21 @@ def test_review_commit_lines_keep_invalid_sha_out_of_valid_set() -> None:
 def test_required_proof_clauses_skip_fenced_command_bodies() -> None:
     body = """## Required proof
 
+### Deterministic
 Run the eval.
 
 ```bash
+# ignored heading inside a fenced command
 python - <<'PY'
 print('not a separate clause')
 PY
 ```
 
+### Live E2E
 Read back the receipt.
+
+## Non-goals
+Do not collect this unrelated section.
 """
     assert handlers.required_proof_clauses(body) == ["Run the eval.", "Read back the receipt."]
 
