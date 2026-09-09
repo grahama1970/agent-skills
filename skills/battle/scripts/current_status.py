@@ -11,7 +11,9 @@ import re
 import subprocess
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
+
+from pydantic import BaseModel, ConfigDict, ValidationError, model_validator
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -53,6 +55,70 @@ ADAPTIVE_LINEAGE_QUALIFICATION_SCHEMAS = {
 }
 
 MIN_ADAPTIVE_LINEAGE_CHECKS = 11
+SUPPORTED_TERMINAL_STATES = (
+    "BLUE_SUCCESS",
+    "RED_SUCCESS",
+    "INSUFFICIENT_EVIDENCE",
+    "BLOCKED",
+    "UNAVAILABLE",
+)
+UNSUPPORTED_TERMINAL_ALIASES = {"kill", "promotion", "fastest_crash"}
+TERMINAL_RECEIPT_SCHEMAS = (
+    "battle.arena_tau_public_only_judge_receipt.v1",
+    "battle.arena_tau_public_only_run_receipt.v1",
+    "battle.tiered_live_qualification_gate.v1",
+    "battle.same_run_arena_pixi_qualification.v1",
+)
+TERMINAL_SEMANTICS_RECEIPT_PATH = Path(
+    os.environ.get("BATTLE_TERMINAL_SEMANTICS_RECEIPT", "/tmp/battle-current-status-terminal-semantics.json")
+)
+
+
+class TerminalSemanticsEvidence(BaseModel):
+    """Typed terminal-result evidence accepted by the local MVP."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    terminal_state: Literal[
+        "BLUE_SUCCESS",
+        "RED_SUCCESS",
+        "INSUFFICIENT_EVIDENCE",
+        "BLOCKED",
+        "UNAVAILABLE",
+    ]
+    source_schema: Literal[
+        "battle.arena_tau_public_only_judge_receipt.v1",
+        "battle.arena_tau_public_only_run_receipt.v1",
+        "battle.tiered_live_qualification_gate.v1",
+        "battle.same_run_arena_pixi_qualification.v1",
+    ]
+    source_status: Literal["PASS"]
+    source_authority: Literal["judge", "scorekeeper"]
+    judge_verdict: Literal[
+        "BLUE_SUCCESS",
+        "RED_SUCCESS",
+        "INSUFFICIENT_EVIDENCE",
+        "BLOCKED",
+        "UNAVAILABLE",
+    ] | None = None
+    scorekeeper_status: Literal[
+        "BLUE_SUCCESS",
+        "RED_SUCCESS",
+        "INSUFFICIENT_EVIDENCE",
+        "BLOCKED",
+        "UNAVAILABLE",
+    ] | None = None
+    crash_observation_only: bool = False
+
+    @model_validator(mode="after")
+    def require_authoritative_terminal_evidence(self) -> "TerminalSemanticsEvidence":
+        if self.crash_observation_only:
+            raise ValueError("crash observations are not terminal evidence without a typed Judge result")
+        if self.source_authority == "judge" and self.judge_verdict != self.terminal_state:
+            raise ValueError("Judge-backed terminal evidence must carry a matching typed judge_verdict")
+        if self.source_authority == "scorekeeper" and self.scorekeeper_status != self.terminal_state:
+            raise ValueError("scorekeeper terminal evidence must carry a matching scorekeeper_status")
+        return self
 
 
 def _utc() -> str:
@@ -971,6 +1037,175 @@ def _source_context_item(path: str) -> dict[str, Any]:
     return {"path": path, "exists": resolved.is_file()}
 
 
+def _terminal_decision(status: dict[str, Any]) -> dict[str, Any]:
+    for item in status.get("decisions") or []:
+        if item.get("id") == "terminal_semantics_local_mvp":
+            return item
+    return {}
+
+
+def _terminal_gap(status: dict[str, Any]) -> dict[str, Any]:
+    for item in status.get("production_gaps") or []:
+        if item.get("id") == "terminal_semantics_implementation":
+            return item
+    return {}
+
+
+def _evaluate_terminal_candidate(candidate: dict[str, Any]) -> dict[str, Any]:
+    terminal_state = candidate.get("terminal_state")
+    if terminal_state in UNSUPPORTED_TERMINAL_ALIASES:
+        return {
+            "decision": "REJECT",
+            "reason": "unsupported_terminal_alias",
+            "terminal_state": terminal_state,
+        }
+    try:
+        evidence = TerminalSemanticsEvidence.model_validate(candidate)
+    except ValidationError as exc:
+        return {
+            "decision": "REJECT",
+            "reason": "typed_terminal_evidence_rejected",
+            "terminal_state": terminal_state,
+            "validation_errors": exc.errors(include_context=False),
+        }
+    return {
+        "decision": "ACCEPT",
+        "reason": "typed_terminal_evidence_accepted",
+        "terminal_state": evidence.terminal_state,
+        "source_schema": evidence.source_schema,
+        "source_authority": evidence.source_authority,
+    }
+
+
+def _terminal_semantics_receipt(status: dict[str, Any]) -> dict[str, Any]:
+    candidates = {
+        "accepts_typed_judge_blue_success": {
+            "terminal_state": "BLUE_SUCCESS",
+            "source_schema": "battle.arena_tau_public_only_judge_receipt.v1",
+            "source_status": "PASS",
+            "source_authority": "judge",
+            "judge_verdict": "BLUE_SUCCESS",
+            "crash_observation_only": False,
+        },
+        "rejects_kill_alias": {
+            "terminal_state": "kill",
+            "source_schema": "battle.arena_tau_public_only_judge_receipt.v1",
+            "source_status": "PASS",
+            "source_authority": "judge",
+            "judge_verdict": "RED_SUCCESS",
+            "crash_observation_only": False,
+        },
+        "rejects_fastest_crash_alias": {
+            "terminal_state": "fastest_crash",
+            "source_schema": "battle.arena_tau_public_only_judge_receipt.v1",
+            "source_status": "PASS",
+            "source_authority": "judge",
+            "judge_verdict": "RED_SUCCESS",
+            "crash_observation_only": False,
+        },
+        "rejects_crash_only_promotion": {
+            "terminal_state": "RED_SUCCESS",
+            "source_schema": "battle.arena_tau_public_only_judge_receipt.v1",
+            "source_status": "PASS",
+            "source_authority": "judge",
+            "judge_verdict": "RED_SUCCESS",
+            "crash_observation_only": True,
+        },
+        "rejects_promotion_alias": {
+            "terminal_state": "promotion",
+            "source_schema": "battle.arena_tau_public_only_run_receipt.v1",
+            "source_status": "PASS",
+            "source_authority": "scorekeeper",
+            "scorekeeper_status": "BLUE_SUCCESS",
+            "crash_observation_only": False,
+        },
+    }
+    cases = [
+        {"name": name, "candidate": candidate, **_evaluate_terminal_candidate(candidate)}
+        for name, candidate in candidates.items()
+    ]
+    case_by_name = {case["name"]: case for case in cases}
+    decision = _terminal_decision(status)
+    gap = _terminal_gap(status)
+    checks = [
+        {
+            "name": "supported_states_match_local_mvp",
+            "status": "PASS"
+            if decision.get("supported_states") == list(SUPPORTED_TERMINAL_STATES)
+            else "FAIL",
+            "supported_states": decision.get("supported_states"),
+        },
+        {
+            "name": "unsupported_aliases_declared",
+            "status": "PASS"
+            if set(decision.get("unsupported_states") or []) >= UNSUPPORTED_TERMINAL_ALIASES
+            else "FAIL",
+            "unsupported_states": decision.get("unsupported_states"),
+        },
+        {
+            "name": "terminal_semantics_implementation_executable",
+            "status": "PASS"
+            if gap.get("status") == "IMPLEMENTED" and bool(gap.get("receipt"))
+            else "FAIL",
+            "gap": gap,
+        },
+        {
+            "name": "typed_judge_terminal_result_accepted",
+            "status": "PASS"
+            if case_by_name["accepts_typed_judge_blue_success"]["decision"] == "ACCEPT"
+            else "FAIL",
+            "case": case_by_name["accepts_typed_judge_blue_success"],
+        },
+        {
+            "name": "kill_alias_rejected",
+            "status": "PASS"
+            if case_by_name["rejects_kill_alias"]["decision"] == "REJECT"
+            else "FAIL",
+            "case": case_by_name["rejects_kill_alias"],
+        },
+        {
+            "name": "fastest_crash_alias_rejected",
+            "status": "PASS"
+            if case_by_name["rejects_fastest_crash_alias"]["decision"] == "REJECT"
+            else "FAIL",
+            "case": case_by_name["rejects_fastest_crash_alias"],
+        },
+        {
+            "name": "crash_only_promotion_rejected",
+            "status": "PASS"
+            if case_by_name["rejects_crash_only_promotion"]["decision"] == "REJECT"
+            else "FAIL",
+            "case": case_by_name["rejects_crash_only_promotion"],
+        },
+    ]
+    return {
+        "schema": "battle.terminal_semantics_validation.v1",
+        "status": "PASS" if all(item["status"] == "PASS" for item in checks) else "FAIL",
+        "mocked": False,
+        "live": True,
+        "created_at": _utc(),
+        "source": {
+            "current_status": str(STATUS_PATH),
+            "terminal_semantics_decision": "skills/battle/docs/TERMINAL_SEMANTICS_LOCAL_MVP.md",
+        },
+        "supported_states": list(SUPPORTED_TERMINAL_STATES),
+        "unsupported_aliases": sorted(UNSUPPORTED_TERMINAL_ALIASES),
+        "accepted": [case for case in cases if case["decision"] == "ACCEPT"],
+        "rejected": [case for case in cases if case["decision"] == "REJECT"],
+        "checks": checks,
+    }
+
+
+def _write_terminal_semantics_receipt(status: dict[str, Any]) -> dict[str, Any]:
+    receipt = _terminal_semantics_receipt(status)
+    TERMINAL_SEMANTICS_RECEIPT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    TERMINAL_SEMANTICS_RECEIPT_PATH.write_text(
+        json.dumps(receipt, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return receipt
+
+
 def _issue_ref(issue: dict[str, Any]) -> dict[str, Any]:
     return {
         "number": issue["number"],
@@ -1330,6 +1565,8 @@ def generate(out: Path) -> int:
                 "issue_refs": [1148],
                 "status": "DECIDED",
                 "path": "skills/battle/docs/TERMINAL_SEMANTICS_LOCAL_MVP.md",
+                "implementation_status": "EXECUTABLE_VALIDATION_BOUNDARY",
+                "implementation_receipt": str(TERMINAL_SEMANTICS_RECEIPT_PATH),
                 "supported_states": [
                     "BLUE_SUCCESS",
                     "RED_SUCCESS",
@@ -1370,7 +1607,13 @@ def generate(out: Path) -> int:
         ],
         "production_gaps": [
             {"id": "staging_infrastructure_readiness", "issue_refs": [1149], "status": "NON_GOAL_UNPROVEN"},
-            {"id": "terminal_semantics_implementation", "issue_refs": [1148], "status": "DECIDED_DOC_ONLY"},
+            {
+                "id": "terminal_semantics_implementation",
+                "issue_refs": [1148, 1632],
+                "status": "IMPLEMENTED",
+                "receipt": str(TERMINAL_SEMANTICS_RECEIPT_PATH),
+                "proof": "current-status check writes battle.terminal_semantics_validation.v1 and rejects kill, promotion, fastest_crash, and crash-only terminal promotion.",
+            },
         ],
         "non_claims": [
             "This status does not claim production deployment readiness.",
@@ -1552,7 +1795,21 @@ def check(path: Path) -> int:
         if phrase in lower_docs:
             errors.append(f"unsupported_claim_in_docs_status:{phrase}")
 
-    print(json.dumps({"status": "PASS" if not errors else "FAIL", "path": str(path), "errors": errors}, indent=2))
+    terminal_receipt = _write_terminal_semantics_receipt(status)
+    if terminal_receipt.get("status") != "PASS":
+        errors.append("terminal_semantics_validation_not_pass")
+
+    print(
+        json.dumps(
+            {
+                "status": "PASS" if not errors else "FAIL",
+                "path": str(path),
+                "terminal_semantics_receipt": str(TERMINAL_SEMANTICS_RECEIPT_PATH),
+                "errors": errors,
+            },
+            indent=2,
+        )
+    )
     return 0 if not errors else 1
 
 

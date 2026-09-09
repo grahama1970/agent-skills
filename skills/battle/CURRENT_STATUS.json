@@ -3,6 +3,8 @@
   "decisions": [
     {
       "id": "terminal_semantics_local_mvp",
+      "implementation_receipt": "/tmp/battle-current-status-terminal-semantics.json",
+      "implementation_status": "EXECUTABLE_VALIDATION_BOUNDARY",
       "issue_refs": [
         1148
       ],
@@ -29,8 +31,83 @@
   },
   "immutable_goal_status": "MET",
   "issue_state_at_generation": {
-    "all_battle_label_issue_count": 47,
+    "all_battle_label_issue_count": 52,
     "all_battle_label_issues": [
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "lane:be",
+          "route:backend_python_or_skill_runtime",
+          "skill-maintenance",
+          "type:maintenance"
+        ],
+        "number": 1636,
+        "state": "OPEN",
+        "title": "Battle: keep fast sanity and live qualification proof rungs separate",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1636"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "lane:be",
+          "route:backend_python_or_skill_runtime",
+          "skill-maintenance",
+          "type:maintenance"
+        ],
+        "number": 1635,
+        "state": "OPEN",
+        "title": "Battle: gate unsupported readiness claims in CURRENT_STATUS",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1635"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "lane:be",
+          "route:backend_python_or_skill_runtime",
+          "skill-optimization",
+          "type:optimization"
+        ],
+        "number": 1634,
+        "state": "OPEN",
+        "title": "Battle: make receipt-derived commentary causally useful",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1634"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "lane:be",
+          "route:backend_python_or_skill_runtime",
+          "type:feature"
+        ],
+        "number": 1633,
+        "state": "OPEN",
+        "title": "Battle: prove adaptive improvement effect separately from lineage",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1633"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "lane:be",
+          "maintainer-active",
+          "route:backend_python_or_skill_runtime",
+          "skill-bug",
+          "type:bug"
+        ],
+        "number": 1632,
+        "state": "OPEN",
+        "title": "Battle: enforce Judge-backed terminal semantics in code",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1632"
+      },
       {
         "labels": [
           "agent-work",
@@ -711,8 +788,84 @@
       "1144": "CLOSED",
       "1150": "CLOSED"
     },
-    "open_battle_label_count": 0,
-    "open_battle_label_issues": []
+    "open_battle_label_count": 5,
+    "open_battle_label_issues": [
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "lane:be",
+          "route:backend_python_or_skill_runtime",
+          "skill-maintenance",
+          "type:maintenance"
+        ],
+        "number": 1636,
+        "state": "OPEN",
+        "title": "Battle: keep fast sanity and live qualification proof rungs separate",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1636"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "lane:be",
+          "route:backend_python_or_skill_runtime",
+          "skill-maintenance",
+          "type:maintenance"
+        ],
+        "number": 1635,
+        "state": "OPEN",
+        "title": "Battle: gate unsupported readiness claims in CURRENT_STATUS",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1635"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "lane:be",
+          "route:backend_python_or_skill_runtime",
+          "skill-optimization",
+          "type:optimization"
+        ],
+        "number": 1634,
+        "state": "OPEN",
+        "title": "Battle: make receipt-derived commentary causally useful",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1634"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "lane:be",
+          "route:backend_python_or_skill_runtime",
+          "type:feature"
+        ],
+        "number": 1633,
+        "state": "OPEN",
+        "title": "Battle: prove adaptive improvement effect separately from lineage",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1633"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "lane:be",
+          "maintainer-active",
+          "route:backend_python_or_skill_runtime",
+          "skill-bug",
+          "type:bug"
+        ],
+        "number": 1632,
+        "state": "OPEN",
+        "title": "Battle: enforce Judge-backed terminal semantics in code",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1632"
+      }
+    ]
   },
   "non_claims": [
     "This status does not claim production deployment readiness.",
@@ -741,9 +894,12 @@
     {
       "id": "terminal_semantics_implementation",
       "issue_refs": [
-        1148
+        1148,
+        1632
       ],
-      "status": "DECIDED_DOC_ONLY"
+      "proof": "current-status check writes battle.terminal_semantics_validation.v1 and rejects kill, promotion, fastest_crash, and crash-only terminal promotion.",
+      "receipt": "/tmp/battle-current-status-terminal-semantics.json",
+      "status": "IMPLEMENTED"
     }
   ],
   "proven": [
@@ -1224,5 +1380,5 @@
       "status": "UNSUPPORTED"
     }
   ],
-  "updated_at": "2026-09-09T00:24:43Z"
+  "updated_at": "2026-09-09T17:26:33Z"
 }

@@ -6,10 +6,10 @@
   "live": true,
   "proof_scope": "Battle feature regression coverage through existing Battle entrypoints, local Docker proof receipts, local transport receipts, receipt-backed Pixi replay browser proof, focused contract suites, an explicit fail-closed adaptive-lineage exact-chain receipt gate, and explicit uncovered seams for Battle features that still need agentic evals",
   "claims": {
-    "proves": "Battle's authorization gate, isolated local Docker reactive Judge round, Red/Judge/Blue visibility boundary, scorekeeper authority, adaptive-lineage contract guards, durable adaptive-lineage exact-chain proof, browser-visible receipt-backed Pixi replay, immutable-goal close-gate readiness, Pydantic arena/Red/Blue/play-by-play event receipts, memory-lineage contract guards, same-run transport, pause/resume transport safety, and staging fail-closed behavior are covered by agentic eval seams with artifact readback",
+    "proves": "Battle's authorization gate, isolated local Docker reactive Judge round, Red/Judge/Blue visibility boundary, scorekeeper authority, terminal semantics fail-closed validation, adaptive-lineage contract guards, durable adaptive-lineage exact-chain proof, browser-visible receipt-backed Pixi replay, immutable-goal close-gate readiness, Pydantic arena/Red/Blue/play-by-play event receipts, memory-lineage contract guards, same-run transport, pause/resume transport safety, and staging fail-closed behavior are covered by agentic eval seams with artifact readback",
     "does_not_prove": "arbitrary target exploitability, a real 1000-round overnight campaign, QEMU boot execution, production WebSocket TLS/auth/fanout against a real public endpoint, or full visual design acceptance"
   },
-  "what_was_exercised": "uv-run Battle probe script invocations that call Battle run.sh commands, local Docker proof generation, focused pytest contract suites, independent JSON receipt readback, and a built spectator bundle served over local HTTP for Playwright Pixi replay proof",
+  "what_was_exercised": "uv-run Battle probe script invocations that call Battle run.sh commands, local Docker proof generation, current-status terminal-semantics receipt readback, focused pytest contract suites, independent JSON receipt readback, and a built spectator bundle served over local HTTP for Playwright Pixi replay proof",
   "what_remains_unverified": "external staging authority bundle (#1149), production WebSocket TLS/auth/fanout against a real public endpoint, a real 1000-round overnight campaign, QEMU boot execution, arbitrary target exploitability, and full visual design acceptance",
   "capability_claims": [
     {
@@ -151,6 +151,14 @@
     {
       "id": "battle.current_status.proof_chain_revalidation",
       "description": "The current-status checker rereads the selected proof manifest, recomputes referenced receipt hashes, validates schemas, and rejects cross-campaign substitutions before accepting MET.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
+    },
+    {
+      "id": "battle.current_status.terminal_semantics",
+      "description": "Battle current-status validates local MVP terminal semantics through typed Judge/scorekeeper evidence and rejects kill, fastest_crash, promotion aliases, and crash-only promotion.",
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
@@ -535,6 +543,21 @@
         "CURRENT_STATUS.json passes MET from cached primary_proof booleans without rereading selected proof manifests",
         "CURRENT_STATUS.json passes after referenced receipt bytes no longer match cached hashes",
         "CURRENT_STATUS.json passes when proven claim paths or evidence refer to a different provider/Tau campaign than the selected source receipts"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "current_status.terminal_semantics",
+      "claim_id": "battle.current_status.terminal_semantics",
+      "seam_type": "typed terminal-result validation",
+      "criticality": "critical",
+      "failure_modes": [
+        "kill is accepted as a terminal success alias",
+        "fastest_crash is accepted as a terminal success alias",
+        "promotion is accepted without a supported local MVP terminal state",
+        "crash-only evidence promotes a terminal result without typed Judge evidence"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -1304,6 +1327,45 @@
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-terminal-semantics",
+      "category": "battle-terminal-semantics",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.current_status.terminal_semantics"
+      ],
+      "seams": [
+        "current_status.terminal_semantics"
+      ],
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-terminal-semantics --summary /tmp/battle-agentic-evals/battle-terminal-semantics.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-terminal-semantics"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-terminal-semantics.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          },
+          {
+            "path": "/tmp/battle-agentic-evals/battle-terminal-semantics/terminal-semantics-receipt.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 1000
           }
         ]
       }

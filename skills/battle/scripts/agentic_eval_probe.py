@@ -3658,6 +3658,103 @@ def probe_review_current_status_proof_chain(summary_path: Path) -> int:
     )
 
 
+def _parse_json_object(text: str) -> dict[str, Any]:
+    start = text.find("{")
+    end = text.rfind("}")
+    if start == -1 or end == -1 or end <= start:
+        raise AssertionError("stdout did not contain a JSON object")
+    return json.loads(text[start : end + 1])
+
+
+def probe_battle_terminal_semantics(summary_path: Path) -> int:
+    suite = "battle-terminal-semantics"
+    out_root = summary_path.parent / suite
+    if out_root.exists():
+        shutil.rmtree(out_root)
+    out_root.mkdir(parents=True)
+
+    receipt_path = out_root / "terminal-semantics-receipt.json"
+    check = _run_in(
+        [str(RUN_SH), "current-status", "check"],
+        cwd=REPO_ROOT,
+        timeout=180,
+        env={"BATTLE_TERMINAL_SEMANTICS_RECEIPT": str(receipt_path)},
+    )
+    (out_root / "current-status-check.stdout.txt").write_text(check.stdout, encoding="utf-8")
+    (out_root / "current-status-check.stderr.txt").write_text(check.stderr, encoding="utf-8")
+    if check.returncode != 0:
+        raise AssertionError("current-status check failed: " + check.stdout + check.stderr)
+    output = _parse_json_object(check.stdout)
+    if output.get("status") != "PASS":
+        raise AssertionError(f"current-status check did not report PASS: {output}")
+    if Path(str(output.get("terminal_semantics_receipt") or "")) != receipt_path:
+        raise AssertionError(f"current-status output did not bind terminal receipt: {output}")
+    receipt = _read_json(receipt_path)
+    if receipt.get("status") != "PASS":
+        raise AssertionError(f"terminal-semantics receipt did not pass: {receipt}")
+
+    rejected = {case.get("name"): case for case in receipt.get("rejected") or []}
+    accepted = {case.get("name"): case for case in receipt.get("accepted") or []}
+    required_rejections = {
+        "rejects_kill_alias": "kill",
+        "rejects_fastest_crash_alias": "fastest_crash",
+        "rejects_crash_only_promotion": "RED_SUCCESS",
+        "rejects_promotion_alias": "promotion",
+    }
+    for case_name, terminal_state in required_rejections.items():
+        case = rejected.get(case_name) or {}
+        if case.get("decision") != "REJECT" or case.get("terminal_state") != terminal_state:
+            raise AssertionError(f"terminal rejection missing for {case_name}: {case}")
+    if (accepted.get("accepts_typed_judge_blue_success") or {}).get("decision") != "ACCEPT":
+        raise AssertionError("typed Judge BLUE_SUCCESS terminal evidence was not accepted")
+
+    checks = [
+        {
+            "name": "current_status_check_passed",
+            "status": "PASS",
+            "stdout": str(out_root / "current-status-check.stdout.txt"),
+        },
+        {
+            "name": "terminal_semantics_receipt_passed",
+            "status": "PASS",
+            "receipt": str(receipt_path),
+        },
+        {
+            "name": "kill_and_fastest_crash_rejected",
+            "status": "PASS",
+            "rejections": [
+                rejected["rejects_kill_alias"],
+                rejected["rejects_fastest_crash_alias"],
+            ],
+        },
+        {
+            "name": "crash_only_promotion_rejected",
+            "status": "PASS",
+            "rejection": rejected["rejects_crash_only_promotion"],
+        },
+    ]
+    return _emit(
+        summary_path,
+        _summary(
+            suite=suite,
+            live="battle_run_sh_current_status_check_with_terminal_semantics_receipt",
+            checks=checks,
+            artifacts={
+                "current_status_check_stdout": str(out_root / "current-status-check.stdout.txt"),
+                "terminal_semantics_receipt": str(receipt_path),
+            },
+            claims_proves=[
+                "Battle current-status check accepts terminal results only through typed Judge/scorekeeper receipt evidence.",
+                "kill, fastest_crash, promotion aliases and crash-only promotion fail closed.",
+            ],
+            claims_does_not_prove=[
+                "future kill or fastest_crash semantics with a new Judge receipt family",
+                "production deployment readiness",
+            ],
+        ),
+    )
+
+
 def probe_small_medium_production_battle(summary_path: Path) -> int:
     suite = "small-medium-production-battle"
     out_root = summary_path.parent / suite
@@ -3796,6 +3893,8 @@ def main() -> int:
             return probe_current_status_adaptive_lineage_receipt(args.summary)
         if args.suite == "review-current-status-proof-chain":
             return probe_review_current_status_proof_chain(args.summary)
+        if args.suite == "battle-terminal-semantics":
+            return probe_battle_terminal_semantics(args.summary)
         if args.suite == "adaptive-lineage-same-run-backend-contracts":
             return probe_pytest_contracts(
                 args.summary,
