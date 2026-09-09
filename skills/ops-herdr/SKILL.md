@@ -59,7 +59,7 @@ This skill is a wrapper; upstream is the authority on command shape.
 | Live schema on this machine | `herdr api schema --json` |
 | Installed version | `herdr status` (client + server + protocol) |
 
-Verified against **Herdr 0.8.0, protocol 19**.
+Verified against **Herdr 0.9.0, protocol 22**.
 
 `herdr api schema --json` is the ground truth for socket request methods,
 parameter shapes, and response fields; `herdr <group> --help` is ground truth
@@ -71,13 +71,13 @@ to the argv this skill builds. A wrong flag surfaces as `unknown option: --x`
 with exit 2, and a removed subcommand prints the group usage — neither is a
 Herdr outage.
 
-### Contract this skill builds against (0.8.0)
+### Contract this skill builds against (0.9.0)
 
-`scripts/ops_herdr_core.py` pins `PROTOCOL_MIN = 19` and every topology mutation
+`scripts/ops_herdr_core.py` pins `PROTOCOL_MIN = 22` and every topology mutation
 calls `require_protocol()` first, so an incompatible Herdr fails closed instead of
 half-building a workspace.
 
-| Concern | 0.8.0 contract |
+| Concern | 0.9.0 contract |
 |---|---|
 | Start an agent | `agent start <name> --kind KIND --pane PANE_ID` on a pane already at a shell prompt |
 | Submit a prompt | `agent prompt <target> <text> [--wait] [--until STATUS]` |

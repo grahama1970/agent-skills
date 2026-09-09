@@ -22,11 +22,11 @@ from loguru import logger
 
 SKILLS_DIR = Path(__file__).resolve().parents[2]
 
-# Verified against Herdr 0.8.0 / protocol 19. `herdr api schema --json` reports the
+# Verified against Herdr 0.9.0 / protocol 22. `herdr api schema --json` reports the
 # protocol; `herdr <group> --help` reports flags. Both outrank this file.
-PROTOCOL_MIN = 19
+PROTOCOL_MIN = 22
 
-# `herdr agent start --kind` enum, from `herdr agent start --help` on 0.8.0.
+# `herdr agent start --kind` enum, from `herdr agent start --help` on 0.9.0.
 AGENT_KINDS = frozenset(
     {
         "pi", "claude", "codex", "gemini", "cursor", "devin", "agy", "cline", "omp",
@@ -428,7 +428,7 @@ def pane_layout(
 ) -> dict[str, Any]:
     """Read the layout of the tab containing a pane.
 
-    Herdr 0.8.0 takes `--pane <ID>` (not a positional, and not a tab id) and returns
+    Herdr 0.9.0 takes `--pane <ID>` (not a positional, and not a tab id) and returns
     a flat `layout` with a `panes` list of leaves plus a `splits` list -- not a
     nested tree.
     """
