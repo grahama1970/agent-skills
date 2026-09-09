@@ -21,6 +21,7 @@ composes:
   - ask
   - best-practices-chatterbox
   - triage-error
+  - interview
 complies:
   - best-practices-skills
   - best-practices-python
@@ -132,6 +133,71 @@ Native tags use Turbo with intensity as a *contextual target*, not an applied
 numeric knob; numeric-intensity cases contain no native tags. Both contrast and
 flat/overblown/wrong-context controls are retained. The real caller-context CLI
 canary has no agent judgment and therefore cannot establish appropriateness.
+
+## Terminal-first human review: one question at a time
+
+```bash
+# Entire automated batch/recommendations already exist; this never rerenders them.
+./run.sh review celebration
+# After that actual judgment is submitted, review the next scenario separately:
+./run.sh review quiet-achievement
+../agentic-evals/run.sh run fixtures/terminal_review.json --timeout-seconds 180 \
+  --output /mnt/storage12tb/skills/chatterbox-speak/outputs/terminal-review-evals.json
+```
+
+`review` composes the existing `interview` Question/Session/InterviewApp and pane
+registry. It requires an actual terminal and shows exactly one scenario question:
+context, relevant turns, expected-target evidence/gaps, provisional recommendation,
+numbered candidates, identity and required rationale. No browser or HTTP service
+is required. The React work is parked, not an acceptance requirement.
+
+- `1`–`5`: select candidate; Up/Down then Enter reaches later candidates, Reject
+  all and Defer. Selection does not advance or submit.
+- `Ctrl+P`: replay the current numbered candidate; `Ctrl+O`: play context.
+  Existing WAVs use `pw-play` under the existing workstation playback lock.
+  Replays stay on this question; wait for playback before submitting.
+- `Ctrl+N`: reviewer identity; `Ctrl+R`: rationale. Both are required. Explain
+  intended outcome, heard result, mismatch and proposed adjustment.
+- `Ctrl+S` or the existing Submit pane: explicitly submit. Escape cancels without
+  saving. The command returns after one scenario; it does not advance automatically.
+
+Human events append under `outputs/human-reviews/<request-id>.jsonl`, bind the
+scenario, recommendation, packet and WAV hashes, and are independently reopened
+before success is reported. Amendments link the latest event without overwriting
+it. Repeated identical request IDs are idempotent; changed payloads are rejected.
+The event's `selection` is the existing typed comparison preference for actual
+candidate choices; Reject all/Defer have no candidate preference. Test simulations
+are isolated under `outputs/review-test-only/`, contain `selection: null`, and
+never enter actual human history or Memory. An actual non-null `selection` may
+be extracted and passed to the existing `compare-memory store --selection` only
+when explicitly authorized; there is no automatic preference/threshold mutation.
+
+### Expected response precedes new rendering
+
+New `compare render` calls require `expected_response` inside the existing input
+JSONL, declared from context before candidate tuning. It contains `context_sha256`
+(over context, prior turns and current user turn), `response_text`,
+`response_meaning`, `emotional_intent`, `delivery_plan`, `rationale`, exact
+`context_evidence` turn quotes, `render_plan`, and `pause_tolerance_frames: 0`.
+`comparison_target.ExpectedResponse` is the strict boundary. Use the existing
+`best-practices-chatterbox/run.sh plan-silence --text ... --tone ...` result for
+`render_plan`; native tags/placement and spaced ` ... ` stay in the declared
+render text, exact delays are compiled into `render_chunks.pause_after_ms`.
+The input/source hash is frozen before narration or candidate rendering. Missing
+targets, stale context, stale compiled pauses and tag/intensity incompatibilities
+fail before any audio work. No separate target artifact is required.
+
+Historical packets retain their original authored wording/delivery and evaluation
+scope. Their precise missing expected-target facts are shown as **legacy partial
+target evidence**, not filled from the later winner or retroactively hash-bound.
+No historical WAV is rerendered to migrate this contract.
+
+Measured PCM pause mismatch is **audio-realization FAIL**, with structured
+Pydantic error details and evidence path. Native event routing/applied-tag echoes
+are not audible-event proof: unobserved native events remain **NOT_ESTABLISHED**
+and cannot be an audio-realization eligible winner. For plans with no native
+events, realization PASS covers exact pauses only, not perceived emotional tone.
+No new acoustic event classifier or thresholds are introduced.
 
 ## Labeled reply comparison and human preferences
 

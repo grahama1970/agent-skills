@@ -1,0 +1,41 @@
+{
+  "version": 2,
+  "skill": "chatterbox-speak",
+  "trials": 2,
+  "proof_scope": "One-question terminal interview, real existing WAV playback, strict expected-target and artifact gates, and explicitly test-only immutable judgment readback. No actual human preference or audible-event perception is manufactured.",
+  "claims": {
+    "proves": ["Public CLI renders the existing interview TUI in an actual PTY", "Replay uses existing WAVs without selecting or advancing", "Numbered choice, visible rationale/identity, explicit submit, append-only amendments and idempotent writes", "Missing/stale expected-response and artifact evidence fails closed before new rendering", "Historical six-row batch remains valid in its original proof scope"],
+    "does_not_prove": ["Actual human preference or hearing", "Native-event acoustic realization or emotional naturalness", "Completed target-first voice evaluation of historical audio", "Parked browser acceptance"]
+  },
+  "cases": [
+    {
+      "name": "terminal-live-pty-playback-and-test-only-adjudication",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "command": ["/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh", "review-eval", "live", "/mnt/storage12tb/skills/chatterbox-speak/outputs/terminal-live-eval.json"],
+      "expected": {"exit_code": 0, "artifacts": [
+        {"path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/terminal-live-eval.json", "json_pointer": "/one_question", "equals": true},
+        {"path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/terminal-live-eval.json", "json_pointer": "/human_history_unchanged", "equals": true},
+        {"path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/terminal-live-eval.json", "json_pointer": "/visible_rationale_and_native_tag_text", "equals": true}
+      ]}
+    },
+    {
+      "name": "terminal-invalid-input-artifacts-and-unobserved-events",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": ["/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh", "review-eval", "negative", "/mnt/storage12tb/skills/chatterbox-speak/outputs/terminal-negative-eval.json"],
+      "expected": {"exit_code": 0, "artifacts": [{"path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/terminal-negative-eval.json", "json_pointer": "/passed", "equals": true}]}
+    },
+    {
+      "name": "expected-response-required-before-rendering",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": ["/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh", "review-eval", "targets", "/mnt/storage12tb/skills/chatterbox-speak/outputs/terminal-target-eval.json"],
+      "expected": {"exit_code": 0, "artifacts": [
+        {"path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/terminal-target-eval.json", "json_pointer": "/public_render_blocked_before_audio", "equals": true},
+        {"path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/terminal-target-eval.json", "json_pointer": "/legacy_audio_rebound", "equals": false}
+      ]}
+    }
+  ]
+}

@@ -15,12 +15,12 @@ import shutil
 import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import uuid4
 
 import typer
 from loguru import logger
-from pydantic import Field, ValidationError, model_serializer, model_validator
+from pydantic import AfterValidator, Field, TypeAdapter, ValidationError, model_serializer, model_validator
 
 from eval_webgpt_audio import (
     ROOT, OUTPUT, AskNode, BrowserMeta, CliResult, Delivery, Evidence, Scenario,
@@ -29,6 +29,7 @@ from eval_webgpt_audio import (
 )
 
 from speak import RenderChunk
+from comparison_target import ExpectedResponse, require_predeclared_response
 
 app = typer.Typer(add_completion=False)
 STORE = OUTPUT.parent / 'comparisons'
@@ -53,9 +54,19 @@ class Comparison(Strict):
     schema_id: Literal['chatterbox_speak.comparison_input.v1'] = Field(alias='schema')
     scenario: Scenario
     candidates: list[Candidate] = Field(min_length=5, max_length=10)
+    expected_response: ExpectedResponse | None = None
+
+    @model_serializer(mode='wrap')
+    def preserve_legacy_input_hash(self, handler):
+        data = handler(self)
+        if self.expected_response is None:
+            data.pop('expected_response', None)
+        return data
 
     @model_validator(mode='after')
     def coherent(self):
+        if self.expected_response is not None:
+            self.expected_response.check(self.scenario)
         if [c.id for c in self.candidates] != [f'C{i:02}' for i in range(1, len(self.candidates)+1)]:
             raise ValueError('candidate ids must be unique, ordered C01 through C10')
         plans = []
@@ -303,6 +314,8 @@ def render(bank: Path, case_id: str, output: Path, variants: int = 5):
     if output.exists():
         raise ValueError('output exists; do not overwrite evidence or rerender for luck')
     comparison = load_input(bank, case_id, variants)
+    TypeAdapter(Annotated[Comparison, AfterValidator(require_predeclared_response)]).validate_python(
+        comparison, context={'input_path': str(bank)})
     s = comparison.scenario
     run = STORE / uuid4().hex
     run.mkdir(parents=True)
