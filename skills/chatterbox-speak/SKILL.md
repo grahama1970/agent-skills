@@ -161,6 +161,11 @@ is required. The React work is parked, not an acceptance requirement.
 - `Ctrl+S` or the existing Submit pane: explicitly submit. Escape cancels without
   saving. The command returns after one scenario; it does not advance automatically.
 
+Terminals shorter than 15 rows use compact mode: redundant title/header/tabs/footer
+are hidden, while the question stays scrollable above a one-line shortcut hint.
+At 7 rows × 113 columns, numbered selection scrolls that candidate into view;
+`Ctrl+N` and `Ctrl+R` bring their input fields into view without submitting.
+
 Human events append under `outputs/human-reviews/<request-id>.jsonl`, bind the
 scenario, recommendation, packet and WAV hashes, and are independently reopened
 before success is reported. Amendments link the latest event without overwriting

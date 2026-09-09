@@ -19,11 +19,11 @@ def check(condition, message):
         raise ValueError(message)
 
 
-def tty_cancel(run: Path):
-    """Actual public command in a PTY; only cancellation, never a human choice."""
+def tty_cancel(run: Path, rows: int = 70, columns: int = 160):
+    """Actual public CLI; compact navigation probes cancel without submitting."""
     master, slave = pty.openpty()
     import fcntl
-    fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack('HHHH', 70, 160, 0, 0))
+    fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack('HHHH', rows, columns, 0, 0))
     process = subprocess.Popen([str(ROOT / 'run.sh'), 'review', 'celebration'], stdin=slave, stdout=slave, stderr=slave,
                                env={**os.environ, 'TERM': 'xterm-256color'}, start_new_session=True)
     os.close(slave)
@@ -33,9 +33,19 @@ def tty_cancel(run: Path):
             if select.select([master], [], [], .2)[0]:
                 try: received.extend(os.read(master, 65536))
                 except OSError: break
-            if b'PROVISIONAL AGENT' in received:
+            if (b'RELEVANT TURNS' if rows < 15 else b'PROVISIONAL AGENT') in received:
                 break
-        check(b'Embry Reply Interview' in received and b'PROVISIONAL AGENT' in received, 'actual terminal command did not render context/recommendation')
+        if rows < 15:
+            check(b'CONTEXT' in received and b'RELEVANT TURNS' in received, 'compact PTY context is hidden')
+            for key, marker in [(b'2', b'C02'), (b'\x12', b'Rationale (required)')]:
+                os.write(master, key)
+                update = bytearray(); deadline = time.monotonic() + 10
+                while marker not in update and time.monotonic() < deadline:
+                    if select.select([master], [], [], .2)[0]:
+                        chunk = os.read(master, 65536); update.extend(chunk); received.extend(chunk)
+                check(marker in update, f'compact PTY navigation did not display {marker!r}')
+        else:
+            check(b'Embry Reply Interview' in received and b'PROVISIONAL AGENT' in received, 'actual terminal command did not render context/recommendation')
         os.write(master, b'\x1b')
         deadline = time.monotonic() + 10
         while time.monotonic() < deadline and process.poll() is None:

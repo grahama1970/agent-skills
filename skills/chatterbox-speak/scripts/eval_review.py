@@ -141,6 +141,44 @@ def live(output: Path):
                          'target_first_audio_quality': 'NOT_ESTABLISHED', 'native_event_realization': 'NOT_ESTABLISHED'})
 
 
+async def exercise_compact(row, run):
+    application = ComparisonInterview(row)
+    async with application.run_test(size=(113, 7)) as pilot:
+        await pilot.pause(.3)
+        pane = application.query_one(ComparisonPane)
+        check(pane.region.y == 0 and pane.region.height >= 5, 'compact chrome consumes the viewport')
+        application.save_screenshot(filename='compact-context.svg', path=str(run))
+        check('CONTEXT' in (run / 'compact-context.svg').read_text(), 'compact context not rendered')
+        await pilot.press('2'); await pilot.pause(.3)
+        choice = pane.query_one('#opt_comparison_2')
+        check(0 <= choice.region.y < 6 and pane.selected_indices == {2}, 'compact current choice not visible')
+        application.save_screenshot(filename='compact-choice.svg', path=str(run))
+        await pilot.press('ctrl+n'); await pilot.pause(.3)
+        field = pane.query_one('#reviewer', Input)
+        check(application.focused is field and 0 <= field.region.y and field.region.bottom <= 6, 'compact reviewer unreachable')
+        await pilot.press(*list('TEST ONLY'))
+        await pilot.press('ctrl+r'); await pilot.pause(.3)
+        field = pane.query_one('#rationale', Input)
+        check(application.focused is field and 0 <= field.region.y and field.region.bottom <= 6, 'compact rationale unreachable')
+        await pilot.press(*list('TEST ONLY compact keyboard submit; no human preference saved.'))
+        application.save_screenshot(filename='compact-rationale.svg', path=str(run))
+        await pilot.press('ctrl+s'); await pilot.pause()
+    check(application.return_value is not None and application.return_value.candidate == 'C02', 'compact explicit submit failed')
+    return {'context_visible': True, 'choice_visible': True, 'rationale_visible': True, 'explicit_submit': True}
+
+
+@app.command()
+def compact(output: Path):
+    """Exercise the observed seven-row overlay dimensions, without preference writes."""
+    run = run_dir(); before = history(OUTPUT / 'human-reviews', 'human')
+    row = read_rows(BATCH)[0]
+    terminal = tty_cancel(run, rows=7, columns=113)
+    checks = asyncio.run(exercise_compact(row, run))
+    check(history(OUTPUT / 'human-reviews', 'human') == before, 'compact test wrote a human preference')
+    receipt(output, run, {'viewport': {'rows': 7, 'columns': 113}, 'actual_pty': terminal,
+                         'simulation': 'test_only_keyboard_no_persistence', 'human_history_unchanged': True, **checks})
+
+
 @app.command()
 def negative(output: Path):
     run = run_dir(); rows = read_rows(BATCH); row = rows[0]; rejected = []

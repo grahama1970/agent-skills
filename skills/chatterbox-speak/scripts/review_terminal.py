@@ -161,7 +161,19 @@ class ComparisonPane(QuestionPane):
 
 class ComparisonInterview(InterviewApp):
     """Reuse interview navigation/Submit; suppress its single-choice auto-advance."""
-    CSS = InterviewApp.CSS + '\nTabbedContent > ContentSwitcher { height: 1fr; }'
+    CSS = InterviewApp.CSS + '''
+    TabbedContent > ContentSwitcher { height: 1fr; }
+    .compact Header, .compact Footer, .compact #title-bar, .compact #context-bar,
+    .compact ContentTabs { display: none; }
+    .compact ComparisonPane { padding: 0; }
+    .compact ComparisonPane Input { margin: 0; }
+    '''
+
+    def on_resize(self, event):
+        self.screen.set_class(event.size.height < 15, 'compact')
+
+    def on_mount(self):
+        self.query_one('#nav-hints', Static).update('1–5 choose · ^P replay · ^O context · ^N name · ^R rationale · ^S submit · Esc cancel')
     def __init__(self, row: ReviewRow, latest=None):
         register_tui_pane('select', lambda question, base_path=None: ComparisonPane(question, row))
         super().__init__(session_for(row, prior=latest is not None))
@@ -202,6 +214,8 @@ class ComparisonInterview(InterviewApp):
         if isinstance(pane, ComparisonPane):
             self.current_option_index = num
             pane.select_option(num)
+            if 1 <= num <= self._get_option_count():
+                pane.query_one(f'#opt_comparison_{num}', OptionItem).scroll_visible(top=True, animate=False)
 
     def action_select_or_submit(self):
         pane = self._get_current_pane()
