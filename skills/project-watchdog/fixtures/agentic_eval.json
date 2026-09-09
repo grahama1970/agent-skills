@@ -1388,7 +1388,12 @@
           {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/ok", "equals": true},
           {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/old_PASS_not_reused", "equals": true},
           {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/old_BLOCKED_not_reused", "equals": true},
-          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/preserved_admission_mutation_rejected", "equals": true}
+          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/preserved_admission_mutation_rejected", "equals": true},
+          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/truncated_reviewer_plan_rejected", "equals": true},
+          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/broken_quoting_rejected", "equals": true},
+          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/missing_mandatory_artifact_rejected", "equals": true},
+          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/dict_coverage_rejected", "equals": true},
+          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/valid_review_plan_admitted", "equals": true}
         ]
       },
       "proves": "Public Ask/Tau local command execution, generation-fenced watchdog settlement, preserved creator admission, and pre-dispatch rejection without inheriting historical status.",

@@ -17,6 +17,52 @@ from types import SimpleNamespace
 
 from watchdog import config, handlers, resume_state
 from watchdog.core import write_json
+from watchdog.primary_models import VerificationPlan
+
+
+def check_verification_plans(root):
+    artifact = str(root / "verified-result.json")
+    plan = {"schema": "agent_skills.project_watchdog.verification_plan.v1",
+            "commands": ["uv run python -c 'print(1)'"], "artifacts": [artifact],
+            "coverage": {"Run proof.": "Read the produced result."}}
+    checks = {"valid_string_coverage_admitted": VerificationPlan.model_validate(plan).coverage == plan["coverage"]}
+    malformed = {
+        "empty_command_rejected": {"commands": [""]},
+        "multiline_command_rejected": {"commands": ["true\ntrue"]},
+        "broken_quoting_rejected": {"commands": ["python -c 'unterminated"]},
+        "nul_command_rejected": {"commands": ["python\x00-c"]},
+        "dict_coverage_rejected": {"coverage": {"Run proof.": {"unexpected": "not authority"}}},
+        "nonstring_coverage_key_rejected": {"coverage": {1: "not a clause"}},
+        "empty_artifact_rejected": {"artifacts": [""]},
+    }
+    for name, change in malformed.items():
+        try:
+            VerificationPlan.model_validate({**plan, **change})
+        except ValueError:
+            checks[name] = True
+        else:
+            checks[name] = False
+    parser = getattr(handlers, "validated_verification_plan", None)
+    checks["native_plan_consumer_present"] = callable(parser)
+    if parser is not None:
+        body = "## Required proof\n\nRun proof.\n"
+        review = "VERDICT: PASS\nPROOF_ARTIFACT: " + artifact + "\nVERIFY_PLAN: " + json.dumps(plan)
+        checks["valid_review_plan_admitted"] = parser(review, body, root).artifacts == [artifact]
+        variants = {
+            "truncated_reviewer_plan_rejected": review[:-12],
+            "missing_reviewer_plan_rejected": "VERDICT: PASS\nPROOF_ARTIFACT: " + artifact,
+            "missing_mandatory_artifact_rejected": review.replace(json.dumps([artifact]), json.dumps([str(root / 'other.json')]), 1),
+            "missing_proof_clause_rejected": review.replace('"Run proof."', '"Different clause."'),
+            "multiple_plans_rejected": review + "\nVERIFY_PLAN: " + json.dumps(plan),
+        }
+        for name, text in variants.items():
+            try:
+                parser(text, body, root)
+            except ValueError:
+                checks[name] = True
+            else:
+                checks[name] = False
+    return checks
 
 
 def run(command, cwd, env=None):
@@ -76,7 +122,7 @@ def main():
     (root / "reviewer-response.json").write_bytes((root / "reviewer-pass.json").read_bytes())
     journal = root / "operation.json"
     command = [str(config.ask_run_sh()), "runs", "resume", str(run_dir), "--execute", "--json"]
-    checks = {}
+    checks = check_verification_plans(root)
     for generation, old_status in [(7, "PASS"), (8, "BLOCKED"), (9, None)]:
         lease_agent = "project-watchdog-local-eval"
         write_json(journal, {"schema": "agent_skills.project_watchdog.primary_operation.v2",

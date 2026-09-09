@@ -1,8 +1,10 @@
 """Watchdog-owned persistence boundaries. Native Tau/ticket retain their schemas."""
 from __future__ import annotations
 
+import shlex
 from typing import Any, Literal
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class StrictRecord(BaseModel):
@@ -68,6 +70,35 @@ class VerificationPlan(StrictRecord):
     artifacts: list[str] = Field(min_length=1)
     # Each required-proof clause must be addressed explicitly by independent review.
     coverage: dict[str, str] = Field(min_length=1)
+
+    @field_validator("commands")
+    @classmethod
+    def executable_command_shape(cls, commands: list[str]) -> list[str]:
+        # Syntax validation only: this never launches a shell or authorizes a command.
+        for index, command in enumerate(commands):
+            if not command.strip() or any(char in command for char in "\x00\r\n"):
+                raise ValueError(f"commands[{index}] must be a nonempty single-line command")
+            try:
+                tokens = shlex.split(command)
+            except ValueError as exc:
+                raise ValueError(f"commands[{index}] has invalid shell quoting: {exc}") from exc
+            if not tokens:
+                raise ValueError(f"commands[{index}] contains no executable tokens")
+        return commands
+
+    @field_validator("artifacts")
+    @classmethod
+    def nonempty_artifact_paths(cls, paths: list[str]) -> list[str]:
+        if any(not path.strip() or any(char in path for char in "\x00\r\n") for path in paths):
+            raise ValueError("artifacts must name nonempty single-line paths")
+        return paths
+
+    @field_validator("coverage")
+    @classmethod
+    def nonempty_coverage(cls, coverage: dict[str, str]) -> dict[str, str]:
+        if any(not clause.strip() or not evidence.strip() for clause, evidence in coverage.items()):
+            raise ValueError("coverage must name nonempty clauses and evidence descriptions")
+        return coverage
 
 
 class NativeClosure(StrictRecord):

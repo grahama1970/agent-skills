@@ -274,6 +274,13 @@ Only the named resumed DAG and its admitted outputs are used, never recursive
 archived DAG discovery. Exit 1 means the requested recovery did not complete;
 read `watchdog-reattach-resume-command.json` for the nested control failure.
 
+Before verification, the independent reviewer must supply one complete
+`VERIFY_PLAN` JSON object. Commands must be nonempty single-line strings with
+balanced shell quoting; coverage is an exact-clause-to-string map, not arbitrary
+nested objects. The plan must include every mandatory result artifact. Missing or
+truncated reviewer instructions cannot be replaced with a creator proposal.
+This validates shape and bindings, not shell-command safety or proof truth.
+
 Retained local CLI proof (scripted nodes/synthetic leases, no GitHub/provider calls):
 `agentic-evals/run.sh run project-watchdog/fixtures/agentic_eval_resume_generation.json`
 from the skills directory.

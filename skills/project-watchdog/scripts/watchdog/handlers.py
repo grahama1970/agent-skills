@@ -46,6 +46,7 @@ from .issue_fields import (
     parse_positive_int,
     repo_relative_existing_path,
 )
+from .primary_models import VerificationPlan
 from .registry import project_repo, project_worktree, worktree_readiness
 
 
@@ -2211,10 +2212,42 @@ def proof_plan_covers_clauses(coverage: dict[str, str], clauses: list[str]) -> b
         return True
     return bool(coverage) and set(coverage) <= {"all required clauses", "all_required_clauses"}
 
+def validated_verification_plan(review: str, issue_body: str, root: Path) -> VerificationPlan:
+    """Admit only a complete reviewer-owned plan before any proof command runs.
+
+    A creator proposal or a PASS prefix cannot repair missing reviewer authority.
+    This checks plan shape and bindings, not command safety or proof truth.
+    """
+    if declared_verdict(review) != "PASS":
+        raise ValueError("verification requires an independent reviewer PASS")
+    plans = verify_plan_lines(review)
+    if len(plans) != 1:
+        raise ValueError("review must supply exactly one native verification plan")
+    plan = VerificationPlan.model_validate_json(plans[0])
+    clauses = required_proof_clauses(issue_body) or ["legacy_native_route"]
+    if not proof_plan_covers_clauses(plan.coverage, clauses):
+        raise ValueError("proof plan does not cover every exact required clause")
+    required = required_proof_artifacts(issue_body)
+    if not required:
+        required = [_clean_proof_path(line.partition(":")[2]) for line in review.splitlines()
+                    if line.startswith("PROOF_ARTIFACT:")]
+        required = [path for path in required if _is_machine_result_path(path)
+                    and Path(path).name != "authored-commit.json"]
+    if not required:
+        raise ValueError("verification plan has no mandatory result artifacts")
+    def normalize(value: str) -> str:
+        path = Path(value).expanduser()
+        return str((path if path.is_absolute() else root / path).resolve())
+    missing = {normalize(path) for path in required} - {normalize(path) for path in plan.artifacts}
+    if missing:
+        raise ValueError("native verification plan omits mandatory result artifacts: " + str(sorted(missing)))
+    return plan
+
+
 def finish_primary_operation(record) -> dict[str, Any]:
     """Shared by normal execution and recovery; never re-dispatches the provider."""
     from . import primary, native_ticket, target_content as content, models
-    from .primary_models import TargetSnapshot, OwnedTargets, VerificationPlan, NativeClosure, encoded
+    from .primary_models import TargetSnapshot, OwnedTargets, NativeClosure, encoded
     root, receipt_dir = Path(record.root), Path(record.receipt_dir)
     project = json.loads((receipt_dir / "dispatch-project.json").read_text())
     issue = json.loads((receipt_dir / "dispatch-issue.json").read_text())
@@ -2263,24 +2296,8 @@ def finish_primary_operation(record) -> dict[str, Any]:
             commit_binding_warnings.append("reviewer REVIEW_COMMIT was malformed; used creator-authored commit after reviewer PASS")
         else:
             raise primary.Refusal("review must bind exactly one full content-commit SHA")
-    plans = verify_plan_lines(text)
     plan_source = "reviewer"
-    creator_plans = verify_plan_lines(creator_text)
-    if len(plans) != 1:
-        if declared_verdict(text) == "PASS" and len(creator_plans) == 1:
-            plans = creator_plans
-            plan_source = "creator"
-        else:
-            raise primary.Refusal("review must supply exactly one native verification plan")
-    try:
-        plan = VerificationPlan.model_validate(json.loads(plans[0]))
-    except (json.JSONDecodeError, ValueError) as exc:
-        if plan_source == "reviewer" and declared_verdict(text) == "PASS" and len(creator_plans) == 1:
-            plan = VerificationPlan.model_validate(json.loads(creator_plans[0]))
-            plan_source = "creator"
-            commit_binding_warnings.append(f"reviewer VERIFY_PLAN was malformed; used creator verification plan after reviewer PASS: {exc}")
-        else:
-            raise primary.Refusal(f"review supplied an invalid native verification plan: {exc}") from exc
+    plan = validated_verification_plan(text, str(issue.get("body") or ""), root)
     clauses = required_proof_clauses(str(issue.get("body") or ""))
     if not clauses and record.action == "ticket_repair":
         raise primary.Refusal("ordinary ticket has no explicit required proof; do not invent acceptance")
