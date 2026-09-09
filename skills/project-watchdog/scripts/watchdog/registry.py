@@ -652,6 +652,7 @@ _TARGET_LINE = re.compile(r"^target:[ \t]*([^\r\n]+?)[ \t]*$", re.MULTILINE)
 _SKILL_PATH = re.compile(r"\bskills/[a-z0-9][a-z0-9._-]*")
 
 _TARGET_PATHS_HEADING = re.compile(r"^##\s+Target paths\s*$", re.IGNORECASE | re.MULTILINE)
+_CONTEXT_FILES_LINE = re.compile(r"^context_files:[ \t]*([^\r\n]+?)[ \t]*$", re.MULTILINE)
 
 #: A ticket whose target cannot be read at all. Just another target value: it
 #: collides with other unreadable tickets and with nothing else. Treating it as
@@ -693,6 +694,18 @@ def _markdown_target_paths(body: str) -> set[str]:
     return targets
 
 
+def _marker_context_file_targets(body: str) -> set[str]:
+    match = _CONTEXT_FILES_LINE.search(body)
+    if not match:
+        return set()
+    targets: set[str] = set()
+    for part in match.group(1).split(","):
+        target = _clean_target_path_fragment(part)
+        if target:
+            targets.add(target)
+    return targets
+
+
 def issue_targets(issue: dict[str, Any]) -> set[str]:
     """The paths a ticket will change, e.g. ``{"skills/ticket"}``.
 
@@ -714,6 +727,9 @@ def issue_targets(issue: dict[str, Any]) -> set[str]:
     declared_paths = _markdown_target_paths(body)
     if declared_paths:
         return declared_paths
+    context_targets = _marker_context_file_targets(body)
+    if context_targets:
+        return context_targets
     if config.TAU_REPAIR_MARKER in body:
         return {"experiments/goal-locked-subagents/agent-command-specs/coder/tau-dispatch-command.json"}
     if config.TAU_HANDOFF_DISPATCH_MARKER in body:

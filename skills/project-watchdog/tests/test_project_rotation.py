@@ -15,7 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from watchdog import commands, registry  # noqa: E402
+from watchdog import commands, config, registry  # noqa: E402
 from watchdog.registry import (  # noqa: E402
     UNKNOWN_TARGET,
     busy_targets,
@@ -136,6 +136,25 @@ def test_markdown_target_paths_accept_coarse_exact_skill_path():
     assert issue_targets({"body": body}) == {"skills/battle"}
 
 
+def test_prose_target_falls_back_to_marker_context_files():
+    body = """## Target
+
+Durable DAG repair-category lifecycle and same-node rerun.
+
+<!-- ticket-skill
+type: bug
+target: durable DAG repair-category lifecycle and same-node rerun
+route: ops_or_scheduler
+context_files: GOAL.md,src/tau_coding/dag_runtime/scheduler.py,src/tau_coding/dag_runtime/run_store.py
+required_skills: project-state,triage-error
+-->
+"""
+    assert issue_targets({"body": body}) == {
+        "src/tau_coding/dag_runtime/scheduler.py",
+        "src/tau_coding/dag_runtime/run_store.py",
+    }
+
+
 def test_a_legacy_ticket_falls_back_to_the_skills_it_mentions():
     """7 of the 8 leases open on agent-skills predate the target: line."""
     body = "Fix `skills/ask` compete when `skills/surf` returns a stale tab."
@@ -230,9 +249,6 @@ def test_a_multi_skill_ticket_blocks_on_any_overlap():
 # therefore read as idle and the watchdog dispatched alongside it -- the exact
 # work-ahead cascade #1083 closed, reachable through the supported path. There
 # was no coverage of this function at all, which is how it shipped.
-
-from watchdog import commands, config, registry  # noqa: E402
-
 
 def _fake_gh(by_label: dict[str, list[dict]], fail_on: str | None = None):
     """Stand in for `gh issue list`, which ANDs repeated --label flags."""
@@ -869,8 +885,9 @@ def test_tick_receipt_copies_excluded_issues_from_selected_scan(tmp_path, monkey
 
 
 def test_scheduler_short_lock_allows_unrelated_target_tick(tmp_path, monkeypatch):
-    import json as _json
     from itertools import count
+    import json as _json
+
     from watchdog import commands, config  # noqa: PLC0415
 
     root = tmp_path / "state-root"
@@ -931,8 +948,9 @@ def test_scheduler_short_lock_allows_unrelated_target_tick(tmp_path, monkeypatch
 
 
 def test_scheduler_execution_lock_blocks_overlapping_target_tick(tmp_path, monkeypatch):
-    import json as _json
     from itertools import count
+    import json as _json
+
     from watchdog import commands, config  # noqa: PLC0415
 
     root = tmp_path / "state-root"
