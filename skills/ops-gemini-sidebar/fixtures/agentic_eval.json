@@ -82,7 +82,7 @@
       "command": [
         "python3",
         "-c",
-        "from pathlib import Path\ntext = Path('../SKILL.md').read_text(encoding='utf-8')\nrequired = ['Gemini is the design authority', 'Surf observations', 'DESIGN.md constraints', 'Exact DOM targets', 'NO_CHANGES', 'Do not claim screenshot attachment']\nmissing = [item for item in required if item not in text]\nif missing:\n    raise SystemExit('missing: ' + ', '.join(missing))\nprint('DESIGN_LOOP_CONTRACT_OK')"
+        "from pathlib import Path\ntext = Path('../SKILL.md').read_text(encoding='utf-8')\nrequired = ['Gemini is the design authority', 'Surf observations', 'DESIGN.md constraints', 'Exact DOM targets', 'NO_CHANGES', 'Do not claim screenshot attachment', 'Sharing', 'ChatGPT', '--paste-only']\nmissing = [item for item in required if item not in text]\nif missing:\n    raise SystemExit('missing: ' + ', '.join(missing))\nprint('DESIGN_LOOP_CONTRACT_OK')"
       ],
       "expected": {
         "exit_code": 0,

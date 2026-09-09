@@ -179,6 +179,7 @@ def submit(
     prompt_file: Annotated[Path, typer.Option()],
     coords: Annotated[Path, typer.Option()],
     execute: Annotated[bool, typer.Option("--execute")] = False,
+    paste_only: Annotated[bool, typer.Option("--paste-only", help="Paste without sending so the sidebar draft can be inspected.")] = False,
     display: Annotated[str | None, typer.Option()] = None,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
@@ -201,15 +202,17 @@ def submit(
         run_checked(["xdotool", "key", "ctrl+a"], env)
         run_checked(["xdotool", "key", "BackSpace"], env)
         run_checked(["xdotool", "key", "ctrl+v"], env)
-        if plan_obj.send:
-            run_checked(["xdotool", "mousemove", str(plan_obj.send.x), str(plan_obj.send.y)], env)
-            run_checked(["xdotool", "click", "1"], env)
-        run_checked(["xdotool", "key", "ctrl+Return"], env)
+        if not paste_only:
+            if plan_obj.send:
+                run_checked(["xdotool", "mousemove", str(plan_obj.send.x), str(plan_obj.send.y)], env)
+                run_checked(["xdotool", "click", "1"], env)
+            else:
+                run_checked(["xdotool", "key", "ctrl+Return"], env)
     except subprocess.CalledProcessError as exc:
         fail("submit", [{"type": "desktop_command_failed", "loc": exc.cmd, "msg": exc.stderr or exc.stdout or str(exc), "ctx": {"returncode": exc.returncode}}], json_output, plan_obj)
     except subprocess.TimeoutExpired as exc:
         fail("submit", [{"type": "desktop_command_timeout", "loc": exc.cmd, "msg": str(exc), "ctx": {"timeout": exc.timeout}}], json_output, plan_obj)
-    emit(CommandReceipt(command="submit", status="PASS", executed=True, created_at=now(), plan=plan_obj, clipboard_chars=len(prompt_file.read_text(encoding="utf-8"))), json_output)
+    emit(CommandReceipt(command="submit", status="PASS", executed=True, created_at=now(), plan=plan_obj, clipboard_chars=len(prompt_file.read_text(encoding="utf-8")), next_step="Draft only: inspect Gemini sidebar before clicking Send." if paste_only else "Verify the submitted turn in Gemini; dispatch is not delivery proof."), json_output)
 
 
 @app.command("copy-response")

@@ -51,21 +51,31 @@ not page DOM. It does not use `$surf-qml`, because Chrome is not a Qt/QML app.
 
 ```bash
 skills/ops-gemini-sidebar/run.sh plan --composer-x 8350 --composer-y 2020 --send-x 8770 --send-y 2020
-skills/ops-gemini-sidebar/run.sh submit --prompt-file /tmp/request.txt --coords /tmp/gemini-coords.json
+skills/ops-gemini-sidebar/run.sh submit --prompt-file /tmp/request.txt --coords /tmp/gemini-coords.json --paste-only --execute
 skills/ops-gemini-sidebar/run.sh copy-response --coords /tmp/gemini-coords.json --out /tmp/gemini-response.txt
 skills/ops-gemini-sidebar/run.sh self-test --json
 ```
 
 ## Contract
 
-1. Calibrate from a screenshot or window geometry first.
+1. Verify the destination before calibrating: capture the exact Chrome window
+   with **Ask Gemini** open and the sidebar's **Sharing** label naming the
+   intended page. A window title containing Chrome, a coordinate filename, or
+   a tool `PASS` is not provider identity. Never send to a ChatGPT page composer
+   and call it Gemini. If the panel is blank, close/reopen Ask Gemini once and
+   inspect it before typing; otherwise stop that submission.
 2. Put prompt text on the desktop clipboard.
 3. Focus the Chrome window.
 4. Click the Gemini composer.
-5. Paste and verify by screenshot or clipboard state before submit.
-6. Click send.
+5. Paste and verify the prompt in the Gemini sidebar composer before submit;
+   clipboard contents alone do not prove the destination received it.
+6. With `--paste-only`, sending is deliberately withheld. After inspecting the
+   draft in the verified sidebar, click its freshly calibrated Send control
+   once. Do not click Send and then press a second submission key.
 7. After Gemini responds, click or hover the response copy control.
-8. Read clipboard back and save the copied response.
+8. Read clipboard back and save the copied response; confirm it is the sidebar's
+   new answer, not the prompt or an answer in a different provider tab. Command
+   `PASS` records desktop input dispatch only, not Gemini delivery or acceptance.
 
 Every command emits typed JSON. `--dry-run` is the default for coordinates that
 would move the pointer; pass `--execute` for live desktop effects.
@@ -93,10 +103,13 @@ upload files through this skill. Instead:
 Default design-loop wording:
 
 ```text
-You are the design assessor. I defer to your design direction. You do not need
-browser access or screenshots. Use my Surf observations, DESIGN.md constraints,
-exact DOM/data-qid targets, allowed files, and reference links. Return only
-NO_CHANGES or a minimal unified diff for the next implementable round.
+You are the design assessor. I defer to your design direction. Use the shared
+current browser page plus my Surf observations, DESIGN.md constraints, exact
+DOM/data-qid targets, current source, and reference links. No screenshot uploads.
+Propose useful iterative design/feature updates, not just cosmetic approval.
+Return code for the next implementable round, or NO_CHANGES only after assessing
+the shared page against the design goals. You, not the project agent, judge
+whether it is modern and professional.
 ```
 
 ## Boundaries
