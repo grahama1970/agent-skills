@@ -162,6 +162,24 @@ for line in text.splitlines():
             continue
         if re.match(r"^[A-Za-z0-9._/@:+-]+$", path):
             paths.append(path.rstrip("/"))
+
+# Section form: a '## Target' / '## Target paths' / '## Scoped files' heading
+# followed by bullet (or bare backticked) path lines. This is the body format
+# /ticket actually renders; the inline form above never matched it, so scoped
+# worktree audits silently ran unscoped (tau#343 release deadlock, 2026-09-09).
+in_section = False
+for line in text.splitlines():
+    stripped = line.strip()
+    if re.match(r"(?i)^#{2,3}\s*(target( paths?)?|scoped[ -]files)\s*$", stripped):
+        in_section = True
+        continue
+    if in_section:
+        if stripped.startswith("#"):
+            in_section = False
+            continue
+        m = re.match(r"^(?:[-*]\s*)?`?([A-Za-z0-9._/@:+-]*/[A-Za-z0-9._/@:+-]+)`?\s*$", stripped)
+        if m:
+            paths.append(m.group(1).rstrip("/"))
 seen = set()
 for path in paths:
     if path not in seen:
