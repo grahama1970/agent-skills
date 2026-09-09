@@ -1186,7 +1186,25 @@ def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[
                                  status="COMPLETED" if stream.get("terminal_status") in {"PASS", "COMPLETED"} else "NEEDS_ATTENTION",
                                  depends_on=["reviewer_agent"]))
     if execution.get("exit_code") != 0 or execution.get("timed_out"):
-        raise primary.Refusal("Ask process failed or timed out despite terminal-looking stream; no closure")
+        if execution.get("timed_out") or not stream.get("terminal"):
+            raise primary.Refusal("Ask process failed or timed out despite terminal-looking stream; no closure")
+        # Terminal non-PASS run: name the actual seat verdict instead of a fake
+        # process failure, so triage stops minting *_unclassified codes for
+        # honest fail-closed refusals (2026-09-09: every ticket_repair receipt
+        # said "failed or timed out" while creators had declared
+        # VERDICT: NEEDS_ATTENTION with the reason in their response).
+        detail = f"Tau terminal {stream.get('terminal_status')}"
+        for dr in sorted(ask_dir.glob("*/tau-receipts/dag-receipt.json")):
+            try:
+                alerts = json.loads(dr.read_text()).get("alerts") or []
+            except (OSError, ValueError):
+                continue
+            if alerts:
+                ev = alerts[0].get("evidence") or {}
+                detail += (f": {alerts[0].get('code')} node={ev.get('node_id')}"
+                           f" seat_verdict={ev.get('receipt_verdict')}")
+                break
+        raise primary.Refusal(f"seat verdict did not pass; ticket stays open ({detail})")
     return finish_primary_operation(primary.current())
 
 

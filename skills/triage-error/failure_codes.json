@@ -3,6 +3,23 @@
   "note": "Canonical failure-code catalog across the model-calling pipeline (/ask -> /tau -> {/surf | /scillm}). Each entry maps a raw signal from any layer to ONE unambiguous {code, cause, next_command}. The triage skill grows this catalog as it classifies real ambiguous errors.",
   "codes": [
     {
+      "code": "tau_seat_verdict_not_pass",
+      "layer": "project-watchdog",
+      "match": [
+        "seat verdict did not pass",
+        "seat_verdict=NEEDS_ATTENTION",
+        "evidence_receipt_verdict_failed"
+      ],
+      "cause": "Tau run reached a terminal state but a repair seat declared a non-PASS verdict (honest fail-closed refusal, e.g. required proof case missing or acceptance unmet). Not a process failure.",
+      "next_command": "read the creator response.md under the run's node-artifacts for the declared VERDICT and its reason",
+      "recoverable": true,
+      "not_this": [
+        "ask process crash",
+        "timeout",
+        "scillm auth failure"
+      ]
+    },
+    {
       "code": "persona_dream_kling_provider_top_up_required",
       "layer": "persona-dream",
       "match": [
