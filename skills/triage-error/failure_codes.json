@@ -20,6 +20,22 @@
       ]
     },
     {
+      "code": "scillm_provider_route_failed",
+      "layer": "tau",
+      "match": [
+        "SCILLM_PROVIDER_ROUTE_FAILED",
+        "scillm_provider_route_failed"
+      ],
+      "cause": "Tau-owned SciLLM adapter could not route the seat's model request (provider route/auth/endpoint failure inside Tau's adapter). Reported through the Tau receipt; not a watchdog or ticket defect.",
+      "next_command": "read the run's tau-receipts/dag-receipt.json alerts and the failing node's receipt; repair belongs to Tau/SciLLM adapter config, not the ticket",
+      "recoverable": true,
+      "not_this": [
+        "seat verdict refusal",
+        "ask compile failure",
+        "watchdog scan failure"
+      ]
+    },
+    {
       "code": "persona_dream_kling_provider_top_up_required",
       "layer": "persona-dream",
       "match": [
