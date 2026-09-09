@@ -845,6 +845,66 @@ def test_fleet_tick_with_live_writer_is_quiet_skip(tmp_path, monkeypatch):
     assert captured["persist"] is False
 
 
+def test_tick_scans_disjoint_target_when_scoped_writer_is_active(tmp_path, monkeypatch):
+    import json as _json
+
+    projects_path = tmp_path / "projects.json"
+    state_path = tmp_path / "state.json"
+    projects_path.write_text(_json.dumps({
+        "projects": [{"project_id": "agent-skills", "repo": "o/agent-skills"}]
+    }))
+    state_path.write_text(_json.dumps({
+        "global": {"state": "active"},
+        "projects": {"agent-skills": {"state": "active"}},
+    }))
+    scanned: list[set[str]] = []
+    captured: dict = {}
+
+    def fake_list(run_id, candidate, busy, *, skip_issue_numbers=None, skip_issue_reasons=None,
+                  only_issue=None, apply=False):
+        scanned.append(set(busy))
+        registry.LAST_SCAN.clear()
+        registry.LAST_SCAN.update({
+            "scanned": 1,
+            "excluded": {},
+            "excluded_issues": {},
+            "unroutable_no_repair_lane": 0,
+        })
+        issue = _issue(1640, "skills/project-watchdog")
+        issue["watchdog_action"] = "ticket_repair"
+        issue["watchdog_targets"] = ["skills/project-watchdog"]
+        return [issue]
+
+    monkeypatch.setattr(config, "projects_path", lambda: projects_path)
+    monkeypatch.setattr(config, "state_path", lambda: state_path)
+    monkeypatch.setattr(registry, "project_worktree", lambda project: tmp_path)
+    pending = {
+        "writer_active": True,
+        "writer_targets": ["skills/shame/scripts/agent_status_schema.py"],
+        "operations": [],
+        "invalid_operations": [],
+        "recovery_command": "recover --apply",
+    }
+    monkeypatch.setattr(commands.primary, "pending", lambda root: pending)
+    monkeypatch.setattr(commands.primary, "reconcile", lambda root: pending)
+    monkeypatch.setattr(commands.registry, "lane_busy_issues", lambda *a, **k: [])
+    monkeypatch.setattr(commands, "list_routable_issues", fake_list)
+    monkeypatch.setattr(commands, "handle_issue", lambda *a, **k: {"ok": True, "status": "DRY_RUN"})
+    monkeypatch.setattr(commands.streaks, "clear_idle", lambda *a, **k: None)
+    monkeypatch.setattr(commands, "_persist_tick_state", lambda state: None)
+    monkeypatch.setattr(commands, "finish", lambda run_id, d, receipt, code, **k:
+                        captured.update(receipt=receipt, code=code, persist=k.get("persist")) or code)
+
+    rc = commands._tick_locked("run", tmp_path / "receipt", apply=False,
+                               project_id="agent-skills", max_tickets=1,
+                               only_issue=1640)
+    assert rc == 0, _json.dumps(captured.get("receipt", {}), sort_keys=True)
+
+    assert scanned == [{"skills/shame/scripts/agent_status_schema.py"}]
+    assert captured["receipt"]["status"] == "DRY_RUN"
+    assert captured["receipt"]["rotation"]["selected"] == "agent-skills"
+
+
 def test_tick_receipt_copies_excluded_issues_from_selected_scan(tmp_path, monkeypatch):
     import json as _json
 

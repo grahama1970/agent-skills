@@ -325,7 +325,10 @@ def observations(root: Path) -> dict[str, Any]:
             number = path.name.split("-", 1)[0]
             invalid.append({"journal": str(path), "issue_number": int(number) if number.isdigit() else None,
                             "error": str(exc), "disposition": "invalid_operation_quarantined"})
-    return {"writer_active": writer_active(root), "global_writer_active": _global_writer_active(root),
+    scoped_reservations = _active_scoped_reservations(root)
+    scoped_targets = sorted({target for row in scoped_reservations for target in row.get("targets", [])})
+    return {"writer_active": bool(scoped_reservations), "global_writer_active": _global_writer_active(root),
+            "writer_targets": scoped_targets, "writer_reservations": scoped_reservations,
             "operations": operations, "invalid_operations": invalid,
             "recovery_command": recovery_command(root)}
 
@@ -499,9 +502,12 @@ def _finalize_reattached_operation() -> dict[str, Any]:
         checkpoint("releasing", result=result)
     elif record.phase in {"leased", "settled"}:
         checkpoint("releasing", result=result)
-    if current().phase == "releasing" and _finish_release(current()):
-        write_json(Path(current().result_path), result)
-        checkpoint("finished" if result.get("ok") else "retryable", lease_released=True, result=result)
+    if current().phase == "releasing":
+        if _finish_release(current()):
+            write_json(Path(current().result_path), result)
+            checkpoint("finished" if result.get("ok") else "retryable", lease_released=True, result=result)
+        else:
+            result = _release_pending_result(current(), result)
     return result
 
 
@@ -544,6 +550,19 @@ def _finish_release(record: Operation) -> bool:
     if record.lease_event is None:
         return record.phase == "reserved"  # An ambiguous acquisition is not safe to release.
     return native_ticket.release(record)
+
+
+def _release_pending_result(record: Operation, result: dict[str, Any]) -> dict[str, Any]:
+    pending = dict(result)
+    pending.update(ok=False, status="NEEDS_ATTENTION",
+                   release_pending=True, requires_human_input=False,
+                   summary=("ticket close read back, but owned native release is not confirmed"
+                            if result.get("ticket_closed")
+                            else "owned native release is not confirmed"))
+    pending.setdefault("authorized_agent_next_steps", [recovery_command(Path(record.root))])
+    checkpoint("releasing", result=pending)
+    write_json(Path(record.result_path), pending)
+    return pending
 
 
 def reconcile(root: Path) -> dict[str, Any] | None:
@@ -619,6 +638,10 @@ def reconcile(root: Path) -> dict[str, Any] | None:
                 write_json(Path(record.result_path), result)
                 checkpoint("finished" if result.get("ok") else "retryable", lease_released=True,
                            result=result)
+            elif record.phase == "releasing":
+                result = _release_pending_result(record, record.result or {
+                    "ok": False, "status": "NEEDS_ATTENTION",
+                    "summary": "owned native release is not confirmed"})
         except (RuntimeError, ValueError, OSError) as exc:
             active = current()
             if active.tau_settled and active.closure is None:
@@ -729,7 +752,7 @@ def dispatch(run_id: str, receipt_dir: Path, project: dict[str, Any], issue: dic
                     write_json(output, result)
                     checkpoint("finished" if result.get("ok") else "retryable", lease_released=True)
                 else:
-                    result.update(ok=False, status="NEEDS_ATTENTION", summary="owned native release not confirmed")
+                    result = _release_pending_result(current(), result)
             except Exception as exc:
                 result.update(ok=False, status="NEEDS_ATTENTION", summary=f"native release retry retained: {exc}")
         elif record.phase in {"launching", "running", "uncertain"}:

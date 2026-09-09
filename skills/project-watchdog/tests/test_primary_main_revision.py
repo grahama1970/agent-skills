@@ -180,6 +180,56 @@ def test_disjoint_remote_advance_is_preserved_without_rebase(repository):
     result = content.publish(root, before, reviewed, receipts, "revision-fixture", 42, remote_required=True)
     assert git(root, "show", f"{result}:other/cron.txt") == "independently shipped"
     assert git(root, "rev-parse", f"{result}^") == other
+    publication = json.loads((receipts / "publication-recovery.json").read_text())
+    assert publication["publication_parent_sha"] == other
+    assert publication["landed_remote_sha"] == result
+    assert publication["published_target_matches_reviewed"] is True
+    assert publication["ancestor_check"]["exit_code"] == 0
+    assert publication["push"]["exit_code"] == 0
+
+
+def test_same_target_remote_advance_is_scoped_conflict_without_overwrite(repository):
+    root, _, receipts = repository
+    before = scope_snapshot(root)
+    (root / "skills/project-watchdog/registry.py").write_text("reviewed repair\n")
+    reviewed = content.snapshot(root, before.targets, before.remote_sha)
+    foreign = ship_fixture(root, receipts, "skills/project-watchdog/registry.py", "foreign same target\n")
+    head_before = git(root, "rev-parse", "HEAD")
+    with pytest.raises(content.ContentConflict, match="origin/main advanced on THIS target"):
+        content.publish(root, before, reviewed, receipts, "revision-fixture", 42, remote_required=True)
+    assert content.remote_pin(root) == foreign
+    assert git(root, "show", f"{foreign}:skills/project-watchdog/registry.py") == "foreign same target"
+    assert git(root, "rev-parse", "HEAD") == head_before
+
+
+def test_failed_publication_push_retains_command_diagnostics(repository, monkeypatch):
+    root, _, receipts = repository
+    before = scope_snapshot(root)
+    (root / "skills/project-watchdog/registry.py").write_text("reviewed repair\n")
+    reviewed = content.snapshot(root, before.targets, before.remote_sha)
+    head_before = git(root, "rev-parse", "HEAD")
+    index_before = (root / ".git/index").read_bytes()
+
+    real_git_diagnostic = content.git_diagnostic
+
+    def fail_push(repo, *args, **kwargs):
+        if args[:2] == ("push", "origin"):
+            return {"command": ["git", "-C", str(repo), *args], "exit_code": 1,
+                    "stdout": "push stdout kept", "stderr": "non-fast-forward kept",
+                    "timed_out": False}
+        return real_git_diagnostic(repo, *args, **kwargs)
+
+    monkeypatch.setattr(content, "git_diagnostic", fail_push)
+    with pytest.raises(content.ContentConflict, match="publication-recovery.json retains"):
+        content.publish(root, before, reviewed, receipts, "revision-fixture", 42, remote_required=True)
+    publication = json.loads((receipts / "publication-recovery.json").read_text())
+    assert publication["push"]["exit_code"] == 1
+    assert publication["push"]["stdout"] == "push stdout kept"
+    assert publication["push"]["stderr"] == "non-fast-forward kept"
+    assert publication["landed_remote_sha"] == before.remote_sha
+    assert publication["published_target_matches_reviewed"] is False
+    assert git(root, "rev-parse", "HEAD") == head_before
+    assert (root / ".git/index").read_bytes() == index_before
 
 
 def test_attributable_out_of_scope_commit_is_rejected(repository):
@@ -268,6 +318,8 @@ def test_scoped_reservations_allow_disjoint_declared_targets(repository):
     assert second is not None
     try:
         assert primary.writer_active(root)
+        observation = primary.observations(root)
+        assert observation["writer_targets"] == ["skills/battle", "skills/project-watchdog"]
         assert len(primary.inherited_fds()) == 0
     finally:
         primary._close_fds(first)
@@ -537,6 +589,24 @@ def test_closure_outbox_recovery_retries_native_close_without_new_provider(closi
     final = Operation.model_validate(core.load_json(Path(record.journal)))
     assert final.phase == "finished" and final.result["ticket_closed"] is True
     assert attempts == [record.run_id, record.run_id]
+
+
+def test_closed_ticket_with_release_pending_is_not_finished_completed(closing_record, monkeypatch):
+    record = closing_record
+    core.write_json(Path(record.journal), encoded(record))
+    monkeypatch.setattr(native_ticket, "close", lambda row: {
+        "ok": True, "status": "COMPLETED", "ticket_closed": True, "commands": []})
+    monkeypatch.setattr(native_ticket, "release", lambda row: False)
+
+    observed = primary.reconcile(Path(record.root))
+
+    assert observed is not None
+    final = Operation.model_validate(core.load_json(Path(record.journal)))
+    assert final.phase == "releasing"
+    assert final.result["status"] == "NEEDS_ATTENTION"
+    assert final.result["ticket_closed"] is True
+    assert final.result["release_pending"] is True
+    assert core.load_json(Path(record.result_path))["release_pending"] is True
 
 
 def test_unknown_remote_run_recovery_never_dispatches_duplicate(closing_record, monkeypatch):

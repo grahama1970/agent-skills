@@ -40,9 +40,20 @@
       "evidence_class": "fault_injected_deterministic",
       "mocked": true,
       "timeout_seconds": 120,
-      "command": ["uv", "run", "--project", "..", "pytest", "../tests/test_primary_main_revision.py::test_scoped_reservations_allow_disjoint_declared_targets", "../tests/test_primary_main_revision.py::test_legacy_global_flock_does_not_block_declared_scoped_targets", "../tests/test_primary_main_revision.py::test_scoped_reservations_serialize_overlapping_target_prefixes", "../tests/test_primary_main_revision.py::test_scoped_publication_guard_rejects_commit_outside_reserved_target", "-q"],
-      "expected": {"exit_code": 0, "stdout_contains": ["4 passed"]},
-      "proves": "Primary reservations use target-scoped nonblocking locks: disjoint declared targets can coexist, a legacy checkout-global flock does not block declared scoped targets, prefix-overlapping targets serialize, and the publication guard rejects worker-attributable commits outside the reserved target scope. Fixture-backed only; no live GitHub/provider closure."
+      "command": ["uv", "run", "--project", "..", "pytest", "../tests/test_primary_main_revision.py::test_scoped_reservations_allow_disjoint_declared_targets", "../tests/test_primary_main_revision.py::test_legacy_global_flock_does_not_block_declared_scoped_targets", "../tests/test_primary_main_revision.py::test_scoped_reservations_serialize_overlapping_target_prefixes", "../tests/test_primary_main_revision.py::test_scoped_publication_guard_rejects_commit_outside_reserved_target", "../tests/test_project_rotation.py::test_tick_scans_disjoint_target_when_scoped_writer_is_active", "-q"],
+      "expected": {"exit_code": 0, "stdout_contains": ["5 passed"]},
+      "proves": "Primary reservations use target-scoped nonblocking locks: disjoint declared targets can coexist, a legacy checkout-global flock does not block declared scoped targets, prefix-overlapping targets serialize, the publication guard rejects worker-attributable commits outside the reserved target scope, and the tick scanner treats active scoped writer targets as busy targets rather than a repository-wide stop. Fixture-backed only; no live GitHub/provider closure."
+    },
+    {
+      "name": "watchdog-publication-recovery",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 180,
+      "command": ["uv", "run", "--project", "..", "python", "../evals/publication_recovery.py", "/tmp/watchdog-publication-recovery-case.json"],
+      "expected": {"exit_code": 0, "artifacts": [{"path": "/tmp/watchdog-publication-recovery-case.json", "json_pointer": "/passed", "equals": true}]},
+      "proves": "Retained #1639 regression coverage for publication races and native release recovery: disjoint remote-main advance, same-target conflict, failed push diagnostics, helper nonzero diagnostics, close readback still open, proof/publication/close/release interruption recovery, target parsing scope, foreign leases/holds, and closed-but-release-pending journal state. Fault-injected mock-GitHub tests supplement, not replace, live remote evidence.",
+      "does_not_prove": "The required live E2E against a real approved GitHub ticket; that remains a separate verification-plan command before closure."
     },
     {
       "name": "immutable-replay-proof-negative-controls",

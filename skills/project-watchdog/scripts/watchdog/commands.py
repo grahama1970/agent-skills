@@ -556,11 +556,11 @@ def _tick_locked(
                        else primary.pending(registry.project_worktree(candidate)))
             if pending:
                 receipt.setdefault("primary_observations", []).append({"project_id": cid, **pending})
-                if pending.get("writer_active"):
+                if pending.get("writer_active") and not pending.get("writer_targets"):
                     skipped.append({"project_id": cid, "reason": "lane_busy", "operation": pending})
                     continue
-                # No actual local writer: historical journals hold only their targets.
-                # Do not let a stale/foreign label become monorepo-wide authority.
+                # Active scoped writers hold only their declared targets. Historical
+                # journals likewise hold only their targets; neither becomes monorepo-wide authority.
             in_flight = registry.lane_busy_issues(run_id, candidate)
         except (RuntimeError, OSError, ValueError) as exc:
             # A failed lease scan must never read as "nothing in flight".
@@ -595,6 +595,7 @@ def _tick_locked(
 
         busy = registry.busy_targets(in_flight)
         unresolved = pending or {}
+        busy.update(unresolved.get("writer_targets", []))
         for operation in unresolved.get("operations", []):
             busy.update(operation["targets"])
         retained_issue_ids = {int(op["issue_number"]) for op in unresolved.get("operations", [])}
