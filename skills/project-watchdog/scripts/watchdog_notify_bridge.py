@@ -207,6 +207,21 @@ def main() -> None:
             "webhook": push_webhook(ev),
             "switchboard": push_switchboard(ev) if fresh else "skipped_stale",
         })
+    if not results:
+        # Heartbeat: a silent stream is indistinguishable from a dead one.
+        import glob as _glob
+        mons = sorted(_glob.glob(str(RECEIPTS / "*/tau-stream-monitor.json")), key=os.path.getmtime)
+        live = ""
+        if mons:
+            try:
+                m = json.loads(Path(mons[-1]).read_text())
+                ev = m.get("latest_event") or {}
+                state = "LIVE" if m.get("process_running") else m.get("current_status")
+                live = f" {state} node={ev.get('node_id') or '-'} elapsed={int(m.get('elapsed_seconds') or 0)}s"
+            except Exception:
+                pass
+        with (STATE_ROOT / "events.log").open("a") as fh:
+            fh.write(f"{time.strftime('%H:%M:%SZ', time.gmtime())} heartbeat: no new receipts;{live or ' no active run'}\n")
     if max_mtime > cursor and "--replay-last" not in sys.argv:
         _save_cursor(max_mtime)
     print(json.dumps({"schema": "project_watchdog.notify_bridge_result.v1",
