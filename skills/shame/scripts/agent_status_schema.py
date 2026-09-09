@@ -11,8 +11,10 @@ triage code that exists in the triage-error catalog or matches the minted
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import json
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
@@ -48,6 +50,10 @@ def read_proof_text(path: Path) -> str:
     if path.is_dir():
         return "\n".join(sorted(p.name for p in path.iterdir()))
     return path.read_text(errors="ignore")[:200_000]
+
+
+def file_sha256_uri(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def import_module(path: Path, name: str) -> Any:
@@ -175,15 +181,14 @@ def artifact_supports_verified(text: str, item: "VerifiedItem") -> bool:
 class ParentRef(BaseModel):
     model_config = ConfigDict(extra="forbid")
     receipt_id: str = Field(min_length=1)
+    receipt_path: str = Field(min_length=1)
     expected_schema: str = Field(min_length=1)
     expected_producer: str = Field(min_length=1)
-    digest: str | None = None
+    digest: str = Field(min_length=71, max_length=71)
 
     @field_validator("digest")
     @classmethod
-    def digest_shape(cls, value: str | None) -> str | None:
-        if value is None:
-            return value
+    def digest_shape(cls, value: str) -> str:
         prefix = "sha256:"
         if not value.startswith(prefix):
             raise PydanticCustomError("invalid_digest", "digest must start with sha256:")
@@ -191,6 +196,119 @@ class ParentRef(BaseModel):
         if len(digest) != 64 or not all(c in "0123456789abcdef" for c in digest):
             raise PydanticCustomError("invalid_digest", "digest must be 64 lowercase hex chars")
         return value
+
+
+@dataclass(frozen=True, slots=True)
+class ResolvedParent:
+    ref: ParentRef
+    producer: str
+    payload_schema: str
+    goal_hash: str | None
+    parent_refs: tuple[Any, ...]
+
+
+BRAVE_SEARCH_RESULTS_SCHEMA = "brave_search.web_results.v1"
+ASK_AGENT_HANDOFF_SCHEMA = "tau.agent_handoff.v1"
+
+
+def receipt_parent_ref(ref: ParentRef) -> dict[str, str]:
+    return {
+        "receipt_id": ref.receipt_id,
+        "expected_schema": ref.expected_schema,
+        "expected_producer": ref.expected_producer,
+        "digest": ref.digest,
+    }
+
+
+def same_receipt_ref(left: dict[str, str], right: Any) -> bool:
+    return (
+        left["receipt_id"] == getattr(right, "receipt_id", None)
+        and left["expected_schema"] == getattr(right, "expected_schema", None)
+        and left["expected_producer"] == getattr(right, "expected_producer", None)
+        and left["digest"] == getattr(right, "digest", None)
+    )
+
+
+def resolve_parent_ref(ref: ParentRef, goal_hash: str | None, state: str) -> ResolvedParent:
+    if goal_hash is None:
+        raise PydanticCustomError(
+            f"{state}_requires_goal_hash",
+            f"state={state} with parent_refs requires goal_hash",
+            {"field": "goal_hash"},
+        )
+    path = local_proof_path(ref.receipt_path)
+    if path is None:
+        raise PydanticCustomError(
+            "parent_ref_receipt_unresolved",
+            "parent_ref receipt_path must be a local receipt file",
+            {"receipt_id": ref.receipt_id, "receipt_path": ref.receipt_path},
+        )
+    if not path.exists():
+        raise PydanticCustomError(
+            "parent_ref_receipt_missing",
+            "parent_ref receipt_path does not exist",
+            {"receipt_id": ref.receipt_id, "receipt_path": str(path)},
+        )
+    if not path.is_file():
+        raise PydanticCustomError(
+            "parent_ref_receipt_not_file",
+            "parent_ref receipt_path must be a file",
+            {"receipt_id": ref.receipt_id, "receipt_path": str(path)},
+        )
+    actual_digest = file_sha256_uri(path)
+    if actual_digest != ref.digest:
+        raise PydanticCustomError(
+            "parent_ref_digest_mismatch",
+            "parent_ref digest must match the resolved receipt bytes",
+            {"receipt_id": ref.receipt_id, "expected_digest": ref.digest, "actual_digest": actual_digest},
+        )
+    text = read_proof_text(path)
+    data = parse_proof_json(path, text)
+    if data is None or data.get("schema") != "pi.receipt_envelope.v1":
+        raise PydanticCustomError(
+            "parent_ref_receipt_not_envelope",
+            "parent_ref receipt must resolve to pi.receipt_envelope.v1",
+            {"receipt_id": ref.receipt_id, "receipt_path": str(path)},
+        )
+    try:
+        envelope = import_receipt_envelope().ReceiptEnvelope.model_validate(data)
+    except Exception as exc:
+        raise PydanticCustomError(
+            "parent_ref_receipt_invalid",
+            "parent_ref receipt envelope failed validation",
+            {"receipt_id": ref.receipt_id, "error": str(exc)},
+        ) from exc
+    if envelope.receipt_id != ref.receipt_id:
+        raise PydanticCustomError(
+            "parent_ref_receipt_id_mismatch",
+            "parent_ref receipt_id must match the resolved receipt",
+            {"expected_receipt_id": ref.receipt_id, "actual_receipt_id": envelope.receipt_id},
+        )
+    if envelope.payload_schema != ref.expected_schema:
+        raise PydanticCustomError(
+            "parent_ref_schema_mismatch",
+            "parent_ref expected_schema must match the resolved receipt payload_schema",
+            {"receipt_id": ref.receipt_id, "expected_schema": ref.expected_schema, "actual_schema": envelope.payload_schema},
+        )
+    if envelope.producer != ref.expected_producer:
+        raise PydanticCustomError(
+            "parent_ref_producer_mismatch",
+            "parent_ref expected_producer must match the resolved receipt producer",
+            {"receipt_id": ref.receipt_id, "expected_producer": ref.expected_producer, "actual_producer": envelope.producer},
+        )
+    if envelope.goal_hash != goal_hash:
+        raise PydanticCustomError(
+            "parent_ref_goal_hash_mismatch",
+            "parent_ref receipt goal_hash must match the active status goal_hash",
+            {"receipt_id": ref.receipt_id, "expected_goal_hash": goal_hash, "actual_goal_hash": envelope.goal_hash},
+        )
+    return ResolvedParent(
+        ref=ref,
+        producer=envelope.producer,
+        payload_schema=envelope.payload_schema,
+        goal_hash=envelope.goal_hash,
+        parent_refs=tuple(envelope.parent_refs),
+    )
 
 
 class VerifiedItem(BaseModel):
@@ -234,8 +352,12 @@ class NeedsBraveSearch(BaseModel):
     queries: list[str] = Field(min_length=1)
 
 
-def has_parent_producer(refs: list[ParentRef], producer: str) -> bool:
-    return any(ref.expected_producer == producer for ref in refs)
+def has_parent_producer(refs: list[ResolvedParent], producer: str) -> bool:
+    return any(ref.producer == producer for ref in refs)
+
+
+def has_parent_receipt(refs: list[ResolvedParent], producer: str, payload_schema: str) -> bool:
+    return any(ref.producer == producer and ref.payload_schema == payload_schema for ref in refs)
 
 
 class NeedsAgent(BaseModel):
@@ -248,12 +370,6 @@ class NeedsAgent(BaseModel):
 
     @model_validator(mode="after")
     def enforce_cross_family_after_brave(self) -> "NeedsAgent":
-        if not has_parent_producer(self.parent_refs, "brave-search"):
-            raise PydanticCustomError(
-                "needs_agent_requires_brave_parent",
-                "state=needs_agent requires a typed brave-search parent_ref",
-                {"expected_producer": "brave-search"},
-            )
         if self.project_agent_family == "openai" and not self.handler.startswith("claude-"):
             raise PydanticCustomError(
                 "needs_agent_requires_cross_family_handler",
@@ -277,18 +393,6 @@ class NeedsWebgpt(BaseModel):
 
     @model_validator(mode="after")
     def enforce_prior_rungs(self) -> "NeedsWebgpt":
-        if not has_parent_producer(self.parent_refs, "brave-search"):
-            raise PydanticCustomError(
-                "needs_webgpt_requires_brave_parent",
-                "state=needs_webgpt requires a typed brave-search parent_ref",
-                {"expected_producer": "brave-search"},
-            )
-        if not has_parent_producer(self.parent_refs, "ask"):
-            raise PydanticCustomError(
-                "needs_webgpt_requires_ask_parent",
-                "state=needs_webgpt requires a typed ask parent_ref",
-                {"expected_producer": "ask"},
-            )
         return self
 
 
@@ -330,10 +434,10 @@ class AgentStatus(BaseModel):
         "needs_brave_search", "needs_agent", "needs_webgpt",
         "needs_roundtable", "needs_competition",
     ]
-    changed: list[str] = []
-    verified: list[VerifiedItem] = []
-    proof: list[str] = []
-    not_done: list[NotDoneItem] = []
+    changed: list[str] = Field(default_factory=list)
+    verified: list[VerifiedItem] = Field(default_factory=list)
+    proof: list[str] = Field(default_factory=list)
+    not_done: list[NotDoneItem] = Field(default_factory=list)
     failure: Failure | None = None
     needs_human: NeedsHuman | None = None
     needs_brave_search: NeedsBraveSearch | None = None
@@ -383,6 +487,62 @@ class AgentStatus(BaseModel):
                 raise PydanticCustomError("state_payload_missing", f"state={state_name} requires the {field_name} payload", {"field": field_name})
             if self.state != state_name and value is not None:
                 raise PydanticCustomError("state_payload_forbidden", f"{field_name} is only legal with state={state_name}", {"field": field_name})
+        if self.state in {"needs_brave_search", "needs_agent", "needs_webgpt"} and self.goal_hash is None:
+            raise PydanticCustomError(
+                "escalation_requires_goal_hash",
+                f"state={self.state} requires goal_hash before compiling an escalation command",
+                {"field": "goal_hash"},
+            )
+        if self.state == "needs_agent" and self.needs_agent is not None:
+            resolved = [
+                resolve_parent_ref(ref, self.goal_hash, self.state)
+                for ref in self.needs_agent.parent_refs
+            ]
+            if not has_parent_receipt(resolved, "brave-search", BRAVE_SEARCH_RESULTS_SCHEMA):
+                raise PydanticCustomError(
+                    "needs_agent_requires_brave_parent",
+                    "state=needs_agent requires a resolved brave-search web-results parent_ref",
+                    {"expected_producer": "brave-search", "expected_schema": BRAVE_SEARCH_RESULTS_SCHEMA},
+                )
+        if self.state == "needs_webgpt" and self.needs_webgpt is not None:
+            resolved = [
+                resolve_parent_ref(ref, self.goal_hash, self.state)
+                for ref in self.needs_webgpt.parent_refs
+            ]
+            brave_refs = [
+                parent
+                for parent in resolved
+                if parent.producer == "brave-search" and parent.payload_schema == BRAVE_SEARCH_RESULTS_SCHEMA
+            ]
+            ask_refs = [
+                parent
+                for parent in resolved
+                if parent.producer == "ask" and parent.payload_schema == ASK_AGENT_HANDOFF_SCHEMA
+            ]
+            if not brave_refs:
+                raise PydanticCustomError(
+                    "needs_webgpt_requires_brave_parent",
+                    "state=needs_webgpt requires a resolved brave-search web-results parent_ref",
+                    {"expected_producer": "brave-search", "expected_schema": BRAVE_SEARCH_RESULTS_SCHEMA},
+                )
+            if not ask_refs:
+                raise PydanticCustomError(
+                    "needs_webgpt_requires_ask_parent",
+                    "state=needs_webgpt requires a resolved Ask handoff parent_ref",
+                    {"expected_producer": "ask", "expected_schema": ASK_AGENT_HANDOFF_SCHEMA},
+                )
+            brave_receipts = [receipt_parent_ref(parent.ref) for parent in brave_refs]
+            if not any(
+                same_receipt_ref(brave_ref, ask_parent_ref)
+                for ask_parent in ask_refs
+                for ask_parent_ref in ask_parent.parent_refs
+                for brave_ref in brave_receipts
+            ):
+                raise PydanticCustomError(
+                    "needs_webgpt_requires_ask_descended_from_brave",
+                    "state=needs_webgpt requires an ask parent receipt descended from the brave-search evidence",
+                    {"expected_lineage": "ask.parent_refs[] must include the brave-search parent_ref"},
+                )
         if not self.changed:
             raise PydanticCustomError(
                 "changed_required",
@@ -459,7 +619,24 @@ def steering_from_error(error: dict[str, Any]) -> dict[str, Any]:
     return steering
 
 
-def invalid_payload(errors: list[dict[str, Any]]) -> dict[str, Any]:
+def minimal_example(state: str) -> dict[str, Any]:
+    """Return a minimal schema-valid pi.agent_status.v1 example for a state.
+
+    Generated next to the pydantic contract so docs cannot drift. Used in
+    rejection notices so a tool-blocked retry never has to guess field shapes.
+    """
+    base: dict[str, Any] = {"schema": "pi.agent_status.v1", "goal": "<one-line goal>", "changed": ["no change: <reason>"]}
+    payloads: dict[str, dict[str, Any]] = {
+        "done": {"verified": [{"command": "read /path/proof.txt", "result": "<exact substring of that file>"}], "proof": ["/path/proof.txt"]},
+        "continuing": {"not_done": [{"item": "<remaining item>"}], "next_command": "<runnable command>"},
+        "needs_human": {"needs_human": {"action": "<exact human action>", "reason": "<why>"}},
+        "failed": {"failure": {"triage": {"code": "<triage-error catalog code>"}}},
+        "needs_brave_search": {"queries": ["<query>"]},
+    }
+    return {**base, "state": state if state in payloads else "done", **payloads.get(state, payloads["done"])}
+
+
+def invalid_payload(errors: list[dict[str, Any]], state_hint: str = "done") -> dict[str, Any]:
     normalized = [
         {
             "type": str(error.get("type") or "invalid_agent_status_json"),
@@ -474,21 +651,32 @@ def invalid_payload(errors: list[dict[str, Any]]) -> dict[str, Any]:
         "schema": "pi.agent_status.validation_result.v1",
         "errors": normalized,
         "steering": [steering_from_error(error) for error in normalized],
+        "example": minimal_example(state_hint),
     }
 
 
 def main() -> int:
+    if len(sys.argv) == 3 and sys.argv[1] == "example":
+        print(json.dumps(minimal_example(sys.argv[2]), indent=2))
+        return 0
     if len(sys.argv) != 3 or sys.argv[1] != "validate":
         print(__doc__, file=sys.stderr)
         return 2
     raw = sys.stdin.read() if sys.argv[2] == "-" else Path(sys.argv[2]).read_text()
+    state_hint = "done"
+    try:
+        parsed = json.loads(raw)
+        if isinstance(parsed, dict) and isinstance(parsed.get("state"), str):
+            state_hint = parsed["state"]
+    except Exception:
+        pass
     try:
         status = AgentStatus.model_validate_json(raw)
     except ValidationError as exc:
-        print(json.dumps(invalid_payload(exc.errors(include_url=False))))
+        print(json.dumps(invalid_payload(exc.errors(include_url=False), state_hint)))
         return 1
     except Exception as exc:
-        print(json.dumps(invalid_payload([{"type": "invalid_json", "loc": [], "msg": str(exc), "ctx": {}}])))
+        print(json.dumps(invalid_payload([{"type": "invalid_json", "loc": [], "msg": str(exc), "ctx": {}}], state_hint)))
         return 1
     print(json.dumps({"valid": True, "schema": "pi.agent_status.validation_result.v1", "state": status.state}))
     return 0

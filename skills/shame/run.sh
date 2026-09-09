@@ -31,6 +31,14 @@ case "$cmd" in
     if [[ ! -f "$history" ]]; then history="$HOME/.pi/agent/extensions/lazy-report-shame-shame-shame/failure-history.mjs"; fi
     node "$history" "$@"
     ;;
+  schema)
+    # schema --example <state>: print a minimal valid pi.agent_status.v1 for that state
+    if [[ "${1:-}" == "--example" && -n "${2:-}" ]]; then
+      uv run --with pydantic python3 "$SKILL_DIR/scripts/agent_status_schema.py" example "$2"
+    else
+      echo "usage: run.sh schema --example <done|continuing|needs_human|failed|needs_brave_search>" >&2; exit 2
+    fi
+    ;;
   path)
     printf '%s\n' "${LAZY_REPORT_SHAME_TRAINING_JSONL:-/mnt/storage12tb/skills/shame/training/classifier-feedback.jsonl}"
     ;;

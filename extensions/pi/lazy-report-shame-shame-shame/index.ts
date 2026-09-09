@@ -424,7 +424,7 @@ function trustedGoalIdentity(status: any): string | null {
   return null;
 }
 
-function failedOperationIdentity(status: any, triage: any): string {
+function failedOperationIdentity(status: any, triage: any): string | null {
   const verified = Array.isArray(status?.verified) ? status.verified : [];
   for (const item of verified) {
     const command = stableCommandIdentity("verified_command", item?.command);
@@ -432,7 +432,16 @@ function failedOperationIdentity(status: any, triage: any): string {
   }
   const nextCommand = stableCommandIdentity("triage_next_command", triage?.next_command);
   if (nextCommand) return nextCommand;
-  return "operation:unspecified";
+  return null;
+}
+
+function ownerNormalizedTriageIdentity(triage: any): string | null {
+  const triageCode = normalizeTriageCode(triage?.code);
+  if (!triageCode) return null;
+  return [
+    "triage_owner:triage-error",
+    `triage_code:${triageCode}`,
+  ].join("\n");
 }
 
 function parseCheckerPayload(stdout: string, stderr: string, status: number | null): CheckResult {
@@ -607,12 +616,13 @@ function statusFailureFingerprint(status: any): string | null {
   const triage = status?.failure?.triage;
   if (status?.state !== "failed" || !triage?.code) return null;
   const goalIdentity = trustedGoalIdentity(status);
-  const triageCode = normalizeTriageCode(triage.code);
-  if (!goalIdentity || !triageCode) return null;
+  const triageIdentity = ownerNormalizedTriageIdentity(triage);
+  const operationIdentity = failedOperationIdentity(status, triage);
+  if (!goalIdentity || !triageIdentity || !operationIdentity) return null;
   return sha256([
     goalIdentity,
-    `triage_code:${triageCode}`,
-    failedOperationIdentity(status, triage),
+    triageIdentity,
+    operationIdentity,
   ].map(String).join("\n"));
 }
 
@@ -1241,10 +1251,16 @@ export default function lazyReportShameShameShame(pi: any) {
     const tool = baseToolName(event.toolName);
     const input = event.input || {};
     const command = String(input.command || "");
-    if (formatRepairTurn) return {
-      block: true, terminate: true,
-      reason: JSON.stringify({ code: "format_repair_tools_forbidden", allowed_tools: [], max_corrections: 1 }),
-    };
+    if (formatRepairTurn) {
+      // A3: the read-only preflight checker is the one tool that prevents a
+      // wasted retry; blocking it forced blind guesses (2026-09-08 spiral).
+      const isPreflight = tool === "bash" && /(^|\s|\/)run\.sh preflight(\s|$)/.test(command) && !isMutatingShellCommand(command);
+      if (tool === "read" || isPreflight) return;
+      return {
+        block: true, terminate: true,
+        reason: JSON.stringify({ code: "format_repair_tools_forbidden", allowed_tools: ["read", "bash: skills/shame/run.sh preflight"], max_corrections: 1 }),
+      };
+    }
     if (shameSkillContractRequired && !shameSkillContractRead && !["read", "shame_failures"].includes(tool)) {
       return {
         block: true,
@@ -1306,7 +1322,11 @@ export default function lazyReportShameShameShame(pi: any) {
     }
     if (sessionMode === "off" && !budget.current) return;
     const text = contentToText(event.message.content);
-    const forceStatus = Boolean(budget.current) || sessionMode === "strict" || mutatingTurn || sessionGuardActive || turnGuardActive || Boolean(activeContinuationState());
+    // A4: a guard token on a turn with zero mutating tool calls is an advisory
+    // question; do not arm the full done/proof contract for it (2026-09-08:
+    // five rejections, all on non-mutating Q&A turns).
+    const guardArmed = (sessionGuardActive || turnGuardActive) && (mutatingTurn || formatRepairTurn);
+    const forceStatus = Boolean(budget.current) || sessionMode === "strict" || mutatingTurn || guardArmed || Boolean(activeContinuationState());
     const strictStatus = shameSelfCorrectTurn;
     let check = checkReport(text, forceStatus, mutatingTurn, strictStatus, currentUserText, formatRepairTurn);
     const statusState = typeof (check as any)?.features?.state === "string" ? String((check as any).features.state) : undefined;
