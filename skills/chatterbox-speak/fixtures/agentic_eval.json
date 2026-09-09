@@ -1,12 +1,38 @@
 {
   "schema": "agentic_eval.fixture.v1",
   "skill": "chatterbox-speak",
+  "version": 2,
   "trials": 3,
+  "capability_claims": [
+    {
+      "id": "speak.render.live",
+      "description": "one-shot voiced line renders live through the Chatterbox service with typed receipt",
+      "criticality": "critical",
+      "evidence_required": {"deterministic": true, "live_e2e": true}
+    },
+    {
+      "id": "speak.emotion.measured",
+      "description": "requested intensity produces measured acoustic arousal via analyze-chatterbox-emotions, not just echoed request fields",
+      "criticality": "critical",
+      "evidence_required": {"live_e2e": true}
+    },
+    {
+      "id": "speak.fail_closed",
+      "description": "unknown voice / dead service / non-live receipt fail closed with no artifact",
+      "criticality": "critical",
+      "evidence_required": {"deterministic": true}
+    }
+  ],
+  "out_of_scope_claims": {
+    "note": "interrupt/barge-in, memory turn-holding, research routing, and wait/delay language are embry-voice-control claims; see its turn rungs (listener-turn-live, embry-chat-static-query-live, research-turn-live) and memory /execution-stats for ETA-driven wait speech"
+  },
   "cases": [
     {
       "id": "speak-live-positive",
       "case_type": "positive",
       "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": ["speak.render.live"],
       "command": "./run.sh speak --text 'Say something. [sigh]' --voice embry --tone neutral_warm --context 'eval fixture' --analyze",
       "assertions": [
         "exit code 0",
@@ -19,6 +45,8 @@
       "id": "speak-intensity-routing",
       "case_type": "positive",
       "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": ["speak.emotion.measured"],
       "command": "./run.sh speak --text 'This matters.' --voice embry --intensity high --tone firm_boundary --analyze",
       "assertions": [
         "exit code 0",
@@ -31,6 +59,8 @@
       "id": "unknown-voice-fails-closed",
       "case_type": "negative",
       "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["speak.fail_closed"],
       "command": "./run.sh speak --text hi --voice nosuchvoice",
       "assertions": ["non-zero exit", "no receipt written"]
     }
