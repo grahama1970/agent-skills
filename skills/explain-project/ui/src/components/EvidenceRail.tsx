@@ -69,7 +69,7 @@ export function EvidenceRail({
 
       <IntegrationHealth state={state} />
 
-      <section className="rounded-lg bg-zinc-950 p-3">
+      <section data-qid="cockpit:source:panel" data-revision={state.source.revision} className="rounded-lg bg-zinc-950 p-3">
         <h2 className="font-semibold">
           Source
         </h2>
@@ -115,7 +115,7 @@ export function EvidenceRail({
         </p>
       </section>
 
-      <section className="rounded-lg bg-zinc-950 p-3">
+      <section data-qid="cockpit:debugger:panel" data-revision={state.debugger.revision} className="rounded-lg bg-zinc-950 p-3">
         <h2 className="font-semibold">
           Debugger target only
         </h2>

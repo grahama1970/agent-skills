@@ -5,7 +5,7 @@ DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 
 if (($# == 0)); then
   echo \
-    "usage: $0 validate|list|ask|sample|cockpit-proof|cockpit|validate-proof|interaction-manifest|debugger-source-reveal-receipt|debugger-runtime-proof-receipt|excalidraw-proposal-receipt ..." \
+    "usage: $0 validate|list|ask|sample|cockpit-proof|cockpit|validate-proof|eval-browser-sync|interaction-manifest|debugger-source-reveal-receipt|debugger-runtime-proof-receipt|excalidraw-proposal-receipt ..." \
     >&2
   exit 2
 fi
@@ -14,6 +14,9 @@ cmd=$1
 shift
 
 case "$cmd" in
+  eval-browser-sync)
+    uv run --isolated --with httpx python3 "$DIR/scripts/eval_browser_sync.py" "$@"
+    ;;
   validate|list|ask|sample|cockpit-proof|cockpit|validate-proof|interaction-manifest|debugger-source-reveal-receipt|debugger-runtime-proof-receipt|excalidraw-proposal-receipt)
     PYTHONPATH="$DIR/scripts" \
       uv run \
@@ -27,7 +30,7 @@ case "$cmd" in
     ;;
   *)
     echo \
-      "usage: $0 validate|list|ask|sample|cockpit-proof|cockpit|validate-proof|interaction-manifest|debugger-source-reveal-receipt|debugger-runtime-proof-receipt|excalidraw-proposal-receipt ..." \
+      "usage: $0 validate|list|ask|sample|cockpit-proof|cockpit|validate-proof|eval-browser-sync|interaction-manifest|debugger-source-reveal-receipt|debugger-runtime-proof-receipt|excalidraw-proposal-receipt ..." \
       >&2
     exit 2
     ;;

@@ -41,6 +41,8 @@ export function TeleprompterStage({
 
   return (
     <section
+      data-qid="cockpit:teleprompter:stage"
+      data-revision={state.teleprompter.revision}
       className={[
         'cockpit-stage',
         'flex min-w-0 flex-col rounded-2xl',

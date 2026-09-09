@@ -7,6 +7,7 @@ import {
 } from 'react'
 
 import {
+  CockpitApiError,
   fetchBootstrap,
   importExplainer,
   postCockpitEvent,
@@ -14,6 +15,7 @@ import {
 } from './api'
 
 import type {
+  BootstrapResponse,
   CockpitState,
   ExplainerSummary,
 } from './types'
@@ -44,33 +46,66 @@ export function useCockpit(
     Promise.resolve(),
   )
 
-  useEffect(() => {
-    if (stateRef.current !== null) return
+  const [syncError, setSyncError] = useState<string | null>(null)
+  const catalogRevision = useRef(initialState?.revision ?? -1)
+  const pendingRefresh = useRef<Promise<void> | null>(null)
 
-    let cancelled = false
+  const adoptState = useCallback((next: CockpitState) => {
+    // Responses may arrive out of order; a slow poll must not undo an action.
+    if (next.revision <= (stateRef.current?.revision ?? -1)) return
+    stateRef.current = next
+    setState(next)
+  }, [])
 
-    void fetchBootstrap()
+  const adoptBootstrap = useCallback((bootstrap: BootstrapResponse) => {
+    if (bootstrap.state.revision < (stateRef.current?.revision ?? -1)) return
+    adoptState(bootstrap.state)
+    if (bootstrap.state.revision > catalogRevision.current) {
+      catalogRevision.current = bootstrap.state.revision
+      setExplainers(bootstrap.explainers)
+    }
+  }, [adoptState])
+
+  const refresh = useCallback((): Promise<void> => {
+    if (pendingRefresh.current) return pendingRefresh.current
+    const request = fetchBootstrap()
       .then((bootstrap) => {
-        if (cancelled) return
-
-        stateRef.current = bootstrap.state
-        setState(bootstrap.state)
-        setExplainers(bootstrap.explainers)
+        adoptBootstrap(bootstrap)
+        setSyncError(null)
       })
-      .catch((caught) => {
-        if (!cancelled) {
-          setError(
-            caught instanceof Error
-              ? caught.message
-              : String(caught),
-          )
-        }
+      .catch((caught: unknown) => {
+        setSyncError(`Cockpit sync interrupted; displayed state may be stale: ${
+          caught instanceof Error ? caught.message : String(caught)
+        }`)
+        throw caught
       })
+      .finally(() => { pendingRefresh.current = null })
+    pendingRefresh.current = request
+    return request
+  }, [adoptBootstrap])
 
+  useEffect(() => {
+    // Explicit seeded props are for isolated, non-network component previews.
+    if (initialState !== undefined) return
+    let cancelled = false
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const refreshQuietly = () => refresh().catch(() => {
+      // refresh renders the sync error; never discard it as a successful poll.
+    })
+    async function poll(): Promise<void> {
+      await refreshQuietly()
+      // ponytail: 1 Hz snapshots for a local cockpit; SSE if latency/size demands it.
+      if (!cancelled) timer = setTimeout(() => { void poll() }, 1000)
+    }
+    const onFocus = () => { void refreshQuietly() }
+    void poll()
+    window.addEventListener('focus', onFocus)
     return () => {
       cancelled = true
+      clearTimeout(timer)
+      window.removeEventListener('focus', onFocus)
     }
-  }, [])
+  }, [initialState, refresh])
 
   const dispatch = useCallback<Dispatch>(
     (type, payload = {}) => {
@@ -90,8 +125,8 @@ export function useCockpit(
             payload,
           )
 
-          stateRef.current = next
-          setState(next)
+          adoptState(next)
+          setError(null)
         },
       )
 
@@ -99,15 +134,18 @@ export function useCockpit(
         () => undefined,
       )
 
-      return queued.catch((caught) => {
-        setError(
-          caught instanceof Error
-            ? caught.message
-            : String(caught),
-        )
+      return queued.catch(async (caught: unknown) => {
+        if (caught instanceof CockpitApiError && caught.status === 409) {
+          setError('Cockpit changed elsewhere; action not replayed. Review the current step and try again.')
+          await refresh().catch(() => {
+            // Keep the sync error visible until a later read succeeds.
+          })
+          return
+        }
+        setError(caught instanceof Error ? caught.message : String(caught))
       })
     },
-    [],
+    [adoptState, refresh],
   )
 
   const importRecord = useCallback(
@@ -120,10 +158,8 @@ export function useCockpit(
             record,
           )
 
-          stateRef.current = bootstrap.state
-          setState(bootstrap.state)
-          setExplainers(bootstrap.explainers)
-
+          adoptBootstrap(bootstrap)
+          setError(null)
           imported = true
         },
       )
@@ -143,7 +179,7 @@ export function useCockpit(
           return false
         })
     },
-    [],
+    [adoptBootstrap],
   )
 
   return {
@@ -151,7 +187,7 @@ export function useCockpit(
     explainers,
     dispatch,
     importRecord,
-    error,
+    error: syncError ?? error,
   }
 }
 

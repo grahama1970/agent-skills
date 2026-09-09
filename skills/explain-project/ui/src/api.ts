@@ -13,15 +13,19 @@ export type EventType =
   | 'debugger.prepare.request'
   | 'adapter.receipt'
 
+export class CockpitApiError extends Error {
+  constructor(readonly status: number, body: unknown) {
+    super(`cockpit API ${status}: ${JSON.stringify(body)}`)
+  }
+}
+
 async function readJson<T>(
   response: Response,
 ): Promise<T> {
   const body = (await response.json()) as T
 
   if (!response.ok) {
-    throw new Error(
-      `cockpit API ${response.status}: ${JSON.stringify(body)}`,
-    )
+    throw new CockpitApiError(response.status, body)
   }
 
   return body
@@ -31,7 +35,7 @@ export async function fetchBootstrap(): Promise<BootstrapResponse> {
   return readJson<BootstrapResponse>(
     await fetch(
       '/api/cockpit/bootstrap',
-      { cache: 'no-store' },
+      { cache: 'no-store', signal: AbortSignal.timeout(5000) },
     ),
   )
 }
@@ -48,6 +52,7 @@ export async function postCockpitEvent(
       headers: {
         'content-type': 'application/json',
       },
+      signal: AbortSignal.timeout(5000),
       body: JSON.stringify({
         schema: 'explain_project.cockpit_event.v1',
         event_id: crypto.randomUUID(),
@@ -71,6 +76,7 @@ export async function importExplainer(
       headers: {
         'content-type': 'application/json',
       },
+      signal: AbortSignal.timeout(5000),
       body: JSON.stringify({ record }),
     },
   )

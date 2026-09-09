@@ -59,6 +59,8 @@ export function CockpitApp({
 
   return (
     <main
+      data-qid="cockpit:state:root"
+      data-revision={state.revision}
       className={[
         'h-dvh overflow-hidden',
         'bg-zinc-950 p-4 text-zinc-50',
@@ -102,6 +104,8 @@ export function CockpitApp({
 
       {error ? (
         <div
+          role="alert"
+          data-qid="cockpit:state:error"
           className={[
             'mb-2 rounded-lg border',
             'border-red-700 bg-red-950/70',

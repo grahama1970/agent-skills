@@ -43,7 +43,9 @@ export function IntegrationHealth({
 
       <div className="mt-2 flex flex-wrap gap-2">
         <HealthPill
-          label="Live Evidence"
+          label={state.question?.source === 'live_evidence_replay'
+            ? 'Live Evidence (replay)'
+            : 'Live Evidence intake'}
           status={state.integration_health.live_evidence}
         />
         <HealthPill

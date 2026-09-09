@@ -46,6 +46,7 @@ skills/explain-project/run.sh validate docs/explain/explainers.jsonl
 skills/explain-project/run.sh list docs/explain/explainers.jsonl
 skills/explain-project/run.sh ask docs/explain/explainers.jsonl --question "What breaks first at scale?"
 skills/explain-project/run.sh sample --output docs/explain/explainers.jsonl
+skills/explain-project/run.sh eval-browser-sync --out-dir /tmp/explain-project-browser-sync
 ```
 
 ## Record contract
@@ -60,6 +61,22 @@ Use Excalidraw as the default editable architecture source. Use SVG as a rendere
 portable artifact when stable or when `$create-svg` verification has produced a
 safe self-contained diagram. Use `$debugger` only when live runtime state answers
 the question.
+
+## Browser synchronization
+
+The React cockpit polls the existing bootstrap endpoint once per second after
+loading (one in-flight request, five-second request deadline). External question
+intake and catalog imports update the already-open page. Late responses cannot
+replace a newer revision. On HTTP 409 the page refreshes state and shows that the
+action was **not replayed**; the human must review the current step and retry.
+Sync failures remain visible until a successful read. This is local polling,
+not instantaneous streaming; API process restarts still require page reload.
+
+`eval-browser-sync` starts disposable API/preview processes and an actual Chrome
+tab through Surf. It retains API/DOM snapshots for replay intake, deduplication,
+next/previous, a real stale-action 409, delayed response ordering, and external
+catalog imports. It closes only its own tab/processes. No capture devices,
+debugger execution, model providers, or whiteboard mutations are exercised.
 
 ## Current scope
 

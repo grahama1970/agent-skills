@@ -26,7 +26,7 @@ export function DiagramStage({
   )
 
   return (
-    <section className="h-[300px] rounded-lg bg-zinc-950 p-3">
+    <section data-qid="cockpit:diagram:stage" data-revision={state.diagram.revision} className="h-[300px] rounded-lg bg-zinc-950 p-3">
       <h2 className="font-semibold">
         Diagram
       </h2>

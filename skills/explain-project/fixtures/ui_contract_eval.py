@@ -68,14 +68,16 @@ def main() -> None:
                     ),
                 )
 
-        for qid in STATIC_QID.findall(text):
-            require(
-                f"element_id: '{qid}'" in combined,
-                (
-                    f"{path}: {qid} lacks "
-                    "useRegisterAction registration"
-                ),
-            )
+            # Read-only pane QIDs expose observations, not executable actions.
+            # Every interactive control still requires action registration.
+            for qid in STATIC_QID.findall(attrs):
+                require(
+                    f"element_id: '{qid}'" in combined,
+                    (
+                        f"{path}: {qid} lacks "
+                        "useRegisterAction registration"
+                    ),
+                )
 
     input_rail = (
         root

@@ -2,7 +2,7 @@
   "version": 2,
   "skill": "explain-project",
   "trials": 2,
-  "proof_scope": "Local deterministic validation of strict Pydantic explainers, MATCHED/AMBIGUOUS/NO_MATCH routing, cockpit reducer synchronization, and no live side effects. Does not launch VS Code, Live Evidence, Excalidraw, microphones, or debugger sessions.",
+  "proof_scope": "Strict Pydantic explainers, MATCHED/AMBIGUOUS/NO_MATCH routing and reducer/receipt contracts, plus live Chrome/HTTP external-update synchronization with replayed questions and fault-injected response ordering. Browser case owns disposable tab/API/preview processes. No microphone, VS Code, Excalidraw board or debugger execution proof.",
   "cases": [
     {
       "name": "sample-command-live-entrypoint",
@@ -125,6 +125,17 @@
       "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_EXCALIDRAW_PROPOSAL_RECEIPT_OK"]},
       "readback": true,
       "evidence_class": "deterministic"
+    },
+    {
+      "name": "browser-external-update-sync",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "readback": true,
+      "notes": "Real Chrome through Surf, disposable production API/preview and skill-generated sample data. Replayed question, real 409 interleaving and delayed real response; no fabricated server responses or adapter proofs. Not microphone, live provider, VS Code or Excalidraw execution proof.",
+      "command": ["bash", "../run.sh", "eval-browser-sync"],
+      "timeout_seconds": 180,
+      "expected": {"exit_code": 0, "stdout_contains": ["BROWSER_SYNC_PASS", "external-replay-updates-open-tab", "stale action not replayed", "late-snapshot-does-not-regress", "external import appears without reload"]}
     },
     {
       "name": "ui-contract-static-check",
