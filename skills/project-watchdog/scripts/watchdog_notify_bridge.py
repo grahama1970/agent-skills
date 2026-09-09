@@ -132,6 +132,33 @@ def _live_seat(receipt_dir: Path) -> str | None:
     return f"finished status={m.get('current_status')} last-agent={node} model={model}"
 
 
+def _active_operation(r: dict) -> dict:
+    rows = r.get("primary_observations") or []
+    for row in rows:
+        if row.get("writer_active"):
+            for op in row.get("operations") or []:
+                return op
+    for row in rows:
+        for op in row.get("operations") or []:
+            return op
+    return {}
+
+
+def _agent_next_steps(r: dict, handled: dict) -> list[str]:
+    steps = handled.get("authorized_agent_next_steps") or r.get("authorized_agent_next_steps") or []
+    if steps:
+        return steps[:2]
+    rows = r.get("primary_observations") or []
+    for row in rows:
+        if row.get("writer_active") and row.get("recovery_command"):
+            return [row["recovery_command"]]
+    for row in rows:
+        cmd = row.get("recovery_command")
+        if cmd:
+            return [cmd]
+    return []
+
+
 def summarize(receipt_dir: Path) -> dict | None:
     rj = receipt_dir / "receipt.json"
     if not rj.is_file():
@@ -141,23 +168,24 @@ def summarize(receipt_dir: Path) -> dict | None:
     except Exception as exc:
         return {"kind": "unreadable_receipt", "dir": receipt_dir.name, "error": str(exc)[:200]}
     handled = (r.get("handled_issues") or [{}])[0]
-    triage = handled.get("triage") or {}
+    op = _active_operation(r)
+    triage = handled.get("triage") or r.get("triage") or {}
     return {
         "kind": "tick",
         "dir": receipt_dir.name,
         "status": r.get("status"),
         "stop_reason": r.get("stop_reason"),
-        "issue": handled.get("issue_number"),
-        "repo": handled.get("repo"),
-        "action": handled.get("action"),
-        "summary": (handled.get("summary") or r.get("reason") or r.get("stop_reason") or "")[:300],
+        "issue": handled.get("issue_number") or op.get("issue_number"),
+        "repo": handled.get("repo") or op.get("repo"),
+        "action": handled.get("action") or op.get("action"),
+        "summary": (handled.get("summary") or r.get("summary") or r.get("reason") or r.get("stop_reason") or "")[:300],
         "requires_human_input": r.get("requires_human_input"),
         "triage_code": triage.get("code"),
         "triage_cause": (triage.get("cause") or "")[:200],
         "seats": _seats(handled),
         "live": _live_seat(receipt_dir),
         "pydantic_violations": _pydantic_violations(r),
-        "next_steps": (handled.get("authorized_agent_next_steps") or [])[:2],
+        "next_steps": _agent_next_steps(r, handled),
     }
 
 
@@ -188,7 +216,7 @@ def requires_human_push(ev: dict) -> bool:
         return True
     if ev.get("requires_human_input") is True:
         return True
-    if ev.get("requires_human_input") is False and ev.get("next_steps"):
+    if ev.get("requires_human_input") is False:
         return False
     return ev.get("status") in {"BLOCKED", "NEEDS_ATTENTION"}
 

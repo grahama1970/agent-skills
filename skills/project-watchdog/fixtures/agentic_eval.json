@@ -40,10 +40,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "2 passed"
+          "4 passed"
         ]
       },
-      "proves": "project-watchdog notify bridge does not page the human or Pi inbox for NEEDS_ATTENTION receipts that explicitly require no human input and provide authorized agent next steps.",
+      "proves": "project-watchdog notify bridge does not page the human or Pi inbox for NEEDS_ATTENTION receipts that explicitly require no human input, and summarizes unsettled active operations with issue identity plus the recovery command instead of None#None.",
       "does_not_prove": "Live Discord or Switchboard delivery; this is a deterministic policy gate over the bridge routing function."
     },
     {
