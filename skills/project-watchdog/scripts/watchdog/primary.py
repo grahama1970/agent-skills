@@ -1,8 +1,9 @@
 """Canonical primary writer reservation and target-scoped native lifecycle recovery.
 
-An actual held flock excludes all cooperating local writers. Historical issue
-labels and settled/orphaned journals only reserve their known target scopes.
-They are never remote liveness or foreign release authority.
+Concrete target reservations use scoped lock records, so disjoint cooperating
+writers can proceed while overlapping target paths still serialize. Historical
+issue labels and settled/orphaned journals only reserve their known target
+scopes. They are never remote liveness or foreign release authority.
 """
 from __future__ import annotations
 
@@ -20,7 +21,7 @@ from .core import load_json, run_cmd, write_json
 from .primary_models import Operation, QueueState, encoded
 
 _CURRENT: Operation | None = None
-_FD: int | None = None
+_FD: tuple[int, ...] = ()
 _TERMINAL = {"finished", "retryable"}
 class Refusal(RuntimeError):
     def __init__(self, reason: str, *, human: bool = False):
@@ -149,13 +150,19 @@ def checkpoint(phase: str, **fields: Any) -> None:
 
 
 def inherited_fds() -> tuple[int, ...]:
-    return (_FD,) if _FD is not None else ()
+    return _FD
 
 
-def _lock(root: Path) -> int | None:
-    area = _area(root)
-    area.mkdir(parents=True, exist_ok=True)
-    fd = os.open(area / "execution.flock", os.O_CREAT | os.O_RDWR, 0o600)
+def _close_fds(fds: tuple[int, ...] | None) -> None:
+    for fd in fds or ():
+        try:
+            os.close(fd)
+        except OSError:
+            pass
+
+
+def _try_lock_file(path: Path) -> int | None:
+    fd = os.open(path, os.O_CREAT | os.O_RDWR, 0o600)
     try:
         fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
         return fd
@@ -164,7 +171,104 @@ def _lock(root: Path) -> int | None:
         return None
 
 
-def writer_active(root: Path) -> bool:
+def _global_lock(root: Path) -> tuple[int, ...] | None:
+    area = _area(root)
+    area.mkdir(parents=True, exist_ok=True)
+    fd = _try_lock_file(area / "execution.flock")
+    return (fd,) if fd is not None else None
+
+
+def _metadata_lock(root: Path) -> int | None:
+    area = _area(root)
+    area.mkdir(parents=True, exist_ok=True)
+    return _try_lock_file(area / "metadata.flock")
+
+
+def _target_lock_name(target: str) -> str:
+    return "target-" + hashlib.sha256(target.encode()).hexdigest() + ".flock"
+
+
+def _scoped_dir(root: Path) -> Path:
+    path = _area(root) / "scoped-locks"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def _active_scoped_reservations(root: Path) -> list[dict[str, Any]]:
+    scoped = _scoped_dir(root)
+    active: list[dict[str, Any]] = []
+    for record_path in sorted(scoped.glob("reservation-*.json")):
+        try:
+            raw = load_json(record_path)
+            targets = safe_targets(raw.get("targets") or [])
+            lock_name = str(raw.get("reservation_lock") or "")
+            if "/" in lock_name or not lock_name.endswith(".flock"):
+                raise ValueError("invalid scoped reservation lock name")
+            lock_path = scoped / lock_name
+            probe = _try_lock_file(lock_path)
+            if probe is None:
+                active.append({"record": str(record_path), "targets": targets})
+                continue
+            os.close(probe)
+            record_path.unlink(missing_ok=True)
+            for name in raw.get("target_locks") or []:
+                if isinstance(name, str) and "/" not in name:
+                    (scoped / name).unlink(missing_ok=True)
+            lock_path.unlink(missing_ok=True)
+        except (OSError, RuntimeError, ValueError, TypeError) as exc:
+            active.append({"record": str(record_path), "targets": [], "invalid": str(exc)})
+    return active
+
+
+def _scoped_lock(root: Path, targets: list[str]) -> tuple[int, ...] | None:
+    from .registry import targets_are_blocked
+    targets = safe_targets(targets)
+    meta_fd = _metadata_lock(root)
+    if meta_fd is None:
+        return None
+    scoped = _scoped_dir(root)
+    held: list[int] = []
+    try:
+        wanted = set(targets)
+        for active in _active_scoped_reservations(root):
+            if active.get("invalid") or targets_are_blocked(wanted, set(active["targets"])):
+                return None
+        reservation_id = uuid.uuid4().hex
+        reservation_lock = f"reservation-{reservation_id}.flock"
+        reservation_fd = _try_lock_file(scoped / reservation_lock)
+        if reservation_fd is None:
+            return None
+        held.append(reservation_fd)
+        target_locks: list[str] = []
+        for target in sorted(targets):
+            name = _target_lock_name(target)
+            fd = _try_lock_file(scoped / name)
+            if fd is None:
+                _close_fds(tuple(held))
+                return None
+            held.append(fd)
+            target_locks.append(name)
+        write_json(scoped / f"reservation-{reservation_id}.json", {
+            "schema": "agent_skills.project_watchdog.scoped_primary_reservation.v1",
+            "targets": targets,
+            "reservation_lock": reservation_lock,
+            "target_locks": target_locks,
+            "pid": os.getpid(),
+            "created_at": time.time(),
+            "boot_id": Path("/proc/sys/kernel/random/boot_id").read_text().strip(),
+        })
+        return tuple(held)
+    finally:
+        os.close(meta_fd)
+
+
+def _lock(root: Path, targets: list[str] | set[str] | None = None) -> tuple[int, ...] | None:
+    if targets is None:
+        return _global_lock(root)
+    return _scoped_lock(root, safe_targets(list(targets)))
+
+
+def _global_writer_active(root: Path) -> bool:
     path = _area(root) / "execution.flock"
     if not path.exists():
         return False
@@ -179,6 +283,10 @@ def writer_active(root: Path) -> bool:
         os.close(fd)
 
 
+def writer_active(root: Path) -> bool:
+    return _global_writer_active(root) or bool(_active_scoped_reservations(root))
+
+
 def queue_order(root: Path, issues: list[dict[str, Any]]) -> list[dict[str, Any]]:
     path = _area(root) / "queue-v2.json"
     queue = QueueState.model_validate(load_json(path)) if path.exists() else QueueState()
@@ -187,12 +295,17 @@ def queue_order(root: Path, issues: list[dict[str, Any]]) -> list[dict[str, Any]
 
 
 def _attempt(root: Path, number: int) -> None:
-    # Called only while holding the canonical execution flock.
-    path = _area(root) / "queue-v2.json"
-    queue = QueueState.model_validate(load_json(path)) if path.exists() else QueueState()
-    queue.sequence += 1
-    queue.attempts[str(number)] = queue.sequence
-    write_json(path, encoded(QueueState.model_validate(encoded(queue))))
+    fd = _metadata_lock(root)
+    if fd is None:
+        raise Refusal("primary metadata reservation is locked")
+    try:
+        path = _area(root) / "queue-v2.json"
+        queue = QueueState.model_validate(load_json(path)) if path.exists() else QueueState()
+        queue.sequence += 1
+        queue.attempts[str(number)] = queue.sequence
+        write_json(path, encoded(QueueState.model_validate(encoded(queue))))
+    finally:
+        os.close(fd)
 
 
 def observations(root: Path) -> dict[str, Any]:
@@ -263,17 +376,11 @@ def reattach_and_resume(root: Path, journal: Path, *, apply: bool, timeout_s: in
     journal = journal.expanduser().resolve(strict=True)
     if not apply:
         return {"ok": True, "status": "DRY_RUN", "command": reattach_command(root, journal)}
-    fd = _lock(root)
-    if fd is None:
-        return {"ok": True, "status": "SKIPPED", "stop_reason": "primary_execution_locked"}
-    _FD = fd
+    fd = None
     try:
         area = _area(root) / "operations"
         if journal.parent.resolve() != area.resolve():
             raise Refusal("reattach journal is not in this primary operation area")
-        observed = observations(root)
-        if observed["operations"] or observed["invalid_operations"]:
-            raise Refusal("primary has nonterminal retained operations; run lifecycle recovery first")
         record = Operation.model_validate(load_json(journal))
         if Path(record.root).resolve() != root or Path(record.journal).resolve() != journal:
             raise Refusal("reattach journal is not bound to this primary checkout")
@@ -281,7 +388,18 @@ def reattach_and_resume(root: Path, journal: Path, *, apply: bool, timeout_s: in
             raise Refusal("reattach requires retryable settled operation with released lease and no closure")
         if not record.ask_run_dir:
             raise Refusal("reattach requires retained Ask run directory")
-        safe_targets(record.targets)
+        targets = safe_targets(record.targets)
+        observed = observations(root)
+        if observed["invalid_operations"]:
+            raise Refusal("primary has invalid retained operations; run lifecycle recovery first")
+        from .registry import targets_are_blocked
+        for prior in observed["operations"]:
+            if prior["issue_number"] == record.issue_number or targets_are_blocked(set(targets), set(prior["targets"])):
+                raise Refusal("retained operation overlaps this reattach target; run lifecycle recovery first")
+        fd = _lock(root, targets)
+        if fd is None:
+            return {"ok": True, "status": "SKIPPED", "stop_reason": "primary_scoped_execution_locked"}
+        _FD = fd
         _CURRENT = record
         result: dict[str, Any] = {"ok": False, "status": "RUNNING", "commands": [], "artifacts": []}
         from . import handlers, native_ticket, resume_state
@@ -360,8 +478,8 @@ def reattach_and_resume(root: Path, journal: Path, *, apply: bool, timeout_s: in
             return result
         raise
     finally:
-        _CURRENT, _FD = None, None
-        os.close(fd)
+        _CURRENT, _FD = None, ()
+        _close_fds(fd)
 
 
 def _finalize_reattached_operation() -> dict[str, Any]:
@@ -433,95 +551,96 @@ def reconcile(root: Path) -> dict[str, Any] | None:
 
     No PID/TTL/reboot converts unknown remote execution to settlement. A missing
     native terminal record retains THIS target's claim and a runnable recovery
-    command. Other scopes can proceed once the actual local reservation is free.
+    command. Other target scopes can proceed under independent scoped locks.
     """
     global _CURRENT, _FD
-    fd = _lock(root)
-    if fd is None:
-        return observations(root)
-    _FD = fd
-    try:
-        for raw in observations(root)["operations"]:
-            record = Operation.model_validate(raw)
-            _CURRENT = record
-            try:
-                from . import handlers, native_ticket
-                if record.phase == "reserved":
-                    checkpoint("retryable", recovery="no external effect was started")
+    root, _ = identity(root)
+    observed = observations(root)
+    if observed["invalid_operations"]:
+        return observed
+    for raw in observed["operations"]:
+        record = Operation.model_validate(raw)
+        fd = _lock(root, record.targets)
+        if fd is None:
+            return observations(root)
+        _CURRENT, _FD = record, fd
+        try:
+            from . import handlers, native_ticket
+            if record.phase == "reserved":
+                checkpoint("retryable", recovery="no external effect was started")
+                continue
+            if record.phase == "acquiring_lease":
+                issue = github.get_issue(record.repo, record.issue_number)
+                event = native_ticket.lease_event(record.repo, record.issue_number)
+                if native_ticket.NATIVE_LABEL not in native_ticket.labels(issue):
+                    checkpoint("retryable", recovery="acquisition absent; no worker launched")
                     continue
-                if record.phase == "acquiring_lease":
-                    issue = github.get_issue(record.repo, record.issue_number)
-                    event = native_ticket.lease_event(record.repo, record.issue_number)
-                    if native_ticket.NATIVE_LABEL not in native_ticket.labels(issue):
-                        checkpoint("retryable", recovery="acquisition absent; no worker launched")
-                        continue
-                    owns_marker = any(f"\nagent: {record.lease_agent}\n" in (c.get("body") or "")
-                                      for c in native_ticket.comments(record.repo, record.issue_number))
-                    if (event and event != record.lease_before_event and event.actor == record.lease_actor
-                            and event.event == "labeled" and owns_marker):
-                        checkpoint("leased", lease_event=event.model_dump())
-                    else:
-                        continue  # Unknown/foreign generation is scoped, never cleared.
-                record = current()
-                if record.phase in {"launching", "running", "uncertain"}:
-                    if not record.ask_run_dir or record.dispatched_at is None:
-                        continue
-                    stream = handlers.inspect_tau_stream(Path(record.ask_run_dir))
-                    if stream.get("invocation_failed"):
-                        result = failure(
-                            {"project_id": record.project_id, "repo": record.repo, "worktree": record.root},
-                            {"number": record.issue_number, "watchdog_action": record.action},
-                            "Ask resume invocation failed before native state changed",
-                        )
-                        result.update(resume_control=stream.get("resume_control"),
-                                      commands=[stream["command_receipt"]])
-                        checkpoint("releasing", result=result)
-                    elif not stream.get("terminal"):
-                        continue
-                    else:
-                        # Only current, native run-level settlement authorizes finalization.
-                        checkpoint("settled", tau_settled=True)
-                record = current()
-                if record.phase == "settled" and record.closure is None:
-                    result = handlers.finish_primary_operation(record)
-                    checkpoint(current().phase, result=result)
-                record = current()
-                if record.closure is not None:
-                    checkpoint("closing")
-                    result = native_ticket.close(current())
-                    checkpoint("releasing", result=result)
-                elif record.phase in {"leased", "settled"}:
-                    checkpoint("releasing")
-                record = current()
-                if record.phase == "releasing" and _finish_release(record):
-                    result = record.result or {"ok": False, "status": "NEEDS_ATTENTION",
-                                               "summary": "settled retained attempt released; retry eligible"}
-                    write_json(Path(record.result_path), result)
-                    checkpoint("finished" if result.get("ok") else "retryable", lease_released=True,
-                               result=result)
-            except (RuntimeError, ValueError, OSError) as exc:
-                active = current()
-                if active.tau_settled and active.closure is None:
-                    # A failed review/proof after native settlement is retryable work,
-                    # not an eternal settled-but-unclosable journal.
-                    result = failure({"project_id": active.project_id, "repo": active.repo,
-                        "worktree": active.root}, {"number": active.issue_number,
-                        "watchdog_action": active.action}, str(exc))
-                    checkpoint("releasing", result=result, recovery=str(exc))
-                    try:
-                        if _finish_release(current()):
-                            write_json(Path(active.result_path), result)
-                            checkpoint("retryable", lease_released=True)
-                    except (RuntimeError, ValueError, OSError):
-                        pass  # The owned release outbox remains executable on next recovery.
+                owns_marker = any(f"\nagent: {record.lease_agent}\n" in (c.get("body") or "")
+                                  for c in native_ticket.comments(record.repo, record.issue_number))
+                if (event and event != record.lease_before_event and event.actor == record.lease_actor
+                        and event.event == "labeled" and owns_marker):
+                    checkpoint("leased", lease_event=event.model_dump())
                 else:
-                    checkpoint(active.phase, recovery=str(exc))
-        remaining = observations(root)
-        remaining["writer_active"] = False
-        return remaining if remaining["operations"] or remaining["invalid_operations"] else None
-    finally:
-        _CURRENT, _FD = None, None
-        os.close(fd)
+                    continue  # Unknown/foreign generation is scoped, never cleared.
+            record = current()
+            if record.phase in {"launching", "running", "uncertain"}:
+                if not record.ask_run_dir or record.dispatched_at is None:
+                    continue
+                stream = handlers.inspect_tau_stream(Path(record.ask_run_dir))
+                if stream.get("invocation_failed"):
+                    result = failure(
+                        {"project_id": record.project_id, "repo": record.repo, "worktree": record.root},
+                        {"number": record.issue_number, "watchdog_action": record.action},
+                        "Ask resume invocation failed before native state changed",
+                    )
+                    result.update(resume_control=stream.get("resume_control"),
+                                  commands=[stream["command_receipt"]])
+                    checkpoint("releasing", result=result)
+                elif not stream.get("terminal"):
+                    continue
+                else:
+                    # Only current, native run-level settlement authorizes finalization.
+                    checkpoint("settled", tau_settled=True)
+            record = current()
+            if record.phase == "settled" and record.closure is None:
+                result = handlers.finish_primary_operation(record)
+                checkpoint(current().phase, result=result)
+            record = current()
+            if record.closure is not None:
+                checkpoint("closing")
+                result = native_ticket.close(current())
+                checkpoint("releasing", result=result)
+            elif record.phase in {"leased", "settled"}:
+                checkpoint("releasing")
+            record = current()
+            if record.phase == "releasing" and _finish_release(record):
+                result = record.result or {"ok": False, "status": "NEEDS_ATTENTION",
+                                           "summary": "settled retained attempt released; retry eligible"}
+                write_json(Path(record.result_path), result)
+                checkpoint("finished" if result.get("ok") else "retryable", lease_released=True,
+                           result=result)
+        except (RuntimeError, ValueError, OSError) as exc:
+            active = current()
+            if active.tau_settled and active.closure is None:
+                # A failed review/proof after native settlement is retryable work,
+                # not an eternal settled-but-unclosable journal.
+                result = failure({"project_id": active.project_id, "repo": active.repo,
+                    "worktree": active.root}, {"number": active.issue_number,
+                    "watchdog_action": active.action}, str(exc))
+                checkpoint("releasing", result=result, recovery=str(exc))
+                try:
+                    if _finish_release(current()):
+                        write_json(Path(active.result_path), result)
+                        checkpoint("retryable", lease_released=True)
+                except (RuntimeError, ValueError, OSError):
+                    pass  # The owned release outbox remains executable on next recovery.
+            else:
+                checkpoint(active.phase, recovery=str(exc))
+        finally:
+            _CURRENT, _FD = None, ()
+            _close_fds(fd)
+    remaining = observations(root)
+    return remaining if (remaining["writer_active"] or remaining["operations"] or remaining["invalid_operations"]) else None
 
 
 def dispatch(run_id: str, receipt_dir: Path, project: dict[str, Any], issue: dict[str, Any],
@@ -540,11 +659,11 @@ def dispatch(run_id: str, receipt_dir: Path, project: dict[str, Any], issue: dic
             __package__ + ".registry", fromlist=["issue_targets"]).issue_targets(issue))
         readonly_preflight(root, targets)
         assert_repository(root, project["repo"])
-        fd = _lock(root)
+        fd = _lock(root, targets)
         if fd is None:
             return {"project_id": project["project_id"], "repo": project["repo"],
                     "issue_number": issue["number"], "action": issue.get("watchdog_action"),
-                    "ok": True, "status": "SKIPPED", "stop_reason": "primary_execution_locked",
+                    "ok": True, "status": "SKIPPED", "stop_reason": "primary_scoped_execution_locked",
                     "commands": [], "artifacts": []}
         observed = observations(root)
         from .registry import targets_are_blocked
@@ -571,13 +690,12 @@ def dispatch(run_id: str, receipt_dir: Path, project: dict[str, Any], issue: dic
         write_json(receipt_dir / "dispatch-issue.json", issue)
         pid = os.fork()
     except (RuntimeError, ValueError, OSError) as exc:
-        if fd is not None:
-            os.close(fd)
-        _CURRENT, _FD = None, None
+        _close_fds(fd)
+        _CURRENT, _FD = None, ()
         return failure(project, issue, str(exc), human=getattr(exc, "human", False))
     if pid:
-        os.close(fd)  # Do not LOCK_UN: the child holds this open-file description.
-        _CURRENT, _FD = None, None
+        _close_fds(fd)  # Do not LOCK_UN: the child holds these open-file descriptions.
+        _CURRENT, _FD = None, ()
         while True:
             waited, _ = os.waitpid(pid, os.WNOHANG)
             if waited:
@@ -622,5 +740,5 @@ def dispatch(run_id: str, receipt_dir: Path, project: dict[str, Any], issue: dic
             checkpoint(record.phase, result=result)
         write_json(output, result)
     finally:
-        os.close(fd)
+        _close_fds(fd)
         os._exit(0)

@@ -249,7 +249,7 @@ Lost responses are reconciled before execution. Existing `agent-active` and
 `maintainer-active` labels are never cleared because of age. A known foreign
 claim holds only overlapping target paths; an unknown foreign claim quarantines
 its own ticket and emits a native `ticket lookup show` command, not a repository
-wildcard. A live canonical flock still excludes every second cooperating writer.
+wildcard. A live scoped primary reservation excludes only overlapping target paths; disjoint skill targets may proceed concurrently.
 
 `scripts/watchdog/recover_primary.py --root PRIMARY --apply` is the executable
 recovery path. It advances the same retained native close/release or inspects the

@@ -256,8 +256,54 @@ def test_canonical_reservation_ignores_configurable_state_root(repository, monke
         assert primary._lock(root) is None
         assert primary.writer_active(root)
     finally:
-        os.close(first)
+        primary._close_fds(first)
     assert not primary.writer_active(root)
+
+
+def test_scoped_reservations_allow_disjoint_declared_targets(repository):
+    root, _, _ = repository
+    first = primary._lock(root, ["skills/battle"])
+    second = primary._lock(root, ["skills/project-watchdog"])
+    assert first is not None
+    assert second is not None
+    try:
+        assert primary.writer_active(root)
+        assert len(primary.inherited_fds()) == 0
+    finally:
+        primary._close_fds(first)
+        primary._close_fds(second)
+    assert not primary.writer_active(root)
+
+
+def test_scoped_reservations_serialize_overlapping_target_prefixes(repository):
+    root, _, _ = repository
+    first = primary._lock(root, ["skills/ask"])
+    assert first is not None
+    try:
+        assert primary._lock(root, ["skills/ask/src"]) is None
+    finally:
+        primary._close_fds(first)
+    second = primary._lock(root, ["skills/ask/src"])
+    assert second is not None
+    try:
+        assert primary._lock(root, ["skills/ask"]) is None
+    finally:
+        primary._close_fds(second)
+    assert not primary.writer_active(root)
+
+
+def test_scoped_publication_guard_rejects_commit_outside_reserved_target(repository, monkeypatch):
+    root, _, receipts = repository
+    record = operation(root, receipts).model_copy(update={"targets": ["skills/ask"]})
+    monkeypatch.setattr(primary, "_CURRENT", record)
+    battle_file = root / "skills/battle/file.py"
+    battle_file.parent.mkdir(parents=True, exist_ok=True)
+    battle_file.write_text("outside scoped reservation\n", encoding="utf-8")
+    git(root, "add", "--", "skills/battle/file.py")
+    git(root, "commit", "-m", "Out of scoped reservation")
+    commit = git(root, "rev-parse", "HEAD")
+    with pytest.raises(content.ContentConflict, match="unauthorized paths"):
+        content.assert_scoped_commit(root, commit, primary.current().targets)
 
 
 def test_recovery_of_prelaunch_crash_releases_local_reservation_not_foreign_labels(repository):
@@ -296,7 +342,7 @@ def test_queue_moves_attempted_failure_behind_older_unattempted_issue(repository
     candidates = [issue(42, "skills/project-watchdog"), issue(43, "skills/battle")]
     fd = primary._lock(root)
     try: primary._attempt(root, 42)
-    finally: os.close(fd)
+    finally: primary._close_fds(fd)
     assert [i["number"] for i in primary.queue_order(root, candidates)] == [43, 42]
 
 
