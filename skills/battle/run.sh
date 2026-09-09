@@ -50,6 +50,11 @@ if [[ "${1:-}" == "same-run-qualification" ]]; then
   exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/same_run_qualification.py" "$@"
 fi
 
+if [[ "${1:-}" == "prove-adaptive-improvement" ]]; then
+  shift
+  exec env BATTLE_ADAPTIVE_PROOF_RUNTIME=1 uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/prove_adaptive_improvement.py" "$@"
+fi
+
 if [[ "${1:-}" == "current-status" ]]; then
   shift
   exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/current_status.py" "$@"

@@ -165,6 +165,14 @@
       }
     },
     {
+      "id": "battle.adaptive_lineage.adaptive_improvement",
+      "description": "A paired battle-004 Docker Judge replay distinguishes lineage existence from a retained promoted Blue artifact causing a predeclared Judge/functionality metric improvement, with a same-treatment negative control.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
       "id": "battle.immutable_goal.adaptive_lineage_pixi",
       "description": "Battle immutable goal close gate requires both durable adaptive-lineage exact-chain proof and browser-visible PixiJS replay evidence",
       "criticality": "critical",
@@ -561,6 +569,21 @@
       ],
       "required_evidence": [
         "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "adaptive_lineage.adaptive_improvement",
+      "claim_id": "battle.adaptive_lineage.adaptive_improvement",
+      "seam_type": "paired Docker Judge metric contrast",
+      "criticality": "critical",
+      "failure_modes": [
+        "lineage existence is mistaken for adaptive improvement",
+        "the promoted artifact is selected but not consumed by the adaptive arm",
+        "PASS is emitted without a paired baseline, Judge metric gain, repeat, or bound hashes",
+        "the same-treatment control reports improvement"
+      ],
+      "required_evidence": [
+        "live_e2e"
       ]
     },
     {
@@ -1371,6 +1394,49 @@
             "path": "/tmp/battle-agentic-evals/battle-terminal-semantics/terminal-semantics-receipt.json",
             "json_pointer": "/adapter_judge_authority_verified",
             "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-adaptive-improvement",
+      "category": "battle-adaptive-improvement",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "battle.adaptive_lineage.adaptive_improvement"
+      ],
+      "seams": [
+        "adaptive_lineage.adaptive_improvement"
+      ],
+      "timeout_seconds": 600,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-adaptive-improvement --summary /tmp/battle-agentic-evals/battle-adaptive-improvement.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-adaptive-improvement"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-adaptive-improvement.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          },
+          {
+            "path": "/tmp/battle-agentic-evals/battle-adaptive-improvement/positive.json",
+            "json_pointer": "/judge_metric_improved",
+            "equals": true
+          },
+          {
+            "path": "/tmp/battle-agentic-evals/battle-adaptive-improvement/same-treatment.json",
+            "json_pointer": "/judge_metric_improved",
+            "equals": false
           }
         ]
       }

@@ -3786,6 +3786,59 @@ def probe_battle_terminal_semantics(summary_path: Path) -> int:
     )
 
 
+def probe_battle_adaptive_improvement(summary_path: Path) -> int:
+    suite = "battle-adaptive-improvement"
+    out = summary_path.parent / suite
+    out.mkdir(parents=True, exist_ok=True)
+    checks = []
+    for label, flags in (("positive", []), ("same-treatment", ["--force-non-improvement"])):
+        result_path = out / f"{label}.json"
+        command = [str(RUN_SH), "prove-adaptive-improvement", "--fixture", "battle-004", "--output", str(result_path), *flags]
+        proc = _run(command, timeout=300)
+        (out / f"{label}.stdout.txt").write_text(proc.stdout)
+        (out / f"{label}.stderr.txt").write_text(proc.stderr)
+        result = _read_json(result_path)
+        expected = "PASS" if label == "positive" else "NOT_PROVEN"
+        if result.get("status") != expected or proc.returncode != (0 if label == "positive" else 1):
+            raise AssertionError(f"{label}: {result.get('error') or result}")
+        if not all(result.get(k) is True for k in ("execution_started", "live", "promoted_artifact_consumed", "paired_baseline_present", "replay_verified", "bound_hashes")):
+            raise AssertionError(f"{label}: missing real paired replay evidence")
+        measured = {}
+        for arm in ("baseline", "adaptive"):
+            runs = result[arm]["runs"]
+            if len(runs) != 2:
+                raise AssertionError("two independent Judge executions per arm required")
+            scores = []
+            for run in runs:
+                judge_path = Path(run["judge_receipt"])
+                if _sha256_file(judge_path).removeprefix("sha256:") != run["judge_sha256"]:
+                    raise AssertionError("Judge digest mismatch")
+                judge = _read_json(judge_path)
+                attempt = judge["attempts"][0]
+                before, after = attempt["commands_run"][-2:]
+                for cmd in (before, after, run["functional_control"]):
+                    if cmd["command"][0] != "docker" or "none" not in cmd["command"]:
+                        raise AssertionError("proof did not use network-disabled Docker")
+                original_confirmed = before["exit_code"] == 0 and "RED_EXPLOIT_CONFIRMED" in Path(before["stdout_path"]).read_text()
+                still_exploitable = after["exit_code"] == 0 and "RED_EXPLOIT_CONFIRMED" in Path(after["stdout_path"]).read_text()
+                functional = run["functional_control"]
+                normal_import = functional["exit_code"] == 0 and "VALID_ZIP_IMPORT_OK" in Path(functional["stdout_path"]).read_text()
+                score = int(original_confirmed and not still_exploitable and normal_import)
+                if score != run["metric_value"]:
+                    raise AssertionError("reported metric differs from Docker artifact readback")
+                scores.append(score)
+            if scores[0] != scores[1]:
+                raise AssertionError("outcome did not repeat")
+            measured[arm] = scores[0]
+        if (measured["adaptive"] > measured["baseline"]) != (label == "positive"):
+            raise AssertionError(f"paired outcome mismatch: {measured}")
+        for ref in result["artifact_hashes"].values():
+            if _sha256_file(Path(ref["path"])).removeprefix("sha256:") != ref["sha256"]:
+                raise AssertionError("input changed after experiment")
+        checks.append({"name": label, "status": "PASS", "observed": expected, "measured": measured, "receipt": str(result_path)})
+    return _emit(summary_path, _summary(suite=suite, live="fresh_authorized_docker_judge_replays_with_retained_promoted_artifacts", checks=checks, artifacts={"positive": str(out / "positive.json"), "no_effect_control": str(out / "same-treatment.json")}, claims_proves=["retained promoted Blue bytes cause the measured bounded Docker defense improvement", "the same promoted treatment in both arms reports NOT_PROVEN, not an improvement"], claims_does_not_prove=["new provider learning", "Memory retrieval benefit", "population generalization"]))
+
+
 def probe_small_medium_production_battle(summary_path: Path) -> int:
     suite = "small-medium-production-battle"
     out_root = summary_path.parent / suite
@@ -3926,6 +3979,8 @@ def main() -> int:
             return probe_review_current_status_proof_chain(args.summary)
         if args.suite == "battle-terminal-semantics":
             return probe_battle_terminal_semantics(args.summary)
+        if args.suite == "battle-adaptive-improvement":
+            return probe_battle_adaptive_improvement(args.summary)
         if args.suite == "adaptive-lineage-same-run-backend-contracts":
             return probe_pytest_contracts(
                 args.summary,
