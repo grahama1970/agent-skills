@@ -72,26 +72,31 @@ export function CockpitApp({
           'bg-zinc-900/80 px-4',
         ].join(' ')}
       >
-        <div
-          className={[
-            'text-sm uppercase',
-            'tracking-wide text-zinc-400',
-          ].join(' ')}
-        >
-          {state.route?.status ?? 'NO_MATCH'}
+        <div>
+          <div
+            className={[
+              'text-xs uppercase',
+              'tracking-[0.22em] text-cyan-300',
+            ].join(' ')}
+          >
+            Interview cockpit
+          </div>
+          <div className="text-sm text-zinc-400">
+            Answer follow-up questions from source, proof, and safe debugger targets.
+          </div>
         </div>
 
-        <div className="text-lg font-semibold">
-          Revision {state.revision}
+        <div className="text-sm font-semibold text-zinc-300">
+          Evidence state: {state.route?.status ?? 'NO_MATCH'} · r{state.revision}
         </div>
 
-        <div className="text-lg">
+        <div className="text-sm text-zinc-400">
           {state.selection
             ? (
-                `${state.selection.step_index + 1}`
+                `Step ${state.selection.step_index + 1}`
                 + ` / ${state.selection.step_count}`
               )
-            : 'No explainer'}
+            : 'No explainer selected'}
         </div>
       </header>
 

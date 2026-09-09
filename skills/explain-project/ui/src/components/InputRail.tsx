@@ -39,8 +39,9 @@ function ExplainerButton({
   explainer: ExplainerSummary
   dispatch: Dispatch
 }) {
+  const id = explainer.feature_id
   const qid = (
-    `cockpit:explainer:select:${explainer.feature_id}`
+    `cockpit:explainer:select:${id}`
   )
 
   useRegisterAction({
@@ -60,7 +61,7 @@ function ExplainerButton({
   return (
     <button
       type="button"
-      data-qid={qid}
+      data-qid={`cockpit:explainer:select:${id}`}
       data-qs-action="EXPLAINER_SELECT"
       title={`Select ${explainer.title}`}
       className={[
@@ -208,6 +209,15 @@ export function InputRail({
         'bg-zinc-900/70 p-3',
       ].join(' ')}
     >
+      <div>
+        <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">
+          Question intake
+        </h2>
+        <p className="mt-1 text-sm text-zinc-400">
+          Route the interviewer’s question without changing the proof contract.
+        </p>
+      </div>
+
       <div className="flex gap-2">
         <input
           data-qid="cockpit:question:manual-input"

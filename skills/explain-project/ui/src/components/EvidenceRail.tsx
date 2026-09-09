@@ -58,6 +58,15 @@ export function EvidenceRail({
         'bg-zinc-900/70 p-3 text-sm',
       ].join(' ')}
     >
+      <div>
+        <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">
+          Evidence controls
+        </h2>
+        <p className="mt-1 text-sm text-zinc-400">
+          Prepare source and debugger handoffs; execution stays receipt-bound.
+        </p>
+      </div>
+
       <IntegrationHealth state={state} />
 
       <section className="rounded-lg bg-zinc-950 p-3">

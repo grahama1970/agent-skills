@@ -51,7 +51,7 @@ export function TeleprompterStage({
         className={[
           'mb-5 flex items-center justify-between',
           'text-sm uppercase tracking-wider',
-          'text-zinc-500',
+          'text-zinc-400',
         ].join(' ')}
       >
         <span>
@@ -68,11 +68,15 @@ export function TeleprompterStage({
         </span>
       </div>
 
+      <p className="mb-3 text-sm uppercase tracking-[0.28em] text-cyan-300">
+        Speaker cue
+      </p>
+
       <h1
         className={[
-          'mb-8 max-w-[20ch]',
-          'text-5xl font-bold leading-[1.05]',
-          'xl:text-6xl',
+          'mb-8 max-w-[22ch]',
+          'text-5xl font-bold leading-[1.02]',
+          'text-balance xl:text-6xl',
         ].join(' ')}
       >
         {state.teleprompter.title
@@ -98,10 +102,14 @@ export function TeleprompterStage({
       <div
         className={[
           'mt-7 rounded-xl',
-          'border border-zinc-800',
-          'p-3 text-lg text-zinc-400',
+          'border border-amber-400/40',
+          'bg-amber-950/20 p-4',
+          'text-lg text-amber-100',
         ].join(' ')}
       >
+        <div className="mb-1 text-xs font-bold uppercase tracking-[0.24em] text-amber-300">
+          Proof boundary
+        </div>
         {state.teleprompter.proof_boundary
           ?? 'No live proof claimed.'}
       </div>
