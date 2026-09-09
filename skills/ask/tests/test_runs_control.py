@@ -123,6 +123,17 @@ def test_resume_reads_receipts_not_scrollback() -> None:
     assert "node-receipt.json" in plan["source"]
 
 
+def test_watchdog_journal_can_force_reviewer_rerun(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("PROJECT_WATCHDOG_OPERATION_JOURNAL", "/tmp/watchdog-op.json")
+    monkeypatch.setenv("PROJECT_WATCHDOG_RESUME_RERUN_NODES", "handler-webgpt,join,missing")
+
+    plan = resume_plan(FIXTURES / "one_handler")
+
+    assert "handler-webgpt" not in plan["already_accepted"]
+    assert "handler-webgpt" in plan["would_rerun"]
+    assert plan["watchdog_forced_rerun"] == ["handler-webgpt", "join"]
+
+
 def test_resume_on_a_fully_accepted_run_is_a_noop() -> None:
     receipt = resume(FIXTURES / "one_handler", execute=False)
     assert receipt["outcome"] == "noop"

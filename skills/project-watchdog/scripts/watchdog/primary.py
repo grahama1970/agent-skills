@@ -411,10 +411,20 @@ def reattach_and_resume(root: Path, journal: Path, *, apply: bool, timeout_s: in
         prior_journal = None
         if isinstance(prior.get("resume_journal"), str) and prior.get("resume_journal"):
             prior_journal = Path(prior["resume_journal"]).expanduser().resolve()
+        project_path = Path(record.receipt_dir) / "dispatch-project.json"
+        project = load_json(project_path) if project_path.is_file() else {}
+        creator, reviewer = config.repair_seats(project)
+        _, reviewer_handler = handlers.repair_execution_handlers(creator, reviewer)
+        recovery_text = "\n".join(str(x or "") for x in [record.recovery, (record.result or {}).get("summary")])
+        rerun_reviewer = prior.get("terminal") is True and any(token in recovery_text for token in (
+            "VerificationPlan", "verification plan", "review must supply exactly one",
+            "proof plan does not cover", "native verification plan omits",
+        ))
         finalize_only = (prior.get("terminal") is True
             and prior.get("terminal_status") in {"PASS", "COMPLETED"}
             and prior_journal == journal
-            and prior.get("resume_lease_agent") == record.lease_agent)
+            and prior.get("resume_lease_agent") == record.lease_agent
+            and not rerun_reviewer)
         native_ticket.acquire(record, result, checkpoint)
         record = current()
         if finalize_only:
@@ -434,7 +444,10 @@ def reattach_and_resume(root: Path, journal: Path, *, apply: bool, timeout_s: in
         command = [str(config.ask_run_sh()), "runs", "resume", str(run_dir), "--execute", "--json"]
         checkpoint("running", ask_run_dir=record.ask_run_dir, dispatched_at=time.time())
         old_env = os.environ.get("PROJECT_WATCHDOG_OPERATION_JOURNAL")
+        old_force = os.environ.get("PROJECT_WATCHDOG_RESUME_RERUN_NODES")
         os.environ["PROJECT_WATCHDOG_OPERATION_JOURNAL"] = str(journal)
+        if rerun_reviewer:
+            os.environ["PROJECT_WATCHDOG_RESUME_RERUN_NODES"] = f"{reviewer_handler},join"
         try:
             row = handlers.run_ask_tau_dag_with_stream_monitor(
                 command, cwd=root, timeout_s=timeout_s, ask_run_dir=Path(record.ask_run_dir),
@@ -445,6 +458,10 @@ def reattach_and_resume(root: Path, journal: Path, *, apply: bool, timeout_s: in
                 os.environ.pop("PROJECT_WATCHDOG_OPERATION_JOURNAL", None)
             else:
                 os.environ["PROJECT_WATCHDOG_OPERATION_JOURNAL"] = old_env
+            if old_force is None:
+                os.environ.pop("PROJECT_WATCHDOG_RESUME_RERUN_NODES", None)
+            else:
+                os.environ["PROJECT_WATCHDOG_RESUME_RERUN_NODES"] = old_force
         result["commands"].append(row)
         result["artifacts"].append(str(run_dir))
         write_json(Path(record.receipt_dir) / "watchdog-reattach-resume-command.json", row)

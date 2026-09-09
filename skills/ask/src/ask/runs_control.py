@@ -351,6 +351,22 @@ def _projection_node_kind(run_dir: Path, node_id: str) -> str:
             return str(node.get("target_kind") or "")
     return ""
 
+def _watchdog_forced_rerun_nodes(projection: dict[str, Any]) -> list[str]:
+    """Watchdog-only escape hatch for post-Tau evidence rejection.
+
+    Normal resume never reruns admitted work. Project-watchdog can reject a
+    reviewer after Tau admission when the reviewer omitted/malformed its native
+    verification plan; in that case the watchdog journal is the authorization to
+    rerun only named non-creator nodes through Tau's command-spec resume seam.
+    """
+    if not os.environ.get("PROJECT_WATCHDOG_OPERATION_JOURNAL"):
+        return []
+    raw = os.environ.get("PROJECT_WATCHDOG_RESUME_RERUN_NODES", "")
+    requested = [item.strip() for item in raw.split(",") if item.strip()]
+    known = {str(n["node_id"]) for n in projection["nodes"]}
+    return [node for node in dict.fromkeys(requested) if node in known]
+
+
 def resume_plan(run_dir: Path) -> dict[str, Any]:
     """What a resume would rerun, and what it must not.
 
@@ -359,9 +375,10 @@ def resume_plan(run_dir: Path) -> dict[str, Any]:
     and often paid effects, which is the failure this plan exists to prevent.
     """
     projection = project_run(run_dir)
-    accepted = [n["node_id"] for n in projection["nodes"] if n["evidence_admitted"]]
-    rerun = [n["node_id"] for n in projection["nodes"] if not n["evidence_admitted"]]
-    return {
+    forced = set(_watchdog_forced_rerun_nodes(projection))
+    accepted = [n["node_id"] for n in projection["nodes"] if n["evidence_admitted"] and n["node_id"] not in forced]
+    rerun = [n["node_id"] for n in projection["nodes"] if not n["evidence_admitted"] or n["node_id"] in forced]
+    receipt = {
         "schema": CONTROL_SCHEMA,
         "action": "resume_plan",
         "run_id": projection["run_id"],
@@ -370,6 +387,9 @@ def resume_plan(run_dir: Path) -> dict[str, Any]:
         "duplicate_risk": [],
         "source": "node-receipt.json evidence admission, not terminal scrollback",
     }
+    if forced:
+        receipt["watchdog_forced_rerun"] = sorted(forced)
+    return receipt
 
 
 def resume(run_dir: Path, execute: bool = False) -> dict[str, Any]:
