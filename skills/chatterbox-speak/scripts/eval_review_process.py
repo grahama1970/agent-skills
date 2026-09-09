@@ -2,6 +2,7 @@
 
 Runs the actual CLI in a PTY and checks pre-render rejection via the public CLI.
 """
+import json
 import os
 import pty
 import select
@@ -24,6 +25,9 @@ def tty_cancel(run: Path, rows: int = 70, columns: int = 160):
     master, slave = pty.openpty()
     import fcntl
     fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack('HHHH', rows, columns, 0, 0))
+    observed_rows, observed_columns, _, _ = struct.unpack('HHHH', fcntl.ioctl(slave, termios.TIOCGWINSZ, b'\0' * 8))
+    check((observed_rows, observed_columns) == (rows, columns), 'actual PTY dimensions differ from requested viewport')
+    (run / 'actual-terminal-size.json').write_text(json.dumps({'rows': observed_rows, 'columns': observed_columns}))
     process = subprocess.Popen([str(ROOT / 'run.sh'), 'review', 'celebration'], stdin=slave, stdout=slave, stderr=slave,
                                env={**os.environ, 'TERM': 'xterm-256color'}, start_new_session=True)
     os.close(slave)
