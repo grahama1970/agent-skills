@@ -15,7 +15,13 @@ def main() -> int:
     args = parser.parse_args()
     result = primary.reconcile(args.root) if args.apply else primary.pending(args.root)
     print(json.dumps(result or {"ok": True, "pending": False}, indent=2))
-    return 1 if result and (result.get("operations") or result.get("invalid_operations")) else 0
+    if not result:
+        return 0
+    if result.get("invalid_operations"):
+        return 1
+    # A live writer means recovery has nothing to do yet. Returning nonzero made
+    # the machine-actionable next command look like another failure every tick.
+    return 0 if result.get("writer_active") else 1 if result.get("operations") else 0
 
 
 if __name__ == "__main__":

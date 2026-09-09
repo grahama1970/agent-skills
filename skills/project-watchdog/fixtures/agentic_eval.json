@@ -47,6 +47,30 @@
       "does_not_prove": "Live Discord or Switchboard delivery; this is a deterministic policy gate over the bridge routing function."
     },
     {
+      "name": "recover-primary-running-writer-zero",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_recover_primary.py",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      },
+      "proves": "The authorized recover_primary.py next command exits 0 while the original watchdog writer is still live, instead of creating another machine-actionable failure loop.",
+      "does_not_prove": "A live Ask/Tau repair has completed; it only proves the recovery command does not report a healthy running writer as a failed recovery."
+    },
+    {
       "name": "unit-suite",
       "type": "positive",
       "command": [
