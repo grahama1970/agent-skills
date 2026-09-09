@@ -92,6 +92,38 @@ def test_verified_sent_with_message_id_advances_dedupe(monkeypatch, tmp_path):
     assert state_path.exists(), "a verified delivery must record the dedupe timestamp"
 
 
+def test_machine_actionable_needs_attention_does_not_page_human(monkeypatch, tmp_path):
+    import subprocess
+
+    monkeypatch.setenv("PROJECT_WATCHDOG_STATE_ROOT", str(tmp_path))
+    fake_run_sh = tmp_path / "ops-discord-run.sh"
+    fake_run_sh.write_text("#!/bin/sh\n")
+    monkeypatch.setattr(alerts, "OPS_DISCORD_RUN_SH", fake_run_sh)
+
+    called = False
+
+    def fake_run(*args, **kwargs):
+        nonlocal called
+        called = True
+        raise AssertionError("ops-discord must not be called")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    receipt = {
+        "schema": "agent_skills.project_watchdog.tick_receipt.v1",
+        "run_id": "r",
+        "status": "NEEDS_ATTENTION",
+        "apply": True,
+        "requires_human_input": False,
+        "authorized_agent_next_steps": ["recover_primary.py --apply"],
+        "handled_issues": [{"issue_number": 1631, "status": "NEEDS_ATTENTION"}],
+    }
+
+    alerts.maybe_alert(receipt)
+
+    assert called is False
+    assert "alert" not in receipt
+
+
 def test_repair_worktree_uses_wt_and_registers_lease(monkeypatch, tmp_path):
     # Managed lifecycle (operator 2026-09-05): creation via `wt switch -c`,
     # never raw `git worktree add`; lease registered on the RESOLVED path.

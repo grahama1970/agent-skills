@@ -70,6 +70,24 @@
       ]
     },
     {
+      "code": "project_watchdog_independent_proof_gate_failed",
+      "layer": "project-watchdog",
+      "match": [
+        "independent proof gate failed",
+        "not every required proof artifact is a completed pass",
+        "reports UNKNOWN",
+        "reports NOT_READY"
+      ],
+      "cause": "A watchdog ticket repair produced code but the independent proof artifacts required for closure are not all completed PASS/READY receipts, so closure must fail closed while the same agent-owned repair path continues.",
+      "next_command": "read the named proof artifact(s), repair the missing or NOT_READY proof through the ticket target, then rerun recover_primary.py --root <primary-checkout> --apply; do not ask the human unless requires_human_input is true",
+      "recoverable": true,
+      "not_this": [
+        "human decision required",
+        "provider route failure",
+        "repo-wide dirty checkout"
+      ]
+    },
+    {
       "code": "persona_dream_kling_provider_top_up_required",
       "layer": "persona-dream",
       "match": [

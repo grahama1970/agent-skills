@@ -46,6 +46,17 @@ def test_project_watchdog_native_tau_unsettled_is_canonical() -> None:
     assert "new ticket repair dispatch" in r["not_this"]
 
 
+def test_project_watchdog_independent_proof_gate_failed_is_canonical() -> None:
+    r = t.classify(
+        "Refusal: independent proof gate failed: not every required proof artifact is a completed pass "
+        "(/x/agentic-eval-result.json: reports UNKNOWN; /x/live-e2e-result.json: reports NOT_READY)",
+        "project-watchdog",
+    )
+    assert r["code"] == "project_watchdog_independent_proof_gate_failed"
+    assert r["ambiguous"] is False
+    assert "human decision required" in r["not_this"]
+
+
 def test_ask_scillm_empty_200_maps_to_actionable_code() -> None:
     r = t.classify(
         '{"failure_code":"handler_execution_failed","evidence":{"response_chars":0,"submit_meta_status":200}}',

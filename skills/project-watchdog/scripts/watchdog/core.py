@@ -454,7 +454,7 @@ def finish(
     from . import alerts
 
     alerts.maybe_alert(receipt)
-    alert_status = str((receipt.get("alert") or {}).get("status") or ("SKIPPED" if receipt.get("status") in {"COMPLETED", "NOOP", "SKIPPED"} else "UNKNOWN"))
+    alert_status = str((receipt.get("alert") or {}).get("status") or "SKIPPED")
     for handled in receipt.get("handled_issues") or []:
         if not isinstance(handled, dict):
             continue

@@ -86,6 +86,8 @@ def _fingerprint(receipt: dict[str, Any]) -> str:
 def _should_alert(receipt: dict[str, Any]) -> bool:
     if os.environ.get("PROJECT_WATCHDOG_ALERTS", "").lower() in {"off", "0", "false"}:
         return False
+    if receipt.get("requires_human_input") is False and receipt.get("authorized_agent_next_steps"):
+        return False
     if receipt.get("status") in ALERT_STATUSES:
         return True
     if receipt.get("stop_reason") == "idle_streak_exceeded":
