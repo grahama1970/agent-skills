@@ -201,9 +201,11 @@ def main() -> None:
                 f"{ev.get('repo') or '-'}#{ev.get('issue') or '-'} "
                 f"{(ev.get('triage_code') or '')} {(ev.get('live') or '')} | {ev.get('summary')}\n"
             )
+        fresh = (time.time() - d.stat().st_mtime) < 900  # stale receipts: log+webhook only, no session pings
         results.append({
             "dir": d.name, "status": ev.get("status"), "issue": ev.get("issue"),
-            "webhook": push_webhook(ev), "switchboard": push_switchboard(ev),
+            "webhook": push_webhook(ev),
+            "switchboard": push_switchboard(ev) if fresh else "skipped_stale",
         })
     if max_mtime > cursor and "--replay-last" not in sys.argv:
         _save_cursor(max_mtime)
