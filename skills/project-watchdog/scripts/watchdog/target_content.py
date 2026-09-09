@@ -6,6 +6,7 @@ branch, registered worktree, or existing working file is ever changed here.
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import stat
 import subprocess
@@ -19,15 +20,41 @@ class ContentConflict(RuntimeError):
     """Retryable scoped contention. Not, by itself, a needs-human decision."""
 
 
-def git_bytes(root: Path, *args: str, data: bytes | None = None,
-              index: Path | None = None, timeout: int = 120) -> bytes:
+def _git_env(index: Path | None = None) -> dict[str, str]:
     env = dict(os.environ, GIT_OPTIONAL_LOCKS="0", GIT_LITERAL_PATHSPECS="1")
     if index is not None:
         env["GIT_INDEX_FILE"] = str(index)
+    return env
+
+
+def git_diagnostic(root: Path, *args: str, data: bytes | None = None,
+                   index: Path | None = None, timeout: int = 120) -> dict[str, object]:
+    """Run git once and retain stdout/stderr/exit without raising."""
+    from . import primary
+    command = ["git", "-C", str(root), *args]
+    try:
+        result = subprocess.run(command, input=data, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, env=_git_env(index),
+                                timeout=timeout, check=False,
+                                pass_fds=primary.inherited_fds())
+        return {"command": command, "exit_code": result.returncode,
+                "stdout": result.stdout.decode(errors="replace"),
+                "stderr": result.stderr.decode(errors="replace"), "timed_out": False}
+    except subprocess.TimeoutExpired as exc:
+        stdout = exc.stdout or b""
+        stderr = exc.stderr or b""
+        return {"command": command, "exit_code": None,
+                "stdout": stdout.decode(errors="replace") if isinstance(stdout, bytes) else str(stdout),
+                "stderr": stderr.decode(errors="replace") if isinstance(stderr, bytes) else str(stderr),
+                "timed_out": True}
+
+
+def git_bytes(root: Path, *args: str, data: bytes | None = None,
+              index: Path | None = None, timeout: int = 120) -> bytes:
     from . import primary
     result = subprocess.run(["git", "-C", str(root), *args], input=data,
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                            env=env, timeout=timeout, check=False,
+                            env=_git_env(index), timeout=timeout, check=False,
                             pass_fds=primary.inherited_fds())
     if result.returncode:
         raise ContentConflict(f"git {args[0]} failed: {result.stderr.decode(errors='replace')[:1200]}")
@@ -209,6 +236,7 @@ def assert_scoped_commit(root: Path, commit: str, targets: list[str]) -> list[st
 def publish(root: Path, baseline: TargetSnapshot, reviewed: TargetSnapshot,
             receipt_dir: Path, run_id: str, number: int, *, remote_required: bool) -> str:
     """No force, reset, checkout or rebase. A raced push is retried by durable recovery."""
+    from .core import write_json
     now = remote_pin(root)
     old = remote_entries(root, baseline.remote_sha, baseline.targets)
     current = remote_entries(root, now, baseline.targets)
@@ -219,10 +247,40 @@ def publish(root: Path, baseline: TargetSnapshot, reviewed: TargetSnapshot,
     require_unchanged(reviewed, observed)
     commit = scoped_commit(root, reviewed, now, receipt_dir,
                            f"Resolve ticket #{number}\n\nWatchdog-Run: {run_id}")
+    publication = {
+        "schema": "agent_skills.project_watchdog.publication_recovery.v1",
+        "run_id": run_id,
+        "issue_number": number,
+        "targets": reviewed.targets,
+        "remote_required": remote_required,
+        "baseline_remote_sha": baseline.remote_sha,
+        "publication_parent_sha": now,
+        "reviewed_commit": commit,
+        "reviewed_snapshot_sha256": "sha256:" + digest(json.dumps(
+            encoded(reviewed), sort_keys=True, separators=(",", ":")).encode()),
+        "reviewed_tree": git_bytes(root, "rev-parse", f"{commit}^{{tree}}").decode().strip(),
+        "push": None,
+        "ancestor_check": None,
+        "landed_remote_sha": now,
+        "published_target_matches_reviewed": commit == now,
+    }
+    receipt_path = receipt_dir / "publication-recovery.json"
+    write_json(receipt_path, publication)
     if remote_required and commit != now:
-        git_bytes(root, "push", "origin", f"{commit}:refs/heads/main")
+        push = git_diagnostic(root, "push", "origin", f"{commit}:refs/heads/main")
+        publication["push"] = push
+        write_json(receipt_path, publication)
+        if push.get("timed_out") or push.get("exit_code") != 0:
+            raise ContentConflict("git push failed; publication-recovery.json retains stdout/stderr/exit")
         landed = remote_pin(root)
-        git_bytes(root, "merge-base", "--is-ancestor", commit, landed)
-        if remote_entries(root, landed, reviewed.targets) != desired:
+        publication["landed_remote_sha"] = landed
+        ancestor = git_diagnostic(root, "merge-base", "--is-ancestor", commit, landed)
+        publication["ancestor_check"] = ancestor
+        publication["published_target_matches_reviewed"] = remote_entries(root, landed, reviewed.targets) == desired
+        write_json(receipt_path, publication)
+        if ancestor.get("timed_out") or ancestor.get("exit_code") != 0:
+            raise ContentConflict("published commit is not an ancestor of origin/main")
+        if not publication["published_target_matches_reviewed"]:
             raise ContentConflict("published target readback differs from reviewed content")
+    write_json(receipt_path, publication)
     return commit
