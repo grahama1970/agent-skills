@@ -309,12 +309,11 @@ require_spine_executor() {
   # Cognition-spine producers mutate persona memory, continuity and transcripts.
   # They run through the typed dag_step executor ('./run.sh dream'), which
   # validates consumed/produced artifacts and upstream receipts. A direct call
-  # skips every gate, so it is refused unless explicitly marked as non-spine
-  # debugging. PERSONA_DREAM_STEP_EXECUTOR is set only by scripts/dag_step.py.
-  if [[ "${PERSONA_DREAM_STEP_EXECUTOR:-0}" != "1" && "${PERSONA_DREAM_ALLOW_DIRECT:-0}" != "1" ]]; then
+  # skips every gate, so it is always refused. PERSONA_DREAM_STEP_EXECUTOR is
+  # set only by scripts/dag_step.py.
+  if [[ "${PERSONA_DREAM_STEP_EXECUTOR:-0}" != "1" ]]; then
     echo "BLOCKED_DIRECT_SPINE_ENTRYPOINT: '$1' is a cognition-spine producer." >&2
-    echo "  Run './run.sh dream' so dag_step validates the step, or set" >&2
-    echo "  PERSONA_DREAM_ALLOW_DIRECT=1 for explicit non-spine debugging (ungated)." >&2
+    echo "  Run './run.sh dream' so dag_step validates the step." >&2
     exit 3
   fi
 }

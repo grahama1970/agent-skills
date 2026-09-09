@@ -50,13 +50,29 @@ CHATTERBOX = os.environ.get("CHATTERBOX_BASE_URL", "http://127.0.0.1:8018")
 
 
 def sh(args: list[str], timeout: int) -> subprocess.CompletedProcess:
-    # This harness IS the live full-cycle evaluation of the documented run.sh
-    # layer; it validates every produced artifact itself, so it opts into the
-    # direct spine entrypoints explicitly instead of impersonating dag_step.
-    env = {**os.environ, "PERSONA_DREAM_ALLOW_DIRECT": "1"}
     return subprocess.run(["bash", str(ROOT / "run.sh"), *args],
                           capture_output=True, text=True, timeout=timeout,
-                          cwd=ROOT, env=env)
+                          cwd=ROOT)
+
+
+def spine_sh(command: str, run_dir: Path, *, consumes: str, produces: str,
+             step_args: list[str] | None = None, timeout: int) -> subprocess.CompletedProcess:
+    """Run a spine producer through the same typed executor Tau uses."""
+    receipt = run_dir / f"EVAL_NODE_{command.replace('-', '_')}.json"
+    args = [
+        sys.executable, str(ROOT / "scripts/dag_step.py"),
+        "--node-id", f"eval-{command}",
+        "--command", command,
+        "--receipt", str(receipt),
+        "--run-dir", str(run_dir),
+        "--run-dir-arg", "--run-dir",
+        "--consumes", consumes,
+        "--produces", produces,
+        "--proves", "full-cycle eval routes public spine producer through dag_step",
+    ]
+    for item in step_args or []:
+        args.append("--step-arg=" + item)
+    return subprocess.run(args, capture_output=True, text=True, timeout=timeout, cwd=ROOT)
 
 
 def fail(code: str, proc: subprocess.CompletedProcess | None = None) -> None:
@@ -274,7 +290,10 @@ def main() -> int:
     stage_receipts["cycle_context_materialized"] = materialized
 
     # 4. spoken journal
-    p = sh(["speak-journal", "--run-dir", str(run_dir)], 900)
+    p = spine_sh("speak-journal", run_dir,
+                 consumes="dream_journal.v1.json,journal_spoken.txt",
+                 produces="JOURNAL_AUDIO_RECEIPT.json,journal.wav",
+                 timeout=900)
     audio_receipt = json.loads((run_dir / "JOURNAL_AUDIO_RECEIPT.json").read_text())
     if audio_receipt.get("status") != "PASS_JOURNAL_SPOKEN":
         fail("JOURNAL_SPOKEN", p)
@@ -302,9 +321,12 @@ def main() -> int:
     stage_receipts["memory_written_and_artifacts_stored"] = {"status": "PASS_DREAM_ARTIFACTS_STORED"}
 
     # 7. multi-turn dynamic audible conversation about dream, day, and mood
-    p = sh(["converse-dynamic", "--run-dir", str(run_dir), "--turns", "3",
-            "--opening-topic",
-            "her dream last night, how today actually went, and how holding the two together moves her mood"], 1500)
+    p = spine_sh("converse-dynamic", run_dir,
+                 consumes="dream_journal.v1.json,JOURNAL_AUDIO_RECEIPT.json,journal_spoken.txt",
+                 produces="dynamic_conversation_receipt.v1.json,conversation.jsonl",
+                 step_args=["--turns", "3", "--opening-topic",
+                            "her dream last night, how today actually went, and how holding the two together moves her mood"],
+                 timeout=1500)
     if "PASS_DYNAMIC_CONVERSATION" not in p.stdout:
         fail("DYNAMIC_CONVERSATION", p)
     convo = [json.loads(l) for l in (run_dir / "conversation.jsonl").read_text().splitlines()]

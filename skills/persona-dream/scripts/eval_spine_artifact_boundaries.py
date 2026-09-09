@@ -197,6 +197,14 @@ def main() -> int:
         assert proc.returncode == 3 and "BLOCKED_DIRECT_SPINE_ENTRYPOINT" in proc.stderr, (proc.returncode, proc.stderr)
         rows.append({"case": "direct-spine-entrypoint-refused", "exit_code": proc.returncode,
                      "stderr": proc.stderr[-400:]})
+        bypass_env = dict(__import__("os").environ)
+        bypass_env.pop("PERSONA_DREAM_STEP_EXECUTOR", None)
+        bypass_env["PERSONA_DREAM_ALLOW_DIRECT"] = "1"
+        proc = subprocess.run(["bash", str(ROOT / "run.sh"), "write-dream-journal", "--cycle", "x"],
+                              capture_output=True, text=True, timeout=60, env=bypass_env)
+        assert proc.returncode == 3 and "BLOCKED_DIRECT_SPINE_ENTRYPOINT" in proc.stderr, (proc.returncode, proc.stderr)
+        rows.append({"case": "direct-spine-env-bypass-refused", "exit_code": proc.returncode,
+                     "stderr": proc.stderr[-400:]})
 
         command = [sys.executable, "-c", """
 import json, sys
