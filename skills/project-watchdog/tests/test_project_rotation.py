@@ -885,8 +885,8 @@ def test_tick_receipt_copies_excluded_issues_from_selected_scan(tmp_path, monkey
 
 
 def test_scheduler_short_lock_allows_unrelated_target_tick(tmp_path, monkeypatch):
-    from itertools import count
     import json as _json
+    from itertools import count
 
     from watchdog import commands, config  # noqa: PLC0415
 
@@ -948,8 +948,8 @@ def test_scheduler_short_lock_allows_unrelated_target_tick(tmp_path, monkeypatch
 
 
 def test_scheduler_execution_lock_blocks_overlapping_target_tick(tmp_path, monkeypatch):
-    from itertools import count
     import json as _json
+    from itertools import count
 
     from watchdog import commands, config  # noqa: PLC0415
 
