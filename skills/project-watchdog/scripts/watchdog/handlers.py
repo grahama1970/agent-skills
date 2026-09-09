@@ -822,7 +822,7 @@ def seat_response_text(ask_run_dir: Path, handler: str, occurrence: int = 1) -> 
 
 
 def _clean_proof_path(path: str) -> str:
-    return path.strip().strip("`.,;:)]}")
+    return path.strip().lstrip("`").rstrip("`.,;:)]}")
 
 
 def _is_machine_result_path(path: str) -> bool:
@@ -838,11 +838,19 @@ def required_proof_artifacts(issue_body: str) -> list[str]:
     win outright, because that is the artifact the proof command writes.
     """
     section: list[str] = []
-    collecting = False
+    collecting, proof_depth, in_fence = False, 0, False
     for line in issue_body.splitlines():
-        heading = re.match(r"^#{1,6}\s*(.+?)\s*$", line.strip())
+        stripped = line.strip()
+        if collecting and stripped.startswith("```"):
+            in_fence = not in_fence
+            continue
+        heading = None if in_fence else re.match(r"^(#{1,6})\s+(.+?)\s*$", stripped)
         if heading:
-            collecting = heading.group(1).strip().lower() == "required proof"
+            depth = len(heading.group(1))
+            if heading.group(2).strip().lower() == "required proof":
+                collecting, proof_depth = True, depth
+            elif collecting and depth <= proof_depth:
+                collecting = False
             continue
         if collecting:
             section.append(line)
@@ -853,6 +861,12 @@ def required_proof_artifacts(issue_body: str) -> list[str]:
     outputs = [p for p in outputs if _is_machine_result_path(p)]
     if outputs:
         return sorted(dict.fromkeys(outputs))
+    # --out may designate a directory; explicit output-file flags may name an
+    # extensionless JSON result. Never substitute the input fixture for it.
+    explicit_outputs = [_clean_proof_path(m.group(1)) for m in re.finditer(
+        r"--(?:output|output-file|report)[ =]+([^\s`'\"]+)", text)]
+    if explicit_outputs:
+        return sorted(dict.fromkeys(explicit_outputs))
     return sorted(dict.fromkeys(
         p for p in (_clean_proof_path(m.group(1)) for m in _PROOF_PATH.finditer(text))
         if _is_machine_result_path(p)
@@ -915,7 +929,7 @@ def inspect_proof_artifact(raw_path: str, *, not_before: float) -> dict[str, Any
     if stat.st_size == 0:
         record["reason"] = "empty"
         return record
-    if path.suffix.lower() != ".json":
+    if path.suffix.lower() not in {".json", ""}:
         record["reason"] = "non-JSON artifact is evidence to inspect, not a machine-verifiable pass"
         return record
     try:

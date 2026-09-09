@@ -742,6 +742,14 @@ def test_required_proof_artifacts_ignore_out_dirs_and_strip_punctuation() -> Non
         "and read /tmp/live-run/campaign-receipt.json.\n"
     )
     assert handlers.required_proof_artifacts(body) == ["/tmp/proof-gate.json"]
+    nested = (
+        "## Required proof\n### Live E2E\n"
+        "run fixtures/agentic_eval.json --output .artifacts/shame/live-escalation-receipt-chain\n"
+        "## Context\nrun --output /tmp/unrelated.json\n"
+    )
+    assert handlers.required_proof_artifacts(nested) == [
+        ".artifacts/shame/live-escalation-receipt-chain"
+    ]
 
 
 def test_proof_artifact_ignores_provider_status_noise_and_domain_enums(tmp_path) -> None:
@@ -755,6 +763,11 @@ def test_proof_artifact_ignores_provider_status_noise_and_domain_enums(tmp_path)
     }), encoding="utf-8")
     record = handlers.inspect_proof_artifact(str(artifact), not_before=0)
     assert record["passed"] is True
+    extensionless = tmp_path / "live-escalation-receipt-chain"
+    extensionless.write_bytes(artifact.read_bytes())
+    assert handlers.inspect_proof_artifact(str(extensionless), not_before=0)["passed"] is True
+    extensionless.write_text("not a JSON result")
+    assert handlers.inspect_proof_artifact(str(extensionless), not_before=0)["passed"] is False
 
 
 def test_review_commit_lines_keep_invalid_sha_out_of_valid_set() -> None:
