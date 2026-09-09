@@ -839,6 +839,17 @@ def test_proof_plan_coverage_all_required_clauses_is_valid() -> None:
     assert not handlers.proof_plan_covers_clauses({"partial": "commands[0]"}, clauses)
 
 
+def test_bulleted_reviewer_proof_artifacts_are_native_artifacts(tmp_path) -> None:
+    artifact = str(tmp_path / "proof.json")
+    plan = {"schema": "agent_skills.project_watchdog.verification_plan.v1",
+            "commands": ["true"], "artifacts": [artifact],
+            "coverage": {"all_required_clauses": "command[0] reads proof.json"}}
+    review = "VERDICT: PASS\n- PROOF_ARTIFACT: " + artifact + "\nVERIFY_PLAN: " + json.dumps(plan)
+    body = "## Required proof\n\nRun proof and read back every trial.\n"
+
+    assert handlers.validated_verification_plan(review, body, tmp_path).artifacts == [artifact]
+
+
 def test_repair_proof_gate_allows_stale_declared_artifacts_before_native_verify(tmp_path) -> None:
     fresh = tmp_path / "fresh.json"
     stale = tmp_path / "stale.json"

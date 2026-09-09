@@ -1120,8 +1120,8 @@ def evaluate_repair_proof(
             reasons.append(f"reviewer seat {handler} declared {verdict}, not PASS")
 
     review_text = seat_response_text(ask_run_dir, reviewer, 2 if reviewer == creator else 1) or ""
-    declared = [_clean_proof_path(line.split(":", 1)[1]) for line in review_text.splitlines()
-                if line.startswith("PROOF_ARTIFACT:")]
+    declared = [_clean_proof_path(match.group(1)) for match in re.finditer(
+        r"(?m)^\s*(?:[-*]\s*)?PROOF_ARTIFACT:\s*`?([^`\s]+)`?", review_text)]
     declared = [p for p in declared if _is_machine_result_path(p)
                 and Path(p).name != "authored-commit.json"]
     # Ticket output operands remain mandatory; fixture/input JSON paths are not output proof.
@@ -1398,7 +1398,7 @@ def collect_closure_artifacts(
                 entry = payload.get(tier)
                 if isinstance(entry, dict):
                     add_artifact(str(entry.get("artifact") or ""), tier=tier, command=entry.get("command"))
-        for match in re.findall(r"(?m)^\s*PROOF_ARTIFACT:\s*`?([^`\s]+)`?", body):
+        for match in re.findall(r"(?m)^\s*(?:[-*]\s*)?PROOF_ARTIFACT:\s*`?([^`\s]+)`?", body):
             add_artifact(match, tier="proof_artifact")
         for match in re.findall(r"`?((?:docs|local|artifacts)/[^`\s]+?\.json)`?", body):
             add_artifact(match, tier="comment")
@@ -2240,8 +2240,8 @@ def validated_verification_plan(review: str, issue_body: str, root: Path) -> Ver
         raise ValueError("proof plan does not cover every exact required clause")
     required = required_proof_artifacts(issue_body)
     if not required:
-        required = [_clean_proof_path(line.partition(":")[2]) for line in review.splitlines()
-                    if line.startswith("PROOF_ARTIFACT:")]
+        required = [_clean_proof_path(match.group(1)) for match in re.finditer(
+            r"(?m)^\s*(?:[-*]\s*)?PROOF_ARTIFACT:\s*`?([^`\s]+)`?", review)]
         required = [path for path in required if _is_machine_result_path(path)
                     and Path(path).name != "authored-commit.json"]
     if not required:
