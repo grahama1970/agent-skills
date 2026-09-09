@@ -2282,7 +2282,10 @@ def finish_primary_operation(record) -> dict[str, Any]:
     if stream.get("resume_generation") is not None:
         command = stream.get("command_receipt") or {}
         control = stream.get("resume_control") or {}
-        if (command.get("timed_out") or command.get("exit_code") != 0
+        resume_result = stream.get("resume_result") or {}
+        native_completed = (stream.get("terminal_status") in {"PASS", "COMPLETED"}
+            and resume_result.get("status") in {"PASS", "COMPLETED"})
+        if not native_completed and (command.get("timed_out") or command.get("exit_code") != 0
                 or control.get("schema") != "ask.run_control.v1"
                 or control.get("outcome") != "completed" or control.get("returncode") != 0):
             raise primary.Refusal("current Ask resume invocation failed; no automatic closure")
