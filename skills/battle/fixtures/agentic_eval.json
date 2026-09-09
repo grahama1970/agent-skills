@@ -1366,6 +1366,11 @@
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 1000
+          },
+          {
+            "path": "/tmp/battle-agentic-evals/battle-terminal-semantics/terminal-semantics-receipt.json",
+            "json_pointer": "/adapter_judge_authority_verified",
+            "equals": true
           }
         ]
       }

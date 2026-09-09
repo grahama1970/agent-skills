@@ -30,6 +30,21 @@ UI layers may render unsupported states only as unavailable or hidden. They must
 not infer terminal success from animation labels, local preview flags, model
 text, Tau provider claims, or spectator-only state.
 
+The shared `battle_skill.terminal_semantics` boundary reads the underlying
+`battle.arena_tau_public_only_judge_receipt.v1` bytes, binds their SHA-256,
+and validates the verdict against typed pair-attempt observations. Wrapper
+receipt families above must resolve to that Judge; their own success labels
+are not authority. `current-status check` uses the selected campaign Judge.
+`--terminal-candidate PATH` accepts a JSON candidate with `terminal_state`,
+`source_schema`, `source_authority: judge`, `source_status`, `judge_receipt`,
+and `judge_receipt_sha256`. Missing files, changed bytes, contradictory verdicts,
+crash-only results, and unsupported states are rejected. Arena-to-Pixi
+qualification and the public-only receipt adapter use the same boundary.
+
+The command validates retained receipts; it does not run a new Docker replay.
+Adversarial cases live in the retained `battle-terminal-semantics` eval, not
+inside the production status command.
+
 ## Unsupported States
 
 | State | Local MVP behavior | Required future proof |

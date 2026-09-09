@@ -19,6 +19,7 @@ from typing import Annotated, Any
 
 import typer
 
+from .terminal_semantics import require_judge_terminal
 from .ux_contract_validator import (
     ContractError,
     _lane_activity_timeline_model,
@@ -787,6 +788,14 @@ def adapt_tau_public_only_proof(*, proof_root: Path, battle_id: str) -> dict[str
 
     red_entries = _manifest_entries(manifest, "red", proof_root=proof_root)
     blue_entries = _manifest_entries(manifest, "blue", proof_root=proof_root)
+    try:
+        terminal = require_judge_terminal(proof_root / "judge" / "judge-receipt.json")
+        terminal_valid = True
+    except (OSError, ValueError):
+        terminal = "INSUFFICIENT_EVIDENCE"
+        terminal_valid = False
+        judge_receipt = {}
+        scoreboard = {}
     attempts = _attempts_from_tau_judge(judge_receipt=judge_receipt, red_entries=red_entries, blue_entries=blue_entries)
 
     facts = _base_facts(
@@ -794,8 +803,8 @@ def adapt_tau_public_only_proof(*, proof_root: Path, battle_id: str) -> dict[str
         battle_id=actual_battle_id,
         run_id=_first_str(run_receipt.get("run_id"), manifest.get("run_id"), "tau-public-only-run"),
         generated_at=_first_str(run_receipt.get("created_at"), "1970-01-01T00:00:00Z"),
-        status=_first_str(run_receipt.get("status"), manifest.get("status"), judge_receipt.get("status"), "UNKNOWN"),
-        verdict=_first_str(judge_receipt.get("verdict"), scoreboard.get("verdict"), run_receipt.get("verdict"), "INSUFFICIENT_EVIDENCE"),
+        status=_first_str(run_receipt.get("status"), manifest.get("status"), judge_receipt.get("status"), "UNKNOWN") if terminal_valid else "BLOCKED",
+        verdict=terminal,
         live_source=_first_str(run_receipt.get("live"), "brave_search_docker_arena_oracle_tau_harness"),
         mocked=bool(run_receipt.get("mocked", False) or manifest.get("mocked", False)),
         scenario=scenario,

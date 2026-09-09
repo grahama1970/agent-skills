@@ -3693,20 +3693,51 @@ def probe_battle_terminal_semantics(summary_path: Path) -> int:
     if receipt.get("status") != "PASS":
         raise AssertionError(f"terminal-semantics receipt did not pass: {receipt}")
 
-    rejected = {case.get("name"): case for case in receipt.get("rejected") or []}
-    accepted = {case.get("name"): case for case in receipt.get("accepted") or []}
-    required_rejections = {
-        "rejects_kill_alias": "kill",
-        "rejects_fastest_crash_alias": "fastest_crash",
-        "rejects_crash_only_promotion": "RED_SUCCESS",
-        "rejects_promotion_alias": "promotion",
-    }
-    for case_name, terminal_state in required_rejections.items():
-        case = rejected.get(case_name) or {}
-        if case.get("decision") != "REJECT" or case.get("terminal_state") != terminal_state:
-            raise AssertionError(f"terminal rejection missing for {case_name}: {case}")
-    if (accepted.get("accepts_typed_judge_blue_success") or {}).get("decision") != "ACCEPT":
-        raise AssertionError("typed Judge BLUE_SUCCESS terminal evidence was not accepted")
+    from battle_skill.terminal_semantics import judge_candidate
+
+    accepted = receipt.get("accepted") or []
+    if not accepted or accepted[0].get("decision") != "ACCEPT":
+        raise AssertionError("real Judge evidence was not accepted")
+    source = Path(accepted[0]["judge_receipt"])
+    if _sha256_file(source).removeprefix("sha256:") != accepted[0]["judge_receipt_sha256"]:
+        raise AssertionError("accepted Judge bytes are not bound")
+    base = judge_candidate(source)
+    candidates = {f"rejects_{alias}_alias": {**base, "terminal_state": alias} for alias in ("kill", "fastest_crash", "promotion")}
+    candidates["rejects_authority_contradiction"] = {**base, "source_authority": "scorekeeper", "scorekeeper_status": "BLUE_SUCCESS"}
+    candidates["rejects_missing_judge"] = {**base, "judge_receipt": str(out_root / "absent.json")}
+    candidates["rejects_stale_hash"] = {**base, "judge_receipt_sha256": "0" * 64}
+    candidates["rejects_unbound_self_claim"] = {k: v for k, v in base.items() if k not in {"judge_receipt", "judge_receipt_sha256"}}
+    for name in ("crash_only_promotion", "contradictory_verdict"):
+        mutated = _read_json(source)
+        mutated["verdict"] = "RED_SUCCESS"
+        if name == "crash_only_promotion":
+            mutated["attempts"] = []
+        mutated_path = out_root / f"{name}-judge.json"
+        _write_json(mutated_path, mutated)
+        candidates[f"rejects_{name}"] = judge_candidate(mutated_path)
+    rejected = {}
+    for name, candidate in candidates.items():
+        candidate_path = out_root / f"{name}.json"
+        result_path = out_root / f"{name}-result.json"
+        _write_json(candidate_path, candidate)
+        proc = _run_in([str(RUN_SH), "current-status", "check", "--terminal-candidate", str(candidate_path)], cwd=REPO_ROOT, timeout=180, env={"BATTLE_TERMINAL_SEMANTICS_RECEIPT": str(result_path)})
+        (out_root / f"{name}.stdout.txt").write_text(proc.stdout)
+        result = _read_json(result_path)
+        if proc.returncode == 0 or result.get("status") != "FAIL" or not result.get("rejected"):
+            raise AssertionError(f"actual CLI accepted {name}: {proc.stdout}")
+        rejected[name] = {"name": name, **result["rejected"][0], "receipt": str(result_path)}
+    from battle_skill.battle_event_adapter import adapt_tau_public_only_proof
+
+    adapter_root = source.parents[2] / "generation-1"
+    adapter = adapt_tau_public_only_proof(proof_root=adapter_root, battle_id="battle-004")
+    adapter_judge = _read_json(adapter_root / "judge/judge-receipt.json")
+    if adapter["scoreboard"]["verdict"] != adapter_judge["verdict"]:
+        raise AssertionError("adapter preferred a materialization/run claim over the actual Judge")
+    _write_json(out_root / "adapter-readback.json", adapter)
+    receipt["rejected"] = list(rejected.values())
+    receipt["adapter_judge_authority_verified"] = True
+    receipt["proof_scope"] = "real current-status CLI and receipt adapter with retained Judge input and adversarial input mutations; no new Docker/provider run"
+    _write_json(receipt_path, receipt)
 
     checks = [
         {
@@ -3744,7 +3775,7 @@ def probe_battle_terminal_semantics(summary_path: Path) -> int:
                 "terminal_semantics_receipt": str(receipt_path),
             },
             claims_proves=[
-                "Battle current-status check accepts terminal results only through typed Judge/scorekeeper receipt evidence.",
+                "Battle current-status and receipt consumers bind terminal state to real typed Judge receipt bytes and matching attempt outcomes.",
                 "kill, fastest_crash, promotion aliases and crash-only promotion fail closed.",
             ],
             claims_does_not_prove=[

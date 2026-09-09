@@ -897,7 +897,7 @@
         1148,
         1632
       ],
-      "proof": "current-status check writes battle.terminal_semantics_validation.v1 and rejects kill, promotion, fastest_crash, and crash-only terminal promotion.",
+      "proof": "current-status check binds actual Judge bytes and typed attempt outcomes; the terminal-semantics CLI eval rejects aliases, missing evidence, changed hashes and crash-only claims.",
       "receipt": "/tmp/battle-current-status-terminal-semantics.json",
       "status": "IMPLEMENTED"
     }

@@ -16,6 +16,8 @@ from pathlib import Path
 from typing import Any
 from urllib.request import urlopen
 
+from battle_skill.terminal_semantics import require_judge_terminal
+
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 BATTLE_DIR = SCRIPT_DIR.parent
@@ -222,6 +224,7 @@ def qualify(out_dir: Path, *, arena_proof_dir: Path | None, skip_arena: bool, wa
     judge_receipt_path = arena_dir / "judge" / "judge-receipt.json"
     run_receipt = _json(run_receipt_path)
     judge_receipt = _json(judge_receipt_path)
+    judge_verdict = require_judge_terminal(judge_receipt_path, expected_state=run_receipt.get("verdict"))
     published = _publish_fixture(arena_dir, source)
     port = _free_port()
     url = f"http://127.0.0.1:{port}/{published['route']}"
@@ -259,7 +262,7 @@ def qualify(out_dir: Path, *, arena_proof_dir: Path | None, skip_arena: bool, wa
         "tau_source": tau_source,
         "battle_id": run_receipt.get("battle_id"),
         "run_id": run_receipt.get("run_id"),
-        "judge_verdict": run_receipt.get("verdict"),
+        "judge_verdict": judge_verdict,
         "arena_receipt": str(run_receipt_path),
         "judge_receipt": str(judge_receipt_path),
         "published_fixture": published,

@@ -2691,6 +2691,7 @@ def _write_tau_public_only_proof(tmp_path: Path, *, include_lineage: bool, inval
     _write_json(
         proof_dir / "judge" / "judge-receipt.json",
         {
+            "schema": "battle.arena_tau_public_only_judge_receipt.v1",
             "status": "PASS",
             "verdict": "BLUE_SUCCESS",
             "attempts": attempts,
@@ -2906,7 +2907,12 @@ def _write_tau_public_only_auth_blocked_proof(tmp_path: Path) -> Path:
 
 
 def _attempt(red_worker_id: str, red_lane_id: str, blue_worker_id: str) -> dict[str, Any]:
+    # Synthetic adapter fixture, not Docker proof. The retained eval reads real Judge bytes.
     return {
+        "schema": "battle.arena_tau_public_only_pair_attempt_receipt.v1",
+        "judge_input_byte_binding_pass": True,
+        "container_input_hash_pass": True,
+        "commands_run": [{"fixture": "before"}, {"fixture": "after"}],
         "pair_id": f"{red_worker_id}__{blue_worker_id}",
         "status": "PASS",
         "verdict": "BLUE_SUCCESS",
