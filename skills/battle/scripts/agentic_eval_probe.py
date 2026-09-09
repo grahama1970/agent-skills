@@ -3666,6 +3666,139 @@ def _parse_json_object(text: str) -> dict[str, Any]:
     return json.loads(text[start : end + 1])
 
 
+def _commentary_causality_campaign_receipt() -> Path:
+    committed = BATTLE_DIR / "proofs" / "current-run-receipts-20260908" / "source-run" / "campaign-receipt.json"
+    if committed.is_file():
+        return committed
+    fallback = Path("/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/campaign-receipt.json")
+    if fallback.is_file():
+        return fallback
+    raise AssertionError("no retained provider/Tau campaign receipt for commentary causality")
+
+
+def _commentary_causal_coverage_from_broadcast(mod: Any, broadcast_receipt: dict[str, Any]) -> dict[str, Any]:
+    commentary = mod.PlayByPlayCommentaryReceipt.model_validate(
+        _read_json(Path(str(broadcast_receipt["sports_play_by_play_commentary_receipt"])))
+    )
+    red = mod.TeamActivityReceipt.model_validate(_read_json(Path(str(broadcast_receipt["red_team_activity_receipt"]))))
+    blue = mod.TeamActivityReceipt.model_validate(_read_json(Path(str(broadcast_receipt["blue_team_activity_receipt"]))))
+    return mod.commentary_causal_coverage(commentary, red, blue)
+
+
+def _rewrite_string_prefix(value: Any, old: str, new: str) -> Any:
+    if isinstance(value, str):
+        return new + value[len(old):] if value.startswith(old) else value
+    if isinstance(value, list):
+        return [_rewrite_string_prefix(item, old, new) for item in value]
+    if isinstance(value, dict):
+        return {key: _rewrite_string_prefix(item, old, new) for key, item in value.items()}
+    return value
+
+
+def _write_red_genome_removed_campaign(mod: Any, campaign_receipt: Path, target_root: Path) -> Path:
+    receipt = _read_json(campaign_receipt)
+    source_root = next(
+        (
+            root for root in mod._campaign_source_roots(campaign_receipt, receipt)
+            if (root / "generation-1" / "genomes" / "red-team-genome.json").is_file()
+        ),
+        None,
+    )
+    if source_root is None:
+        raise AssertionError("positive campaign has no source red genome to remove")
+    target_root.mkdir(parents=True, exist_ok=True)
+    for generation in (1, 2):
+        src_dir = source_root / f"generation-{generation}" / "genomes"
+        dst_dir = target_root / f"generation-{generation}" / "genomes"
+        dst_dir.mkdir(parents=True, exist_ok=True)
+        blue = src_dir / "blue-team-genome.json"
+        if blue.is_file():
+            shutil.copy2(blue, dst_dir / blue.name)
+    mutated = _rewrite_string_prefix(receipt, str(source_root), str(target_root))
+    campaign = target_root / "campaign-receipt.json"
+    _write_json(campaign, mutated)
+    return campaign
+
+
+def probe_battle_commentary_causality(summary_path: Path) -> int:
+    suite = "battle-commentary-causality"
+    out_root = summary_path.parent / suite
+    if out_root.exists():
+        shutil.rmtree(out_root)
+    out_root.mkdir(parents=True)
+    mod = _lineage_report_module()
+    campaign = _commentary_causality_campaign_receipt()
+
+    positive_receipt = mod.render(campaign, out_root / "positive-render", None, None)
+    positive_receipt_path = out_root / "positive-render" / "provider-tau-lineage-broadcast-receipt.json"
+    positive_readback = _read_json(positive_receipt_path)
+    if positive_receipt.get("status") != "PASS" or positive_readback.get("status") != "PASS":
+        raise AssertionError(f"positive renderer did not pass: {positive_readback}")
+    positive_coverage = _commentary_causal_coverage_from_broadcast(mod, positive_readback)
+    missing = [
+        slot for slot, item in (positive_coverage.get("slots") or {}).items()
+        if item.get("status") != "present-and-source-bound"
+    ]
+    if missing:
+        raise AssertionError(f"positive commentary causal slots missing or unbound: {missing} {positive_coverage}")
+    if positive_coverage.get("forbids_unsupported_kill_language") is not True:
+        raise AssertionError(f"positive commentary used unsupported kill language: {positive_coverage}")
+
+    negative_campaign = _write_red_genome_removed_campaign(mod, campaign, out_root / "red-genome-removed-source-run")
+    negative_receipt = mod.render(negative_campaign, out_root / "negative-render", None, None)
+    negative_receipt_path = out_root / "negative-render" / "provider-tau-lineage-broadcast-receipt.json"
+    negative_readback = _read_json(negative_receipt_path)
+    if negative_receipt.get("status") != "PASS" or negative_readback.get("status") != "PASS":
+        raise AssertionError(f"negative renderer did not pass: {negative_readback}")
+    negative_coverage = _commentary_causal_coverage_from_broadcast(mod, negative_readback)
+    red_slot = (negative_coverage.get("slots") or {}).get("red_mechanism") or {}
+    if red_slot.get("status") != "absent":
+        raise AssertionError(f"red mechanism was fabricated after red genome removal: {negative_coverage}")
+    if negative_coverage.get("forbids_unsupported_kill_language") is not True:
+        raise AssertionError(f"negative commentary used unsupported kill language: {negative_coverage}")
+
+    checks = [
+        {
+            "name": "positive_causal_slots_present_and_source_bound",
+            "status": "PASS",
+            "campaign_receipt": str(campaign),
+            "broadcast_receipt": str(positive_receipt_path),
+            "coverage": positive_coverage,
+        },
+        {
+            "name": "negative_red_genome_removed_omits_red_mechanism",
+            "status": "PASS",
+            "campaign_receipt": str(negative_campaign),
+            "broadcast_receipt": str(negative_receipt_path),
+            "coverage": negative_coverage,
+        },
+    ]
+    return _emit(
+        summary_path,
+        _summary(
+            suite=suite,
+            live="retained_provider_tau_renderer_receipt_readback_with_mutated_campaign_control",
+            checks=checks,
+            artifacts={
+                "positive_broadcast_receipt": str(positive_receipt_path),
+                "positive_commentary_receipt": str(positive_readback["sports_play_by_play_commentary_receipt"]),
+                "negative_broadcast_receipt": str(negative_receipt_path),
+                "negative_commentary_receipt": str(negative_readback["sports_play_by_play_commentary_receipt"]),
+            },
+            claims_proves=[
+                "Receipt-derived sports commentary carries source-bound objective, Red mechanism, Blue response, replay transition, and Judge terminal result slots when those facts exist.",
+                "Removing the Red genome removes the Red mechanism slot instead of fabricating a mechanism.",
+                "The retained zip-slip campaign commentary omits unsupported kill/killed language.",
+            ],
+            claims_does_not_prove=[
+                "voice synthesis",
+                "Pixi redesign",
+                "fresh provider campaign regeneration",
+            ],
+        ),
+    )
+
+
 def probe_battle_terminal_semantics(summary_path: Path) -> int:
     suite = "battle-terminal-semantics"
     out_root = summary_path.parent / suite
@@ -3979,6 +4112,8 @@ def main() -> int:
             return probe_review_current_status_proof_chain(args.summary)
         if args.suite == "battle-terminal-semantics":
             return probe_battle_terminal_semantics(args.summary)
+        if args.suite == "battle-commentary-causality":
+            return probe_battle_commentary_causality(args.summary)
         if args.suite == "battle-adaptive-improvement":
             return probe_battle_adaptive_improvement(args.summary)
         if args.suite == "adaptive-lineage-same-run-backend-contracts":

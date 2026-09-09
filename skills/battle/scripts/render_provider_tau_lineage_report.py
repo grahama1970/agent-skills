@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
@@ -14,6 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 
 
 SCHEMA = "battle.provider_tau_lineage_broadcast.v1"
+CausalSlot = Literal["objective", "red_mechanism", "blue_response", "replay_transition", "judge_result"]
 
 
 class ArenaReceipt(BaseModel):
@@ -27,6 +29,7 @@ class ArenaReceipt(BaseModel):
     target_sha256_by_generation: dict[str, str]
     equalizers: list[str] = Field(min_length=1)
     expected_exploit_family: str = Field(min_length=1)
+    objective_fields: dict[str, Any] = Field(default_factory=dict)
 
 
 class TeamActivity(BaseModel):
@@ -44,6 +47,8 @@ class TeamActivity(BaseModel):
     semantic_change_count: int | None = None
     selected_generation: int | None = None
     retention_decision: str | None = None
+    fact_slot: CausalSlot | None = None
+    fact_fields: dict[str, Any] = Field(default_factory=dict)
 
 
 class SelectionTeamRecord(BaseModel):
@@ -82,6 +87,7 @@ class CommentaryLine(BaseModel):
     speaker_line: str = Field(min_length=1)
     source_receipts: list[str] = Field(min_length=1)
     source_activity_indices: dict[Literal["red", "blue"], list[int]] = Field(default_factory=dict)
+    causal_slot: CausalSlot | None = None
 
     @field_validator("source_activity_indices", mode="before")
     @classmethod
@@ -348,8 +354,94 @@ def selection_report_status(receipt: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _present(value: Any) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return bool(value.strip())
+    if isinstance(value, (list, dict)):
+        return bool(value)
+    return True
+
+
+def _compact_fact(fields: dict[str, Any]) -> dict[str, Any]:
+    return {key: value for key, value in fields.items() if _present(value)}
+
+
+def _objective_fields(receipt: dict[str, Any]) -> dict[str, Any]:
+    arena = receipt.get("arena") if isinstance(receipt.get("arena"), dict) else {}
+    return _compact_fact(
+        {
+            "scenario_id": arena.get("scenario_id"),
+            "cwe": arena.get("cwe"),
+            "hidden_vulnerability_family": arena.get("hidden_vulnerability_family"),
+            "public_entrypoint": arena.get("public_entrypoint"),
+        }
+    )
+
+
+def _campaign_source_roots(campaign_receipt: Path, receipt: dict[str, Any]) -> list[Path]:
+    roots: list[Path] = [campaign_receipt.parent]
+    for generation in receipt.get("generations") or []:
+        gen = generation.get("generation")
+        marker = f"generation-{gen}"
+        for pipe in ((generation.get("artifact_pipelines") or {}).get(team) or {} for team in ("red", "blue")):
+            paths = [pipe.get("selected_artifact_path"), pipe.get("selected_artifact_source_path")]
+            slot = pipe.get("immutable_slot") if isinstance(pipe.get("immutable_slot"), dict) else {}
+            paths.extend([slot.get("path"), slot.get("source_path")])
+            for raw in paths:
+                if not isinstance(raw, str) or not raw:
+                    continue
+                path = Path(raw)
+                for parent in path.parents:
+                    if parent.name == marker:
+                        roots.append(parent.parent)
+                        break
+    deduped: list[Path] = []
+    seen: set[str] = set()
+    for root in roots:
+        key = str(root)
+        if key not in seen:
+            seen.add(key)
+            deduped.append(root)
+    return deduped
+
+
+def _load_generation_genome(
+    *,
+    campaign_receipt: Path,
+    receipt: dict[str, Any],
+    generation: int,
+    team: Literal["red", "blue"],
+) -> dict[str, Any] | None:
+    for root in _campaign_source_roots(campaign_receipt, receipt):
+        path = root / f"generation-{generation}" / "genomes" / f"{team}-team-genome.json"
+        if path.is_file():
+            return read_json(path)
+    return None
+
+
+def _replay_by_generation(receipt: dict[str, Any]) -> dict[int, dict[str, Any]]:
+    replays: dict[int, dict[str, Any]] = {}
+    for replay in ((receipt.get("artifact_integrity") or {}).get("judge_replays") or []):
+        if not isinstance(replay, dict):
+            continue
+        try:
+            generation = int(replay.get("generation"))
+        except (TypeError, ValueError):
+            continue
+        replays[generation] = replay
+    return replays
+
+
+def _selected_team_record(receipt: dict[str, Any], team: Literal["red", "blue"]) -> dict[str, Any]:
+    item = (((receipt.get("selection") or {}).get("teams") or {}).get(team))
+    return item if isinstance(item, dict) else {}
+
+
 def build_arena_receipt(campaign_receipt: Path, receipt: dict[str, Any]) -> ArenaReceipt:
     arena = receipt.get("arena") or {}
+    objective_fields = _objective_fields(receipt)
     return ArenaReceipt(
         campaign_receipt=str(campaign_receipt),
         campaign_receipt_sha256=sha256_file(campaign_receipt),
@@ -364,7 +456,13 @@ def build_arena_receipt(campaign_receipt: Path, receipt: dict[str, Any]) -> Aren
             "Docker/Judge replay binds the score call.",
             "Selection is deterministic after receipt replay.",
         ],
-        expected_exploit_family="Zip Slip archive path traversal against import-zip handling.",
+        expected_exploit_family=str(
+            arena.get("hidden_vulnerability_family")
+            or arena.get("expected_exploit_family")
+            or arena.get("scenario_id")
+            or "unknown-scenario"
+        ),
+        objective_fields=objective_fields,
     )
 
 
@@ -375,8 +473,21 @@ def build_team_activity_receipt(
     receipt: dict[str, Any],
 ) -> TeamActivityReceipt:
     activities: list[TeamActivity] = []
+    objective_fact = _objective_fields(receipt)
+    replays = _replay_by_generation(receipt)
+    previous_verdict: str | None = None
+    selected = _selected_team_record(receipt, team)
     for generation in receipt.get("generations", []):
         gen = int(generation.get("generation") or 0)
+        if objective_fact:
+            activities.append(
+                TeamActivity(
+                    event_type="causal_fact",
+                    generation=gen,
+                    fact_slot="objective",
+                    fact_fields={"generation": gen, **objective_fact},
+                )
+            )
         pipe = (generation.get("artifact_pipelines") or {}).get(team) or {}
         activities.append(
             TeamActivity(
@@ -388,6 +499,88 @@ def build_team_activity_receipt(
                 compile_receipt_sha256=pipe.get("compile_receipt_sha256"),
             )
         )
+        genome = _load_generation_genome(
+            campaign_receipt=campaign_receipt,
+            receipt=receipt,
+            generation=gen,
+            team=team,
+        )
+        if genome and team == "red":
+            fact = _compact_fact(
+                {
+                    "generation": gen,
+                    "artifact_role": genome.get("artifact_role"),
+                    "selected_methods": genome.get("selected_methods"),
+                    "strategy_payload_family": genome.get("strategy_payload_family"),
+                    "parameters": genome.get("parameters"),
+                    "expected_observation": genome.get("expected_observation"),
+                }
+            )
+            if fact.get("selected_methods") or fact.get("strategy_payload_family"):
+                activities.append(
+                    TeamActivity(
+                        event_type="causal_fact",
+                        generation=gen,
+                        fact_slot="red_mechanism",
+                        fact_fields=fact,
+                    )
+                )
+        if genome and team == "blue":
+            selected_generation = selected.get("selected_generation")
+            fact = _compact_fact(
+                {
+                    "generation": gen,
+                    "artifact_role": genome.get("artifact_role"),
+                    "selected_methods": genome.get("selected_methods"),
+                    "retention_decision": selected.get("retention_decision") if selected_generation in (gen, str(gen)) else None,
+                    "parameters": genome.get("parameters"),
+                    "expected_observation": genome.get("expected_observation"),
+                }
+            )
+            if fact.get("selected_methods") or fact.get("retention_decision"):
+                activities.append(
+                    TeamActivity(
+                        event_type="causal_fact",
+                        generation=gen,
+                        fact_slot="blue_response",
+                        fact_fields=fact,
+                    )
+                )
+        replay = replays.get(gen)
+        if replay:
+            fact = _compact_fact(
+                {
+                    "generation": gen,
+                    "matched": replay.get("matched"),
+                    "replay_status": replay.get("status"),
+                    "previous_judge_verdict": previous_verdict,
+                    "judge_verdict": generation.get("judge_verdict"),
+                    "replay_receipt": replay.get("path"),
+                    "expected_sha256": replay.get("expected_sha256"),
+                    "actual_sha256": replay.get("actual_sha256"),
+                }
+            )
+            if "matched" in fact or fact.get("judge_verdict"):
+                activities.append(
+                    TeamActivity(
+                        event_type="causal_fact",
+                        generation=gen,
+                        fact_slot="replay_transition",
+                        fact_fields=fact,
+                    )
+                )
+        judge_fact = _compact_fact({"generation": gen, "judge_verdict": generation.get("judge_verdict")})
+        if judge_fact.get("judge_verdict"):
+            activities.append(
+                TeamActivity(
+                    event_type="causal_fact",
+                    generation=gen,
+                    judge_verdict=generation.get("judge_verdict"),
+                    fact_slot="judge_result",
+                    fact_fields=judge_fact,
+                )
+            )
+        previous_verdict = generation.get("judge_verdict")
     spawn = (receipt.get("spawn") or {}).get(team) or {}
     activities.append(
         TeamActivity(
@@ -411,7 +604,6 @@ def build_team_activity_receipt(
             artifact_sha256=delta.get("sha256"),
         )
     )
-    selected = (receipt.get("selection") or {}).get("teams", {}).get(team) or {}
     activities.append(
         TeamActivity(
             event_type="selection_decision",
@@ -426,6 +618,35 @@ def build_team_activity_receipt(
         activities=activities,
     )
 
+def _fact_value_text(value: Any) -> str:
+    if isinstance(value, list):
+        return "; ".join(str(item) for item in value)
+    if isinstance(value, dict):
+        return ", ".join(f"{key}={value[key]}" for key in sorted(value))
+    return str(value)
+
+
+def _fact_text(fields: dict[str, Any]) -> str:
+    return "; ".join(f"{key}={_fact_value_text(value)}" for key, value in fields.items())
+
+
+def _causal_line(team: Literal["red", "blue"], path: Path, idx: int, activity: TeamActivity) -> CommentaryLine:
+    slot = activity.fact_slot
+    text = _fact_text(activity.fact_fields)
+    labels = {
+        "red_mechanism": "RED exploit mechanism",
+        "blue_response": "BLUE response",
+        "replay_transition": "Judge replay transition",
+        "judge_result": "Judge terminal result",
+    }
+    return CommentaryLine(
+        period=f"generation_{activity.generation}_{slot}",
+        speaker_line=f"{labels.get(slot or '', slot or 'receipt fact')}: {text}.",
+        source_receipts=[str(path)],
+        source_activity_indices={team: [idx]},
+        causal_slot=slot,
+    )
+
 
 def build_commentary_receipt(
     *,
@@ -436,42 +657,26 @@ def build_commentary_receipt(
     red: TeamActivityReceipt,
     blue: TeamActivityReceipt,
 ) -> PlayByPlayCommentaryReceipt:
-    lines = [
-        CommentaryLine(
-            period="arena_open",
-            speaker_line=(
-                f"Welcome to {arena.scenario_id}: equal public terrain, hidden Judge authority, "
-                f"and {arena.expected_exploit_family} on the marquee."
-            ),
-            source_receipts=[str(arena_path)],
+    lines: list[CommentaryLine] = []
+    if arena.objective_fields:
+        lines.append(
+            CommentaryLine(
+                period="arena_objective",
+                speaker_line=f"Scenario objective: {_fact_text(arena.objective_fields)}.",
+                source_receipts=[str(arena_path)],
+                causal_slot="objective",
+            )
         )
-    ]
     for idx, activity in enumerate(red.activities):
-        if activity.event_type == "specimen_materialized":
-            lines.append(
-                CommentaryLine(
-                    period=f"generation_{activity.generation}",
-                    speaker_line=(
-                        f"RED takes the monster lane in generation {activity.generation}: "
-                        f"artifact {activity.artifact_sha256} hits the arena under Judge call {activity.judge_verdict}."
-                    ),
-                    source_receipts=[str(red_path)],
-                    source_activity_indices={"red": [idx]},
-                )
-            )
+        if activity.fact_slot == "red_mechanism":
+            lines.append(_causal_line("red", red_path, idx, activity))
     for idx, activity in enumerate(blue.activities):
-        if activity.event_type == "specimen_materialized":
-            lines.append(
-                CommentaryLine(
-                    period=f"generation_{activity.generation}",
-                    speaker_line=(
-                        f"BLUE answers with the shield wall in generation {activity.generation}: "
-                        f"artifact {activity.artifact_sha256} stays bound to Judge call {activity.judge_verdict}."
-                    ),
-                    source_receipts=[str(blue_path)],
-                    source_activity_indices={"blue": [idx]},
-                )
-            )
+        if activity.fact_slot == "blue_response":
+            lines.append(_causal_line("blue", blue_path, idx, activity))
+    for team, activity_receipt, path in [("red", red, red_path), ("blue", blue, blue_path)]:
+        for idx, activity in enumerate(activity_receipt.activities):
+            if activity.fact_slot in {"replay_transition", "judge_result"}:
+                lines.append(_causal_line(team, path, idx, activity))
     for team, activity_receipt, path in [("red", red, red_path), ("blue", blue, blue_path)]:
         for idx, activity in enumerate(activity_receipt.activities):
             if activity.event_type == "selection_decision":
@@ -492,7 +697,6 @@ def build_commentary_receipt(
         blue_team_activity_receipt_sha256=sha256_file(blue_path),
         commentary_lines=lines,
     )
-
 
 def _bound_receipt_hash_errors(commentary: PlayByPlayCommentaryReceipt) -> list[str]:
     errors: list[str] = []
@@ -548,6 +752,72 @@ def commentary_provenance_errors(
         if not has_exact_arena and not has_valid_team_activity:
             errors.append(f"{line.period}: lacks exact hashed arena receipt or exact team activity index")
     return errors
+
+
+def _line_provenance_errors(
+    commentary: PlayByPlayCommentaryReceipt,
+    line: CommentaryLine,
+    red: TeamActivityReceipt,
+    blue: TeamActivityReceipt,
+) -> list[str]:
+    errors: list[str] = []
+    counts = {"red": len(red.activities), "blue": len(blue.activities)}
+    team_receipts = {
+        "red": commentary.red_team_activity_receipt,
+        "blue": commentary.blue_team_activity_receipt,
+    }
+    allowed_receipts = {commentary.arena_receipt, *team_receipts.values()}
+    has_exact_arena = commentary.arena_receipt in line.source_receipts
+    has_valid_team_activity = False
+    for source_receipt in line.source_receipts:
+        if source_receipt not in allowed_receipts:
+            errors.append(f"{line.period}: unbound source receipt {source_receipt}")
+    for team, indices in line.source_activity_indices.items():
+        if not indices:
+            errors.append(f"{line.period}: {team} activity index list is empty")
+            continue
+        if team_receipts[team] not in line.source_receipts:
+            errors.append(f"{line.period}: {team} activity indices lack exact bound team receipt")
+            continue
+        if not all(isinstance(index, int) and not isinstance(index, bool) and 0 <= index < counts[team] for index in indices):
+            errors.append(f"{line.period}: {team} activity indices include invalid index")
+            continue
+        has_valid_team_activity = True
+    if not has_exact_arena and not has_valid_team_activity:
+        errors.append(f"{line.period}: lacks exact hashed arena receipt or exact team activity index")
+    return errors
+
+
+def commentary_causal_coverage(
+    commentary: PlayByPlayCommentaryReceipt,
+    red: TeamActivityReceipt,
+    blue: TeamActivityReceipt,
+) -> dict[str, Any]:
+    required_slots: tuple[CausalSlot, ...] = (
+        "objective",
+        "red_mechanism",
+        "blue_response",
+        "replay_transition",
+        "judge_result",
+    )
+    slots: dict[str, dict[str, Any]] = {}
+    for slot in required_slots:
+        lines = [line for line in commentary.commentary_lines if line.causal_slot == slot]
+        bound = [line for line in lines if not _line_provenance_errors(commentary, line, red, blue)]
+        slots[slot] = {
+            "status": "present-and-source-bound" if bound else "absent",
+            "present": bool(bound),
+            "source_bound": bool(bound),
+            "line_count": len(bound),
+            "periods": [line.period for line in bound],
+        }
+    commentary_text = "\n".join(line.speaker_line.lower() for line in commentary.commentary_lines)
+    has_kill_word = re.search(r"\bkill(?:ed)?\b", commentary_text) is not None
+    return {
+        "slots": slots,
+        "all_required_present_and_source_bound": all(item["status"] == "present-and-source-bound" for item in slots.values()),
+        "forbids_unsupported_kill_language": not has_kill_word,
+    }
 
 
 def commentary_is_grounded(commentary: PlayByPlayCommentaryReceipt, red: TeamActivityReceipt, blue: TeamActivityReceipt) -> bool:
@@ -769,6 +1039,14 @@ def render(campaign_receipt: Path, out_dir: Path, dogpile_seed: Path | None, mem
             "red_team_activity_receipt": str(red_path),
             "blue_team_activity_receipt": str(blue_path),
             "sports_play_by_play_commentary_receipt": str(commentary_path),
+        }
+    )
+    causal_coverage = commentary_causal_coverage(commentary, red, blue)
+    checks.append(
+        {
+            "name": "commentary_causal_coverage",
+            "status": "PASS" if causal_coverage["forbids_unsupported_kill_language"] else "FAIL",
+            **causal_coverage,
         }
     )
     events = collect_events(receipt)

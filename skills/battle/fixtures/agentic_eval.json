@@ -6,7 +6,7 @@
   "live": true,
   "proof_scope": "Battle feature regression coverage through existing Battle entrypoints, local Docker proof receipts, local transport receipts, receipt-backed Pixi replay browser proof, focused contract suites, an explicit fail-closed adaptive-lineage exact-chain receipt gate, and explicit uncovered seams for Battle features that still need agentic evals",
   "claims": {
-    "proves": "Battle's authorization gate, isolated local Docker reactive Judge round, Red/Judge/Blue visibility boundary, scorekeeper authority, terminal semantics fail-closed validation, adaptive-lineage contract guards, durable adaptive-lineage exact-chain proof, browser-visible receipt-backed Pixi replay, immutable-goal close-gate readiness, Pydantic arena/Red/Blue/play-by-play event receipts, memory-lineage contract guards, same-run transport, pause/resume transport safety, and staging fail-closed behavior are covered by agentic eval seams with artifact readback",
+    "proves": "Battle's authorization gate, isolated local Docker reactive Judge round, Red/Judge/Blue visibility boundary, scorekeeper authority, terminal semantics fail-closed validation, adaptive-lineage contract guards, durable adaptive-lineage exact-chain proof, browser-visible receipt-backed Pixi replay, immutable-goal close-gate readiness, Pydantic arena/Red/Blue/play-by-play event receipts, commentary causality, memory-lineage contract guards, same-run transport, pause/resume transport safety, and staging fail-closed behavior are covered by agentic eval seams with artifact readback",
     "does_not_prove": "arbitrary target exploitability, a real 1000-round overnight campaign, QEMU boot execution, production WebSocket TLS/auth/fanout against a real public endpoint, or full visual design acceptance"
   },
   "what_was_exercised": "uv-run Battle probe script invocations that call Battle run.sh commands, local Docker proof generation, current-status terminal-semantics receipt readback, focused pytest contract suites, independent JSON receipt readback, and a built spectator bundle served over local HTTP for Playwright Pixi replay proof",
@@ -119,6 +119,14 @@
     {
       "id": "battle.adaptive_lineage.commentary_provenance",
       "description": "Provider/Tau broadcast commentary lines fail closed unless they cite the exact bound arena receipt or nonempty valid activity indices from the exact bound team activity receipt.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
+    },
+    {
+      "id": "battle.adaptive_lineage.commentary_causality",
+      "description": "Provider/Tau broadcast commentary narrates scenario objective, Red mechanism, Blue response, replay transition, and Judge terminal result only from typed source-bound receipt fact slots, omitting absent facts and unsupported kill language.",
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
@@ -494,6 +502,20 @@
         "commentary accepts empty activity-index lists",
         "commentary accepts basename-only arena receipt matches instead of the exact bound arena receipt",
         "commentary accepts wrong-team, out-of-range, or boolean activity indices"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "adaptive_lineage.commentary_causality",
+      "claim_id": "battle.adaptive_lineage.commentary_causality",
+      "seam_type": "receipt fact-slot commentary projection",
+      "criticality": "critical",
+      "failure_modes": [
+        "commentary narrates an objective, exploit mechanism, Blue response, replay transition, or Judge result without a typed source-bound receipt slot",
+        "commentary fabricates a Red exploit mechanism when the Red genome is absent",
+        "crash-only or unsupported events are narrated as kills without a typed terminal kill slot"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -1214,6 +1236,39 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/review-commentary-provenance.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-commentary-causality",
+      "category": "battle-commentary-causality",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.adaptive_lineage.commentary_causality"
+      ],
+      "seams": [
+        "adaptive_lineage.commentary_causality"
+      ],
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-commentary-causality --summary /tmp/battle-agentic-evals/battle-commentary-causality.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-commentary-causality"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-commentary-causality.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800
