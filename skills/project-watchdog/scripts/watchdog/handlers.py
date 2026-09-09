@@ -2235,9 +2235,17 @@ def finish_primary_operation(record) -> dict[str, Any]:
         result["tau_stream_monitor"] = stream
         result["tau_failure"] = refused
         return result
-    monitor = _json_from_file(receipt_dir / "tau-stream-monitor.json") or {}
-    if monitor.get("timed_out") or monitor.get("process_exit_code") not in {None, 0}:
-        raise primary.Refusal("retained Ask invocation failed/timed out; no automatic closure")
+    if stream.get("resume_generation") is not None:
+        command = stream.get("command_receipt") or {}
+        control = stream.get("resume_control") or {}
+        if (command.get("timed_out") or command.get("exit_code") != 0
+                or control.get("schema") != "ask.run_control.v1"
+                or control.get("outcome") != "completed" or control.get("returncode") != 0):
+            raise primary.Refusal("current Ask resume invocation failed; no automatic closure")
+    else:
+        monitor = _json_from_file(receipt_dir / "tau-stream-monitor.json") or {}
+        if monitor.get("timed_out") or monitor.get("process_exit_code") not in {None, 0}:
+            raise primary.Refusal("retained Ask invocation failed/timed out; no automatic closure")
     creator, reviewer = config.repair_seats(project)
     creator_handler, reviewer_handler = repair_execution_handlers(creator, reviewer)
     text = seat_response_text(Path(record.ask_run_dir), reviewer_handler) or ""

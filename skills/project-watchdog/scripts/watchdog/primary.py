@@ -286,8 +286,22 @@ def reattach_and_resume(root: Path, journal: Path, *, apply: bool, timeout_s: in
         result: dict[str, Any] = {"ok": False, "status": "RUNNING", "commands": [], "artifacts": []}
         from . import handlers, native_ticket, resume_state
         run_dir = _project_command_spec_run(Path(record.ask_run_dir))
+        prior = handlers.inspect_tau_stream(Path(record.ask_run_dir))
+        finalize_only = (prior.get("terminal") is True
+            and prior.get("terminal_status") in {"PASS", "COMPLETED"}
+            and record.lease_event is not None
+            and prior.get("resume_generation") == record.lease_event.id)
         native_ticket.acquire(record, result, checkpoint)
         record = current()
+        if finalize_only:
+            write_json(Path(record.receipt_dir) / "retained-resume-finalization.json", {
+                "schema": "agent_skills.project_watchdog.resume_finalization.v1",
+                "admitted_generation": prior["resume_generation"],
+                "native_result": prior["terminal_source"], "new_lease_event_id": record.lease_event.id,
+                "provider_dispatched": False,
+            })
+            checkpoint("settled", tau_settled=True)
+            return _finalize_reattached_operation()
         generation_path = resume_state.begin(record, run_dir)
         command = [str(config.ask_run_sh()), "runs", "resume", str(run_dir), "--execute", "--json"]
         checkpoint("running", ask_run_dir=record.ask_run_dir, dispatched_at=time.time())
@@ -328,25 +342,7 @@ def reattach_and_resume(root: Path, journal: Path, *, apply: bool, timeout_s: in
             checkpoint("uncertain", result=result)
             return result
         checkpoint("settled", tau_settled=True)
-        try:
-            result = handlers.finish_primary_operation(current())
-            checkpoint(current().phase, result=result)
-        except (RuntimeError, ValueError, OSError) as exc:
-            active = current()
-            result = failure({"project_id": active.project_id, "repo": active.repo, "worktree": active.root},
-                             {"number": active.issue_number, "watchdog_action": active.action}, str(exc))
-            checkpoint("releasing", result=result, recovery=str(exc))
-        record = current()
-        if record.closure is not None:
-            checkpoint("closing")
-            result = native_ticket.close(current())
-            checkpoint("releasing", result=result)
-        elif record.phase in {"leased", "settled"}:
-            checkpoint("releasing", result=result)
-        if current().phase == "releasing" and _finish_release(current()):
-            write_json(Path(current().result_path), result)
-            checkpoint("finished" if result.get("ok") else "retryable", lease_released=True, result=result)
-        return result
+        return _finalize_reattached_operation()
     except (RuntimeError, ValueError, OSError) as exc:
         active = _CURRENT
         if active is not None:
@@ -359,6 +355,29 @@ def reattach_and_resume(root: Path, journal: Path, *, apply: bool, timeout_s: in
     finally:
         _CURRENT, _FD = None, None
         os.close(fd)
+
+
+def _finalize_reattached_operation() -> dict[str, Any]:
+    from . import handlers, native_ticket
+    try:
+        result = handlers.finish_primary_operation(current())
+        checkpoint(current().phase, result=result)
+    except (RuntimeError, ValueError, OSError) as exc:
+        active = current()
+        result = failure({"project_id": active.project_id, "repo": active.repo, "worktree": active.root},
+                         {"number": active.issue_number, "watchdog_action": active.action}, str(exc))
+        checkpoint("releasing", result=result, recovery=str(exc))
+    record = current()
+    if record.closure is not None:
+        checkpoint("closing")
+        result = native_ticket.close(current())
+        checkpoint("releasing", result=result)
+    elif record.phase in {"leased", "settled"}:
+        checkpoint("releasing", result=result)
+    if current().phase == "releasing" and _finish_release(current()):
+        write_json(Path(current().result_path), result)
+        checkpoint("finished" if result.get("ok") else "retryable", lease_released=True, result=result)
+    return result
 
 
 def failure(project: dict[str, Any], issue: dict[str, Any], message: str,

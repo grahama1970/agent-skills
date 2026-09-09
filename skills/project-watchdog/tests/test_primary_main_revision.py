@@ -618,7 +618,9 @@ def test_aggregate_pass_cannot_erase_failed_required_node(tmp_path):
     assert observed["terminal_status"] == "NEEDS_ATTENTION"
 
 
-def test_retryable_resume_reattaches_native_lease_and_sets_watchdog_journal(repository, monkeypatch):
+@pytest.mark.parametrize("finalize_only", [False, True])
+def test_retryable_resume_reattaches_native_lease_and_sets_watchdog_journal(repository, monkeypatch, finalize_only):
+    from watchdog.primary_models import LeaseEvent
     root, _, receipts = repository
     receipts.mkdir(parents=True, exist_ok=True)
     ask_parent = receipts / "ask"
@@ -633,6 +635,7 @@ def test_retryable_resume_reattaches_native_lease_and_sets_watchdog_journal(repo
         "tau_settled": True,
         "lease_released": True,
         "targets": ["skills/ask"],
+        "lease_event": LeaseEvent(id=6, event="labeled", actor="fixture", created_at="earlier") if finalize_only else None,
     })
     Path(record.journal).parent.mkdir(parents=True, exist_ok=True)
     core.write_json(Path(record.journal), encoded(record))
@@ -655,19 +658,27 @@ def test_retryable_resume_reattaches_native_lease_and_sets_watchdog_journal(repo
 
     monkeypatch.setattr(native_ticket, "acquire", acquire)
     monkeypatch.setattr(handlers, "run_ask_tau_dag_with_stream_monitor", run_resume)
-    monkeypatch.setattr(handlers, "inspect_tau_stream", lambda _: {"terminal": True, "terminal_status": "BLOCKED"})
+    monkeypatch.setattr(handlers, "inspect_tau_stream", lambda _: {
+        "terminal": True, "terminal_status": "PASS" if finalize_only else "BLOCKED",
+        "resume_generation": 6, "terminal_source": "fixture-current-native-result",
+    })
     monkeypatch.setattr(handlers, "finish_primary_operation", lambda row: {"ok": False, "status": "NEEDS_ATTENTION", "summary": "reviewer still blocked"})
     monkeypatch.setattr(primary, "_finish_release", lambda row: True)
 
     result = primary.reattach_and_resume(root, Path(record.journal), apply=True)
 
     assert result["status"] == "NEEDS_ATTENTION"
-    assert seen["command"][:3] == [str(root / "skills/ask/run.sh"), "runs", "resume"]
-    assert seen["command"][3] == str(run_dir)
-    assert seen["journal_env"] == record.journal
+    if finalize_only:
+        assert seen == {}, "accepted resume must not launch Ask or a provider again"
+        assert core.load_json(receipts / "retained-resume-finalization.json")["provider_dispatched"] is False
+    else:
+        assert seen["command"][:3] == [str(root / "skills/ask/run.sh"), "runs", "resume"]
+        assert seen["command"][3] == str(run_dir)
+        assert seen["journal_env"] == record.journal
     updated = Operation.model_validate(core.load_json(Path(record.journal)))
     assert updated.phase == "retryable"
     assert updated.lease_released is True
     assert updated.lease_event is not None and updated.lease_event.id == 7
-    command_receipt = core.load_json(receipts / "watchdog-reattach-resume-command.json")
-    assert "--watchdog-journal" in command_receipt["stdout"]
+    if not finalize_only:
+        command_receipt = core.load_json(receipts / "watchdog-reattach-resume-command.json")
+        assert "--watchdog-journal" in command_receipt["stdout"]
