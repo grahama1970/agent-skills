@@ -114,6 +114,22 @@ def run_checked(argv: list[str], env: dict[str, str], timeout: int = 10) -> subp
     return subprocess.run(argv, check=True, capture_output=True, text=True, timeout=timeout, env=env)
 
 
+def set_clipboard(text: str, env: dict[str, str]) -> None:
+    logger.info("setting clipboard")
+    proc = subprocess.Popen(
+        ["xclip", "-selection", "clipboard", "-i"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+        text=True,
+        env=env,
+    )
+    if proc.stdin is None:
+        raise RuntimeError("xclip stdin pipe was not opened")
+    proc.stdin.write(text)
+    proc.stdin.close()
+
+
 def preflight(plan: CoordinatePlan, display: str | None) -> list[dict]:
     errors = [err for tool in ("xdotool", "xclip") if (err := require_tool(tool))]
     env = desktop_env(plan, display)
@@ -178,16 +194,21 @@ def submit(
         fail("submit", errors, json_output, plan_obj)
     env = desktop_env(plan_obj, display)
     try:
-        run_checked(["xclip", "-selection", "clipboard", str(prompt_file)], env)
+        set_clipboard(prompt_file.read_text(encoding="utf-8"), env)
         run_checked(["xdotool", "search", "--name", plan_obj.window_title, "windowactivate", "%@"], env)
         run_checked(["xdotool", "mousemove", str(plan_obj.composer.x), str(plan_obj.composer.y)], env)
         run_checked(["xdotool", "click", "1"], env)
+        run_checked(["xdotool", "key", "ctrl+a"], env)
+        run_checked(["xdotool", "key", "BackSpace"], env)
         run_checked(["xdotool", "key", "ctrl+v"], env)
         if plan_obj.send:
             run_checked(["xdotool", "mousemove", str(plan_obj.send.x), str(plan_obj.send.y)], env)
             run_checked(["xdotool", "click", "1"], env)
+        run_checked(["xdotool", "key", "ctrl+Return"], env)
     except subprocess.CalledProcessError as exc:
         fail("submit", [{"type": "desktop_command_failed", "loc": exc.cmd, "msg": exc.stderr or exc.stdout or str(exc), "ctx": {"returncode": exc.returncode}}], json_output, plan_obj)
+    except subprocess.TimeoutExpired as exc:
+        fail("submit", [{"type": "desktop_command_timeout", "loc": exc.cmd, "msg": str(exc), "ctx": {"timeout": exc.timeout}}], json_output, plan_obj)
     emit(CommandReceipt(command="submit", status="PASS", executed=True, created_at=now(), plan=plan_obj, clipboard_chars=len(prompt_file.read_text(encoding="utf-8"))), json_output)
 
 
@@ -217,6 +238,8 @@ def copy_response(
         result = run_checked(["xclip", "-selection", "clipboard", "-o"], env)
     except subprocess.CalledProcessError as exc:
         fail("copy-response", [{"type": "desktop_command_failed", "loc": exc.cmd, "msg": exc.stderr or exc.stdout or str(exc), "ctx": {"returncode": exc.returncode}}], json_output, plan_obj)
+    except subprocess.TimeoutExpired as exc:
+        fail("copy-response", [{"type": "desktop_command_timeout", "loc": exc.cmd, "msg": str(exc), "ctx": {"timeout": exc.timeout}}], json_output, plan_obj)
     out.write_text(result.stdout, encoding="utf-8")
     emit(CommandReceipt(command="copy-response", status="PASS", executed=True, created_at=now(), plan=plan_obj, output_path=str(out), clipboard_chars=len(result.stdout)), json_output)
 

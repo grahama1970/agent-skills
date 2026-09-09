@@ -1,0 +1,53 @@
+{
+  "version": 2,
+  "skill": "ops-gemini-sidebar",
+  "trials": 2,
+  "proof_scope": "live desktop execution against an already-open Chrome side-panel using calibrated coordinates, plus fail-closed desktop preflight",
+  "mocked": false,
+  "live": true,
+  "claims": {
+    "proves": "with calibrated local coordinates, the production submit command can paste into the visible side-panel composer, submit, and produce a screenshot OCR readback containing the requested marker",
+    "does_not_prove": "that coordinates are portable across displays, that Gemini review quality is high, or that dynamic copy-icon coordinates are stable"
+  },
+  "what_was_exercised": "the production run.sh submit --execute path through xclip and xdotool, followed by a root screenshot and tesseract OCR readback",
+  "what_remains_unverified": "copy icon automation remains coordinate-sensitive and must be calibrated from a post-response screenshot",
+  "cases": [
+    {
+      "name": "live-submit-produces-visible-sidebar-response",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "command": [
+        "bash",
+        "-lc",
+        "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/ops-gemini-sidebar/.venv OPS_GEMINI_SIDEBAR_COORDS=/tmp/gemini-coords-live.json OPS_GEMINI_SIDEBAR_DISPLAY=:0 OPS_GEMINI_SIDEBAR_WAIT_SECONDS=18 uv run --project .. python live_sidebar_eval.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"schema\": \"ops_gemini_sidebar.live_eval.v1\"",
+          "\"status\": \"PASS\"",
+          "SIDEBARLIVEOK"
+        ]
+      }
+    },
+    {
+      "name": "missing-display-fails-closed",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "bash",
+        "-lc",
+        "tmp=$(mktemp); printf 'x' > /tmp/ops-gemini-sidebar-prompt.txt; ../run.sh plan --composer-x 1 --composer-y 1 --out \"$tmp\" >/dev/null; env -u DISPLAY ../run.sh submit --prompt-file /tmp/ops-gemini-sidebar-prompt.txt --coords \"$tmp\" --execute --json || true"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"FAILED\"",
+          "missing_display"
+        ]
+      }
+    }
+  ]
+}
