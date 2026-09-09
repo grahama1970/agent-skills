@@ -42,6 +42,7 @@ export function TeleprompterStage({
   return (
     <section
       className={[
+        'cockpit-stage',
         'flex min-w-0 flex-col rounded-2xl',
         'border border-cyan-500/30',
         'bg-black p-8 shadow-2xl',
@@ -49,6 +50,7 @@ export function TeleprompterStage({
     >
       <div
         className={[
+          'cockpit-stage__meta',
           'mb-5 flex items-center justify-between',
           'text-sm uppercase tracking-wider',
           'text-zinc-400',

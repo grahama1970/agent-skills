@@ -35,9 +35,11 @@ interface Props {
 function ExplainerButton({
   explainer,
   dispatch,
+  selected,
 }: {
   explainer: ExplainerSummary
   dispatch: Dispatch
+  selected: boolean
 }) {
   const id = explainer.feature_id
   const qid = (
@@ -64,10 +66,12 @@ function ExplainerButton({
       data-qid={`cockpit:explainer:select:${id}`}
       data-qs-action="EXPLAINER_SELECT"
       title={`Select ${explainer.title}`}
+      aria-current={selected ? 'true' : undefined}
       className={[
-        'w-full rounded-lg border',
-        'border-zinc-700 p-2 text-left',
-        'text-sm hover:border-cyan-500',
+        'w-full rounded-lg border p-3 text-left',
+        selected
+          ? 'border-cyan-300 bg-cyan-950/30 text-zinc-50'
+          : 'border-zinc-700 text-zinc-200 hover:border-zinc-400',
       ].join(' ')}
       onClick={() => {
         void dispatch(
@@ -349,6 +353,7 @@ export function InputRail({
             key={explainer.feature_id}
             explainer={explainer}
             dispatch={dispatch}
+            selected={state.selection?.feature_id === explainer.feature_id}
           />
         ))}
       </div>

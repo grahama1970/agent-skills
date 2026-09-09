@@ -135,3 +135,373 @@ button:hover, input:focus, textarea:focus {
   h1 { font-size: 46px; }
   ul { font-size: 30px; }
 }
+
+main[class] {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 100dvh;
+  background: #09090b;
+}
+
+main[class] > header {
+  flex: 0 0 auto;
+  height: auto;
+  min-height: 64px;
+  margin: 0;
+  gap: 12px 24px;
+  flex-wrap: wrap;
+  border-color: #3f3f46;
+  border-radius: 12px;
+  background: #131316;
+  padding: 12px 18px;
+  box-shadow: none;
+}
+
+main[class] > header > div {
+  font-variant-numeric: tabular-nums;
+}
+
+main[class] > header + div {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+main[class] > section {
+  flex: 1 1 0;
+  height: auto;
+  min-height: 0;
+  grid-template-columns: clamp(18rem, 19vw, 20rem) minmax(0, 1fr) clamp(19rem, 21vw, 22rem);
+}
+
+main[class] > section > :is(aside, section) {
+  min-width: 0;
+  overflow: auto;
+  border-color: #3f3f46;
+  border-radius: 12px;
+  background: #131316;
+  padding: 16px;
+  scroll-padding-block: 16px;
+}
+
+main[class] > section > section {
+  border-color: #52525b;
+  background: #09090b;
+  padding: 28px clamp(24px, 2.5vw, 48px);
+  box-shadow: none;
+}
+
+main[class] > section > section > * {
+  flex-shrink: 0;
+}
+
+main[class] > section > section.cockpit-stage {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(6rem, 1fr) auto auto;
+  align-content: stretch;
+  align-items: start;
+  gap: 0;
+}
+
+main[class] .cockpit-stage__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  color: #a1a1aa;
+  font-size: 0.875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+main[class] .cockpit-stage__meta > span:last-child {
+  text-align: right;
+}
+
+main[class] > section > section > :is(p, h1, ul) {
+  width: 100%;
+  max-width: 50rem;
+  margin-inline: auto;
+}
+
+main[class] > section > section > p {
+  margin-top: auto;
+}
+
+main[class] > section > section > h1 {
+  margin-block: 0 24px;
+  font-size: clamp(2.5rem, 3.2vw, 4rem);
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
+}
+
+main[class] > section > section.cockpit-stage > p {
+  margin-block: 24px 12px;
+}
+
+main[class] > section > section.cockpit-stage > h1 {
+  margin-block: 0 24px;
+}
+
+main[class] > section > section > ul {
+  flex: 0 1 auto;
+  min-height: 6rem;
+  margin-block: 0 auto;
+  font-size: clamp(1.5rem, 1.85vw, 2.25rem);
+  line-height: 1.45;
+  overflow: auto;
+}
+
+main[class] > section > section.cockpit-stage > ul {
+  align-self: stretch;
+  min-width: 0;
+  min-height: 0;
+  margin-block: 0;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
+main[class] > section > section > ul:empty {
+  min-height: 0;
+}
+
+main[class] > section > section > ul[class] > li:nth-child(n) {
+  margin: 0 0 18px;
+  overflow-wrap: anywhere;
+}
+
+main[class] > section > section > ul[class] > li:last-child {
+  margin-bottom: 0;
+}
+
+main[class] > section > section > ul + div {
+  margin-top: 24px;
+  padding: 14px 16px;
+  border: 1px solid #52525b;
+  border-left: 3px solid #a1a1aa;
+  border-radius: 8px;
+  color: #e4e4e7;
+  background: #18181b;
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+main[class] > section > section > ul + div > div {
+  color: #d4d4d8;
+  letter-spacing: 0.08em;
+}
+
+main[class] > section > section > div:last-child {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+main[class] > section > section.cockpit-stage > div:last-child {
+  align-self: end;
+  margin-block: 0;
+  padding-top: 20px;
+}
+
+main[class] > section > aside {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+main[class] > section > aside[class] > :nth-child(n) {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+main[class] > section > aside:first-child > div:last-child {
+  flex: 1 1 auto;
+  min-height: 8rem;
+  padding: 4px;
+}
+
+main[class] > section > aside h2 {
+  font-size: 1rem;
+  line-height: 1.4;
+  letter-spacing: 0.025em;
+}
+
+main[class] > section > aside p {
+  font-size: 1rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+main[class] aside :is(.text-zinc-400, .text-zinc-500) {
+  color: #bdbdc5;
+}
+
+main[class] > section > aside:last-child {
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+main[class] > section > aside:last-child > section {
+  min-width: 0;
+  max-width: 100%;
+  height: auto;
+  padding: 14px 0 0;
+  border: 0;
+  border-top: 1px solid #3f3f46;
+  border-radius: 0;
+  background: transparent;
+}
+
+main[class] > section > aside:last-child > section > :is(p, div) {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+main[class] > section > aside:last-child > section:first-of-type > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+}
+
+main[class] aside span[title] {
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+main[class] > section > aside:last-child > section > p:last-child {
+  margin-top: 10px;
+  font-size: 0.875rem;
+  color: #d4d4d8;
+}
+
+main[class] .cockpit-diagram-preview {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: clamp(9rem, 18vh, 13rem);
+  padding: 8px;
+  background: #09090b;
+}
+
+main[class] .cockpit-diagram-preview [data-active='false'] circle {
+  fill: #27272a;
+  stroke: #71717a;
+}
+
+main[class] .cockpit-diagram-preview [data-active='true'] circle {
+  fill: #67e8f9;
+  stroke: #cffafe;
+}
+
+main[class] .cockpit-diagram-preview [data-active='false'] text {
+  fill: #d4d4d8;
+}
+
+main[class] .cockpit-diagram-preview [data-active='true'] text {
+  fill: #ecfeff;
+}
+
+main[class] .cockpit-diagram-preview text {
+  font-size: 14px;
+  paint-order: stroke;
+  stroke: #09090b;
+  stroke-width: 3px;
+}
+
+main[class] [data-qid^='cockpit:explainer:select:']:nth-child(n) {
+  margin: 0 0 10px;
+  padding: 14px;
+  border-color: #52525b;
+  border-radius: 8px;
+  background: #18181b;
+  color: #f4f4f5;
+  font-size: 1rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+main[class] [data-qid^='cockpit:explainer:select:'] > span:last-child {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.875rem;
+}
+
+main[class] [data-qid^='cockpit:explainer:select:'][aria-current='true'] {
+  border-color: #67e8f9;
+  background: #13262b;
+  box-shadow: inset 3px 0 #67e8f9;
+}
+
+main[class] [data-qid^='cockpit:explainer:select:']:hover {
+  border-color: #a1a1aa;
+  background: #27272a;
+}
+
+main[class] [data-qid^='cockpit:explainer:select:'][aria-current='true']:hover {
+  border-color: #a5f3fc;
+  background: #1a3036;
+}
+
+main[class] input,
+main[class] textarea {
+  border: 1px solid #71717a;
+  border-radius: 8px;
+  background: #09090b;
+}
+
+main[class] button {
+  min-height: 44px;
+  border: 1px solid #71717a;
+  border-radius: 8px;
+  background: #18181b;
+  color: #e4e4e7;
+}
+
+main[class] [data-qid='cockpit:question:manual-submit'] {
+  background: #67e8f9;
+  color: #083344;
+  font-weight: 700;
+}
+
+main[class] [data-qid='cockpit:step:previous'],
+main[class] [data-qid='cockpit:step:next'] {
+  min-width: 8rem;
+  font-size: 1.125rem;
+}
+
+main[class] :is(button, input, textarea, a):focus-visible {
+  outline: 3px solid #a5f3fc;
+  outline-offset: 3px;
+}
+
+main[class] :is(button, input, textarea):disabled {
+  opacity: 1;
+  color: #a1a1aa;
+  border-color: #52525b;
+  background: #18181b;
+  cursor: not-allowed;
+}
+
+@media (max-width: 70rem) {
+  main[class] > section {
+    grid-template-columns: 16rem minmax(0, 1fr);
+    overflow: auto;
+    align-items: start;
+  }
+  main[class] > section > section { min-height: 38rem; }
+  main[class] > section > aside:first-child { max-height: 38rem; }
+  main[class] > section > aside:last-child { grid-column: 1 / -1; }
+}
+
+@media (max-width: 46rem) {
+  main[class] > section { grid-template-columns: minmax(0, 1fr); }
+  main[class] > section > section { padding: 24px; }
+}
