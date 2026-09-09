@@ -133,6 +133,96 @@ numeric knob; numeric-intensity cases contain no native tags. Both contrast and
 flat/overblown/wrong-context controls are retained. The real caller-context CLI
 canary has no agent judgment and therefore cannot establish appropriateness.
 
+## Labeled reply comparison and human preferences
+
+`compare` adds a finite review workflow, not a UI application. The retained
+`fixtures/reply_variants.jsonl` extends all six synthetic contextual cases with
+10 authored reply-delivery plans each. Default **five** evenly cover the supplied
+expressive-to-restrained range; `--variants` accepts **5–10**. Candidate IDs are
+packet-scoped. Grief varies quiet presence, not indiscriminate high arousal.
+The original single-candidate negative controls and audio-quality evidence remain.
+`tuned_reply_variants.jsonl` supplies five wording-and-delivery alternatives for
+the subsequent five batch rows, including context-appropriate alternatives to
+wrong-context celebration. Its original scenario remains the baseline; each
+candidate's optional `response_text` is its actual Embry reply. These are authored
+calibration candidates, not accepted production defaults. The current live batch
+is six rows (three underlying context families), not the old 50-scenario expansion.
+
+```bash
+./run.sh compare render fixtures/reply_variants.jsonl celebration \
+  /mnt/storage12tb/skills/chatterbox-speak/outputs/comparison.jsonl
+./run.sh compare prompt /absolute/comparison.jsonl /absolute/recommendation-prompt.txt
+# Submit that prompt through Ask tau-dag --handler webgpt; run Ask's browser prompt preflight first.
+./run.sh compare recommend /absolute/comparison.jsonl /absolute/ask/node-receipt.json \
+  /absolute/recommendation.jsonl
+./run.sh compare replay /absolute/recommendation.jsonl /absolute/replay-report.json
+# ONLY after an actual human reply:
+./run.sh compare select /absolute/recommendation.jsonl --candidate C03 \
+  --reason 'Actual human explanation' --evaluator-identity 'Actual human identity' \
+  --human-reply 'Verbatim actual human reply'
+../agentic-evals/run.sh run fixtures/reply_variants.json --timeout-seconds 480 \
+  --output /mnt/storage12tb/skills/chatterbox-speak/outputs/variant-evals.json
+```
+
+Embry first narrates context and relevant dialogue separately, then announces each
+candidate ID and label before playing its **Embry reply**, never the user turn.
+One existing workstation lock spans the whole sequence. Every WAV uses production
+`speak --planned-pauses --play` and the owning analyzer; labels and narration are
+not scored as candidate replies. Native tags never receive explicit intensity.
+Numeric-intensity variants have no native vocal tags; pause directives compile out.
+
+The Ask recommendation is retained **before** human selection, quotes actual turn
+IDs, assesses every candidate's wording and delivery, and cites exact hash-bound
+waveform measurements. An eligible winner requires both contextual PASS and
+technical PASS. If no candidate qualifies, `eligible_winner` is null and the
+agent's named relative-best choice is only a calibration candidate, explicitly
+NO ACCEPTABLE WINNER. Do not substitute the technically cleanest waveform for
+contextual fit. Finish every row in the declared batch and retained trial suite
+before presenting the batch for human selection.
+It is not chosen by maximizing an acoustic score. It cannot certify perceived
+emotion. The generated Markdown packet lists context, WAV paths, clear IDs,
+technical failures, and the agent's contextual recommendation. Playback returncode
+zero is device-delivery evidence, not proof the human heard it. Full voice-quality
+readiness and comparison-workflow checks remain separate.
+
+JSONL preserves context provenance, plans, WAV/analysis/Ask hashes and separate
+contextual, technical, and perceived verdicts. Existing packet/recommendation files
+cannot be overwritten. `replay` reopens actual evidence and rejects stale bytes;
+it explicitly reports artifact-backed replay, not a fresh WebGPT response. A
+selection is a separate unique JSONL record with reason, caller-attested evaluator
+identity, verbatim human reply, concurrence and immutable recommendation link.
+No selection is synthesized before the human responds. This CLI attests supplied
+human input; it is not identity authentication or an independent listening study.
+
+Each actual preference carries a `PROPOSED_NOT_APPLIED` learning handoff targeting
+`analyze-chatterbox-emotions` and `best-practices-chatterbox`. It does **not** edit
+shared thresholds or persona Memory. Scoped engineering lessons may be retained
+through the documented Memory owning API, separate from persona/user memories:
+
+```bash
+./run.sh compare-memory store /absolute/recommendation.jsonl /absolute/store-receipt.json
+./run.sh compare-memory recall 'quiet companionship after loss' /absolute/lessons.json
+./run.sh compare prompt /absolute/next-packet.jsonl /absolute/next-prompt.txt --lessons /absolute/lessons.json
+./run.sh compare recommend /absolute/next-packet.jsonl /absolute/ask/node-receipt.json \
+  /absolute/next-recommendation.jsonl --lessons /absolute/lessons.json
+# Only after actual human selection, optionally store that separate preference:
+./run.sh compare-memory store /absolute/recommendation.jsonl /absolute/human-store.json \
+  --selection /absolute/human-preference.jsonl
+```
+
+Memory lessons use stable hash identities and scoped tags, with context/scenario
+hashes, evidence references, rationale and status `provisional_agent_recommendation`.
+Only an actual retained human choice can produce `human_confirmed_preference`.
+The CLI uses Memory `/upsert` to preserve full metadata in its observed live
+`lessons_v2` collection; it verifies full metadata with `/list` and independently
+verifies the exact key and clean solution through `/recall`. Canonical Memory
+text never contains renderer markup. Before later recommendations, recall relevant
+lessons and record the exact keys the evaluator says influenced its reasoning.
+Lessons remain provisional guidance, not ground truth or altered frozen criteria.
+Calibration requires several human choices,
+context-stratified review, and held-out checks; one preference cannot establish a
+universal tone/intensity rule. Synthetic bank cases are never real user memories.
+
 ## Boundaries
 
 - Speaks only caller-approved text; no answer generation, memory routing, or

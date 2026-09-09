@@ -75,11 +75,13 @@ class Scenario(Strict):
             raise ValueError('current user turn must be distinct')
         # Known renderer markup grammar, not a semantic classifier.
         tags = re.findall(r'\[[^\]]+\]', self.delivery_plan.render_text)
-        if not set(tags) <= TAGS:
+        # Pause directives are compiler input, not native vocal events.
+        native = [tag for tag in tags if not re.fullmatch(r'\[pause:(?:[1-9][0-9]{0,3}ms|[0-9](?:\.[0-9]{1,3})?s)\]', tag)]
+        if not set(native) <= TAGS:
             raise ValueError('unsupported renderer tag')
-        if tags and self.delivery_plan.realization == 'intensity':
+        if native and self.delivery_plan.realization == 'intensity':
             raise ValueError('native tags and explicit intensity cannot be realized together')
-        if self.delivery_plan.realization == 'native_tags' and not tags:
+        if self.delivery_plan.realization == 'native_tags' and not native:
             raise ValueError('native tag arm requires tags')
         plain = re.sub(r'\[[^\]]+\]', '', self.delivery_plan.render_text).replace(' ... ', ' ')
         if ' '.join(plain.split()) != ' '.join(self.embry_response.split()):

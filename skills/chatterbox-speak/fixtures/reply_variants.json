@@ -1,0 +1,620 @@
+{
+  "version": 2,
+  "skill": "chatterbox-speak",
+  "trials": 2,
+  "proof_scope": "Six-row contextual comparison artifact integrity, wording/delivery plans, eligible-winner and preference gates; live caller-task speech CLI canary. Frozen 30-WAV and six Ask readback is replay, NOT fresh repeated judging or full voice-quality readiness.",
+  "claims": {
+    "proves": [
+      "Bounded 5-10 contextual candidate plans",
+      "Recorded live five-candidate speech and Ask artifacts reopen with matching hashes",
+      "Negative controls reject missing context, invalid bounds, stale hashes, missing recommendations, invalid selection and fabricated perceptual evidence",
+      "Actual caller-task context reaches live speech CLI with artifact readback"
+    ],
+    "does_not_prove": [
+      "Human choice or hearing before the actual reply",
+      "Perceived emotional naturalness",
+      "Full voice-quality readiness; prior 3 audio-quality failures remain",
+      "Fresh repeated Ask model recommendations",
+      "Shared analyzer calibration from one choice"
+    ]
+  },
+  "cases": [
+    {
+      "name": "missing-context",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh",
+        "compare",
+        "reject-control",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/reply_variants.jsonl",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/first-five-recommendation.jsonl",
+        "missing-context"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "Field required"
+        ]
+      }
+    },
+    {
+      "name": "four-variants",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh",
+        "compare",
+        "reject-control",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/reply_variants.jsonl",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/first-five-recommendation.jsonl",
+        "four-variants"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "between 5 and 10"
+        ]
+      }
+    },
+    {
+      "name": "eleven-variants",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh",
+        "compare",
+        "reject-control",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/reply_variants.jsonl",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/first-five-recommendation.jsonl",
+        "eleven-variants"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "between 5 and 10"
+        ]
+      }
+    },
+    {
+      "name": "stale-hash",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh",
+        "compare",
+        "reject-control",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/reply_variants.jsonl",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/first-five-recommendation.jsonl",
+        "stale-hash"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "stale recommendation packet hash"
+        ]
+      }
+    },
+    {
+      "name": "absent-recommendation",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh",
+        "compare",
+        "reject-control",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/reply_variants.jsonl",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/first-five-recommendation.jsonl",
+        "absent-recommendation"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "No such file"
+        ]
+      }
+    },
+    {
+      "name": "invalid-selection",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh",
+        "compare",
+        "reject-control",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/reply_variants.jsonl",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/first-five-recommendation.jsonl",
+        "invalid-selection"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "invalid human candidate selection"
+        ]
+      }
+    },
+    {
+      "name": "perceived-pass",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh",
+        "compare",
+        "reject-control",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/reply_variants.jsonl",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/first-five-recommendation.jsonl",
+        "perceived-pass"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "NOT_ESTABLISHED"
+        ]
+      }
+    },
+    {
+      "name": "invented-waveform",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh",
+        "compare",
+        "reject-control",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/reply_variants.jsonl",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/first-five-recommendation.jsonl",
+        "invented-waveform"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "stale or fabricated waveform citation"
+        ]
+      }
+    },
+    {
+      "name": "tag-intensity-conflict",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh",
+        "compare",
+        "reject-control",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/reply_variants.jsonl",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/first-five-recommendation.jsonl",
+        "tag-intensity-conflict"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "cannot be realized together"
+        ]
+      }
+    },
+    {
+      "name": "empty-human-reason",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh",
+        "compare",
+        "reject-control",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/reply_variants.jsonl",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/first-five-recommendation.jsonl",
+        "empty-human-reason"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "at least 1 character"
+        ]
+      }
+    },
+    {
+      "name": "missing-perception",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh",
+        "compare",
+        "reject-control",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/reply_variants.jsonl",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/first-five-recommendation.jsonl",
+        "missing-perception"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "Field required"
+        ]
+      }
+    },
+    {
+      "name": "stale-audio",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh",
+        "compare",
+        "reject-control",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/reply_variants.jsonl",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/first-five-recommendation.jsonl",
+        "stale-audio"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "stale artifact hash"
+        ]
+      }
+    },
+    {
+      "name": "five-variant-artifact-backed-replay",
+      "type": "positive",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh",
+        "compare",
+        "replay",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/first-five-recommendation.jsonl",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/variant-replay-report.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/variant-replay-report.json",
+            "json_pointer": "/candidate_count",
+            "equals": 5
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/variant-replay-report.json",
+            "json_pointer": "/hashes_valid",
+            "equals": true
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/variant-replay-report.json",
+            "json_pointer": "/perceived_delivery",
+            "equals": "NOT_ESTABLISHED"
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/variant-replay-report.json",
+            "json_pointer": "/evidence_mode",
+            "equals": "artifact_backed_replay"
+          }
+        ]
+      }
+    },
+    {
+      "name": "actual-caller-context-production-speech",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh",
+        "compare",
+        "caller-canary",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/variant-canary.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/variant-canary.json",
+            "json_pointer": "/live",
+            "equals": true
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/variant-canary.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/variant-canary.json",
+            "json_pointer": "/audio/playback_returncode",
+            "equals": 0
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/variant-canary.json",
+            "json_pointer": "/perceived_delivery",
+            "equals": "NOT_ESTABLISHED"
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/variant-canary.json",
+            "json_pointer": "/origin",
+            "equals": "provided_conversation"
+          }
+        ]
+      }
+    },
+    {
+      "name": "plan-range-5",
+      "type": "positive",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh",
+        "compare",
+        "plan-check",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/reply_variants.jsonl",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/variant-plans-5.json",
+        "--variants",
+        "5"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/variant-plans-5.json",
+            "json_pointer": "/variant_count",
+            "equals": 5
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/variant-plans-5.json",
+            "json_pointer": "/scenario_count",
+            "equals": 6
+          }
+        ]
+      }
+    },
+    {
+      "name": "plan-range-10",
+      "type": "positive",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh",
+        "compare",
+        "plan-check",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/reply_variants.jsonl",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/variant-plans-10.json",
+        "--variants",
+        "10"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/variant-plans-10.json",
+            "json_pointer": "/variant_count",
+            "equals": 10
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/variant-plans-10.json",
+            "json_pointer": "/scenario_count",
+            "equals": 6
+          }
+        ]
+      }
+    },
+    {
+      "name": "quiet-achievement-artifact-backed-replay",
+      "type": "positive",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh",
+        "compare",
+        "replay",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/quiet-achievement-recommendation.jsonl",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/quiet-achievement-replay-report.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/quiet-achievement-replay-report.json",
+            "json_pointer": "/candidate_count",
+            "equals": 5
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/quiet-achievement-replay-report.json",
+            "json_pointer": "/hashes_valid",
+            "equals": true
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/quiet-achievement-replay-report.json",
+            "json_pointer": "/perceived_delivery",
+            "equals": "NOT_ESTABLISHED"
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/quiet-achievement-replay-report.json",
+            "json_pointer": "/evidence_mode",
+            "equals": "artifact_backed_replay"
+          }
+        ]
+      }
+    },
+    {
+      "name": "grief-presence-artifact-backed-replay",
+      "type": "positive",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh",
+        "compare",
+        "replay",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/grief-presence-recommendation.jsonl",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/grief-presence-replay-report.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/grief-presence-replay-report.json",
+            "json_pointer": "/candidate_count",
+            "equals": 5
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/grief-presence-replay-report.json",
+            "json_pointer": "/hashes_valid",
+            "equals": true
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/grief-presence-replay-report.json",
+            "json_pointer": "/perceived_delivery",
+            "equals": "NOT_ESTABLISHED"
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/grief-presence-replay-report.json",
+            "json_pointer": "/evidence_mode",
+            "equals": "artifact_backed_replay"
+          }
+        ]
+      }
+    },
+    {
+      "name": "flat-celebration-artifact-backed-replay",
+      "type": "positive",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh",
+        "compare",
+        "replay",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/flat-celebration-recommendation.jsonl",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/flat-celebration-replay-report.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/flat-celebration-replay-report.json",
+            "json_pointer": "/candidate_count",
+            "equals": 5
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/flat-celebration-replay-report.json",
+            "json_pointer": "/hashes_valid",
+            "equals": true
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/flat-celebration-replay-report.json",
+            "json_pointer": "/perceived_delivery",
+            "equals": "NOT_ESTABLISHED"
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/flat-celebration-replay-report.json",
+            "json_pointer": "/evidence_mode",
+            "equals": "artifact_backed_replay"
+          }
+        ]
+      }
+    },
+    {
+      "name": "overblown-grief-artifact-backed-replay",
+      "type": "positive",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh",
+        "compare",
+        "replay",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/overblown-grief-recommendation.jsonl",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/overblown-grief-replay-report.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/overblown-grief-replay-report.json",
+            "json_pointer": "/candidate_count",
+            "equals": 5
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/overblown-grief-replay-report.json",
+            "json_pointer": "/hashes_valid",
+            "equals": true
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/overblown-grief-replay-report.json",
+            "json_pointer": "/perceived_delivery",
+            "equals": "NOT_ESTABLISHED"
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/overblown-grief-replay-report.json",
+            "json_pointer": "/evidence_mode",
+            "equals": "artifact_backed_replay"
+          }
+        ]
+      }
+    },
+    {
+      "name": "wrong-context-celebration-artifact-backed-replay",
+      "type": "positive",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh",
+        "compare",
+        "replay",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/wrong-context-celebration-recommendation.jsonl",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/wrong-context-celebration-replay-report.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/wrong-context-celebration-replay-report.json",
+            "json_pointer": "/candidate_count",
+            "equals": 5
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/wrong-context-celebration-replay-report.json",
+            "json_pointer": "/hashes_valid",
+            "equals": true
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/wrong-context-celebration-replay-report.json",
+            "json_pointer": "/perceived_delivery",
+            "equals": "NOT_ESTABLISHED"
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/wrong-context-celebration-replay-report.json",
+            "json_pointer": "/evidence_mode",
+            "equals": "artifact_backed_replay"
+          }
+        ]
+      }
+    },
+    {
+      "name": "live-provisional-memory-recall",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh",
+        "compare-memory",
+        "recall",
+        "contextual comparison of celebration versus quiet companionship",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/variant-live-memory-recall.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "provisional_agent_recommendation",
+          "contextual-audio-comparison"
+        ],
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/variant-live-memory-recall.json",
+            "json_pointer": "/found",
+            "equals": true
+          }
+        ]
+      }
+    }
+  ]
+}
