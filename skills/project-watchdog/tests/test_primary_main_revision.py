@@ -616,3 +616,58 @@ def test_aggregate_pass_cannot_erase_failed_required_node(tmp_path):
     observed = handlers.inspect_tau_stream(tmp_path)
     assert observed["terminal"] is True
     assert observed["terminal_status"] == "NEEDS_ATTENTION"
+
+
+def test_retryable_resume_reattaches_native_lease_and_sets_watchdog_journal(repository, monkeypatch):
+    root, _, receipts = repository
+    receipts.mkdir(parents=True, exist_ok=True)
+    ask_parent = receipts / "ask"
+    run_dir = ask_parent / "ask-tau-repair-fixture"
+    (run_dir / "agents").mkdir(parents=True)
+    (run_dir / "command-specs").mkdir()
+    (run_dir / "tau-receipts").mkdir()
+    (run_dir / "dag.json").write_text("{}", encoding="utf-8")
+    (run_dir / "tau-receipts" / "dag-run.sqlite3").write_text("sqlite", encoding="utf-8")
+    record = operation(root, receipts, number=1628, phase="retryable").model_copy(update={
+        "ask_run_dir": str(ask_parent),
+        "tau_settled": True,
+        "lease_released": True,
+        "targets": ["skills/ask"],
+    })
+    Path(record.journal).parent.mkdir(parents=True, exist_ok=True)
+    core.write_json(Path(record.journal), encoded(record))
+    monkeypatch.setattr(primary.config, "ask_run_sh", lambda: root / "skills/ask/run.sh")
+
+    def acquire(row, result, checkpoint):
+        result["commands"].append({"command": ["native", "lease"]})
+        checkpoint("leased", lease_event={"id": 7, "event": "labeled", "actor": "fixture", "created_at": "now"},
+                   lease_actor="fixture", lease_agent="project-watchdog-fixture-token", lease_released=False)
+
+    seen = {}
+    original_run_cmd = primary.run_cmd
+
+    def run_resume(command, **kwargs):
+        if command[:3] != [str(root / "skills/ask/run.sh"), "runs", "resume"]:
+            return original_run_cmd(command, **kwargs)
+        seen["command"] = command
+        seen["journal_env"] = os.environ.get("PROJECT_WATCHDOG_OPERATION_JOURNAL")
+        return {"command": command, "exit_code": 0, "stdout": "tau --watchdog-journal " + seen["journal_env"], "stderr": ""}
+
+    monkeypatch.setattr(native_ticket, "acquire", acquire)
+    monkeypatch.setattr(primary, "run_cmd", run_resume)
+    monkeypatch.setattr(handlers, "inspect_tau_stream", lambda _: {"terminal": True, "terminal_status": "BLOCKED"})
+    monkeypatch.setattr(handlers, "finish_primary_operation", lambda row: {"ok": False, "status": "NEEDS_ATTENTION", "summary": "reviewer still blocked"})
+    monkeypatch.setattr(primary, "_finish_release", lambda row: True)
+
+    result = primary.reattach_and_resume(root, Path(record.journal), apply=True)
+
+    assert result["status"] == "NEEDS_ATTENTION"
+    assert seen["command"][:3] == [str(root / "skills/ask/run.sh"), "runs", "resume"]
+    assert seen["command"][3] == str(run_dir)
+    assert seen["journal_env"] == record.journal
+    updated = Operation.model_validate(core.load_json(Path(record.journal)))
+    assert updated.phase == "retryable"
+    assert updated.lease_released is True
+    assert updated.lease_event is not None and updated.lease_event.id == 7
+    command_receipt = core.load_json(receipts / "watchdog-reattach-resume-command.json")
+    assert "--watchdog-journal" in command_receipt["stdout"]

@@ -190,6 +190,37 @@ def test_project_command_spec_resume_execute_uses_native_tau_command(
     assert receipt["accepted_work_preserved"] is True
 
 
+def test_project_command_spec_resume_passes_watchdog_journal_to_tau(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    run = tmp_path / "run"
+    shutil.copytree(FIXTURES / "roundtable_partial", run)
+    (run / "agents").mkdir()
+    (run / "command-specs").mkdir()
+    (run / "tau-receipts").mkdir()
+    (run / "tau-receipts" / "dag-run.sqlite3").write_text("sqlite marker", encoding="utf-8")
+    tau_root = tmp_path / "tau"
+    tau_root.mkdir()
+    (tau_root / "pyproject.toml").write_text("[project]\nname='tau'\n", encoding="utf-8")
+    journal = tmp_path / "operation.json"
+    journal.write_text("{}", encoding="utf-8")
+    monkeypatch.setenv("ASK_TAU_PROJECT_ROOT", str(tau_root))
+    monkeypatch.setenv("PROJECT_WATCHDOG_OPERATION_JOURNAL", str(journal))
+    calls: list[list[str]] = []
+
+    def fake_run(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
+        calls.append(command)
+        return subprocess.CompletedProcess(command, 0, stdout='{"ok": true}\n', stderr="")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    resume(run, execute=True)
+
+    assert calls
+    assert "--watchdog-journal" in calls[0]
+    assert calls[0][calls[0].index("--watchdog-journal") + 1] == str(journal)
+
+
 def test_watch_emits_settlement_and_stops() -> None:
     events = list(watch_events(FIXTURES / "one_handler", poll_seconds=0, max_polls=1))
     kinds = [e["event"] for e in events]

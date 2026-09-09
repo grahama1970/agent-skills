@@ -337,6 +337,9 @@ def _project_command_spec_resume_command(run_dir: Path, plan: dict[str, Any]) ->
         command.extend(["--rerun-node", str(node)])
     for node in dependents:
         command.extend(["--rerun-dependent", str(node)])
+    watchdog_journal = os.environ.get("PROJECT_WATCHDOG_OPERATION_JOURNAL", "").strip()
+    if watchdog_journal:
+        command.extend(["--watchdog-journal", watchdog_journal])
     command.extend(["--execute", "--json"])
     return command
 

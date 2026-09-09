@@ -5,21 +5,19 @@ labels and settled/orphaned journals only reserve their known target scopes.
 They are never remote liveness or foreign release authority.
 """
 from __future__ import annotations
-import argparse
+
 import fcntl
 import hashlib
-import json
 import os
 import shlex
-import sys
 import time
 import uuid
 from pathlib import Path, PurePosixPath
 from typing import Any, Callable
+
 from . import config, github
 from .core import load_json, run_cmd, write_json
 from .primary_models import Operation, QueueState, encoded
-from .target_content import ContentConflict
 
 _CURRENT: Operation | None = None
 _FD: int | None = None
@@ -231,9 +229,123 @@ def recovery_command(root: Path) -> str:
                        "--root", str(root), "--apply"])
 
 
+def reattach_command(root: Path, journal: Path) -> str:
+    return shlex.join([config.resolve_uv_bin(), "run", "--project", str(config.SKILL_DIR),
+                       "python", str(Path(__file__).with_name("recover_primary.py")),
+                       "--root", str(root), "--reattach-journal", str(journal), "--apply"])
+
+
+def _project_command_spec_run(ask_run_dir: Path) -> Path:
+    candidates = []
+    roots = [ask_run_dir]
+    if ask_run_dir.is_dir():
+        roots.extend(path for path in ask_run_dir.iterdir() if path.is_dir())
+    for root in roots:
+        if ((root / "dag.json").is_file()
+                and (root / "command-specs").is_dir()
+                and (root / "agents").is_dir()
+                and (root / "tau-receipts" / "dag-run.sqlite3").is_file()):
+            candidates.append(root)
+    if len(candidates) != 1:
+        raise Refusal(f"expected exactly one command-spec Ask run under {ask_run_dir}, found {len(candidates)}")
+    return candidates[0]
+
+
+def reattach_and_resume(root: Path, journal: Path, *, apply: bool, timeout_s: int = 1200) -> dict[str, Any]:
+    """Resume one retryable operation only after reacquiring its native lease.
+
+    This is the watchdog-owned same-run recovery seam: it consumes a retained
+    retryable journal, reacquires a fresh native ticket lease, sets the journal
+    path in Ask's environment, and lets Ask/Tau resume only the unsettled nodes.
+    """
+    global _CURRENT, _FD
+    root, _ = identity(root)
+    journal = journal.expanduser().resolve(strict=True)
+    if not apply:
+        return {"ok": True, "status": "DRY_RUN", "command": reattach_command(root, journal)}
+    fd = _lock(root)
+    if fd is None:
+        return {"ok": True, "status": "SKIPPED", "stop_reason": "primary_execution_locked"}
+    _FD = fd
+    try:
+        area = _area(root) / "operations"
+        if journal.parent.resolve() != area.resolve():
+            raise Refusal("reattach journal is not in this primary operation area")
+        observed = observations(root)
+        if observed["operations"] or observed["invalid_operations"]:
+            raise Refusal("primary has nonterminal retained operations; run lifecycle recovery first")
+        record = Operation.model_validate(load_json(journal))
+        if Path(record.root).resolve() != root or Path(record.journal).resolve() != journal:
+            raise Refusal("reattach journal is not bound to this primary checkout")
+        if record.phase != "retryable" or not record.tau_settled or not record.lease_released or record.closure is not None:
+            raise Refusal("reattach requires retryable settled operation with released lease and no closure")
+        if not record.ask_run_dir:
+            raise Refusal("reattach requires retained Ask run directory")
+        safe_targets(record.targets)
+        _CURRENT = record
+        result: dict[str, Any] = {"ok": False, "status": "RUNNING", "commands": [], "artifacts": []}
+        from . import handlers, native_ticket
+        native_ticket.acquire(record, result, checkpoint)
+        record = current()
+        run_dir = _project_command_spec_run(Path(record.ask_run_dir))
+        command = [str(config.ask_run_sh()), "runs", "resume", str(run_dir), "--execute", "--json"]
+        checkpoint("running", ask_run_dir=record.ask_run_dir, dispatched_at=time.time())
+        old_env = os.environ.get("PROJECT_WATCHDOG_OPERATION_JOURNAL")
+        os.environ["PROJECT_WATCHDOG_OPERATION_JOURNAL"] = str(journal)
+        try:
+            row = run_cmd(command, cwd=root, timeout_s=timeout_s)
+        finally:
+            if old_env is None:
+                os.environ.pop("PROJECT_WATCHDOG_OPERATION_JOURNAL", None)
+            else:
+                os.environ["PROJECT_WATCHDOG_OPERATION_JOURNAL"] = old_env
+        result["commands"].append(row)
+        result["artifacts"].append(str(run_dir))
+        write_json(Path(record.receipt_dir) / "watchdog-reattach-resume-command.json", row)
+        stream = handlers.inspect_tau_stream(Path(record.ask_run_dir))
+        write_json(Path(record.receipt_dir) / "watchdog-reattach-stream.json", stream)
+        if not stream.get("terminal"):
+            result.update(ok=False, status="NEEDS_ATTENTION", summary="reattached Ask resume did not reach terminal Tau settlement",
+                          authorized_agent_next_steps=[reattach_command(root, journal)])
+            checkpoint("uncertain", result=result)
+            return result
+        checkpoint("settled", tau_settled=True)
+        try:
+            result = handlers.finish_primary_operation(current())
+            checkpoint(current().phase, result=result)
+        except (RuntimeError, ValueError, OSError) as exc:
+            active = current()
+            result = failure({"project_id": active.project_id, "repo": active.repo, "worktree": active.root},
+                             {"number": active.issue_number, "watchdog_action": active.action}, str(exc))
+            checkpoint("releasing", result=result, recovery=str(exc))
+        record = current()
+        if record.closure is not None:
+            checkpoint("closing")
+            result = native_ticket.close(current())
+            checkpoint("releasing", result=result)
+        elif record.phase in {"leased", "settled"}:
+            checkpoint("releasing", result=result)
+        if current().phase == "releasing" and _finish_release(current()):
+            write_json(Path(current().result_path), result)
+            checkpoint("finished" if result.get("ok") else "retryable", lease_released=True, result=result)
+        return result
+    except (RuntimeError, ValueError, OSError) as exc:
+        active = _CURRENT
+        if active is not None:
+            result = failure({"project_id": active.project_id, "repo": active.repo, "worktree": active.root},
+                             {"number": active.issue_number, "watchdog_action": active.action}, str(exc),
+                             human=getattr(exc, "human", False))
+            checkpoint("retryable" if active.lease_released else active.phase, result=result, recovery=str(exc))
+            return result
+        raise
+    finally:
+        _CURRENT, _FD = None, None
+        os.close(fd)
+
+
 def failure(project: dict[str, Any], issue: dict[str, Any], message: str,
             *, human: bool = False) -> dict[str, Any]:
-    from .receipt_schema import _classify_with_triage_error, Triage
+    from .receipt_schema import Triage, _classify_with_triage_error
     raw_triage = _classify_with_triage_error(message)
     classification = {}
     try:
@@ -289,7 +401,7 @@ def reconcile(root: Path) -> dict[str, Any] | None:
             record = Operation.model_validate(raw)
             _CURRENT = record
             try:
-                from . import native_ticket, handlers
+                from . import handlers, native_ticket
                 if record.phase == "reserved":
                     checkpoint("retryable", recovery="no external effect was started")
                     continue

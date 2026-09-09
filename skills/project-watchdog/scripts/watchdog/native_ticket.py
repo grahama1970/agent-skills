@@ -16,8 +16,16 @@ from typing import Any
 
 from . import config, github
 from .core import run_cmd, write_json
-from .primary_models import LeaseEvent, NativeClosure, Operation, VerificationPlan
-from .target_content import ContentConflict, digest, remote_entries, remote_pin, snapshot, require_unchanged, versions
+from .primary_models import LeaseEvent, Operation, VerificationPlan
+from .target_content import (
+    ContentConflict,
+    digest,
+    remote_entries,
+    remote_pin,
+    require_unchanged,
+    snapshot,
+    versions,
+)
 
 NATIVE_LABEL = "maintainer-active"
 
@@ -87,7 +95,8 @@ def acquire(record: Operation, result: dict[str, Any], checkpoint) -> None:
         raise ContentConflict("cannot bind authenticated native lease actor")
     agent = "project-watchdog-" + record.owner_token
     checkpoint("acquiring_lease", lease_before_event=before.model_dump() if before else None,
-               lease_actor=actor_result["stdout"].strip(), lease_agent=agent)
+               lease_actor=actor_result["stdout"].strip(), lease_agent=agent,
+               lease_released=False)
     command = invoke(Path(record.root), record.repo, "lease", record.issue_number, "--agent", agent)
     result["commands"].append(command)
     event = lease_event(record.repo, record.issue_number)
