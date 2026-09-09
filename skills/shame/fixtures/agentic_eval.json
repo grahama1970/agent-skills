@@ -114,10 +114,11 @@
     },
     {
       "id": "shame.escalation_ladder_data_contract",
-      "description": "Escalation is data-gated: brave-search parent evidence precedes a cross-family Ask model, and WebGPT requires typed brave-search plus Ask parent refs.",
+      "description": "Escalation is data-gated and live-receipt-gated: real Brave results precede the configured first Ask API handler, and WebGPT requires typed brave-search plus Ask parent refs before terminal acceptance.",
       "criticality": "critical",
       "evidence_required": {
-        "deterministic": true
+        "deterministic": true,
+        "live_e2e": true
       }
     },
     {
@@ -595,6 +596,92 @@
         "stdout_excludes": [
           "Traceback",
           "AssertionError"
+        ]
+      }
+    },
+    {
+      "name": "live-escalation-receipt-chain",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "shame.escalation_ladder_data_contract"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--with",
+        "pydantic",
+        "python3",
+        "-c",
+        "from __future__ import annotations\nimport hashlib, json, os, subprocess, sys, uuid\nfrom datetime import datetime, timezone\nfrom pathlib import Path\nfrom typing import Any\nROOT = Path('/home/graham/workspace/experiments/agent-skills')\nRUN_ID = 'live-' + uuid.uuid4().hex[:10]\nRUN_ROOT = ROOT / '.artifacts' / 'shame' / 'live-escalation-receipt-chain-runs' / RUN_ID\nRUN_ROOT.mkdir(parents=True, exist_ok=True)\nRESULT_PATH = ROOT / '.artifacts' / 'shame' / 'live-escalation-receipt-chain-result.json'\nGOAL_HASH = 'sha256:' + hashlib.sha256(('shame live escalation receipt chain ' + RUN_ID).encode()).hexdigest()\nSTATUS_SCHEMA = ROOT / 'skills' / 'shame' / 'scripts' / 'agent_status_schema.py'\nCOMPILER = ROOT / 'extensions' / 'pi' / 'lazy-report-shame-shame-shame' / 'compile-status-command.mjs'\nASK_RUN = ROOT / 'skills' / 'ask' / 'run.sh'\nBRAVE_RUN = ROOT / 'skills' / 'brave-search' / 'run.sh'\nBROWSER_PREFLIGHT = ROOT / 'skills' / 'ask' / 'scripts' / 'browser_prompt_preflight.py'\nCHAIN_ENV = {'LRSSS_PROJECT_AGENT_FAMILY': 'openai', 'LRSSS_AVAILABLE_ASK_HANDLERS': json.dumps(['claude-fable-low', 'gpt-5.5-high'])}\n\ndef write_json(path: Path, payload: dict[str, Any]) -> None:\n    path.parent.mkdir(parents=True, exist_ok=True)\n    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + '\\n', encoding='utf-8')\n\ndef sha256_file(path: Path) -> str:\n    return 'sha256:' + hashlib.sha256(path.read_bytes()).hexdigest()\n\ndef fail(message: str, evidence: Any = None) -> None:\n    detail = {'message': message, 'evidence': evidence}\n    write_json(RUN_ROOT / 'failure.json', {'schema': 'lazy_report_shame.live_escalation_receipt_chain.v1', 'status': 'FAIL', 'detail': detail})\n    raise SystemExit(json.dumps(detail, indent=2, sort_keys=True))\n\ndef require(condition: bool, message: str, evidence: Any = None) -> None:\n    if not condition:\n        fail(message, evidence)\n\ndef run_cmd(cmd: list[str], *, cwd: Path = ROOT, timeout: int = 120, stdin: str | None = None, env_extra: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:\n    env = os.environ.copy()\n    if env_extra:\n        env.update(env_extra)\n    proc = subprocess.run(cmd, cwd=str(cwd), input=stdin, text=True, capture_output=True, timeout=timeout, env=env, check=False)\n    return proc\n\ndef parse_first_json(text: str) -> Any:\n    decoder = json.JSONDecoder()\n    for idx, char in enumerate(text):\n        if char not in '[{':\n            continue\n        try:\n            value, _end = decoder.raw_decode(text[idx:])\n        except json.JSONDecodeError:\n            continue\n        return value\n    fail('no JSON object found in command output', text[-1000:])\n\ndef validate_status(payload: dict[str, Any]) -> dict[str, Any]:\n    proc = run_cmd(['uv', 'run', '--with', 'pydantic', 'python3', str(STATUS_SCHEMA), 'validate', '-'], stdin=json.dumps(payload), env_extra=CHAIN_ENV)\n    out = parse_first_json(proc.stdout)\n    out['exit_code'] = proc.returncode\n    return out\n\ndef compile_status(payload: dict[str, Any]) -> dict[str, Any]:\n    proc = run_cmd(['node', str(COMPILER)], stdin=json.dumps(payload), env_extra=CHAIN_ENV)\n    require(proc.returncode == 0, 'status command compiler failed', {'stderr': proc.stderr[-1000:], 'stdout': proc.stdout[-1000:]})\n    out = parse_first_json(proc.stdout)\n    out['exit_code'] = proc.returncode\n    return out\n\ndef parent_for_envelope(ref: dict[str, str]) -> dict[str, str]:\n    return {k: ref[k] for k in ('receipt_id', 'expected_schema', 'expected_producer', 'digest')}\n\ndef envelope(receipt_id: str, producer: str, payload_schema: str, payload: dict[str, Any], parent_refs: list[dict[str, str]] | None = None) -> dict[str, str]:\n    doc = {'schema': 'pi.receipt_envelope.v1', 'receipt_id': receipt_id, 'payload_schema': payload_schema, 'producer': producer, 'emitted_at': datetime.now(timezone.utc).isoformat(), 'goal_hash': GOAL_HASH, 'parent_refs': parent_refs or [], 'payload': payload}\n    path = RUN_ROOT / f'{receipt_id}.envelope.json'\n    write_json(path, doc)\n    return {'receipt_id': receipt_id, 'receipt_path': str(path), 'expected_schema': payload_schema, 'expected_producer': producer, 'digest': sha256_file(path)}\n\ndef latest_run_dir(output_root: Path) -> Path:\n    dirs = [p for p in output_root.iterdir() if p.is_dir()]\n    require(bool(dirs), 'Ask output root has no run directory', str(output_root))\n    return max(dirs, key=lambda p: p.stat().st_mtime)\n\ndef run_ask(handler: str, token: str, output_root: Path, extra: list[str] | None = None, timeout: int = 1200) -> dict[str, Any]:\n    cmd = [str(ASK_RUN), 'tau-dag', f'Reply with exactly: {token}', '--repo', 'local/agent-skills', '--target', 'shame-live-escalation-receipt-chain', '--immutable-goal', 'Return the requested token or a typed blocker.', '--handler', handler, '--execute', '--json', '--run-output-root', str(output_root)]\n    if extra:\n        cmd.extend(extra)\n    proc = run_cmd(cmd, cwd=ASK_RUN.parent, timeout=timeout)\n    require(proc.returncode == 0, f'Ask {handler} run failed', {'stderr': proc.stderr[-2000:], 'stdout': proc.stdout[-2000:]})\n    payload = parse_first_json(proc.stdout)\n    run_dir = Path(str(((payload.get('bundle') or {}).get('run_dir')) or latest_run_dir(output_root)))\n    node_dir = run_dir / 'node-artifacts' / ('handler-' + handler.replace('.', '-'))\n    receipt_path = node_dir / 'node-receipt.json'\n    response_path = node_dir / 'response.md'\n    handoff_path = node_dir / 'handoff.json'\n    require(receipt_path.is_file(), f'missing {handler} node receipt', str(receipt_path))\n    require(response_path.is_file(), f'missing {handler} response', str(response_path))\n    require(handoff_path.is_file(), f'missing {handler} handoff', str(handoff_path))\n    receipt = json.loads(receipt_path.read_text(encoding='utf-8'))\n    response = response_path.read_text(encoding='utf-8', errors='replace')\n    handoff = json.loads(handoff_path.read_text(encoding='utf-8'))\n    require(payload.get('status') == 'PASS' and payload.get('ok') is True, f'Ask {handler} CLI result not PASS', payload.get('status'))\n    require(receipt.get('schema') == 'ask.tau_dag_handler_receipt.v1' and receipt.get('status') == 'PASS', f'Ask {handler} node receipt not PASS', receipt)\n    require(receipt.get('live') is True and receipt.get('mocked') is False and receipt.get('provider_live') is True, f'Ask {handler} receipt is not live provider evidence', receipt)\n    require(token in response, f'Ask {handler} response missing token', response[-500:])\n    require(handoff.get('schema') == 'tau.agent_handoff.v1' and (handoff.get('result') or {}).get('status') == 'PASS', f'Ask {handler} handoff not PASS', handoff)\n    return {'cli': payload, 'run_dir': str(run_dir), 'node_dir': str(node_dir), 'receipt_path': str(receipt_path), 'response_path': str(response_path), 'handoff_path': str(handoff_path), 'receipt': receipt, 'handoff': handoff, 'response_chars': len(response)}\n\nbrave_query = 'OpenAI agentic evaluations live receipt chain ' + RUN_ID\nbrave_proc = run_cmd([str(BRAVE_RUN), 'web', brave_query, '--count', '1'], timeout=90)\nrequire(brave_proc.returncode == 0, 'Brave web search command failed', {'stderr': brave_proc.stderr[-1000:], 'stdout': brave_proc.stdout[-1000:]})\nbrave_result = parse_first_json(brave_proc.stdout)\nbrave_raw_path = RUN_ROOT / 'brave-web-results.raw.json'\nwrite_json(brave_raw_path, brave_result)\nbrave_results = brave_result.get('results') or []\nrequire(brave_result.get('query') == brave_query and len(brave_results) >= 1 and str(brave_results[0].get('url', '')).startswith('http'), 'Brave web search did not return a live result', brave_result)\nbrave_ref = envelope('brave-' + RUN_ID, 'brave-search', 'brave_search.web_results.v1', {'schema': 'brave_search.web_results.v1', 'status': 'PASS', 'command': [str(BRAVE_RUN), 'web', brave_query, '--count', '1'], 'result_path': str(brave_raw_path), 'result_count': len(brave_results), 'first_url': brave_results[0].get('url'), 'raw_sha256': sha256_file(brave_raw_path)})\n\nneeds_agent_status = {'schema': 'pi.agent_status.v1', 'goal': 'retain live escalation receipt chain', 'goal_hash': GOAL_HASH, 'state': 'needs_agent', 'changed': ['scoped Shame eval catalog live escalation case'], 'needs_agent': {'project_agent_family': 'openai', 'handler': 'claude-fable-low', 'question': 'Use the configured first Ask API route.', 'parent_refs': [brave_ref]}}\nneeds_agent_validation = validate_status(needs_agent_status)\nrequire(needs_agent_validation.get('exit_code') == 0 and needs_agent_validation.get('valid') is True, 'needs_agent status did not validate after live Brave receipt', needs_agent_validation)\nneeds_agent_compiled = compile_status(needs_agent_status)\ncompiled_agent_command = needs_agent_compiled.get('command') or ''\nrequire('skills/ask/run.sh tau-dag' in compiled_agent_command and \"--handler 'claude-fable-low'\" in compiled_agent_command, 'needs_agent did not compile to first Ask API handler', compiled_agent_command)\n\nask_api = run_ask('claude-fable-low', 'ASK-FIRST-' + RUN_ID.upper(), RUN_ROOT / 'ask-api', ['--allow-provider-calls', '--require-provider-calls'], timeout=900)\nask_transport = (((ask_api['receipt'].get('provider_receipt') or {}).get('transport')))\nrequire(ask_transport == 'scillm.chat', 'first Ask API route did not use scillm.chat', ask_api['receipt'].get('provider_receipt'))\nask_handoff_payload = ask_api['handoff']\nask_ref = envelope('ask-first-' + RUN_ID, 'ask', 'tau.agent_handoff.v1', ask_handoff_payload, [parent_for_envelope(brave_ref)])\n\nneeds_webgpt_status = {'schema': 'pi.agent_status.v1', 'goal': 'retain live escalation receipt chain', 'goal_hash': GOAL_HASH, 'state': 'needs_webgpt', 'changed': ['scoped Shame eval catalog live escalation case'], 'needs_webgpt': {'question': 'Use the browser WebGPT route after Brave and Ask receipts.', 'parent_refs': [brave_ref, ask_ref]}}\nneeds_webgpt_validation = validate_status(needs_webgpt_status)\nrequire(needs_webgpt_validation.get('exit_code') == 0 and needs_webgpt_validation.get('valid') is True, 'needs_webgpt status did not validate after typed Brave and Ask parents', needs_webgpt_validation)\nneeds_webgpt_compiled = compile_status(needs_webgpt_status)\ncompiled_webgpt_command = needs_webgpt_compiled.get('command') or ''\nrequire('skills/ask/run.sh tau-dag' in compiled_webgpt_command and \"--handler 'webgpt'\" in compiled_webgpt_command and '--attach-file' in compiled_webgpt_command, 'needs_webgpt did not compile to WebGPT with attached typed parents', compiled_webgpt_command)\n\nwebgpt_prompt = 'Reply with exactly: WEBGPT-' + RUN_ID.upper()\npreflight = run_cmd(['python3', str(BROWSER_PREFLIGHT), '--prompt', webgpt_prompt], timeout=30)\nrequire(preflight.returncode == 0, 'WebGPT prompt preflight failed', {'stderr': preflight.stderr, 'stdout': preflight.stdout})\nwebgpt = run_ask('webgpt', 'WEBGPT-' + RUN_ID.upper(), RUN_ROOT / 'webgpt', ['--browser-tab-lifecycle', 'fresh-temporary', '--poll-timeout-seconds', '900', '--browser-lock-timeout', '900'], timeout=1200)\nwebgpt_provider = webgpt['receipt'].get('provider_receipt') or {}\nrequire(webgpt_provider.get('transport') == 'webgpt.submit' and webgpt_provider.get('provider_transport') == '$surf', 'WebGPT route did not use Surf browser transport', webgpt_provider)\nprovider_result_path = Path(str(webgpt_provider.get('surf_provider_result_path') or ''))\nrequire(provider_result_path.is_file(), 'WebGPT provider result path missing', str(provider_result_path))\nprovider_result = json.loads(provider_result_path.read_text(encoding='utf-8'))\nrequire(provider_result.get('schema') == 'surf.provider_result.v1' and provider_result.get('success') is True and provider_result.get('proof_status') == 'response_proven', 'WebGPT Surf provider result did not prove response', provider_result)\nwebgpt_ref = envelope('webgpt-' + RUN_ID, 'ask', 'tau.agent_handoff.v1', webgpt['handoff'], [parent_for_envelope(brave_ref), parent_for_envelope(ask_ref)])\n\nterminal_payload = {'schema': 'lazy_report_shame.live_escalation_receipt_chain.v1', 'status': 'terminal_acceptance_pass', 'live': True, 'mocked': False, 'verified_command': 'live-escalation-receipt-chain terminal acceptance', 'verified_result': 'terminal_acceptance_pass', 'run_id': RUN_ID, 'goal_hash': GOAL_HASH, 'brave_parent_ref': brave_ref, 'ask_parent_ref': ask_ref, 'webgpt_receipt_ref': webgpt_ref, 'ask_handler': 'claude-fable-low', 'webgpt_transport': 'webgpt.submit'}\nterminal_ref = envelope('terminal-acceptance-' + RUN_ID, 'shame', 'lazy_report_shame.live_escalation_receipt_chain.v1', terminal_payload, [parent_for_envelope(brave_ref), parent_for_envelope(ask_ref), parent_for_envelope(webgpt_ref)])\ndone_status = {'schema': 'pi.agent_status.v1', 'goal': 'retain live escalation receipt chain', 'goal_hash': GOAL_HASH, 'state': 'done', 'changed': ['scoped Shame eval catalog live escalation case'], 'verified': [{'command': 'live-escalation-receipt-chain terminal acceptance', 'result': 'terminal_acceptance_pass'}], 'proof': [terminal_ref['receipt_path']], 'receipts': [brave_ref['receipt_path'], ask_ref['receipt_path'], webgpt_ref['receipt_path'], terminal_ref['receipt_path']], 'nodes': [{'id': 'brave-search', 'status': 'PASS', 'receipt': brave_ref['receipt_path']}, {'id': 'ask-api-claude-fable-low', 'status': 'PASS', 'receipt': ask_ref['receipt_path']}, {'id': 'ask-webgpt-browser', 'status': 'PASS', 'receipt': webgpt_ref['receipt_path']}]}\nterminal_validation = validate_status(done_status)\nrequire(terminal_validation.get('exit_code') == 0 and terminal_validation.get('valid') is True, 'terminal done status did not validate against receipt readback', terminal_validation)\n\nresult = {'schema': 'lazy_report_shame.live_escalation_receipt_chain.v1', 'status': 'PASS', 'live': True, 'mocked': False, 'run_id': RUN_ID, 'goal_hash': GOAL_HASH, 'checked': ['real Brave web search returned a result', 'needs_agent accepted typed Brave parent and compiled to claude-fable-low', 'configured first Ask API route executed with provider_live true', 'needs_webgpt accepted Brave plus Ask typed lineage and compiled to WebGPT browser route with attachment', 'WebGPT executed through Surf browser transport and proved response', 'terminal done status read back a typed acceptance envelope'], 'brave': {'status': 'PASS', 'raw_result_path': str(brave_raw_path), 'receipt_path': brave_ref['receipt_path'], 'result_count': len(brave_results), 'first_url': brave_results[0].get('url')}, 'ask_api': {'status': 'PASS', 'handler': 'claude-fable-low', 'transport': ask_transport, 'provider_live': True, 'receipt_path': ask_api['receipt_path'], 'response_path': ask_api['response_path'], 'handoff_path': ask_api['handoff_path'], 'run_dir': ask_api['run_dir']}, 'lineage': {'needs_agent_validation': needs_agent_validation, 'needs_agent_command': compiled_agent_command, 'needs_webgpt_validation': needs_webgpt_validation, 'needs_webgpt_command': compiled_webgpt_command, 'brave_parent_ref': brave_ref, 'ask_parent_ref': ask_ref}, 'webgpt_browser': {'status': 'PASS', 'handler': 'webgpt', 'transport': webgpt_provider.get('transport'), 'provider_transport': webgpt_provider.get('provider_transport'), 'provider_live': True, 'receipt_path': webgpt['receipt_path'], 'response_path': webgpt['response_path'], 'handoff_path': webgpt['handoff_path'], 'provider_result_path': str(provider_result_path), 'run_dir': webgpt['run_dir']}, 'terminal_acceptance': {'status': 'PASS', 'receipt_path': terminal_ref['receipt_path'], 'validation': terminal_validation}}\nwrite_json(RESULT_PATH, result)\nprint(json.dumps({'schema': result['schema'], 'status': result['status'], 'live': result['live'], 'mocked': result['mocked'], 'result_path': str(RESULT_PATH), 'checked': result['checked']}, indent=2, sort_keys=True))"
+      ],
+      "timeout_seconds": 1500,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "lazy_report_shame.live_escalation_receipt_chain.v1",
+          "real Brave web search returned a result",
+          "configured first Ask API route executed with provider_live true",
+          "WebGPT executed through Surf browser transport and proved response",
+          "terminal done status read back a typed acceptance envelope"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "AssertionError"
+        ],
+        "artifacts": [
+          {
+            "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
+            "json_pointer": "/schema",
+            "equals": "lazy_report_shame.live_escalation_receipt_chain.v1"
+          },
+          {
+            "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
+            "json_pointer": "/live",
+            "equals": true
+          },
+          {
+            "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          },
+          {
+            "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
+            "json_pointer": "/brave/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
+            "json_pointer": "/ask_api/handler",
+            "equals": "claude-fable-low"
+          },
+          {
+            "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
+            "json_pointer": "/ask_api/provider_live",
+            "equals": true
+          },
+          {
+            "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
+            "json_pointer": "/webgpt_browser/transport",
+            "equals": "webgpt.submit"
+          },
+          {
+            "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
+            "json_pointer": "/webgpt_browser/provider_live",
+            "equals": true
+          },
+          {
+            "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
+            "json_pointer": "/terminal_acceptance/status",
+            "equals": "PASS"
+          }
         ]
       }
     },
