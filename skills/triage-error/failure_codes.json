@@ -1049,6 +1049,25 @@
       ]
     },
     {
+      "code": "shame_status_contract_invalid",
+      "layer": "shame",
+      "match": [
+        "pi.agent_status.v1",
+        "missing_agent_status_json",
+        "pi.agent_status.validation_result.v1",
+        "UNLAZY_FORCED_RETRY",
+        "REJECTED_BY_SLOTH_COURT",
+        "state=done requires non-empty proof"
+      ],
+      "cause": "The terminal reply violated the pi.agent_status.v1 status contract (missing fenced JSON block, invalid state literal, forbidden extra field, or missing state payload/proof). The rejection's validation_result.errors[] carries the exact pydantic loc/msg/ctx.",
+      "next_command": "Apply the steering in validation_result.errors[] against the executable contract skills/shame/scripts/agent_status_schema.py, write the corrected reply to a file, and run skills/shame/run.sh preflight <file> until decision=pass before stopping.",
+      "recoverable": true,
+      "not_this": [
+        "a product/code failure (the underlying work may be fine; only the status report is invalid)",
+        "scene_table or other skill pydantic schema failures"
+      ]
+    },
+    {
       "code": "scene_table_unknown_field",
       "layer": "scene_script",
       "match": [
@@ -1180,6 +1199,222 @@
         "completely novel unresolvable failure zzqx-77"
       ],
       "cause": "Unclassified error signal: completely novel unresolvable failure zzqx-77",
+      "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
+      "recoverable": true,
+      "not_this": []
+    },
+    {
+      "code": "create_kling_scene_unclassified_10523978",
+      "layer": "create_kling_scene",
+      "match": [
+        "create_kling_scene_unclassified_10523978",
+        "value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.fK8dMQzmSO/fake.png"
+      ],
+      "cause": "Unclassified error signal: value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.fK8dMQzmSO/fake.png",
+      "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
+      "recoverable": true,
+      "not_this": []
+    },
+    {
+      "code": "create_kling_scene_unclassified_77c82483",
+      "layer": "create_kling_scene",
+      "match": [
+        "create_kling_scene_unclassified_77c82483",
+        "value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.pnPBnKA4iS/fake.png"
+      ],
+      "cause": "Unclassified error signal: value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.pnPBnKA4iS/fake.png",
+      "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
+      "recoverable": true,
+      "not_this": []
+    },
+    {
+      "code": "create_kling_scene_unclassified_cdcce632",
+      "layer": "create_kling_scene",
+      "match": [
+        "create_kling_scene_unclassified_cdcce632",
+        "value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.HSkCK8F23N/fake.png"
+      ],
+      "cause": "Unclassified error signal: value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.HSkCK8F23N/fake.png",
+      "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
+      "recoverable": true,
+      "not_this": []
+    },
+    {
+      "code": "create_kling_scene_unclassified_3d0707dd",
+      "layer": "create_kling_scene",
+      "match": [
+        "create_kling_scene_unclassified_3d0707dd",
+        "value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.udVtcH39yl/fake.png"
+      ],
+      "cause": "Unclassified error signal: value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.udVtcH39yl/fake.png",
+      "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
+      "recoverable": true,
+      "not_this": []
+    },
+    {
+      "code": "create_kling_scene_unclassified_63ec9bdd",
+      "layer": "create_kling_scene",
+      "match": [
+        "create_kling_scene_unclassified_63ec9bdd",
+        "value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.oM2h9Kg0rE/fake.png"
+      ],
+      "cause": "Unclassified error signal: value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.oM2h9Kg0rE/fake.png",
+      "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
+      "recoverable": true,
+      "not_this": []
+    },
+    {
+      "code": "create_kling_scene_unclassified_72d854e4",
+      "layer": "create_kling_scene",
+      "match": [
+        "create_kling_scene_unclassified_72d854e4",
+        "value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.e4NUdcIBmo/fake.png"
+      ],
+      "cause": "Unclassified error signal: value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.e4NUdcIBmo/fake.png",
+      "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
+      "recoverable": true,
+      "not_this": []
+    },
+    {
+      "code": "create_kling_scene_unclassified_bd524cef",
+      "layer": "create_kling_scene",
+      "match": [
+        "create_kling_scene_unclassified_bd524cef",
+        "value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.645GAcjwn2/fake.png"
+      ],
+      "cause": "Unclassified error signal: value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.645GAcjwn2/fake.png",
+      "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
+      "recoverable": true,
+      "not_this": []
+    },
+    {
+      "code": "create_kling_scene_unclassified_d9a3d984",
+      "layer": "create_kling_scene",
+      "match": [
+        "create_kling_scene_unclassified_d9a3d984",
+        "value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.faKhl9wOvy/fake.png"
+      ],
+      "cause": "Unclassified error signal: value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.faKhl9wOvy/fake.png",
+      "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
+      "recoverable": true,
+      "not_this": []
+    },
+    {
+      "code": "create_kling_scene_unclassified_d907eff1",
+      "layer": "create_kling_scene",
+      "match": [
+        "create_kling_scene_unclassified_d907eff1",
+        "value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.VEzcY7Otct/fake.png"
+      ],
+      "cause": "Unclassified error signal: value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.VEzcY7Otct/fake.png",
+      "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
+      "recoverable": true,
+      "not_this": []
+    },
+    {
+      "code": "create_kling_scene_unclassified_d90a96a4",
+      "layer": "create_kling_scene",
+      "match": [
+        "create_kling_scene_unclassified_d90a96a4",
+        "value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.3TkeSQyfX3/fake.png"
+      ],
+      "cause": "Unclassified error signal: value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.3TkeSQyfX3/fake.png",
+      "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
+      "recoverable": true,
+      "not_this": []
+    },
+    {
+      "code": "create_kling_scene_unclassified_edfb5535",
+      "layer": "create_kling_scene",
+      "match": [
+        "create_kling_scene_unclassified_edfb5535",
+        "value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.DxkC1pXfB4/fake.png"
+      ],
+      "cause": "Unclassified error signal: value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.DxkC1pXfB4/fake.png",
+      "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
+      "recoverable": true,
+      "not_this": []
+    },
+    {
+      "code": "create_kling_scene_unclassified_270ea9c0",
+      "layer": "create_kling_scene",
+      "match": [
+        "create_kling_scene_unclassified_270ea9c0",
+        "value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.JO38taZRg9/fake.png"
+      ],
+      "cause": "Unclassified error signal: value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.JO38taZRg9/fake.png",
+      "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
+      "recoverable": true,
+      "not_this": []
+    },
+    {
+      "code": "create_kling_scene_unclassified_cecd861f",
+      "layer": "create_kling_scene",
+      "match": [
+        "create_kling_scene_unclassified_cecd861f",
+        "value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.2PNZazgB3L/fake.png"
+      ],
+      "cause": "Unclassified error signal: value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.2PNZazgB3L/fake.png",
+      "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
+      "recoverable": true,
+      "not_this": []
+    },
+    {
+      "code": "create_kling_scene_unclassified_ac91d33f",
+      "layer": "create_kling_scene",
+      "match": [
+        "create_kling_scene_unclassified_ac91d33f",
+        "value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.aotlWxUSZu/fake.png"
+      ],
+      "cause": "Unclassified error signal: value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.aotlWxUSZu/fake.png",
+      "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
+      "recoverable": true,
+      "not_this": []
+    },
+    {
+      "code": "create_kling_scene_unclassified_357d75b5",
+      "layer": "create_kling_scene",
+      "match": [
+        "create_kling_scene_unclassified_357d75b5",
+        "value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.mH3hqFu3YG/fake.png"
+      ],
+      "cause": "Unclassified error signal: value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.mH3hqFu3YG/fake.png",
+      "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
+      "recoverable": true,
+      "not_this": []
+    },
+    {
+      "code": "create_kling_scene_unclassified_1990ee1b",
+      "layer": "create_kling_scene",
+      "match": [
+        "create_kling_scene_unclassified_1990ee1b",
+        "value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.xIn2glQt3r/fake.png"
+      ],
+      "cause": "Unclassified error signal: value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.xIn2glQt3r/fake.png",
+      "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
+      "recoverable": true,
+      "not_this": []
+    },
+    {
+      "code": "create_kling_scene_unclassified_47c64efe",
+      "layer": "create_kling_scene",
+      "match": [
+        "create_kling_scene_unclassified_47c64efe",
+        "value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.z0mM1PiRpo/fake.png"
+      ],
+      "cause": "Unclassified error signal: value_error: Value error, embry: not a PNG or JPEG (bad magic bytes): /tmp/tmp.z0mM1PiRpo/fake.png",
+      "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
+      "recoverable": true,
+      "not_this": []
+    },
+    {
+      "code": "tau_unclassified_dcbbe23c",
+      "layer": "tau",
+      "match": [
+        "tau_unclassified_dcbbe23c",
+        "evidence_receipt_verdict_failed: handler_response_receipt for handler-codex node in project-watchdog ticket_repair lane; Tau blocked before reviewer ran (NO_RECEIPT downstream); cr"
+      ],
+      "cause": "Unclassified error signal: evidence_receipt_verdict_failed: handler_response_receipt for handler-codex node in project-watchdog ticket_repair lane; Tau blocked before reviewer ran (NO_RECEIPT downstream); creator response contained VERDICT: PASS and REVIEW_COMMIT but workspace diff included ~4MB of unrelated dirty agent-skill",
       "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
       "recoverable": true,
       "not_this": []

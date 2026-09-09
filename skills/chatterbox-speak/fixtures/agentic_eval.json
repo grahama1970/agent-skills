@@ -8,25 +8,34 @@
       "id": "speak.render.live",
       "description": "one-shot voiced line renders live through the Chatterbox service with typed receipt",
       "criticality": "critical",
-      "evidence_required": {"deterministic": true, "live_e2e": true}
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      }
     },
     {
       "id": "speak.emotion.measured",
       "description": "requested intensity produces measured acoustic arousal via analyze-chatterbox-emotions, not just echoed request fields",
       "criticality": "critical",
-      "evidence_required": {"live_e2e": true}
+      "evidence_required": {
+        "live_e2e": true
+      }
     },
     {
       "id": "speak.session.mood_hold",
       "description": "session holds bounded mood + speaker across turns; a no-intensity turn keeps the held mood and last tone; speaker-tagged memory recall lands in the receipt",
       "criticality": "critical",
-      "evidence_required": {"live_e2e": true}
+      "evidence_required": {
+        "live_e2e": true
+      }
     },
     {
       "id": "speak.fail_closed",
       "description": "unknown voice / dead service / non-live receipt fail closed with no artifact",
       "criticality": "critical",
-      "evidence_required": {"deterministic": true}
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "out_of_scope_claims": {
@@ -34,13 +43,25 @@
   },
   "cases": [
     {
-      "id": "speak-live-positive",
-      "case_type": "positive",
       "real_world": true,
       "evidence_class": "live_e2e",
-      "supports_claims": ["speak.render.live"],
-      "command": "./run.sh speak --text 'Say something. [sigh]' --voice embry --tone neutral_warm --context 'eval fixture' --analyze",
-      "assertions": [
+      "supports_claims": [
+        "speak.render.live"
+      ],
+      "name": "speak-live-positive",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && ./run.sh speak --text 'Say something. [sigh]' --voice embry --tone neutral_warm --context 'eval fixture' --analyze"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\": true"
+        ]
+      },
+      "expected_notes": [
         "exit code 0",
         "stdout JSON has ok=true and existing non-empty wav path",
         "receipt.json exists with schema chatterbox_speak.receipt.v1, mocked=false, live=true",
@@ -48,13 +69,25 @@
       ]
     },
     {
-      "id": "speak-intensity-routing",
-      "case_type": "positive",
       "real_world": true,
       "evidence_class": "live_e2e",
-      "supports_claims": ["speak.emotion.measured"],
-      "command": "./run.sh speak --text 'This matters.' --voice embry --intensity high --tone firm_boundary --analyze",
-      "assertions": [
+      "supports_claims": [
+        "speak.emotion.measured"
+      ],
+      "name": "speak-intensity-routing",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && ./run.sh speak --text 'This matters.' --voice embry --intensity high --tone firm_boundary --analyze"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "chatterbox_base_affect"
+        ]
+      },
+      "expected_notes": [
         "exit code 0",
         "receipt affect_effect.applied=true",
         "backend id is chatterbox_base_affect (explicit intensity routes off turbo)",
@@ -62,13 +95,22 @@
       ]
     },
     {
-      "id": "session-mood-holds-across-turns",
-      "case_type": "positive",
       "real_world": true,
       "evidence_class": "live_e2e",
-      "supports_claims": ["speak.session.mood_hold"],
-      "command": "S=eval-$RANDOM; ./run.sh speak --text 'I hear you.' --voice embry --intensity high --tone firm_boundary --session $S --to graham --recall-context && ./run.sh speak --text 'Still here.' --voice embry --session $S",
-      "assertions": [
+      "supports_claims": [
+        "speak.session.mood_hold"
+      ],
+      "name": "session-mood-holds-across-turns",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && S=eval-$RANDOM; ./run.sh speak --text 'I hear you.' --voice embry --intensity high --tone firm_boundary --session $S --to graham --recall-context && ./run.sh speak --text 'Still here.' --voice embry --session $S"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "expected_notes": [
         "both turns exit 0",
         "sessions/<S>.json has speaker=graham, mood_intensity=0.9, last_tone=firm_boundary, turns=2",
         "turn-2 render routed to chatterbox_base_affect (held mood applied without explicit --intensity)",
@@ -76,17 +118,36 @@
       ]
     },
     {
-      "id": "unknown-voice-fails-closed",
-      "case_type": "negative",
       "real_world": true,
       "evidence_class": "deterministic",
-      "supports_claims": ["speak.fail_closed"],
-      "command": "./run.sh speak --text hi --voice nosuchvoice",
-      "assertions": ["non-zero exit", "no receipt written"]
+      "supports_claims": [
+        "speak.fail_closed"
+      ],
+      "name": "unknown-voice-fails-closed",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && ./run.sh speak --text hi --voice nosuchvoice"
+      ],
+      "expected": {
+        "exit_code": 1
+      },
+      "expected_notes": [
+        "non-zero exit",
+        "no receipt written"
+      ]
     }
   ],
   "claims": {
-    "proves": ["one-shot live render with receipt", "fail-closed on unknown voice", "waveform-level affect evidence via analyze-chatterbox-emotions embedded in the receipt"],
-    "does_not_prove": ["real speaker emotion or human-perceived quality (acoustic proxies only)", "conversation control plane behavior"]
+    "proves": [
+      "one-shot live render with receipt",
+      "fail-closed on unknown voice",
+      "waveform-level affect evidence via analyze-chatterbox-emotions embedded in the receipt"
+    ],
+    "does_not_prove": [
+      "real speaker emotion or human-perceived quality (acoustic proxies only)",
+      "conversation control plane behavior"
+    ]
   }
 }
