@@ -715,11 +715,16 @@ def _tick_locked(
     }
     receipt.setdefault("issue_scans", issue_scans)
 
-    if project is None and (receipt["errors"] or any(row.get("writer_active") for row in receipt.get("primary_observations", []))):
+    if project is None and receipt["errors"]:
         receipt.update(ok=False, status="NEEDS_ATTENTION", stop_reason="unsettled_execution_or_scan_failure",
                        requires_human_input=any(x.get("requires_human_input") is True
                            for x in receipt.get("primary_observations", [])))
         return finish(run_id, receipt_dir, receipt, 1, persist=apply)
+
+    if project is None and any(row.get("writer_active") for row in receipt.get("primary_observations", [])):
+        receipt.update(ok=True, status="SKIPPED", stop_reason="retained_operation_running",
+                       requires_human_input=False)
+        return finish(run_id, receipt_dir, receipt, 0, persist=False)
 
     # No repair work anywhere. Before calling the tick idle, check whether any
     # recent closure needs reviewing: closing a ticket is a claim that the work

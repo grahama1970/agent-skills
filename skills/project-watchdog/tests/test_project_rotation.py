@@ -810,6 +810,41 @@ def test_all_project_tick_is_the_explicit_fleet_fallback(tmp_path, monkeypatch):
     assert captured["receipt"]["rotation"]["selected"] == "agent-skills"
 
 
+def test_fleet_tick_with_live_writer_is_quiet_skip(tmp_path, monkeypatch):
+    import json as _json
+
+    projects_path = tmp_path / "projects.json"
+    state_path = tmp_path / "state.json"
+    projects_path.write_text(_json.dumps({
+        "projects": [{"project_id": "agent-skills", "repo": "o/agent-skills"}]
+    }))
+    state_path.write_text(_json.dumps({
+        "global": {"state": "active"},
+        "projects": {"agent-skills": {"state": "active"}},
+    }))
+    captured: dict = {}
+
+    monkeypatch.setattr(config, "projects_path", lambda: projects_path)
+    monkeypatch.setattr(config, "state_path", lambda: state_path)
+    monkeypatch.setattr(registry, "project_worktree", lambda project: tmp_path)
+    monkeypatch.setattr(commands.primary, "reconcile", lambda root: {
+        "writer_active": True,
+        "operations": [{"repo": "o/agent-skills", "issue_number": 1631}],
+        "invalid_operations": [],
+        "recovery_command": "recover --apply",
+    })
+    monkeypatch.setattr(commands, "finish", lambda run_id, d, receipt, code, **k:
+                        captured.update(receipt=receipt, code=code, persist=k.get("persist")) or code)
+
+    assert commands._tick_locked("run", tmp_path / "receipt", apply=True,
+                                 project_id="all", max_tickets=1) == 0
+
+    assert captured["receipt"]["status"] == "SKIPPED"
+    assert captured["receipt"]["stop_reason"] == "retained_operation_running"
+    assert captured["receipt"]["requires_human_input"] is False
+    assert captured["persist"] is False
+
+
 def test_tick_receipt_copies_excluded_issues_from_selected_scan(tmp_path, monkeypatch):
     import json as _json
 

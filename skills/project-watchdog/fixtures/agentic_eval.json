@@ -47,6 +47,30 @@
       "does_not_prove": "Live Discord or Switchboard delivery; this is a deterministic policy gate over the bridge routing function."
     },
     {
+      "name": "fleet-tick-running-writer-skips",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_rotation.py::test_fleet_tick_with_live_writer_is_quiet_skip",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      },
+      "proves": "A fleet tick that only finds a retained live writer exits cleanly as SKIPPED/retained_operation_running and does not persist another NEEDS_ATTENTION receipt.",
+      "does_not_prove": "The live writer finished its repair; that is proven only by recover_primary reading back the run receipt after the writer exits."
+    },
+    {
       "name": "recover-primary-running-writer-zero",
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",
