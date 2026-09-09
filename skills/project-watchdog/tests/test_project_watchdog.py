@@ -924,6 +924,12 @@ def test_resume_proof_gate_can_read_admitted_artifacts_before_native_verify(tmp_
     assert allowed["ok"] is True
 
 
+def test_data_qid_domain_outcomes_are_machine_verifiable(tmp_path) -> None:
+    artifact = tmp_path / "proof.json"
+    artifact.write_text(json.dumps({"status": "PASS_DATA_QID_LIVE_FIXTURE", "live": True, "mocked": False}), encoding="utf-8")
+    assert handlers.inspect_proof_artifact(str(artifact), not_before=0)["passed"] is True
+
+
 def test_a_proof_artifact_that_reports_a_failure_does_not_count(tmp_path) -> None:
     artifact = tmp_path / "proof.json"
     artifact.write_text(

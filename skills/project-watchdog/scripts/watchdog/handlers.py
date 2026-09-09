@@ -754,7 +754,8 @@ REPAIR_REFUSAL_TOKENS = frozenset({"FAIL", "NEEDS_ATTENTION", "BLOCKED"})
 #: Values a machine-readable proof artifact may carry that mean "this run
 #: finished and passed".
 PROOF_PASS_VALUES = frozenset(
-    {"PASS", "PASSED", "READY", "OK", "COMPLETED", "SUCCESS", "GREEN", "TRUE", "MET"}
+    {"PASS", "PASSED", "READY", "OK", "COMPLETED", "SUCCESS", "GREEN", "TRUE", "MET",
+     "PASS_DATA_QID", "PASS_DATA_QID_FIXTURES", "PASS_DATA_QID_LIVE_FIXTURE"}
 )
 
 #: Values that mean the proof did not finish, or finished badly. ``RUNNING``
