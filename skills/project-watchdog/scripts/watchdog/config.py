@@ -203,6 +203,8 @@ def seat_provider(seat: str) -> str:
         return _SEAT_PROVIDER[s]
     if s.startswith("oc-"):
         return _OC_FAMILY_PROVIDER.get(s[3:].split("-")[0], "opencode")
+    if s.startswith("opencode-go/"):
+        return s.split("/", 1)[1].split("-", 1)[0]
     # `Codex-<model>` is a SciLLM route prefix, NOT the OpenAI Codex CLI: the
     # provider is the MODEL family after it (Codex-opus-5 -> anthropic).
     m = s[len("codex-"):] if s.startswith("codex-") else s
