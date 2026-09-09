@@ -150,7 +150,7 @@ def summarize(receipt_dir: Path) -> dict | None:
         "issue": handled.get("issue_number"),
         "repo": handled.get("repo"),
         "action": handled.get("action"),
-        "summary": (handled.get("summary") or r.get("stop_reason") or "")[:300],
+        "summary": (handled.get("summary") or r.get("reason") or r.get("stop_reason") or "")[:300],
         "requires_human_input": r.get("requires_human_input"),
         "triage_code": triage.get("code"),
         "triage_cause": (triage.get("cause") or "")[:200],
