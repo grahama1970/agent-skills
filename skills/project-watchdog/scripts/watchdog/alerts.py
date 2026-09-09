@@ -30,7 +30,8 @@ from typing import Any
 
 from . import config
 
-#: Receipt statuses that a human should hear about.
+#: Receipt statuses that can page a human only when the receipt explicitly says
+#: a human decision/input is required.
 ALERT_STATUSES = frozenset({"BLOCKED", "NEEDS_ATTENTION"})
 
 DEFAULT_RENOTIFY_SECONDS = 86400
@@ -86,20 +87,10 @@ def _fingerprint(receipt: dict[str, Any]) -> str:
 def _should_alert(receipt: dict[str, Any]) -> bool:
     if os.environ.get("PROJECT_WATCHDOG_ALERTS", "").lower() in {"off", "0", "false"}:
         return False
-    if receipt.get("requires_human_input") is False and receipt.get("authorized_agent_next_steps"):
-        return False
-    if receipt.get("status") in ALERT_STATUSES:
-        return True
-    if receipt.get("stop_reason") == "idle_streak_exceeded":
-        return True
-    # A completed ticket is human-notable good news (operator 2026-09-03):
-    # notify when a tick actually handled a ticket to completion. NOOP fleet
-    # rotation stays silent.
-    if receipt.get("status") == "COMPLETED" and any(
-        h.get("status") == "COMPLETED" for h in receipt.get("handled_issues") or []
-    ):
-        return True
-    return False
+    return receipt.get("requires_human_input") is True and (
+        receipt.get("status") in ALERT_STATUSES
+        or receipt.get("stop_reason") == "idle_streak_exceeded"
+    )
 
 
 def _render_content(receipt: dict[str, Any]) -> str:

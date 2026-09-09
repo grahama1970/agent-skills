@@ -466,7 +466,7 @@ def finish(
             "skill": "ops-discord notify",
             "executor": "watchdog alert at core.finish",
             "status": alert_status,
-            "details": ["alerts only for BLOCKED, NEEDS_ATTENTION, or idle_streak_exceeded; COMPLETED does not alert"],
+            "details": ["ops-discord alerts only for explicit human-input BLOCKED, NEEDS_ATTENTION, or idle_streak_exceeded receipts; machine-actionable failures and COMPLETED receipts stay agent-owned"],
         })
         if existing is None:
             phases.append(phase)

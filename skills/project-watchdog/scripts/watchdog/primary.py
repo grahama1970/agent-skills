@@ -541,7 +541,7 @@ def failure(project: dict[str, Any], issue: dict[str, Any], message: str,
                  "depends_on": ["route_classified"], "details": [message[:240]]},
                 {"id": "ops_discord_alert", "agent": "ops-discord", "skill": "ops-discord notify",
                  "executor": "watchdog alert at core.finish", "status": "PENDING", "depends_on": ["failure_triaged"],
-                 "details": ["alerts only for BLOCKED, NEEDS_ATTENTION, or idle_streak_exceeded; COMPLETED does not alert"]},
+                 "details": ["ops-discord alerts only for explicit human-input BLOCKED, NEEDS_ATTENTION, or idle_streak_exceeded receipts; machine-actionable failures and COMPLETED receipts stay agent-owned"]},
             ]}
 
 

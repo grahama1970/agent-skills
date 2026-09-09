@@ -42,4 +42,4 @@ def test_failure_records_triage_and_alert_policy(monkeypatch) -> None:
     phases = {phase["id"]: phase for phase in result["workflow_phases"]}
     assert phases["failure_triaged"]["skill"] == "triage-error"
     assert phases["ops_discord_alert"]["status"] == "PENDING"
-    assert "COMPLETED does not alert" in phases["ops_discord_alert"]["details"][0]
+    assert "machine-actionable failures and COMPLETED receipts stay agent-owned" in phases["ops_discord_alert"]["details"][0]
