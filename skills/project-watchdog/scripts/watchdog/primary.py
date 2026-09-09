@@ -447,7 +447,7 @@ def reattach_and_resume(root: Path, journal: Path, *, apply: bool, timeout_s: in
         old_force = os.environ.get("PROJECT_WATCHDOG_RESUME_RERUN_NODES")
         os.environ["PROJECT_WATCHDOG_OPERATION_JOURNAL"] = str(journal)
         if rerun_reviewer:
-            os.environ["PROJECT_WATCHDOG_RESUME_RERUN_NODES"] = f"{reviewer_handler},join"
+            os.environ["PROJECT_WATCHDOG_RESUME_RERUN_NODES"] = f"{handlers.repair_node_id(reviewer_handler)},join"
         try:
             row = handlers.run_ask_tau_dag_with_stream_monitor(
                 command, cwd=root, timeout_s=timeout_s, ask_run_dir=Path(record.ask_run_dir),
