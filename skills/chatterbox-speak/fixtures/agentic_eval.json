@@ -1,0 +1,40 @@
+{
+  "schema": "agentic_eval.fixture.v1",
+  "skill": "chatterbox-speak",
+  "trials": 3,
+  "cases": [
+    {
+      "id": "speak-live-positive",
+      "case_type": "positive",
+      "real_world": true,
+      "command": "./run.sh speak --text 'Say something. [sigh]' --voice embry --tone neutral_warm --context 'eval fixture'",
+      "assertions": [
+        "exit code 0",
+        "stdout JSON has ok=true and existing non-empty wav path",
+        "receipt.json exists with schema chatterbox_speak.receipt.v1, mocked=false, live=true"
+      ]
+    },
+    {
+      "id": "speak-intensity-routing",
+      "case_type": "positive",
+      "real_world": true,
+      "command": "./run.sh speak --text 'This matters.' --voice embry --intensity high --tone firm_boundary",
+      "assertions": [
+        "exit code 0",
+        "receipt affect_effect.applied=true",
+        "backend id is chatterbox_base_affect (explicit intensity routes off turbo)"
+      ]
+    },
+    {
+      "id": "unknown-voice-fails-closed",
+      "case_type": "negative",
+      "real_world": true,
+      "command": "./run.sh speak --text hi --voice nosuchvoice",
+      "assertions": ["non-zero exit", "no receipt written"]
+    }
+  ],
+  "claims": {
+    "proves": ["one-shot live render with receipt", "fail-closed on unknown voice"],
+    "does_not_prove": ["perceived emotional quality (use /analyze-chatterbox-emotions)", "conversation control plane behavior"]
+  }
+}
