@@ -1,6 +1,6 @@
 {
-  "campaign_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/campaign-receipt.json",
-  "campaign_receipt_sha256": "e441c6030b29ffa8fa64ba714a2e3f2d9fcf6a5f63e5cb8f4f4cf914326d75f4",
+  "campaign_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/campaign-receipt.json",
+  "campaign_receipt_sha256": "c73014da5b2de3aa9afd1dba982d9dc92203dff6e4eb813c5b2465abc0f5508c",
   "equalizers": [
     "Red and Blue consume the same public arena context.",
     "Provider/Tau outputs cannot self-award wins.",

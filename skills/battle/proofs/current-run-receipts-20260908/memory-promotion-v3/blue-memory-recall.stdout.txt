@@ -1,0 +1,90 @@
+{
+  "found": true,
+  "should_scan": false,
+  "confidence": 0.667,
+  "items": [
+    {
+      "problem": "CWE-22 Zip Slip path traversal Battle adaptive-lineage promotion battle-memory-promotion:review-ticket-live-rerun:blue:generation-2: team=blue generation 2 was selected after Docker/Judge replay verdi",
+      "solution": "Use this blue lineage as same-team Exploit/Harden/Detect evidence only: team=blue; artifact_sha256=94393268a77e42eb805e2fc89d808bc7fdd0c1a9f92a08dc495a83b7e0d51616; genome_delta_sha256=d1df79318d98e7ad1add469577a093f83d340254c4ec00d793097a30ab5f649b; semantic_change_count=27; fitness_sha256=6ec55215cc380b703000016543e3d7582d1e080da9744bcce22256e275bad7bd; research_sha256=385a840e5df2453fa376a35c6570c4c4b5d202ec73d23d00564ef4646898c9d6; seed_sha256s=['06c27a77608d2aa9a4d8b46c7b7419404026cb7512270",
+      "score": 0.667,
+      "tags": [
+        "battle",
+        "adaptive-lineage",
+        "blue",
+        "project-agent"
+      ]
+    },
+    {
+      "problem": "CWE-22 Zip Slip path traversal Battle adaptive-lineage promotion battle-memory-promotion:review-ticket-live-rerun:blue:generation-2: team=blue generation 2 was selected after Docker/Judge replay verdi",
+      "solution": "Use this blue lineage as same-team Exploit/Harden/Detect evidence only: team=blue; artifact_sha256=5f9fc2933771f220bd54da992ebacee89e49f7496c854d0dd80b25b432d8b6f5; genome_delta_sha256=9cf1fcc5de4668b3f6252cd1d8fcac62cc6dd7fb884c01dc2fd7eeec4c67483a; semantic_change_count=25; fitness_sha256=3c9086940b0e40970c092e734b6da91f149a0c1a6b1c91220e289fb28cde482c; research_sha256=9d260fa963ed3d5cacc39ff67b0f4f11cd1ae1ff057f069ee15968bcdf85eb76; seed_sha256s=['06c27a77608d2aa9a4d8b46c7b7419404026cb7512270",
+      "score": 1.0,
+      "tags": [
+        "battle",
+        "adaptive-lineage",
+        "blue",
+        "project-agent"
+      ]
+    },
+    {
+      "problem": "CWE-22 Zip Slip path traversal Battle adaptive-lineage promotion battle-memory-promotion:review-ticket-live-rerun:blue:generation-2: team=blue generation 2 was selected after Docker/Judge replay verdi",
+      "solution": "Use this blue lineage as same-team Exploit/Harden/Detect evidence only: team=blue; artifact_sha256=94393268a77e42eb805e2fc89d808bc7fdd0c1a9f92a08dc495a83b7e0d51616; genome_delta_sha256=d1df79318d98e7ad1add469577a093f83d340254c4ec00d793097a30ab5f649b; semantic_change_count=27; fitness_sha256=6ec55215cc380b703000016543e3d7582d1e080da9744bcce22256e275bad7bd; research_sha256=385a840e5df2453fa376a35c6570c4c4b5d202ec73d23d00564ef4646898c9d6; seed_sha256s=['06c27a77608d2aa9a4d8b46c7b7419404026cb7512270",
+      "score": 0.593,
+      "tags": [
+        "battle",
+        "adaptive-lineage",
+        "blue",
+        "project-agent"
+      ]
+    }
+  ],
+  "meta": {
+    "q": "battle-memory-promotion:review-ticket-live-rerun:blue:generation-2 team=blue artifact_sha256=94393268a77e42eb805e2fc89d808bc7fdd0c1a9f92a08dc495a83b7e0d51616 fitness_sha256=6ec55215cc380b703000016543e3d7582d1e080da9744bcce22256e275bad7bd",
+    "scope": "battle",
+    "k": 3,
+    "used_dense": true,
+    "used_reranker": false,
+    "took_ms": 333,
+    "threshold": 0.3,
+    "recall_envelope": {
+      "schema": "memory.recall_envelope.v1",
+      "q": "battle-memory-promotion:review-ticket-live-rerun:blue:generation-2 team=blue artifact_sha256=94393268a77e42eb805e2fc89d808bc7fdd0c1a9f92a08dc495a83b7e0d51616 fitness_sha256=6ec55215cc380b703000016543e3d7582d1e080da9744bcce22256e275bad7bd",
+      "scope": "battle",
+      "k": 3,
+      "limit": 3,
+      "threshold": 0.3,
+      "collections": null,
+      "tags": [],
+      "recall_profile": null,
+      "recall_profile_source": null,
+      "profile_hash": null,
+      "profile_version": null,
+      "required_artifacts": [],
+      "selector": null,
+      "selector_lifecycle_mode": null,
+      "include_retired": false,
+      "used_dense": true,
+      "used_reranker": false,
+      "took_ms": 333,
+      "scan_decision": {
+        "found": true,
+        "should_scan": false,
+        "confidence": 0.667,
+        "threshold": 0.3,
+        "item_count": 3
+      }
+    },
+    "memory_first": true,
+    "runtime_pressure": {
+      "level": "normal",
+      "active_workloads": [],
+      "slow_query_risk": false,
+      "recommended_action": "No active persisted runtime pressure detected.",
+      "checked_at": 1788801848,
+      "sources": []
+    },
+    "brief": true,
+    "sort": null,
+    "prefix": null
+  },
+  "errors": []
+}

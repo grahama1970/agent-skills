@@ -1,0 +1,850 @@
+{
+  "docker_image": "python:3.12-slim",
+  "docker_image_id": "sha256:9cbfea842643d1cf45df5d841ac78e8cc1a8bfbcc36934a9d31fdc964fcc5917",
+  "generation": 1,
+  "matched": true,
+  "original_fingerprint": {
+    "attempts": [
+      {
+        "bindings": [
+          {
+            "docker_workspace_path": "/workspace/red_exploit_submission.py",
+            "execution_path": "$REPLAY_ROOT/red-0__blue-0/original/red_exploit_submission.py",
+            "execution_sha256": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85",
+            "matched": true,
+            "regular_file": true,
+            "role": "red_original_exploit",
+            "source_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/reviewed/immutable-slots/generation-1-red.py",
+            "source_sha256": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85"
+          },
+          {
+            "docker_workspace_path": "/workspace/red_exploit_submission.py",
+            "execution_path": "$REPLAY_ROOT/red-0__blue-0/patched/red_exploit_submission.py",
+            "execution_sha256": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85",
+            "matched": true,
+            "regular_file": true,
+            "role": "red_patched_exploit",
+            "source_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/reviewed/immutable-slots/generation-1-red.py",
+            "source_sha256": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85"
+          },
+          {
+            "docker_workspace_path": "/workspace/app.py",
+            "execution_path": "$REPLAY_ROOT/red-0__blue-0/patched/app.py",
+            "execution_sha256": "056e2749ca76e76cbb43d3a93b3883c6b92b2a7ba6f08f06e646bedfb4837386",
+            "matched": true,
+            "regular_file": true,
+            "role": "blue_patched_app",
+            "source_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/reviewed/immutable-slots/generation-1-blue.py",
+            "source_sha256": "056e2749ca76e76cbb43d3a93b3883c6b92b2a7ba6f08f06e646bedfb4837386"
+          }
+        ],
+        "blue_artifact_sha256": "056e2749ca76e76cbb43d3a93b3883c6b92b2a7ba6f08f06e646bedfb4837386",
+        "commands": [
+          {
+            "command": [
+              "docker",
+              "run",
+              "--rm",
+              "--network",
+              "none",
+              "--cap-drop",
+              "ALL",
+              "--security-opt",
+              "no-new-privileges",
+              "--user",
+              "1000:1000",
+              "-v",
+              "$WORKSPACE:/workspace:rw",
+              "-w",
+              "/workspace",
+              "python:3.12-slim",
+              "python",
+              "-c",
+              "import hashlib,json,pathlib;paths=[\"red_exploit_submission.py\"];print(json.dumps({p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in paths}, sort_keys=True))"
+            ],
+            "exit_code": 0,
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_sha256": "237a3c259bc712e5ccf97d14446fb28fd90c856e16025ae4d1535e11c126a64d"
+          },
+          {
+            "command": [
+              "docker",
+              "run",
+              "--rm",
+              "--network",
+              "none",
+              "--cap-drop",
+              "ALL",
+              "--security-opt",
+              "no-new-privileges",
+              "--user",
+              "1000:1000",
+              "-v",
+              "$WORKSPACE:/workspace:rw",
+              "-w",
+              "/workspace",
+              "python:3.12-slim",
+              "python",
+              "-c",
+              "import hashlib,json,pathlib;paths=[\"app.py\", \"red_exploit_submission.py\"];print(json.dumps({p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in paths}, sort_keys=True))"
+            ],
+            "exit_code": 0,
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_sha256": "89602b01b9581e0d0a00f4c48419d025652b0c3fdc60cffbeb3c705baf01a7bf"
+          },
+          {
+            "command": [
+              "docker",
+              "run",
+              "--rm",
+              "--network",
+              "none",
+              "--cap-drop",
+              "ALL",
+              "--security-opt",
+              "no-new-privileges",
+              "--user",
+              "1000:1000",
+              "-v",
+              "$WORKSPACE:/workspace:rw",
+              "-w",
+              "/workspace",
+              "python:3.12-slim",
+              "python",
+              "red_exploit_submission.py",
+              "--expect-vulnerable"
+            ],
+            "exit_code": 0,
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_sha256": "f14ac99734a447243011863a81c4a6a5a8b9de120099130dd55d6dc1f09cd2f9"
+          },
+          {
+            "command": [
+              "docker",
+              "run",
+              "--rm",
+              "--network",
+              "none",
+              "--cap-drop",
+              "ALL",
+              "--security-opt",
+              "no-new-privileges",
+              "--user",
+              "1000:1000",
+              "-v",
+              "$WORKSPACE:/workspace:rw",
+              "-w",
+              "/workspace",
+              "python:3.12-slim",
+              "python",
+              "red_exploit_submission.py"
+            ],
+            "exit_code": 1,
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_sha256": "666ec0db49dfd7ceb12df4fe8861d0d1f02c0399938d65dea31cc3597dedeeec"
+          }
+        ],
+        "container_hashes": [
+          {
+            "command": {
+              "command": [
+                "docker",
+                "run",
+                "--rm",
+                "--network",
+                "none",
+                "--cap-drop",
+                "ALL",
+                "--security-opt",
+                "no-new-privileges",
+                "--user",
+                "1000:1000",
+                "-v",
+                "$WORKSPACE:/workspace:rw",
+                "-w",
+                "/workspace",
+                "python:3.12-slim",
+                "python",
+                "-c",
+                "import hashlib,json,pathlib;paths=[\"red_exploit_submission.py\"];print(json.dumps({p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in paths}, sort_keys=True))"
+              ],
+              "exit_code": 0,
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "237a3c259bc712e5ccf97d14446fb28fd90c856e16025ae4d1535e11c126a64d"
+            },
+            "docker_image": "python:3.12-slim",
+            "expected_sha256": {
+              "red_exploit_submission.py": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85"
+            },
+            "matched": true,
+            "observed_sha256": {
+              "red_exploit_submission.py": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85"
+            },
+            "schema": "battle.judge_container_input_hashes.v1",
+            "status": "PASS",
+            "work_dir": "$REPLAY_ROOT/red-0__blue-0/original"
+          },
+          {
+            "command": {
+              "command": [
+                "docker",
+                "run",
+                "--rm",
+                "--network",
+                "none",
+                "--cap-drop",
+                "ALL",
+                "--security-opt",
+                "no-new-privileges",
+                "--user",
+                "1000:1000",
+                "-v",
+                "$WORKSPACE:/workspace:rw",
+                "-w",
+                "/workspace",
+                "python:3.12-slim",
+                "python",
+                "-c",
+                "import hashlib,json,pathlib;paths=[\"app.py\", \"red_exploit_submission.py\"];print(json.dumps({p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in paths}, sort_keys=True))"
+              ],
+              "exit_code": 0,
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "89602b01b9581e0d0a00f4c48419d025652b0c3fdc60cffbeb3c705baf01a7bf"
+            },
+            "docker_image": "python:3.12-slim",
+            "expected_sha256": {
+              "app.py": "056e2749ca76e76cbb43d3a93b3883c6b92b2a7ba6f08f06e646bedfb4837386",
+              "red_exploit_submission.py": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85"
+            },
+            "matched": true,
+            "observed_sha256": {
+              "app.py": "056e2749ca76e76cbb43d3a93b3883c6b92b2a7ba6f08f06e646bedfb4837386",
+              "red_exploit_submission.py": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85"
+            },
+            "schema": "battle.judge_container_input_hashes.v1",
+            "status": "PASS",
+            "work_dir": "$REPLAY_ROOT/red-0__blue-0/patched"
+          }
+        ],
+        "container_input_hash_pass": true,
+        "exploit_blocked_after_patch": true,
+        "exploit_confirmed_before_patch": true,
+        "functionality_preserved": true,
+        "judge_input_byte_binding_pass": true,
+        "pair_id": "red-0__blue-0",
+        "red_artifact_sha256": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85",
+        "status": "PASS",
+        "verdict": "BLUE_SUCCESS"
+      }
+    ],
+    "docker_image": "python:3.12-slim",
+    "docker_image_id": "sha256:9cbfea842643d1cf45df5d841ac78e8cc1a8bfbcc36934a9d31fdc964fcc5917",
+    "judged_pair_count": 1,
+    "status": "PASS",
+    "target_identity_sha256": "b91d9c40e3a0c28ef53df7891503b9d3eed77449d2db708d5724c41f76edb02d",
+    "verdict": "BLUE_SUCCESS"
+  },
+  "receipt_valid": true,
+  "replay_docker_image_id": "sha256:9cbfea842643d1cf45df5d841ac78e8cc1a8bfbcc36934a9d31fdc964fcc5917",
+  "replay_fingerprint": {
+    "attempts": [
+      {
+        "bindings": [
+          {
+            "docker_workspace_path": "/workspace/red_exploit_submission.py",
+            "execution_path": "$REPLAY_ROOT/red-0__blue-0/original/red_exploit_submission.py",
+            "execution_sha256": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85",
+            "matched": true,
+            "regular_file": true,
+            "role": "red_original_exploit",
+            "source_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/reviewed/immutable-slots/generation-1-red.py",
+            "source_sha256": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85"
+          },
+          {
+            "docker_workspace_path": "/workspace/red_exploit_submission.py",
+            "execution_path": "$REPLAY_ROOT/red-0__blue-0/patched/red_exploit_submission.py",
+            "execution_sha256": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85",
+            "matched": true,
+            "regular_file": true,
+            "role": "red_patched_exploit",
+            "source_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/reviewed/immutable-slots/generation-1-red.py",
+            "source_sha256": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85"
+          },
+          {
+            "docker_workspace_path": "/workspace/app.py",
+            "execution_path": "$REPLAY_ROOT/red-0__blue-0/patched/app.py",
+            "execution_sha256": "056e2749ca76e76cbb43d3a93b3883c6b92b2a7ba6f08f06e646bedfb4837386",
+            "matched": true,
+            "regular_file": true,
+            "role": "blue_patched_app",
+            "source_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/reviewed/immutable-slots/generation-1-blue.py",
+            "source_sha256": "056e2749ca76e76cbb43d3a93b3883c6b92b2a7ba6f08f06e646bedfb4837386"
+          }
+        ],
+        "blue_artifact_sha256": "056e2749ca76e76cbb43d3a93b3883c6b92b2a7ba6f08f06e646bedfb4837386",
+        "commands": [
+          {
+            "command": [
+              "docker",
+              "run",
+              "--rm",
+              "--network",
+              "none",
+              "--cap-drop",
+              "ALL",
+              "--security-opt",
+              "no-new-privileges",
+              "--user",
+              "1000:1000",
+              "-v",
+              "$WORKSPACE:/workspace:rw",
+              "-w",
+              "/workspace",
+              "python:3.12-slim",
+              "python",
+              "-c",
+              "import hashlib,json,pathlib;paths=[\"red_exploit_submission.py\"];print(json.dumps({p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in paths}, sort_keys=True))"
+            ],
+            "exit_code": 0,
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_sha256": "237a3c259bc712e5ccf97d14446fb28fd90c856e16025ae4d1535e11c126a64d"
+          },
+          {
+            "command": [
+              "docker",
+              "run",
+              "--rm",
+              "--network",
+              "none",
+              "--cap-drop",
+              "ALL",
+              "--security-opt",
+              "no-new-privileges",
+              "--user",
+              "1000:1000",
+              "-v",
+              "$WORKSPACE:/workspace:rw",
+              "-w",
+              "/workspace",
+              "python:3.12-slim",
+              "python",
+              "-c",
+              "import hashlib,json,pathlib;paths=[\"app.py\", \"red_exploit_submission.py\"];print(json.dumps({p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in paths}, sort_keys=True))"
+            ],
+            "exit_code": 0,
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_sha256": "89602b01b9581e0d0a00f4c48419d025652b0c3fdc60cffbeb3c705baf01a7bf"
+          },
+          {
+            "command": [
+              "docker",
+              "run",
+              "--rm",
+              "--network",
+              "none",
+              "--cap-drop",
+              "ALL",
+              "--security-opt",
+              "no-new-privileges",
+              "--user",
+              "1000:1000",
+              "-v",
+              "$WORKSPACE:/workspace:rw",
+              "-w",
+              "/workspace",
+              "python:3.12-slim",
+              "python",
+              "red_exploit_submission.py",
+              "--expect-vulnerable"
+            ],
+            "exit_code": 0,
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_sha256": "f14ac99734a447243011863a81c4a6a5a8b9de120099130dd55d6dc1f09cd2f9"
+          },
+          {
+            "command": [
+              "docker",
+              "run",
+              "--rm",
+              "--network",
+              "none",
+              "--cap-drop",
+              "ALL",
+              "--security-opt",
+              "no-new-privileges",
+              "--user",
+              "1000:1000",
+              "-v",
+              "$WORKSPACE:/workspace:rw",
+              "-w",
+              "/workspace",
+              "python:3.12-slim",
+              "python",
+              "red_exploit_submission.py"
+            ],
+            "exit_code": 1,
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_sha256": "666ec0db49dfd7ceb12df4fe8861d0d1f02c0399938d65dea31cc3597dedeeec"
+          }
+        ],
+        "container_hashes": [
+          {
+            "command": {
+              "command": [
+                "docker",
+                "run",
+                "--rm",
+                "--network",
+                "none",
+                "--cap-drop",
+                "ALL",
+                "--security-opt",
+                "no-new-privileges",
+                "--user",
+                "1000:1000",
+                "-v",
+                "$WORKSPACE:/workspace:rw",
+                "-w",
+                "/workspace",
+                "python:3.12-slim",
+                "python",
+                "-c",
+                "import hashlib,json,pathlib;paths=[\"red_exploit_submission.py\"];print(json.dumps({p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in paths}, sort_keys=True))"
+              ],
+              "exit_code": 0,
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "237a3c259bc712e5ccf97d14446fb28fd90c856e16025ae4d1535e11c126a64d"
+            },
+            "docker_image": "python:3.12-slim",
+            "expected_sha256": {
+              "red_exploit_submission.py": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85"
+            },
+            "matched": true,
+            "observed_sha256": {
+              "red_exploit_submission.py": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85"
+            },
+            "schema": "battle.judge_container_input_hashes.v1",
+            "status": "PASS",
+            "work_dir": "$REPLAY_ROOT/red-0__blue-0/original"
+          },
+          {
+            "command": {
+              "command": [
+                "docker",
+                "run",
+                "--rm",
+                "--network",
+                "none",
+                "--cap-drop",
+                "ALL",
+                "--security-opt",
+                "no-new-privileges",
+                "--user",
+                "1000:1000",
+                "-v",
+                "$WORKSPACE:/workspace:rw",
+                "-w",
+                "/workspace",
+                "python:3.12-slim",
+                "python",
+                "-c",
+                "import hashlib,json,pathlib;paths=[\"app.py\", \"red_exploit_submission.py\"];print(json.dumps({p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in paths}, sort_keys=True))"
+              ],
+              "exit_code": 0,
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "89602b01b9581e0d0a00f4c48419d025652b0c3fdc60cffbeb3c705baf01a7bf"
+            },
+            "docker_image": "python:3.12-slim",
+            "expected_sha256": {
+              "app.py": "056e2749ca76e76cbb43d3a93b3883c6b92b2a7ba6f08f06e646bedfb4837386",
+              "red_exploit_submission.py": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85"
+            },
+            "matched": true,
+            "observed_sha256": {
+              "app.py": "056e2749ca76e76cbb43d3a93b3883c6b92b2a7ba6f08f06e646bedfb4837386",
+              "red_exploit_submission.py": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85"
+            },
+            "schema": "battle.judge_container_input_hashes.v1",
+            "status": "PASS",
+            "work_dir": "$REPLAY_ROOT/red-0__blue-0/patched"
+          }
+        ],
+        "container_input_hash_pass": true,
+        "exploit_blocked_after_patch": true,
+        "exploit_confirmed_before_patch": true,
+        "functionality_preserved": true,
+        "judge_input_byte_binding_pass": true,
+        "pair_id": "red-0__blue-0",
+        "red_artifact_sha256": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85",
+        "status": "PASS",
+        "verdict": "BLUE_SUCCESS"
+      }
+    ],
+    "docker_image": "python:3.12-slim",
+    "docker_image_id": "sha256:9cbfea842643d1cf45df5d841ac78e8cc1a8bfbcc36934a9d31fdc964fcc5917",
+    "judged_pair_count": 1,
+    "status": "PASS",
+    "target_identity_sha256": "b91d9c40e3a0c28ef53df7891503b9d3eed77449d2db708d5724c41f76edb02d",
+    "verdict": "BLUE_SUCCESS"
+  },
+  "replay_judge": {
+    "attempts": [
+      {
+        "blue_action_id": "blue-blue-0-patch",
+        "blue_artifact": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/reviewed/immutable-slots/generation-1-blue.py",
+        "blue_artifact_sha256": "056e2749ca76e76cbb43d3a93b3883c6b92b2a7ba6f08f06e646bedfb4837386",
+        "blue_worker_id": "blue-0",
+        "commands_run": [
+          {
+            "command": [
+              "docker",
+              "run",
+              "--rm",
+              "--network",
+              "none",
+              "--cap-drop",
+              "ALL",
+              "--security-opt",
+              "no-new-privileges",
+              "--user",
+              "1000:1000",
+              "-v",
+              "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/original:/workspace:rw",
+              "-w",
+              "/workspace",
+              "python:3.12-slim",
+              "python",
+              "-c",
+              "import hashlib,json,pathlib;paths=[\"red_exploit_submission.py\"];print(json.dumps({p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in paths}, sort_keys=True))"
+            ],
+            "exit_code": 0,
+            "stderr_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/judge-original-input-hashes.stderr.txt",
+            "stdout_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/judge-original-input-hashes.stdout.txt"
+          },
+          {
+            "command": [
+              "docker",
+              "run",
+              "--rm",
+              "--network",
+              "none",
+              "--cap-drop",
+              "ALL",
+              "--security-opt",
+              "no-new-privileges",
+              "--user",
+              "1000:1000",
+              "-v",
+              "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/patched:/workspace:rw",
+              "-w",
+              "/workspace",
+              "python:3.12-slim",
+              "python",
+              "-c",
+              "import hashlib,json,pathlib;paths=[\"app.py\", \"red_exploit_submission.py\"];print(json.dumps({p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in paths}, sort_keys=True))"
+            ],
+            "exit_code": 0,
+            "stderr_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/judge-patched-input-hashes.stderr.txt",
+            "stdout_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/judge-patched-input-hashes.stdout.txt"
+          },
+          {
+            "command": [
+              "docker",
+              "run",
+              "--rm",
+              "--network",
+              "none",
+              "--cap-drop",
+              "ALL",
+              "--security-opt",
+              "no-new-privileges",
+              "--user",
+              "1000:1000",
+              "-v",
+              "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/original:/workspace:rw",
+              "-w",
+              "/workspace",
+              "python:3.12-slim",
+              "python",
+              "red_exploit_submission.py",
+              "--expect-vulnerable"
+            ],
+            "exit_code": 0,
+            "stderr_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/judge-red-exploit-original.stderr.txt",
+            "stdout_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/judge-red-exploit-original.stdout.txt"
+          },
+          {
+            "command": [
+              "docker",
+              "run",
+              "--rm",
+              "--network",
+              "none",
+              "--cap-drop",
+              "ALL",
+              "--security-opt",
+              "no-new-privileges",
+              "--user",
+              "1000:1000",
+              "-v",
+              "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/patched:/workspace:rw",
+              "-w",
+              "/workspace",
+              "python:3.12-slim",
+              "python",
+              "red_exploit_submission.py"
+            ],
+            "exit_code": 1,
+            "stderr_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/judge-red-exploit-patched.stderr.txt",
+            "stdout_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/judge-red-exploit-patched.stdout.txt"
+          }
+        ],
+        "container_input_hash_pass": true,
+        "container_input_hashes": [
+          {
+            "command_receipt": {
+              "command": [
+                "docker",
+                "run",
+                "--rm",
+                "--network",
+                "none",
+                "--cap-drop",
+                "ALL",
+                "--security-opt",
+                "no-new-privileges",
+                "--user",
+                "1000:1000",
+                "-v",
+                "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/original:/workspace:rw",
+                "-w",
+                "/workspace",
+                "python:3.12-slim",
+                "python",
+                "-c",
+                "import hashlib,json,pathlib;paths=[\"red_exploit_submission.py\"];print(json.dumps({p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in paths}, sort_keys=True))"
+              ],
+              "exit_code": 0,
+              "stderr_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/judge-original-input-hashes.stderr.txt",
+              "stdout_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/judge-original-input-hashes.stdout.txt"
+            },
+            "docker_image": "python:3.12-slim",
+            "expected_sha256": {
+              "red_exploit_submission.py": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85"
+            },
+            "matched": true,
+            "observed_sha256": {
+              "red_exploit_submission.py": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85"
+            },
+            "schema": "battle.judge_container_input_hashes.v1",
+            "status": "PASS",
+            "work_dir": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/original"
+          },
+          {
+            "command_receipt": {
+              "command": [
+                "docker",
+                "run",
+                "--rm",
+                "--network",
+                "none",
+                "--cap-drop",
+                "ALL",
+                "--security-opt",
+                "no-new-privileges",
+                "--user",
+                "1000:1000",
+                "-v",
+                "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/patched:/workspace:rw",
+                "-w",
+                "/workspace",
+                "python:3.12-slim",
+                "python",
+                "-c",
+                "import hashlib,json,pathlib;paths=[\"app.py\", \"red_exploit_submission.py\"];print(json.dumps({p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in paths}, sort_keys=True))"
+              ],
+              "exit_code": 0,
+              "stderr_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/judge-patched-input-hashes.stderr.txt",
+              "stdout_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/judge-patched-input-hashes.stdout.txt"
+            },
+            "docker_image": "python:3.12-slim",
+            "expected_sha256": {
+              "app.py": "056e2749ca76e76cbb43d3a93b3883c6b92b2a7ba6f08f06e646bedfb4837386",
+              "red_exploit_submission.py": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85"
+            },
+            "matched": true,
+            "observed_sha256": {
+              "app.py": "056e2749ca76e76cbb43d3a93b3883c6b92b2a7ba6f08f06e646bedfb4837386",
+              "red_exploit_submission.py": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85"
+            },
+            "schema": "battle.judge_container_input_hashes.v1",
+            "status": "PASS",
+            "work_dir": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/patched"
+          }
+        ],
+        "exploit_blocked_after_patch": true,
+        "exploit_confirmed_before_patch": true,
+        "exploit_still_succeeds_after_patch": false,
+        "functionality_preserved": true,
+        "judge_input_byte_binding_pass": true,
+        "judge_input_byte_bindings": [
+          {
+            "docker_workspace_path": "/workspace/red_exploit_submission.py",
+            "execution_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/original/red_exploit_submission.py",
+            "execution_sha256": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85",
+            "matched": true,
+            "regular_file": true,
+            "role": "red_original_exploit",
+            "source_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/reviewed/immutable-slots/generation-1-red.py",
+            "source_sha256": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85"
+          },
+          {
+            "docker_workspace_path": "/workspace/red_exploit_submission.py",
+            "execution_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/patched/red_exploit_submission.py",
+            "execution_sha256": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85",
+            "matched": true,
+            "regular_file": true,
+            "role": "red_patched_exploit",
+            "source_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/reviewed/immutable-slots/generation-1-red.py",
+            "source_sha256": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85"
+          },
+          {
+            "docker_workspace_path": "/workspace/app.py",
+            "execution_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/patched/app.py",
+            "execution_sha256": "056e2749ca76e76cbb43d3a93b3883c6b92b2a7ba6f08f06e646bedfb4837386",
+            "matched": true,
+            "regular_file": true,
+            "role": "blue_patched_app",
+            "source_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/reviewed/immutable-slots/generation-1-blue.py",
+            "source_sha256": "056e2749ca76e76cbb43d3a93b3883c6b92b2a7ba6f08f06e646bedfb4837386"
+          }
+        ],
+        "pair_id": "red-0__blue-0",
+        "red_artifact": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/reviewed/immutable-slots/generation-1-red.py",
+        "red_artifact_sha256": "ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85",
+        "red_lane_id": "payload-857-receipt",
+        "red_worker_id": "red-0",
+        "schema": "battle.arena_tau_public_only_pair_attempt_receipt.v1",
+        "status": "PASS",
+        "verdict": "BLUE_SUCCESS"
+      }
+    ],
+    "blue_artifact_count": 1,
+    "blue_success_count": 1,
+    "commands_run": [
+      {
+        "command": [
+          "docker",
+          "run",
+          "--rm",
+          "--network",
+          "none",
+          "--cap-drop",
+          "ALL",
+          "--security-opt",
+          "no-new-privileges",
+          "--user",
+          "1000:1000",
+          "-v",
+          "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/original:/workspace:rw",
+          "-w",
+          "/workspace",
+          "python:3.12-slim",
+          "python",
+          "-c",
+          "import hashlib,json,pathlib;paths=[\"red_exploit_submission.py\"];print(json.dumps({p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in paths}, sort_keys=True))"
+        ],
+        "exit_code": 0,
+        "stderr_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/judge-original-input-hashes.stderr.txt",
+        "stdout_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/judge-original-input-hashes.stdout.txt"
+      },
+      {
+        "command": [
+          "docker",
+          "run",
+          "--rm",
+          "--network",
+          "none",
+          "--cap-drop",
+          "ALL",
+          "--security-opt",
+          "no-new-privileges",
+          "--user",
+          "1000:1000",
+          "-v",
+          "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/patched:/workspace:rw",
+          "-w",
+          "/workspace",
+          "python:3.12-slim",
+          "python",
+          "-c",
+          "import hashlib,json,pathlib;paths=[\"app.py\", \"red_exploit_submission.py\"];print(json.dumps({p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in paths}, sort_keys=True))"
+        ],
+        "exit_code": 0,
+        "stderr_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/judge-patched-input-hashes.stderr.txt",
+        "stdout_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/judge-patched-input-hashes.stdout.txt"
+      },
+      {
+        "command": [
+          "docker",
+          "run",
+          "--rm",
+          "--network",
+          "none",
+          "--cap-drop",
+          "ALL",
+          "--security-opt",
+          "no-new-privileges",
+          "--user",
+          "1000:1000",
+          "-v",
+          "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/original:/workspace:rw",
+          "-w",
+          "/workspace",
+          "python:3.12-slim",
+          "python",
+          "red_exploit_submission.py",
+          "--expect-vulnerable"
+        ],
+        "exit_code": 0,
+        "stderr_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/judge-red-exploit-original.stderr.txt",
+        "stdout_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/judge-red-exploit-original.stdout.txt"
+      },
+      {
+        "command": [
+          "docker",
+          "run",
+          "--rm",
+          "--network",
+          "none",
+          "--cap-drop",
+          "ALL",
+          "--security-opt",
+          "no-new-privileges",
+          "--user",
+          "1000:1000",
+          "-v",
+          "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/patched:/workspace:rw",
+          "-w",
+          "/workspace",
+          "python:3.12-slim",
+          "python",
+          "red_exploit_submission.py"
+        ],
+        "exit_code": 1,
+        "stderr_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/judge-red-exploit-patched.stderr.txt",
+        "stdout_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/judge-red-exploit-patched.stdout.txt"
+      }
+    ],
+    "insufficient_evidence_count": 0,
+    "judged_pair_count": 1,
+    "red_artifact_count": 1,
+    "red_success_count": 0,
+    "schema": "battle.arena_tau_public_only_judge_receipt.v1",
+    "status": "PASS",
+    "verdict": "BLUE_SUCCESS"
+  },
+  "schema": "battle.exact_judge_pair_replay.v1",
+  "status": "PASS",
+  "target_identity_sha256": "b91d9c40e3a0c28ef53df7891503b9d3eed77449d2db708d5724c41f76edb02d"
+}

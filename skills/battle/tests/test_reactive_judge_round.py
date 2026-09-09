@@ -12,9 +12,12 @@ import pytest
 from battle_skill.reactive_judge_round import (
     EventLedger,
     PhaseTransitionError,
+    build_judge2_receipt,
     classify_judge2_outcome,
+    object_sha256,
     run_reactive_judge_round,
     score_from_judges,
+    target_hash_manifest,
 )
 
 
@@ -72,6 +75,30 @@ def test_judge2_outcome_matrix_distinguishes_security_and_functionality() -> Non
         actual_target_hash="a",
         replay_error=True,
     ).verdict == "REPLAY_ERROR"
+
+
+def test_build_judge2_receipt_detects_target_hash_mismatch(tmp_path: Path) -> None:
+    workspace = tmp_path / "judge2"
+    workspace.mkdir()
+    (workspace / "service.py").write_text("safe\n", encoding="utf-8")
+    (workspace / "artifacts").mkdir()
+    (workspace / "artifacts" / "runtime-marker.txt").write_text("ignored\n", encoding="utf-8")
+    expected_hash = object_sha256(target_hash_manifest(workspace))
+
+    (workspace / "service.py").write_text("tampered\n", encoding="utf-8")
+    receipt = build_judge2_receipt(
+        battle_id="test",
+        patched_workspace=workspace,
+        baseline_hash="baseline",
+        patch_receipt={"status": "PASS"},
+        exploit_command={"exit_code": 1},
+        functionality_command={"exit_code": 0},
+        expected_target_hash=expected_hash,
+    )
+
+    assert receipt["verdict"] == "HASH_MISMATCH"
+    assert receipt["expected_target_sha256"] == expected_hash
+    assert receipt["actual_target_sha256"] != expected_hash
 
 
 def test_scorekeeper_ignores_blue_advisory_fields() -> None:

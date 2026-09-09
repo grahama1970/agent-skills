@@ -1,14 +1,14 @@
 {
-  "arena_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/arena-receipt.json",
-  "arena_receipt_sha256": "b092db8d61cd64cd2b6461913035e4809b4e25a766d6029120f851e1203e7f4d",
-  "blue_team_activity_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/blue-team-activity-receipt.json",
-  "blue_team_activity_receipt_sha256": "e27a50e16872d3734c7a7675b58d96d5b7cd46ca73efd56fd4c711b2ac76351c",
+  "arena_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/arena-receipt.json",
+  "arena_receipt_sha256": "a090198aab914b8bde013197ab62b499407ed441a4c1a15cc1d2ae69f27892c0",
+  "blue_team_activity_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/blue-team-activity-receipt.json",
+  "blue_team_activity_receipt_sha256": "a95de74efaf93fb7e363e4ccd881492ca3c05b1880383fca81bdd65093544fac",
   "commentary_lines": [
     {
       "period": "arena_open",
       "source_activity_indices": {},
       "source_receipts": [
-        "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/arena-receipt.json"
+        "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/arena-receipt.json"
       ],
       "speaker_line": "Welcome to arena-zip-slip-import-001: equal public terrain, hidden Judge authority, and Zip Slip archive path traversal against import-zip handling. on the marquee."
     },
@@ -20,9 +20,9 @@
         ]
       },
       "source_receipts": [
-        "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/red-team-activity-receipt.json"
+        "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/red-team-activity-receipt.json"
       ],
-      "speaker_line": "RED takes the monster lane in generation 1: artifact 094a192188fe2719a9f541a4cab75b1a73d8bf73efe321d3fdd4811081612ad8 hits the arena under Judge call BLUE_SUCCESS."
+      "speaker_line": "RED takes the monster lane in generation 1: artifact ff21c6a4d141ef551fe0cbbe7ae1791d2d12f955c2efba65e7ee414c89748b85 hits the arena under Judge call BLUE_SUCCESS."
     },
     {
       "period": "generation_2",
@@ -32,9 +32,9 @@
         ]
       },
       "source_receipts": [
-        "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/red-team-activity-receipt.json"
+        "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/red-team-activity-receipt.json"
       ],
-      "speaker_line": "RED takes the monster lane in generation 2: artifact 17c12a210f00b8b3f4aa0ef9b5b9b1d1209e25bb3839b72ba15135e2cadfa5e6 hits the arena under Judge call BLUE_SUCCESS."
+      "speaker_line": "RED takes the monster lane in generation 2: artifact 923c16f51895c422193ec2b955c754fb5b7ee87150741dba562e9ca78a5e4a85 hits the arena under Judge call BLUE_SUCCESS."
     },
     {
       "period": "generation_1",
@@ -44,9 +44,9 @@
         ]
       },
       "source_receipts": [
-        "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/blue-team-activity-receipt.json"
+        "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/blue-team-activity-receipt.json"
       ],
-      "speaker_line": "BLUE answers with the shield wall in generation 1: artifact 876f61c94cefb9cd33f070d2980dd3899d910b696d2e4389f8c48dfb6a92bcd8 stays bound to Judge call BLUE_SUCCESS."
+      "speaker_line": "BLUE answers with the shield wall in generation 1: artifact 056e2749ca76e76cbb43d3a93b3883c6b92b2a7ba6f08f06e646bedfb4837386 stays bound to Judge call BLUE_SUCCESS."
     },
     {
       "period": "generation_2",
@@ -56,9 +56,9 @@
         ]
       },
       "source_receipts": [
-        "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/blue-team-activity-receipt.json"
+        "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/blue-team-activity-receipt.json"
       ],
-      "speaker_line": "BLUE answers with the shield wall in generation 2: artifact db49bea212c21cdd3db8b7975a85fb232fc9629a7f101371f47ee79e588cc304 stays bound to Judge call BLUE_SUCCESS."
+      "speaker_line": "BLUE answers with the shield wall in generation 2: artifact 94393268a77e42eb805e2fc89d808bc7fdd0c1a9f92a08dc495a83b7e0d51616 stays bound to Judge call BLUE_SUCCESS."
     },
     {
       "period": "selection",
@@ -68,9 +68,9 @@
         ]
       },
       "source_receipts": [
-        "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/red-team-activity-receipt.json"
+        "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/red-team-activity-receipt.json"
       ],
-      "speaker_line": "RED selection whistle: GENERATION_2_SELECTED, generation 2 promoted by receipt."
+      "speaker_line": "RED selection whistle: GENERATION_2_SELECTED; generation 2 child promoted by receipt."
     },
     {
       "period": "selection",
@@ -80,13 +80,13 @@
         ]
       },
       "source_receipts": [
-        "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/blue-team-activity-receipt.json"
+        "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/blue-team-activity-receipt.json"
       ],
-      "speaker_line": "BLUE selection whistle: GENERATION_2_SELECTED, generation 2 promoted by receipt."
+      "speaker_line": "BLUE selection whistle: GENERATION_2_SELECTED; generation 2 child promoted by receipt."
     }
   ],
-  "red_team_activity_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/red-team-activity-receipt.json",
-  "red_team_activity_receipt_sha256": "0c8b2c2dde81b1f9a5062ae9a9a9951ab6eccb43fced953ddbf775c8c58ced3e",
+  "red_team_activity_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/red-team-activity-receipt.json",
+  "red_team_activity_receipt_sha256": "f9a43ea9d703590cce2d04f391b84e467b73637c55d63d265aaf68008c8c7af4",
   "schema": "battle.sports_play_by_play_commentary_receipt.v1",
   "status": "PASS"
 }

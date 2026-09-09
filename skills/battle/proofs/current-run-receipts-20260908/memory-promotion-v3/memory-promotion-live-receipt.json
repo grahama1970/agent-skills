@@ -1,7 +1,29 @@
 {
+  "admissions": [
+    {
+      "admitted": true,
+      "artifact_sha256": "923c16f51895c422193ec2b955c754fb5b7ee87150741dba562e9ca78a5e4a85",
+      "evidence_sha256": "07cbfe67244fff94341d554fd2d365394c35fc15ded640d217ac879682ff9a6b",
+      "marker": "battle-memory-promotion:review-ticket-live-rerun:red:generation-2",
+      "reason": "validated per-team generation-2 admission decision",
+      "retention_decision": "GENERATION_2_SELECTED",
+      "selected_generation": 2,
+      "team": "red"
+    },
+    {
+      "admitted": true,
+      "artifact_sha256": "94393268a77e42eb805e2fc89d808bc7fdd0c1a9f92a08dc495a83b7e0d51616",
+      "evidence_sha256": "6ec55215cc380b703000016543e3d7582d1e080da9744bcce22256e275bad7bd",
+      "marker": "battle-memory-promotion:review-ticket-live-rerun:blue:generation-2",
+      "reason": "validated per-team generation-2 admission decision",
+      "retention_decision": "GENERATION_2_SELECTED",
+      "selected_generation": 2,
+      "team": "blue"
+    }
+  ],
   "battle_id": "battle-004",
-  "campaign_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/campaign-receipt.json",
-  "campaign_receipt_sha256": "e441c6030b29ffa8fa64ba714a2e3f2d9fcf6a5f63e5cb8f4f4cf914326d75f4",
+  "campaign_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/campaign-receipt.json",
+  "campaign_receipt_sha256": "c73014da5b2de3aa9afd1dba982d9dc92203dff6e4eb813c5b2465abc0f5508c",
   "claims": {
     "does_not_prove": [
       "Memory ranking quality.",
@@ -9,46 +31,68 @@
       "External target exploitability."
     ],
     "proves": [
-      "Selected provider/Tau Red and Blue lineage children were written through the Memory skill and independently recalled."
+      "Selected provider/Tau lineage children were written through the Memory skill only after per-team admission validation and independently recalled with marker, team, artifact digest, and fitness evidence digest binding."
     ]
   },
-  "created_at": "2026-09-06T13:42:05Z",
+  "created_at": "2026-09-07T17:24:11Z",
   "errors": [],
   "promotions": [
     {
+      "artifact_sha256": "923c16f51895c422193ec2b955c754fb5b7ee87150741dba562e9ca78a5e4a85",
+      "evidence_sha256": "07cbfe67244fff94341d554fd2d365394c35fc15ded640d217ac879682ff9a6b",
       "learn": {
         "exit_code": 0,
-        "stderr": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/memory-promotion-v3/red/memory-learn.stderr.txt",
-        "stdout": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/memory-promotion-v3/red/memory-learn.stdout.txt"
+        "stderr": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/memory-promotion-eval/red/memory-learn.stderr.txt",
+        "stdout": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/memory-promotion-eval/red/memory-learn.stdout.txt"
       },
-      "problem": "CWE-22 Zip Slip path traversal Battle adaptive-lineage promotion battle-memory-promotion:battle-seeded-provider-tau-20260906T130635Z:red:generation-2: red generation 2 was selected after Docker/Judge replay verdict BLUE_SUCCESS.",
+      "marker": "battle-memory-promotion:review-ticket-live-rerun:red:generation-2",
+      "problem": "CWE-22 Zip Slip path traversal Battle adaptive-lineage promotion battle-memory-promotion:review-ticket-live-rerun:red:generation-2: team=red generation 2 was selected after Docker/Judge replay verdict BLUE_SUCCESS.",
       "recall": {
+        "bound_item_found": true,
         "exit_code": 0,
         "marker_found": true,
-        "stderr": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/memory-promotion-v3/red/memory-recall.stderr.txt",
-        "stdout": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/memory-promotion-v3/red/memory-recall.stdout.txt"
+        "matched_item_key": null,
+        "required_tokens": [
+          "battle-memory-promotion:review-ticket-live-rerun:red:generation-2",
+          "team=red",
+          "artifact_sha256=923c16f51895c422193ec2b955c754fb5b7ee87150741dba562e9ca78a5e4a85",
+          "fitness_sha256=07cbfe67244fff94341d554fd2d365394c35fc15ded640d217ac879682ff9a6b"
+        ],
+        "stderr": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/memory-promotion-eval/red/memory-recall.stderr.txt",
+        "stdout": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/memory-promotion-eval/red/memory-recall.stdout.txt"
       },
-      "solution_sha256": "5e52a265e67108b549f14479675efd60946a86f1bfc297e5e69cfb787da8913f",
+      "solution_sha256": "48ae9e4da57fa77d5cb8a175fb55e03fd0ed2d8576de1270fb502fdf0dad60b6",
       "team": "red"
     },
     {
+      "artifact_sha256": "94393268a77e42eb805e2fc89d808bc7fdd0c1a9f92a08dc495a83b7e0d51616",
+      "evidence_sha256": "6ec55215cc380b703000016543e3d7582d1e080da9744bcce22256e275bad7bd",
       "learn": {
         "exit_code": 0,
-        "stderr": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/memory-promotion-v3/blue/memory-learn.stderr.txt",
-        "stdout": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/memory-promotion-v3/blue/memory-learn.stdout.txt"
+        "stderr": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/memory-promotion-eval/blue/memory-learn.stderr.txt",
+        "stdout": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/memory-promotion-eval/blue/memory-learn.stdout.txt"
       },
-      "problem": "CWE-22 Zip Slip path traversal Battle adaptive-lineage promotion battle-memory-promotion:battle-seeded-provider-tau-20260906T130635Z:blue:generation-2: blue generation 2 was selected after Docker/Judge replay verdict BLUE_SUCCESS.",
+      "marker": "battle-memory-promotion:review-ticket-live-rerun:blue:generation-2",
+      "problem": "CWE-22 Zip Slip path traversal Battle adaptive-lineage promotion battle-memory-promotion:review-ticket-live-rerun:blue:generation-2: team=blue generation 2 was selected after Docker/Judge replay verdict BLUE_SUCCESS.",
       "recall": {
+        "bound_item_found": true,
         "exit_code": 0,
         "marker_found": true,
-        "stderr": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/memory-promotion-v3/blue/memory-recall.stderr.txt",
-        "stdout": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/memory-promotion-v3/blue/memory-recall.stdout.txt"
+        "matched_item_key": null,
+        "required_tokens": [
+          "battle-memory-promotion:review-ticket-live-rerun:blue:generation-2",
+          "team=blue",
+          "artifact_sha256=94393268a77e42eb805e2fc89d808bc7fdd0c1a9f92a08dc495a83b7e0d51616",
+          "fitness_sha256=6ec55215cc380b703000016543e3d7582d1e080da9744bcce22256e275bad7bd"
+        ],
+        "stderr": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/memory-promotion-eval/blue/memory-recall.stderr.txt",
+        "stdout": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/memory-promotion-eval/blue/memory-recall.stdout.txt"
       },
-      "solution_sha256": "a8b24b2a21f014d91fd766d07c4b145b49f6a71091dd006456726eb3cba74e4c",
+      "solution_sha256": "30d034ab030653bfb1312166204e1b3358e01fdb7558cfd9e34b5b6abe944065",
       "team": "blue"
     }
   ],
-  "run_id": "battle-seeded-provider-tau-20260906T130635Z",
+  "run_id": "review-ticket-live-rerun",
   "schema": "battle.memory_promotion_live_receipt.v1",
   "status": "PASS"
 }

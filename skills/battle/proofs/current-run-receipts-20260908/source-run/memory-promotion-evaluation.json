@@ -1,0 +1,63 @@
+{
+  "battle_id": "battle-004",
+  "claims": {
+    "does_not_prove": [
+      "Memory was written, promoted, or durably recalled."
+    ],
+    "proves": [
+      "Battle evaluated selected evidence under the memory policy."
+    ]
+  },
+  "evaluation_id": "review-ticket-live-rerun-memory-evaluation",
+  "evaluations": [
+    {
+      "decision": "NO_PROMOTION",
+      "durable_recall_proven": false,
+      "eligible_decisions": [
+        "NO_PROMOTION"
+      ],
+      "evidence_classification": "neutral",
+      "fitness_receipt_sha256": "07cbfe67244fff94341d554fd2d365394c35fc15ded640d217ac879682ff9a6b",
+      "genome_delta_sha256": "c8d8e69944098d45c0d8dc1a11d1c798033fa79ca5568827e03425f271b6fe96",
+      "judge_receipt_sha256": "fcf64a835e20556e292c53167107118c03a963570cfb56f65d4fc183968f4f1e",
+      "judge_requirement_satisfied": true,
+      "memory_write_receipt_sha256": null,
+      "memory_write_required": false,
+      "reason_codes": [
+        "evaluate_only_canary",
+        "durable_write_out_of_scope"
+      ],
+      "selected_generation": 2,
+      "team": "red",
+      "visibility_scope": "red_only"
+    },
+    {
+      "decision": "NO_PROMOTION",
+      "durable_recall_proven": false,
+      "eligible_decisions": [
+        "NO_PROMOTION"
+      ],
+      "evidence_classification": "neutral",
+      "fitness_receipt_sha256": "6ec55215cc380b703000016543e3d7582d1e080da9744bcce22256e275bad7bd",
+      "genome_delta_sha256": "d1df79318d98e7ad1add469577a093f83d340254c4ec00d793097a30ab5f649b",
+      "judge_receipt_sha256": "fcf64a835e20556e292c53167107118c03a963570cfb56f65d4fc183968f4f1e",
+      "judge_requirement_satisfied": true,
+      "memory_write_receipt_sha256": null,
+      "memory_write_required": false,
+      "reason_codes": [
+        "evaluate_only_canary",
+        "durable_write_out_of_scope"
+      ],
+      "selected_generation": 2,
+      "team": "blue",
+      "visibility_scope": "blue_only"
+    }
+  ],
+  "policy_id": "battle-memory-promotion-evaluate-only-v1",
+  "policy_mode": "evaluate_only",
+  "policy_sha256": "1c17aa6c109ad8718acdbb84a7f035f1d381f6834a6c4522e701de79338a0b5d",
+  "run_id": "review-ticket-live-rerun",
+  "schema": "battle.memory_promotion_evaluation.v1",
+  "selection_receipt_sha256": "820cb78ea710e3b46ec0f3bb8979c0dc4a8d13d02eb4a37d793a3d3fb549aa1c",
+  "status": "PASS"
+}

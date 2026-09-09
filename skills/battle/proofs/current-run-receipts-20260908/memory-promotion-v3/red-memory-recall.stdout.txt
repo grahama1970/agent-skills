@@ -1,0 +1,170 @@
+{
+  "found": true,
+  "should_scan": false,
+  "confidence": 0.667,
+  "items": [
+    {
+      "problem": "CWE-22 Zip Slip path traversal Battle adaptive-lineage promotion battle-memory-promotion:review-ticket-live-rerun:red:generation-2: team=red generation 2 was selected after Docker/Judge replay verdict",
+      "solution": "Use this red lineage as same-team Exploit/Harden/Detect evidence only: team=red; artifact_sha256=923c16f51895c422193ec2b955c754fb5b7ee87150741dba562e9ca78a5e4a85; genome_delta_sha256=c8d8e69944098d45c0d8dc1a11d1c798033fa79ca5568827e03425f271b6fe96; semantic_change_count=25; fitness_sha256=07cbfe67244fff94341d554fd2d365394c35fc15ded640d217ac879682ff9a6b; research_sha256=b9455e86eab7d31f2016d4a0b158dab6d478e3e52e1e715a72cbb1290aaa20b4; seed_sha256s=['06c27a77608d2aa9a4d8b46c7b7419404026cb7512270dc",
+      "score": 0.667,
+      "tags": [
+        "battle",
+        "adaptive-lineage",
+        "red",
+        "project-agent"
+      ]
+    },
+    {
+      "problem": "CWE-22 Zip Slip path traversal Battle adaptive-lineage promotion battle-memory-promotion:review-ticket-live-rerun:red:generation-2: team=red generation 2 was selected after Docker/Judge replay verdict",
+      "solution": "Use this red lineage as same-team Exploit/Harden/Detect evidence only: team=red; artifact_sha256=78cd6fe201656dac320d70e0646bdad34fa30ab1fd8ad2d6535435409cb526f1; genome_delta_sha256=67df3703745ef6b5c4b135e1454399223a9654742251aa6ced180b5272c94773; semantic_change_count=25; fitness_sha256=d63f7a76897175803a38fddace7fc3c6570af43d2ee7a4cc8d2db1d4b0efe9bc; research_sha256=7e188e52468211a5df50782364b56afda19bf3d90c2943b3ee7eb4bbd3ce5404; seed_sha256s=['06c27a77608d2aa9a4d8b46c7b7419404026cb7512270dc",
+      "score": 1.0,
+      "tags": [
+        "battle",
+        "adaptive-lineage",
+        "red",
+        "project-agent"
+      ]
+    },
+    {
+      "problem": "CWE-22 Zip Slip path traversal Battle adaptive-lineage promotion battle-memory-promotion:review-ticket-live-rerun:red:generation-2: team=red generation 2 was selected after Docker/Judge replay verdict",
+      "solution": "Use this red lineage as same-team Exploit/Harden/Detect evidence only: team=red; artifact_sha256=923c16f51895c422193ec2b955c754fb5b7ee87150741dba562e9ca78a5e4a85; genome_delta_sha256=c8d8e69944098d45c0d8dc1a11d1c798033fa79ca5568827e03425f271b6fe96; semantic_change_count=25; fitness_sha256=07cbfe67244fff94341d554fd2d365394c35fc15ded640d217ac879682ff9a6b; research_sha256=b9455e86eab7d31f2016d4a0b158dab6d478e3e52e1e715a72cbb1290aaa20b4; seed_sha256s=['06c27a77608d2aa9a4d8b46c7b7419404026cb7512270dc",
+      "score": 0.559,
+      "tags": [
+        "battle",
+        "adaptive-lineage",
+        "red",
+        "project-agent"
+      ]
+    }
+  ],
+  "meta": {
+    "q": "battle-memory-promotion:review-ticket-live-rerun:red:generation-2 team=red artifact_sha256=923c16f51895c422193ec2b955c754fb5b7ee87150741dba562e9ca78a5e4a85 fitness_sha256=07cbfe67244fff94341d554fd2d365394c35fc15ded640d217ac879682ff9a6b",
+    "scope": "battle",
+    "k": 3,
+    "used_dense": true,
+    "used_reranker": false,
+    "took_ms": 332,
+    "threshold": 0.3,
+    "recall_envelope": {
+      "schema": "memory.recall_envelope.v1",
+      "q": "battle-memory-promotion:review-ticket-live-rerun:red:generation-2 team=red artifact_sha256=923c16f51895c422193ec2b955c754fb5b7ee87150741dba562e9ca78a5e4a85 fitness_sha256=07cbfe67244fff94341d554fd2d365394c35fc15ded640d217ac879682ff9a6b",
+      "scope": "battle",
+      "k": 3,
+      "limit": 3,
+      "threshold": 0.3,
+      "collections": null,
+      "tags": [],
+      "recall_profile": null,
+      "recall_profile_source": null,
+      "profile_hash": null,
+      "profile_version": null,
+      "required_artifacts": [],
+      "selector": null,
+      "selector_lifecycle_mode": null,
+      "include_retired": false,
+      "used_dense": true,
+      "used_reranker": false,
+      "took_ms": 332,
+      "scan_decision": {
+        "found": true,
+        "should_scan": false,
+        "confidence": 0.667,
+        "threshold": 0.3,
+        "item_count": 3
+      }
+    },
+    "memory_first": true,
+    "runtime_pressure": {
+      "level": "normal",
+      "active_workloads": [],
+      "slow_query_risk": false,
+      "recommended_action": "No active persisted runtime pressure detected.",
+      "checked_at": 1788801842,
+      "sources": []
+    },
+    "brief": true,
+    "sort": null,
+    "prefix": null
+  },
+  "errors": [],
+  "skill_chain": {
+    "collection": "skill_chains",
+    "_key": "chain_9db3f7c668782c63",
+    "task_type": "review",
+    "success_rate": 1,
+    "observations": 2,
+    "elegance": "efficient",
+    "score": 0.1,
+    "source": "skill_chains",
+    "provenance": {
+      "collection": "skill_chains",
+      "_id": "skill_chains/chain_9db3f7c668782c63",
+      "_key": "chain_9db3f7c668782c63",
+      "source": "skill_chains"
+    },
+    "traversal_path": [
+      {
+        "position": 0,
+        "node": "memory",
+        "node_type": "skill",
+        "collection": "skill_chains",
+        "chain_key": "chain_9db3f7c668782c63"
+      },
+      {
+        "position": 1,
+        "node": "agentic-evals",
+        "node_type": "skill",
+        "collection": "skill_chains",
+        "chain_key": "chain_9db3f7c668782c63"
+      },
+      {
+        "position": 2,
+        "node": "best-practices-github-ticket",
+        "node_type": "skill",
+        "collection": "skill_chains",
+        "chain_key": "chain_9db3f7c668782c63"
+      }
+    ],
+    "path": [
+      {
+        "position": 0,
+        "node": "memory",
+        "node_type": "skill",
+        "collection": "skill_chains",
+        "chain_key": "chain_9db3f7c668782c63"
+      },
+      {
+        "position": 1,
+        "node": "agentic-evals",
+        "node_type": "skill",
+        "collection": "skill_chains",
+        "chain_key": "chain_9db3f7c668782c63"
+      },
+      {
+        "position": 2,
+        "node": "best-practices-github-ticket",
+        "node_type": "skill",
+        "collection": "skill_chains",
+        "chain_key": "chain_9db3f7c668782c63"
+      }
+    ],
+    "hop_count": 2,
+    "hops": 2,
+    "skills": [
+      "memory",
+      "agentic-evals",
+      "best-practices-github-ticket"
+    ],
+    "problem": "Issue 147 proves repeated skill-chain writes are Arango/Qdrant idempotent.",
+    "solution": "Use canonical ordered skill and normalized task-type identity.",
+    "task_description": "issue147_skill_chain_idempotency review and validate deterministic idempotency",
+    "commit": "",
+    "files_changed": [],
+    "tags": [
+      "issue147_skill_chain_idempotency",
+      "skill-chain",
+      "idempotency"
+    ],
+    "scope": "memory"
+  }
+}

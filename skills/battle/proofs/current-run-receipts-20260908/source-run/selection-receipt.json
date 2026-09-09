@@ -13,9 +13,9 @@
   "improvement_dimensions": [],
   "policy_id": "battle-adaptive-selection-lexicographic-v1",
   "policy_sha256": "651bfd8663a953e11918dd1bf28f35830149febc19f1bf0793e4b22895fe91c4",
-  "run_id": "battle-seeded-provider-tau-20260906T130635Z",
+  "run_id": "review-ticket-live-rerun",
   "schema": "battle.adaptive_selection_receipt.v1",
-  "selection_id": "battle-seeded-provider-tau-20260906T130635Z-selection",
+  "selection_id": "review-ticket-live-rerun-selection",
   "status": "PASS",
   "teams": {
     "blue": {
@@ -36,8 +36,8 @@
           ]
         }
       ],
-      "generation_1_fitness_receipt_sha256": "b0a69c262e9bf4461915e005df41fa23ec513ac4616d0e159a8f233175cc45e6",
-      "generation_2_fitness_receipt_sha256": "0eb2cdfbee088147fe0fbe87670f5196cba082a9ebffe7aaaa0915739388a2d4",
+      "generation_1_fitness_receipt_sha256": "292961e687625ea23e50d07ea2e81b9d2bd3141549d75d4136df77073b3e44d0",
+      "generation_2_fitness_receipt_sha256": "6ec55215cc380b703000016543e3d7582d1e080da9744bcce22256e275bad7bd",
       "retention_decision": "GENERATION_2_SELECTED",
       "selected_generation": 2,
       "tie_break_reason": null
@@ -60,8 +60,8 @@
           ]
         }
       ],
-      "generation_1_fitness_receipt_sha256": "00d6786c5e94da5fd2b2f13600465ec996c671e8d2d26a96f09dece29ab0bcea",
-      "generation_2_fitness_receipt_sha256": "6bd9dbeb7ea57166c80b3402ceda240598ce23ef843922ed0fc7a4971d2cd9f2",
+      "generation_1_fitness_receipt_sha256": "85d7b9b1937e7bea339b64981c7ba2d3505ef9677bd05b5d31085244e348a241",
+      "generation_2_fitness_receipt_sha256": "07cbfe67244fff94341d554fd2d365394c35fc15ded640d217ac879682ff9a6b",
       "retention_decision": "GENERATION_2_SELECTED",
       "selected_generation": 2,
       "tie_break_reason": null

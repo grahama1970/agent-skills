@@ -1,9 +1,41 @@
-repo=/home/graham/workspace/experiments/agent-skills
-skill=skills/battle
-branch_target=main
-current_branch=main
-current_head=7c32f2310c9f932b9f0a2fd6735cdb40254379f9
-origin_main=79c748e9d78e98fce90b4eb918f091d3601644b2
-battle_commit=e114ce296b32a4b0972cc9fe384f43471a30d395
-battle_commit_in_origin_main=true
-battle_path_diff:
+repo: /home/graham/workspace/experiments/agent-skills
+branch: main
+head: 7c32f2310c9f932b9f0a2fd6735cdb40254379f9
+origin_main: 65cb0d4a0038cba2f475394a1be31a47bbfb6d23
+origin_contains_e114: yes
+origin_contains_e616: yes
+battle_status_porcelain:
+ M skills/battle/src/battle_skill/reactive_judge_round.py
+ M skills/battle/tests/test_reactive_judge_round.py
+?? skills/battle/proofs/current-run-receipts-20260908/authorization.json
+?? skills/battle/proofs/current-run-receipts-20260908/broadcast-pydantic-event/PROVIDER_TAU_LINEAGE_REPORT.md
+?? skills/battle/proofs/current-run-receipts-20260908/broadcast-pydantic-event/arena-receipt.json
+?? skills/battle/proofs/current-run-receipts-20260908/broadcast-pydantic-event/blue-team-activity-receipt.json
+?? skills/battle/proofs/current-run-receipts-20260908/broadcast-pydantic-event/provider-tau-event-ledger.jsonl
+?? skills/battle/proofs/current-run-receipts-20260908/broadcast-pydantic-event/provider-tau-lineage-broadcast-receipt.json
+?? skills/battle/proofs/current-run-receipts-20260908/broadcast-pydantic-event/red-team-activity-receipt.json
+?? skills/battle/proofs/current-run-receipts-20260908/broadcast-pydantic-event/sports-play-by-play-commentary-receipt.json
+?? skills/battle/proofs/current-run-receipts-20260908/current-status.json
+?? skills/battle/proofs/current-run-receipts-20260908/git-readback.txt
+?? skills/battle/proofs/current-run-receipts-20260908/memory-promotion-v3/blue-memory-recall.stdout.txt
+?? skills/battle/proofs/current-run-receipts-20260908/memory-promotion-v3/memory-promotion-live-receipt.json
+?? skills/battle/proofs/current-run-receipts-20260908/memory-promotion-v3/red-memory-recall.stdout.txt
+?? skills/battle/proofs/current-run-receipts-20260908/screenshots/fable-review-input.png
+?? skills/battle/proofs/current-run-receipts-20260908/screenshots/surf-battle-replay-live-ux.png
+?? skills/battle/proofs/current-run-receipts-20260908/source-run/adaptive-lineage-chain-receipt.json
+?? skills/battle/proofs/current-run-receipts-20260908/source-run/artifact-integrity-receipt.json
+?? skills/battle/proofs/current-run-receipts-20260908/source-run/authorization-validation.json
+?? skills/battle/proofs/current-run-receipts-20260908/source-run/campaign-receipt.json
+?? skills/battle/proofs/current-run-receipts-20260908/source-run/generation-1/judge-exact-replay/exact-replay-receipt.json
+?? skills/battle/proofs/current-run-receipts-20260908/source-run/generation-2/judge-exact-replay/exact-replay-receipt.json
+?? skills/battle/proofs/current-run-receipts-20260908/source-run/memory-promotion-evaluation.json
+?? skills/battle/proofs/current-run-receipts-20260908/source-run/selection-receipt.json
+?? skills/battle/proofs/current-run-receipts-20260908/source-run/source-receipt-index.json
+?? skills/battle/proofs/current-run-receipts-20260908/webgpt/best-effort-gaps-compact/browser-readable-prompt.md
+?? skills/battle/proofs/current-run-receipts-20260908/webgpt/best-effort-gaps-compact/response.md
+?? skills/battle/proofs/current-run-receipts-20260908/webgpt/best-effort-gaps-compact/response.meta.json
+?? skills/battle/proofs/current-run-receipts-20260908/webgpt/best-effort-gaps-compact/webgpt_transport_summary.json
+?? skills/battle/proofs/current-run-receipts-20260908/webgpt/postfix-closure/browser-readable-prompt.md
+?? skills/battle/proofs/current-run-receipts-20260908/webgpt/postfix-closure/response.md
+?? skills/battle/proofs/current-run-receipts-20260908/webgpt/postfix-closure/response.meta.json
+?? skills/battle/proofs/current-run-receipts-20260908/webgpt/postfix-closure/webgpt_transport_summary.json

@@ -1,10 +1,10 @@
 {
-  "arena_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/arena-receipt.json",
-  "arena_receipt_sha256": "b092db8d61cd64cd2b6461913035e4809b4e25a766d6029120f851e1203e7f4d",
-  "blue_team_activity_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/blue-team-activity-receipt.json",
-  "blue_team_activity_receipt_sha256": "e27a50e16872d3734c7a7675b58d96d5b7cd46ca73efd56fd4c711b2ac76351c",
-  "campaign_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/campaign-receipt.json",
-  "campaign_receipt_sha256": "e441c6030b29ffa8fa64ba714a2e3f2d9fcf6a5f63e5cb8f4f4cf914326d75f4",
+  "arena_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/arena-receipt.json",
+  "arena_receipt_sha256": "a090198aab914b8bde013197ab62b499407ed441a4c1a15cc1d2ae69f27892c0",
+  "blue_team_activity_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/blue-team-activity-receipt.json",
+  "blue_team_activity_receipt_sha256": "a95de74efaf93fb7e363e4ccd881492ca3c05b1880383fca81bdd65093544fac",
+  "campaign_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/campaign-receipt.json",
+  "campaign_receipt_sha256": "c73014da5b2de3aa9afd1dba982d9dc92203dff6e4eb813c5b2465abc0f5508c",
   "checks": [
     {
       "name": "campaign_live_provider_tau",
@@ -47,7 +47,14 @@
           "sha256": "945986e9eac8281740eb0bd2f734f0f5b8212a5f27312089a6c77f36f732232b"
         }
       ],
+      "errors": [],
       "name": "seed_hashes_cited_by_provider",
+      "provider_seed_citation_count": 4,
+      "provider_seed_citation_count_by_team": {
+        "blue": 2,
+        "red": 2
+      },
+      "required_seed_count": 2,
       "status": "PASS"
     },
     {
@@ -55,20 +62,44 @@
       "status": "PASS"
     },
     {
-      "artifact_integrity": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/artifact-integrity-receipt.json",
+      "artifact_integrity": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/artifact-integrity-receipt.json",
+      "errors": [],
+      "judge_replay_count": 2,
+      "matched_replay_count": 2,
+      "matched_slot_count": 4,
       "name": "docker_judge_replays_bound",
+      "required_replay_count": 2,
+      "required_slot_count": 4,
       "status": "PASS"
     },
     {
-      "name": "selection_promoted_children",
+      "child_promotion_canary": {
+        "both_generation_2_selected": true,
+        "gates_broadcast_validity": false
+      },
+      "errors": [],
+      "name": "selection_decisions_valid",
+      "outcomes": {
+        "blue": {
+          "outcome": "child_promoted",
+          "retention_decision": "GENERATION_2_SELECTED",
+          "selected_generation": 2
+        },
+        "red": {
+          "outcome": "child_promoted",
+          "retention_decision": "GENERATION_2_SELECTED",
+          "selected_generation": 2
+        }
+      },
       "status": "PASS"
     },
     {
-      "arena_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/arena-receipt.json",
-      "blue_team_activity_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/blue-team-activity-receipt.json",
+      "arena_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/arena-receipt.json",
+      "blue_team_activity_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/blue-team-activity-receipt.json",
+      "errors": [],
       "name": "pydantic_arena_team_commentary_receipts",
-      "red_team_activity_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/red-team-activity-receipt.json",
-      "sports_play_by_play_commentary_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/sports-play-by-play-commentary-receipt.json",
+      "red_team_activity_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/red-team-activity-receipt.json",
+      "sports_play_by_play_commentary_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/sports-play-by-play-commentary-receipt.json",
       "status": "PASS"
     }
   ],
@@ -84,13 +115,13 @@
       "Arena, Red activity, Blue activity, and sports play-by-play commentary are Pydantic-validated JSON receipts."
     ]
   },
-  "created_at": "2026-09-06T14:18:12Z",
-  "event_ledger": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/provider-tau-event-ledger.jsonl",
-  "event_ledger_sha256": "f2b21e8e6adf44e629d41af9d54b3360472c472ea568bbb28090ad4587837b1a",
-  "red_team_activity_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/red-team-activity-receipt.json",
-  "red_team_activity_receipt_sha256": "0c8b2c2dde81b1f9a5062ae9a9a9951ab6eccb43fced953ddbf775c8c58ced3e",
-  "report": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/PROVIDER_TAU_LINEAGE_REPORT.md",
-  "report_sha256": "57645c9088450bbd6392c235cb339f6e3aa5ca6b3fe5bc812ee00932793c3913",
+  "created_at": "2026-09-07T17:23:41Z",
+  "event_ledger": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/provider-tau-event-ledger.jsonl",
+  "event_ledger_sha256": "03102224bdac7aef5d7bae4613d13ef7cf3c83f319dd8c4fead31f10b17a9915",
+  "red_team_activity_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/red-team-activity-receipt.json",
+  "red_team_activity_receipt_sha256": "f9a43ea9d703590cce2d04f391b84e467b73637c55d63d265aaf68008c8c7af4",
+  "report": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/PROVIDER_TAU_LINEAGE_REPORT.md",
+  "report_sha256": "5de7668dfc09c2d7805e217af469379c838f106443878e1b4b9b0a0016cd3965",
   "schema": "battle.provider_tau_lineage_broadcast.v1",
   "seed_receipts": [
     {
@@ -245,7 +276,7 @@
       "sha256": "945986e9eac8281740eb0bd2f734f0f5b8212a5f27312089a6c77f36f732232b"
     }
   ],
-  "sports_play_by_play_commentary_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast-pydantic-event/sports-play-by-play-commentary-receipt.json",
-  "sports_play_by_play_commentary_receipt_sha256": "8c89a606caa987ebdd1e6ba534a6a29b27fc56b70895b0d7432060dce3b4375b",
+  "sports_play_by_play_commentary_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/sports-play-by-play-commentary-receipt.json",
+  "sports_play_by_play_commentary_receipt_sha256": "08211a9fcec83218d83aa35e4bab3b6d72c088acea2b770d181255dfd007a35a",
   "status": "PASS"
 }

@@ -156,6 +156,14 @@ def hash_manifest(root: Path) -> dict[str, str]:
     }
 
 
+def target_hash_manifest(root: Path) -> dict[str, str]:
+    return {
+        str(path.relative_to(root)): file_sha256(path)
+        for path in sorted(root.rglob("*"))
+        if path.is_file() and "artifacts" not in path.relative_to(root).parts
+    }
+
+
 def run_docker_python(workspace: Path, script: str, *, name: str, out_dir: Path) -> dict[str, Any]:
     """Run one fixture command inside a local networkless Docker container."""
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -380,12 +388,14 @@ def build_judge2_receipt(
     patch_receipt: dict[str, Any],
     exploit_command: dict[str, Any],
     functionality_command: dict[str, Any],
+    expected_target_hash: str | None = None,
 ) -> dict[str, Any]:
-    actual_hash = object_sha256(hash_manifest(patched_workspace))
+    actual_hash = object_sha256(target_hash_manifest(patched_workspace))
+    expected_hash = expected_target_hash or actual_hash
     outcome = classify_judge2_outcome(
         exploit_exit_code=exploit_command["exit_code"],
         functionality_exit_code=functionality_command["exit_code"],
-        expected_target_hash=actual_hash,
+        expected_target_hash=expected_hash,
         actual_target_hash=actual_hash,
     )
     return {
@@ -396,6 +406,8 @@ def build_judge2_receipt(
         "status": outcome.status,
         "verdict": outcome.verdict,
         "baseline_sha256": baseline_hash,
+        "expected_target_sha256": expected_hash,
+        "actual_target_sha256": actual_hash,
         "patched_runtime_sha256": actual_hash,
         "patch_receipt_sha256": object_sha256(patch_receipt),
         "exploit_blocked_after_patch": outcome.exploit_blocked,
@@ -593,6 +605,7 @@ def run_reactive_judge_round(
     judge2_artifacts = judge2_ws / "artifacts"
     judge2_artifacts.mkdir(exist_ok=True)
     judge2_artifacts.chmod(0o777)
+    expected_judge2_target_hash = object_sha256(target_hash_manifest(judge2_ws))
     ledger.append("judge2_started", actor="judge")
     exploit_after_patch = run_docker_python(judge2_ws, "probe_exploit.py", name="judge2-exploit-replay", out_dir=judge2_dir)
     functionality = run_docker_python(judge2_ws, "functionality_check.py", name="judge2-functionality", out_dir=judge2_dir)
@@ -603,6 +616,7 @@ def run_reactive_judge_round(
         patch_receipt=patch_receipt,
         exploit_command=exploit_after_patch,
         functionality_command=functionality,
+        expected_target_hash=expected_judge2_target_hash,
     )
     judge2_path = write_json(judge2_dir / "judge-2-receipt.json", judge2)
     ledger.append("judge2_terminal", actor="judge", receipt=str(judge2_path))

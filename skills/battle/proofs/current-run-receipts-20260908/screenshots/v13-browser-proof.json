@@ -1,0 +1,556 @@
+{
+  "schema": "battle.adaptive_lineage_ui_proof.v1",
+  "pass": true,
+  "mocked": false,
+  "live": true,
+  "source_commit": "7c32f2310c9f932b9f0a2fd6735cdb40254379f9",
+  "host": "http://127.0.0.1:3003",
+  "route": "http://127.0.0.1:3003/#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-v13&pixiTest=1&reducedMotion=1&particles=0",
+  "fixture": {
+    "event_count": 26,
+    "lane_count": 4,
+    "lineage_edge_count": 2
+  },
+  "source_receipts": {
+    "source_index": "skills/battle/local/battle-004-adaptive-lineage-v13/source-receipt-index.json",
+    "source_index_sha256": "c8c7fe136902d190397f574d25b112e62a1d8c242fb90a04647e87e5dc1545c9"
+  },
+  "checks": [
+    {
+      "id": "source-receipt-index-valid",
+      "pass": true,
+      "detail": {
+        "status": "PASS",
+        "schema": "battle.adaptive_lineage_source_receipt_index.v1",
+        "battle_id": "battle-004",
+        "run_id": "review-ticket-live-rerun",
+        "campaign_root_id": "source-run"
+      }
+    },
+    {
+      "id": "source-receipt-index-public-receipts",
+      "pass": true,
+      "detail": {
+        "receipts": 26,
+        "untypedReceipts": 1
+      }
+    },
+    {
+      "id": "fixture-http",
+      "pass": true,
+      "detail": {
+        "status": 200,
+        "schema": "battle.normalized_adaptive_lineage_fixture.v1"
+      }
+    },
+    {
+      "id": "source-index-fixture-run-match",
+      "pass": true,
+      "detail": {
+        "source_run_id": "review-ticket-live-rerun",
+        "fixture_run_id": "review-ticket-live-rerun",
+        "source_battle_id": "battle-004",
+        "fixture_battle_id": "battle-004"
+      }
+    },
+    {
+      "id": "fixture-causal-contract",
+      "pass": true,
+      "detail": {
+        "causal": true,
+        "events": 26,
+        "expectedEvents": 26,
+        "lanes": 4,
+        "expectedLanes": 4,
+        "edges": 2,
+        "expectedEdges": 2
+      }
+    },
+    {
+      "id": "fixture-shared-atlas",
+      "pass": true,
+      "detail": {
+        "proof_scope": "cosmetic_identity_only",
+        "schema": "battle.sprite_theme.v1",
+        "semantic_authority": false,
+        "shared_atlas": true,
+        "theme_id": "v13-shared-plague-nurgling",
+        "variants": {
+          "v13-shared-runner": {
+            "scale": 1,
+            "sprite_id": "plague_nurgling"
+          }
+        }
+      }
+    },
+    {
+      "id": "pre-spawn-parent-only",
+      "pass": true,
+      "detail": {
+        "laneIds": [
+          "red-g1",
+          "blue-g1"
+        ],
+        "animations": {
+          "red-g1": "run",
+          "blue-g1": "run"
+        }
+      }
+    },
+    {
+      "id": "authorized-four-lanes",
+      "pass": true,
+      "detail": [
+        "red-g1",
+        "red-g2",
+        "blue-g1",
+        "blue-g2"
+      ]
+    },
+    {
+      "id": "authorized-pending-not-active",
+      "pass": true,
+      "detail": {
+        "lineagePhases": {
+          "red-g2": "authorized_pending",
+          "blue-g2": "authorized_pending"
+        },
+        "animations": {
+          "red-g1": "run",
+          "red-g2": "idle",
+          "blue-g1": "run",
+          "blue-g2": "idle"
+        }
+      }
+    },
+    {
+      "id": "research-materializes-child",
+      "pass": true,
+      "detail": {
+        "lineagePhases": {
+          "red-g2": "descending",
+          "blue-g2": "descending"
+        },
+        "animations": {
+          "red-g1": "run",
+          "red-g2": "spawn",
+          "blue-g1": "run",
+          "blue-g2": "spawn"
+        }
+      }
+    },
+    {
+      "id": "children-active-research",
+      "pass": true,
+      "detail": {
+        "lineagePhases": {
+          "red-g2": "active",
+          "blue-g2": "active"
+        },
+        "animations": {
+          "red-g1": "run",
+          "red-g2": "research",
+          "blue-g1": "run",
+          "blue-g2": "research"
+        }
+      }
+    },
+    {
+      "id": "mutation-evidence-animation",
+      "pass": true,
+      "detail": {
+        "animations": {
+          "red-g1": "run",
+          "red-g2": "mutate",
+          "blue-g1": "run",
+          "blue-g2": "mutate"
+        }
+      }
+    },
+    {
+      "id": "no-terminal-overclaim",
+      "pass": true,
+      "detail": {
+        "red-g1": "run",
+        "red-g2": "mutate",
+        "blue-g1": "run",
+        "blue-g2": "mutate"
+      }
+    },
+    {
+      "id": "canvas-nonblank-dimensions",
+      "pass": true,
+      "detail": {
+        "width": 1030,
+        "height": 282,
+        "mountId": "6"
+      }
+    },
+    {
+      "id": "mobile-four-lane-state",
+      "pass": true,
+      "detail": {
+        "laneIds": [
+          "red-g1",
+          "red-g2",
+          "blue-g1",
+          "blue-g2"
+        ],
+        "canvas": {
+          "width": 1030,
+          "height": 282,
+          "mountId": "7"
+        },
+        "pageWidth": {
+          "client": 430,
+          "scroll": 430
+        },
+        "timelineScrollLeft": 924
+      }
+    },
+    {
+      "id": "mobile-outer-scroll-stable",
+      "pass": true,
+      "detail": {
+        "available": true,
+        "target": 851,
+        "actual": 851,
+        "sameCanvas": true,
+        "mountId": "7",
+        "nextMountId": "7",
+        "canvasWidth": 1030
+      }
+    },
+    {
+      "id": "mobile-pixi-no-remount",
+      "pass": true,
+      "detail": {
+        "available": true,
+        "target": 851,
+        "actual": 851,
+        "sameCanvas": true,
+        "mountId": "7",
+        "nextMountId": "7",
+        "canvasWidth": 1030
+      }
+    },
+    {
+      "id": "mobile-four-lane-canvas-pixel-occupancy",
+      "pass": true,
+      "detail": [
+        {
+          "laneId": "red-g1",
+          "x": 0,
+          "y": 0,
+          "width": 1030,
+          "height": 70,
+          "visiblePixels": 2400
+        },
+        {
+          "laneId": "red-g2",
+          "x": 0,
+          "y": 70,
+          "width": 1030,
+          "height": 70,
+          "visiblePixels": 2818
+        },
+        {
+          "laneId": "blue-g1",
+          "x": 0,
+          "y": 141,
+          "width": 1030,
+          "height": 70,
+          "visiblePixels": 1627
+        },
+        {
+          "laneId": "blue-g2",
+          "x": 0,
+          "y": 211,
+          "width": 1030,
+          "height": 70,
+          "visiblePixels": 1744
+        }
+      ]
+    },
+    {
+      "id": "continuous-replay-single-mount",
+      "pass": true,
+      "detail": {
+        "route": "http://127.0.0.1:3003/#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-v13&reducedMotion=1&particles=0",
+        "initial_mount_id": "8",
+        "final_mount_id": "8",
+        "observed_playhead_values": {
+          "zero": 0,
+          "played": 0.5529,
+          "pauseStart": 0.6029,
+          "pauseEnd": 0.6029,
+          "preSpawn": 53.25209183883496,
+          "pending": 55.78790573592233,
+          "descending": 63.15384134174758,
+          "research": 65.81040828155339,
+          "mutation": 124.375634,
+          "restarted": 0,
+          "finalState": 0
+        },
+        "pause_delta_seconds": 0,
+        "states": {
+          "zero": {
+            "playheadSeconds": 0,
+            "playheadLabel": "PLAYHEAD 00:00",
+            "laneIds": [
+              "blue-g1",
+              "red-g1"
+            ],
+            "lineagePhases": {},
+            "animations": {
+              "red-g1": "run",
+              "blue-g1": "run"
+            },
+            "mountId": "8",
+            "sameCanvas": true
+          },
+          "played": {
+            "playheadSeconds": 0.5529,
+            "playheadLabel": "PLAYHEAD 00:00",
+            "laneIds": [
+              "blue-g1",
+              "red-g1"
+            ],
+            "lineagePhases": {},
+            "animations": {
+              "red-g1": "run",
+              "blue-g1": "run"
+            },
+            "mountId": "8",
+            "sameCanvas": true
+          },
+          "pauseStart": {
+            "playheadSeconds": 0.6029,
+            "playheadLabel": "PLAYHEAD 00:00",
+            "laneIds": [
+              "blue-g1",
+              "red-g1"
+            ],
+            "lineagePhases": {},
+            "animations": {
+              "red-g1": "run",
+              "blue-g1": "run"
+            },
+            "mountId": "8",
+            "sameCanvas": true
+          },
+          "pauseEnd": {
+            "playheadSeconds": 0.6029,
+            "playheadLabel": "PLAYHEAD 00:00",
+            "laneIds": [
+              "blue-g1",
+              "red-g1"
+            ],
+            "lineagePhases": {},
+            "animations": {
+              "red-g1": "run",
+              "blue-g1": "run"
+            },
+            "mountId": "8",
+            "sameCanvas": true
+          },
+          "preSpawn": {
+            "playheadSeconds": 53.25209183883496,
+            "playheadLabel": "PLAYHEAD 00:53",
+            "laneIds": [
+              "blue-g1",
+              "red-g1"
+            ],
+            "lineagePhases": {},
+            "animations": {
+              "red-g1": "run",
+              "blue-g1": "run"
+            },
+            "mountId": "8",
+            "sameCanvas": true
+          },
+          "pending": {
+            "playheadSeconds": 55.78790573592233,
+            "playheadLabel": "PLAYHEAD 00:55",
+            "laneIds": [
+              "blue-g1",
+              "blue-g2",
+              "red-g1",
+              "red-g2"
+            ],
+            "lineagePhases": {
+              "red-g2": "authorized_pending",
+              "blue-g2": "authorized_pending"
+            },
+            "animations": {
+              "red-g1": "run",
+              "red-g2": "idle",
+              "blue-g1": "run",
+              "blue-g2": "idle"
+            },
+            "mountId": "8",
+            "sameCanvas": true
+          },
+          "descending": {
+            "playheadSeconds": 63.15384134174758,
+            "playheadLabel": "PLAYHEAD 01:03",
+            "laneIds": [
+              "blue-g1",
+              "blue-g2",
+              "red-g1",
+              "red-g2"
+            ],
+            "lineagePhases": {
+              "red-g2": "descending",
+              "blue-g2": "descending"
+            },
+            "animations": {
+              "red-g1": "run",
+              "red-g2": "spawn",
+              "blue-g1": "run",
+              "blue-g2": "spawn"
+            },
+            "mountId": "8",
+            "sameCanvas": true
+          },
+          "research": {
+            "playheadSeconds": 65.81040828155339,
+            "playheadLabel": "PLAYHEAD 01:05",
+            "laneIds": [
+              "blue-g1",
+              "blue-g2",
+              "red-g1",
+              "red-g2"
+            ],
+            "lineagePhases": {
+              "red-g2": "active",
+              "blue-g2": "active"
+            },
+            "animations": {
+              "red-g1": "run",
+              "red-g2": "research",
+              "blue-g1": "run",
+              "blue-g2": "research"
+            },
+            "mountId": "8",
+            "sameCanvas": true
+          },
+          "mutation": {
+            "playheadSeconds": 124.375634,
+            "playheadLabel": "PLAYHEAD 02:04",
+            "laneIds": [
+              "blue-g1",
+              "blue-g2",
+              "red-g1",
+              "red-g2"
+            ],
+            "lineagePhases": {
+              "red-g2": "active",
+              "blue-g2": "active"
+            },
+            "animations": {
+              "red-g1": "run",
+              "red-g2": "mutate",
+              "blue-g1": "run",
+              "blue-g2": "mutate"
+            },
+            "mountId": "8",
+            "sameCanvas": true
+          },
+          "restarted": {
+            "playheadSeconds": 0,
+            "playheadLabel": "PLAYHEAD 00:00",
+            "laneIds": [
+              "blue-g1",
+              "red-g1"
+            ],
+            "lineagePhases": {},
+            "animations": {
+              "red-g1": "run",
+              "blue-g1": "run"
+            },
+            "mountId": "8",
+            "sameCanvas": true
+          },
+          "finalState": {
+            "playheadSeconds": 0,
+            "playheadLabel": "PLAYHEAD 00:00",
+            "laneIds": [
+              "blue-g1",
+              "red-g1"
+            ],
+            "lineagePhases": {},
+            "animations": {
+              "red-g1": "run",
+              "blue-g1": "run"
+            },
+            "mountId": "8",
+            "sameCanvas": true
+          }
+        },
+        "same_canvas_node": true,
+        "mount_stable_at_every_step": true
+      }
+    },
+    {
+      "id": "plague-atlas-requested",
+      "pass": true,
+      "detail": [
+        {
+          "url": "http://127.0.0.1:3003/battle-sprites/pixijs/plague_nurgling.json?v=4",
+          "resource_type": "fetch",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:3003/battle-sprites/pixijs/plague_nurgling.png?v=4",
+          "resource_type": "fetch",
+          "method": "GET"
+        },
+        {
+          "url": "http://127.0.0.1:3003/battle-audio/score/v1/motifs/plague_nurgling.ogg",
+          "resource_type": "fetch",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "id": "no-raw-runtime-requests",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "id": "no-browser-errors",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "id": "local-public-fixture-byte-identical",
+      "pass": true,
+      "detail": {
+        "local": "08bfa71e84016cd6eeb30ec0272e2e86b47ea1e0e0e750de113917364b5c9867",
+        "public": "08bfa71e84016cd6eeb30ec0272e2e86b47ea1e0e0e750de113917364b5c9867"
+      }
+    }
+  ],
+  "failed": [],
+  "errors": [],
+  "screenshots": [
+    "screenshots/01-pre-spawn-children-hidden.png",
+    "screenshots/02-spawn-authorized-pending.png",
+    "screenshots/03-ladder-descent-hop.png",
+    "screenshots/04-children-active-research.png",
+    "screenshots/05-mutation-evidence.png",
+    "screenshots/06-judge-selection-memory-boundary.png",
+    "screenshots/07-four-lane-mobile.png",
+    "screenshots/08-four-lane-mobile-race.png",
+    "screenshots/09-continuous-replay-single-mount.png"
+  ],
+  "claims": {
+    "proves": [
+      "The V13 source receipt index is rendered through the public HTTP fixture with four visible Pixi runners, one-way outer-scroll camera control, and continuous Play/Pause/scrub/restart behavior on one stable Pixi mount."
+    ],
+    "does_not_prove": [
+      "Speaker output, final audio mix, exploit success, child improvement, durable memory reuse, or production readiness."
+    ]
+  }
+}

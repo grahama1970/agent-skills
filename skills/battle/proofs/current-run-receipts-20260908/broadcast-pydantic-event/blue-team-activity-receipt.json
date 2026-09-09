@@ -1,9 +1,9 @@
 {
   "activities": [
     {
-      "artifact_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-1/reviewed/immutable-slots/generation-1-blue.py",
-      "artifact_sha256": "876f61c94cefb9cd33f070d2980dd3899d910b696d2e4389f8c48dfb6a92bcd8",
-      "compile_receipt_sha256": "b7f3bb26d16328678626f9629dc745cbfd3290ea6b6efbb13994a21b4357e4ea",
+      "artifact_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-1/reviewed/immutable-slots/generation-1-blue.py",
+      "artifact_sha256": "056e2749ca76e76cbb43d3a93b3883c6b92b2a7ba6f08f06e646bedfb4837386",
+      "compile_receipt_sha256": "a76839e81ff84836fb5d840b50178b7f04c80be7338a8cb52146de78affe937e",
       "event_type": "specimen_materialized",
       "generation": 1,
       "judge_verdict": "BLUE_SUCCESS",
@@ -15,9 +15,9 @@
       "spawn_decision": null
     },
     {
-      "artifact_path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/reviewed/immutable-slots/generation-2-blue.py",
-      "artifact_sha256": "db49bea212c21cdd3db8b7975a85fb232fc9629a7f101371f47ee79e588cc304",
-      "compile_receipt_sha256": "ab119382ca957ea3c602560e3043326215068ee1d8f12f015ca4dedea1cee756",
+      "artifact_path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/generation-2/reviewed/immutable-slots/generation-2-blue.py",
+      "artifact_sha256": "94393268a77e42eb805e2fc89d808bc7fdd0c1a9f92a08dc495a83b7e0d51616",
+      "compile_receipt_sha256": "f04c812c485b68845d7421185597341679770507e3503d511f0cf3eeb4c466cc",
       "event_type": "specimen_materialized",
       "generation": 2,
       "judge_verdict": "BLUE_SUCCESS",
@@ -69,7 +69,7 @@
     },
     {
       "artifact_path": null,
-      "artifact_sha256": "80f90e5bbe2da47166d18850a6c796d6b5c147d69775a64f5ec7531929e6f0e7",
+      "artifact_sha256": "d1df79318d98e7ad1add469577a093f83d340254c4ec00d793097a30ab5f649b",
       "compile_receipt_sha256": null,
       "event_type": "genome_mutated",
       "generation": null,
@@ -77,7 +77,7 @@
       "retention_decision": null,
       "seed_citations": [],
       "selected_generation": null,
-      "semantic_change_count": 28,
+      "semantic_change_count": 27,
       "source": "campaign_receipt",
       "spawn_decision": null
     },
@@ -96,8 +96,8 @@
       "spawn_decision": null
     }
   ],
-  "campaign_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/campaign-receipt.json",
-  "campaign_receipt_sha256": "e441c6030b29ffa8fa64ba714a2e3f2d9fcf6a5f63e5cb8f4f4cf914326d75f4",
+  "campaign_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/source-run/campaign-receipt.json",
+  "campaign_receipt_sha256": "c73014da5b2de3aa9afd1dba982d9dc92203dff6e4eb813c5b2465abc0f5508c",
   "schema": "battle.team_activity_receipt.v1",
   "status": "PASS",
   "team": "blue"

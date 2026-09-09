@@ -3,16 +3,18 @@
 Repo: `/home/graham/workspace/experiments/agent-skills`
 Skill: `skills/battle`
 Branch target: `main`
+Canonical run: `review-ticket-live-rerun`
 
-This directory materializes the current Battle closure review evidence in the repo so WebGPT can inspect the same durable files as the local agent.
+This packet materializes the canonical Battle closure evidence used by the current V13 spectator fixture/source index.
 
 Contents:
-- `source-run/`: backend adaptive-lineage campaign, lineage, selection, artifact-integrity, and source index receipts.
-- `broadcast-pydantic-event/`: arena, Red activity, Blue activity, sports play-by-play, broadcast receipt, and downstream report.
-- `memory-promotion-v3/`: live memory-promotion receipt.
-- `authorization.json`: authorization input for the provider Tau seeded run.
-- `webgpt/`: browser-readable prompts, responses, metadata, and transport summaries from the best-effort gaps review and post-fix closure review.
-- `git-readback.txt`: current repo/branch/origin readback from the commit turn.
-- `SHA256SUMS`: hashes for all files in this packet.
+- `source-run/`: canonical backend adaptive-lineage campaign, lineage, selection, artifact-integrity, source index, authorization validation, memory-evaluation, and exact Judge replay receipts, and reviewed immutable slot files.
+- `broadcast-pydantic-event/`: arena, Red activity, Blue activity, sports play-by-play, broadcast receipt, event ledger, and downstream report generated from the canonical run.
+- `memory-promotion-v3/`: live memory-promotion receipt plus recall stdout readbacks.
+- `screenshots/`: actual PNG bytes used for Battle spectator UX review plus the V13 browser proof JSON binding the rendered fixture to `review-ticket-live-rerun`.
+- `authorization.json`: authorization manifest whose SHA-256 is bound by the canonical campaign authorization validation.
+- `webgpt/`: historical browser-readable prompts, responses, metadata, and transport summaries. These are review artifacts, not closure proof.
+- `git-readback.txt`: repo/branch/origin readback from this packet refresh turn.
+- `SHA256SUMS`: hashes for every file in this packet except itself.
 
-Review boundary: these receipts are evidence for WebGPT review. They do not by themselves replace current repo commands or fresh gates.
+Review boundary: this packet is durable evidence for review. It does not replace fresh local commands, and screenshots do not prove Docker execution, Judge independence, authorization, or scorekeeping.
