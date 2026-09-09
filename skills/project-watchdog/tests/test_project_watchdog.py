@@ -888,6 +888,42 @@ def test_a_proof_artifact_from_a_previous_run_does_not_count(tmp_path) -> None:
     assert old["passed"] is False and old["reason"] == "predates this dispatch"
 
 
+def test_resume_proof_gate_can_read_admitted_artifacts_before_native_verify(tmp_path) -> None:
+    artifact = tmp_path / "proof.json"
+    artifact.write_text(json.dumps({"readiness": "READY"}), encoding="utf-8")
+    not_before = artifact.stat().st_mtime + 10
+    ask_nodes = tmp_path / "ask" / "run" / "node-artifacts"
+    (ask_nodes / "handler-codex").mkdir(parents=True)
+    (ask_nodes / "handler-reviewer").mkdir(parents=True)
+    (ask_nodes / "handler-codex" / "response.md").write_text("VERDICT: PASS\n", encoding="utf-8")
+    (ask_nodes / "handler-reviewer" / "response.md").write_text(
+        f"VERDICT: PASS\nPROOF_ARTIFACT: {artifact}\n", encoding="utf-8"
+    )
+
+    failed = handlers.evaluate_repair_proof(
+        ask_run_dir=tmp_path / "ask",
+        issue_body=f"## Required proof\n\nRun proof --output {artifact}\n",
+        creator="codex",
+        reviewer="reviewer",
+        repair_worktree=tmp_path,
+        not_before=not_before,
+        reviewed_commit="a" * 40,
+    )
+    allowed = handlers.evaluate_repair_proof(
+        ask_run_dir=tmp_path / "ask",
+        issue_body=f"## Required proof\n\nRun proof --output {artifact}\n",
+        creator="codex",
+        reviewer="reviewer",
+        repair_worktree=tmp_path,
+        not_before=not_before,
+        reviewed_commit="a" * 40,
+        allow_preexisting_proof_artifacts=True,
+    )
+
+    assert failed["ok"] is False and "predates this dispatch" in failed["reasons"][0]
+    assert allowed["ok"] is True
+
+
 def test_a_proof_artifact_that_reports_a_failure_does_not_count(tmp_path) -> None:
     artifact = tmp_path / "proof.json"
     artifact.write_text(

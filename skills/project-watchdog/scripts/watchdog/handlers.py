@@ -1064,6 +1064,7 @@ def evaluate_repair_proof(
     not_before: float,
     base_sha: str | None = None,
     reviewed_commit: str | None = None,
+    allow_preexisting_proof_artifacts: bool = False,
 ) -> dict[str, Any]:
     """Decide whether repair evidence is ready for ticket-owned verification.
 
@@ -1138,7 +1139,8 @@ def evaluate_repair_proof(
     gate["required_proof_artifacts"] = sorted(mandatory)
     gate["declared_proof_artifacts"] = artifacts
     if artifacts:
-        results = [inspect_proof_artifact(a, not_before=not_before) for a in artifacts]
+        proof_not_before = 0.0 if allow_preexisting_proof_artifacts else not_before
+        results = [inspect_proof_artifact(a, not_before=proof_not_before) for a in artifacts]
         gate["artifact_results"] = results
         failed = [r for r in results if r["path"] in mandatory and not r["passed"]]
         if failed:
@@ -2337,7 +2339,8 @@ def finish_primary_operation(record) -> dict[str, Any]:
     write_json(receipt_dir / "primary-after.json", encoded(after))
     initial_gate = evaluate_repair_proof(ask_run_dir=Path(record.ask_run_dir), issue_body=str(issue.get("body") or ""),
         creator=creator_handler, reviewer=reviewer_handler, repair_worktree=root, not_before=record.dispatched_at,
-        reviewed_commit=review_commit)
+        reviewed_commit=review_commit,
+        allow_preexisting_proof_artifacts=stream.get("resume_generation") is not None)
     if not initial_gate["ok"]:
         raise primary.Refusal("independent proof gate failed: " + "; ".join(initial_gate["reasons"]))
     needed = {str(Path(p).expanduser().resolve() if Path(p).is_absolute() else (root / p).resolve())
