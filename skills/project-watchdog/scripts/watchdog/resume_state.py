@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 import sqlite3
 import time
 from pathlib import Path
@@ -23,6 +24,18 @@ def file_hash(path: Path) -> str | None:
 def begin(record, run_dir: Path) -> Path:
     receipts = run_dir / "tau-receipts"
     path = receipts / FENCE
+    history = receipts / f"watchdog-resume-prior-{record.lease_event.id}"
+    history.mkdir(parents=True, exist_ok=False)
+    prior_command = run_dir.parent.parent / "watchdog-reattach-resume-command.json"
+    if prior_command.is_file():
+        shutil.copyfile(prior_command, history / "command.json")
+    for node in load_json(run_dir / "dag.json").get("nodes", []):
+        for name in ("node-receipt.json", "response.meta.json", "response.md"):
+            source = run_dir / "node-artifacts" / node["id"] / name
+            if source.is_file():
+                target = history / node["id"] / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(source, target)
     if path.exists():
         previous = load_json(path)
         write_json(receipts / f"watchdog-resume-generation-{previous['lease_event_id']}.json", previous)

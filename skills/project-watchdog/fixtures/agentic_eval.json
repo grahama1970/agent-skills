@@ -1374,6 +1374,25 @@
       },
       "proves": "prepare_repair_worktree creates a real git worktree AND registers an ops-worktrees lease, read back from the lease registry file (issue #1577 named proof).",
       "does_not_prove": "reaper reclamation behavior or GitHub dispatch."
+    },
+    {
+      "name": "watchdog-reviewer-resume",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "timeout_seconds": 120,
+      "command": ["bash", "-lc", "cd .. && uv run python scripts/eval_resume_generation.py --out /tmp/watchdog-resume-generation-eval/proof.json"],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/ok", "equals": true},
+          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/old_PASS_not_reused", "equals": true},
+          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/old_BLOCKED_not_reused", "equals": true},
+          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/preserved_admission_mutation_rejected", "equals": true}
+        ]
+      },
+      "proves": "Public Ask/Tau local command execution, generation-fenced watchdog settlement, preserved creator admission, and pre-dispatch rejection without inheriting historical status.",
+      "does_not_prove": "Real GitHub lease acquisition, real provider invocation count, cooldown/retry budgets, supervisor-loss recovery, or native ticket closure. These remain #1638 live acceptance work."
     }
   ]
 }
