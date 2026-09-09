@@ -937,7 +937,29 @@ def inspect_proof_artifact(raw_path: str, *, not_before: float) -> dict[str, Any
     except (OSError, json.JSONDecodeError) as exc:
         record["reason"] = f"unreadable json: {exc}"
         return record
-    values = _result_values(payload)
+    if isinstance(payload, dict) and payload.get("schema") == "agentic_evals.report.v2":
+        # This schema's outcomes describe checks, while nested provenance and
+        # negative-control observations are data, not additional verdicts.
+        cases = payload.get("cases")
+        valid_cases = isinstance(cases, list) and bool(cases) and all(
+            isinstance(case, dict) and isinstance(case.get("trials"), list)
+            and bool(case["trials"]) and all(isinstance(trial, dict) for trial in case["trials"])
+            for case in cases
+        )
+        if not valid_cases:
+            record["reason"] = "agentic-evals report has missing or malformed case/trial results"
+            return record
+        values = [str(payload.get("readiness", "UNKNOWN"))]
+        values.extend(str(case.get("outcome", "UNKNOWN")) for case in cases)
+        values.extend(str(trial.get("outcome", "UNKNOWN")) for case in cases for trial in case["trials"])
+        counts = payload.get("outcome_counts")
+        observed_counts = {outcome: sum(case.get("outcome") == outcome for case in cases)
+                           for outcome in {"PASS", "FAIL", "BLOCKED", "NOT_TESTED"}}
+        if not isinstance(counts, dict) or any(counts.get(k, 0) != v for k, v in observed_counts.items()):
+            record["reason"] = "agentic-evals outcome counts disagree with case results"
+            return record
+    else:
+        values = _result_values(payload)
     record["machine_readable"] = bool(values)
     failing = sorted({v for v in values if v in PROOF_FAIL_VALUES})
     passing = sorted({v for v in values if v in PROOF_PASS_VALUES})

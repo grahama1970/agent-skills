@@ -768,6 +768,17 @@ def test_proof_artifact_ignores_provider_status_noise_and_domain_enums(tmp_path)
     assert handlers.inspect_proof_artifact(str(extensionless), not_before=0)["passed"] is True
     extensionless.write_text("not a JSON result")
     assert handlers.inspect_proof_artifact(str(extensionless), not_before=0)["passed"] is False
+    report = {"schema": "agentic_evals.report.v2", "readiness": "READY",
+              "outcome_counts": {"PASS": 1}, "cases": [{"outcome": "PASS",
+              "trials": [{"outcome": "PASS"}], "diagnostic": {"readiness": "NOT_READY"}}]}
+    artifact.write_text(json.dumps(report))
+    assert handlers.inspect_proof_artifact(str(artifact), not_before=0)["passed"] is True
+    report["cases"][0]["trials"][0]["outcome"] = "FAIL"
+    artifact.write_text(json.dumps(report))
+    assert handlers.inspect_proof_artifact(str(artifact), not_before=0)["passed"] is False
+    report["cases"] = []
+    artifact.write_text(json.dumps(report))
+    assert handlers.inspect_proof_artifact(str(artifact), not_before=0)["passed"] is False
 
 
 def test_review_commit_lines_keep_invalid_sha_out_of_valid_set() -> None:
