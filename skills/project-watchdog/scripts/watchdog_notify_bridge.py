@@ -187,6 +187,7 @@ def main() -> None:
             (d for d in RECEIPTS.iterdir() if d.is_dir() and d.stat().st_mtime > cursor),
             key=lambda p: p.stat().st_mtime,
         )
+    stream = STATE_ROOT / "events.log"  # one line per receipt; tail -F this
     results = []
     max_mtime = cursor
     for d in dirs:
@@ -194,6 +195,12 @@ def main() -> None:
         max_mtime = max(max_mtime, d.stat().st_mtime)
         if ev is None or ev.get("kind") != "tick":
             continue
+        with stream.open("a") as fh:
+            fh.write(
+                f"{time.strftime('%H:%M:%SZ', time.gmtime())} {ev.get('status'):<16} "
+                f"{ev.get('repo') or '-'}#{ev.get('issue') or '-'} "
+                f"{(ev.get('triage_code') or '')} {(ev.get('live') or '')} | {ev.get('summary')}\n"
+            )
         results.append({
             "dir": d.name, "status": ev.get("status"), "issue": ev.get("issue"),
             "webhook": push_webhook(ev), "switchboard": push_switchboard(ev),
