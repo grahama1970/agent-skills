@@ -36,6 +36,14 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "speak.contract.adversarial_sampled",
+      "description": "tag/knob routing contract survives 50 freshly sampled adversarial scenarios per run: valid tags stay on turbo, tag+intensity conflicts route to base with tags_interpreted=false declared, invented tags never claimed applied, unknown tones/empty text/SSML never crash unbounded",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
     }
   ],
   "out_of_scope_claims": {
@@ -136,6 +144,31 @@
       "expected_notes": [
         "non-zero exit",
         "no receipt written"
+      ]
+    },
+    {
+      "name": "adversarial-scenario-sampler",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "speak.contract.adversarial_sampled"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && ./run.sh probe --samples 50"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"failed\": 0"
+        ],
+        "artifacts": []
+      },
+      "expected_notes": [
+        "all 50 fresh scenarios pass their deterministic routing/receipt invariants",
+        "probe report written under outputs/scenario-probe/ with schema chatterbox_speak.scenario_probe.v1"
       ]
     }
   ],
