@@ -179,12 +179,23 @@ function renderStatusLine(status: any): string {
   lines.push("Status Report");
   lines.push(`- Goal: ${String(status?.goal || "unknown")}`);
   lines.push(`- State: ${String(status?.state || "unknown")}`);
+  if (status?.run_dir) lines.push(`- Run dir: ${String(status.run_dir)}`);
   const changed = Array.isArray(status?.changed) ? status.changed : [];
   for (const item of changed) lines.push(`- Changed: ${String(item)}`);
   const verified = Array.isArray(status?.verified) ? status.verified : [];
   for (const item of verified) lines.push(`- Verified: ${String(item?.command || "") } -> ${String(item?.result || "")}`);
   const proof = Array.isArray(status?.proof) ? status.proof : [];
   for (const item of proof) lines.push(`- Proof: ${String(item)}`);
+  const artifacts = Array.isArray(status?.artifacts) ? status.artifacts : [];
+  for (const item of artifacts) lines.push(`- Artifact: ${String(item)}`);
+  const receipts = Array.isArray(status?.receipts) ? status.receipts : [];
+  for (const item of receipts) lines.push(`- Receipt: ${String(item)}`);
+  const nodes = Array.isArray(status?.nodes) ? status.nodes : [];
+  for (const item of nodes) lines.push(`- Node: ${String(item?.id || "")} -> ${String(item?.status || "")}${item?.artifact ? ` artifact=${String(item.artifact)}` : ""}${item?.receipt ? ` receipt=${String(item.receipt)}` : ""}`);
+  const blocked = Array.isArray(status?.blocked) ? status.blocked : [];
+  for (const item of blocked) lines.push(`- Blocked: ${String(item?.item || "")} -> ${String(item?.reason || "")}${item?.next_command ? ` -> ${String(item.next_command)}` : ""}`);
+  const missing = Array.isArray(status?.missing_artifacts) ? status.missing_artifacts : [];
+  for (const item of missing) lines.push(`- Missing artifact: ${String(item)}`);
   const notDone = Array.isArray(status?.not_done) ? status.not_done : [];
   if (notDone.length) {
     for (const item of notDone) lines.push(`- Not done: ${String(item?.item || "")} -> ${String(item?.next_command || "")}`);
@@ -626,6 +637,31 @@ function statusFailureFingerprint(status: any): string | null {
   ].map(String).join("\n"));
 }
 
+function statusFailureJournalFields(status: any): Record<string, unknown> {
+  const triage = status?.failure?.triage;
+  const triageCode = normalizeTriageCode(triage?.code);
+  const operationIdentity = triage ? failedOperationIdentity(status, triage) : null;
+  return {
+    goal: trustedGoalIdentity(status),
+    goal_text: nonEmptyText(status?.goal),
+    goal_hash: nonEmptyText(status?.goal_hash)?.toLowerCase() || null,
+    goal_id: nonEmptyText(status?.goal_id),
+    triage_owner: triageCode ? "triage-error" : null,
+    triage_code: triageCode,
+    operation_identity: operationIdentity,
+  };
+}
+
+function recoveryJournalCheckId(status: any, decision: Record<string, unknown>): string {
+  const statusFingerprint = statusFailureFingerprint(status);
+  const pieces = [
+    `recovery_action:${String(decision.action || "unknown")}`,
+    `format_only:${decision.format_only === true ? "true" : "false"}`,
+  ];
+  if (statusFingerprint) pieces.push(`status_failure:${statusFingerprint}`);
+  return pieces.join("\n");
+}
+
 function readJsonFile(path: unknown): any | null {
   const raw = String(path || "").trim();
   if (!raw || raw.includes("\n") || !existsSync(raw)) return null;
@@ -890,7 +926,6 @@ ${JSON.stringify({
     footer_failures: check.footer_failures,
     diagnostics_sha256: check.diagnostics ? sha256(check.diagnostics) : null,
     review_packet: reviewPacketPath,
-    validation_result: validationResult(check),
     recovery_decision: decision,
     next: rejectionAction(decision),
   })}
@@ -924,7 +959,15 @@ function retryEvidenceSnapshot(candidate: Candidate, check: CheckResult): Array<
 }
 
 function writeSpiralTicketRequest(candidate: Candidate, check: CheckResult, reviewPacketPath: string, decision: Record<string, unknown>): string {
-  const fingerprint = sha256([candidate.session_id || candidate.session_file || "unknown-session", candidate.turn_id, ...check.reason_codes].join("\n"));
+  const status = check.features?.status;
+  const stableEpisode = statusFailureFingerprint(status) || candidate.turn_id;
+  const fingerprint = sha256([
+    candidate.session_id || candidate.session_file || "unknown-session",
+    stableEpisode,
+    `recovery_action:${String(decision.action || "unknown")}`,
+    `format_only:${decision.format_only === true ? "true" : "false"}`,
+    ...check.reason_codes,
+  ].join("\n"));
   const id = fingerprint.slice(7, 23);
   mkdirSync(SPIRAL_TICKET_OUTBOX, { recursive: true });
   const requestPath = join(SPIRAL_TICKET_OUTBOX, `${id}.json`);
@@ -1386,8 +1429,9 @@ export default function lazyReportShameShameShame(pi: any) {
         lastCandidate = makeCandidate(ctx, currentUserText, String(event.message.id || event.id || "unknown"), text, check, forceStatus);
       }
       if (check.decision !== "reject") {
-        if (statusState === "failed") recordFailure(ctx, { kind: "agent_reported_failure", goal: status.goal,
-          reason_codes: [status.failure?.triage?.code], cause: status.failure?.triage?.cause, candidate_hash: lastCandidate.response_sha256 });
+        if (statusState === "failed") recordFailure(ctx, { kind: "agent_reported_failure", ...statusFailureJournalFields(status),
+          reason_codes: [normalizeTriageCode(status.failure?.triage?.code) || String(status.failure?.triage?.code || "")],
+          cause: status.failure?.triage?.cause, check_id: statusFailureFingerprint(status), candidate_hash: lastCandidate.response_sha256 });
         // JSON-first keep-going and escalation: every validated status compiles
         // through compile-status-command.mjs (pure data -> command; no regex).
         // continuing and needs_* escalation states queue their exact compiled
@@ -1449,7 +1493,8 @@ export default function lazyReportShameShameShame(pi: any) {
         try { spiralTicketRequestPath = writeSpiralTicketRequest(lastCandidate, check, reviewPacketPath, finalDecision); }
         catch (error) { recordFailure(ctx, { kind: "spiral_ticket_request_failed", error_excerpt: String(error).slice(0, 1000), reason_codes: check.reason_codes }); }
       }
-      recordFailure(ctx, { kind: alreadyRetried ? "report_retry_exhausted" : "report_rejected", goal: status?.goal || null, candidate_hash: lastCandidate.response_sha256,
+      recordFailure(ctx, { kind: alreadyRetried ? "report_retry_exhausted" : "report_rejected", ...(status ? statusFailureJournalFields(status) : { goal: null }),
+        candidate_hash: lastCandidate.response_sha256, check_id: recoveryJournalCheckId(status, finalDecision),
         reason_codes: check.reason_codes, checker_version: check.checker_version, review_packet: reviewPacketPath,
         excerpt: candidateExcerpt(lastCandidate), retry: { planned: !alreadyRetried, reason: pipelineClaim.reason }, spiral_ticket_request: spiralTicketRequestPath });
       const notice = rejectionNotice(lastCandidate, check, alreadyRetried, reviewPacketPath, finalDecision);

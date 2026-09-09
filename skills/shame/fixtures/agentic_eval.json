@@ -176,6 +176,14 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "shame.concrete_status_visibility",
+      "description": "Schema-passing status reports preserve concrete operational anchors in accepted data and compact rejection/retry packets hash raw diagnostics.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "cases": [
@@ -572,8 +580,13 @@
           "lazy_report_shame.escalation_ladder_eval.v1",
           "needs_agent resolves parent_ref receipts before accepting brave-search lineage",
           "declared parent_ref producer/schema strings are not authority",
+          "parent_ref producer mismatches are rejected",
+          "parent_ref receipt_id mismatches are rejected",
           "parent_ref digest mismatches are rejected",
           "parent_ref goal_hash mismatches are rejected",
+          "resolved brave-search parents must use brave_search.web_results.v1",
+          "resolved ask parents must use tau.agent_handoff.v1",
+          "escalation commands require an active goal_hash",
           "needs_brave_search compiles every requested Brave query",
           "needs_agent rejects same-family first Ask handler",
           "needs_webgpt requires a resolved Ask receipt descended from the Brave evidence",
@@ -862,6 +875,30 @@
           "lazy_report_shame.format_only_retry_contract_eval.v1",
           "PASS",
           "format-only retry rejects lazy_report_shame.rejection_notice.v1"
+        ]
+      }
+    },
+    {
+      "name": "vague-status-report-concrete-anchors",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.concrete_status_visibility"
+      ],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-vague-status-report.py"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"PASS\"",
+          "\"lazy_report_shame.vague_status_eval.v1\""
+        ],
+        "stdout_excludes": [
+          "Traceback"
         ]
       }
     }

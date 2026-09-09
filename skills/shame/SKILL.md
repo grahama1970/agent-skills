@@ -123,7 +123,14 @@ budget. The mechanical exit:
 ## pi.agent_status.v1
 
 Every status requires a non-empty `goal` and `changed` (use `no change: <reason>`
-when appropriate). State-specific data:
+when appropriate). Use concrete operational anchors when they exist: `run_dir`,
+`artifacts[]`, `receipts[]`, `nodes[]` (`id`, `status`, optional `artifact` or
+`receipt`), `blocked[]`, and `missing_artifacts[]`. The extension renders those
+fields in the visible `Status Report`; do not substitute vague prose summaries
+such as "task completed" or "tests passed" for paths, node states, and receipt
+locations.
+
+State-specific data:
 
 | State | Required data |
 |---|---|
@@ -143,7 +150,11 @@ the owning skill first. JSON proofs must declare a supported receipt schema and 
 that schema's checks, including `ticket.closure_receipt.v1` for ticket closure.
 Each verified command/result pair must be backed by one proof record; unrelated
 text matches across files do not authorize completion. This proves consistency,
-not OS-level authenticity or universal obedience.
+not OS-level authenticity or universal obedience. Schema-passing reports stay
+data-first, but visible rejection notices are compact: raw checker diagnostics
+are stored as a hash, while typed `lazy_report_shame.retry_request.v1` and
+`lazy_report_shame.follow_up.v1` packets carry the machine-readable recovery
+payload.
 
 ## Failure history versus human labels
 

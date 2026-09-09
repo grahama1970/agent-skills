@@ -13,6 +13,7 @@ from __future__ import annotations
 import importlib.util
 import hashlib
 import json
+import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -209,6 +210,20 @@ class ResolvedParent:
 
 BRAVE_SEARCH_RESULTS_SCHEMA = "brave_search.web_results.v1"
 ASK_AGENT_HANDOFF_SCHEMA = "tau.agent_handoff.v1"
+FIRST_ASK_HANDLER_BY_PROJECT_AGENT_FAMILY = {
+    "openai": "claude-fable-low",
+    "claude": "gpt-5.5-high",
+}
+PROJECT_AGENT_FAMILY_ENV_VARS = (
+    "LRSSS_PROJECT_AGENT_FAMILY",
+    "LAZY_REPORT_SHAME_PROJECT_AGENT_FAMILY",
+    "PI_PROJECT_AGENT_FAMILY",
+)
+ASK_HANDLER_AVAILABILITY_ENV_VARS = (
+    "LRSSS_AVAILABLE_ASK_HANDLERS",
+    "LAZY_REPORT_SHAME_AVAILABLE_ASK_HANDLERS",
+    "ASK_AVAILABLE_HANDLERS",
+)
 
 
 def receipt_parent_ref(ref: ParentRef) -> dict[str, str]:
@@ -227,6 +242,42 @@ def same_receipt_ref(left: dict[str, str], right: Any) -> bool:
         and left["expected_producer"] == getattr(right, "expected_producer", None)
         and left["digest"] == getattr(right, "digest", None)
     )
+
+
+def normalize_project_agent_family(value: str) -> str:
+    family = value.strip().lower()
+    if family in FIRST_ASK_HANDLER_BY_PROJECT_AGENT_FAMILY:
+        return family
+    if "codex" in family or family.startswith(("openai", "gpt-")):
+        return "openai"
+    if "anthropic" in family or family.startswith("claude"):
+        return "claude"
+    return family
+
+
+def runtime_project_agent_family(payload_family: str) -> tuple[str, str]:
+    for name in PROJECT_AGENT_FAMILY_ENV_VARS:
+        raw = os.environ.get(name, "").strip()
+        if raw:
+            return normalize_project_agent_family(raw), name
+    provider = os.environ.get("PI_PROVIDER", "").strip()
+    if provider:
+        return normalize_project_agent_family(provider), "PI_PROVIDER"
+    return normalize_project_agent_family(payload_family), "payload_legacy_fallback"
+
+
+def configured_ask_handlers() -> frozenset[str]:
+    for name in ASK_HANDLER_AVAILABILITY_ENV_VARS:
+        raw = os.environ.get(name, "").strip()
+        if raw:
+            try:
+                parsed = json.loads(raw)
+            except Exception:
+                parsed = None
+            if isinstance(parsed, list):
+                return frozenset(str(item).strip() for item in parsed if str(item).strip())
+            return frozenset(part for part in raw.replace(",", " ").split() if part)
+    return frozenset(FIRST_ASK_HANDLER_BY_PROJECT_AGENT_FAMILY.values())
 
 
 def resolve_parent_ref(ref: ParentRef, goal_hash: str | None, state: str) -> ResolvedParent:
@@ -317,6 +368,21 @@ class VerifiedItem(BaseModel):
     result: str = Field(min_length=1)
 
 
+class StatusNode(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    id: str = Field(min_length=1)
+    status: str = Field(min_length=1)
+    artifact: str | None = None
+    receipt: str | None = None
+
+
+class BlockedItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    item: str = Field(min_length=1)
+    reason: str = Field(min_length=1)
+    next_command: str | None = None
+
+
 class NotDoneItem(BaseModel):
     model_config = ConfigDict(extra="forbid")
     item: str = Field(min_length=1)
@@ -370,17 +436,50 @@ class NeedsAgent(BaseModel):
 
     @model_validator(mode="after")
     def enforce_cross_family_after_brave(self) -> "NeedsAgent":
-        if self.project_agent_family == "openai" and not self.handler.startswith("claude-"):
+        runtime_family, family_source = runtime_project_agent_family(self.project_agent_family)
+        required_handler = FIRST_ASK_HANDLER_BY_PROJECT_AGENT_FAMILY.get(runtime_family)
+        if required_handler is None:
             raise PydanticCustomError(
-                "needs_agent_requires_cross_family_handler",
-                "OpenAI/Codex-family agents must escalate first to a Claude-family Ask handler",
-                {"allowed_handler": "claude-fable-low"},
+                "needs_agent_unsupported_runtime_family",
+                "state=needs_agent requires a supported runtime project-agent family",
+                {
+                    "runtime_family": runtime_family,
+                    "family_source": family_source,
+                    "supported_families": sorted(FIRST_ASK_HANDLER_BY_PROJECT_AGENT_FAMILY),
+                },
             )
-        if self.project_agent_family == "claude" and not self.handler.startswith("gpt-"):
+        payload_family = normalize_project_agent_family(self.project_agent_family)
+        if family_source != "payload_legacy_fallback" and payload_family != runtime_family:
+            raise PydanticCustomError(
+                "needs_agent_project_family_not_runtime_bound",
+                "needs_agent.project_agent_family must match the trusted runtime project-agent family",
+                {
+                    "payload_family": payload_family,
+                    "runtime_family": runtime_family,
+                    "family_source": family_source,
+                },
+            )
+        if self.handler != required_handler:
             raise PydanticCustomError(
                 "needs_agent_requires_cross_family_handler",
-                "Claude-family agents must escalate first to a GPT-family Ask handler",
-                {"allowed_handler": "gpt-5.5-high"},
+                "state=needs_agent must use the exact first Ask handler for the trusted runtime family",
+                {
+                    "runtime_family": runtime_family,
+                    "family_source": family_source,
+                    "allowed_handler": required_handler,
+                },
+            )
+        available_handlers = configured_ask_handlers()
+        if required_handler not in available_handlers:
+            raise PydanticCustomError(
+                "needs_agent_first_handler_unavailable",
+                "configured Ask handlers do not include the required first-rung handler",
+                {
+                    "runtime_family": runtime_family,
+                    "family_source": family_source,
+                    "required_handler": required_handler,
+                    "configured_handlers": sorted(available_handlers),
+                },
             )
         return self
 
@@ -437,6 +536,12 @@ class AgentStatus(BaseModel):
     changed: list[str] = Field(default_factory=list)
     verified: list[VerifiedItem] = Field(default_factory=list)
     proof: list[str] = Field(default_factory=list)
+    run_dir: str | None = Field(default=None, min_length=1)
+    artifacts: list[str] = Field(default_factory=list)
+    receipts: list[str] = Field(default_factory=list)
+    nodes: list[StatusNode] = Field(default_factory=list)
+    blocked: list[BlockedItem] = Field(default_factory=list)
+    missing_artifacts: list[str] = Field(default_factory=list)
     not_done: list[NotDoneItem] = Field(default_factory=list)
     failure: Failure | None = None
     needs_human: NeedsHuman | None = None

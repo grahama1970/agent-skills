@@ -5,11 +5,12 @@
 // invokes validation, and returns the validated object for the extension renderer.
 
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-const CHECKER_VERSION = '2026-09-07.status-json-typed-context.v12';
+const CHECKER_VERSION = '2026-09-09.status-json-typed-context.v14';
 const TRUTHY_FLAG_VALUES = new Set(['1', 'true', 'yes']);
 const FALSY_FLAG_VALUES = new Set(['0', 'false', 'no']);
 const flagEnabled = (value) => TRUTHY_FLAG_VALUES.has(String(value || '').trim().toLowerCase());
@@ -37,6 +38,10 @@ const text = await new Promise((resolve) => {
   process.stdin.on('data', (chunk) => { data += chunk; });
   process.stdin.on('end', () => resolve(data));
 });
+
+function sha256(value) {
+  return 'sha256:' + createHash('sha256').update(String(value || '')).digest('hex');
+}
 
 function emit(decision, reasonCodes, extra = {}, footerFailures = []) {
   const result = {
@@ -169,13 +174,64 @@ function contextFlag(paths, envNames = [], options = {}) {
   return options.nonBooleanStringTruthy && String(value || '').trim() ? true : null;
 }
 
+const CONTEXT_TEXT_KEYS = [
+  'authoritative_task_outcome',
+  'authoritativeTaskOutcome',
+  'authoritative_disposition',
+  'authoritativeDisposition',
+  'task_outcome',
+  'taskOutcome',
+  'task_result',
+  'taskResult',
+  'runner_outcome',
+  'runnerOutcome',
+  'runner_result',
+  'runnerResult',
+  'immutable_goal_state',
+  'immutableGoalState',
+  'global_goal_state',
+  'globalGoalState',
+  'goal_state',
+  'goalState',
+  'outcome',
+  'state',
+  'disposition',
+  'status',
+  'result',
+  'completion_state',
+  'completionState',
+  'goal_completion',
+  'goalCompletion',
+  'mode',
+  'value',
+];
+
+const CONTEXT_BOOLEAN_OUTCOMES = [
+  ['accepted', 'complete'],
+  ['completed', 'complete'],
+  ['complete', 'complete'],
+  ['passed', 'pass'],
+  ['succeeded', 'success'],
+  ['ready', 'ready'],
+  ['failed', 'failed'],
+  ['blocked', 'blocked'],
+  ['rejected', 'rejected'],
+  ['needs_human', 'needs_human'],
+  ['needsHuman', 'needs_human'],
+  ['needs_attention', 'needs_attention'],
+  ['needsAttention', 'needs_attention'],
+];
+
 function contextText(paths, envNames = []) {
   const value = firstTypedValue(paths, envNames);
   if (value && typeof value === 'object') {
-    for (const key of ['immutable_goal_state', 'immutableGoalState', 'global_goal_state', 'globalGoalState', 'goal_state', 'goalState', 'outcome', 'state', 'disposition', 'status', 'result', 'completion_state', 'completionState', 'goal_completion', 'goalCompletion', 'mode', 'value']) {
+    for (const key of CONTEXT_TEXT_KEYS) {
       if (value[key] !== undefined && value[key] !== null && String(value[key]).trim() !== '') {
         return String(value[key]).trim();
       }
+    }
+    for (const [key, token] of CONTEXT_BOOLEAN_OUTCOMES) {
+      if (value[key] === true) return token;
     }
     return '';
   }
@@ -240,6 +296,8 @@ const authoritativeTaskOutcome = contextText(
   [
     ['authoritative_task_outcome'],
     ['authoritativeTaskOutcome'],
+    ['authoritative_disposition'],
+    ['authoritativeDisposition'],
     ['task_outcome'],
     ['taskOutcome'],
     ['runner_outcome'],
@@ -254,6 +312,8 @@ const authoritativeTaskOutcome = contextText(
     ['task', 'outcome'],
     ['task', 'status'],
     ['task', 'result'],
+    ['task', 'authoritative_disposition'],
+    ['task', 'authoritativeDisposition'],
     ['task', 'immutable_goal_state'],
     ['task', 'immutableGoalState'],
     ['task', 'global_goal_state'],
@@ -265,6 +325,8 @@ const authoritativeTaskOutcome = contextText(
     ['runner', 'outcome'],
     ['runner', 'status'],
     ['runner', 'result'],
+    ['runner', 'authoritative_disposition'],
+    ['runner', 'authoritativeDisposition'],
     ['runner', 'immutable_goal_state'],
     ['runner', 'immutableGoalState'],
     ['runner', 'global_goal_state'],
@@ -275,6 +337,8 @@ const authoritativeTaskOutcome = contextText(
     ['runner', 'completionState'],
     ['typed_turn_context', 'authoritative_task_outcome'],
     ['typedTurnContext', 'authoritativeTaskOutcome'],
+    ['typed_turn_context', 'authoritative_disposition'],
+    ['typedTurnContext', 'authoritativeDisposition'],
     ['typed_turn_context', 'task_outcome'],
     ['typedTurnContext', 'taskOutcome'],
     ['typed_turn_context', 'runner_outcome'],
@@ -303,6 +367,8 @@ const authoritativeTaskOutcome = contextText(
     ['immutableGoal', 'completionState'],
     ['immutable_goal', 'authoritative_task_outcome'],
     ['immutableGoal', 'authoritativeTaskOutcome'],
+    ['immutable_goal', 'authoritative_disposition'],
+    ['immutableGoal', 'authoritativeDisposition'],
     ['immutable_goal_context', 'outcome'],
     ['immutableGoalContext', 'outcome'],
     ['immutable_goal_context', 'immutable_goal_state'],
@@ -319,8 +385,12 @@ const authoritativeTaskOutcome = contextText(
     ['immutableGoalContext', 'completionState'],
     ['immutable_goal_context', 'authoritative_task_outcome'],
     ['immutableGoalContext', 'authoritativeTaskOutcome'],
+    ['immutable_goal_context', 'authoritative_disposition'],
+    ['immutableGoalContext', 'authoritativeDisposition'],
     ['turn', 'authoritative_task_outcome'],
     ['turn', 'authoritativeTaskOutcome'],
+    ['turn', 'authoritative_disposition'],
+    ['turn', 'authoritativeDisposition'],
     ['turn', 'task_outcome'],
     ['turn', 'taskOutcome'],
     ['turn', 'outcome'],
@@ -361,6 +431,16 @@ function applyImmutableGoalHeadline(status, validatedState, taskOutcome) {
   const body = stripImmutableGoalHeadline(status.answer);
   status.answer = body ? `${headline} - ${body}` : headline;
   return { disposition, headline };
+}
+
+function typedTurnContextFeature(immutableGoal = null) {
+  return {
+    answer_required: answerRequired,
+    question_mode: questionMode || null,
+    immutable_goal_context: immutableGoalContext === true,
+    authoritative_task_outcome: authoritativeTaskOutcome || null,
+    immutable_goal: immutableGoal,
+  };
 }
 
 const jsonFences = findJsonFences(text);
@@ -518,12 +598,55 @@ if (verdict.valid !== true) {
 
 const parsedStatus = JSON.parse(statusJson);
 const terminalStates = new Set(['done', 'failed', 'needs_human']);
+
+function operationalAnchorCount(status) {
+  let count = 0;
+  if (String(status?.run_dir || '').trim()) count += 1;
+  for (const key of ['proof', 'artifacts', 'receipts', 'missing_artifacts']) {
+    if (Array.isArray(status?.[key])) count += status[key].filter((item) => String(item || '').trim()).length;
+  }
+  if (Array.isArray(status?.nodes)) count += status.nodes.filter((node) => String(node?.id || '').trim() && String(node?.status || '').trim()).length;
+  if (Array.isArray(status?.blocked)) count += status.blocked.filter((item) => String(item?.item || '').trim() && String(item?.reason || '').trim()).length;
+  if (Array.isArray(status?.not_done)) count += status.not_done.filter((item) => String(item?.item || '').trim() && String(item?.next_command || '').trim()).length;
+  if (status?.needs_human?.action) count += 1;
+  if (status?.failure?.triage?.code) count += 1;
+  if (Array.isArray(status?.needs_brave_search?.queries)) count += status.needs_brave_search.queries.length;
+  if (Array.isArray(status?.needs_agent?.parent_refs)) count += status.needs_agent.parent_refs.length;
+  if (Array.isArray(status?.needs_webgpt?.parent_refs)) count += status.needs_webgpt.parent_refs.length;
+  if (Array.isArray(status?.needs_roundtable?.handlers)) count += status.needs_roundtable.handlers.length;
+  if (Array.isArray(status?.needs_competition?.criteria)) count += status.needs_competition.criteria.length;
+  return count;
+}
+
+if ((MUTATING_TURN || FORCE_STATUS || STRICT_STATUS) && operationalAnchorCount(parsedStatus) === 0) {
+  emit('reject', ['vague_status_report'], {
+    status: parsedStatus,
+    diagnostics_sha256: sha256('vague_status_report: no operational anchors'),
+    validation_result: {
+      schema: 'pi.agent_status.validation_result.v1',
+      valid: false,
+      errors: [{
+        type: 'vague_status_report',
+        loc: ['run_dir', 'artifacts', 'receipts', 'nodes', 'blocked', 'missing_artifacts'],
+        msg: 'status report needs at least one concrete operational anchor',
+        ctx: { required_any_of: ['run_dir', 'proof', 'artifacts', 'receipts', 'nodes', 'blocked', 'missing_artifacts', 'not_done.next_command'] },
+      }],
+      steering: [{
+        code: 'vague_status_report',
+        loc: ['status'],
+        action: 'add_concrete_operational_fields',
+        fields: ['run_dir', 'artifacts', 'receipts', 'nodes', 'blocked', 'missing_artifacts'],
+      }],
+    },
+  });
+}
 const originalAnswer = String(parsedStatus.answer || '').trim();
 let immutableGoal = null;
 if (answerRequired && terminalStates.has(String(verdict.state || '')) && !originalAnswer) {
   emit('reject', ['missing_answer_to_question'], {
     state: verdict.state,
     status: parsedStatus,
+    typed_turn_context: typedTurnContextFeature(),
     validation_result: {
       schema: 'pi.agent_status.validation_result.v1',
       valid: false,
@@ -538,12 +661,6 @@ if (immutableGoalContext === true && terminalStates.has(String(verdict.state || 
 emit('pass', ['valid_agent_status_json'], {
   state: verdict.state,
   status: parsedStatus,
-  typed_turn_context: {
-    answer_required: answerRequired,
-    question_mode: questionMode || null,
-    immutable_goal_context: immutableGoalContext === true,
-    authoritative_task_outcome: authoritativeTaskOutcome || null,
-    immutable_goal: immutableGoal,
-  },
+  typed_turn_context: typedTurnContextFeature(immutableGoal),
   ignored_trailing_content_chars: trailingContent.length,
 });
