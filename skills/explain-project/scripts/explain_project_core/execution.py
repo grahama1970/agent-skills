@@ -157,8 +157,13 @@ def fulfill(client: httpx.Client, repo: Path, out_dir: Path, execute: bool,
         while True:
             raw = status_path.read_text()
             data = json.loads(raw)
-            # Pending/start states are transport observations, never proof.
-            if data.get('status') not in ('pending', 'starting'):
+            # Pending/start/running states are transport observations, never
+            # proof. A launch settles only at stopped/failure; reveal/prepare
+            # settle at their own terminal states.
+            transient = {'pending', 'starting'}
+            if launch_config:
+                transient |= {'running', 'started', 'breakpoints-added'}
+            if data.get('status') not in transient:
                 break
             if time.monotonic() >= deadline:
                 raise TimeoutError(f'Debugger bridge did not settle; inspect {status_path}')
