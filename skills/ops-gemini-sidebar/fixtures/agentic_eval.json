@@ -1,12 +1,12 @@
 {
   "version": 2,
   "skill": "ops-gemini-sidebar",
-  "trials": 3,
+  "trials": 4,
   "proof_scope": "deterministic dry-run validation of typed coordinate plans and command receipts without desktop side effects",
   "mocked": false,
   "live": true,
   "claims": {
-    "proves": "the skill validates coordinate plans, emits typed receipts, and keeps submit/copy-response dry-run by default",
+    "proves": "the skill validates coordinate plans, emits typed receipts, keeps submit/copy-response dry-run by default, and documents the Gemini-as-design-assessor loop",
     "does_not_prove": "that a particular Chrome/Gemini window is present, that OS pointer injection works in this session, or that Gemini returns a useful answer"
   },
   "what_was_exercised": "plan, self-test, submit dry-run, and copy-response dry-run through the production run.sh entrypoint",
@@ -71,6 +71,23 @@
         "exit_code": 0,
         "stdout_contains": [
           "OPS_GEMINI_SIDEBAR_SANITY_PASS"
+        ]
+      }
+    },
+    {
+      "name": "design-loop-contract-documents-gemini-as-assessor",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "command": [
+        "python3",
+        "-c",
+        "from pathlib import Path\ntext = Path('../SKILL.md').read_text(encoding='utf-8')\nrequired = ['Gemini is the design authority', 'Surf observations', 'DESIGN.md constraints', 'Exact DOM targets', 'NO_CHANGES', 'Do not claim screenshot attachment']\nmissing = [item for item in required if item not in text]\nif missing:\n    raise SystemExit('missing: ' + ', '.join(missing))\nprint('DESIGN_LOOP_CONTRACT_OK')"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "DESIGN_LOOP_CONTRACT_OK"
         ]
       }
     }
