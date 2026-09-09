@@ -12,6 +12,8 @@ import pytest
 from live_evidence.config import AppSettings
 from live_evidence.models import EvidenceSource, Freshness, RetrievalLane
 from live_evidence.retrieval.ask import AskSolutionClient
+from live_evidence.reviewed_answer import binding_text
+from review_fixture import write_reviewed_run
 
 
 def settings(tmp_path: Path, runner: Path | None) -> AppSettings:
@@ -29,33 +31,35 @@ def settings(tmp_path: Path, runner: Path | None) -> AppSettings:
     )
 
 
-def write_runner(tmp_path: Path, run_dir: Path) -> Path:
-    runner = tmp_path / "ask-runner.sh"
+def write_runner(tmp_path: Path, run_dir: Path, binding: dict, answer: str) -> Path:
+    write_reviewed_run(run_dir, binding, answer)
+    runner = tmp_path / "ask-wrapper.sh"
+    token = binding_text(binding)
     runner.write_text(
         "\n".join(
             [
                 "#!/usr/bin/env bash",
                 "set -euo pipefail",
-                'mkdir -p "$1/node-artifacts/handler-fixture"',
-                'printf "Ask says use target_symbol from src/live.py.\\n" > "$1/node-artifacts/handler-fixture/response.md"',
-                'printf \'{"run_dir":"%s"}\\n\' "$1"',
+                f"grep -F {token!r} <<< \"$2\" >/dev/null",
+                f"printf '{{\"run_dir\":\"{run_dir}\"}}\\n'",
             ]
         ),
         encoding="utf-8",
     )
     runner.chmod(0o755)
-    wrapper = tmp_path / "ask-wrapper.sh"
-    wrapper.write_text(
-        f"#!/usr/bin/env bash\nexec {runner} {run_dir}\n",
-        encoding="utf-8",
-    )
-    wrapper.chmod(0o755)
-    return wrapper
+    return runner
 
 
 def test_ask_solution_reads_response_from_run_receipt(tmp_path: Path) -> None:
     run_dir = tmp_path / "ask-run"
-    client = AskSolutionClient(settings(tmp_path, write_runner(tmp_path, run_dir)))
+    binding = {
+        "question_id": "question-ask",
+        "question_revision": 1,
+        "policy_digest": None,
+        "query": "Where is target_symbol implemented?",
+    }
+    answer = "Ask says use target_symbol from src/live.py."
+    client = AskSolutionClient(settings(tmp_path, write_runner(tmp_path, run_dir, binding, answer)))
     evidence = [
         EvidenceSource(
             lane=RetrievalLane.RIPGREP,
@@ -69,7 +73,7 @@ def test_ask_solution_reads_response_from_run_receipt(tmp_path: Path) -> None:
         )
     ]
 
-    result = asyncio.run(client.solve("Where is target_symbol implemented?", evidence))
+    result = asyncio.run(client.solve("Where is target_symbol implemented?", evidence, binding=binding))
 
     assert result.ok is True
     assert result.sources[0].lane is RetrievalLane.ASK

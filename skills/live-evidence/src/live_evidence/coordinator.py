@@ -54,8 +54,6 @@ from .query_bounds import bounded_query
 from .trigger import TriggerDecision
 class CardPublicationHeld(RuntimeError):
     """A manual candidate did not pass the shared publication gate."""
-
-
 class EvidenceCoordinator:
     """Run bounded retrieval after accepted transcript triggers."""
     def __init__(
@@ -89,7 +87,6 @@ class EvidenceCoordinator:
         self._assistant_utterances: list[str] = []
         self._scanner = QuestionScanner()
         from .threader import QuestionThreader
-
         self._threader = QuestionThreader()
         self._ready_queue: asyncio.Queue[tuple[str, int, TriggerDecision]] = asyncio.Queue()
         self._answer_workers: list[asyncio.Task[None]] = []
@@ -107,24 +104,20 @@ class EvidenceCoordinator:
             for word in os.getenv("LIVE_EVIDENCE_SCAN_WAKE_WORDS", "let me see").split(",")
             if word.strip()
         )
-
     @staticmethod
     def _scanner_mode() -> bool:
         return os.getenv("LIVE_EVIDENCE_SCANNER_MODE", "true").lower() not in {"0", "false", "no"}
-
     def _ensure_answer_workers(self) -> None:
         if self._answer_workers:
             return
         for index in range(2):
             worker = asyncio.create_task(self._answer_worker(f"answer-worker-{index + 1}"))
             self._answer_workers.append(worker)
-
     async def _answer_worker(self, worker_id: str) -> None:
         while True:
             question_id, revision, decision = await self._ready_queue.get()
             acquired = await self._state.acquire_lease(question_id, worker_id)
             if not acquired:
-                # Another worker owns this question; never write over its card.
                 self._ready_queue.task_done()
                 continue
             try:
@@ -141,9 +134,7 @@ class EvidenceCoordinator:
                 await self._state.release_lease(question_id, worker_id)
                 self._dispatched_questions.discard(question_id)
                 self._ready_queue.task_done()
-
     _review_published_answer = review_published_answer
-
     def _scanner_client_context(self) -> str:
         lines: list[str] = [f"profile: {self._profile.name}"]
         if self._profile.watch_terms:
@@ -154,13 +145,10 @@ class EvidenceCoordinator:
                 lines.append("prepared_briefing_topics:")
                 lines.extend(f"- {title}" for title in titles)
         return "\n".join(lines)
-
     _same_progressive_question = staticmethod(scanner_fallback.same_progressive_question)
     _fallback_question_key = staticmethod(scanner_fallback.fallback_question_key)
-
     def _restatement_match(self, text: str) -> str | None:
         """Return the id of an already-dispatched question this text restates."""
-
         key = self._fallback_question_key(text)
         for known_id, known_text in self._dispatched_texts.items():
             if self._same_progressive_question(known_text, text):
@@ -172,9 +160,7 @@ class EvidenceCoordinator:
     _matching_progressive_question_id = staticmethod(scanner_fallback.matching_progressive_question_id)
     _ledger_text = staticmethod(scanner_fallback.ledger_text)
     _fallback_scan = staticmethod(scanner_fallback.fallback_scan)
-
     _coherent_tail = staticmethod(scanner_fallback.coherent_tail)
-
     async def _run_scan(self) -> None:
         if self._scan_in_flight:
             self._scan_requested = True
@@ -260,7 +246,6 @@ class EvidenceCoordinator:
                 if question.status == "follow_up":
                     parent_question_id = scanned_question_id
                     from uuid import uuid4
-
                     question_id, revision = await self._state.adopt_question(
                         uuid4().hex, question.text
                     )
@@ -320,7 +305,6 @@ class EvidenceCoordinator:
                     )
                 else:
                     from uuid import uuid4
-
                     question_id, revision = await self._state.adopt_question(
                         uuid4().hex, question.text
                     )
@@ -340,9 +324,6 @@ class EvidenceCoordinator:
                     query=question.text,
                     thread=question.text[:60],
                     reason="scanner_complete",
-                    # The question was assembled from the scanned tail; those
-                    # events are its provenance (requirement ledger requires
-                    # source events for STATED entries).
                     source_event_ids=tuple(item.event_id for item in tail_events[-4:]),
                     candidate_fingerprint=None,
                 )
@@ -391,11 +372,6 @@ class EvidenceCoordinator:
                     policy_digest=self._state.session_policy_digest(),
                 )
         if self._scanner_mode():
-            # Scanner triggers (decision 4: both + wake word):
-            # 1. silence pause - any final interviewer turn;
-            # 2. char interval - N new final chars since the last scan, so a
-            #    long uninterrupted monologue still gets scanned mid-flow;
-            # 3. wake word - the human says e.g. 'let me see' (either speaker),
             #    an explicit on-demand trigger.
             is_final = event.kind.value == "final"
             if is_final:
@@ -808,7 +784,6 @@ class EvidenceCoordinator:
         )
         return card
     _retrieve = retrieve
-
     async def close(self) -> None:
         """Cancel unfinished retrieval tasks during service shutdown."""
         tasks = list(self._tasks)
@@ -823,4 +798,3 @@ class EvidenceCoordinator:
             task.result()
         except Exception as exc:  # surfaced as lane error, service remains available
             logger.exception("background evidence retrieval failed: {}", exc)
-

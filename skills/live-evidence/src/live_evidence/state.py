@@ -1,12 +1,9 @@
 """Concurrent runtime state and Server-Sent Event projection."""
-
 from __future__ import annotations
-
 import asyncio
 from uuid import uuid4
 from collections.abc import AsyncIterator
 from datetime import timezone
-
 from .config import AppSettings, InterviewProfile
 from .models import (
     AppSnapshot,
@@ -43,11 +40,8 @@ from .state_helpers import (
     listener_snapshot,
 )
 from .transcript_dedupe import is_progressive_restatement, richer_transcript_event
-
-
 class RuntimeState:
     """Own the mutable in-process projection used by the API and UI."""
-
     def __init__(self, settings: AppSettings, profile: InterviewProfile) -> None:
         self._settings = settings
         self._profile = profile
@@ -72,13 +66,10 @@ class RuntimeState:
         self._listener_last_report_at = None
         self._listener_last_audio_at = None
         self._listener_last_transcript_at = None
-
     async def snapshot(self) -> AppSnapshot:
         """Return an immutable validated UI projection."""
-
         async with self._lock:
             return self._snapshot_unlocked()
-
     async def start_session(
         self,
         consent_confirmed: bool,
@@ -87,17 +78,14 @@ class RuntimeState:
         policy: CapabilityPolicy | None = None,
     ) -> AppSnapshot:
         """Start or restart a session under a frozen capability policy (#1449).
-
         Purpose, actor role, and policy are bound into a digest at start.
         Requesting a DIFFERENT identity after transcript activity begins does
         not widen the running session: it allocates a new session id, so a UI
         toggle can never silently upgrade a formal assessment into a coached
         one. Consent remains a separate, prior gate that policy supplements.
         """
-
         resolved_policy = policy or DEFAULT_POLICIES[purpose]
         digest = policy_digest(purpose, actor_role, resolved_policy)
-
         def fresh_session() -> SessionInfo:
             return SessionInfo(
                 status=_status_for_session(consent_confirmed, resolved_policy),
@@ -110,7 +98,6 @@ class RuntimeState:
                 policy_digest=digest,
                 practice_only=purpose is SessionPurpose.REHEARSAL,
             )
-
         async with self._lock:
             same_identity = self._session.policy_digest == digest
             active = self._session.status in (
@@ -145,16 +132,12 @@ class RuntimeState:
             snapshot = self._snapshot_unlocked()
         await self._broadcast(snapshot)
         return snapshot
-
     def session_policy(self) -> CapabilityPolicy:
         """Frozen capability policy for coordinator/API enforcement."""
-
         return self._session.policy
-
     async def reassign_turn(self, turn_id: str, speaker_slot: str) -> int:
         """Manual speaker-slot correction (#1477): presentation-level only --
         semantic content, cards, ledger, and coverage are untouched."""
-
         async with self._lock:
             count = 0
             for index, item in enumerate(self._transcript):
@@ -168,22 +151,16 @@ class RuntimeState:
             snapshot = self._snapshot_unlocked()
         await self._broadcast(snapshot)
         return count
-
     def active_question(self) -> str | None:
         return self._active_question_id
-
     def active_question_revision(self) -> int:
         return self._active_question_revision
-
     def session_purpose(self):
         return self._session.purpose
-
     def session_policy_digest(self) -> str:
         return self._session.policy_digest
-
     async def set_listener_info(self, info: dict[str, str]) -> AppSnapshot:
         """Record which audio device the listener actually captures."""
-
         now = utc_now().astimezone(timezone.utc)
         level = int(str(info.get("level") or "0") or 0)
         async with self._lock:
@@ -194,10 +171,8 @@ class RuntimeState:
             snapshot = self._snapshot_unlocked()
         await self._broadcast(snapshot)
         return snapshot
-
     async def pause_session(self) -> AppSnapshot:
         """Pause automatic retrieval while preserving the transcript."""
-
         async with self._lock:
             self._session.status = SessionStatus.PAUSED
             snapshot = self._snapshot_unlocked()
@@ -502,15 +477,15 @@ class RuntimeState:
         """
 
         # Answer/body/provenance changes require a new bound approval and the
-        # publication gate; this metadata-only path cannot promote amendments.
-        if set(fields) - {"review_verdict", "review_reasons"}:
+        # publication gate; review/amendment metadata keeps the bound answer.
+        if set(fields) - {"review_verdict", "review_reasons", "amendment_text", "amendment_complete", "solution_deck"}:
             return False
         async with self._lock:
             for index, card in enumerate(self._cards):
                 if card.card_id == card_id:
                     candidate = card.model_copy(update=fields)
                     from .reviewed_answer import card_has_bound_review
-                    if candidate.review_verdict != "ok" or not card_has_bound_review(candidate):
+                    if not card_has_bound_review(candidate):
                         return False
                     self._cards[index] = candidate
                     snapshot = self._snapshot_unlocked()

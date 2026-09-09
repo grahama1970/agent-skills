@@ -28,6 +28,74 @@ def free_port() -> int:
         return int(sock.getsockname()[1])
 
 
+def write_fake_ask_runner(temp: Path) -> Path:
+    """Create a local creator-reviewer Ask receipt for the current binding."""
+
+    runner = temp / "fake-ask-runner.py"
+    runner.write_text(r'''#!/usr/bin/env python3
+import hashlib, json, re, sys
+from pathlib import Path
+
+prompt = sys.argv[2]
+match = re.search(r"LIVE_EVIDENCE_BINDING=(\{[^\n]+\})", prompt)
+if not match:
+    raise SystemExit("missing LIVE_EVIDENCE_BINDING")
+binding_json = match.group(1)
+token = "LIVE_EVIDENCE_BINDING=" + binding_json
+run_dir = Path(sys.argv[0]).parent / "ask-run" / hashlib.sha256(binding_json.encode()).hexdigest()
+creator = run_dir / "node-artifacts" / "creator"
+reviewer = run_dir / "node-artifacts" / "reviewer"
+creator.mkdir(parents=True, exist_ok=True)
+reviewer.mkdir(parents=True, exist_ok=True)
+answer = """## Position
+### APPROACH
+- Tau keeps long work bounded with typed receipt admission.
+### PSEUDOCODE
+```text
+submit task
+require receipt
+admit only matching schema
+reject drift
+```
+### CODE
+```python
+def admit(receipt):
+    return receipt.get("status") == "PASS"
+```
+### COMPLEXITY
+- O(1) receipt gate per completed step.
+### OPTIMIZATIONS
+- Check schema hashes before trusting provider prose."""
+(run_dir / "dag.json").write_text(json.dumps({
+    "context": {"dag_template": "creator-reviewer", "request": prompt},
+    "entry_node": "creator",
+    "edges": [{"from": "creator", "to": "reviewer"}],
+}))
+def write_node(path, node_id, response, **extra):
+    response_path = path / "response.md"
+    response_path.write_text(response)
+    receipt = {
+        "schema": "ask.tau_dag_handler_receipt.v1",
+        "node_id": node_id,
+        "ok": True,
+        "status": "PASS",
+        "live": True,
+        "mocked": False,
+        "response_path": str(response_path),
+    }
+    receipt.update(extra)
+    (path / "node-receipt.json").write_text(json.dumps(receipt))
+write_node(creator, "creator", answer)
+prompt_path = reviewer / "prompt.md"
+prompt_path.write_text(token + "\n" + answer)
+write_node(reviewer, "reviewer", "VERDICT: PASS", verdict="PASS", requires_verdict=True,
+           prior_nodes=["creator"], prompt_path=str(prompt_path))
+print(json.dumps({"run_dir": str(run_dir)}))
+''', encoding="utf-8")
+    runner.chmod(0o755)
+    return runner
+
+
 def main() -> int:
     root = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
     with tempfile.TemporaryDirectory(prefix="live-evidence-sanity-") as temp_name:
@@ -37,6 +105,7 @@ def main() -> int:
         shutil.copy2(root / "fixtures" / "repo" / "tau" / "README.md", repo / "README.md")
         data_dir = temp / "data"
         port = free_port()
+        ask_runner = write_fake_ask_runner(temp)
         env = {
             **os.environ,
             "LIVE_EVIDENCE_REPOS": str(repo),
@@ -45,6 +114,7 @@ def main() -> int:
             "LIVE_EVIDENCE_HTTP_TIMEOUT": "0.3",
             "LIVE_EVIDENCE_PROCESS_TIMEOUT": "3",
             "MEMORY_SERVICE_URL": "http://127.0.0.1:9",
+            "LIVE_EVIDENCE_ASK_RUNNER": str(ask_runner),
         }
         log_path = temp / "server.log"
         with log_path.open("w", encoding="utf-8") as log:

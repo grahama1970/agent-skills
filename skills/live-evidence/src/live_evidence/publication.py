@@ -131,7 +131,9 @@ def _provenance_rejections(card: EvidenceCard) -> list[str]:
     if card.question_revision <= 0:
         reasons.append("missing_question_revision")
     if card.status is CardStatus.SUPPORTED:
-        if card.review_verdict != "ok" or not card_has_bound_review(card):
+        if (card.answer or "").strip() and (
+            card.review_verdict != "ok" or not card_has_bound_review(card)
+        ):
             reasons.append("answer_review_required")
         if not card.sources:
             reasons.append("supported_card_missing_sources")

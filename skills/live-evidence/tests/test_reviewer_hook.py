@@ -17,6 +17,7 @@ from live_evidence.coordinator import EvidenceCoordinator
 from live_evidence.persistence import SessionJournal
 from live_evidence.reviewer import ReviewOutcome
 from live_evidence.state import RuntimeState
+from review_fixture import bind_review_to_state
 
 
 @pytest.mark.asyncio
@@ -54,6 +55,7 @@ async def test_review_hook_labels_weak_and_records_journal(tmp_path, monkeypatch
         question_id=question_id,
         question_revision=revision,
     )
+    card = bind_review_to_state(tmp_path, state, card)
     snapshot = await state.publish_card_fenced(card)
     assert snapshot is not None
 

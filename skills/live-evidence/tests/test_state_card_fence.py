@@ -13,6 +13,7 @@ from live_evidence.models import (
     RetrievalLane,
 )
 from live_evidence.state import RuntimeState
+from review_fixture import bind_review_to_state
 
 
 def settings(tmp_path):
@@ -90,9 +91,9 @@ async def _assert_later_insufficient_revision_does_not_evict_supported_card(tmp_
     await state.start_session(consent_confirmed=True)
     question_id, _ = await state.revise_question("remove minimum invalid parentheses")
 
-    supported = card(CardStatus.SUPPORTED, revision=1).model_copy(
+    supported = bind_review_to_state(tmp_path, state, card(CardStatus.SUPPORTED, revision=1).model_copy(
         update={"question_id": question_id}
-    )
+    ))
     assert await state.publish_card_fenced(supported) is not None
 
     # Simulate cumulative STT creating weaker later revisions before the
@@ -117,9 +118,9 @@ async def _assert_publication_reducer_records_visible_decision(tmp_path) -> None
     await state.start_session(consent_confirmed=True)
     question_id, revision = await state.revise_question("remove minimum invalid parentheses")
 
-    supported = card(CardStatus.SUPPORTED, revision=revision).model_copy(
+    supported = bind_review_to_state(tmp_path, state, card(CardStatus.SUPPORTED, revision=revision).model_copy(
         update={"question_id": question_id}
-    )
+    ))
     assert await state.publish_card_fenced(supported) is not None
 
     decisions = await state.card_publication_journal()
@@ -139,9 +140,9 @@ async def _assert_malformed_supported_card_is_held_with_reason(tmp_path) -> None
     await state.start_session(consent_confirmed=True)
     question_id, revision = await state.revise_question("remove minimum invalid parentheses")
 
-    malformed = card(CardStatus.SUPPORTED, revision=revision).model_copy(
+    malformed = bind_review_to_state(tmp_path, state, card(CardStatus.SUPPORTED, revision=revision).model_copy(
         update={"question_id": question_id, "sources": []}
-    )
+    ))
     assert await state.publish_card_fenced(malformed) is None
 
     snapshot = await state.snapshot()
@@ -157,12 +158,12 @@ async def _assert_stale_same_question_revision_is_superseded(tmp_path) -> None:
     question_id, _ = await state.revise_question("remove minimum invalid parentheses")
     await state.revise_question("remove minimum invalid parentheses with stack")
 
-    current = card(CardStatus.SUPPORTED, revision=2).model_copy(
+    current = bind_review_to_state(tmp_path, state, card(CardStatus.SUPPORTED, revision=2).model_copy(
         update={"question_id": question_id}
-    )
-    stale = card(CardStatus.SUPPORTED, revision=1).model_copy(
+    ))
+    stale = bind_review_to_state(tmp_path, state, card(CardStatus.SUPPORTED, revision=1).model_copy(
         update={"question_id": question_id}
-    )
+    ))
     assert await state.publish_card_fenced(current) is not None
     assert await state.publish_card_fenced(stale) is None
 
@@ -179,12 +180,12 @@ async def _assert_duplicate_current_question_reconciles_to_one_visible_card(tmp_
     await state.start_session(consent_confirmed=True)
     question_id, revision = await state.revise_question("remove minimum invalid parentheses")
 
-    first = card(CardStatus.SUPPORTED, revision=revision).model_copy(
+    first = bind_review_to_state(tmp_path, state, card(CardStatus.SUPPORTED, revision=revision).model_copy(
         update={"question_id": question_id, "answer": "first answer"}
-    )
-    second = card(CardStatus.SUPPORTED, revision=revision).model_copy(
+    ))
+    second = bind_review_to_state(tmp_path, state, card(CardStatus.SUPPORTED, revision=revision).model_copy(
         update={"question_id": question_id, "answer": "refined answer"}
-    )
+    ))
     assert await state.publish_card_fenced(first) is not None
     assert await state.publish_card_fenced(second) is not None
 
@@ -209,20 +210,20 @@ async def _assert_superseded_question_completion_stays_behind_active_card(tmp_pa
     )
     assert old_question_id != new_question_id
 
-    active = card(CardStatus.SUPPORTED, revision=1).model_copy(
+    active = bind_review_to_state(tmp_path, state, card(CardStatus.SUPPORTED, revision=1).model_copy(
         update={
             "question_id": new_question_id,
             "query": "Which HTTP status code should a rate-limited API return?",
         }
-    )
+    ))
     assert await state.publish_card_fenced(active) is not None
 
-    completed_old = card(CardStatus.SUPPORTED, revision=1).model_copy(
+    completed_old = bind_review_to_state(tmp_path, state, card(CardStatus.SUPPORTED, revision=1).model_copy(
         update={
             "question_id": old_question_id,
             "query": "Explain how consistent hashing rebalances keys.",
         }
-    )
+    ))
     assert await state.publish_card_fenced(completed_old) is not None
 
     snapshot = await state.snapshot()
@@ -274,9 +275,9 @@ async def _assert_older_supported_revision_replaces_newer_insufficient_card(tmp_
     assert decisions[-1].status is PublicationStatus.HELD
     assert decisions[-1].reason_codes == ["insufficient_card_not_publishable"]
 
-    supported = card(CardStatus.SUPPORTED, revision=1).model_copy(
+    supported = bind_review_to_state(tmp_path, state, card(CardStatus.SUPPORTED, revision=1).model_copy(
         update={"question_id": question_id}
-    )
+    ))
     assert await state.publish_card_fenced(supported) is not None
 
     snapshot = await state.snapshot()
