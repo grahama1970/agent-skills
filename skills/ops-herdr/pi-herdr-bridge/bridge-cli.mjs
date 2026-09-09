@@ -43,8 +43,9 @@ if (command === "list") {
   } else {
     for (const r of rows) {
       const name = r.name || "(unnamed)";
+      const tab = r.tabLabel ? `{tab:${r.tabLabel}} ` : "";
       process.stdout.write(
-        `${r.provider.padEnd(7)} ${String(r.lane).padEnd(13)} ${name}  [${r.sessionRef?.value ?? r.paneId}]  ${r.status ?? ""}  ${r.cwd}\n`,
+        `${r.provider.padEnd(7)} ${String(r.lane).padEnd(13)} ${tab}${name}  [${r.sessionRef?.value ?? r.paneId}]  ${r.status ?? ""}  ${r.cwd}\n`,
       );
     }
     for (const e of errors) process.stderr.write(`warning: ${e}\n`);

@@ -5,7 +5,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { encodeFrame, createFrameReader, BrokerClient } from "../broker.mjs";
-import { normalizeHerdrAgents, normalizeBrokerSessions, mergeRoster, resolveTarget } from "../roster.mjs";
+import { normalizeHerdrAgents, normalizeBrokerSessions, mergeRoster, resolveTarget, normalizeTabLabels } from "../roster.mjs";
 import { pickLane } from "../route.mjs";
 
 test("framing round-trips split and coalesced frames", () => {
@@ -62,6 +62,30 @@ test("roster normalizes herdr and broker entries and resolves targets", () => {
   assert.equal(resolveTarget(roster, "uuid-codex-1").entry.provider, "codex");
   assert.equal(resolveTarget(roster, "w1:p3").entry.provider, "pi");
   assert.match(resolveTarget(roster, "nope").error, /no session matches/);
+});
+
+test("roster resolves a Herdr pane by its tab label", () => {
+  const tabLabels = normalizeTabLabels({
+    result: { tabs: [
+      { tab_id: "w7E:t1G", label: "devops" },
+      { tab_id: "w7E:t1F", label: "battle" },
+    ] },
+  });
+  const herdr = normalizeHerdrAgents({
+    result: { agents: [
+      { agent: "pi", agent_session: { agent: "pi", kind: "path", source: "herdr:pi", value: "/s/devops.jsonl" }, agent_status: "done", cwd: "/repo/x", pane_id: "w7E:p1H", tab_id: "w7E:t1G", terminal_id: "td", terminal_title_stripped: "\u03c0 - agent-skills", workspace_id: "w7E" },
+    ] },
+  }, tabLabels);
+  assert.equal(herdr[0].tabLabel, "devops");
+  const roster = mergeRoster([], herdr);
+  const resolved = resolveTarget(roster, "devops").entry;
+  assert.equal(resolved.paneId, "w7E:p1H");
+  assert.equal(pickLane(resolved), "herdr-prompt");
+  // A missing tab list degrades gracefully: no tabLabel, pane id still resolves.
+  const bare = normalizeHerdrAgents({ result: { agents: [
+    { agent: "pi", agent_status: "idle", cwd: "/y", pane_id: "w7E:p1H", tab_id: "w7E:t1G", terminal_id: "td", workspace_id: "w7E" },
+  ] } });
+  assert.equal(bare[0].tabLabel, null);
 });
 
 test("roster keeps Herdr-only terminal sessions discoverable", () => {

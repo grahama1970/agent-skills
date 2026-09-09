@@ -188,9 +188,18 @@ A single workstation can run different providers in different panes:
 `pi-herdr-bridge/` is a companion extension to pi-intercom that lets Pi,
 Codex, and Claude Code sessions discover each other and exchange bounded
 messages. The roster merges pi-intercom broker sessions with `herdr agent
-list` panes (which carry native session refs per provider); delivery routes
-per target: intercom broker for Pi, `codex queue --thread <uuid>` for Codex,
-`herdr agent prompt <pane_id>` otherwise.
+list` panes (which carry native session refs per provider) and enriches each
+Herdr pane with its **tab label** from `herdr tab list` (joined on `tab_id`);
+delivery routes per target: intercom broker for Pi, `codex queue --thread
+<uuid>` for Codex, `herdr agent prompt <pane_id>` otherwise.
+
+`resolveTarget` matches, in priority order: intercom name, Herdr terminal
+title, **Herdr tab label**, session-ref value, pane id. A tab named `devops`
+is therefore addressable as `--to devops` even when its pane title is
+`π - agent-skills`. Tab-label enrichment is best-effort: if `herdr tab list`
+is unavailable the roster still resolves by pane id and session ref. This is
+the owning layer for Herdr tab/pane addressing; pi-intercom does not scan
+Herdr and delegates cross-provider/tab targeting here.
 
 ```bash
 node pi-herdr-bridge/bridge-cli.mjs list
