@@ -22,8 +22,8 @@ def test_machine_actionable_needs_attention_does_not_page_human():
         "next_steps": ["skills/project-watchdog/run.sh recover"],
     }
     assert bridge.requires_human_push(ev) is False
-    assert bridge.push_webhook(ev) == "skipped_machine_actionable"
-    assert bridge.switchboard_delivery_decision(ev, fresh=True) == "skipped_machine_actionable"
+    assert bridge.push_webhook(ev)["reason"] == "not_human_only_blocker"
+    assert bridge.switchboard_delivery_decision(ev, fresh=True) is None
 
 
 def test_machine_actionable_needs_attention_without_next_step_does_not_page_human():
@@ -31,10 +31,25 @@ def test_machine_actionable_needs_attention_without_next_step_does_not_page_huma
     assert bridge.requires_human_push({"status": "NEEDS_ATTENTION", "requires_human_input": False}) is False
 
 
-def test_human_needed_and_completed_receipts_still_page():
+def test_machine_actionable_switchboard_push_is_not_high_alert():
+    bridge = load_bridge()
+    payload = bridge.switchboard_payload({
+        "status": "NEEDS_ATTENTION",
+        "requires_human_input": False,
+        "repo": "grahama1970/agent-skills",
+        "issue": "1640",
+        "next_steps": ["recover --apply"],
+        "dir": "receipt-dir",
+    })
+    assert payload["type"] == "info"
+    assert payload["priority"] == "normal"
+    assert payload["owning_next_action"] == "recover --apply"
+
+
+def test_human_needed_pages_but_completed_receipts_do_not_page():
     bridge = load_bridge()
     assert bridge.requires_human_push({"status": "NEEDS_ATTENTION", "requires_human_input": True}) is True
-    assert bridge.requires_human_push({"status": "COMPLETED", "requires_human_input": False}) is True
+    assert bridge.requires_human_push({"status": "COMPLETED", "requires_human_input": False}) is False
 
 
 def test_summarize_unsettled_running_operation_names_issue_and_recovery(tmp_path, monkeypatch):
@@ -67,7 +82,7 @@ def test_summarize_unsettled_running_operation_names_issue_and_recovery(tmp_path
     ev = bridge.summarize(receipt_dir)
 
     assert ev["repo"] == "grahama1970/agent-skills"
-    assert ev["issue"] == 1628
+    assert ev["issue"] == "1628"
     assert ev["action"] == "ticket_repair"
     assert ev["next_steps"] == ["recover --apply"]
-    assert bridge.switchboard_delivery_decision(ev, fresh=True) == "skipped_machine_actionable"
+    assert bridge.switchboard_delivery_decision(ev, fresh=True) is None

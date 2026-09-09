@@ -14,10 +14,24 @@
       "evidence_class": "fault_injected_deterministic",
       "mocked": true,
       "timeout_seconds": 120,
-      "command": ["uv", "run", "--project", "..", "python", "../evals/proof_trust.py", "/tmp/watchdog-proof-trust-result.json"],
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "python",
+        "../evals/proof_trust.py",
+        "/tmp/watchdog-proof-trust-result.json"
+      ],
       "expected": {
         "exit_code": 0,
-        "artifacts": [{"path": "/tmp/watchdog-proof-trust-result.json", "json_pointer": "/passed", "equals": true}]
+        "artifacts": [
+          {
+            "path": "/tmp/watchdog-proof-trust-result.json",
+            "json_pointer": "/passed",
+            "equals": true
+          }
+        ]
       },
       "proves": "The repair proof gate rejects forged bare-boolean proof JSON, stale artifacts, missing/verdictless/ambiguous reviewers, count-contradicting and forged typed reports, while accepting valid typed READY and untyped domain READY payloads. Fault-injected deterministic; not live GitHub/provider closure evidence."
     },
@@ -27,10 +41,24 @@
       "evidence_class": "fault_injected_deterministic",
       "mocked": true,
       "timeout_seconds": 120,
-      "command": ["uv", "run", "--project", "..", "python", "../evals/verify_plan_trust.py", "/tmp/watchdog-verify-plan-result.json"],
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "python",
+        "../evals/verify_plan_trust.py",
+        "/tmp/watchdog-verify-plan-result.json"
+      ],
       "expected": {
         "exit_code": 0,
-        "artifacts": [{"path": "/tmp/watchdog-verify-plan-result.json", "json_pointer": "/passed", "equals": true}]
+        "artifacts": [
+          {
+            "path": "/tmp/watchdog-verify-plan-result.json",
+            "json_pointer": "/passed",
+            "equals": true
+          }
+        ]
       },
       "proves": "validated_verification_plan admits only a complete reviewer-owned VERIFY_PLAN: truncated plan JSON, duplicate/missing plans, creator authority substitution, wrong artifact binding, blank coverage, and multiline command injection are all rejected. Fault-injected deterministic; not live closure evidence."
     },
@@ -40,8 +68,25 @@
       "evidence_class": "fault_injected_deterministic",
       "mocked": true,
       "timeout_seconds": 120,
-      "command": ["uv", "run", "--project", "..", "pytest", "../tests/test_primary_main_revision.py::test_scoped_reservations_allow_disjoint_declared_targets", "../tests/test_primary_main_revision.py::test_legacy_global_flock_does_not_block_declared_scoped_targets", "../tests/test_primary_main_revision.py::test_scoped_reservations_serialize_overlapping_target_prefixes", "../tests/test_primary_main_revision.py::test_scoped_publication_guard_rejects_commit_outside_reserved_target", "../tests/test_project_rotation.py::test_tick_scans_disjoint_target_when_scoped_writer_is_active", "-q"],
-      "expected": {"exit_code": 0, "stdout_contains": ["5 passed"]},
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_primary_main_revision.py::test_scoped_reservations_allow_disjoint_declared_targets",
+        "../tests/test_primary_main_revision.py::test_legacy_global_flock_does_not_block_declared_scoped_targets",
+        "../tests/test_primary_main_revision.py::test_scoped_reservations_serialize_overlapping_target_prefixes",
+        "../tests/test_primary_main_revision.py::test_scoped_publication_guard_rejects_commit_outside_reserved_target",
+        "../tests/test_project_rotation.py::test_tick_scans_disjoint_target_when_scoped_writer_is_active",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "5 passed"
+        ]
+      },
       "proves": "Primary reservations use target-scoped nonblocking locks: disjoint declared targets can coexist, a legacy checkout-global flock does not block declared scoped targets, prefix-overlapping targets serialize, the publication guard rejects worker-attributable commits outside the reserved target scope, and the tick scanner treats active scoped writer targets as busy targets rather than a repository-wide stop. Fixture-backed only; no live GitHub/provider closure."
     },
     {
@@ -50,8 +95,25 @@
       "evidence_class": "fault_injected_deterministic",
       "mocked": true,
       "timeout_seconds": 180,
-      "command": ["uv", "run", "--project", "..", "python", "../evals/publication_recovery.py", "/tmp/watchdog-publication-recovery-case.json"],
-      "expected": {"exit_code": 0, "artifacts": [{"path": "/tmp/watchdog-publication-recovery-case.json", "json_pointer": "/passed", "equals": true}]},
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "python",
+        "../evals/publication_recovery.py",
+        "/tmp/watchdog-publication-recovery-case.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/tmp/watchdog-publication-recovery-case.json",
+            "json_pointer": "/passed",
+            "equals": true
+          }
+        ]
+      },
       "proves": "Retained #1639 regression coverage for publication races and native release recovery: disjoint remote-main advance, same-target conflict, failed push diagnostics, helper nonzero diagnostics, close readback still open, proof/publication/close/release interruption recovery, target parsing scope, foreign leases/holds, and closed-but-release-pending journal state. Fault-injected mock-GitHub tests supplement, not replace, live remote evidence.",
       "does_not_prove": "The required live E2E against a real approved GitHub ticket; that remains a separate verification-plan command before closure."
     },
@@ -61,8 +123,21 @@
       "evidence_class": "fault_injected_deterministic",
       "mocked": true,
       "timeout_seconds": 120,
-      "command": ["uv", "run", "--project", "..", "pytest", "../tests/test_project_watchdog.py::test_immutable_replay_proof_checks_expected_failures_and_hashes", "-q"],
-      "expected": {"exit_code": 0, "stdout_contains": ["1 passed"]}
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_watchdog.py::test_immutable_replay_proof_checks_expected_failures_and_hashes",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      }
     },
     {
       "name": "native-release-retains-command-diagnostics",
@@ -70,8 +145,21 @@
       "evidence_class": "fault_injected_deterministic",
       "mocked": true,
       "timeout_seconds": 120,
-      "command": ["uv", "run", "--project", "..", "pytest", "../tests/test_primary_main_revision.py::test_owned_release_does_not_remove_foreign_generation", "-q"],
-      "expected": {"exit_code": 0, "stdout_contains": ["1 passed"]}
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_primary_main_revision.py::test_owned_release_does_not_remove_foreign_generation",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      }
     },
     {
       "name": "sanity-gates",
@@ -105,11 +193,75 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "4 passed"
+          "5 passed"
         ]
       },
-      "proves": "project-watchdog notify bridge does not page the human or Pi inbox for NEEDS_ATTENTION receipts that explicitly require no human input, and summarizes unsettled active operations with issue identity plus the recovery command instead of None#None.",
+      "proves": "project-watchdog notify bridge does not page the human or send HIGH/ALERT Switchboard pushes for NEEDS_ATTENTION receipts that explicitly require no human input, still wakes the Pi agent for machine-actionable work, and summarizes unsettled active operations with issue identity plus the recovery command instead of None#None.",
       "does_not_prove": "Live Discord or Switchboard delivery; this is a deterministic policy gate over the bridge routing function."
+    },
+    {
+      "name": "watchdog-log-delivery",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "python",
+        "../evals/watchdog_log_delivery.py",
+        "/tmp/watchdog-log-delivery-proof.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/tmp/watchdog-log-delivery-proof.json",
+            "json_pointer": "/passed",
+            "equals": true
+          },
+          {
+            "path": "/tmp/watchdog-log-delivery-proof.json",
+            "json_pointer": "/checks/jsonl_bytes_rendered_terminal_event",
+            "equals": true
+          },
+          {
+            "path": "/tmp/watchdog-log-delivery-proof.json",
+            "json_pointer": "/checks/pi_checkpoint_after_ack",
+            "equals": true
+          },
+          {
+            "path": "/tmp/watchdog-log-delivery-proof.json",
+            "json_pointer": "/checks/agent_action_receipt_retained",
+            "equals": true
+          },
+          {
+            "path": "/tmp/watchdog-log-delivery-proof.json",
+            "json_pointer": "/checks/human_only_escalation_uses_ops_discord",
+            "equals": true
+          },
+          {
+            "path": "/tmp/watchdog-log-delivery-proof.json",
+            "json_pointer": "/checks/restart_catchup_no_loss",
+            "equals": true
+          },
+          {
+            "path": "/tmp/watchdog-log-delivery-proof.json",
+            "json_pointer": "/checks/restart_catchup_no_replay_flood",
+            "equals": true
+          },
+          {
+            "path": "/tmp/watchdog-log-delivery-proof.json",
+            "json_pointer": "/checks/stale_progress_never_live",
+            "equals": true
+          }
+        ]
+      },
+      "proves": "The real watchdog_notify_bridge.py entrypoint normalizes receipts into correlated JSONL terminal events with explicit unknown identity, source_time separate from observed_at, raw errors and triage details; advances per-destination checkpoints only after terminal/Pi/ops-discord readback; retains pending failed destinations for restart catch-up without replay flood; refuses concurrent collectors; keeps stale heartbeat progress out of LIVE; and sends ops-discord only for explicit human-input blockers.",
+      "does_not_prove": "Live Discord, live Pi Switchboard, live GitHub/Tau transition, or supervising agent acknowledgement. The command uses isolated receipts, a local HTTP stand-in, and a fake ops-discord executable; the ticket's live E2E proof remains a separate closure gate."
     },
     {
       "name": "fleet-tick-running-writer-skips",
@@ -1428,19 +1580,59 @@
       "real_world": true,
       "evidence_class": "fault_injected_deterministic",
       "timeout_seconds": 120,
-      "command": ["bash", "-lc", "cd .. && uv run python scripts/eval_resume_generation.py --out /tmp/watchdog-resume-generation-eval/proof.json"],
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && uv run python scripts/eval_resume_generation.py --out /tmp/watchdog-resume-generation-eval/proof.json"
+      ],
       "expected": {
         "exit_code": 0,
         "artifacts": [
-          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/ok", "equals": true},
-          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/old_PASS_not_reused", "equals": true},
-          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/old_BLOCKED_not_reused", "equals": true},
-          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/preserved_admission_mutation_rejected", "equals": true},
-          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/truncated_reviewer_plan_rejected", "equals": true},
-          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/broken_quoting_rejected", "equals": true},
-          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/missing_mandatory_artifact_rejected", "equals": true},
-          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/dict_coverage_rejected", "equals": true},
-          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/valid_review_plan_admitted", "equals": true}
+          {
+            "path": "/tmp/watchdog-resume-generation-eval/proof.json",
+            "json_pointer": "/ok",
+            "equals": true
+          },
+          {
+            "path": "/tmp/watchdog-resume-generation-eval/proof.json",
+            "json_pointer": "/checks/old_PASS_not_reused",
+            "equals": true
+          },
+          {
+            "path": "/tmp/watchdog-resume-generation-eval/proof.json",
+            "json_pointer": "/checks/old_BLOCKED_not_reused",
+            "equals": true
+          },
+          {
+            "path": "/tmp/watchdog-resume-generation-eval/proof.json",
+            "json_pointer": "/checks/preserved_admission_mutation_rejected",
+            "equals": true
+          },
+          {
+            "path": "/tmp/watchdog-resume-generation-eval/proof.json",
+            "json_pointer": "/checks/truncated_reviewer_plan_rejected",
+            "equals": true
+          },
+          {
+            "path": "/tmp/watchdog-resume-generation-eval/proof.json",
+            "json_pointer": "/checks/broken_quoting_rejected",
+            "equals": true
+          },
+          {
+            "path": "/tmp/watchdog-resume-generation-eval/proof.json",
+            "json_pointer": "/checks/missing_mandatory_artifact_rejected",
+            "equals": true
+          },
+          {
+            "path": "/tmp/watchdog-resume-generation-eval/proof.json",
+            "json_pointer": "/checks/dict_coverage_rejected",
+            "equals": true
+          },
+          {
+            "path": "/tmp/watchdog-resume-generation-eval/proof.json",
+            "json_pointer": "/checks/valid_review_plan_admitted",
+            "equals": true
+          }
         ]
       },
       "proves": "Public Ask/Tau local command execution, generation-fenced watchdog settlement, preserved creator admission, and pre-dispatch rejection without inheriting historical status.",
