@@ -55,12 +55,12 @@ Enterprise-grade React/Next.js/React Native rules from Vercel Engineering. 100+ 
 
 Every interactive element gets **4 things at write time** — no exceptions, no retrofitting:
 
-1. **`data-qid`** — stable CSS selector. Format: `component:element:qualifier` (colon-separated). Used by test manifests, CDP automation, and `verify-data-qid.py` enforcement.
+1. **`data-qid`** — stable automation/test identifier consumed only through `[data-qid='...']`. Format: `component:element:qualifier` (colon-separated). Used by test manifests, CDP automation, and `scripts/verify-data-qid.py` enforcement.
 2. **`data-qs-action`** — QuerySpec action ID for agent/voice execution. Format: `COMPONENT_ACTION` (uppercase, underscore). An agent resolves NL intent → action ID → `document.querySelector('[data-qs-action="APPROVE_ENTRY"]').click()` — zero latency, no database lookup, works offline.
 3. **`title`** — human-readable label. Required for MIL-STD-1472H compliance, screen readers, tooltips.
 4. **`useRegisterAction`** — registers the action to ArangoDB `app_actions` collection for training data, analytics, and cross-app action discovery.
 
-Components without all 4 are **not shippable**. `verify-data-qid.py` enforces `data-qid` coverage in CI.
+Components without all 4 are **not shippable**. `scripts/verify-data-qid.py` enforces source-level `data-qid` coverage in CI.
 
 **Write-time checklist:**
 ```tsx
@@ -87,7 +87,32 @@ useRegisterAction('quarantine:action:approve', {
 - `useRegisterAction` = ArangoDB registry (training data, cross-app discovery, analytics)
 - They use the SAME action ID (`QUARANTINE_APPROVE`) so intent → action → DOM click is one straight line
 
-**Enforcement**: `verify-data-qid.py` MUST run in CI and `/plan` DoD for any UX task. Exit 1 = not shippable. `/review-plan` MUST FAIL any UX plan without it.
+**Enforcement**: `scripts/verify-data-qid.py` MUST run in CI and `/plan` DoD for any UX task. Exit 1 = not shippable. `/review-plan` MUST FAIL any UX plan without it.
+
+**QID selector contract:** executable interaction tests use only
+`[data-qid='...']` selectors. No `#id`, `.class`, text, XPath, `nth-child`, array
+position, render-order, or other CSS-selector fallback is acceptable. A missing
+or unstable QID is an instrumentation defect to fix in the component, not a test
+authoring problem to guess around.
+
+Every interactive control must expose a `data-qid` that is unique within every
+reachable live-DOM state.
+
+**Static vs live boundary:** `scripts/verify-data-qid.py` checks source-level
+facts it can prove: interactive JSX controls have a `data-qid`, literal QIDs use
+the canonical shape, repeated-entity QIDs do not derive from volatile identity,
+and obvious duplicate literal QIDs are rejected. It does **not** prove every
+conditionally rendered live-DOM state is reachable or unique. Live reachability,
+live uniqueness, missing rendered QIDs, and duplicate rendered QIDs remain owned
+by `skills/test-interactions/run.sh discover`.
+
+**Persistent controls:** use invariant semantic QIDs such as
+`component:element:qualifier`.
+
+**Repeated entity controls:** append a stable domain or test identity when
+needed, for example `orders:item:open:${order.id}`. Do not append array index,
+render position, sort order, `Date.now()`, timestamps, random values,
+per-render UUIDs, or `nth-child`.
 
 ### File size — capped by contents, not one number
 
@@ -111,7 +136,7 @@ python3 scripts/verify-file-size.py src/       # exit 1 on violation
 Data files are **detected, not declared**, so the lower ceiling cannot be dodged
 by renaming. Existing violations go in `.file-size-allowlist` as `path: lines` —
 a debt marker that pins the current size, so an allowlisted file may not grow.
-Runs in CI and `/plan` DoD alongside `verify-data-qid.py`.
+Runs in CI and `/plan` DoD alongside `scripts/verify-data-qid.py`.
 - Eliminate request waterfalls (parallel fetching, `Promise.all`)
 - Bundle size (dynamic imports, tree shaking, barrel file avoidance)
 - Accessibility (aria-labels, semantic HTML, keyboard navigation)
@@ -281,7 +306,7 @@ component commit and make the revert path explicit before applying new edits.
   </div>
 ))}
 ```
-**Why:** Test manifests need unique selectors. If 18 entries share `data-qid="quarantine:entry"`, `querySelector` always hits the first one. Use the entity ID to make each qid unique. Note: dynamic qids change when data changes, so test manifests for list items must query the live DOM or use `:nth-child` fallbacks.
+**Why:** Test manifests need unique selectors. If 18 entries share `data-qid="quarantine:entry"`, `querySelector` always hits the first one. Use the entity ID to make each qid unique. Dynamic list manifests must come from the live DOM and target the rendered element by its `[data-qid='...']` selector. If no stable executable QID exists, fix instrumentation before writing the test.
 
 ### WRONG: Early return that hides chrome (filters, nav, controls) on empty state
 ```tsx

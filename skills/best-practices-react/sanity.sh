@@ -37,10 +37,10 @@ done
 # SKILL.md frontmatter
 check "SKILL.md has name field" grep -q "^name:" SKILL.md
 check "SKILL.md has description" grep -q "^description:" SKILL.md
-
-echo "--- $PASS passed, $FAIL failed ---"
-[ "$FAIL" -eq 0 ]
-
+check "verify-data-qid runs and reports" python3 scripts/verify-data-qid.py --help
+check "verify-data-qid accepts stable fixtures" python3 scripts/verify-data-qid.py fixtures/data-qid/positive
+check "verify-data-qid rejects missing qid" bash -c '
+  python3 scripts/verify-data-qid.py fixtures/data-qid/negative/missing-qid.tsx >/dev/null 2>&1; rc=$?; [ $rc -eq 1 ]'
 check "verify-file-size runs and reports" python3 scripts/verify-file-size.py --help
 check "verify-file-size flags an over-ceiling logic file" bash -c '
   d=$(mktemp -d); mkdir -p "$d/src"
@@ -51,3 +51,5 @@ check "verify-file-size allows a large pure-data file" bash -c '
   { echo "export const t = {"; for i in $(seq 1 500); do echo "  k$i: { color: \"red\" },"; done; echo "}"; } > "$d/src/tokens.ts"
   python3 scripts/verify-file-size.py "$d/src" >/dev/null 2>&1; rc=$?; rm -rf "$d"; [ $rc -eq 0 ]'
 
+echo "--- $PASS passed, $FAIL failed ---"
+[ "$FAIL" -eq 0 ]

@@ -18,7 +18,7 @@ renaming a component. A file counts as data only when it has no control flow, no
 JSX, and no function bodies.
 
 Exit 1 on violation. Intended for CI and for the definition of done on any UX
-task, alongside verify-data-qid.py.
+task, alongside scripts/verify-data-qid.py.
 """
 from __future__ import annotations
 

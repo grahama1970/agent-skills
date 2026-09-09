@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>best-practices-react data-qid live fixture</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 32px; color: #172033; }
+      button { min-width: 48px; min-height: 44px; margin: 6px; }
+    </style>
+  </head>
+  <body>
+    <main data-qid="orders:surface:fixture">
+      <h1>Orders</h1>
+      <p data-qid="orders:status:message">ready</p>
+      <section data-qid="orders:list:stable" aria-label="Stable dynamic list"></section>
+      <section aria-label="Instrumentation defects">
+        <button
+          data-qid="orders:item:duplicate"
+          data-qs-action="ORDERS_DUPLICATE_A"
+          title="Duplicate A"
+          onclick="document.querySelector('[data-qid=&quot;orders:status:message&quot;]').textContent='duplicate A'"
+        >Duplicate A</button>
+        <button
+          data-qid="orders:item:duplicate"
+          data-qs-action="ORDERS_DUPLICATE_B"
+          title="Duplicate B"
+          onclick="document.querySelector('[data-qid=&quot;orders:status:message&quot;]').textContent='duplicate B'"
+        >Duplicate B</button>
+        <button
+          data-qs-action="ORDERS_MISSING_QID"
+          title="Missing QID"
+          onclick="document.querySelector('[data-qid=&quot;orders:status:message&quot;]').textContent='missing qid clicked'"
+        >Missing QID</button>
+      </section>
+    </main>
+    <script>
+      const orders = [
+        { id: "order-101", label: "101" },
+        { id: "order-102", label: "102" },
+      ];
+      const list = document.querySelector('[data-qid="orders:list:stable"]');
+      for (const order of orders) {
+        const button = document.createElement("button");
+        button.dataset.qid = `orders:item:open:${order.id}`;
+        button.dataset.qsAction = "ORDERS_OPEN";
+        button.title = `Open order ${order.label}`;
+        button.textContent = `Open ${order.label}`;
+        button.addEventListener("click", () => {
+          document.querySelector('[data-qid="orders:status:message"]').textContent = `opened ${order.id}`;
+        });
+        list.appendChild(button);
+      }
+    </script>
+  </body>
+</html>

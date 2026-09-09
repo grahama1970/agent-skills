@@ -2,10 +2,10 @@
   "version": 2,
   "skill": "best-practices-react",
   "trials": 3,
-  "proof_scope": "React operator-surface standards for the OpenAI interview demo: data-qid, data-qs-action, title, and project verifier coverage.",
+  "proof_scope": "React operator-surface standards: data-qid, data-qs-action, title, source QID verifier coverage, and live discovery boundary.",
   "claims": {
-    "proves": "best-practices-react can guard the OpenAI demo UI for data-qid/action/title affordances through the project verifier.",
-    "does_not_prove": "visual design quality, browser screenshot fidelity, full accessibility, or production UX readiness."
+    "proves": "best-practices-react can guard source-level data-qid/action/title affordances and delegate live rendered QID uniqueness to test-interactions.",
+    "does_not_prove": "visual design quality, full accessibility, or that static source parsing proves every conditional live-DOM state."
   },
   "cases": [
     {
@@ -46,6 +46,96 @@
         ]
       },
       "timeout_seconds": 120
+    },
+    {
+      "name": "data-qid-source-fixtures",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "best_practices_react.data_qid_source_verifier"
+      ],
+      "seams": [
+        "react.data_qid_source_contract"
+      ],
+      "command": [
+        "python3",
+        "../scripts/verify-data-qid-fixtures.py",
+        "--include-sanity",
+        "--output",
+        "/tmp/best-practices-react-agentic-data-qid.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_DATA_QID_FIXTURES"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/best-practices-react-agentic-data-qid.json",
+            "json_pointer": "/status",
+            "equals": "PASS_DATA_QID_FIXTURES"
+          }
+        ]
+      }
+    },
+    {
+      "name": "data-qid-live-discovery-boundary",
+      "type": "adversarial",
+      "evidence_class": "live_e2e",
+      "real_world": true,
+      "supports_claims": [
+        "best_practices_react.data_qid_live_boundary"
+      ],
+      "seams": [
+        "react.data_qid_live_boundary"
+      ],
+      "command": [
+        "python3",
+        "../scripts/verify-data-qid-live-fixture.py",
+        "--output",
+        "/tmp/best-practices-react-agentic-data-qid-live.json",
+        "--work-dir",
+        "/tmp/best-practices-react-agentic-data-qid-live-work"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_DATA_QID_LIVE_FIXTURE"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/best-practices-react-agentic-data-qid-live.json",
+            "json_pointer": "/status",
+            "equals": "PASS_DATA_QID_LIVE_FIXTURE"
+          },
+          {
+            "path": "/tmp/best-practices-react-agentic-data-qid-live.json",
+            "json_pointer": "/checks/stable_dynamic_control_manifest_target",
+            "equals": true
+          },
+          {
+            "path": "/tmp/best-practices-react-agentic-data-qid-live.json",
+            "json_pointer": "/checks/duplicate_qid_reported",
+            "equals": true
+          },
+          {
+            "path": "/tmp/best-practices-react-agentic-data-qid-live.json",
+            "json_pointer": "/checks/missing_qid_reported",
+            "equals": true
+          },
+          {
+            "path": "/tmp/best-practices-react-agentic-data-qid-live.json",
+            "json_pointer": "/checks/no_fallback_selector_in_manifest",
+            "equals": true
+          },
+          {
+            "path": "/tmp/best-practices-react-agentic-data-qid-live.json",
+            "json_pointer": "/checks/no_fallback_selector_in_findings",
+            "equals": true
+          }
+        ]
+      },
+      "timeout_seconds": 120
     }
   ],
   "capability_claims": [
@@ -55,6 +145,22 @@
       "criticality": "critical",
       "evidence_required": {
         "deterministic": true
+      }
+    },
+    {
+      "id": "best_practices_react.data_qid_source_verifier",
+      "description": "The canonical source verifier accepts stable QIDs and rejects missing, malformed, volatile, and duplicate literal QIDs.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "best_practices_react.data_qid_live_boundary",
+      "description": "Live CDP discovery owns rendered QID reachability and uniqueness while generated executable targets stay QID-only.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
       }
     }
   ],
@@ -66,6 +172,24 @@
       "claim_id": "best_practices_react.openai_operator_surface",
       "required_evidence": [
         "deterministic"
+      ]
+    },
+    {
+      "seam_id": "react.data_qid_source_contract",
+      "seam_type": "source verifier",
+      "criticality": "critical",
+      "claim_id": "best_practices_react.data_qid_source_verifier",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "react.data_qid_live_boundary",
+      "seam_type": "browser/CDP discovery",
+      "criticality": "critical",
+      "claim_id": "best_practices_react.data_qid_live_boundary",
+      "required_evidence": [
+        "live_e2e"
       ]
     }
   ]

@@ -78,12 +78,12 @@ useRegisterAction(selectAction)
 ## Rules
 
 1. **Every `onClick`, `onChange`, `onDoubleClick` that changes app state** MUST have a corresponding `useRegisterAction` call
-2. **`data-qid` is the stable selector**: format `{component}:{element}:{qualifier}` (colon-separated, e.g., `quarantine:action:approve`, `corpus:sort:asc`, `bbox:filter:table`). This is the key used by `useRegisterAction`, CDP automation, and test manifests.
+2. **`data-qid` is the stable automation/test identifier**: format `{component}:{element}:{qualifier}` (colon-separated, e.g., `quarantine:action:approve`, `corpus:sort:asc`, `bbox:filter:table`). Executable tests consume it only through `[data-qid='...']`; missing QIDs are instrumentation defects, not permission to use `nth-child`, class, ID, text, XPath, or positional selector fallbacks.
 3. **`title` on every `data-qid` element** — MIL-STD-1472H compliance, screen readers, tooltip discoverability
 4. **`useRegisterAction(qid, {app, action, label, description})` registers to ArangoDB `app_actions`** — this IS the QuerySpec registry. Agents query `app_actions` to discover available actions. No separate `data-qs-action`/`data-qs-params` DOM attributes needed — the database is the single source of truth.
 5. **Handlers are the SAME functions** as mouse/keyboard handlers — no separate "voice handler"
 6. **Every successful execution is stored** to ArangoDB as `(voice_text, evidence, QuerySpec, scope)` for training the local 32B model
-7. **Enforcement**: `verify-data-qid.py` runs in CI. Exit 1 = not shippable. Located at `packages/ux-lab/scripts/verify-data-qid.py`.
+7. **Enforcement**: `scripts/verify-data-qid.py` runs in CI. Exit 1 = not shippable. Source validation catches missing/malformed/volatile/obvious duplicate QIDs; live uniqueness and reachability remain owned by `skills/test-interactions/run.sh discover`.
 
 **`data-qs-action` on DOM elements**: Required for zero-latency agent execution. The DOM must be self-describing — an agent resolves "approve this entry" → `APPROVE_ENTRY` → `document.querySelector('[data-qs-action="APPROVE_ENTRY"]').click()` without any database lookup. `useRegisterAction` stores to ArangoDB for training/analytics; `data-qs-action` on the DOM is for runtime execution.
 

@@ -60,7 +60,8 @@ function DirectorConsole({ stage, onSelect }: Props) {
 ```
 
 **Enforcement.** `scripts/verify-file-size.py` exits 1 on violation and must run
-in CI and in `/plan` DoD for any UX task, alongside `verify-data-qid.py`.
+in CI and in `/plan` DoD for any UX task, alongside
+`scripts/verify-data-qid.py`.
 `/review-plan` must fail a UX plan that omits it.
 
 ```bash
