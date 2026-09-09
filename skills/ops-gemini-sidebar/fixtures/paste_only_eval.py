@@ -57,8 +57,12 @@ def main():
     run('import', '-window', windows[0], str(out / 'draft.png'))
     clipboard(poison)
     run('xdotool', 'key', 'ctrl+a', 'ctrl+c')
-    time.sleep(.2)
-    readback = run('xclip', '-selection', 'clipboard', '-o')
+    deadline = time.monotonic() + 5
+    while True:
+        readback = run('xclip', '-selection', 'clipboard', '-o')
+        if readback == marker or time.monotonic() >= deadline:
+            break
+        time.sleep(.1)
     (out / 'draft-readback.txt').write_text(readback)
     passed = readback == marker
     if passed:

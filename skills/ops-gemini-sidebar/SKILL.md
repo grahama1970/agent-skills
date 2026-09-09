@@ -112,11 +112,29 @@ the shared page against the design goals. You, not the project agent, judge
 whether it is modern and professional.
 ```
 
+## Live desktop checks
+
+`fixtures/paste_only_live.json` exercises a blank draft and an already-completed
+code response without sending another prompt. Supply a freshly calibrated
+`OPS_GEMINI_SIDEBAR_COORDS` plan (including the current copy icon),
+`OPS_GEMINI_SIDEBAR_DISPLAY`, and, for non-cockpit responses,
+`OPS_GEMINI_SIDEBAR_RESPONSE_MARKER`. Both draft and response tests poison the
+clipboard before independent readback; they cannot pass on the outgoing prompt.
+
+When agents share Chrome, keep the project tab in a dedicated browser window
+(same browser/profile, not a new browser process). Use Surf `window.new` and
+`tab.move <tab-id> --to-window <window-id>`, then verify `tab.list`, window
+geometry and the sidebar Sharing label again. Never reuse coordinates after a
+window move/resize. A different project's sidebar answer is not your verdict.
+
 ## Boundaries
 
 - Requires an accessible desktop session with `xdotool` and `xclip`.
 - Fails closed when `DISPLAY` is absent unless `--display` is supplied.
 - Copy-icon coordinates are dynamic; take a fresh screenshot after the response.
+  `copy-response` installs a unique pending clipboard marker and waits up to five
+  seconds for its replacement before saving. Chrome's copy is asynchronous;
+  an immediate clipboard read can return the outgoing prompt instead of the answer.
 - Do not claim screenshot attachment to Gemini sidebar; this skill sends text
   through the composer only.
 - Gemini is the design assessor in design-loop mode. Local proof remains with

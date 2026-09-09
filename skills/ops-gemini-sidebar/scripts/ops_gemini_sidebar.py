@@ -13,6 +13,8 @@ import json
 import os
 import shutil
 import subprocess
+import time
+from uuid import uuid4
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated, Literal
@@ -235,10 +237,25 @@ def copy_response(
         fail("copy-response", errors, json_output, plan_obj)
     env = desktop_env(plan_obj, display)
     try:
+        marker = f"ops-gemini-sidebar-copy-pending:{uuid4()}"
+        set_clipboard(marker, env)
+        deadline = time.monotonic() + 5
+        while run_checked(["xclip", "-selection", "clipboard", "-o"], env).stdout != marker:
+            if time.monotonic() >= deadline:
+                raise subprocess.TimeoutExpired(["xclip", "clipboard-marker-readback"], 5)
+            time.sleep(0.1)
         run_checked(["xdotool", "search", "--name", plan_obj.window_title, "windowactivate", "%@"], env)
         run_checked(["xdotool", "mousemove", str(plan_obj.copy_button.x), str(plan_obj.copy_button.y)], env)
-        run_checked(["xdotool", "click", "1"], env)
-        result = run_checked(["xclip", "-selection", "clipboard", "-o"], env)
+        # Chrome side-panel Copy can ignore an instantaneous press/release.
+        run_checked(["xdotool", "mousedown", "1", "sleep", "0.15", "mouseup", "1"], env)
+        deadline = time.monotonic() + 5
+        while True:
+            result = run_checked(["xclip", "-selection", "clipboard", "-o"], env)
+            if result.stdout != marker:
+                break
+            if time.monotonic() >= deadline:
+                raise subprocess.TimeoutExpired(["xclip", "fresh-response-readback"], 5)
+            time.sleep(0.1)
     except subprocess.CalledProcessError as exc:
         fail("copy-response", [{"type": "desktop_command_failed", "loc": exc.cmd, "msg": exc.stderr or exc.stdout or str(exc), "ctx": {"returncode": exc.returncode}}], json_output, plan_obj)
     except subprocess.TimeoutExpired as exc:

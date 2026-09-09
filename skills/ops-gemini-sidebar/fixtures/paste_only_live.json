@@ -2,8 +2,18 @@
   "version": 2,
   "skill": "ops-gemini-sidebar",
   "trials": 2,
-  "proof_scope": "Real X11 draft retention in an operator-calibrated empty composer, plus explicit missing-display refusal. No Gemini/provider answer or design acceptance claim.",
+  "proof_scope": "Real X11 draft retention and asynchronous response-copy readback in an operator-calibrated sidebar, plus explicit missing-display refusal. No new provider answer or design acceptance claim.",
   "cases": [
+    {
+      "name": "live-copy-replaces-poisoned-clipboard",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "command": ["bash", "-c", "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/ops-gemini-sidebar/.venv uv run --project .. python copy_response_eval.py"],
+      "timeout_seconds": 45,
+      "expected": {"exit_code": 0, "stdout_contains": ["\"status\": \"PASS\"", "Real desktop response copy/readback"]}
+    },
     {
       "name": "live-paste-only-retains-draft",
       "type": "positive",
