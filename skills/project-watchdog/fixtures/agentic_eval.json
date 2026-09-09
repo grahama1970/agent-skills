@@ -9,6 +9,15 @@
   },
   "cases": [
     {
+      "name": "immutable-replay-proof-negative-controls",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": ["uv", "run", "--project", "..", "pytest", "../tests/test_project_watchdog.py::test_immutable_replay_proof_checks_expected_failures_and_hashes", "-q"],
+      "expected": {"exit_code": 0, "stdout_contains": ["1 passed"]}
+    },
+    {
       "name": "native-release-retains-command-diagnostics",
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",

@@ -1,0 +1,97 @@
+{
+  "schema": "agentic_evals.issue1631.live_e2e_result.v1",
+  "mocked": false,
+  "live": true,
+  "steps": {
+    "original_frozen_failure": {
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh",
+        "run",
+        "/tmp/ae-issue1631-wqp2lkfm/original.json",
+        "--output",
+        "/tmp/ae-issue1631-wqp2lkfm/original-report.json",
+        "--report-only"
+      ],
+      "returncode": 0,
+      "readiness": "NOT_READY",
+      "case_outcome": "FAIL",
+      "observed_outcome": "FAIL",
+      "claim_verdict": "FAILED",
+      "test_source_sha256": "sha256:97e7bcae7f94ed47b1e3387c2bb8d6629708e38472a2586183dbd2afd5777cdd",
+      "oracle_sha256": "sha256:27246cf9cbd1b79bb9ea7660a6995fe23b322b18b92bb49fe077eb5ee4e2c2f8",
+      "application_identity": {
+        "kind": "local_http_service",
+        "source": "/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/scripts/issue1631_live_e2e.py",
+        "build_identity": "broken-primary-control"
+      },
+      "evidence_eligibility": {
+        "eligible": true,
+        "eligible_for_existing_claim": true,
+        "requires_requalification": false,
+        "reason_codes": [],
+        "integrity_errors": []
+      }
+    },
+    "locator_only_test_change": {
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh",
+        "run",
+        "/tmp/ae-issue1631-wqp2lkfm/locator-repair.json",
+        "--output",
+        "/tmp/ae-issue1631-wqp2lkfm/locator-repair-report.json",
+        "--report-only"
+      ],
+      "returncode": 0,
+      "readiness": "NOT_READY",
+      "case_outcome": "FAIL",
+      "observed_outcome": "PASS",
+      "claim_verdict": "NOT_ESTABLISHED",
+      "test_source_sha256": "sha256:95f2e3e1ae6a2522428a52c13074653d43f311b6175809e0de80b682cae5b828",
+      "oracle_sha256": "sha256:27246cf9cbd1b79bb9ea7660a6995fe23b322b18b92bb49fe077eb5ee4e2c2f8",
+      "application_identity": {
+        "kind": "local_http_service",
+        "source": "/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/scripts/issue1631_live_e2e.py",
+        "build_identity": "broken-primary-control"
+      },
+      "evidence_eligibility": {
+        "eligible": false,
+        "eligible_for_existing_claim": false,
+        "requires_requalification": true,
+        "reason_codes": [
+          "regression_replay_declared_mutation_requires_test_repair"
+        ],
+        "integrity_errors": []
+      }
+    },
+    "application_repair_unchanged_replay": {
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh",
+        "run",
+        "/tmp/ae-issue1631-wqp2lkfm/fixed-original.json",
+        "--output",
+        "/tmp/ae-issue1631-wqp2lkfm/fixed-report.json",
+        "--report-only"
+      ],
+      "returncode": 0,
+      "readiness": "READY",
+      "case_outcome": "PASS",
+      "observed_outcome": "PASS",
+      "claim_verdict": "PROVEN",
+      "test_source_sha256": "sha256:97e7bcae7f94ed47b1e3387c2bb8d6629708e38472a2586183dbd2afd5777cdd",
+      "oracle_sha256": "sha256:27246cf9cbd1b79bb9ea7660a6995fe23b322b18b92bb49fe077eb5ee4e2c2f8",
+      "application_identity": {
+        "kind": "local_http_service",
+        "source": "/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/scripts/issue1631_live_e2e.py",
+        "build_identity": "application-repaired-primary-control"
+      },
+      "evidence_eligibility": {
+        "eligible": true,
+        "eligible_for_existing_claim": true,
+        "requires_requalification": false,
+        "reason_codes": [],
+        "integrity_errors": []
+      }
+    }
+  },
+  "passed": true
+}

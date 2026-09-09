@@ -781,6 +781,28 @@ def test_proof_artifact_ignores_provider_status_noise_and_domain_enums(tmp_path)
     assert handlers.inspect_proof_artifact(str(artifact), not_before=0)["passed"] is False
 
 
+def test_immutable_replay_proof_checks_expected_failures_and_hashes(tmp_path) -> None:
+    source = Path(__file__).resolve().parents[1] / "fixtures/immutable-replay-proof.json"
+    original = json.loads(source.read_text())
+    artifact = tmp_path / "proof.json"
+    artifact.write_text(json.dumps(original))
+    assert handlers.inspect_proof_artifact(str(artifact), not_before=0)["passed"] is True
+    mutations = [
+        ("locator_only_test_change", "case_outcome", "PASS"),
+        ("application_repair_unchanged_replay", "oracle_sha256", "sha256:" + "0" * 64),
+        ("application_repair_unchanged_replay", "test_source_sha256", "sha256:" + "0" * 64),
+        ("original_frozen_failure", "readiness", "READY"),
+        ("locator_only_test_change", "returncode", 1),
+    ]
+    for step, field, value in mutations:
+        changed = json.loads(json.dumps(original))
+        changed["steps"][step][field] = value
+        artifact.write_text(json.dumps(changed))
+        assert handlers.inspect_proof_artifact(str(artifact), not_before=0)["passed"] is False
+    artifact.write_text(json.dumps({"schema": original["schema"], "passed": True}))
+    assert handlers.inspect_proof_artifact(str(artifact), not_before=0)["passed"] is False
+
+
 def test_review_commit_lines_keep_invalid_sha_out_of_valid_set() -> None:
     text = "REVIEW_COMMIT: 9ae45ee8d5099b6b9b18a373c2d0e32a8aaf052f5\n"
     assert handlers.review_commit_lines(text) == ["9ae45ee8d5099b6b9b18a373c2d0e32a8aaf052f5"]

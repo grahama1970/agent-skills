@@ -895,6 +895,46 @@ def _result_values(payload: Any, depth: int = 0) -> list[str]:
     return found
 
 
+def _immutable_replay_proof_passed(payload: dict[str, Any]) -> bool:
+    """Validate the declared replay proof, not nested observation vocabulary."""
+    try:
+        steps = payload["steps"]
+        if set(steps) != {"original_frozen_failure", "locator_only_test_change",
+                          "application_repair_unchanged_replay"}:
+            return False
+        original = steps["original_frozen_failure"]
+        locator = steps["locator_only_test_change"]
+        repaired = steps["application_repair_unchanged_replay"]
+        fields = ("readiness", "case_outcome", "observed_outcome", "claim_verdict")
+        expected = (("NOT_READY", "FAIL", "FAIL", "FAILED"),
+                    ("NOT_READY", "FAIL", "PASS", "NOT_ESTABLISHED"),
+                    ("READY", "PASS", "PASS", "PROVEN"))
+        rows = (original, locator, repaired)
+        return (
+            payload.get("passed") is True and payload.get("live") is True
+            and payload.get("mocked") is False
+            and all(tuple(row[key] for key in fields) == want for row, want in zip(rows, expected))
+            and all(type(row["returncode"]) is int and row["returncode"] == 0 for row in rows)
+            and all(re.fullmatch(r"sha256:[0-9a-f]{64}", row[key])
+                    for row in rows for key in ("test_source_sha256", "oracle_sha256"))
+            and original["test_source_sha256"] == repaired["test_source_sha256"]
+            and original["test_source_sha256"] != locator["test_source_sha256"]
+            and original["oracle_sha256"] == locator["oracle_sha256"] == repaired["oracle_sha256"]
+            and all(row["evidence_eligibility"]["eligible"] is True
+                    and row["evidence_eligibility"]["eligible_for_existing_claim"] is True
+                    and row["evidence_eligibility"]["requires_requalification"] is False
+                    for row in (original, repaired))
+            and locator["evidence_eligibility"]["eligible"] is False
+            and locator["evidence_eligibility"]["eligible_for_existing_claim"] is False
+            and locator["evidence_eligibility"]["requires_requalification"] is True
+            and "regression_replay_declared_mutation_requires_test_repair"
+                in locator["evidence_eligibility"]["reason_codes"]
+            and all(row["evidence_eligibility"]["integrity_errors"] == [] for row in rows)
+        )
+    except (KeyError, TypeError, ValueError):
+        return False
+
+
 def inspect_proof_artifact(raw_path: str, *, not_before: float) -> dict[str, Any]:
     """Whether one named proof artifact is present, fresh, and a completed pass.
 
@@ -958,6 +998,8 @@ def inspect_proof_artifact(raw_path: str, *, not_before: float) -> dict[str, Any
         if not isinstance(counts, dict) or any(counts.get(k, 0) != v for k, v in observed_counts.items()):
             record["reason"] = "agentic-evals outcome counts disagree with case results"
             return record
+    elif isinstance(payload, dict) and payload.get("schema") == "agentic_evals.issue1631.live_e2e_result.v1":
+        values = ["PASS" if _immutable_replay_proof_passed(payload) else "FAIL"]
     else:
         values = _result_values(payload)
     record["machine_readable"] = bool(values)
