@@ -298,13 +298,13 @@
       ]
     },
     {
-      "name": "listener-requires-explicit-consent",
+      "name": "listener-refuses-explicit-no-consent",
       "type": "negative",
       "real_world": true,
       "command": [
         "bash",
         "-c",
-        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh listen --mode microphone"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh listen --mode microphone --no-consent-confirmed"
       ],
       "timeout_seconds": 30,
       "expected": {
@@ -1049,6 +1049,30 @@
       }
     },
     {
+      "name": "operator-consent-default-http",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "readback": true,
+      "notes": "Fresh local HTTP server and independent GET /api/state readbacks. No audio, model calls, or card-publication claim; full session-policy case remains separate and required.",
+      "command": ["bash", "../run.sh", "eval-session-policy", "--consent-only"],
+      "timeout_seconds": 40,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "server boot does not grant consent or start capture: PASS",
+          "operator consent default: PASS",
+          "explicit false keeps a new session armed: PASS",
+          "resume does not override explicit false: PASS",
+          "stop retained after consent-default change: PASS",
+          "CLI omitted consent reaches source validation: PASS",
+          "consent default does not widen capture policy: PASS",
+          "consent default preserves formal-assessment restriction: PASS",
+          "consent default policy: PASS"
+        ]
+      }
+    },
+    {
       "name": "session-capability-policy-fails-closed-in-backend",
       "type": "adversarial",
       "real_world": true,
@@ -1061,6 +1085,12 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
+          "server boot does not grant consent or start capture: PASS",
+          "operator consent default: PASS",
+          "explicit false keeps a new session armed: PASS",
+          "resume does not override explicit false: PASS",
+          "stop retained after consent-default change: PASS",
+          "CLI omitted consent reaches source validation: PASS",
           "formal_assessment: automatic Ask NEVER ran: PASS",
           "formal_assessment: manual Ask rejected 403: PASS",
           "formal_assessment: manual external search rejected 403: PASS",

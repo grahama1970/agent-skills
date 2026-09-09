@@ -124,8 +124,8 @@ def listen(
     backend_url: Annotated[str, typer.Option(help="Running Live Evidence API.")] = DEFAULT_BACKEND_URL,
     consent_confirmed: Annotated[
         bool,
-        typer.Option("--consent-confirmed", help="Acknowledge required recording consent/policy."),
-    ] = False,
+        typer.Option("--consent-confirmed/--no-consent-confirmed", help="Operator-authorized consent defaults to true; explicit false refuses capture."),
+    ] = True,
     pipewire_source: Annotated[str | None, typer.Option(help="PipeWire source name/id.")] = None,
     speaker: Annotated[
         Speaker | None,

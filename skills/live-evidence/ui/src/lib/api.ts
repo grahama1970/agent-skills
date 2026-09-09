@@ -17,7 +17,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   state: () => request<AppSnapshot>("/api/state"),
-  start: (consentConfirmed = false) =>
+  // Omission uses the backend's consent default; explicit false is preserved.
+  start: (consentConfirmed?: boolean) =>
     request<AppSnapshot>("/api/session/start", {
       method: "POST",
       body: JSON.stringify({ consent_confirmed: consentConfirmed }),

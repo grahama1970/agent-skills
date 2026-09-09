@@ -199,7 +199,16 @@ never the complete transcript.
 `backend_url` into `listen`, `replay`, or `status` when the server could not use
 8799.
 
-In another terminal, after obtaining any required recording consent:
+Consent defaults to `true` for explicit session Start/New Session and CLI
+`listen` commands (operator instruction, 2026-09-09). The UI defers to the
+backend default. A new API session can explicitly pass
+`{"consent_confirmed": false}` to stay armed; CLI `--no-consent-confirmed`
+refuses capture. Use Stop to end an already-running capture. Server startup and
+page load do not start recording or retroactively mark an existing session
+consented. Purpose restrictions still apply independently of this default.
+
+In another terminal, after obtaining any required recording consent
+(`--consent-confirmed` is now optional):
 
 ```bash
 # Default microphone

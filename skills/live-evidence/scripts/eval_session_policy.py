@@ -134,6 +134,59 @@ def main() -> int:
                     time.sleep(0.5)
                 return cards
 
+            # Defaults authorize only an explicit start; they never spawn capture.
+            initial = get(base, "/api/state")
+            check("server boot does not grant consent or start capture",
+                  initial["session"]["consent_confirmed"] is False
+                  and initial["session"]["status"] == "idle"
+                  and initial["listener"] is None, str(initial["session"]["status"]))
+            post(base, "/api/session/start", {})
+            defaulted = get(base, "/api/state")
+            check("operator consent default",
+                  defaulted["session"]["consent_confirmed"] is True
+                  and defaulted["session"]["status"] == "listening"
+                  and defaulted["listener"] is None,
+                  "HTTP start with omitted consent, independent state readback; no audio")
+            post(base, "/api/session/stop", {})
+            post(base, "/api/session/start", {"consent_confirmed": False})
+            refused = get(base, "/api/state")
+            check("explicit false keeps a new session armed",
+                  refused["session"]["consent_confirmed"] is False
+                  and refused["session"]["status"] == "armed", str(refused["session"]))
+            post(base, "/api/session/resume", {})
+            check("resume does not override explicit false",
+                  get(base, "/api/state")["session"]["status"] == "armed", "armed")
+            post(base, "/api/session/stop", {})
+            check("stop retained after consent-default change",
+                  get(base, "/api/state")["session"]["status"] == "stopped", "stopped")
+            # No PipeWire source: reaches listener option validation but cannot
+            # open a device. This exercises the real CLI's omitted-consent path.
+            cli = subprocess.run(
+                [sys.executable, "-m", "live_evidence", "listen", "--mode", "pipewire"],
+                cwd=root, env=env, capture_output=True, text=True, timeout=20,
+            )
+            check("CLI omitted consent reaches source validation",
+                  cli.returncode != 0 and "require --pipewire-source" in cli.stderr
+                  and "require --consent-confirmed" not in cli.stderr,
+                  "invalid audio source refused before recording")
+
+            post(base, "/api/session/start", {"purpose": "post_interview_review"})
+            restricted = get(base, "/api/state")
+            check("consent default does not widen capture policy",
+                  restricted["session"]["consent_confirmed"] is True
+                  and restricted["session"]["status"] == "armed"
+                  and restricted["session"]["policy"]["capture_audio"] is False,
+                  "post-interview review remains non-capturing")
+            post(base, "/api/session/start", {"purpose": "formal_assessment", "actor_role": "candidate"})
+            code, _ = post(base, "/api/search", {"lane": "ask", "query": QUESTION})
+            check("consent default preserves formal-assessment restriction",
+                  code == 403, f"manual Ask status={code}")
+            post(base, "/api/session/stop", {})
+
+            if "--consent-only" in sys.argv:
+                print(f"consent default policy: {'FAIL' if failures else 'PASS'}")
+                return 1 if failures else 0
+
             # --- meeting baseline: ask fires, digest binds ---
             _, snap = post(base, "/api/session/start",
                            {"consent_confirmed": True, "purpose": "meeting"})

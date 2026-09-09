@@ -131,17 +131,14 @@ PY
     ;;
   listen)
     shift || true
-    consent_seen="false"
+    # Consent defaults to true by operator instruction. Refuse explicit opt-out
+    # before resolving the optional speech stack or touching capture devices.
     for arg in "$@"; do
-      if [[ "$arg" == "--consent-confirmed" || "$arg" == "--help" || "$arg" == "-h" ]]; then
-        consent_seen="true"
-        break
+      if [[ "$arg" == "--no-consent-confirmed" ]]; then
+        echo "Invalid value: live modes require --consent-confirmed" >&2
+        exit 2
       fi
     done
-    if [[ "$consent_seen" != "true" ]]; then
-      echo "Invalid value: live modes require --consent-confirmed" >&2
-      exit 2
-    fi
     prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev --extra stt python -m live_evidence listen "$@"
     ;;

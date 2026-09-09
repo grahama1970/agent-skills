@@ -671,11 +671,11 @@ class AppSnapshot(BaseModel):
     updated_at: datetime = Field(default_factory=utc_now)
 
 class SessionStartRequest(BaseModel):
-    """Start-session command from the UI."""
+    """Start-session command with the operator-authorized consent default."""
 
     model_config = ConfigDict(extra="forbid")
 
-    consent_confirmed: bool = False
+    consent_confirmed: bool = True
     purpose: SessionPurpose = SessionPurpose.MEETING
     actor_role: ActorRole = ActorRole.PARTICIPANT
     # Explicit capability override; omitted fields take the purpose default.

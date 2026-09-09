@@ -94,7 +94,7 @@ export function useLiveEvidence() {
 
   const actions = useMemo(
     () => ({
-      start: () => execute(() => api.start(false)),
+      start: () => execute(() => api.start()),
       pause: () => execute(api.pause),
       resume: () => execute(api.resume),
       // Save the old session (episodic archive) before starting a fresh one.
@@ -102,7 +102,7 @@ export function useLiveEvidence() {
         execute(async () => {
           await api.archive();
           await api.stop();
-          return api.start(false);
+          return api.start();
         }),
       stop: () => execute(api.stop),
       search: (query: string, lane: RetrievalLane) => execute(() => api.search(query, lane)),
