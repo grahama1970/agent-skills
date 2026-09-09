@@ -105,6 +105,21 @@ def main() -> int:
               and json.loads(idle.stdout)['status'] == 'IDLE', idle.stdout.strip())
 
         dispatch('explainer.select', {'feature_id': record['feature_id']})
+
+        rendered = record['diagram']['rendered_svg_path']
+        absent = client.get('/api/cockpit/diagram')
+        check('missing diagram artifact is an honest 404', absent.status_code == 404
+              and absent.json()['failure_code'] == 'DIAGRAM_ARTIFACT_MISSING', rendered)
+        svg_path = repo / rendered
+        svg_path.parent.mkdir(parents=True, exist_ok=True)
+        svg_path.write_text('<svg xmlns="http://www.w3.org/2000/svg"><g id="probe"/></svg>')
+        served = client.get('/api/cockpit/diagram')
+        check('bound diagram artifact is served as svg bytes',
+              served.status_code == 200
+              and served.headers['content-type'] == 'image/svg+xml'
+              and served.content == svg_path.read_bytes(),
+              {'bytes': len(served.content)})
+
         dispatch('source.reveal.request')
         dry = bridge()
         payload = json.loads(dry.stdout)

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from pathlib import Path
 import threading
 from datetime import datetime, timezone
 from http import HTTPStatus
@@ -211,12 +212,33 @@ class CockpitSession:
         self,
         rows: list[FeatureExplainer],
         memory_url: str,
+        repo: Path | None = None,
     ) -> None:
         self._rows = list(rows)
+        self._repo = repo.resolve() if repo else None
         self._state = initial_state(self._rows)
         self._seen_live_questions: set[str] = set()
         self._lock = threading.Lock()
         self.actions = ActionRegistry(memory_url)
+
+    def diagram_svg(self) -> bytes | None:
+        """Bytes of the currently bound rendered SVG artifact, or None."""
+        with self._lock:
+            rendered = self._state.diagram.rendered_svg_path
+        if self._repo is None or not rendered:
+            return None
+        try:
+            path = (self._repo / rendered).resolve(strict=True)
+        except OSError:
+            return None
+        if (
+            not path.is_relative_to(self._repo)
+            or path.suffix != ".svg"
+            or not path.is_file()
+            or path.stat().st_size > 2_000_000
+        ):
+            return None
+        return path.read_bytes()
 
     def bootstrap(self) -> BootstrapResponse:
         with self._lock:
@@ -453,6 +475,26 @@ def _handler_factory(
                 )
                 return
 
+            if self.path.split("?")[0] == "/api/cockpit/diagram":
+                payload = session.diagram_svg()
+                if payload is None:
+                    self._json(
+                        HTTPStatus.NOT_FOUND,
+                        {
+                            "status": "FAIL",
+                            "failure_code": "DIAGRAM_ARTIFACT_MISSING",
+                            "message": "rendered_svg_path absent or outside --repo",
+                        },
+                    )
+                    return
+                self.send_response(HTTPStatus.OK)
+                self.send_header("content-type", "image/svg+xml")
+                self.send_header("cache-control", "no-store")
+                self.send_header("content-length", str(len(payload)))
+                self.end_headers()
+                self.wfile.write(payload)
+                return
+
             if self.path == "/api/health":
                 self._json(
                     HTTPStatus.OK,
@@ -584,12 +626,14 @@ def serve(
     host: str = "127.0.0.1",
     port: int = 8766,
     memory_url: str = "http://127.0.0.1:8601",
+    repo: Path | None = None,
 ) -> None:
     """Run the local JSON API until interrupted."""
 
     session = CockpitSession(
         rows,
         memory_url,
+        repo,
     )
 
     server = ThreadingHTTPServer(

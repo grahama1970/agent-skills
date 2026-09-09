@@ -721,6 +721,7 @@ def cockpit_command(
             host=host,
             port=port,
             memory_url=memory_url,
+            repo=repo,
         )
         return
 

@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+
 import type {
   CockpitState,
 } from '../types'
@@ -7,6 +9,14 @@ export function DiagramStage({
 }: {
   state: CockpitState
 }) {
+  const [artifact, setArtifact] = useState<
+    'loading' | 'shown' | 'missing'
+  >('loading')
+  const rendered = state.diagram.rendered_svg_path
+
+  useEffect(() => {
+    setArtifact(rendered ? 'loading' : 'missing')
+  }, [rendered, state.diagram.revision])
   const active = new Set(
     state.diagram.active_node_ids,
   )
@@ -34,6 +44,28 @@ export function DiagramStage({
       <h2 className="text-xs font-semibold uppercase tracking-wider text-cyan-300">
         Diagram
       </h2>
+
+      {rendered && artifact !== 'missing' ? (
+        <div className="mt-2 overflow-hidden rounded border border-zinc-800 bg-white/95 p-1">
+          <img
+            data-qid="cockpit:diagram:artifact"
+            src={`/api/cockpit/diagram?rev=${state.diagram.revision}`}
+            alt={`Rendered diagram ${rendered}`}
+            className="block max-h-52 w-full object-contain"
+            onLoad={() => setArtifact('shown')}
+            onError={() => setArtifact('missing')}
+          />
+        </div>
+      ) : null}
+
+      {rendered && artifact === 'missing' ? (
+        <p
+          className="mt-2 text-xs font-mono text-red-400"
+          data-diagram-diagnostic="missing-artifact"
+        >
+          Rendered artifact unavailable: {rendered}
+        </p>
+      ) : null}
 
       <div className="relative mt-2 overflow-hidden rounded border border-zinc-800 bg-zinc-900/90 p-2">
         <svg
