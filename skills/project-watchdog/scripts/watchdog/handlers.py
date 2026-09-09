@@ -1024,6 +1024,15 @@ def inspect_proof_artifact(raw_path: str, *, not_before: float) -> dict[str, Any
     if not passing:
         record["reason"] = "no machine-readable result"
         return record
+    # Bare boolean assertions are not a machine-verifiable pass. A fabricated
+    # {"passed": true, "live": true} yields only boolean-derived TRUE values
+    # and satisfied this gate (agent-skills#1637). A real result artifact
+    # states a domain outcome word (PASS, READY, COMPLETED, ...); an artifact
+    # whose entire passing evidence is TRUE fails closed as unverifiable.
+    if set(passing) <= {"TRUE"}:
+        record["reason"] = ("only bare boolean assertions; no domain outcome value "
+                            "(PASS/READY/...) — not a machine-verifiable proof (see #1637)")
+        return record
     record["passed"] = True
     record["reason"] = f"reports {', '.join(passing)}"
     return record

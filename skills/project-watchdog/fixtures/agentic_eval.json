@@ -9,6 +9,32 @@
   },
   "cases": [
     {
+      "name": "watchdog-proof-trust",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": ["uv", "run", "--project", "..", "python", "../evals/proof_trust.py", "/tmp/watchdog-proof-trust-result.json"],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [{"path": "/tmp/watchdog-proof-trust-result.json", "json_pointer": "/passed", "equals": true}]
+      },
+      "proves": "The repair proof gate rejects forged bare-boolean proof JSON, stale artifacts, missing/verdictless/ambiguous reviewers, count-contradicting and forged typed reports, while accepting valid typed READY and untyped domain READY payloads. Fault-injected deterministic; not live GitHub/provider closure evidence."
+    },
+    {
+      "name": "watchdog-verify-plan-trust",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": ["uv", "run", "--project", "..", "python", "../evals/verify_plan_trust.py", "/tmp/watchdog-verify-plan-result.json"],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [{"path": "/tmp/watchdog-verify-plan-result.json", "json_pointer": "/passed", "equals": true}]
+      },
+      "proves": "validated_verification_plan admits only a complete reviewer-owned VERIFY_PLAN: truncated plan JSON, duplicate/missing plans, creator authority substitution, wrong artifact binding, blank coverage, and multiline command injection are all rejected. Fault-injected deterministic; not live closure evidence."
+    },
+    {
       "name": "immutable-replay-proof-negative-controls",
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",
