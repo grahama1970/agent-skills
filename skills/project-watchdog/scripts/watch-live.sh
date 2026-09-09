@@ -8,7 +8,8 @@ set -euo pipefail
 STATE_ROOT="${PROJECT_WATCHDOG_STATE_ROOT:-$HOME/.local/state/project-watchdog}"
 PHART="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/phart-dag-chart/run.sh"
 
-PROGRESS=$(ls -t "$STATE_ROOT"/receipts/*/ask/*/tau-receipts/dag-progress.json 2>/dev/null | head -1)
+# ponytail: ls|head under pipefail exits 141 on SIGPIPE; collect then slice instead
+PROGRESS=$(set +o pipefail; ls -t "$STATE_ROOT"/receipts/*/ask/*/tau-receipts/dag-progress.json 2>/dev/null | head -1)
 if [ -z "$PROGRESS" ]; then
   echo "no Tau repair runs found under $STATE_ROOT/receipts"
   exit 1
