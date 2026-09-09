@@ -20,6 +20,8 @@ def main() -> int:
     else:
         result = primary.reconcile(args.root) if args.apply else primary.pending(args.root)
     print(json.dumps(result or {"ok": True, "pending": False}, indent=2))
+    if args.reattach_journal:
+        return 0 if result.get("ok") is True else 1
     if not result:
         return 0
     if result.get("invalid_operations"):

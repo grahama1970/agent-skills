@@ -284,16 +284,20 @@ def reattach_and_resume(root: Path, journal: Path, *, apply: bool, timeout_s: in
         safe_targets(record.targets)
         _CURRENT = record
         result: dict[str, Any] = {"ok": False, "status": "RUNNING", "commands": [], "artifacts": []}
-        from . import handlers, native_ticket
+        from . import handlers, native_ticket, resume_state
+        run_dir = _project_command_spec_run(Path(record.ask_run_dir))
         native_ticket.acquire(record, result, checkpoint)
         record = current()
-        run_dir = _project_command_spec_run(Path(record.ask_run_dir))
+        generation_path = resume_state.begin(record, run_dir)
         command = [str(config.ask_run_sh()), "runs", "resume", str(run_dir), "--execute", "--json"]
         checkpoint("running", ask_run_dir=record.ask_run_dir, dispatched_at=time.time())
         old_env = os.environ.get("PROJECT_WATCHDOG_OPERATION_JOURNAL")
         os.environ["PROJECT_WATCHDOG_OPERATION_JOURNAL"] = str(journal)
         try:
-            row = run_cmd(command, cwd=root, timeout_s=timeout_s)
+            row = handlers.run_ask_tau_dag_with_stream_monitor(
+                command, cwd=root, timeout_s=timeout_s, ask_run_dir=Path(record.ask_run_dir),
+                monitor_path=Path(record.receipt_dir) / "watchdog-reattach-monitor.json",
+            )
         finally:
             if old_env is None:
                 os.environ.pop("PROJECT_WATCHDOG_OPERATION_JOURNAL", None)
@@ -302,11 +306,25 @@ def reattach_and_resume(root: Path, journal: Path, *, apply: bool, timeout_s: in
         result["commands"].append(row)
         result["artifacts"].append(str(run_dir))
         write_json(Path(record.receipt_dir) / "watchdog-reattach-resume-command.json", row)
+        resume_state.complete(generation_path, row)
         stream = handlers.inspect_tau_stream(Path(record.ask_run_dir))
         write_json(Path(record.receipt_dir) / "watchdog-reattach-stream.json", stream)
-        if not stream.get("terminal"):
-            result.update(ok=False, status="NEEDS_ATTENTION", summary="reattached Ask resume did not reach terminal Tau settlement",
+        if stream.get("invocation_failed"):
+            # The failed invocation did not change the native store/prep. It is
+            # not the previous run's terminal state and cannot authorize closure.
+            result.update(ok=False, status="NEEDS_ATTENTION",
+                          summary="Ask resume invocation failed before native state changed",
+                          resume_control=stream.get("resume_control"),
                           authorized_agent_next_steps=[reattach_command(root, journal)])
+            checkpoint("releasing", result=result)
+            if _finish_release(current()):
+                checkpoint("retryable", lease_released=True, result=result)
+            write_json(Path(current().result_path), result)
+            return result
+        if not stream.get("terminal"):
+            result.update(ok=False, status="NEEDS_ATTENTION", summary=stream.get("reason"),
+                          resume_observation=stream,
+                          authorized_agent_next_steps=[recovery_command(root)])
             checkpoint("uncertain", result=result)
             return result
         checkpoint("settled", tau_settled=True)
@@ -423,10 +441,20 @@ def reconcile(root: Path) -> dict[str, Any] | None:
                     if not record.ask_run_dir or record.dispatched_at is None:
                         continue
                     stream = handlers.inspect_tau_stream(Path(record.ask_run_dir))
-                    if not stream.get("terminal"):
+                    if stream.get("invocation_failed"):
+                        result = failure(
+                            {"project_id": record.project_id, "repo": record.repo, "worktree": record.root},
+                            {"number": record.issue_number, "watchdog_action": record.action},
+                            "Ask resume invocation failed before native state changed",
+                        )
+                        result.update(resume_control=stream.get("resume_control"),
+                                      commands=[stream["command_receipt"]])
+                        checkpoint("releasing", result=result)
+                    elif not stream.get("terminal"):
                         continue
-                    # Native run-level settlement, not process disappearance or a node PASS.
-                    checkpoint("settled", tau_settled=True)
+                    else:
+                        # Only current, native run-level settlement authorizes finalization.
+                        checkpoint("settled", tau_settled=True)
                 record = current()
                 if record.phase == "settled" and record.closure is None:
                     result = handlers.finish_primary_operation(record)

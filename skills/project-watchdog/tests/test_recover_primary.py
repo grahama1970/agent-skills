@@ -36,3 +36,31 @@ def test_unowned_pending_operation_still_exits_nonzero(monkeypatch, tmp_path):
     })
 
     assert mod.main() == 1
+
+
+def test_reattach_journal_routes_to_watchdog_resume(monkeypatch, tmp_path):
+    mod = load_recover_primary()
+    journal = tmp_path / "operation.json"
+    journal.write_text("{}", encoding="utf-8")
+    called = {}
+
+    def reattach(root, journal_path, *, apply):
+        called.update(root=root, journal=journal_path, apply=apply)
+        return {"ok": True, "status": "DRY_RUN"}
+
+    monkeypatch.setattr(sys, "argv", ["recover_primary.py", "--root", str(tmp_path), "--reattach-journal", str(journal)])
+    monkeypatch.setattr(mod.primary, "reattach_and_resume", reattach)
+
+    assert mod.main() == 0
+    assert called == {"root": tmp_path, "journal": journal, "apply": False}
+
+
+def test_failed_reattachment_exits_nonzero(monkeypatch, tmp_path):
+    mod = load_recover_primary()
+    journal = tmp_path / "operation.json"
+    monkeypatch.setattr(sys, "argv", ["recover_primary.py", "--root", str(tmp_path),
+                                     "--reattach-journal", str(journal), "--apply"])
+    monkeypatch.setattr(mod.primary, "reattach_and_resume", lambda *a, **kw: {
+        "ok": False, "status": "NEEDS_ATTENTION", "summary": "nested Ask invocation failed"
+    })
+    assert mod.main() == 1

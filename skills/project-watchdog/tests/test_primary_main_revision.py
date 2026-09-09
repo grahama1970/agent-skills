@@ -654,7 +654,7 @@ def test_retryable_resume_reattaches_native_lease_and_sets_watchdog_journal(repo
         return {"command": command, "exit_code": 0, "stdout": "tau --watchdog-journal " + seen["journal_env"], "stderr": ""}
 
     monkeypatch.setattr(native_ticket, "acquire", acquire)
-    monkeypatch.setattr(primary, "run_cmd", run_resume)
+    monkeypatch.setattr(handlers, "run_ask_tau_dag_with_stream_monitor", run_resume)
     monkeypatch.setattr(handlers, "inspect_tau_stream", lambda _: {"terminal": True, "terminal_status": "BLOCKED"})
     monkeypatch.setattr(handlers, "finish_primary_operation", lambda row: {"ok": False, "status": "NEEDS_ATTENTION", "summary": "reviewer still blocked"})
     monkeypatch.setattr(primary, "_finish_release", lambda row: True)

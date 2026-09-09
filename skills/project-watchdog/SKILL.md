@@ -258,6 +258,26 @@ queue records, snapshots and closure outboxes are strict Pydantic records.
 Persistent lock directories are not liveness evidence; status and UI probe the
 kernel reservation. GitHub labels are not a distributed compare-and-swap.
 
+For an explicitly requested reviewer-only retry of a settled, released journal:
+
+```bash
+uv run python scripts/watchdog/recover_primary.py --root PRIMARY \
+  --reattach-journal PRIMARY/.git/project-watchdog-primary/operations/ISSUE-TOKEN.json --apply
+```
+
+This reacquires the native lease and invokes `ask runs resume`, carrying
+`PROJECT_WATCHDOG_OPERATION_JOURNAL` to Tau as `--watchdog-journal`. The
+`tau-receipts/watchdog-resume-generation.json` fence binds the new lease event,
+original DAG hash, prior store hash, nested Ask control outcome and current Tau
+result. Historical PASS/BLOCKED receipts cannot settle an invocation failure.
+Only the named resumed DAG and its admitted outputs are used, never recursive
+archived DAG discovery. Exit 1 means the requested recovery did not complete;
+read `watchdog-reattach-resume-command.json` for the nested control failure.
+
+Retained local CLI proof (scripted nodes/synthetic leases, no GitHub/provider calls):
+`agentic-evals/run.sh run project-watchdog/fixtures/agentic_eval_resume_generation.json`
+from the skills directory.
+
 ## Pause, Stop, Resume
 
 The watchdog must check both global and per-project state before scanning or

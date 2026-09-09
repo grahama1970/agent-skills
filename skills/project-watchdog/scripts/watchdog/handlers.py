@@ -544,6 +544,11 @@ def inspect_tau_stream(ask_run_dir: Path) -> dict[str, Any]:
     }
     if not ask_run_dir.exists():
         return record
+    from . import resume_state
+    resumed = resume_state.observe(ask_run_dir)
+    if resumed is not None:
+        record.update(resumed)
+        return record
     if refusal := _compile_stop(ask_run_dir):
         record.update(terminal=True, terminal_status="BLOCKED", current_status="BLOCKED",
                       stream_readable=True, terminal_source=refusal["path"], compile_refusal=refusal,

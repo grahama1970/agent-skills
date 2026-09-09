@@ -1,0 +1,32 @@
+{
+  "version": 2,
+  "skill": "project-watchdog-resume-generation",
+  "trials": 2,
+  "proof_scope": "Public Ask/Tau CLI resume invocation and watchdog generation settlement over real local subprocesses/SQLite, scripted local nodes and synthetic leases.",
+  "claims": {
+    "proves": "Nested Ask invocation errors cannot inherit old PASS/BLOCKED; settlement binds a fresh lease generation, the exact resumed DAG and admitted preserved output.",
+    "does_not_prove": "Live GitHub lease ownership, provider availability, semantic reviewer quality, issue closure or overall Tau readiness."
+  },
+  "cases": [
+    {
+      "name": "public-resume-generation-fence",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "timeout_seconds": 120,
+      "command": ["bash", "-lc", "cd .. && uv run python scripts/eval_resume_generation.py --out /tmp/watchdog-resume-generation-eval/proof.json"],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/ok", "equals": true},
+          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/old_PASS_not_reused", "equals": true},
+          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/old_BLOCKED_not_reused", "equals": true},
+          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/current_generation_settled", "equals": true},
+          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/decoy_dag_ignored", "equals": true},
+          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/cross_generation_rejected", "equals": true},
+          {"path": "/tmp/watchdog-resume-generation-eval/proof.json", "json_pointer": "/checks/creator_not_relaunched", "equals": true}
+        ]
+      }
+    }
+  ]
+}
