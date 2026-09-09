@@ -588,12 +588,94 @@ def _validate_provider_tau_chain(status: dict[str, Any], errors: list[str]) -> b
     return len(errors) == ok_before
 
 
+UNSUPPORTED_CLAIM_RECEIPT_REQUIREMENTS: dict[str, str] = {
+    "production_deployment_ready": "battle.production_infrastructure_deployment_proof.v1",
+    "full_adaptive_improvement_proven": "battle.full_adaptive_improvement_proof.v1",
+    "kill_promotion_fastest_crash_supported": "battle.judge_kill_fastest_crash_semantics.v1",
+    "fast_sanity_is_live_product_proof": "battle.live_product_qualification_receipt.v1",
+}
+
+_PROMOTED_CLAIM_STATUSES = {"PASS", "MET", "PROVEN", "READY", "SUPPORTED", "TRUE"}
+
+
 def _proven_claim(status: dict[str, Any], claim_id: str, errors: list[str]) -> dict[str, Any]:
     claim = next((item for item in status.get("proven", []) if item.get("id") == claim_id), None)
     if not isinstance(claim, dict):
         errors.append(f"proven_claim_missing:{claim_id}")
         return {}
     return claim
+
+
+def _claim_value_asserted(value: Any) -> bool:
+    if value is True:
+        return True
+    if isinstance(value, str):
+        return value.upper() in _PROMOTED_CLAIM_STATUSES
+    if isinstance(value, dict):
+        for key in ("asserted", "claimed", "proven", "ready", "supported", "value"):
+            if value.get(key) is True:
+                return True
+        return _claim_value_asserted(value.get("status"))
+    return False
+
+
+def _status_claim_assertion_sources(status: dict[str, Any], claim_id: str) -> list[str]:
+    sources: list[str] = []
+    if _claim_value_asserted(status.get(claim_id)):
+        sources.append(f"top_level:{claim_id}")
+    for container_name in ("claims", "primary_proof"):
+        container = status.get(container_name)
+        if isinstance(container, dict) and _claim_value_asserted(container.get(claim_id)):
+            sources.append(f"{container_name}:{claim_id}")
+    for list_name in ("proven", "partial", "unsupported", "production_gaps", "non_claims"):
+        items = status.get(list_name) or []
+        if not isinstance(items, list):
+            continue
+        for index, item in enumerate(items):
+            if not isinstance(item, dict):
+                continue
+            if item.get("id") != claim_id and item.get("claim") != claim_id:
+                continue
+            if _claim_value_asserted(item):
+                sources.append(f"{list_name}[{index}]")
+    return sources
+
+
+def _has_bound_receipt_schema(status: dict[str, Any], schema: str, errors: list[str]) -> bool:
+    found = False
+    for name, record in (status.get("source_receipts") or {}).items():
+        if record.get("schema") != schema:
+            continue
+        found = True
+        path = Path(str(record.get("path") or ""))
+        payload = _json_or_error(path, f"unsupported_claim_required_receipt:{name}", errors)
+        if payload is None:
+            continue
+        before = len(errors)
+        _require_schema(f"unsupported_claim_required_receipt:{name}", payload, {schema}, errors)
+        _require_status(f"unsupported_claim_required_receipt:{name}", payload, "PASS", errors)
+        if payload.get("mocked") is not False:
+            errors.append(f"unsupported_claim_required_receipt_mocked:{name}:{schema}")
+        if len(errors) == before and payload.get("mocked") is False:
+            return True
+    return found and False
+
+
+def _validate_unsupported_claim_gates(status: dict[str, Any], errors: list[str]) -> None:
+    for claim_id, required_schema in UNSUPPORTED_CLAIM_RECEIPT_REQUIREMENTS.items():
+        sources = _status_claim_assertion_sources(status, claim_id)
+        if not sources:
+            continue
+        if not _has_bound_receipt_schema(status, required_schema, errors):
+            errors.append(
+                f"unsupported_claim_promoted_without_receipt:{claim_id}:requires:{required_schema}:sources:{','.join(sources)}"
+            )
+        if claim_id == "fast_sanity_is_live_product_proof":
+            fast = (status.get("source_receipts") or {}).get("fast_sanity") or {}
+            if fast.get("schema") == "battle.tiered_fast_sanity_gate.v1" or fast.get("path"):
+                errors.append(
+                    "fast_sanity_is_live_product_proof_requires_live_product_receipt_not_battle.tiered_fast_sanity_gate.v1"
+                )
 
 
 def _require_claim_path(
@@ -1468,6 +1550,7 @@ def check(path: Path, candidate_path: Path | None = None) -> int:
     if status.get("schema") != "battle.current_status.v1":
         errors.append("schema_mismatch")
     _validate_cached_source_records(status, errors)
+    _validate_unsupported_claim_gates(status, errors)
     for item in status.get("source_receipts", {}).values():
         if not item.get("exists") and not item.get("superseded_by"):
             errors.append(f"missing_source_receipt:{item.get('path')}")

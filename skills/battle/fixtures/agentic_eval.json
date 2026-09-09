@@ -173,6 +173,14 @@
       }
     },
     {
+      "id": "battle.current_status.unsupported_claim_gates",
+      "description": "CURRENT_STATUS check rejects promotion of explicitly unsupported readiness claims unless each claim is bound to its required receipt class.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
+    },
+    {
       "id": "battle.adaptive_lineage.adaptive_improvement",
       "description": "A paired battle-004 Docker Judge replay distinguishes lineage existence from a retained promoted Blue artifact causing a predeclared Judge/functionality metric improvement, with a same-treatment negative control.",
       "criticality": "critical",
@@ -588,6 +596,21 @@
         "fastest_crash is accepted as a terminal success alias",
         "promotion is accepted without a supported local MVP terminal state",
         "crash-only evidence promotes a terminal result without typed Judge evidence"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "battle.current_status.unsupported_claim_gates",
+      "claim_id": "battle.current_status.unsupported_claim_gates",
+      "seam_type": "receipt/status projection",
+      "criticality": "critical",
+      "failure_modes": [
+        "CURRENT_STATUS reports MET while production_deployment_ready is promoted without production infrastructure receipt",
+        "CURRENT_STATUS reports MET while full_adaptive_improvement_proven is promoted without full adaptive improvement receipt",
+        "CURRENT_STATUS reports MET while kill/fastest-crash terminal semantics are promoted without typed Judge receipt family",
+        "CURRENT_STATUS treats fast sanity as live product proof"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -1449,6 +1472,39 @@
             "path": "/tmp/battle-agentic-evals/battle-terminal-semantics/terminal-semantics-receipt.json",
             "json_pointer": "/adapter_judge_authority_verified",
             "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-current-status-claim-gates",
+      "category": "battle-current-status-claim-gates",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.current_status.unsupported_claim_gates"
+      ],
+      "seams": [
+        "battle.current_status.unsupported_claim_gates"
+      ],
+      "timeout_seconds": 360,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-current-status-claim-gates --summary /tmp/battle-agentic-evals/battle-current-status-claim-gates.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-current-status-claim-gates"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-current-status-claim-gates.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
           }
         ]
       }

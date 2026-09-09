@@ -3799,6 +3799,118 @@ def probe_battle_commentary_causality(summary_path: Path) -> int:
     )
 
 
+CURRENT_STATUS_UNSUPPORTED_CLAIMS = {
+    "production_deployment_ready": "battle.production_infrastructure_deployment_proof.v1",
+    "full_adaptive_improvement_proven": "battle.full_adaptive_improvement_proof.v1",
+    "kill_promotion_fastest_crash_supported": "battle.judge_kill_fastest_crash_semantics.v1",
+    "fast_sanity_is_live_product_proof": "battle.live_product_qualification_receipt.v1",
+}
+
+
+def _assert_current_status_claimed_true(status: dict[str, Any], claim: str) -> dict[str, Any]:
+    mutated = copy.deepcopy(status)
+    mutated[claim] = True
+    for item in mutated.get("unsupported") or []:
+        if isinstance(item, dict) and item.get("claim") == claim:
+            item["status"] = "PASS"
+            item["asserted"] = True
+            break
+    else:
+        raise AssertionError(f"unsupported claim missing: {claim}")
+    return mutated
+
+
+def _run_current_status_check(status_path: Path, *, out_root: Path, name: str) -> tuple[subprocess.CompletedProcess[str], dict[str, Any]]:
+    receipt_path = out_root / f"{name}-terminal-semantics.json"
+    proc = _run_in(
+        [str(RUN_SH), "current-status", "check", "--path", str(status_path)],
+        cwd=REPO_ROOT,
+        timeout=240,
+        env={"BATTLE_TERMINAL_SEMANTICS_RECEIPT": str(receipt_path)},
+    )
+    (out_root / f"{name}.stdout.txt").write_text(proc.stdout, encoding="utf-8")
+    (out_root / f"{name}.stderr.txt").write_text(proc.stderr, encoding="utf-8")
+    return proc, _parse_json_object(proc.stdout)
+
+
+def probe_battle_current_status_claim_gates(summary_path: Path) -> int:
+    suite = "battle-current-status-claim-gates"
+    out_root = summary_path.parent / suite
+    if out_root.exists():
+        shutil.rmtree(out_root)
+    out_root.mkdir(parents=True)
+
+    generated_status_path = out_root / "CURRENT_STATUS.generated.json"
+    generate = _run_in(
+        [str(RUN_SH), "current-status", "generate", "--out", str(generated_status_path)],
+        cwd=REPO_ROOT,
+        timeout=240,
+    )
+    (out_root / "generate.stdout.txt").write_text(generate.stdout, encoding="utf-8")
+    (out_root / "generate.stderr.txt").write_text(generate.stderr, encoding="utf-8")
+    if generate.returncode != 0:
+        raise AssertionError("current-status generate failed: " + generate.stdout + generate.stderr)
+    generated = _read_json(generated_status_path)
+
+    pass_proc, pass_output = _run_current_status_check(generated_status_path, out_root=out_root, name="generated-pass")
+    if pass_proc.returncode != 0 or pass_output.get("status") != "PASS" or pass_output.get("errors"):
+        raise AssertionError(f"generated status did not check PASS: {pass_output}")
+
+    checks: list[dict[str, Any]] = [
+        {
+            "name": "generated_current_status_checks_pass",
+            "status": "PASS",
+            "status_path": str(generated_status_path),
+            "stdout": str(out_root / "generated-pass.stdout.txt"),
+        }
+    ]
+    artifacts: dict[str, Any] = {"generated_status": str(generated_status_path)}
+    for claim, required_schema in CURRENT_STATUS_UNSUPPORTED_CLAIMS.items():
+        mutated_path = out_root / f"{claim}.asserted-true.json"
+        _write_json(mutated_path, _assert_current_status_claimed_true(generated, claim))
+        proc, output = _run_current_status_check(mutated_path, out_root=out_root, name=claim)
+        expected = f"unsupported_claim_promoted_without_receipt:{claim}:requires:{required_schema}"
+        matched = any(str(error).startswith(expected) for error in output.get("errors") or [])
+        if proc.returncode == 0 or output.get("status") != "FAIL" or not matched:
+            raise AssertionError(f"unsupported claim gate did not fail closed for {claim}: {output}")
+        if claim == "fast_sanity_is_live_product_proof" and "fast_sanity_is_live_product_proof_requires_live_product_receipt_not_battle.tiered_fast_sanity_gate.v1" not in (output.get("errors") or []):
+            raise AssertionError(f"fast sanity gate accepted fast sanity as live product proof: {output}")
+        checks.append(
+            {
+                "name": f"rejects_{claim}_without_{required_schema}",
+                "status": "PASS",
+                "mutated_status": str(mutated_path),
+                "stdout": str(out_root / f"{claim}.stdout.txt"),
+                "required_receipt_schema": required_schema,
+                "error_prefix": expected,
+            }
+        )
+        artifacts[f"{claim}_mutated_status"] = str(mutated_path)
+
+    return _emit(
+        summary_path,
+        _summary(
+            suite=suite,
+            live="battle_run_sh_current_status_generate_check_with_adversarial_unsupported_claim_mutations",
+            checks=checks,
+            artifacts=artifacts,
+            claims_proves=[
+                "CURRENT_STATUS check fails closed when production_deployment_ready is promoted without battle.production_infrastructure_deployment_proof.v1.",
+                "CURRENT_STATUS check fails closed when full_adaptive_improvement_proven is promoted without battle.full_adaptive_improvement_proof.v1.",
+                "CURRENT_STATUS check fails closed when kill_promotion_fastest_crash_supported is promoted without battle.judge_kill_fastest_crash_semantics.v1.",
+                "CURRENT_STATUS check fails closed when fast_sanity_is_live_product_proof is promoted without battle.live_product_qualification_receipt.v1, and battle.tiered_fast_sanity_gate.v1 alone is rejected.",
+            ],
+            claims_does_not_prove=[
+                "production infrastructure is deployed",
+                "full adaptive improvement is proven",
+                "kill/fastest-crash terminal semantics are supported",
+                "fast sanity is live product proof",
+            ],
+        ),
+    )
+
+
+
 def probe_battle_terminal_semantics(summary_path: Path) -> int:
     suite = "battle-terminal-semantics"
     out_root = summary_path.parent / suite
@@ -4112,6 +4224,8 @@ def main() -> int:
             return probe_review_current_status_proof_chain(args.summary)
         if args.suite == "battle-terminal-semantics":
             return probe_battle_terminal_semantics(args.summary)
+        if args.suite == "battle-current-status-claim-gates":
+            return probe_battle_current_status_claim_gates(args.summary)
         if args.suite == "battle-commentary-causality":
             return probe_battle_commentary_causality(args.summary)
         if args.suite == "battle-adaptive-improvement":
