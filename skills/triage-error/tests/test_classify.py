@@ -36,6 +36,16 @@ def test_project_watchdog_target_ownership_conflict_is_canonical() -> None:
     assert "repo-wide dirty checkout" in r["not_this"]
 
 
+def test_project_watchdog_native_tau_unsettled_is_canonical() -> None:
+    r = t.classify(
+        "Refusal: native Tau run is not settled; recover the same retained run",
+        "project-watchdog",
+    )
+    assert r["code"] == "project_watchdog_native_tau_run_unsettled"
+    assert r["ambiguous"] is False
+    assert "new ticket repair dispatch" in r["not_this"]
+
+
 def test_ask_scillm_empty_200_maps_to_actionable_code() -> None:
     r = t.classify(
         '{"failure_code":"handler_execution_failed","evidence":{"response_chars":0,"submit_meta_status":200}}',

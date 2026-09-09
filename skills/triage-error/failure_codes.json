@@ -53,6 +53,23 @@
       ]
     },
     {
+      "code": "project_watchdog_native_tau_run_unsettled",
+      "layer": "project-watchdog",
+      "match": [
+        "native Tau run is not settled",
+        "recover the same retained run",
+        "tau_settled\": false"
+      ],
+      "cause": "A retained watchdog ticket-repair operation has a launched Tau/Ask run whose terminal receipt is not yet available, so watchdog must recover that exact run rather than launching a duplicate.",
+      "next_command": "run recover_primary.py --root <primary-checkout> --apply after the writer exits; if writer_active is true, wait instead of reporting failure",
+      "recoverable": true,
+      "not_this": [
+        "new ticket repair dispatch",
+        "human decision required",
+        "repo-wide dirty checkout"
+      ]
+    },
+    {
       "code": "persona_dream_kling_provider_top_up_required",
       "layer": "persona-dream",
       "match": [
