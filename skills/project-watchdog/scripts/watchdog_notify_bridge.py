@@ -79,6 +79,43 @@ def _seats(handled: dict) -> list[str]:
     return out
 
 
+def _node_models(receipt_dir: Path) -> dict[str, str]:
+    """node_id -> model, read from the run's source-dag.json handler bindings."""
+    import glob as _g
+    out: dict[str, str] = {}
+    # exact model from finished nodes
+    for f in _g.glob(str(receipt_dir / "ask/*/node-artifacts/*/response.meta.json")):
+        try:
+            data = json.loads(Path(f).read_text())
+        except Exception:
+            continue
+        model = data.get("requested_model") or data.get("model")
+        if model:
+            out.setdefault(Path(f).parent.name, model)
+    # planned model from the dag: nodes[].context.handler_policy.model_policy
+    for f in _g.glob(str(receipt_dir / "ask/*/tau-receipts/source-dag.json")) + _g.glob(str(receipt_dir / "ask/*/dag.json")):
+        try:
+            data = json.loads(Path(f).read_text())
+        except Exception:
+            continue
+        for node in data.get("nodes") or []:
+            nid = node.get("id")
+            pol = ((node.get("context") or {}).get("handler_policy") or {})
+            mp = pol.get("model_policy") or {}
+            model = mp.get("requested_model") or mp.get("model") or pol.get("model")
+            if nid and model:
+                out.setdefault(nid, model)
+    return out
+
+
+def _dispatched_issue(receipt_dir: Path) -> str:
+    try:
+        d = json.loads((receipt_dir / "dispatch-issue.json").read_text())
+        return str(d.get("issue") or d.get("number") or "-")
+    except Exception:
+        return "-"
+
+
 def _live_seat(receipt_dir: Path) -> str | None:
     mon = receipt_dir / "tau-stream-monitor.json"
     if not mon.is_file():
@@ -87,10 +124,12 @@ def _live_seat(receipt_dir: Path) -> str | None:
         m = json.loads(mon.read_text())
     except Exception:
         return None
+    ev = m.get("latest_event") or {}
+    node = ev.get("node_id") or m.get("current_node") or "-"
+    model = _node_models(receipt_dir).get(node, "?")
     if m.get("process_running"):
-        ev = m.get("latest_event") or {}
-        return f"RUNNING node={ev.get('node_id') or m.get('current_node')} elapsed={int(m.get('elapsed_seconds') or 0)}s"
-    return f"finished status={m.get('current_status')}"
+        return f"RUNNING agent={node} model={model} elapsed={int(m.get('elapsed_seconds') or 0)}s"
+    return f"finished status={m.get('current_status')} last-agent={node} model={model}"
 
 
 def summarize(receipt_dir: Path) -> dict | None:
@@ -187,7 +226,7 @@ def main() -> None:
             (d for d in RECEIPTS.iterdir() if d.is_dir() and d.stat().st_mtime > cursor),
             key=lambda p: p.stat().st_mtime,
         )
-    stream = STATE_ROOT / "events.log"  # one line per receipt; tail -F this
+    stream = STATE_ROOT / "events.jsonl"  # one JSON object per line; tail -F | jq
     results = []
     max_mtime = cursor
     for d in dirs:
@@ -196,11 +235,19 @@ def main() -> None:
         if ev is None or ev.get("kind") != "tick":
             continue
         with stream.open("a") as fh:
-            fh.write(
-                f"{time.strftime('%H:%M:%SZ', time.gmtime())} {ev.get('status'):<16} "
-                f"{ev.get('repo') or '-'}#{ev.get('issue') or '-'} "
-                f"{(ev.get('triage_code') or '')} {(ev.get('live') or '')} | {ev.get('summary')}\n"
-            )
+            fh.write(json.dumps({
+                "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "kind": "receipt",
+                "status": ev.get("status"),
+                "issue": ev.get("issue"),
+                "repo": ev.get("repo"),
+                "summary": ev.get("summary"),
+                "seat": ev.get("live"),
+                "triage": ev.get("triage_code"),
+                "pydantic": ev.get("pydantic_violations") or [],
+                "next": (ev.get("next_steps") or [None])[0],
+                "receipt": str(RECEIPTS / ev["dir"]),
+            }) + "\n")
         fresh = (time.time() - d.stat().st_mtime) < 900  # stale receipts: log+webhook only, no session pings
         results.append({
             "dir": d.name, "status": ev.get("status"), "issue": ev.get("issue"),
@@ -216,12 +263,21 @@ def main() -> None:
             try:
                 m = json.loads(Path(mons[-1]).read_text())
                 ev = m.get("latest_event") or {}
+                run_dir = Path(mons[-1]).parent
+                node = ev.get("node_id") or "-"
+                model = _node_models(run_dir).get(node, "?")
+                issue = _dispatched_issue(run_dir)
                 state = "LIVE" if m.get("process_running") else m.get("current_status")
-                live = f" {state} node={ev.get('node_id') or '-'} elapsed={int(m.get('elapsed_seconds') or 0)}s"
+                live = {"state": state, "issue": issue, "agent": node, "model": model,
+                        "elapsed_s": int(m.get("elapsed_seconds") or 0)}
             except Exception:
                 pass
-        with (STATE_ROOT / "events.log").open("a") as fh:
-            fh.write(f"{time.strftime('%H:%M:%SZ', time.gmtime())} heartbeat: no new receipts;{live or ' no active run'}\n")
+        with stream.open("a") as fh:
+            fh.write(json.dumps({
+                "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "kind": "heartbeat",
+                **(live if isinstance(live, dict) else {"state": "no_active_run"}),
+            }) + "\n")
     if max_mtime > cursor and "--replay-last" not in sys.argv:
         _save_cursor(max_mtime)
     print(json.dumps({"schema": "project_watchdog.notify_bridge_result.v1",
