@@ -275,6 +275,24 @@ def test_scoped_reservations_allow_disjoint_declared_targets(repository):
     assert not primary.writer_active(root)
 
 
+def test_legacy_global_flock_does_not_block_declared_scoped_targets(repository):
+    root, _, _ = repository
+    legacy = primary._lock(root)
+    assert legacy is not None
+    scoped = None
+    try:
+        observation = primary.observations(root)
+        assert observation["global_writer_active"] is True
+        assert observation["writer_active"] is False
+        scoped = primary._lock(root, ["skills/project-watchdog"])
+        assert scoped is not None
+    finally:
+        primary._close_fds(legacy)
+        if scoped is not None:
+            primary._close_fds(scoped)
+    assert not primary.writer_active(root)
+
+
 def test_scoped_reservations_serialize_overlapping_target_prefixes(repository):
     root, _, _ = repository
     first = primary._lock(root, ["skills/ask"])

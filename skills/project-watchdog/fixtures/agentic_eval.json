@@ -40,9 +40,9 @@
       "evidence_class": "fault_injected_deterministic",
       "mocked": true,
       "timeout_seconds": 120,
-      "command": ["uv", "run", "--project", "..", "pytest", "../tests/test_primary_main_revision.py::test_scoped_reservations_allow_disjoint_declared_targets", "../tests/test_primary_main_revision.py::test_scoped_reservations_serialize_overlapping_target_prefixes", "../tests/test_primary_main_revision.py::test_scoped_publication_guard_rejects_commit_outside_reserved_target", "-q"],
-      "expected": {"exit_code": 0, "stdout_contains": ["3 passed"]},
-      "proves": "Primary reservations use target-scoped nonblocking locks: disjoint declared targets can coexist, prefix-overlapping targets serialize, and the publication guard rejects worker-attributable commits outside the reserved target scope. Fixture-backed only; no live GitHub/provider closure."
+      "command": ["uv", "run", "--project", "..", "pytest", "../tests/test_primary_main_revision.py::test_scoped_reservations_allow_disjoint_declared_targets", "../tests/test_primary_main_revision.py::test_legacy_global_flock_does_not_block_declared_scoped_targets", "../tests/test_primary_main_revision.py::test_scoped_reservations_serialize_overlapping_target_prefixes", "../tests/test_primary_main_revision.py::test_scoped_publication_guard_rejects_commit_outside_reserved_target", "-q"],
+      "expected": {"exit_code": 0, "stdout_contains": ["4 passed"]},
+      "proves": "Primary reservations use target-scoped nonblocking locks: disjoint declared targets can coexist, a legacy checkout-global flock does not block declared scoped targets, prefix-overlapping targets serialize, and the publication guard rejects worker-attributable commits outside the reserved target scope. Fixture-backed only; no live GitHub/provider closure."
     },
     {
       "name": "immutable-replay-proof-negative-controls",

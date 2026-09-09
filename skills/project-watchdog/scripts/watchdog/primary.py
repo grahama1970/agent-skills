@@ -284,7 +284,7 @@ def _global_writer_active(root: Path) -> bool:
 
 
 def writer_active(root: Path) -> bool:
-    return _global_writer_active(root) or bool(_active_scoped_reservations(root))
+    return bool(_active_scoped_reservations(root))
 
 
 def queue_order(root: Path, issues: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -325,8 +325,8 @@ def observations(root: Path) -> dict[str, Any]:
             number = path.name.split("-", 1)[0]
             invalid.append({"journal": str(path), "issue_number": int(number) if number.isdigit() else None,
                             "error": str(exc), "disposition": "invalid_operation_quarantined"})
-    return {"writer_active": writer_active(root), "operations": operations,
-            "invalid_operations": invalid,
+    return {"writer_active": writer_active(root), "global_writer_active": _global_writer_active(root),
+            "operations": operations, "invalid_operations": invalid,
             "recovery_command": recovery_command(root)}
 
 
