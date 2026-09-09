@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import time
 from pathlib import Path
@@ -282,6 +283,71 @@ def cancel(run_dir: Path, node_id: str = "") -> dict[str, Any]:
     return receipt
 
 
+
+def _is_project_command_spec_run(run_dir: Path) -> bool:
+    return (
+        (run_dir / "dag.json").is_file()
+        and (run_dir / "command-specs").is_dir()
+        and (run_dir / "agents").is_dir()
+        and (run_dir / "tau-receipts" / "dag-run.sqlite3").is_file()
+    )
+
+
+def _tau_project_command() -> list[str] | None:
+    configured = os.environ.get("ASK_TAU_PROJECT_ROOT")
+    candidates = [Path(configured)] if configured else []
+    candidates.extend(
+        [
+            Path("/home/graham/workspace/experiments/tau"),
+            Path.home() / "workspace/experiments/tau",
+        ]
+    )
+    for candidate in candidates:
+        if candidate and (candidate / "pyproject.toml").is_file():
+            return ["uv", "run", "--project", str(candidate), "tau"]
+    executable = shutil.which("tau")
+    if executable:
+        return [executable]
+    return None
+
+
+def _project_command_spec_resume_command(run_dir: Path, plan: dict[str, Any]) -> list[str] | None:
+    tau = _tau_project_command()
+    if tau is None:
+        return None
+    rerun = [node for node in plan["would_rerun"] if _projection_node_kind(run_dir, node) != "join"]
+    dependents = [node for node in plan["would_rerun"] if _projection_node_kind(run_dir, node) == "join"]
+    if not rerun:
+        rerun = list(plan["would_rerun"][:1])
+        dependents = [node for node in plan["would_rerun"][1:] if node not in rerun]
+    command = [
+        *tau,
+        "dag-command-spec-resume",
+        str(run_dir / "dag.json"),
+        "--receipt-dir",
+        str(run_dir / "tau-receipts"),
+        "--agents-root",
+        str(run_dir / "agents"),
+        "--command-spec-root",
+        str(run_dir / "command-specs"),
+    ]
+    for node in plan["already_accepted"]:
+        command.extend(["--preserve-node", str(node)])
+    for node in rerun:
+        command.extend(["--rerun-node", str(node)])
+    for node in dependents:
+        command.extend(["--rerun-dependent", str(node)])
+    command.extend(["--execute", "--json"])
+    return command
+
+
+def _projection_node_kind(run_dir: Path, node_id: str) -> str:
+    projection = project_run(run_dir)
+    for node in projection.get("nodes") or []:
+        if node.get("node_id") == node_id:
+            return str(node.get("target_kind") or "")
+    return ""
+
 def resume_plan(run_dir: Path) -> dict[str, Any]:
     """What a resume would rerun, and what it must not.
 
@@ -316,27 +382,36 @@ def resume(run_dir: Path, execute: bool = False) -> dict[str, Any]:
         )
         return receipt
 
-    tau_run = Path(__file__).resolve().parents[3] / "tau" / "run.sh"
-    if not tau_run.is_file():
-        receipt.update(
-            outcome="unsupported",
-            reason_code="tau_wrapper_absent",
-            explanation="no Tau wrapper to resume through",
-        )
-        return receipt
+    command = (
+        _project_command_spec_resume_command(run_dir, plan)
+        if _is_project_command_spec_run(run_dir)
+        else None
+    )
+    reason_code = "tau_command_spec_resume"
+    if command is None:
+        tau_run = Path(__file__).resolve().parents[3] / "tau" / "run.sh"
+        if not tau_run.is_file():
+            receipt.update(
+                outcome="unsupported",
+                reason_code="tau_wrapper_absent",
+                explanation="no Tau command-spec resume command or wrapper to resume through",
+            )
+            return receipt
+        command = [str(tau_run), "workflow-resume", str(run_dir)]
+        reason_code = "tau_workflow_resume"
 
     if not execute:
         receipt.update(
             outcome="planned",
             reason_code="dry_run",
-            next_command=f"{tau_run} workflow-resume {run_dir}",
+            next_command=" ".join(command),
             explanation="resume plan computed; pass execute to run it",
         )
         return receipt
 
     try:
         completed = subprocess.run(
-            [str(tau_run), "workflow-resume", str(run_dir)],
+            command,
             capture_output=True, text=True, timeout=900, check=False,
         )
     except (OSError, subprocess.SubprocessError) as exc:
@@ -346,8 +421,10 @@ def resume(run_dir: Path, execute: bool = False) -> dict[str, Any]:
     receipt.update(
         executed=True,
         outcome="completed" if completed.returncode == 0 else "failed",
-        reason_code="tau_workflow_resume",
+        reason_code=reason_code,
+        command=command,
         returncode=completed.returncode,
+        stdout_excerpt=(completed.stdout or "")[-1000:],
         stderr_excerpt=(completed.stderr or "")[-300:],
     )
     # Verify the promise: nothing already accepted may have been rerun.

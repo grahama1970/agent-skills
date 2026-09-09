@@ -10,6 +10,8 @@ work, and guidance that widens scope reaching a node at all.
 from __future__ import annotations
 
 import json
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -131,6 +133,61 @@ def test_resume_without_execute_never_runs_anything() -> None:
     receipt = resume(FIXTURES / "roundtable_partial", execute=False)
     assert receipt["executed"] is False
     assert receipt["outcome"] in {"planned", "unsupported"}
+
+
+def test_project_command_spec_resume_plans_native_tau_command(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    run = tmp_path / "run"
+    shutil.copytree(FIXTURES / "roundtable_partial", run)
+    (run / "agents").mkdir()
+    (run / "command-specs" / "handler-webclaude").mkdir(parents=True)
+    (run / "command-specs" / "join").mkdir(parents=True)
+    (run / "tau-receipts").mkdir()
+    (run / "tau-receipts" / "dag-run.sqlite3").write_text("sqlite marker", encoding="utf-8")
+    tau_root = tmp_path / "tau"
+    tau_root.mkdir()
+    (tau_root / "pyproject.toml").write_text("[project]\nname='tau'\n", encoding="utf-8")
+    monkeypatch.setenv("ASK_TAU_PROJECT_ROOT", str(tau_root))
+
+    receipt = resume(run, execute=False)
+
+    assert receipt["outcome"] == "planned"
+    assert "dag-command-spec-resume" in receipt["next_command"]
+    assert "workflow-resume" not in receipt["next_command"]
+    assert "--preserve-node handler-webgpt" in receipt["next_command"]
+    assert "--rerun-node handler-webclaude" in receipt["next_command"]
+    assert "--rerun-node handler-webkimi" in receipt["next_command"]
+    assert "--rerun-dependent join" in receipt["next_command"]
+
+
+def test_project_command_spec_resume_execute_uses_native_tau_command(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    run = tmp_path / "run"
+    shutil.copytree(FIXTURES / "roundtable_partial", run)
+    (run / "agents").mkdir()
+    (run / "command-specs").mkdir()
+    (run / "tau-receipts").mkdir()
+    (run / "tau-receipts" / "dag-run.sqlite3").write_text("sqlite marker", encoding="utf-8")
+    tau_root = tmp_path / "tau"
+    tau_root.mkdir()
+    (tau_root / "pyproject.toml").write_text("[project]\nname='tau'\n", encoding="utf-8")
+    monkeypatch.setenv("ASK_TAU_PROJECT_ROOT", str(tau_root))
+    calls: list[list[str]] = []
+
+    def fake_run(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
+        calls.append(command)
+        return subprocess.CompletedProcess(command, 0, stdout='{"ok": true}\n', stderr="")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    receipt = resume(run, execute=True)
+
+    assert receipt["outcome"] == "completed"
+    assert receipt["reason_code"] == "tau_command_spec_resume"
+    assert calls and calls[0][4] == "tau"
+    assert "dag-command-spec-resume" in calls[0]
+    assert "workflow-resume" not in calls[0]
+    assert receipt["accepted_work_preserved"] is True
 
 
 def test_watch_emits_settlement_and_stops() -> None:

@@ -1,0 +1,49 @@
+{
+  "version": 2,
+  "skill": "ask",
+  "trials": 2,
+  "proof_scope": "Ask runs resume routes project DAG command-spec runs to Tau native command-spec resume instead of workflow-resume.",
+  "claims": {
+    "proves": "The public `ask runs resume <run> --json` planning surface detects a project DAG command-spec run, preserves accepted handler nodes, selects failed handler nodes plus join dependents, and emits a Tau `dag-command-spec-resume` command without executing provider work.",
+    "does_not_prove": "Real provider capacity, Tau execution success for a live reviewer rerun, project-watchdog reservation reattachment, or GitHub issue closure."
+  },
+  "capability_claims": [
+    {
+      "id": "ask.runs.resume.command_spec_route",
+      "description": "Ask run resume planning uses Tau's command-spec resume seam for project DAG command-spec runs.",
+      "criticality": "critical",
+      "evidence_required": {"live_e2e": true}
+    }
+  ],
+  "cases": [
+    {
+      "name": "project-command-spec-resume-plans-native-tau-command",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": ["ask.runs.resume.command_spec_route"],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-lc",
+        "mkdir -p ../local/command-spec-resume && uv run --project .. python ../evals/command_spec_resume.py --out ../local/command-spec-resume/proof.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\": true",
+          "dag-command-spec-resume",
+          "--preserve-node handler-webgpt",
+          "--rerun-dependent join"
+        ],
+        "stdout_excludes": ["workflow-resume"],
+        "artifacts": [
+          {"path": "../local/command-spec-resume/proof.json", "json_pointer": "/ok", "equals": true},
+          {"path": "../local/command-spec-resume/proof.json", "json_pointer": "/mocked", "equals": false},
+          {"path": "../local/command-spec-resume/proof.json", "json_pointer": "/live", "equals": true},
+          {"path": "../local/command-spec-resume/proof.json", "json_pointer": "/outcome", "equals": "planned"}
+        ]
+      }
+    }
+  ]
+}

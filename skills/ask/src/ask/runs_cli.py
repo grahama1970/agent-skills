@@ -36,7 +36,6 @@ from .runs_control import (
     list_runs,
     resolve_run,
     resume as resume_run,
-    resume_plan,
     steer as steer_node,
     watch_events,
 )
@@ -174,9 +173,7 @@ def resume_command(
 ) -> None:
     """Resume, skipping work whose evidence was already admitted."""
     path = _resolve_or_exit(run)
-    receipt = resume_run(path, execute=execute) if execute else {
-        **resume_plan(path), "outcome": "planned"
-    }
+    receipt = resume_run(path, execute=execute)
     if json_out:
         typer.echo(json_lib.dumps(receipt, indent=2, sort_keys=True))
         return
