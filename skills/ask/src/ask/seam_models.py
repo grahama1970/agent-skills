@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 from pydantic_core import PydanticCustomError
 
 
@@ -72,6 +72,36 @@ class HandlerExecutionBinding(BaseModel):
                 "handler_workspace_required", "The codex transport requires handler=codex and a workspace", {},
             )
         return self
+
+
+class ScillmCompletionChoice(BaseModel):
+    """Admission fields from a non-streaming OpenAI-compatible completion."""
+
+    model_config = ConfigDict(extra="ignore", strict=True)
+    finish_reason: str
+    message: dict[str, Any]
+
+    @field_validator("finish_reason")
+    @classmethod
+    def require_complete(cls, value: str) -> str:
+        if value != "stop":
+            raise PydanticCustomError(
+                "scillm_response_incomplete",
+                "Provider completion is not complete: finish_reason={finish_reason}",
+                {"finish_reason": value},
+            )
+        return value
+
+
+class ScillmCompletion(BaseModel):
+    """Validate completion admission before using provider text as evidence.
+
+    Provider extensions remain preserved in raw.json, not interpreted as
+    acceptance authority. Incomplete output is never repaired or self-healed.
+    """
+
+    model_config = ConfigDict(extra="ignore", strict=True)
+    choices: list[ScillmCompletionChoice] = Field(min_length=1, max_length=1)
 
 
 class _SeamModel(BaseModel):

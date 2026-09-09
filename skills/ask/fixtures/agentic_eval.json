@@ -9,6 +9,34 @@
   },
   "cases": [
     {
+      "name": "completion-admission-live-positive",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "real_world": true,
+      "readback": true,
+      "mocked": false,
+      "timeout_seconds": 180,
+      "command": ["uv", "run", "--project", "..", "python", "../evals/completion_admission.py", "/mnt/storage12tb/skills/ask/outputs/completion-admission-live-proof.json", "--live"],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [{"path": "/mnt/storage12tb/skills/ask/outputs/completion-admission-live-proof.json", "json_pointer": "/passed", "equals": true}]
+      },
+      "proves": "Public Ask/Tau provider call still admits complete output with exact fresh sentinel and finish_reason=stop."
+    },
+    {
+      "name": "completion-admission-rejects-truncation",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 90,
+      "command": ["uv", "run", "--project", "..", "python", "../evals/completion_admission.py", "/tmp/ask-completion-admission-proof.json"],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [{"path": "/tmp/ask-completion-admission-proof.json", "json_pointer": "/passed", "equals": true}]
+      },
+      "proves": "Captured-response replay plus modified finish reasons reject incomplete output before verdict admission; network mocked, not live provider or closure evidence."
+    },
+    {
       "name": "pi-native-docs-and-retained-evals",
       "type": "positive",
       "evidence_class": "deterministic",

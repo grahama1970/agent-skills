@@ -28,7 +28,7 @@ from pydantic import ValidationError
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 from ask import browser_windows, model_provenance  # noqa: E402
 from ask.tau_dag import _handler_policy, resolve_handler_execution_binding, resolve_scillm_model_route  # noqa: E402
-from ask.seam_models import enforce  # noqa: E402
+from ask.seam_models import ScillmCompletion, enforce  # noqa: E402
 
 
 load_dotenv()
@@ -877,6 +877,9 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             submit_meta["binding_validation"] = {
                 "valid": False, "errors": exc.errors(include_input=False, include_url=False),
             }
+        elif isinstance(exc, ValidationError) and exc.title == "ScillmCompletion":
+            submit_meta = _read_json(meta_path)
+            failure = "scillm_response_incomplete: " + str(exc)
         status = "ERROR"
         ok = False
         provider_live = False
@@ -4677,6 +4680,8 @@ def _handler_failure_recovery_packet(
 
 
 def _classify_handler_failure(*, handler: str, failure: str, submit_meta: dict[str, Any]) -> str:
+    if submit_meta.get("schema") == "ask.tau_dag_scillm_submit_meta.v1" and submit_meta.get("validation_errors"):
+        return "scillm_response_incomplete"
     haystack = "\n".join([handler, failure, json.dumps(submit_meta, sort_keys=True, default=str)]).lower()
     if "handlerexecutionbinding" in haystack:
         return "ask_handler_binding_invalid"
@@ -4821,6 +4826,7 @@ def _handler_recovery_reason(failure_code: str) -> str:
         "scillm_model_not_found": "SciLLM routed the requested model to a provider/model id that is not available.",
         "scillm_provider_route_failed": "SciLLM exhausted provider routes for the requested model.",
         "scillm_empty_response_200": "SciLLM returned HTTP 200 but the first assistant message had no usable content.",
+        "scillm_response_incomplete": "The provider completion failed typed admission; inspect finish_reason and validation_errors, not partial verdict prose.",
         "subagent_runner_failed": "The local subagent-runner handler did not produce a usable answer.",
         "codex_handler_failed": "The local Codex handler did not produce the required workspace evidence.",
         "handler_timeout": "The handler did not produce a usable answer before its timeout.",
@@ -4829,6 +4835,8 @@ def _handler_recovery_reason(failure_code: str) -> str:
 
 
 def _handler_auto_retry_blocked_reason(failure_code: str) -> str:
+    if failure_code == "scillm_response_incomplete":
+        return "provider_completion_requires_output_contract_repair"
     if failure_code in {"ask_handler_binding_invalid", "codex_model_not_supported"}:
         return "handler_binding_requires_configuration_repair"
     if failure_code == "scillm_auth_invalid_api_key":
@@ -4847,7 +4855,7 @@ def _handler_recovery_next_command(
     request_payload: dict[str, Any],
     failure_code: str,
 ) -> str:
-    if failure_code in {"ask_handler_binding_invalid", "codex_model_not_supported"}:
+    if failure_code in {"ask_handler_binding_invalid", "codex_model_not_supported", "scillm_response_incomplete"}:
         return shlex.join(["python3", "-m", "json.tool", str(Path(args.artifact_dir) / "node-receipt.json")])
     request_text = str(request_payload.get("request") or "").strip()
     parts = ["cd", "skills/ask", "&&", "./run.sh", "tau-dag", request_text or "repeat the same request"]
@@ -4887,6 +4895,8 @@ def _handler_recovery_next_command(
 
 
 def _handler_fallback_instruction(failure_code: str) -> str:
+    if failure_code == "scillm_response_incomplete":
+        return "Preserve response.raw.md and response.meta.json. Repair the output contract before authorizing a retry; do not admit partial text or substitute another seat's plan."
     if failure_code in {"ask_handler_binding_invalid", "codex_model_not_supported"}:
         return "Repair the declared handler/transport/workspace contract before recompiling. Do not switch providers, drop required local tools, or retry the same invalid binding."
     if failure_code == "scillm_auth_invalid_api_key":
@@ -6886,15 +6896,10 @@ def _run_scillm_handler(
     raw_path.write_text(raw, encoding="utf-8")
     payload = _parse_json_object(raw)
     choices = payload.get("choices") if isinstance(payload.get("choices"), list) else []
-    message = choices[0].get("message") if choices and isinstance(choices[0], dict) else {}
-    content = message.get("content") if isinstance(message, dict) else ""
-    if isinstance(content, list):
-        text = "\n".join(str(item.get("text") or item) for item in content)
-    else:
-        text = str(content or "")
-    response_path.write_text(text, encoding="utf-8")
+    choice = choices[0] if choices and isinstance(choices[0], dict) else {}
     meta = {
         "schema": "ask.tau_dag_scillm_submit_meta.v1",
+        "finish_reason": choice.get("finish_reason"),
         "status_code": status_code,
         "model": model,
         "requested_handler": handler,
@@ -6904,6 +6909,19 @@ def _run_scillm_handler(
         "duration_seconds": round(time.time() - started, 3),
         "usage": payload.get("usage"),
     }
+    try:
+        completion = ScillmCompletion.model_validate_json(raw)
+    except ValidationError as exc:
+        meta["validation_errors"] = exc.errors(include_input=False, include_url=False)
+        meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        raise
+    message = completion.choices[0].message
+    content = message.get("content")
+    if isinstance(content, list):
+        text = "\n".join(str(item.get("text") or item) for item in content)
+    else:
+        text = str(content or "")
+    response_path.write_text(text, encoding="utf-8")
     meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return text, meta
 

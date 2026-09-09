@@ -3,6 +3,15 @@
   "note": "Canonical failure-code catalog across the model-calling pipeline (/ask -> /tau -> {/surf | /scillm}). Each entry maps a raw signal from any layer to ONE unambiguous {code, cause, next_command}. The triage skill grows this catalog as it classifies real ambiguous errors.",
   "codes": [
     {
+      "code": "scillm_response_incomplete",
+      "layer": "ask",
+      "match": ["scillm_response_incomplete"],
+      "cause": "The non-streaming provider response failed typed completion admission; inspect finish_reason and Pydantic validation_errors. Partial verdict text is not accepted evidence.",
+      "next_command": "Inspect the failing Ask node's response.meta.json validation_errors and preserved response.raw.md; repair the output contract before authorizing a same-node retry.",
+      "recoverable": true,
+      "not_this": ["reviewer semantic rejection", "provider authentication failure", "accepted complete response"]
+    },
+    {
       "code": "tau_seat_verdict_not_pass",
       "layer": "project-watchdog",
       "match": [

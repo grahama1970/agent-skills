@@ -207,6 +207,12 @@ tables: `references/workflows.md`.
 - `PASS` is reviewer/model evidence only; local closure requires deterministic
   local proof. `DEGRADED`/`NEEDS_ATTENTION`/rate limits are lane-local: keep
   usable seats, follow the failed lane's recovery packet.
+- Non-streaming API completions must pass typed admission with `finish_reason=stop`
+  before their text can count as evidence. Truncated, filtered, missing-finish-reason,
+  or malformed completions emit `scillm_response_incomplete`; retain raw bytes and
+  `response.meta.json` validation errors. Do not repair partial verdict text or retry
+  automatically. Retained cases: `completion-admission-rejects-truncation` (captured
+  replay) and `completion-admission-live-positive` (real provider readback).
 - Failures are non-silent: every failed lane exposes `failure_code`, a recovery
   packet, and `next_command`/ticket instruction. On any failure, read
   `references/diagnosis.md` and dispatch on the owning receipt before theorising.
