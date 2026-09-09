@@ -37,6 +37,18 @@ function tauSingle(question, handler) {
   return `cd ${REPO} && skills/ask/run.sh tau-dag ${q(question)} --repo local/agent-skills --target status-escalation --immutable-goal ${q('Return one likely cause, one next command, or NEEDS_ATTENTION.')} --handler ${q(handler)} --execute --json`;
 }
 
+function webgptParentAttachment(parentRefs) {
+  const payload = JSON.stringify({
+    schema: 'lazy_report_shame.escalation_parent_refs.v1',
+    parent_refs: parentRefs,
+  });
+  return `refs_file=$(mktemp /tmp/shame-webgpt-parent-refs-XXXXXX.json) && printf %s ${q(payload)} > "$refs_file"`;
+}
+
+function tauWebgpt(question, parentRefs) {
+  return `${webgptParentAttachment(parentRefs)} && cd ${REPO} && skills/ask/run.sh tau-dag ${q(question)} --repo local/agent-skills --target status-escalation --immutable-goal ${q('Return one likely cause, one next command, or NEEDS_ATTENTION.')} --handler 'webgpt' --attach-file "$refs_file" --execute --json`;
+}
+
 function compile(s) {
   switch (s.state) {
     case 'continuing': {
@@ -44,16 +56,14 @@ function compile(s) {
       return next ? { command: String(next), reason: 'continuing_next_command' } : { command: null, reason: 'continuing_without_next_command' };
     }
     case 'needs_brave_search': {
-      const query = s.needs_brave_search.queries[0];
-      return { command: `cd ${REPO} && skills/brave-search/run.sh web ${q(query)} --count 5`, reason: 'escalation_rung_0' };
+      const commands = s.needs_brave_search.queries
+        .map((query) => `cd ${REPO} && skills/brave-search/run.sh web ${q(query)} --count 5`);
+      return { command: commands.join(' && '), reason: 'escalation_rung_0' };
     }
     case 'needs_agent':
       return { command: tauSingle(s.needs_agent.question, s.needs_agent.handler), reason: 'escalation_rung_1_cross_family' };
     case 'needs_webgpt': {
-      const refs = (s.needs_webgpt.parent_refs || [])
-        .map((r) => `${r.receipt_id} (${r.expected_schema} from ${r.expected_producer})`)
-        .join(', ');
-      return { command: tauSingle(`${s.needs_webgpt.question}\n\nPrior typed parent refs: ${refs}`, 'webgpt'), reason: 'escalation_rung_2_webgpt' };
+      return { command: tauWebgpt(s.needs_webgpt.question, s.needs_webgpt.parent_refs || []), reason: 'escalation_rung_2_webgpt' };
     }
     case 'needs_roundtable': {
       const p = s.needs_roundtable;

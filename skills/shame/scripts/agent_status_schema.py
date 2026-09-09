@@ -255,7 +255,7 @@ def normalize_project_agent_family(value: str) -> str:
     return family
 
 
-def runtime_project_agent_family(payload_family: str) -> tuple[str, str]:
+def runtime_project_agent_family() -> tuple[str, str | None]:
     for name in PROJECT_AGENT_FAMILY_ENV_VARS:
         raw = os.environ.get(name, "").strip()
         if raw:
@@ -263,7 +263,7 @@ def runtime_project_agent_family(payload_family: str) -> tuple[str, str]:
     provider = os.environ.get("PI_PROVIDER", "").strip()
     if provider:
         return normalize_project_agent_family(provider), "PI_PROVIDER"
-    return normalize_project_agent_family(payload_family), "payload_legacy_fallback"
+    return "", None
 
 
 def configured_ask_handlers() -> frozenset[str]:
@@ -436,7 +436,16 @@ class NeedsAgent(BaseModel):
 
     @model_validator(mode="after")
     def enforce_cross_family_after_brave(self) -> "NeedsAgent":
-        runtime_family, family_source = runtime_project_agent_family(self.project_agent_family)
+        runtime_family, family_source = runtime_project_agent_family()
+        if family_source is None:
+            raise PydanticCustomError(
+                "needs_agent_runtime_family_missing",
+                "state=needs_agent requires a trusted runtime project-agent family",
+                {
+                    "required_env": list(PROJECT_AGENT_FAMILY_ENV_VARS),
+                    "fallback_env": "PI_PROVIDER",
+                },
+            )
         required_handler = FIRST_ASK_HANDLER_BY_PROJECT_AGENT_FAMILY.get(runtime_family)
         if required_handler is None:
             raise PydanticCustomError(
@@ -449,7 +458,7 @@ class NeedsAgent(BaseModel):
                 },
             )
         payload_family = normalize_project_agent_family(self.project_agent_family)
-        if family_source != "payload_legacy_fallback" and payload_family != runtime_family:
+        if payload_family != runtime_family:
             raise PydanticCustomError(
                 "needs_agent_project_family_not_runtime_bound",
                 "needs_agent.project_agent_family must match the trusted runtime project-agent family",

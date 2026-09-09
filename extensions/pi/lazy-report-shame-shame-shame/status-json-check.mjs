@@ -642,11 +642,15 @@ if ((MUTATING_TURN || FORCE_STATUS || STRICT_STATUS) && operationalAnchorCount(p
 }
 const originalAnswer = String(parsedStatus.answer || '').trim();
 let immutableGoal = null;
-if (answerRequired && terminalStates.has(String(verdict.state || '')) && !originalAnswer) {
+if (immutableGoalContext === true && terminalStates.has(String(verdict.state || ''))) {
+  immutableGoal = applyImmutableGoalHeadline(parsedStatus, verdict.state, authoritativeTaskOutcome);
+}
+const answerAfterTypedContext = String(parsedStatus.answer || '').trim();
+if (answerRequired && terminalStates.has(String(verdict.state || '')) && !answerAfterTypedContext) {
   emit('reject', ['missing_answer_to_question'], {
     state: verdict.state,
     status: parsedStatus,
-    typed_turn_context: typedTurnContextFeature(),
+    typed_turn_context: typedTurnContextFeature(immutableGoal),
     validation_result: {
       schema: 'pi.agent_status.validation_result.v1',
       valid: false,
@@ -654,9 +658,6 @@ if (answerRequired && terminalStates.has(String(verdict.state || '')) && !origin
       steering: [{ code: 'missing_answer_to_question', loc: ['answer'], field: 'answer', action: 'add_required_field' }],
     },
   });
-}
-if (immutableGoalContext === true && terminalStates.has(String(verdict.state || ''))) {
-  immutableGoal = applyImmutableGoalHeadline(parsedStatus, verdict.state, authoritativeTaskOutcome);
 }
 emit('pass', ['valid_agent_status_json'], {
   state: verdict.state,
