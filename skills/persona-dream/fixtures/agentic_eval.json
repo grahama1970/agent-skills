@@ -4,9 +4,9 @@
   "trials": 2,
   "proof_scope": "Agentic-evals is the main Persona Dream pipeline gate. Cases execute run.sh/script entrypoints and read produced artifacts; pytest/unit-test commands are intentionally excluded.",
   "claims": {
-    "proves": "Selected Persona Dream pipeline seams execute through real skill entrypoints: Pydantic step boundary triage, video_plan crew fail-closed gate, video_plan artifact production with crew bundle, provider packet dry-run routing, and pipeline-integrity audit surface.",
-    "does_not_prove": "Live paid provider generation, human perceptual quality, full 318-script coverage, or semantic dream quality."
-  },
+    "proves": "Selected Persona Dream pipeline seams execute through real skill entrypoints: Pydantic step boundary triage, video_plan crew fail-closed gate, video_plan artifact production with crew bundle, provider packet dry-run routing, and pipeline-integrity audit surface with blocking finding readback.",
+    "does_not_prove": "Live paid provider generation, human perceptual quality, manual review of every script, or semantic dream quality."
+  }, 
   "capability_claims": [
     {
       "id": "persona_dream.agentic_pipeline_driver",
@@ -119,7 +119,7 @@
       "command": [
         "bash",
         "-lc",
-        "OUT=/tmp/persona-dream-pipeline-integrity-agentic.json; uv run --project .. python ../scripts/audit_pipeline_integrity.py --output \"$OUT\" --fail-on never >/dev/null; python3 - <<'PY'\nimport json\nr=json.load(open('/tmp/persona-dream-pipeline-integrity-agentic.json'))\nassert r['schema']=='persona_dream.pipeline_integrity_audit.v1', r\nassert r['file_count'] > 100, r\nprint('PIPELINE_INTEGRITY_AUDIT_READBACK_OK', r['finding_file_count'])\nPY"
+        "OUT=/tmp/persona-dream-pipeline-integrity-agentic.json; uv run --project .. python ../scripts/audit_pipeline_integrity.py --output \"$OUT\" --fail-on P1 >/dev/null; python3 - <<'PY'\nimport json\nr=json.load(open('/tmp/persona-dream-pipeline-integrity-agentic.json'))\nassert r['schema']=='persona_dream.pipeline_integrity_audit.v2', r\nassert r['status']=='PASS', r\nassert r['file_count'] > 100, r\nassert r['blocking_file_count'] == 0, r\nassert r['reviewed_file_count'] > 100, r\nprint('PIPELINE_INTEGRITY_AUDIT_READBACK_OK', r['file_count'], r['reviewed_file_count'], r['blocking_file_count'])\nPY"
       ],
       "expected": {
         "exit_code": 0,
