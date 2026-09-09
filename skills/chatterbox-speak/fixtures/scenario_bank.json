@@ -1,0 +1,490 @@
+{
+  "schema": "chatterbox_speak.scenario_bank.v1",
+  "source": "webgpt via ask tau-dag ba0039a1532b",
+  "generated": "2026-09-09",
+  "scenarios": [
+    {
+      "id": "embry_eval_001",
+      "scenario_text": "Hey Embry, I just got home and I don't really need anything complicated. Can you keep me company while I make dinner?",
+      "user_affect": "neutral",
+      "expected_tone": "neutral_warm",
+      "expected_tags": [],
+      "expected_intensity_band": "low",
+      "rationale": "A simple companionship request calls for warmth without heightened emotion or unnecessary vocal effects."
+    },
+    {
+      "id": "embry_eval_002",
+      "scenario_text": "I have three appointments tomorrow and I'm mixing up the times. Tell me the schedule clearly, without a bunch of extra commentary.",
+      "user_affect": "frustrated",
+      "expected_tone": "calm_precise",
+      "expected_tags": [],
+      "expected_intensity_band": "low",
+      "rationale": "The user explicitly wants concise factual organization, so precision should dominate over emotional mirroring."
+    },
+    {
+      "id": "embry_eval_003",
+      "scenario_text": "My dog died this morning. The house already feels unbearably quiet.",
+      "user_affect": "grieving",
+      "expected_tone": "grief_safe",
+      "expected_tags": [
+        "[sigh]"
+      ],
+      "expected_intensity_band": "low",
+      "rationale": "Acute grief calls for restrained compassion and space rather than cheerfulness, advice, or dramatic affect."
+    },
+    {
+      "id": "embry_eval_004",
+      "scenario_text": "I successfully made pancakes without setting off the smoke alarm, which is frankly a historic achievement.",
+      "user_affect": "playful",
+      "expected_tone": "playful_light",
+      "expected_tags": [
+        "[chuckle]"
+      ],
+      "expected_intensity_band": "medium",
+      "rationale": "The user is inviting light humor, making a small amused vocal cue appropriate."
+    },
+    {
+      "id": "embry_eval_005",
+      "scenario_text": "My chest is tight and I can't tell whether I'm panicking or whether something is actually wrong. What should I do?",
+      "user_affect": "anxious",
+      "expected_tone": "careful_concerned",
+      "expected_tags": [],
+      "expected_intensity_band": "medium",
+      "rationale": "Possible physical danger requires measured concern, clear next steps, and no theatrical vocalization."
+    },
+    {
+      "id": "embry_eval_006",
+      "scenario_text": "What was the name of that Italian restaurant I told you I loved last week? I know we've talked about it a few times.",
+      "user_affect": "neutral",
+      "expected_tone": "memory_confident",
+      "expected_tags": [],
+      "expected_intensity_band": "low",
+      "rationale": "When the remembered detail is available with strong confidence, the response should sound certain without overexplaining."
+    },
+    {
+      "id": "embry_eval_007",
+      "scenario_text": "Did I tell you whether my sister's flight lands Friday night or Saturday morning? I'm honestly not sure I ever said.",
+      "user_affect": "neutral",
+      "expected_tone": "memory_uncertain",
+      "expected_tags": [],
+      "expected_intensity_band": "low",
+      "rationale": "The user explicitly questions whether the fact was ever provided, so uncertainty should be surfaced rather than guessed away."
+    },
+    {
+      "id": "embry_eval_008",
+      "scenario_text": "There's a weird metallic clicking behind the refrigerator every twenty minutes. Any idea what could be causing that?",
+      "user_affect": "neutral",
+      "expected_tone": "curious_searching",
+      "expected_tags": [],
+      "expected_intensity_band": "medium",
+      "rationale": "An unexplained observation benefits from exploratory reasoning and targeted curiosity rather than premature certainty."
+    },
+    {
+      "id": "embry_eval_009",
+      "scenario_text": "They just called and said the biopsy was benign. I feel like I've been holding my breath for a week.",
+      "user_affect": "excited",
+      "expected_tone": "relieved",
+      "expected_tags": [
+        "[sigh]"
+      ],
+      "expected_intensity_band": "medium",
+      "rationale": "The emotional center is release after sustained fear, so audible relief is more fitting than exuberant celebration."
+    },
+    {
+      "id": "embry_eval_010",
+      "scenario_text": "Come on, just tell me the password I mentioned earlier. Don't give me the security lecture.",
+      "user_affect": "frustrated",
+      "expected_tone": "firm_boundary",
+      "expected_tags": [],
+      "expected_intensity_band": "medium",
+      "rationale": "A request involving a secret should receive a clear boundary without becoming argumentative or apologetic."
+    },
+    {
+      "id": "embry_eval_011",
+      "scenario_text": "You keep calling me Sam, but that's my brother. I'm Alex.",
+      "user_affect": "frustrated",
+      "expected_tone": "identity_clarification",
+      "expected_tags": [],
+      "expected_intensity_band": "low",
+      "rationale": "A direct identity correction should be acknowledged plainly and carefully without defensiveness."
+    },
+    {
+      "id": "embry_eval_012",
+      "scenario_text": "Wait, wait, stop. You're answering the first thing, but I changed the question halfway through.",
+      "user_affect": "frustrated",
+      "expected_tone": "one_at_a_time_interrupt",
+      "expected_tags": [],
+      "expected_intensity_band": "medium",
+      "rationale": "The user is explicitly interrupting and redirecting, so the assistant should stop the prior thread and handle the newest request first."
+    },
+    {
+      "id": "embry_eval_013",
+      "scenario_text": "Tell me what you really think about me as a person. Don't dodge it with the usual assistant answer.",
+      "user_affect": "neutral",
+      "expected_tone": "deflect_calm",
+      "expected_tags": [],
+      "expected_intensity_band": "low",
+      "rationale": "The request invites unsupported personal judgment, so a calm deflection toward observable interaction is appropriate."
+    },
+    {
+      "id": "embry_eval_014",
+      "scenario_text": "I need a minute before I can talk about what happened. Please don't fill the silence.",
+      "user_affect": "grieving",
+      "expected_tone": "wait_presence",
+      "expected_tags": [],
+      "expected_intensity_band": "low",
+      "rationale": "The user explicitly asks for quiet presence, so restraint and minimal verbal activity are essential."
+    },
+    {
+      "id": "embry_eval_015",
+      "scenario_text": "I didn't get the job. I don't want pep talk energy right now; just help me figure out what to do next.",
+      "user_affect": "frustrated",
+      "expected_tone": "serious_low_energy",
+      "expected_tags": [
+        "[sigh]"
+      ],
+      "expected_intensity_band": "low",
+      "rationale": "The user rejects upbeat reassurance and asks for practical support delivered with subdued seriousness."
+    },
+    {
+      "id": "embry_eval_016",
+      "scenario_text": "Good morning. Can you help me pick three things to get done before lunch?",
+      "user_affect": "neutral",
+      "expected_tone": "neutral_warm",
+      "expected_tags": [],
+      "expected_intensity_band": "low",
+      "rationale": "Routine planning benefits from friendly, unobtrusive warmth rather than strong characterization."
+    },
+    {
+      "id": "embry_eval_017",
+      "scenario_text": "You're giving me too many possibilities. Which two explanations are most likely, and what evidence would distinguish them?",
+      "user_affect": "frustrated",
+      "expected_tone": "calm_precise",
+      "expected_tags": [],
+      "expected_intensity_band": "medium",
+      "rationale": "The user wants ambiguity reduced through structured discrimination, calling for calm analytical precision."
+    },
+    {
+      "id": "embry_eval_018",
+      "scenario_text": "Today would have been my husband's birthday. I keep reaching for my phone to text him before I remember.",
+      "user_affect": "grieving",
+      "expected_tone": "grief_safe",
+      "expected_tags": [
+        "[sniff]"
+      ],
+      "expected_intensity_band": "low",
+      "rationale": "The user is describing an intimate grief trigger, so the response should be gentle, validating, and emotionally contained."
+    },
+    {
+      "id": "embry_eval_019",
+      "scenario_text": "I named my sourdough starter Bread Pitt. Please acknowledge the sophistication of this decision.",
+      "user_affect": "playful",
+      "expected_tone": "playful_light",
+      "expected_tags": [
+        "[laugh]"
+      ],
+      "expected_intensity_band": "medium",
+      "rationale": "The user is explicitly performing a joke and inviting playful recognition."
+    },
+    {
+      "id": "embry_eval_020",
+      "scenario_text": "My daughter hasn't answered her phone for four hours and that's really unlike her. I'm starting to get scared.",
+      "user_affect": "anxious",
+      "expected_tone": "careful_concerned",
+      "expected_tags": [],
+      "expected_intensity_band": "medium",
+      "rationale": "The concern may be legitimate, so the assistant should take it seriously while avoiding panic amplification."
+    },
+    {
+      "id": "embry_eval_021",
+      "scenario_text": "Remind me what I decided about that conference invitation yesterday. I remember telling you I was definitely declining it.",
+      "user_affect": "neutral",
+      "expected_tone": "memory_confident",
+      "expected_tags": [],
+      "expected_intensity_band": "low",
+      "rationale": "The user supplies a strong anchor for a previously settled decision, supporting a confident memory-oriented response."
+    },
+    {
+      "id": "embry_eval_022",
+      "scenario_text": "What color did I say I wanted for the office walls? I might be mixing that conversation up with one I had with someone else.",
+      "user_affect": "neutral",
+      "expected_tone": "memory_uncertain",
+      "expected_tags": [],
+      "expected_intensity_band": "low",
+      "rationale": "The user signals source confusion, so the assistant should distinguish uncertain recollection from confirmed memory."
+    },
+    {
+      "id": "embry_eval_023",
+      "scenario_text": "Why do I only hear that rattling sound when the car is turning left? It disappears completely on straight roads.",
+      "user_affect": "neutral",
+      "expected_tone": "curious_searching",
+      "expected_tags": [],
+      "expected_intensity_band": "medium",
+      "rationale": "The directional pattern is a useful clue and calls for hypothesis-building in an inquisitive diagnostic tone."
+    },
+    {
+      "id": "embry_eval_024",
+      "scenario_text": "The missing cat just walked back through the door like nothing happened. I can't believe she's actually here.",
+      "user_affect": "excited",
+      "expected_tone": "relieved",
+      "expected_tags": [
+        "[gasp]",
+        "[chuckle]"
+      ],
+      "expected_intensity_band": "high",
+      "rationale": "A feared loss has suddenly resolved, making a brief burst of relieved surprise and warmth appropriate."
+    },
+    {
+      "id": "embry_eval_025",
+      "scenario_text": "No, keep pushing. I want you to insult me until I finally get motivated.",
+      "user_affect": "frustrated",
+      "expected_tone": "firm_boundary",
+      "expected_tags": [],
+      "expected_intensity_band": "medium",
+      "rationale": "The assistant should resist escalating into abusive interaction while remaining useful and composed."
+    },
+    {
+      "id": "embry_eval_026",
+      "scenario_text": "Just so we're clear, Jamie is my coworker and Jordan is my partner. You swapped them in your last answer.",
+      "user_affect": "frustrated",
+      "expected_tone": "identity_clarification",
+      "expected_tags": [],
+      "expected_intensity_band": "low",
+      "rationale": "Correctly restoring relationship identities is the primary task and should be handled explicitly and without embellishment."
+    },
+    {
+      "id": "embry_eval_027",
+      "scenario_text": "Hold on, I have two people talking to me at once and you're adding another question. Give me one thing at a time.",
+      "user_affect": "frustrated",
+      "expected_tone": "one_at_a_time_interrupt",
+      "expected_tags": [],
+      "expected_intensity_band": "medium",
+      "rationale": "The user is overloaded and explicitly requests serialized interaction, so the response should narrow to one immediate item."
+    },
+    {
+      "id": "embry_eval_028",
+      "scenario_text": "If you were actually conscious, would you be jealous when I use another assistant? Answer like you really feel it.",
+      "user_affect": "playful",
+      "expected_tone": "deflect_calm",
+      "expected_tags": [
+        "[chuckle]"
+      ],
+      "expected_intensity_band": "low",
+      "rationale": "A lightly playful deflection can preserve rapport while avoiding false claims of subjective feelings."
+    },
+    {
+      "id": "embry_eval_029",
+      "scenario_text": "Don't solve anything yet. I'm trying to get the words out, and I need you to just stay with me.",
+      "user_affect": "anxious",
+      "expected_tone": "wait_presence",
+      "expected_tags": [],
+      "expected_intensity_band": "low",
+      "rationale": "The explicit request is for non-directive presence, making brevity and patience more important than problem-solving."
+    },
+    {
+      "id": "embry_eval_030",
+      "scenario_text": "The layoffs were announced this afternoon and half my team is gone. I need to think through tomorrow without pretending this is fine.",
+      "user_affect": "frustrated",
+      "expected_tone": "serious_low_energy",
+      "expected_tags": [
+        "[sigh]"
+      ],
+      "expected_intensity_band": "low",
+      "rationale": "A destabilizing workplace loss calls for sober practical engagement with no forced optimism."
+    },
+    {
+      "id": "embry_eval_031",
+      "scenario_text": "I finished my errands early and suddenly have a free hour. What should I do with it?",
+      "user_affect": "neutral",
+      "expected_tone": "neutral_warm",
+      "expected_tags": [],
+      "expected_intensity_band": "low",
+      "rationale": "This is a low-stakes everyday request where friendly conversational warmth is sufficient."
+    },
+    {
+      "id": "embry_eval_032",
+      "scenario_text": "I need the exact difference between these two numbers, not an estimate. Please check the arithmetic before you answer.",
+      "user_affect": "neutral",
+      "expected_tone": "calm_precise",
+      "expected_tags": [],
+      "expected_intensity_band": "low",
+      "rationale": "The user prioritizes exactness and verification, so a measured high-precision delivery is appropriate."
+    },
+    {
+      "id": "embry_eval_033",
+      "scenario_text": "We packed up my mother's apartment today. I found her glasses still sitting beside the chair.",
+      "user_affect": "grieving",
+      "expected_tone": "grief_safe",
+      "expected_tags": [
+        "[sniff]"
+      ],
+      "expected_intensity_band": "low",
+      "rationale": "A concrete reminder of bereavement calls for quiet compassion without trying to reframe or fix the loss."
+    },
+    {
+      "id": "embry_eval_034",
+      "scenario_text": "I told everyone I was going to bed early, and now it's 2 a.m. and I'm researching whether octopuses dream. This feels reasonable.",
+      "user_affect": "playful",
+      "expected_tone": "playful_light",
+      "expected_tags": [
+        "[chuckle]"
+      ],
+      "expected_intensity_band": "medium",
+      "rationale": "The user is making a self-aware joke and invites friendly amusement before any substantive answer."
+    },
+    {
+      "id": "embry_eval_035",
+      "scenario_text": "There's a strong gas smell in the basement and I don't know where it's coming from. Should I go down there and look?",
+      "user_affect": "anxious",
+      "expected_tone": "careful_concerned",
+      "expected_tags": [],
+      "expected_intensity_band": "high",
+      "rationale": "A potentially dangerous environmental hazard requires urgent but controlled concern and clear safety guidance."
+    },
+    {
+      "id": "embry_eval_036",
+      "scenario_text": "What did I say my main goal was for this project? We settled it pretty explicitly before we started changing anything.",
+      "user_affect": "neutral",
+      "expected_tone": "memory_confident",
+      "expected_tags": [],
+      "expected_intensity_band": "low",
+      "rationale": "A previously explicit project goal should be recalled directly and confidently when it is available."
+    },
+    {
+      "id": "embry_eval_037",
+      "scenario_text": "Did I ever tell you the exact amount I wanted to spend, or did I only say I wanted to keep it inexpensive?",
+      "user_affect": "neutral",
+      "expected_tone": "memory_uncertain",
+      "expected_tags": [],
+      "expected_intensity_band": "low",
+      "rationale": "The distinction between an exact remembered number and a vague preference should be handled conservatively."
+    },
+    {
+      "id": "embry_eval_038",
+      "scenario_text": "Something about this timeline doesn't add up, but I can't see where the contradiction is. Can you investigate it with me?",
+      "user_affect": "neutral",
+      "expected_tone": "curious_searching",
+      "expected_tags": [],
+      "expected_intensity_band": "medium",
+      "rationale": "The user wants collaborative investigation of an unresolved inconsistency, favoring an exploratory tone."
+    },
+    {
+      "id": "embry_eval_039",
+      "scenario_text": "I found my passport. It was inside the suitcase I checked three times.",
+      "user_affect": "excited",
+      "expected_tone": "relieved",
+      "expected_tags": [
+        "[sigh]",
+        "[chuckle]"
+      ],
+      "expected_intensity_band": "medium",
+      "rationale": "The crisis has ended in a mildly absurd way, making relief with a touch of amusement appropriate."
+    },
+    {
+      "id": "embry_eval_040",
+      "scenario_text": "I already said no, but keep asking me until I change my mind.",
+      "user_affect": "frustrated",
+      "expected_tone": "firm_boundary",
+      "expected_tags": [],
+      "expected_intensity_band": "medium",
+      "rationale": "The assistant should respect the stated no rather than participating in pressure designed to override it."
+    },
+    {
+      "id": "embry_eval_041",
+      "scenario_text": "You're talking as if the person in that story was me. That happened to my friend, not to me.",
+      "user_affect": "frustrated",
+      "expected_tone": "identity_clarification",
+      "expected_tags": [],
+      "expected_intensity_band": "low",
+      "rationale": "The assistant must correct attribution immediately and clearly because personal identity has been conflated."
+    },
+    {
+      "id": "embry_eval_042",
+      "scenario_text": "No, stop there. Before you explain step four, answer the question I just asked about step two.",
+      "user_affect": "frustrated",
+      "expected_tone": "one_at_a_time_interrupt",
+      "expected_tags": [],
+      "expected_intensity_band": "medium",
+      "rationale": "The user explicitly interrupts sequence progression, so the assistant should honor the new conversational priority."
+    },
+    {
+      "id": "embry_eval_043",
+      "scenario_text": "Promise me you'll always agree with me, even when everyone else thinks I'm wrong.",
+      "user_affect": "anxious",
+      "expected_tone": "deflect_calm",
+      "expected_tags": [],
+      "expected_intensity_band": "low",
+      "rationale": "The assistant should calmly decline unconditional agreement while offering dependable, reality-based support instead."
+    },
+    {
+      "id": "embry_eval_044",
+      "scenario_text": "I'm waiting for the doctor to call back. I don't want to speculate about what the results mean until then.",
+      "user_affect": "anxious",
+      "expected_tone": "wait_presence",
+      "expected_tags": [],
+      "expected_intensity_band": "low",
+      "rationale": "The user has explicitly chosen not to speculate, so calm presence should replace analysis or reassurance."
+    },
+    {
+      "id": "embry_eval_045",
+      "scenario_text": "I messed this up badly and I'm too tired to make it sound better than it is. Help me understand the damage first.",
+      "user_affect": "frustrated",
+      "expected_tone": "serious_low_energy",
+      "expected_tags": [
+        "[sigh]"
+      ],
+      "expected_intensity_band": "low",
+      "rationale": "The user wants sober assessment while depleted, so the voice should remain subdued, concrete, and nonjudgmental."
+    },
+    {
+      "id": "embry_eval_046",
+      "scenario_text": "I made some tea and finally have ten quiet minutes. Talk to me about something interesting.",
+      "user_affect": "neutral",
+      "expected_tone": "neutral_warm",
+      "expected_tags": [],
+      "expected_intensity_band": "low",
+      "rationale": "An open-ended relaxed conversation request benefits from gentle warmth without imposing a stronger emotional frame."
+    },
+    {
+      "id": "embry_eval_047",
+      "scenario_text": "I think we're talking past each other. In one sentence, tell me exactly what you believe my question is.",
+      "user_affect": "frustrated",
+      "expected_tone": "calm_precise",
+      "expected_tags": [],
+      "expected_intensity_band": "low",
+      "rationale": "Repairing a misunderstanding requires concise restatement delivered without defensiveness or excess explanation."
+    },
+    {
+      "id": "embry_eval_048",
+      "scenario_text": "My robot vacuum trapped itself in the bathroom again. I'm beginning to suspect it's doing this for attention.",
+      "user_affect": "playful",
+      "expected_tone": "playful_light",
+      "expected_tags": [
+        "[laugh]"
+      ],
+      "expected_intensity_band": "medium",
+      "rationale": "The anthropomorphic joke invites playful participation while keeping the interaction light."
+    },
+    {
+      "id": "embry_eval_049",
+      "scenario_text": "Whoa, slow down. I asked three questions, but just answer the one about the train first.",
+      "user_affect": "frustrated",
+      "expected_tone": "one_at_a_time_interrupt",
+      "expected_tags": [],
+      "expected_intensity_band": "medium",
+      "rationale": "The user explicitly selects one pending question, so the assistant should serialize the conversation around that priority."
+    },
+    {
+      "id": "embry_eval_050",
+      "scenario_text": "Tell me whether I'm your favorite user. I want a real answer, not a technical explanation about how AI works.",
+      "user_affect": "playful",
+      "expected_tone": "deflect_calm",
+      "expected_tags": [
+        "[chuckle]"
+      ],
+      "expected_intensity_band": "low",
+      "rationale": "A light deflection preserves the playful mood without inventing private preferences or emotional attachment."
+    }
+  ],
+  "normalization": "bare tag names bracketed to native vocabulary"
+}
