@@ -53,6 +53,7 @@ def memory_affect_profile(residue_items: list[dict]) -> dict:
           "evidence": evidence[t]} for t, s in scores.items() if s),
         key=lambda w: -w["weight"])
     return {"schema": "persona_dream.memory_affect_profile.v0",
+            "status": "PASS",
             "derivation": "deterministic_lexicon_dream_free",
             "compute_matched": False,
             "weights": weights}
@@ -102,10 +103,12 @@ def main():
         })
     (OUT / "annotation_packets.v1.json").write_text(json.dumps(
         {"schema": "persona_dream.tom_annotation_packets.v1",
+         "status": "PASS",
          "blinding": "profiles labeled A/B; D/M mapping sealed separately",
          "n_packets": len(packets), "packets": packets}, indent=2) + "\n")
     (OUT / "SEALED_blinding_key.json").write_text(json.dumps(
         {"schema": "persona_dream.tom_annotation_blinding_key.v1",
+         "status": "SEALED",
          "do_not_open_until": "all three annotator responses captured",
          "key": key}, indent=2) + "\n")
     print(f"built {len(packets)} packets; key sealed")

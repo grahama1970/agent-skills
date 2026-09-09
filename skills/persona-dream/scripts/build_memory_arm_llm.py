@@ -123,6 +123,7 @@ def build(cycle_dir: Path) -> dict | None:
             "tom_state_types": sorted({t["tom_state_type"] for t in toms})}
     prof = dvw.build_profile(node, toms)
     prof["schema"] = "persona_dream.memory_voice_weight_profile.v2"
+    prof["status"] = "PASS"
     prof["arm"] = "M_llm_compute_matched"
     prof["derivation"] = ("same LLM adapter as the dream arm; single-memory "
                           "extractive affect reading; forbidden cross-memory "

@@ -173,6 +173,7 @@ def init_ledger(persona_id: str, docs: list[dict] | None = None,
     core = founding_core(persona_id, docs)
     ledger = {
         "schema": SCHEMA,
+        "status": "ACTIVE",
         "persona_id": persona_id,
         "identity_core": core,
         "arc_state": founding_arc(persona_id),
@@ -203,6 +204,9 @@ def validate_ledger(ledger: dict, persona_id: str) -> dict:
         out.setdefault("provenance", {})["normalized_from_schema"] = LEGACY_EMBRY_SCHEMA
     elif schema != SCHEMA:
         raise _block(f"BLOCKED_LEDGER_SCHEMA_UNSUPPORTED:{schema}")
+    out.setdefault("status", "ACTIVE")
+    if out.get("status") != "ACTIVE":
+        raise _block(f"BLOCKED_LEDGER_STATUS_UNSUPPORTED:{out.get('status')}")
     if out.get("persona_id") != persona_id:
         raise _block(f"BLOCKED_LEDGER_PERSONA_MISMATCH:{out.get('persona_id')}!={persona_id}")
     core = out.get("identity_core")

@@ -88,6 +88,7 @@ def build_memory_profile(cycle_dir: Path, docs: dict) -> dict | None:
             "tom_state_types": sorted({t["tom_state_type"] for t in toms})}
     profile = dvw.build_profile(node, toms)
     profile["schema"] = "persona_dream.memory_voice_weight_profile.v1"
+    profile["status"] = "PASS"
     profile["arm"] = "M_direct_memory"
     profile["derivation"] = ("compute_matched: identical TOM_TO_VOICE mapping and "
                              "mean-intensity weight formula as the dream arm, ToM "

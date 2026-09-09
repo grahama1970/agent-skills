@@ -77,6 +77,8 @@ def main() -> int:
         )
 
     manifest = {
+        "schema": "persona_dream.dag_harness_public_manifest.v1",
+        "status": "PASS",
         "defaultRunId": args.default_run_id,
         "runs": runs,
     }

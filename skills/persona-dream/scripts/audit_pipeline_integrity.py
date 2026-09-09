@@ -28,7 +28,8 @@ VALIDATION_TOKENS = (
     "validate(",
     "validate_json",
 )
-WRITE_TOKENS = ("write_text", "json.dump", "json.dumps", "write_json")
+WRITE_TOKENS = ("json.dump(", "write_json")
+JSON_WRITE_RE = re.compile(r"\.(?:write_text|writestr)\(\s*json\.dumps", re.DOTALL)
 SPINE_CONTRACT = ROOT / "contracts" / "dream_spine.v1.yaml"
 RUN_SH = ROOT / "run.sh"
 
@@ -164,7 +165,11 @@ def trivial_pass_lines(tree: ast.AST) -> list[int]:
 
 def has_schema_status_receipt(text: str) -> bool:
     lowered = text.lower()
-    return "schema" in lowered and "status" in lowered
+    if "schema" not in lowered:
+        return False
+    return any(token in lowered for token in (
+        "status", "verdict", "tau.generic_dag_spec.v1", "tau.dag_contract.v1",
+    ))
 
 
 def is_legacy_experiment_or_probe(name: str) -> bool:
@@ -174,8 +179,12 @@ def is_legacy_experiment_or_probe(name: str) -> bool:
     ))
 
 
+def writes_json_artifact(text: str) -> bool:
+    return any(token in text for token in WRITE_TOKENS) or bool(JSON_WRITE_RE.search(text))
+
+
 def classify_json_writer(path: Path, text: str, entrypoints: dict[str, str], spine: dict[str, str]) -> Finding | None:
-    if not any(token in text for token in WRITE_TOKENS):
+    if not writes_json_artifact(text):
         return None
     if any(token in text for token in VALIDATION_TOKENS):
         return None
@@ -206,9 +215,8 @@ def classify_json_writer(path: Path, text: str, entrypoints: dict[str, str], spi
             coverage="legacy_experiment_or_probe",
         )
     return Finding(
-        severity="INFO", kind="json_writer_without_local_validation_token", disposition="reviewed",
-        detail="non-spine writer lacks local pydantic/jsonschema token and schema/status heuristic; retained as reviewed hardening debt outside the current Tau spine",
-        coverage="non_spine_writer_reviewed_debt",
+        severity="P1", kind="json_writer_without_local_validation_token", disposition="blocking",
+        detail="JSON artifact writer is neither pydantic/jsonschema validated, spine-wrapped, validator/audit-scoped, schema/status receipt-shaped, nor classified as legacy experiment/probe",
     )
 
 

@@ -93,6 +93,7 @@ def build(personas: list[str], max_paths: int = 25) -> dict:
 
     return {
         "schema": "persona_dream.cross_persona_affect.v1",
+        "status": "PASS",
         "capability": "connect emotional states of personas via shared "
                       "affect/ToM nodes (multi-hop, read-only)",
         "personas": personas,

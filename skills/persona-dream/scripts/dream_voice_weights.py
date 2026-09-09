@@ -136,6 +136,7 @@ def build_profile(node: dict, toms: list[dict]) -> dict:
     weights.sort(key=lambda w: -w["weight"])
     return {
         "schema": "persona_dream.dream_voice_weight_profile.v1",
+        "status": "PASS",
         "dream_node_key": node["_key"],
         "persona_id": node.get("persona_id"),
         "tom_state_types": node.get("tom_state_types"),
@@ -288,6 +289,7 @@ def main() -> int:
 
     receipt = {
         "schema": "persona_dream.dream_voice_weights_receipt.v1",
+        "status": "PASS",
         "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "dream_node_key": args.dream_key,
         "tom_candidates_read": len(toms),

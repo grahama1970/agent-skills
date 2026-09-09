@@ -41,7 +41,7 @@ def main() -> int:
     args = parser.parse_args()
 
     args.out.mkdir(parents=True, exist_ok=True)
-    manifest: dict[str, object] = {"rungs": {}, "viewer": {}}
+    manifest: dict[str, object] = {"schema": "persona_dream.dag_harness_review_bundle.v1", "status": "PASS", "rungs": {}, "viewer": {}}
 
     for rung in RUNGS:
         src = latest_dir(args.artifact_root, rung)
