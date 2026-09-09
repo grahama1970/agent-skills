@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import hashlib
+import os
 import subprocess
 import tempfile
 from pathlib import Path
@@ -12,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]
 VALIDATOR = ROOT / "shame/scripts/agent_status_schema.py"
 COMPILER = ROOT.parents[0] / "extensions/pi/lazy-report-shame-shame-shame/compile-status-command.mjs"
 GOAL_HASH = "sha256:" + hashlib.sha256(b"shame escalation parent lineage").hexdigest()
+ASK_HANDLERS_ENV = json.dumps(["claude-fable-low", "gpt-5.5-high"])
 
 
 def digest(path: Path) -> str:
@@ -67,6 +69,15 @@ def write_envelope(
     }
 
 
+def escalation_env(payload: dict) -> dict[str, str]:
+    env = os.environ.copy()
+    needs_agent = payload.get("needs_agent")
+    if isinstance(needs_agent, dict) and isinstance(needs_agent.get("project_agent_family"), str):
+        env["LRSSS_PROJECT_AGENT_FAMILY"] = needs_agent["project_agent_family"]
+        env["LRSSS_AVAILABLE_ASK_HANDLERS"] = ASK_HANDLERS_ENV
+    return env
+
+
 def validate(payload: dict) -> dict:
     run = subprocess.run(
         ["python3", str(VALIDATOR), "validate", "-"],
@@ -75,6 +86,7 @@ def validate(payload: dict) -> dict:
         capture_output=True,
         check=False,
         timeout=15,
+        env=escalation_env(payload),
     )
     if not run.stdout.strip():
         raise AssertionError({"argv": run.args, "exit_code": run.returncode, "stderr": run.stderr})
@@ -91,6 +103,7 @@ def compile_status(payload: dict) -> dict:
         capture_output=True,
         check=False,
         timeout=15,
+        env=escalation_env(payload),
     )
     out = json.loads(run.stdout)
     out["exit_code"] = run.returncode
