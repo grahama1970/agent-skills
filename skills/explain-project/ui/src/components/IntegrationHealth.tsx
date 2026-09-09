@@ -4,10 +4,17 @@ import type {
 } from '../types'
 
 const tone: Record<IntegrationStatus, string> = {
-  READY: 'border-emerald-600 text-emerald-300',
-  STALE: 'border-amber-600 text-amber-300',
-  FAILED: 'border-red-600 text-red-300',
-  NOT_CONFIGURED: 'border-zinc-700 text-zinc-500',
+  READY: 'border-emerald-600/60 text-emerald-300 bg-emerald-950/30',
+  STALE: 'border-amber-600/60 text-amber-300 bg-amber-950/30',
+  FAILED: 'border-red-600/60 text-red-300 bg-red-950/30',
+  NOT_CONFIGURED: 'border-zinc-700 text-zinc-400 bg-zinc-900/50',
+}
+
+const dotColor: Record<IntegrationStatus, string> = {
+  READY: 'bg-emerald-400',
+  STALE: 'bg-amber-400',
+  FAILED: 'bg-red-400',
+  NOT_CONFIGURED: 'bg-zinc-500',
 }
 
 function HealthPill({
@@ -20,12 +27,13 @@ function HealthPill({
   return (
     <span
       className={[
-        'rounded-full border px-2 py-1 text-[11px]',
+        'inline-flex items-center gap-1.5 rounded-md border px-2 py-1 font-mono text-[11px] leading-none',
         tone[status],
       ].join(' ')}
       title={`${label}: ${status}`}
     >
-      {label}: {status}
+      <span className={`h-1.5 w-1.5 rounded-full ${dotColor[status]}`} />
+      <span>{label} : {status}</span>
     </span>
   )
 }
@@ -36,12 +44,12 @@ export function IntegrationHealth({
   state: CockpitState
 }) {
   return (
-    <section className="rounded-lg bg-zinc-950 p-3">
-      <h2 className="font-semibold">
+    <section className="rounded-lg border border-zinc-800 bg-zinc-950 p-3">
+      <h2 className="text-xs font-semibold uppercase tracking-wider text-cyan-300">
         Integration health
       </h2>
 
-      <div className="mt-2 flex flex-wrap gap-2">
+      <div className="mt-2 flex flex-wrap gap-1.5">
         <HealthPill
           label={state.question?.source === 'live_evidence_replay'
             ? 'Live Evidence (replay)'

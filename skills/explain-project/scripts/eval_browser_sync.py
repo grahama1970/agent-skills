@@ -139,9 +139,19 @@ def main() -> int:
             def click(qid):
                 run(str(SURF), 'click', f'[data-qid="{qid}"]', '--tab-id', tab, '--no-activate', '--json')
 
+            def fill(qid, value):
+                return js('''(() => { const e=document.querySelector(''' + json.dumps(f'[data-qid="{qid}"]') + ''');
+                  const prototype=e.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;
+                  Object.getOwnPropertyDescriptor(prototype,'value').set.call(e,''' + json.dumps(value) + ''');
+                  e.dispatchEvent(new Event('input',{bubbles:true})); return JSON.stringify({value:e.value}); })()''')
+
             wait_for(lambda: dom()['panes'][0].get('revision') == '0', 'initial render')
             run(str(SURF), 'snap', '--tab-id', tab, '--output', str(out / 'before.png'), '--json')
             origin = dom()['timeOrigin']
+            input_selector = '[data-qid="cockpit:question:manual-input"]'
+            check('compiled layout utilities are effective',
+                  js('JSON.stringify(getComputedStyle(document.querySelector(' + json.dumps(input_selector) + ').parentElement).display)') == 'flex', 'question row display:flex')
+            fill('cockpit:question:manual-input', 'Unsubmitted draft ' + token)
             text = record['question']
             candidate = {'schema': 'live_evidence.question_candidate.v1',
                          'question_id': 'sync-question-' + token, 'normalized_question': text,
@@ -154,10 +164,16 @@ def main() -> int:
             observed(accepted['state'], 'external-replay-updates-open-tab')
             check('replay is labelled, not microphone proof',
                   'Live Evidence (replay)' in dom()['panes'][0]['text'], accepted['state']['question']['source'])
+            check('external update preserves unfinished question',
+                  js('JSON.stringify(document.querySelector(' + json.dumps(input_selector) + ').value)') == 'Unsubmitted draft ' + token, 'draft retained')
             duplicate = post('/api/intake/live-evidence', candidate)
             check('duplicate does not advance revision', duplicate['status'] == 'DUPLICATE'
                   and bootstrap()['state']['revision'] == accepted['state']['revision'], duplicate['status'])
 
+            fill('cockpit:question:manual-input', text)
+            click('cockpit:question:manual-submit')
+            manual = wait_for(lambda: (s if (s := bootstrap()['state'])['question']['source'] == 'manual' else None), 'manual question')
+            observed(manual, 'existing-manual-question-path')
             click('cockpit:step:next')
             state = wait_for(lambda: (s if (s := bootstrap()['state'])['selection']['step_index'] == 1 else None), 'next')
             observed(state, 'existing-next-path')
@@ -213,6 +229,25 @@ def main() -> int:
             observed(latest['state'], 'external-catalog-revision')
             selector = '[data-qid="cockpit:explainer:select:' + imported['feature_id'] + '"]'
             check('external import appears without reload', js('JSON.stringify(!!document.querySelector(' + json.dumps(selector) + '))'), imported['feature_id'])
+            fill('cockpit:explainer:page-input', '1')
+            jumped = wait_for(lambda: (s if (s := bootstrap()['state'])['selection']['feature_id'] == imported['feature_id'] else None), 'one-based first explainer')
+            observed(jumped, 'one-based-navigation')
+            fill('cockpit:explainer:page-input', '2')
+            wait_for(lambda: bootstrap()['state']['selection']['feature_id'] == record['feature_id'], 'second explainer')
+            click('cockpit:explainer:paste-toggle')
+            fill('cockpit:explainer:paste-editor', '{')
+            before_invalid = bootstrap()['state']['revision']
+            click('cockpit:explainer:paste-apply')
+            check('invalid paste does not change backend', bootstrap()['state']['revision'] == before_invalid, before_invalid)
+            imported['title'] = 'Pasted catalog ' + token
+            fill('cockpit:explainer:paste-editor', json.dumps(imported))
+            click('cockpit:explainer:paste-apply')
+            def imported_ready():
+                b = bootstrap()
+                return b if any(e['title'] == imported['title'] for e in b['explainers']) else None
+            updated = wait_for(imported_ready, 'pasted explainer import')
+            observed(updated['state'], 'conditional-paste-editor-and-apply')
+            check('successful paste closes editor', js('JSON.stringify(!document.querySelector(\'[data-qid="cockpit:explainer:paste-editor"]\'))'), 'editor closed')
             check('page was never reloaded', dom()['timeOrigin'] == origin, origin)
             check('no unintended adapter effects', not latest['state']['source']['reveal_intent']
                   and not latest['state']['debugger']['prepare_intent']

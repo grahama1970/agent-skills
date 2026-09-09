@@ -68,7 +68,7 @@ export function CockpitApp({
     >
       <header
         className={[
-          'mb-4 flex h-14 items-center',
+          'mb-3 flex h-14 items-center',
           'justify-between rounded-xl',
           'border border-zinc-800',
           'bg-zinc-900/80 px-4',
@@ -77,22 +77,22 @@ export function CockpitApp({
         <div>
           <div
             className={[
-              'text-xs uppercase',
+              'text-xs font-semibold uppercase',
               'tracking-[0.22em] text-cyan-300',
             ].join(' ')}
           >
             Interview cockpit
           </div>
-          <div className="text-sm text-zinc-400">
+          <div className="text-xs text-zinc-400">
             Answer follow-up questions from source, proof, and safe debugger targets.
           </div>
         </div>
 
-        <div className="text-sm font-semibold text-zinc-300">
+        <div className="text-xs font-mono font-semibold text-zinc-300">
           Evidence state: {state.route?.status ?? 'NO_MATCH'} · r{state.revision}
         </div>
 
-        <div className="text-sm text-zinc-400">
+        <div className="text-xs font-mono text-zinc-400">
           {state.selection
             ? (
                 `Step ${state.selection.step_index + 1}`
@@ -118,8 +118,8 @@ export function CockpitApp({
 
       <section
         className={[
-          'grid h-[calc(100dvh-104px)]',
-          'grid-cols-[280px_minmax(0,1fr)_420px]',
+          'grid h-[calc(100dvh-96px)]',
+          'grid-cols-[290px_minmax(0,1fr)_410px]',
           'gap-4',
         ].join(' ')}
       >

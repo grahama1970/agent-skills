@@ -42,9 +42,7 @@ function ExplainerButton({
   selected: boolean
 }) {
   const id = explainer.feature_id
-  const qid = (
-    `cockpit:explainer:select:${id}`
-  )
+  const qid = `cockpit:explainer:select:${id}`
 
   useRegisterAction({
     element_id: qid,
@@ -68,10 +66,10 @@ function ExplainerButton({
       title={`Select ${explainer.title}`}
       aria-current={selected ? 'true' : undefined}
       className={[
-        'w-full rounded-lg border p-3 text-left',
+        'w-full block text-left rounded-lg border p-3 transition-all',
         selected
-          ? 'border-cyan-300 bg-cyan-950/30 text-zinc-50'
-          : 'border-zinc-700 text-zinc-200 hover:border-zinc-400',
+          ? 'border-cyan-400 bg-cyan-950/40 text-cyan-100 shadow-sm'
+          : 'border-zinc-800 bg-zinc-950/60 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900',
       ].join(' ')}
       onClick={() => {
         void dispatch(
@@ -82,15 +80,14 @@ function ExplainerButton({
         )
       }}
     >
-      <span className="block font-medium">
+      <span className="block text-sm font-medium leading-snug">
         {explainer.title}
       </span>
 
-      <span className="text-xs text-zinc-500">
-        {explainer.question_family}
-        {' · '}
-        {explainer.steps}
-        {' steps'}
+      <span className="mt-1 flex items-center gap-1.5 text-xs text-zinc-400 font-mono">
+        <span>{explainer.question_family}</span>
+        <span>·</span>
+        <span className="text-cyan-300/80">{explainer.steps} steps</span>
       </span>
     </button>
   )
@@ -201,37 +198,35 @@ export function InputRail({
       }
     } catch {
       // Malformed JSON never leaves the browser.
-      // The server remains authority for valid records.
     }
   }
 
   return (
     <aside
       className={[
-        'space-y-3 overflow-hidden rounded-xl',
+        'space-y-3 overflow-y-auto rounded-xl',
         'border border-zinc-800',
         'bg-zinc-900/70 p-3',
       ].join(' ')}
     >
       <div>
-        <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">
           Question intake
         </h2>
-        <p className="mt-1 text-sm text-zinc-400">
+        <p className="mt-1 text-xs text-zinc-400">
           Route the interviewer’s question without changing the proof contract.
         </p>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-row items-center gap-2 w-full">
         <input
           data-qid="cockpit:question:manual-input"
           data-qs-action="QUESTION_MANUAL_EDIT"
           title="Paste or type an interview question"
           className={[
-            'min-w-0 flex-1 rounded-lg',
-            'bg-zinc-950 p-3 text-base',
-            'outline-none ring-cyan-500',
-            'focus:ring-2',
+            'min-w-0 flex-1 rounded-lg border border-zinc-700',
+            'bg-zinc-950 px-3 py-2 text-sm text-zinc-100',
+            'placeholder-zinc-500 outline-none focus:border-cyan-500',
           ].join(' ')}
           placeholder="Paste interview question"
           value={question}
@@ -253,9 +248,9 @@ export function InputRail({
           data-qs-action="QUESTION_MANUAL_SUBMIT"
           title="Route the current interview question"
           className={[
-            'rounded-lg border',
-            'border-cyan-500 px-3',
-            'text-cyan-300',
+            'shrink-0 rounded-lg border border-cyan-500/80',
+            'bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300',
+            'hover:bg-cyan-500 hover:text-zinc-950 transition-all',
           ].join(' ')}
           onClick={() => {
             void submitQuestion()
@@ -276,9 +271,8 @@ export function InputRail({
         data-qs-action="EXPLAINER_SEARCH_SET"
         title="Search existing explainers"
         className={[
-          'w-full rounded-lg bg-zinc-950',
-          'p-2 text-sm outline-none',
-          'ring-cyan-500 focus:ring-2',
+          'w-full rounded-lg border border-zinc-800 bg-zinc-950',
+          'px-3 py-2 text-xs outline-none focus:border-cyan-500',
         ].join(' ')}
         placeholder="Find explainer"
         value={query}
@@ -295,9 +289,9 @@ export function InputRail({
         data-qs-action="EXPLAINER_IMPORT_TOGGLE"
         title="Paste a session-only explainer"
         className={[
-          'w-full rounded-lg bg-cyan-500',
-          'px-3 py-2 font-semibold',
-          'text-zinc-950',
+          'w-full rounded-lg bg-cyan-500/20 border border-cyan-500/40',
+          'px-3 py-2 text-xs font-semibold text-cyan-200',
+          'hover:bg-cyan-500 hover:text-zinc-950 transition-all',
         ].join(' ')}
         onClick={() => {
           setPasteOpen(
@@ -315,10 +309,9 @@ export function InputRail({
             data-qs-action="EXPLAINER_IMPORT_EDIT"
             title="Paste one project.feature_explainer.v1 JSON object"
             className={[
-              'h-40 w-full resize-none rounded-lg',
-              'bg-zinc-950 p-2 font-mono text-xs',
-              'outline-none ring-cyan-500',
-              'focus:ring-2',
+              'h-36 w-full resize-none rounded-lg border border-zinc-800',
+              'bg-zinc-950 p-2 font-mono text-xs text-zinc-200',
+              'outline-none focus:border-cyan-500',
             ].join(' ')}
             value={pastedJson}
             onChange={(event) => {
@@ -334,9 +327,8 @@ export function InputRail({
             data-qs-action="EXPLAINER_IMPORT_APPLY"
             title="Validate and import pasted explainer"
             className={[
-              'w-full rounded-lg border',
-              'border-cyan-500 px-3 py-2',
-              'text-cyan-300',
+              'w-full rounded-lg border border-cyan-500 px-3 py-1.5',
+              'text-xs font-semibold text-cyan-300 hover:bg-cyan-950/50',
             ].join(' ')}
             onClick={() => {
               void applyImport()
@@ -347,7 +339,7 @@ export function InputRail({
         </div>
       ) : null}
 
-      <div className="space-y-2 overflow-y-auto pr-1">
+      <div className="space-y-2 pt-1">
         {filtered.map((explainer) => (
           <ExplainerButton
             key={explainer.feature_id}

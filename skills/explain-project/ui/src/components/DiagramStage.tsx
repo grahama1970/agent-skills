@@ -17,84 +17,109 @@ export function DiagramStage({
   const nodes = state.diagram.node_ids.map(
     (nodeId, index) => ({
       nodeId,
-      y: 24 + index * 42,
+      y: 22 + index * 36,
     }),
   )
   const height = Math.max(
-    80,
-    24 + nodes.length * 42,
+    90,
+    28 + nodes.length * 36,
   )
 
   return (
-    <section data-qid="cockpit:diagram:stage" data-revision={state.diagram.revision} className="h-[300px] rounded-lg bg-zinc-950 p-3">
-      <h2 className="font-semibold">
+    <section
+      data-qid="cockpit:diagram:stage"
+      data-revision={state.diagram.revision}
+      className="rounded-lg border border-zinc-800 bg-zinc-950 p-3"
+    >
+      <h2 className="text-xs font-semibold uppercase tracking-wider text-cyan-300">
         Diagram
       </h2>
 
-      <svg
-        viewBox={`0 0 280 ${height}`}
-        role="img"
-        aria-label="Current explainer diagram highlights"
-        className="cockpit-diagram-preview mt-3 w-full rounded border border-zinc-800 bg-black"
-      >
-        {nodes.map(({ nodeId, y }) => {
-          const isActive = active.has(nodeId)
+      <div className="relative mt-2 overflow-hidden rounded border border-zinc-800 bg-zinc-900/90 p-2">
+        <svg
+          viewBox={`0 0 280 ${height}`}
+          role="img"
+          aria-label="Current explainer diagram highlights"
+          className="cockpit-diagram-preview block w-full"
+        >
+          {nodes.length > 1 ? (
+            <line
+              x1="22"
+              y1={nodes[0].y}
+              x2="22"
+              y2={nodes[nodes.length - 1].y}
+              stroke="#3f3f46"
+              strokeWidth="2"
+              strokeDasharray="4 2"
+            />
+          ) : null}
 
-          return (
-            <g
-              key={nodeId}
-              data-node-id={nodeId}
-              data-active={isActive ? 'true' : 'false'}
-            >
-              <title>{nodeId}</title>
-              <circle
-                cx="22"
-                cy={y}
-                r="10"
-                className={
-                  isActive
-                    ? 'fill-cyan-400 stroke-cyan-100'
-                    : 'fill-zinc-800 stroke-zinc-600'
-                }
-                strokeWidth="2"
-              />
-              <text
-                x="44"
-                y={y + 5}
-                className={
-                  isActive
-                    ? 'fill-cyan-100 text-[14px]'
-                    : 'fill-zinc-400 text-[14px]'
-                }
+          {nodes.map(({ nodeId, y }) => {
+            const isActive = active.has(nodeId)
+
+            return (
+              <g
+                key={nodeId}
+                data-node-id={nodeId}
+                data-active={isActive ? 'true' : 'false'}
               >
-                {nodeId}
-              </text>
-            </g>
-          )
-        })}
-      </svg>
+                <title>{nodeId}</title>
+                {isActive ? (
+                  <circle
+                    cx="22"
+                    cy={y}
+                    r="11"
+                    fill="none"
+                    stroke="#22d3ee"
+                    strokeWidth="1.5"
+                    opacity="0.6"
+                  />
+                ) : null}
+                <circle
+                  cx="22"
+                  cy={y}
+                  r="6"
+                  fill={isActive ? '#06b6d4' : '#27272a'}
+                  stroke={isActive ? '#a5f3fc' : '#52525b'}
+                  strokeWidth="2"
+                />
+                <text
+                  x="42"
+                  y={y + 4}
+                  fill={isActive ? '#cffafe' : '#a1a1aa'}
+                  fontSize="13"
+                  fontFamily="monospace"
+                  fontWeight={isActive ? 'bold' : 'normal'}
+                >
+                  {nodeId}
+                </text>
+              </g>
+            )
+          })}
+        </svg>
+      </div>
 
-      <p className="mt-2 text-cyan-300">
+      <p className="mt-2 text-xs font-mono text-cyan-300">
         {state.diagram.active_node_ids.join(' · ')
           || 'No active node'}
       </p>
 
       {missing.length ? (
         <p
-          className="mt-2 text-red-300"
+          className="mt-2 text-xs font-mono text-red-400"
           data-diagram-diagnostic="missing-node"
         >
           Missing diagram node: {missing.join(', ')}
         </p>
       ) : null}
 
-      <p className="mt-2 text-zinc-500">
+      <p className="mt-2 truncate font-mono text-[10px] text-zinc-500" title={state.diagram.rendered_svg_path ?? state.diagram.source_path ?? ''}>
         {state.diagram.rendered_svg_path
           ?? state.diagram.source_path
           ?? 'No diagram'}
       </p>
 
-      <p className="mt-3 text-xs text-zinc-500">
+      <p className="mt-2 text-[11px] font-mono text-zinc-500">
         {state.diagram.highlight_intent
           ? 'Display highlight only; mutation_allowed=false.'
           : 'No highlight intent.'}
