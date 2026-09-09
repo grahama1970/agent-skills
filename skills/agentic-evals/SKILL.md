@@ -58,6 +58,12 @@ unless the fixture commands themselves exercise those live paths.
 ./run.sh audit-skills ../ --output /tmp/agentic-evals-baseline-gap-report.json
 ./run.sh scaffold-fixture ../some-skill --output ../some-skill/fixtures/agentic_eval.json
 ./run.sh apply-scaffolds ../ --write --output /tmp/agentic-evals-apply-scaffolds.json
+# requirements-to-journey planning over live discovery (issue #1629)
+./run.sh plan-journeys --fixture fixtures/agentic_eval.json \
+  --requirements requirements.json \
+  --interaction-inventory discovery/discovery-inventory.json \
+  --state-graph discovery/state-graph.json \
+  --output journey-plan.json [--scaffold-output fragment.json] [--report-only]
 # claim / evidence / regression / coverage (issues #1445-#1448)
 ./run.sh regressions audit ../ --output /tmp/agentic-evals-regressions.json
 ./run.sh regressions show . && ./run.sh regressions verify .

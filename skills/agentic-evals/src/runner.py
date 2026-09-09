@@ -1105,6 +1105,52 @@ def validate(
     typer.echo(f"VALID: {manifest} ({len(m['cases'])} cases, trials={m.get('trials')})")
 
 
+@app.command("plan-journeys")
+def plan_journeys(
+    fixture: Path = typer.Option(..., "--fixture", exists=True, dir_okay=False, readable=True),
+    requirements: Path = typer.Option(..., "--requirements", exists=True, dir_okay=False, readable=True),
+    interaction_inventory: Path = typer.Option(..., "--interaction-inventory", exists=True, dir_okay=False),
+    state_graph: Path = typer.Option(..., "--state-graph", exists=True, dir_okay=False),
+    output: Path = typer.Option(..., "--output"),
+    scaffold_output: Path | None = typer.Option(None, "--scaffold-output", help="Optional candidate test-interactions manifest fragment."),
+    report_only: bool = typer.Option(False, "--report-only", help="Exit 0 even with unbound/uncovered critical requirements."),
+) -> None:
+    """Bind declared requirements to live test-interactions discovery (agent-skills#1629).
+
+    Emits agentic_evals.journey_plan.v1. A required flow discovery cannot see
+    stays visible as UNBOUND; validation and reference errors fail closed with
+    exit 3. Without --report-only, exit 1 when any critical requirement is not
+    cleanly bound or any critical claim has no journey. Binding is planning,
+    never proof: this command cannot emit PROVEN or READY.
+    """
+    import journeys as journeys_mod
+
+    plan, errors = journeys_mod.plan_journeys_files(
+        fixture_path=fixture,
+        requirements_path=requirements,
+        inventory_path=interaction_inventory,
+        state_graph_path=state_graph,
+        output_path=output,
+        scaffold_output=scaffold_output,
+    )
+    if errors:
+        for err in errors:
+            typer.echo(f"INVALID: {err}", err=True)
+        raise typer.Exit(3)
+    assert plan is not None
+    summary = plan["summary"]
+    typer.echo(json.dumps(summary, indent=2))
+    typer.echo(f"PLAN: {output}")
+    critical_gaps = summary["missing_critical_journeys"] + sum(
+        1
+        for j in plan["journeys"]
+        if j["criticality"] == "critical" and not j["coverage_satisfiable"]
+    )
+    if critical_gaps and not report_only:
+        typer.echo(f"NOT COVERED: {critical_gaps} critical gap(s); see plan.", err=True)
+        raise typer.Exit(1)
+
+
 @app.command("apply-scaffolds")
 def apply_scaffolds(
     skills_root: Path = typer.Argument(..., exists=True, file_okay=False, readable=True),

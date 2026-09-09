@@ -1,0 +1,158 @@
+"""Deterministic tests for requirements-to-journey planning (agent-skills#1629).
+
+Negative controls from the ticket:
+1. fully implemented flow binds (BOUND);
+2. required flow with its final control removed surfaces UNBOUND/PARTIALLY_BOUND;
+3. extra implemented control does not manufacture a capability claim;
+plus QID-corruption fail-closed, weak-oracle, reference-integrity, and
+determinism checks.
+"""
+
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+
+import journeys  # noqa: E402
+
+
+def _inventory(qids: list[str]) -> dict:
+    return {
+        "schema": "test_interactions.discovery.v1",
+        "run_id": "run-fixed",
+        "url": "http://fixture",
+        "inventory": [
+            {
+                "url": "http://fixture",
+                "interactives": [
+                    {"qid": q, "tag": "button", "visible": True, "enabled": True} for q in qids
+                ],
+            }
+        ],
+    }
+
+
+FIXTURE = {
+    "capability_claims": [
+        {"id": "claim.checkout", "criticality": "critical"},
+        {"id": "claim.export", "criticality": "critical"},
+        {"id": "claim.orphan", "criticality": "critical"},
+    ],
+    "seams": [{"id": "seam.ui"}],
+}
+
+
+def _req(rid: str, claims: list[str], qids: list[str], failing_capable: bool = True) -> dict:
+    return {
+        "id": rid,
+        "description": rid,
+        "criticality": "critical",
+        "capability_claims": claims,
+        "seams": ["seam.ui"],
+        "journey": {
+            "actions": [{"kind": "ui", "qid": q, "action": "click"} for q in qids],
+            "oracles": [{"kind": "readback", "description": "row appears", "failing_capable": failing_capable}],
+        },
+    }
+
+
+def _requirements(reqs: list[dict]) -> dict:
+    return {"schema": journeys.REQUIREMENTS_SCHEMA, "requirements": reqs}
+
+
+def _write(tmp_path: Path, name: str, doc) -> Path:
+    p = tmp_path / name
+    p.write_text(json.dumps(doc, sort_keys=True))
+    return p
+
+
+def _plan(tmp_path: Path, reqs: list[dict], observed: list[str]):
+    return journeys.plan_journeys_files(
+        fixture_path=_write(tmp_path, "fixture.json", FIXTURE),
+        requirements_path=_write(tmp_path, "reqs.json", _requirements(reqs)),
+        inventory_path=_write(tmp_path, "inv.json", _inventory(observed)),
+        state_graph_path=_write(tmp_path, "graph.json", []),
+        output_path=tmp_path / "plan.json",
+    )
+
+
+def test_negative_controls_bind_unbind_no_invented_claims(tmp_path: Path) -> None:
+    reqs = [
+        _req("req.checkout", ["claim.checkout"], ["shop:add", "shop:pay"]),
+        _req("req.export", ["claim.export"], ["export:open", "export:confirm"]),
+    ]
+    # observed: full checkout flow, export flow missing its FINAL control,
+    # plus an extra implemented control no requirement mentions.
+    plan, errors = _plan(tmp_path, reqs, ["shop:add", "shop:pay", "export:open", "extra:widget"])
+    assert not errors
+    by_id = {j["requirement_id"]: j for j in plan["journeys"]}
+    assert by_id["req.checkout"]["binding_status"] == "BOUND"
+    assert by_id["req.export"]["binding_status"] == "PARTIALLY_BOUND"
+    assert by_id["req.export"]["missing"] == [{"kind": "control", "qid": "export:confirm"}]
+    # extra control reported, no claim manufactured
+    assert [c["qid"] for c in plan["unlinked_controls"]] == ["extra:widget"]
+    assert set(plan["claim_traceability"]) == {"claim.checkout", "claim.export", "claim.orphan"}
+    # untraced critical claim is an explicit finding, not silence
+    assert plan["missing_journeys"][0]["capability_claim"] == "claim.orphan"
+
+
+def test_fully_missing_flow_is_unbound_not_omitted(tmp_path: Path) -> None:
+    plan, errors = _plan(tmp_path, [_req("req.gone", ["claim.export"], ["gone:a", "gone:b"])], ["other:x"])
+    assert not errors
+    j = plan["journeys"][0]
+    assert j["binding_status"] == "UNBOUND"
+    assert not j["coverage_satisfiable"]
+
+
+def test_selector_fallback_fails_closed(tmp_path: Path) -> None:
+    bad = _req("req.bad", ["claim.export"], [".quarantine-entry:nth-child(7)"])
+    plan, errors = _plan(tmp_path, [bad], ["x"])
+    assert plan is None
+    assert any("selector fallback" in e for e in errors)
+
+
+def test_unknown_claim_fails_closed(tmp_path: Path) -> None:
+    plan, errors = _plan(tmp_path, [_req("req.x", ["claim.invented"], ["a"])], ["a"])
+    assert plan is None
+    assert any("unknown capability claim" in e for e in errors)
+
+
+def test_weak_oracle_cannot_satisfy_coverage(tmp_path: Path) -> None:
+    plan, errors = _plan(tmp_path, [_req("req.weak", ["claim.export"], ["a"], failing_capable=False)], ["a"])
+    assert not errors
+    j = plan["journeys"][0]
+    assert j["binding_status"] == "BOUND"
+    assert j["weak_oracle"] and not j["coverage_satisfiable"]
+
+
+def test_determinism_and_hashes(tmp_path: Path) -> None:
+    reqs = [_req("req.checkout", ["claim.checkout"], ["shop:add"])]
+    plan1, _ = _plan(tmp_path, reqs, ["shop:add"])
+    plan2, _ = _plan(tmp_path, reqs, ["shop:add"])
+    assert plan1 == plan2  # no timestamps/run IDs of our own
+    h = plan1["source"]["hashes"]
+    assert all(len(v) == 64 for v in h.values()) and len(h) == 4
+    assert plan1["source"]["discovery_run_id"] == "run-fixed"
+
+
+def test_scaffold_fragment_is_qid_only_and_nonmutating(tmp_path: Path) -> None:
+    fixture_path = _write(tmp_path, "fixture.json", FIXTURE)
+    before = fixture_path.read_bytes()
+    scaffold = tmp_path / "fragment.json"
+    plan, errors = journeys.plan_journeys_files(
+        fixture_path=fixture_path,
+        requirements_path=_write(tmp_path, "reqs.json", _requirements([_req("req.c", ["claim.checkout"], ["shop:add"])])),
+        inventory_path=_write(tmp_path, "inv.json", _inventory(["shop:add"])),
+        state_graph_path=_write(tmp_path, "graph.json", []),
+        output_path=tmp_path / "plan.json",
+        scaffold_output=scaffold,
+    )
+    assert not errors
+    frag = json.loads(scaffold.read_text())
+    selectors = [i["selector"] for e in frag["elements"] for i in e["interactions"]]
+    assert selectors == ["[data-qid='shop:add']"]
+    assert "candidate" in frag["schema"]
+    assert fixture_path.read_bytes() == before  # source fixture untouched
