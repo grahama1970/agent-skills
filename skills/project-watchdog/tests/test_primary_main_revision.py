@@ -630,12 +630,17 @@ def test_retryable_resume_reattaches_native_lease_and_sets_watchdog_journal(repo
     (run_dir / "tau-receipts").mkdir()
     (run_dir / "dag.json").write_text("{}", encoding="utf-8")
     (run_dir / "tau-receipts" / "dag-run.sqlite3").write_text("sqlite", encoding="utf-8")
+    admitted_generation = 6
+    retained_lease_id = 8 if finalize_only else None
+    retained_lease_agent = "project-watchdog-fixture-retained"
+    new_lease_id = 9 if finalize_only else 7
     record = operation(root, receipts, number=1628, phase="retryable").model_copy(update={
         "ask_run_dir": str(ask_parent),
         "tau_settled": True,
         "lease_released": True,
         "targets": ["skills/ask"],
-        "lease_event": LeaseEvent(id=6, event="labeled", actor="fixture", created_at="earlier") if finalize_only else None,
+        "lease_event": LeaseEvent(id=retained_lease_id, event="labeled", actor="fixture", created_at="earlier") if finalize_only else None,
+        "lease_agent": retained_lease_agent,
     })
     Path(record.journal).parent.mkdir(parents=True, exist_ok=True)
     core.write_json(Path(record.journal), encoded(record))
@@ -643,7 +648,7 @@ def test_retryable_resume_reattaches_native_lease_and_sets_watchdog_journal(repo
 
     def acquire(row, result, checkpoint):
         result["commands"].append({"command": ["native", "lease"]})
-        checkpoint("leased", lease_event={"id": 7, "event": "labeled", "actor": "fixture", "created_at": "now"},
+        checkpoint("leased", lease_event={"id": new_lease_id, "event": "labeled", "actor": "fixture", "created_at": "now"},
                    lease_actor="fixture", lease_agent="project-watchdog-fixture-token", lease_released=False)
 
     seen = {}
@@ -660,7 +665,8 @@ def test_retryable_resume_reattaches_native_lease_and_sets_watchdog_journal(repo
     monkeypatch.setattr(handlers, "run_ask_tau_dag_with_stream_monitor", run_resume)
     monkeypatch.setattr(handlers, "inspect_tau_stream", lambda _: {
         "terminal": True, "terminal_status": "PASS" if finalize_only else "BLOCKED",
-        "resume_generation": 6, "terminal_source": "fixture-current-native-result",
+        "resume_generation": admitted_generation, "resume_journal": record.journal,
+        "resume_lease_agent": retained_lease_agent, "terminal_source": "fixture-current-native-result",
     })
     monkeypatch.setattr(handlers, "finish_primary_operation", lambda row: {"ok": False, "status": "NEEDS_ATTENTION", "summary": "reviewer still blocked"})
     monkeypatch.setattr(primary, "_finish_release", lambda row: True)
@@ -670,7 +676,13 @@ def test_retryable_resume_reattaches_native_lease_and_sets_watchdog_journal(repo
     assert result["status"] == "NEEDS_ATTENTION"
     if finalize_only:
         assert seen == {}, "accepted resume must not launch Ask or a provider again"
-        assert core.load_json(receipts / "retained-resume-finalization.json")["provider_dispatched"] is False
+        finalization = core.load_json(receipts / "retained-resume-finalization.json")
+        assert finalization["provider_dispatched"] is False
+        assert finalization["admitted_generation"] == admitted_generation
+        assert finalization["admitted_journal"] == record.journal
+        assert finalization["admitted_lease_agent"] == retained_lease_agent
+        assert finalization["new_lease_event_id"] == new_lease_id
+        assert finalization["new_lease_event_id"] != finalization["admitted_generation"]
     else:
         assert seen["command"][:3] == [str(root / "skills/ask/run.sh"), "runs", "resume"]
         assert seen["command"][3] == str(run_dir)
@@ -678,7 +690,7 @@ def test_retryable_resume_reattaches_native_lease_and_sets_watchdog_journal(repo
     updated = Operation.model_validate(core.load_json(Path(record.journal)))
     assert updated.phase == "retryable"
     assert updated.lease_released is True
-    assert updated.lease_event is not None and updated.lease_event.id == 7
+    assert updated.lease_event is not None and updated.lease_event.id == new_lease_id
     if not finalize_only:
         command_receipt = core.load_json(receipts / "watchdog-reattach-resume-command.json")
         assert "--watchdog-journal" in command_receipt["stdout"]

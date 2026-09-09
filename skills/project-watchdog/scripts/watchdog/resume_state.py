@@ -94,6 +94,8 @@ def observe(ask_root: Path) -> dict[str, Any] | None:
                 or fence["source_sha256"] != file_hash(run_dir / "dag.json")):
             raise ValueError("resume generation source identity mismatch")
         observation["resume_generation"] = fence["lease_event_id"]
+        observation["resume_journal"] = fence["journal"]
+        observation["resume_lease_agent"] = fence["lease_agent"]
         observation["terminal_source"] = str(path)
         command = fence.get("command_receipt")
         control = None

@@ -287,17 +287,24 @@ def reattach_and_resume(root: Path, journal: Path, *, apply: bool, timeout_s: in
         from . import handlers, native_ticket, resume_state
         run_dir = _project_command_spec_run(Path(record.ask_run_dir))
         prior = handlers.inspect_tau_stream(Path(record.ask_run_dir))
+        prior_journal = None
+        if isinstance(prior.get("resume_journal"), str) and prior.get("resume_journal"):
+            prior_journal = Path(prior["resume_journal"]).expanduser().resolve()
         finalize_only = (prior.get("terminal") is True
             and prior.get("terminal_status") in {"PASS", "COMPLETED"}
-            and record.lease_event is not None
-            and prior.get("resume_generation") == record.lease_event.id)
+            and prior_journal == journal
+            and prior.get("resume_lease_agent") == record.lease_agent)
         native_ticket.acquire(record, result, checkpoint)
         record = current()
         if finalize_only:
             write_json(Path(record.receipt_dir) / "retained-resume-finalization.json", {
                 "schema": "agent_skills.project_watchdog.resume_finalization.v1",
                 "admitted_generation": prior["resume_generation"],
-                "native_result": prior["terminal_source"], "new_lease_event_id": record.lease_event.id,
+                "admitted_journal": prior["resume_journal"],
+                "admitted_lease_agent": prior["resume_lease_agent"],
+                "native_result": prior["terminal_source"],
+                "new_lease_event_id": record.lease_event.id,
+                "new_lease_agent": record.lease_agent,
                 "provider_dispatched": False,
             })
             checkpoint("settled", tau_settled=True)

@@ -15,7 +15,7 @@ import tempfile
 from pathlib import Path
 from types import SimpleNamespace
 
-from watchdog import config, handlers, resume_state
+from watchdog import config, handlers, native_ticket, primary, resume_state
 from watchdog.core import write_json
 from watchdog.primary_models import VerificationPlan
 
@@ -120,16 +120,18 @@ def main():
     write_json(root / "initial-command.json", first)
     assert (receipts / "dag-run.sqlite3").is_file(), first
     (root / "reviewer-response.json").write_bytes((root / "reviewer-pass.json").read_bytes())
-    journal = root / "operation.json"
+    operation_area = root / ".git" / "project-watchdog-primary" / "operations"
+    operation_area.mkdir(parents=True)
+    journal = operation_area / "1628-local-eval.json"
     command = [str(config.ask_run_sh()), "runs", "resume", str(run_dir), "--execute", "--json"]
     checks = check_verification_plans(root)
+    lease_agent = "project-watchdog-local-eval"
     for generation, old_status in [(7, "PASS"), (8, "BLOCKED"), (9, None)]:
-        lease_agent = "project-watchdog-local-eval"
         write_json(journal, {"schema": "agent_skills.project_watchdog.primary_operation.v2",
             "phase": "running", "run_id": "watchdog-eval", "ask_run_dir": str(run_dir.parent),
             "tau_settled": True, "lease_released": old_status is not None,
             "owner_token": "local-eval", "lease_agent": lease_agent, "lease_actor": "eval",
-            "lease_before_event": {"id": generation-1, "event": "unlabeled"},
+            "lease_before_event": {"id": generation-1, "event": "unlabeled", "actor": "eval", "created_at": "2026-09-09T00:00:00Z"},
             "lease_event": {"id": generation, "event": "labeled", "actor": "eval", "created_at": "2026-09-09T00:00:00Z"}})
         if old_status:
             write_json(receipts / "dag-progress.json", {"status": old_status})
@@ -151,6 +153,60 @@ def main():
     checks["decoy_dag_ignored"] = handlers.inspect_tau_stream(run_dir.parent)["terminal"] is True
     checks["creator_not_relaunched"] = (root / "coder-count.txt").read_text() == "1"
     checks["reviewer_reran_once"] = (root / "reviewer-count.txt").read_text() == "2"
+    admitted_observation = handlers.inspect_tau_stream(run_dir.parent)
+    before_coder_count = (root / "coder-count.txt").read_text()
+    before_reviewer_count = (root / "reviewer-count.txt").read_text()
+    write_json(journal, {"schema": "agent_skills.project_watchdog.primary_operation.v2",
+        "phase": "retryable", "run_id": "watchdog-eval-finalize", "repo": "fixture/repo",
+        "project_id": "fixture", "issue_number": 1628, "action": "ticket_repair",
+        "owner_token": "local-eval", "root": str(root), "journal": str(journal),
+        "result_path": str(root / "finalize-result.json"), "receipt_dir": str(receipts),
+        "targets": ["skills/project-watchdog"], "task_sha256": "task", "scheduler_pid": os.getpid(),
+        "boot_id": "eval-boot", "lease_actor": "eval", "lease_agent": lease_agent,
+        "lease_before_event": {"id": 11, "event": "unlabeled", "actor": "eval", "created_at": "2026-09-09T00:00:00Z"},
+        "lease_event": {"id": 12, "event": "labeled", "actor": "eval", "created_at": "2026-09-09T00:00:00Z"},
+        "lease_released": True, "ask_run_dir": str(run_dir.parent), "tau_settled": True})
+    finalization_invocations = []
+    original_identity, original_area = primary.identity, primary._area
+    original_acquire = native_ticket.acquire
+    original_stream_runner = handlers.run_ask_tau_dag_with_stream_monitor
+    original_finish = handlers.finish_primary_operation
+    original_release = primary._finish_release
+    try:
+        primary.identity = lambda candidate: (Path(candidate).resolve(strict=True), (root / ".git").resolve())
+        primary._area = lambda candidate: operation_area.parent
+
+        def acquire(record, result, checkpoint):
+            result["commands"].append({"command": ["native", "lease", "finalize"]})
+            checkpoint("leased", lease_event={"id": 13, "event": "labeled", "actor": "eval", "created_at": "2026-09-09T00:00:01Z"},
+                       lease_actor="eval", lease_agent=lease_agent, lease_released=False)
+
+        def unexpected_resume(command, **kwargs):
+            finalization_invocations.append(command)
+            return {"command": command, "exit_code": 99, "stdout": "", "stderr": "unexpected resume"}
+
+        native_ticket.acquire = acquire
+        handlers.run_ask_tau_dag_with_stream_monitor = unexpected_resume
+        handlers.finish_primary_operation = lambda row: {"ok": False, "status": "NEEDS_ATTENTION", "summary": "fixture finalized"}
+        primary._finish_release = lambda row: True
+        primary.reattach_and_resume(root, journal, apply=True, timeout_s=30)
+    finally:
+        primary.identity, primary._area = original_identity, original_area
+        native_ticket.acquire = original_acquire
+        handlers.run_ask_tau_dag_with_stream_monitor = original_stream_runner
+        handlers.finish_primary_operation = original_finish
+        primary._finish_release = original_release
+    finalization = json.loads((receipts / "retained-resume-finalization.json").read_text())
+    checks["second_finalization_no_ask_invocation"] = finalization_invocations == []
+    checks["second_finalization_provider_counts_unchanged"] = ((root / "coder-count.txt").read_text() == before_coder_count
+        and (root / "reviewer-count.txt").read_text() == before_reviewer_count)
+    checks["second_finalization_receipt_bound"] = (finalization.get("provider_dispatched") is False
+        and finalization.get("admitted_generation") == admitted_observation.get("resume_generation")
+        and finalization.get("admitted_journal") == str(journal)
+        and finalization.get("admitted_lease_agent") == lease_agent
+        and finalization.get("new_lease_event_id") == 13
+        and finalization.get("new_lease_event_id") != finalization.get("admitted_generation")
+        and finalization.get("new_lease_agent") == lease_agent)
     result_path = receipts / "command-spec-resume-result.json"
     result = json.loads(result_path.read_text())
     result["watchdog_journal"]["lease_event_id"] = 999
