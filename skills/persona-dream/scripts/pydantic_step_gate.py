@@ -25,7 +25,17 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
-from spine_artifact_models import SPINE_ARTIFACT_MODELS
+try:
+    from spine_artifact_models import SPINE_ARTIFACT_MODELS
+except ImportError:  # producers load this module by file path without scripts/ on sys.path
+    import importlib.util as _importlib_util
+
+    _spec = _importlib_util.spec_from_file_location(
+        "spine_artifact_models", Path(__file__).with_name("spine_artifact_models.py"))
+    _module = _importlib_util.module_from_spec(_spec)
+    sys.modules["spine_artifact_models"] = _module
+    _spec.loader.exec_module(_module)
+    SPINE_ARTIFACT_MODELS = _module.SPINE_ARTIFACT_MODELS
 
 
 class ArtifactEnvelope(BaseModel):
@@ -95,6 +105,9 @@ REGISTRY: dict[str, type[ArtifactEnvelope]] = {
 _GENERATED_DIR = Path(__file__).resolve().parent / "generated_models"
 _generated_registry: dict[str, type[BaseModel]] | None = None
 _generated_by_stem: dict[str, type[BaseModel]] = {}
+#: stem -> load error. A generated contract that fails to import is a visible
+#: fail-closed condition for the schemas it should own, never a silent envelope.
+GENERATED_MODEL_LOAD_FAILURES: dict[str, str] = {}
 
 
 def _load_generated_registry() -> dict[str, type[BaseModel]]:
@@ -118,9 +131,10 @@ def _load_generated_registry() -> dict[str, type[BaseModel]]:
         sys.modules[spec.name] = module  # required so get_type_hints resolves ForwardRefs
         try:
             spec.loader.exec_module(module)
-        except Exception:
+        except Exception as exc:  # noqa: BLE001 - recorded, then fail-closed at use sites
             sys.modules.pop(spec.name, None)
-            continue  # a broken generated module must not break the gate for others
+            GENERATED_MODEL_LOAD_FAILURES[module_path.stem] = f"{type(exc).__name__}: {exc}"
+            continue  # other generated contracts stay usable; this one is fail-closed
         last_model = None
         for obj in vars(module).values():
             if isinstance(obj, type) and issubclass(obj, BaseModel) and obj.__module__ == spec.name:
@@ -149,6 +163,24 @@ def _load_generated_registry() -> dict[str, type[BaseModel]]:
                     registry.setdefault(value, obj)
     _generated_registry = registry
     return registry
+
+
+def _generated_contract_load_error(schema: dict[str, Any]) -> str | None:
+    """Return the load failure for the generated model this schema should use."""
+    _load_generated_registry()
+    const = str((schema.get("properties", {}).get("schema", {}) or {}).get("const", ""))
+    schema_id = str(schema.get("$id", ""))
+    stems = []
+    if schema_id:
+        stems.append(Path(schema_id).name.removesuffix(".json").replace(".", "_").replace("-", "_"))
+    if const:
+        normalized = const.replace("-", "_").replace(".", "_")
+        stems.extend([normalized, normalized.removeprefix("persona_dream_") + "_schema"])
+    for failed_stem, failure in GENERATED_MODEL_LOAD_FAILURES.items():
+        base = failed_stem.removesuffix("_schema")
+        if failed_stem in stems or any(stem.endswith(base) for stem in stems):
+            return f"{failed_stem}: {failure}"
+    return None
 
 
 def _resolve_model(schema: dict[str, Any], value: Any) -> type[BaseModel] | None:
@@ -182,6 +214,10 @@ def validate_payload(schema: dict[str, Any], value: Any) -> list[dict[str, Any]]
     secondary depth check for constraints codegen cannot express. Returns
     pydantic-style error dicts; empty list means PASS.
     """
+    unavailable = _generated_contract_load_error(schema)
+    if unavailable:
+        return [{"type": "generated_model_load_failed", "loc": ["schema"],
+                 "msg": f"generated pydantic contract unavailable: {unavailable}"}]
     errors: list[dict[str, Any]] = []
     model = _resolve_model(schema, value)
     if model is not None:
@@ -264,18 +300,57 @@ class ChatCompletionResponse(BaseModel):
     """OpenAI-style chat completion response."""
 
     model_config = ConfigDict(extra="allow")
-    choices: list[Any]
+    choices: list[Any] = Field(min_length=1)
+
+
+class ChatterboxSynthesizeResponse(BaseModel):
+    """Chatterbox /synthesize-batch response consumed by conversation renders."""
+
+    model_config = ConfigDict(extra="allow")
+    finished_response_audio: str = Field(min_length=1)
+
+
+class JournalReasoningResult(BaseModel):
+    """Typed journal LLM output; validated before any entry/persistence logic."""
+
+    model_config = ConfigDict(extra="allow")
+    journal: str = Field(min_length=1)
+    unresolved_tension: str = Field(min_length=1)
+    expanded_understanding: str = Field(min_length=1)
+    mood_label: str = Field(min_length=1)
+    mood_description: str = Field(min_length=1)
+
+
+class HorusTurnResult(BaseModel):
+    """Typed conversation-turn LLM output; validated before speech or append."""
+
+    model_config = ConfigDict(extra="allow")
+    question: str = Field(min_length=1)
+    tone: str = Field(min_length=1)
 
 
 HTTP_RESPONSE_MODELS: dict[str, type[BaseModel]] = {
     "memory_generic": GenericJsonObject,
     "embedding": EmbeddingResponse,
     "chat_completion": ChatCompletionResponse,
+    "chatterbox_synthesize": ChatterboxSynthesizeResponse,
+    "journal_reasoning": JournalReasoningResult,
+    "horus_turn": HorusTurnResult,
     "memory_query": MemoryQueryResponse,
     "memory_recall": MemoryRecallResponse,
     "memory_list": MemoryListResponse,
     "memory_store": MemoryStoreResponse,
 }
+
+
+#: memory API path -> response model kind, for the producers' shared post() seam.
+MEMORY_PATH_KINDS = {"/list": "memory_list", "/recall": "memory_recall",
+                     "/query": "memory_query", "/upsert": "memory_store",
+                     "/store": "memory_store"}
+
+
+def memory_kind_for_path(path: str) -> str:
+    return MEMORY_PATH_KINDS.get(str(path).split("?", 1)[0].rstrip("/"), "memory_generic")
 
 
 def validate_http_json(kind: str, payload: Any) -> dict[str, Any]:
@@ -337,8 +412,10 @@ def _artifact_value_errors(path: Path, raw: Any, require_schema: bool) -> list[d
             model = SPINE_ARTIFACT_MODELS.get(path.name) if require_schema else None
             model = model or REGISTRY.get(declared) or _load_generated_registry().get(declared)
             if model is None and require_schema:
-                return [{"type": "artifact_schema_unknown", "loc": [str(path), "schema"],
-                         "msg": f"no typed artifact contract registered for {declared!r}"}]
+                detail = f"no typed artifact contract registered for {declared!r}"
+                if GENERATED_MODEL_LOAD_FAILURES:
+                    detail += f"; generated contract modules failed to load: {GENERATED_MODEL_LOAD_FAILURES}"
+                return [{"type": "artifact_schema_unknown", "loc": [str(path), "schema"], "msg": detail}]
             model = model or ArtifactEnvelope
         else:
             stem = path.name.removesuffix(".json").replace(".", "_").replace("-", "_") + "_schema"
@@ -358,9 +435,11 @@ def _artifact_value_errors(path: Path, raw: Any, require_schema: bool) -> list[d
             audio_refs = [raw]
         for reference in audio_refs:
             named = Path(reference["audio"])
-            audio = path.parent / named.name
-            declared = named if named.is_absolute() else (Path(__file__).resolve().parents[3] / named if len(named.parts) > 1 else path.parent / named)
-            if declared.resolve() != audio.resolve() or not audio.resolve().is_relative_to(path.parent.resolve()):
+            audio = (path.parent / named.name).resolve()
+            if named.is_absolute() and named.resolve() != audio:
+                return [{"type": "artifact_audio_path_mismatch", "loc": [str(path), "audio"],
+                         "msg": "audio reference must name a file in this cycle directory"}]
+            if not audio.is_relative_to(path.parent.resolve()):
                 return [{"type": "artifact_audio_path_mismatch", "loc": [str(path), "audio"],
                          "msg": "audio reference must name a file in this cycle directory"}]
             try:
@@ -373,11 +452,109 @@ def _artifact_value_errors(path: Path, raw: Any, require_schema: bool) -> list[d
             if not data or ("audio_bytes" in reference and len(data) != reference["audio_bytes"]):
                 return [{"type": "artifact_audio_size_mismatch", "loc": [str(path), "audio_bytes"],
                          "msg": "referenced local WAV size does not match the receipt"}]
+            if data[:4] != b"RIFF" or data[8:12] != b"WAVE":
+                return [{"type": "artifact_audio_not_wav", "loc": [str(path), "audio"],
+                         "msg": "referenced audio bytes are not a RIFF/WAVE file"}]
+        lineage = _lineage_errors(path, raw)
+        if lineage:
+            return lineage
         field = {"phase14_tom.json": "revision_id", "observation_packet.json": "source_revision_id",
                  "dream_journal.v1.json": "cycle"}.get(path.name)
         if field and raw[field] != path.parent.name:
             return [{"type": "artifact_cycle_mismatch", "loc": [str(path), field],
                      "msg": "artifact does not belong to the active cycle directory"}]
+    return []
+
+
+def _sha(data: bytes) -> str:
+    return "sha256:" + hashlib.sha256(data).hexdigest()
+
+
+def _lineage_errors(path: Path, raw: dict[str, Any]) -> list[dict[str, Any]]:
+    """Join spoken text, audio and conversation claims to actual cycle bytes.
+
+    Individually valid receipts must not be mutually self-asserted: each digest
+    field is bound to the real file it claims to describe (measured live
+    relationships from cycle_20260909T130904Z, not invented conventions).
+    """
+    def err(kind: str, where: str, msg: str) -> list[dict[str, Any]]:
+        return [{"type": kind, "loc": [str(path), where], "msg": msg}]
+
+    cycle = path.parent
+
+    def read(name: str) -> bytes | None:
+        try:
+            return (cycle / name).read_bytes()
+        except OSError:
+            return None
+
+    if path.name == "JOURNAL_SPOKEN_TEXT_RECEIPT.json":
+        if Path(raw["journal_spoken"]).name != "journal_spoken.txt":
+            return err("artifact_lineage_target_mismatch", "journal_spoken",
+                       "receipt must describe this cycle's journal_spoken.txt")
+        spoken = read("journal_spoken.txt")
+        if spoken is None:
+            return err("artifact_lineage_target_missing", "journal_spoken",
+                       "journal_spoken.txt does not exist in this cycle")
+        if _sha(spoken.decode("utf-8", "replace").strip().encode()) != raw["spoken_text_sha256"]:
+            return err("artifact_lineage_hash_mismatch", "spoken_text_sha256",
+                       "digest does not match the actual journal_spoken.txt text")
+        source_name = Path(raw["source"]).name
+        if source_name not in {"dream_journal.v1.json", "dream_journal.md"}:
+            return err("artifact_lineage_target_mismatch", "source", "source must be the cycle journal")
+        source = read(source_name)
+        if source is None:
+            return err("artifact_lineage_target_missing", "source", "named journal source is absent")
+        if source_name == "dream_journal.v1.json":
+            journal = json.loads(source).get("journal", "")
+            if str(journal).strip() != spoken.decode("utf-8", "replace").strip():
+                return err("artifact_lineage_text_mismatch", "source",
+                           "journal_spoken.txt does not match the journal entry text")
+
+    if path.name == "JOURNAL_AUDIO_RECEIPT.json":
+        if Path(raw["audio"]).name != "journal.wav":
+            return err("artifact_lineage_target_mismatch", "audio",
+                       "journal audio receipt must describe this cycle's journal.wav")
+        spoken = read("journal_spoken.txt")
+        if spoken is None:
+            return err("artifact_lineage_target_missing", "journal_spoken",
+                       "journal_spoken.txt does not exist in this cycle")
+        stripped = spoken.decode("utf-8", "replace").strip()
+        if _sha(stripped.encode()) != raw["source_spoken_text_sha256"]:
+            return err("artifact_lineage_hash_mismatch", "source_spoken_text_sha256",
+                       "digest does not match the actual journal_spoken.txt text")
+        rendered = stripped[: raw["truncated_to"]] if raw.get("truncated_to") else stripped
+        if _sha(rendered.encode()) != raw["spoken_text_sha256"]:
+            return err("artifact_lineage_hash_mismatch", "spoken_text_sha256",
+                       "digest does not match the rendered spoken text")
+
+    if path.name == "dynamic_conversation_receipt.v1.json":
+        transcript = read("conversation.jsonl")
+        if transcript is None:
+            return err("artifact_lineage_target_missing", "conversation.jsonl",
+                       "conversation.jsonl does not exist in this cycle")
+        try:
+            rows = [json.loads(line) for line in transcript.decode("utf-8", "replace").splitlines() if line.strip()]
+        except ValueError as exc:
+            return err("artifact_lineage_target_unreadable", "conversation.jsonl", str(exc))
+        expected = int(raw.get("transcript_base_lines") or 0) + int(raw["turn_count"])
+        if len(rows) != expected:
+            return err("artifact_lineage_count_mismatch", "turn_count",
+                       f"conversation.jsonl has {len(rows)} rows; receipt claims {expected}")
+        transcript_hashes = {row.get("audio_sha256") for row in rows}
+        claimed = {pair[role]["audio_sha256"] for pair in raw["turn_pairs"] for role in ("horus", "embry")}
+        if not claimed <= transcript_hashes:
+            return err("artifact_lineage_hash_mismatch", "turn_pairs",
+                       "receipt claims voiced turns absent from conversation.jsonl")
+
+    if path.name == "conversation.jsonl" and raw.get("journal_spoken_sha256"):
+        spoken = read("journal_spoken.txt")
+        if spoken is None:
+            return err("artifact_lineage_target_missing", "journal_spoken_sha256",
+                       "journal_spoken.txt does not exist in this cycle")
+        if _sha(spoken) != raw["journal_spoken_sha256"]:
+            return err("artifact_lineage_hash_mismatch", "journal_spoken_sha256",
+                       "turn is bound to a different journal_spoken.txt than this cycle's")
     return []
 
 

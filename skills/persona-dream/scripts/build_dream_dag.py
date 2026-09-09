@@ -26,6 +26,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import time
 from pathlib import Path
 from typing import Any
@@ -62,6 +63,9 @@ def build_spec(*, contract: Path, run_dir: Path, run_id: str,
     # directory, which they hardcode. The DAG's --run-dir holds only its own
     # bookkeeping, so the artifact check must look where the files actually go.
     cycle_dir = ROOT / "reports" / "goal_v3" / "cycles" / cycle_id
+    cycles_root = (ROOT / "reports" / "goal_v3" / "cycles").resolve()
+    if not cycle_dir.resolve().is_relative_to(cycles_root) or cycle_dir.resolve() == cycles_root:
+        raise SystemExit(f"BLOCKED_UNSAFE_CYCLE_ID: {cycle_id!r} escapes the canonical cycles root")
     shim = ROOT / "scripts" / "dag_step.py"
 
     goal = {
@@ -118,13 +122,14 @@ def build_spec(*, contract: Path, run_dir: Path, run_id: str,
         for name in step["consumes"]:
             if name not in producers:
                 raise SystemExit(f"BLOCKED_STEP_{node_id}_UNBOUND_INPUT: {name}")
-            upstream_receipts.add(producers[name])
+            upstream_receipts.add(producers[name][1])
+            command += ["--input-owner", f"{name}={producers[name][0]}"]
         for receipt_path in sorted(upstream_receipts):
             command += ["--input-receipt", str(receipt_path)]
         for name in step["produces"]:
             if name in producers:
                 raise SystemExit(f"BLOCKED_STEP_{node_id}_DUPLICATE_PRODUCER: {name}")
-            producers[name] = receipts_dir / f"{node_id}.json"
+            producers[name] = (node_id, receipts_dir / f"{node_id}.json")
         # Omitted entirely when the step takes no run directory: Tau requires
         # every argv item to be a non-empty string, so an empty flag value is
         # not a way to say "none".
@@ -195,6 +200,12 @@ def main() -> int:
 
     run_dir = args.run_dir.expanduser().resolve()
     cycle_id = args.cycle_id or f"cycle_{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}"
+    # The cycle id names a directory under the canonical cycles root. An
+    # absolute or traversal-bearing id would move the TRUSTED artifact root
+    # itself; every downstream containment check would then guard the wrong
+    # directory. Closed grammar, fail-closed.
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", cycle_id) or ".." in cycle_id:
+        raise SystemExit(f"BLOCKED_UNSAFE_CYCLE_ID: {cycle_id!r} must match [A-Za-z0-9][A-Za-z0-9_.-]*")
     run_id = args.run_id or f"dream-{cycle_id}"
     spec = build_spec(contract=args.contract.resolve(), run_dir=run_dir,
                       run_id=run_id, persona=args.persona, cycle_id=cycle_id, idea=args.idea,

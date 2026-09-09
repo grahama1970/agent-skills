@@ -50,8 +50,13 @@ CHATTERBOX = os.environ.get("CHATTERBOX_BASE_URL", "http://127.0.0.1:8018")
 
 
 def sh(args: list[str], timeout: int) -> subprocess.CompletedProcess:
+    # This harness IS the live full-cycle evaluation of the documented run.sh
+    # layer; it validates every produced artifact itself, so it opts into the
+    # direct spine entrypoints explicitly instead of impersonating dag_step.
+    env = {**os.environ, "PERSONA_DREAM_ALLOW_DIRECT": "1"}
     return subprocess.run(["bash", str(ROOT / "run.sh"), *args],
-                          capture_output=True, text=True, timeout=timeout, cwd=ROOT)
+                          capture_output=True, text=True, timeout=timeout,
+                          cwd=ROOT, env=env)
 
 
 def fail(code: str, proc: subprocess.CompletedProcess | None = None) -> None:

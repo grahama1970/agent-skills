@@ -305,6 +305,20 @@ EOF
 COMMAND="${1:-help}"
 shift || true
 
+require_spine_executor() {
+  # Cognition-spine producers mutate persona memory, continuity and transcripts.
+  # They run through the typed dag_step executor ('./run.sh dream'), which
+  # validates consumed/produced artifacts and upstream receipts. A direct call
+  # skips every gate, so it is refused unless explicitly marked as non-spine
+  # debugging. PERSONA_DREAM_STEP_EXECUTOR is set only by scripts/dag_step.py.
+  if [[ "${PERSONA_DREAM_STEP_EXECUTOR:-0}" != "1" && "${PERSONA_DREAM_ALLOW_DIRECT:-0}" != "1" ]]; then
+    echo "BLOCKED_DIRECT_SPINE_ENTRYPOINT: '$1' is a cognition-spine producer." >&2
+    echo "  Run './run.sh dream' so dag_step validates the step, or set" >&2
+    echo "  PERSONA_DREAM_ALLOW_DIRECT=1 for explicit non-spine debugging (ungated)." >&2
+    exit 3
+  fi
+}
+
 case "$COMMAND" in
   read)
     knowledge_path="${SCRIPT_DIR}/PROJECT_KNOWLEDGE.md"
@@ -378,11 +392,13 @@ case "$COMMAND" in
     # observe -> interpret -> persist -> evaluate, producing the cycle
     # directory write-dream-journal reads. Had no door in run.sh at all, which
     # is why the spine kept being reassembled by hand from its internals.
+    require_spine_executor "autonomous-dream-cycle"
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/autonomous_dream_cycle.py" "$@"
     ;;
   write-dream-journal)
     # Was unreachable through run.sh entirely, despite being the artifact the
     # pipeline terminates at. That gap is why journal writing got bespoked.
+    require_spine_executor "write-dream-journal"
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_dream_journal.py" "$@"
     ;;
   pipeline-loop-run)
@@ -851,6 +867,7 @@ case "$COMMAND" in
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/curate_transcript_context.py" "$@"
     ;;
   converse-dynamic|chatterbox-conversation)
+    require_spine_executor "chatterbox-conversation"
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/dynamic_conversation.py" "$@"
     ;;
   append-conversation)
@@ -864,6 +881,7 @@ case "$COMMAND" in
       "${SCRIPT_DIR}/scripts/measure_tone_effect.py" "$@"
     ;;
   speak-journal)
+    require_spine_executor "speak-journal"
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/speak_journal.py" "$@"
     ;;
   map-delivery-tone)

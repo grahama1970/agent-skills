@@ -21,6 +21,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
+import signal
 import subprocess
 import time
 from pathlib import Path
@@ -92,6 +94,8 @@ def main() -> int:
                          "BEFORE the step runs (first deterministic gate)")
     ap.add_argument("--input-receipt", type=Path, action="append", default=[],
                     help="upstream PASS receipt binding consumed artifact hashes; repeatable")
+    ap.add_argument("--input-owner", action="append", default=[],
+                    help="<artifact>=<node_id> producer ownership binding; repeatable")
     ap.add_argument("--proves", default="")
     ap.add_argument("--does-not-prove", default="")
     ap.add_argument("--goal-hash", default="",
@@ -126,7 +130,8 @@ def main() -> int:
     consumed = [artifact_dir / n for n in args.consumes.split(",") if n and n not in unsafe]
     pydantic_errors.extend({"type": "artifact_missing", "loc": [str(p)], "msg": "file not found"}
                            for p in consumed if not p.is_file())
-    pydantic_errors += validate_artifacts([p for p in consumed if p.is_file()], require_schema=True)
+    # Hash BEFORE validation and re-hash after it: a consumed file swapped
+    # between the two reads is a blocked race, not silently revalidated bytes.
     input_hashes = {}
     if not pydantic_errors:
         for path in consumed:
@@ -134,7 +139,14 @@ def main() -> int:
                 input_hashes[str(path.resolve())] = _sha256(path)
             except OSError as exc:
                 pydantic_errors.append({"type": "artifact_unreadable", "loc": [str(path)], "msg": str(exc)})
+    pydantic_errors += validate_artifacts([p for p in consumed if p.is_file()], require_schema=True)
+    if not pydantic_errors:
+        for path in consumed:
+            if _sha256(path) != input_hashes[str(path.resolve())]:
+                pydantic_errors.append({"type": "artifact_changed_during_validation", "loc": [str(path)],
+                                        "msg": "consumed bytes changed while being validated"})
     bindings: dict[str, str] = {}
+    owners: dict[str, str] = {}
     for receipt_path in args.input_receipt:
         receipt_errors = validate_artifact(receipt_path, require_schema=True)
         pydantic_errors.extend(receipt_errors)
@@ -145,11 +157,26 @@ def main() -> int:
             pydantic_errors.append({"type": "upstream_receipt_rejected", "loc": [str(receipt_path)], "msg": "upstream PASS and matching goal hash required"})
         for artifact in upstream.get("artifacts", []):
             if isinstance(artifact, dict) and artifact.get("path"):
-                bindings[str(Path(artifact["path"]).resolve())] = artifact.get("sha256", "")
+                claimed = Path(str(artifact["path"])).resolve()
+                if not claimed.is_relative_to(artifact_dir.resolve()):
+                    pydantic_errors.append({"type": "upstream_receipt_wrong_cycle", "loc": [str(receipt_path), str(claimed)],
+                                            "msg": "upstream receipt claims artifacts outside this cycle directory"})
+                    continue
+                bindings[str(claimed)] = artifact.get("sha256", "")
+                owners[str(claimed)] = str(upstream.get("node_id", ""))
     if args.input_receipt:
         for path, digest in input_hashes.items():
             if bindings.get(path) != digest:
                 pydantic_errors.append({"type": "upstream_artifact_hash_mismatch", "loc": [path], "msg": "consumed bytes do not match upstream receipt"})
+    for entry in args.input_owner:
+        name, _, expected_node = entry.partition("=")
+        if not name or not expected_node:
+            pydantic_errors.append({"type": "input_owner_malformed", "loc": [entry], "msg": "expected <artifact>=<node_id>"})
+            continue
+        actual = owners.get(str((artifact_dir / name).resolve()))
+        if actual != expected_node:
+            pydantic_errors.append({"type": "upstream_receipt_wrong_producer", "loc": [name],
+                                    "msg": f"artifact must be bound by producer {expected_node!r}, found {actual!r}"})
     if pydantic_errors:
         errors.extend(
             f"pydantic_gate_input {e['type']} at {e['loc']}: {e.get('msg', '')}"
@@ -162,16 +189,29 @@ def main() -> int:
         if path.is_file():
             stat = path.stat()
             prior_outputs[name] = (stat.st_ino, stat.st_mtime_ns, stat.st_ctime_ns, stat.st_size)
+    step_env = {**os.environ, "PERSONA_DREAM_STEP_EXECUTOR": "1"}
     try:
         if errors:
             raise _PydanticGateBlocked
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=1800)
+        # Own process group: a timed-out producer must not leave descendant
+        # writers mutating the cycle after the step is recorded as failed.
+        with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                              text=True, env=step_env, start_new_session=True) as proc:
+            try:
+                _, step_stderr = proc.communicate(timeout=1800)
+            except subprocess.TimeoutExpired:
+                try:
+                    os.killpg(proc.pid, signal.SIGKILL)
+                except (ProcessLookupError, PermissionError, OSError):
+                    proc.kill()
+                proc.wait(timeout=30)
+                raise
         exit_code = proc.returncode
-        stderr_tail = proc.stderr[-8000:]
-        if proc.returncode != 0:
-            errors.append(f"{args.command} exited {proc.returncode}: {stderr_tail[-2500:]}")
+        stderr_tail = (step_stderr or "")[-8000:]
+        if exit_code != 0:
+            errors.append(f"{args.command} exited {exit_code}: {stderr_tail[-2500:]}")
     except subprocess.TimeoutExpired:
-        errors.append(f"{args.command} exceeded 1800s")
+        errors.append(f"{args.command} exceeded 1800s; process group killed")
     except _PydanticGateBlocked:
         pass  # consumed-artifact validation failed; step never ran
     except OSError as exc:

@@ -60,7 +60,11 @@ def _load(name: str):
 def post(path: str, payload: dict, timeout: float = 60.0) -> dict:
     req = urllib.request.Request(f"{GMO}{path}", data=json.dumps(payload).encode(),
                                  headers={"Content-Type": "application/json"})
-    return json.loads(urllib.request.urlopen(req, timeout=timeout).read())
+    response = json.loads(urllib.request.urlopen(req, timeout=timeout).read())
+    # Pydantic FIRST at the memory-service seam: an unexpected response shape
+    # is a typed refusal here, before any selection/persistence logic reads it.
+    gate = sys.modules.get("pydantic_step_gate") or _load("pydantic_step_gate")
+    return gate.validate_http_json(gate.memory_kind_for_path(path), response)
 
 
 def sha256_text(text: str) -> str:
@@ -652,6 +656,8 @@ def observe(composite, art: dict, out: Path) -> list:
         payload, artifact_dir=str(vlm_dir),
         caller_skill="persona-dream-cycle-observer",
         purpose="storyboard_content_observation")
+    gate = sys.modules.get("pydantic_step_gate") or _load("pydantic_step_gate")
+    resp = gate.validate_http_json("chat_completion", resp)
     text = (resp.get("choices") or [{}])[0].get("message", {}).get("content", "")
     try:
         frames = json.loads(text[text.index("{"):text.rindex("}") + 1]).get("frames", [])

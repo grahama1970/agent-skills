@@ -287,8 +287,13 @@ def main():
         output_contract={"journal": "string", "unresolved_tension": "string",
                          "expanded_understanding": "string",
                          "mood_label": "string", "mood_description": "string"})
-    if not parsed or not parsed.get("journal"):
-        raise SystemExit("BLOCKED_JOURNAL_NO_PARSE")
+    # Pydantic FIRST on the model output: no entry building, persistence, or
+    # ledger mutation may read an unvalidated LLM dict (deal-killing rule).
+    gate = sys.modules.get("pydantic_step_gate") or _load("pydantic_step_gate")
+    try:
+        parsed = gate.validate_http_json("journal_reasoning", parsed or {})
+    except ValueError as exc:
+        raise SystemExit(f"BLOCKED_JOURNAL_NO_PARSE: {exc}") from exc
     entry = {
         "schema": "persona_dream.persona_journal.v1",
         "persona_id": persona,

@@ -31,7 +31,7 @@ def main() -> int:
     rows = []
     payloads = {}
     for name in SPINE_ARTIFACT_MODELS:
-        path = source / name
+        path = next((p for p in (source / name, source / "voice_weights" / name) if p.is_file()), source / name)
         errors = validate_artifact(path, require_schema=True)
         if errors:
             raise SystemExit(f"production positive control rejected: {name}: {errors}")
@@ -39,12 +39,23 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="persona-dream-boundary-eval-") as tmp:
         tmp = Path(tmp)
 
-        def invoke(label, filename, text, expected_error=None, produces=""):
+        DEFAULT_SIDE = {
+            "JOURNAL_SPOKEN_TEXT_RECEIPT.json": ("journal_spoken.txt", "dream_journal.v1.json"),
+            "JOURNAL_AUDIO_RECEIPT.json": ("journal_spoken.txt",),
+            "dynamic_conversation_receipt.v1.json": ("conversation.jsonl", "journal_spoken.txt"),
+            "conversation.jsonl": ("journal_spoken.txt",),
+        }
+
+        def invoke(label, filename, text, expected_error=None, produces="", side=None, extra=None):
             directory = tmp / label / source.name
             directory.mkdir(parents=True)
             if filename in {"conversation.jsonl", "JOURNAL_AUDIO_RECEIPT.json", "dynamic_conversation_receipt.v1.json"}:
                 for audio in source.glob("*.wav"):
                     shutil.copyfile(audio, directory / audio.name)
+            for name in (DEFAULT_SIDE.get(filename, ()) if side is None else side):
+                shutil.copyfile(source / name, directory / name)
+            for name, content in (extra or {}).items():
+                (directory / name).write_text(content, encoding="utf-8")
             path = directory / filename
             path.write_text(text, encoding="utf-8")
             receipt_path = directory / "node.json"
@@ -98,10 +109,40 @@ def main() -> int:
         invoke("empty-output", "empty.txt", "", "artifact is empty", produces="empty.txt")
         invoke("path-escape", "../escape.json", payloads["storyboard_plan.json"], "artifact_path_escape")
 
+        # Cross-artifact lineage: individually valid receipts must bind to the
+        # ACTUAL cycle bytes they claim to describe (WebGPT review P0-3).
+        invoke("valid-spoken-receipt", "JOURNAL_SPOKEN_TEXT_RECEIPT.json", payloads["JOURNAL_SPOKEN_TEXT_RECEIPT.json"])
+        invoke("valid-audio-receipt", "JOURNAL_AUDIO_RECEIPT.json", payloads["JOURNAL_AUDIO_RECEIPT.json"])
+        invoke("valid-conversation-receipt", "dynamic_conversation_receipt.v1.json", payloads["dynamic_conversation_receipt.v1.json"])
+        invoke("spoken-receipt-target-missing", "JOURNAL_SPOKEN_TEXT_RECEIPT.json",
+               payloads["JOURNAL_SPOKEN_TEXT_RECEIPT.json"], "artifact_lineage_target_missing", side=())
+        forged = json.loads(payloads["JOURNAL_SPOKEN_TEXT_RECEIPT.json"])
+        forged["spoken_text_sha256"] = "sha256:" + "0" * 64
+        invoke("spoken-receipt-forged-digest", "JOURNAL_SPOKEN_TEXT_RECEIPT.json",
+               json.dumps(forged), "artifact_lineage_hash_mismatch")
+        fake = b"FAKE-BYTES-NOT-A-RIFF-WAVE-CONTAINER"
+        not_wav = json.loads(payloads["JOURNAL_AUDIO_RECEIPT.json"])
+        not_wav.update(audio="journal.wav", audio_bytes=len(fake),
+                       audio_sha256="sha256:" + __import__("hashlib").sha256(fake).hexdigest())
+        invoke("audio-receipt-not-wav", "JOURNAL_AUDIO_RECEIPT.json", json.dumps(not_wav),
+               "artifact_audio_not_wav", extra={"journal.wav": fake.decode()})
+        detached = json.loads(payloads["JOURNAL_AUDIO_RECEIPT.json"])
+        detached["source_spoken_text_sha256"] = "sha256:" + "0" * 64
+        invoke("audio-receipt-detached-source", "JOURNAL_AUDIO_RECEIPT.json",
+               json.dumps(detached), "artifact_lineage_hash_mismatch")
+        transcript_rows = [line for line in payloads["conversation.jsonl"].splitlines() if line.strip()]
+        invoke("conversation-receipt-transcript-mismatch", "dynamic_conversation_receipt.v1.json",
+               payloads["dynamic_conversation_receipt.v1.json"], "artifact_lineage_count_mismatch",
+               side=("journal_spoken.txt",), extra={"conversation.jsonl": "\n".join(transcript_rows[:-1]) + "\n"})
+        rebound = json.loads(transcript_rows[0])
+        rebound["journal_spoken_sha256"] = "sha256:" + "0" * 64
+        invoke("jsonl-turn-foreign-journal", "conversation.jsonl",
+               json.dumps(rebound) + "\n", "artifact_lineage_hash_mismatch")
+
         # Reuse the actual upstream receipt; corrupt only temporary copies of it.
         upstream_path = Path('/mnt/storage12tb/skills/persona-dream/outputs/full-persona-dream-auto-20260909T130904Z/dag_receipts/dream_cycle.json')
         upstream = json.loads(upstream_path.read_text())
-        for label in ['valid-upstream', 'tampered-upstream-hash', 'contradictory-upstream', 'malformed-upstream-ref']:
+        for label in ['valid-upstream', 'tampered-upstream-hash', 'contradictory-upstream', 'malformed-upstream-ref', 'wrong-producer-owner']:
             document = json.loads(json.dumps(upstream))
             if label == 'tampered-upstream-hash':
                 for artifact in document['artifacts']:
@@ -118,6 +159,8 @@ def main() -> int:
                        '--command', 'check-agentic-eval-no-pytest', '--receipt', str(receipt_path),
                        '--run-dir', str(source), '--consumes', 'phase14_tom.json',
                        '--input-receipt', str(input_receipt), '--goal-hash', upstream['goal_hash'],
+                       '--input-owner',
+                       'phase14_tom.json=' + ('journal_entry' if label == 'wrong-producer-owner' else str(upstream['node_id'])),
                        '--step-arg=' + str(ROOT / 'fixtures/agentic_eval.json'), '--step-arg=--json']
             proc = subprocess.run(command, text=True, capture_output=True, timeout=120)
             receipt = json.loads(receipt_path.read_text())
@@ -127,15 +170,49 @@ def main() -> int:
                 assert receipt['triage_errors']
             rows.append({'case': label, 'command': command, 'exit_code': proc.returncode, 'receipt': receipt})
 
-        # Real DAG compiler must bind every input to its producing node receipt.
+        # Real DAG compiler must bind every input to its producing node receipt
+        # AND refuse a cycle id that would move the trusted artifact root.
         spec_path = tmp / "compiled.json"
         command = [sys.executable, str(ROOT / "scripts/build_dream_dag.py"),
                    "--run-dir", str(tmp / "dag"), "--cycle-id", source.name, "--out", str(spec_path)]
         subprocess.run(command, check=True, capture_output=True, text=True, timeout=30)
         spec = json.loads(spec_path.read_text())
         assert all("--input-receipt" in node["command"] for node in spec["nodes"][1:])
+        assert all("--input-owner" in node["command"] for node in spec["nodes"][1:])
         assert "--input-receipt" not in spec["nodes"][0]["command"]
         rows.append({"case": "compiler-binds-upstream-receipts", "command": command, "exit_code": 0})
+        for label, bad_cycle in (("compiler-refuses-absolute-cycle-id", str(tmp / "escaped")),
+                                 ("compiler-refuses-traversal-cycle-id", "../escaped")):
+            command = [sys.executable, str(ROOT / "scripts/build_dream_dag.py"),
+                       "--run-dir", str(tmp / "dag2"), "--cycle-id", bad_cycle, "--out", str(tmp / "bad.json")]
+            proc = subprocess.run(command, capture_output=True, text=True, timeout=30)
+            assert proc.returncode != 0 and "BLOCKED_UNSAFE_CYCLE_ID" in proc.stderr + proc.stdout, (label, proc.stdout, proc.stderr)
+            rows.append({"case": label, "command": command, "exit_code": proc.returncode})
+
+        # Direct spine producer entrypoints are refused outside the executor.
+        proc = subprocess.run(["bash", str(ROOT / "run.sh"), "write-dream-journal", "--cycle", "x"],
+                              capture_output=True, text=True, timeout=60,
+                              env={k: v for k, v in __import__("os").environ.items()
+                                   if k not in {"PERSONA_DREAM_STEP_EXECUTOR", "PERSONA_DREAM_ALLOW_DIRECT"}})
+        assert proc.returncode == 3 and "BLOCKED_DIRECT_SPINE_ENTRYPOINT" in proc.stderr, (proc.returncode, proc.stderr)
+        rows.append({"case": "direct-spine-entrypoint-refused", "exit_code": proc.returncode,
+                     "stderr": proc.stderr[-400:]})
+
+        command = [sys.executable, "-c", """
+import json, sys
+from pathlib import Path
+sys.path.insert(0, str(Path('scripts').resolve()))
+import pydantic_step_gate as g
+schema = json.load(open('schemas/persona_journal.v1.schema.json'))
+g.GENERATED_MODEL_LOAD_FAILURES['persona_journal_v1_schema'] = 'SyntaxError: simulated import failure'
+errors = g.validate_payload(schema, {'schema': 'persona_dream.persona_journal.v1', 'journal': 'x'})
+assert errors and errors[0]['type'] == 'generated_model_load_failed', errors
+print(errors[0]['type'])
+"""]
+        proc = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, timeout=60)
+        assert proc.returncode == 0 and "generated_model_load_failed" in proc.stdout, (proc.stdout, proc.stderr)
+        rows.append({"case": "generated-model-import-failure-fails-closed", "command": command,
+                     "exit_code": proc.returncode, "stdout": proc.stdout.strip()})
 
     report = {"schema": "persona_dream.spine_artifact_boundary_eval.v1", "status": "PASS",
               "production_cycle": str(source), "positive_artifact_count": len(payloads), "cases": rows,

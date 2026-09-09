@@ -287,12 +287,18 @@ def accepted_chunk_asr(chunk: dict[str, Any], expected_text: str | None = None) 
 def ensure_spoken_text(run_dir: Path) -> tuple[Path | None, list[str]]:
     """Ensure cycle-lane journals have the text artifact the speech lane needs."""
     spoken_path = run_dir / "journal_spoken.txt"
-    if spoken_path.is_file():
-        return spoken_path, []
-
     gates: list[str] = []
     journal_json = run_dir / "dream_journal.v1.json"
     journal_md = run_dir / "dream_journal.md"
+    if spoken_path.is_file():
+        # A pre-existing spoken text is reused ONLY when it still derives from
+        # the current journal; a stale file must be rebuilt, not spoken again.
+        if journal_json.is_file():
+            current = str(json.loads(journal_json.read_text(encoding="utf-8")).get("journal") or "").strip()
+            if current and spoken_path.read_text(encoding="utf-8").strip() == current:
+                return spoken_path, []
+        else:
+            return spoken_path, []
     text = ""
     source = None
     if journal_json.is_file():
@@ -355,9 +361,14 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 
     # The tone comes from the dream's own tension, not from a caller's guess.
     mapper = _load_sibling("map_delivery_tone")
+    # Cycle-lane spine runs read ONLY declared inputs: when the cycle journal
+    # exists, the generate-lane side files (contradiction_report.json,
+    # dream_packet.json) are ignored so no undeclared artifact can steer the
+    # delivery while upstream receipts stay green.
+    cycle_lane = (run_dir / "dream_journal.v1.json").is_file()
     contradictions: list[dict[str, Any]] = []
     cpath = run_dir / "contradiction_report.json"
-    if cpath.is_file():
+    if cpath.is_file() and not cycle_lane:
         contradictions = json.loads(cpath.read_text(encoding="utf-8")).get("contradictions") or []
     mood_label = args.mood_label
     if not mood_label:
@@ -367,7 +378,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             sm = payload.get("session_mood")
             if isinstance(sm, dict):
                 mood_label = sm.get("mood_label")
-    if not mood_label:
+    if not mood_label and not cycle_lane:
         packet = run_dir / "dream_packet.json"
         if packet.is_file():
             sm = json.loads(packet.read_text(encoding="utf-8")).get("session_mood")

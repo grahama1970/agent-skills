@@ -66,6 +66,17 @@ class ResidueLinks(Record):
     items: list[ResidueItem] = Field(min_length=1)
 
 
+class VoiceWeight(Record):
+    emotional_tag: Text
+    weight: float
+
+
+class VoiceWeightProfile(Record):
+    schema_name: Literal["persona_dream.dream_voice_weight_profile.v1"] = Field(alias="schema")
+    persona_id: Text
+    weights: list[VoiceWeight] = Field(min_length=1)
+
+
 class TomReceipt(Record):
     schema_name: Literal["persona_dream.tom_validation_receipt.v1"] = Field(alias="schema")
     status: Literal["PASS_TOM_VALIDATION_LIVE", "PASS_TOM_VALIDATION_DETERMINISTIC_PROJECTION"]
@@ -127,7 +138,10 @@ class JournalAudioReceipt(Record):
     audio: Text
     audio_bytes: int = Field(gt=0, strict=True)
     audio_sha256: Digest
+    spoken_text: Text
     spoken_text_sha256: Digest
+    source_spoken_text_sha256: Digest
+    truncated_to: int | None = Field(default=None, gt=0, strict=True)
     asr_ok: Literal[True]
     readback_proves_audio: Literal[True]
     failed_gates: list[str] = Field(max_length=0)
@@ -151,12 +165,19 @@ class ConversationReceipt(Record):
     status: Literal["PASS_DYNAMIC_CONVERSATION"]
     run_dir: Text
     turn_count: int = Field(gt=0, strict=True)
+    transcript_base_lines: int | None = Field(default=None, ge=0, strict=True)
+    transcript_total_lines: int | None = Field(default=None, gt=0, strict=True)
     turn_pairs: list[ConversationPair] = Field(min_length=1)
 
     @model_validator(mode="after")
     def turn_counts_match(self) -> "ConversationReceipt":
         if self.turn_count != 2 * len(self.turn_pairs):
             raise ValueError("turn_count must match the voiced pairs")
+        if (self.transcript_base_lines is None) != (self.transcript_total_lines is None):
+            raise ValueError("transcript checkpoint fields must be supplied together")
+        if self.transcript_total_lines is not None and \
+                self.transcript_total_lines != self.transcript_base_lines + self.turn_count:
+            raise ValueError("transcript totals must equal checkpoint base plus voiced turns")
         return self
 
 
@@ -181,6 +202,7 @@ SPINE_ARTIFACT_MODELS: dict[str, type[BaseModel]] = {
     "selection_receipt.v1.json": SelectionReceipt,
     "residue_links.json": ResidueLinks,
     "phase14_tom.json": TomReceipt,
+    "dream_voice_weight_profile.v1.json": VoiceWeightProfile,
     "observation_packet.json": ObservationPacket,
     "dream_journal.v1.json": PersonaJournal,
     "JOURNAL_SPOKEN_TEXT_RECEIPT.json": SpokenTextReceipt,

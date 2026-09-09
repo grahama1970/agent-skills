@@ -91,8 +91,14 @@ Return strict JSON: {{"question": "...", "tone": "<one tone from the list>"}}"""
         prompt, role="horus_turn",
         output_contract={"question": "string", "tone": "string"},
         caller_skill="persona-dream-dynamic-conversation", timeout_s=180.0)
-    question = str((parsed or {}).get("question") or "").strip()
-    tone = str((parsed or {}).get("tone") or "").strip()
+    # Pydantic FIRST on the model output, before grounding/speech/append logic.
+    gate = sys.modules.get("pydantic_step_gate") or _load("pydantic_step_gate")
+    try:
+        parsed = gate.validate_http_json("horus_turn", parsed or {})
+    except ValueError as exc:
+        raise SystemExit(f"BLOCKED_HORUS_NOT_DRAFTED: {exc}; receipt={json.dumps(receipt)[:200]}") from exc
+    question = str(parsed["question"]).strip()
+    tone = str(parsed["tone"]).strip()
     if not question:
         raise SystemExit(f"BLOCKED_HORUS_NOT_DRAFTED: {json.dumps(receipt)[:200]}")
     question, injected = grounding.ground_if_needed(question, context, role="horus")
@@ -127,6 +133,11 @@ def speak_horus(sr, text: str, tone: str, run_dir: Path, label: str) -> dict[str
         headers={"Content-Type": "application/json"}, method="POST")
     with urllib.request.urlopen(req, timeout=300) as resp:
         response = json.loads(resp.read())
+    gate = sys.modules.get("pydantic_step_gate") or _load("pydantic_step_gate")
+    try:
+        response = gate.validate_http_json("chatterbox_synthesize", response)
+    except ValueError as exc:
+        raise SystemExit(f"BLOCKED_HORUS_NOT_SPOKEN: {exc}") from exc
     source = sr.resolve_host_audio(str(response.get("finished_response_audio") or ""))
     if source is None:
         raise SystemExit(
@@ -186,9 +197,14 @@ def main() -> int:
     sr = _load("speak_reply")
     tones = list(_load("map_delivery_tone").ALLOWED_TONES)
 
+    # Resume/retry checkpoint: an existing transcript is an explicit versioned
+    # input, never an invisible one. The receipt binds base + newly voiced rows
+    # so a partial earlier run cannot silently inflate or shrink the claim.
+    base_lines = len(transcript_tail(run_dir, limit=10**6))
     receipt: dict[str, Any] = {
         "schema": "persona_dream.dynamic_conversation_receipt.v1",
         "run_dir": str(run_dir), "turn_pairs": [], "mocked": False, "live": True,
+        "transcript_base_lines": base_lines,
     }
     for i in range(1, args.turns + 1):
         horus, tau_receipt = draft_horus_turn(run_dir, adapter, tones, args.opening_topic)
@@ -234,6 +250,7 @@ def main() -> int:
 
     receipt["status"] = "PASS_DYNAMIC_CONVERSATION"
     receipt["turn_count"] = sum(2 for _ in receipt["turn_pairs"])
+    receipt["transcript_total_lines"] = len(transcript_tail(run_dir, limit=10**6))
     receipt["voice_delivery"] = {
         "rendered_turn_count": receipt["turn_count"],
         "audio_sha256_count": sum(

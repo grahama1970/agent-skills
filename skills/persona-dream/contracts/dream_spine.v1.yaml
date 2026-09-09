@@ -74,7 +74,8 @@ steps:
     args: ["--persona", "{persona}", "--cycle-id", "{cycle_id}", "--about", "{idea}"]
     consumes: []
     produces: [storyboard_plan.json, selection_receipt.v1.json, residue_links.json,
-               phase14_tom.json, observation_packet.json]
+               phase14_tom.json, observation_packet.json,
+               voice_weights/dream_voice_weight_profile.v1.json]
     validation: {input: pydantic_first, output: pydantic_first, failure: triage-error}
     proves: residue was selected, dreamt, observed, interpreted, and persisted
     does_not_prove: that the dream is meaningful or that recall improves
@@ -84,7 +85,9 @@ steps:
     command: write-dream-journal
     run_dir_arg: null
     args: ["--cycle", "{cycle_id}", "--persona", "{persona}"]
-    consumes: [selection_receipt.v1.json, residue_links.json, phase14_tom.json, observation_packet.json]
+    consumes: [selection_receipt.v1.json, residue_links.json, phase14_tom.json,
+               observation_packet.json, storyboard_plan.json,
+               voice_weights/dream_voice_weight_profile.v1.json]
     produces: [dream_journal.v1.json, dream_journal.md]
     validation: {input: pydantic_first, output: pydantic_first, failure: triage-error}
     proves: she wrote an entry conforming to persona_journal.v1
