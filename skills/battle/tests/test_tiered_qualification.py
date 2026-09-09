@@ -29,6 +29,7 @@ def test_live_gate_accepts_current_same_run_non_fixture_receipts(tmp_path: Path,
     arena = _write(
         tmp_path / "arena.json",
         {
+            "schema": "battle.live_arena_receipt.v1",
             "status": "PASS",
             "mocked": False,
             "live": "brave_search_docker_arena_oracle_tau_harness",
@@ -40,6 +41,7 @@ def test_live_gate_accepts_current_same_run_non_fixture_receipts(tmp_path: Path,
     pixi = _write(
         tmp_path / "pixi.json",
         {
+            "schema": "battle.live_pixi_browser_receipt.v1",
             "status": "PASS",
             "mocked": False,
             "live": True,
@@ -60,6 +62,7 @@ def test_live_gate_rejects_stale_source_and_fixture_backed_browser(tmp_path: Pat
     arena = _write(
         tmp_path / "arena.json",
         {
+            "schema": "battle.live_arena_receipt.v1",
             "status": "PASS",
             "mocked": False,
             "live": "brave_search_docker_arena_oracle_tau_harness",
@@ -71,6 +74,7 @@ def test_live_gate_rejects_stale_source_and_fixture_backed_browser(tmp_path: Pat
     pixi = _write(
         tmp_path / "pixi.json",
         {
+            "schema": "battle.live_pixi_browser_receipt.v1",
             "status": "PASS",
             "mocked": False,
             "live": True,

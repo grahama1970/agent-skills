@@ -3911,6 +3911,185 @@ def probe_battle_current_status_claim_gates(summary_path: Path) -> int:
 
 
 
+
+def _battle_source() -> dict[str, str]:
+    return {
+        "commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, text=True).strip(),
+        "battle_tree": subprocess.check_output(["git", "rev-parse", "HEAD:skills/battle"], cwd=REPO_ROOT, text=True).strip(),
+    }
+
+
+def _same_run_live_qualification_receipt(source: dict[str, str]) -> dict[str, Any]:
+    return {
+        "schema": "battle.same_run_arena_pixi_qualification.v1",
+        "status": "PASS",
+        "mocked": False,
+        "live": True,
+        "run_id": "battle-proof-rung-separation",
+        "source_commit": source["commit"],
+        "source_tree": source["battle_tree"],
+        "browser": {"status": "PASS", "cdp_command": {"exit_code": 0}},
+        "published_fixture": {"fixture_key": "battle-proof-rung-separation", "fixture_sha256": "f" * 64},
+    }
+
+
+def _live_pair_receipts(source: dict[str, str]) -> tuple[dict[str, Any], dict[str, Any]]:
+    arena = {
+        "schema": "battle.live_arena_receipt.v1",
+        "status": "PASS",
+        "mocked": False,
+        "live": "tau_docker_judge_arena",
+        "run_id": "battle-proof-rung-separation",
+        "source_commit": source["commit"],
+        "source_tree": source["battle_tree"],
+    }
+    pixi = {
+        "schema": "battle.live_pixi_browser_receipt.v1",
+        "status": "PASS",
+        "mocked": False,
+        "live": True,
+        "run_id": "battle-proof-rung-separation",
+        "fixture_backed": False,
+        "source_commit": source["commit"],
+        "source_tree": source["battle_tree"],
+    }
+    return arena, pixi
+
+
+def _fast_sanity_fixture(source: dict[str, str]) -> dict[str, Any]:
+    return {
+        "schema": "battle.tiered_fast_sanity_gate.v1",
+        "status": "PASS",
+        "mocked": False,
+        "live": False,
+        "source": source,
+        "command_result": {"exit_code": 0},
+        "proof_scope": "offline sanity plus local deterministic fixture checks; no live provider/Docker/browser qualification",
+    }
+
+
+def probe_battle_proof_rung_separation(summary_path: Path) -> int:
+    suite = "battle-proof-rung-separation"
+    out_root = summary_path.parent / suite
+    if out_root.exists():
+        shutil.rmtree(out_root)
+    out_root.mkdir(parents=True)
+    source = _battle_source()
+
+    fast_path = out_root / "fast-sanity-only.json"
+    _write_json(fast_path, _fast_sanity_fixture(source))
+
+    fast_pair_out = out_root / "fast-as-live-pair-gate.json"
+    fast_pair = _run_in(
+        [str(RUN_SH), "tiered-gate", "live", "--arena-receipt", str(fast_path), "--pixi-receipt", str(fast_path), "--out", str(fast_pair_out)],
+        cwd=REPO_ROOT,
+        timeout=240,
+    )
+    (out_root / "fast-as-live-pair.stdout.txt").write_text(fast_pair.stdout, encoding="utf-8")
+    (out_root / "fast-as-live-pair.stderr.txt").write_text(fast_pair.stderr, encoding="utf-8")
+    fast_pair_receipt = _read_json(fast_pair_out)
+    for expected in ("arena_receipt_fast_sanity_substitution_rejected", "pixi_receipt_fast_sanity_substitution_rejected"):
+        if expected not in (fast_pair_receipt.get("errors") or []):
+            raise AssertionError(f"live pair gate did not reject fast sanity proof rung: {fast_pair_receipt}")
+    if fast_pair.returncode == 0 or fast_pair_receipt.get("status") != "FAIL":
+        raise AssertionError(f"fast sanity unexpectedly passed live pair gate: {fast_pair_receipt}")
+
+    fast_same_out = out_root / "fast-as-same-run-live-gate.json"
+    fast_same = _run_in(
+        [str(RUN_SH), "tiered-gate", "same-run-live", "--same-run-receipt", str(fast_path), "--out", str(fast_same_out)],
+        cwd=REPO_ROOT,
+        timeout=240,
+    )
+    (out_root / "fast-as-same-run.stdout.txt").write_text(fast_same.stdout, encoding="utf-8")
+    (out_root / "fast-as-same-run.stderr.txt").write_text(fast_same.stderr, encoding="utf-8")
+    fast_same_receipt = _read_json(fast_same_out)
+    if "same_run_receipt_fast_sanity_substitution_rejected" not in (fast_same_receipt.get("errors") or []):
+        raise AssertionError(f"same-run gate did not reject fast sanity proof rung: {fast_same_receipt}")
+    if fast_same.returncode == 0 or fast_same_receipt.get("status") != "FAIL":
+        raise AssertionError(f"fast sanity unexpectedly passed same-run live gate: {fast_same_receipt}")
+
+    arena_payload, pixi_payload = _live_pair_receipts(source)
+    arena_path = out_root / "live-arena.json"
+    pixi_path = out_root / "live-pixi.json"
+    _write_json(arena_path, arena_payload)
+    _write_json(pixi_path, pixi_payload)
+    live_pair_out = out_root / "live-pair-gate.json"
+    live_pair = _run_in(
+        [str(RUN_SH), "tiered-gate", "live", "--arena-receipt", str(arena_path), "--pixi-receipt", str(pixi_path), "--out", str(live_pair_out)],
+        cwd=REPO_ROOT,
+        timeout=240,
+    )
+    (out_root / "live-pair.stdout.txt").write_text(live_pair.stdout, encoding="utf-8")
+    (out_root / "live-pair.stderr.txt").write_text(live_pair.stderr, encoding="utf-8")
+    live_pair_receipt = _read_json(live_pair_out)
+    if live_pair.returncode != 0 or live_pair_receipt.get("status") != "PASS" or live_pair_receipt.get("errors"):
+        raise AssertionError(f"live pair proof rung did not pass: {live_pair_receipt}")
+
+    same_run_path = out_root / "same-run-live.json"
+    _write_json(same_run_path, _same_run_live_qualification_receipt(source))
+    same_run_out = out_root / "same-run-live-gate.json"
+    same_run = _run_in(
+        [str(RUN_SH), "tiered-gate", "same-run-live", "--same-run-receipt", str(same_run_path), "--out", str(same_run_out)],
+        cwd=REPO_ROOT,
+        timeout=240,
+    )
+    (out_root / "same-run-live.stdout.txt").write_text(same_run.stdout, encoding="utf-8")
+    (out_root / "same-run-live.stderr.txt").write_text(same_run.stderr, encoding="utf-8")
+    same_run_receipt = _read_json(same_run_out)
+    if same_run.returncode != 0 or same_run_receipt.get("status") != "PASS" or same_run_receipt.get("errors"):
+        raise AssertionError(f"same-run live proof rung did not pass: {same_run_receipt}")
+
+    checks = [
+        {
+            "name": "fast_sanity_rejected_by_live_pair_gate",
+            "status": "PASS",
+            "receipt": str(fast_pair_out),
+            "errors": fast_pair_receipt.get("errors"),
+        },
+        {
+            "name": "fast_sanity_rejected_by_same_run_live_gate",
+            "status": "PASS",
+            "receipt": str(fast_same_out),
+            "errors": fast_same_receipt.get("errors"),
+        },
+        {
+            "name": "live_pair_receipts_pass_live_gate",
+            "status": "PASS",
+            "receipt": str(live_pair_out),
+        },
+        {
+            "name": "same_run_live_receipt_passes_live_gate",
+            "status": "PASS",
+            "receipt": str(same_run_out),
+        },
+    ]
+    return _emit(
+        summary_path,
+        _summary(
+            suite=suite,
+            live="battle_tiered_gate_proof_class_validator_with_current_source_receipts",
+            checks=checks,
+            artifacts={
+                "fast_sanity_only": str(fast_path),
+                "fast_as_live_pair_gate": str(fast_pair_out),
+                "fast_as_same_run_live_gate": str(fast_same_out),
+                "live_pair_gate": str(live_pair_out),
+                "same_run_live_gate": str(same_run_out),
+            },
+            claims_proves=[
+                "Offline fast sanity receipts cannot satisfy the live pair qualification gate.",
+                "Offline fast sanity receipts cannot satisfy the same-run live qualification gate.",
+                "Current-source live proof-class receipts can still satisfy their matching live qualification gates.",
+            ],
+            claims_does_not_prove=[
+                "fresh provider campaign generation",
+                "production deployment",
+                "overnight campaign breadth",
+            ],
+        ),
+    )
+
+
 def probe_battle_terminal_semantics(summary_path: Path) -> int:
     suite = "battle-terminal-semantics"
     out_root = summary_path.parent / suite
@@ -4226,6 +4405,8 @@ def main() -> int:
             return probe_battle_terminal_semantics(args.summary)
         if args.suite == "battle-current-status-claim-gates":
             return probe_battle_current_status_claim_gates(args.summary)
+        if args.suite == "battle-proof-rung-separation":
+            return probe_battle_proof_rung_separation(args.summary)
         if args.suite == "battle-commentary-causality":
             return probe_battle_commentary_causality(args.summary)
         if args.suite == "battle-adaptive-improvement":

@@ -324,6 +324,14 @@
       "evidence_required": {
         "adversarial_live_e2e": true
       }
+    },
+    {
+      "id": "battle.proof_rungs.fast_sanity_live_separation",
+      "description": "Fast offline sanity receipts cannot satisfy live backend qualification proof rungs; live gates require matching live receipt classes.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
     }
   ],
   "seams": [
@@ -855,6 +863,20 @@
         "scorekeeper proves only totals without explaining team scans and attempts",
         "adaptive lineage is claimed in prose but absent from round receipts",
         "human report reads like receipt laundering instead of match commentary"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "proof_rungs.fast_sanity_live_separation",
+      "claim_id": "battle.proof_rungs.fast_sanity_live_separation",
+      "seam_type": "proof-class/provenance boundary",
+      "criticality": "critical",
+      "failure_modes": [
+        "battle.tiered_fast_sanity_gate.v1 is accepted by a live qualification gate",
+        "live qualification passes without an explicit live receipt schema",
+        "same-run live qualification accepts an offline deterministic fixture receipt"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -2029,6 +2051,39 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/small-medium-production-battle.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-proof-rung-separation",
+      "category": "battle-proof-rung-separation",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.proof_rungs.fast_sanity_live_separation"
+      ],
+      "seams": [
+        "proof_rungs.fast_sanity_live_separation"
+      ],
+      "timeout_seconds": 360,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-proof-rung-separation --summary /tmp/battle-agentic-evals/battle-proof-rung-separation.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-proof-rung-separation"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-proof-rung-separation.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800

@@ -23,6 +23,12 @@ REPO_ROOT = SKILL_DIR.parents[1]
 RUN_SH = SKILL_DIR / "run.sh"
 SANITY_SH = SKILL_DIR / "sanity.sh"
 
+FAST_SANITY_SCHEMA = "battle.tiered_fast_sanity_gate.v1"
+LIVE_GATE_SCHEMA = "battle.tiered_live_qualification_gate.v1"
+SAME_RUN_LIVE_SCHEMA = "battle.same_run_arena_pixi_qualification.v1"
+LIVE_ARENA_SCHEMAS = frozenset({"battle.live_arena_receipt.v1", "battle.adaptive_red_blue_lineage_canary.v1"})
+LIVE_PIXI_SCHEMAS = frozenset({"battle.live_pixi_browser_receipt.v1"})
+
 
 def _utc() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
@@ -111,6 +117,15 @@ def _source_values(payload: dict[str, Any]) -> tuple[Any, Any]:
     return commit, tree
 
 
+def _require_proof_class(label: str, payload: dict[str, Any], allowed: frozenset[str], errors: list[str]) -> None:
+    schema = payload.get("schema")
+    if schema == FAST_SANITY_SCHEMA:
+        errors.append(f"{label}_receipt_fast_sanity_substitution_rejected")
+        return
+    if schema not in allowed:
+        errors.append(f"{label}_receipt_schema_not_live_qualification:{schema}:expected:{','.join(sorted(allowed))}")
+
+
 def validate_live(arena_receipt: Path, pixi_receipt: Path, out: Path) -> int:
     arena = _read(arena_receipt)
     pixi = _read(pixi_receipt)
@@ -122,6 +137,8 @@ def validate_live(arena_receipt: Path, pixi_receipt: Path, out: Path) -> int:
     arena_commit, arena_tree = _source_values(arena)
     pixi_commit, pixi_tree = _source_values(pixi)
 
+    _require_proof_class("arena", arena, LIVE_ARENA_SCHEMAS, errors)
+    _require_proof_class("pixi", pixi, LIVE_PIXI_SCHEMAS, errors)
     if arena.get("status") != "PASS":
         errors.append("arena_receipt_status_not_pass")
     if pixi.get("status") not in {"PASS", "passed", None}:
@@ -148,7 +165,7 @@ def validate_live(arena_receipt: Path, pixi_receipt: Path, out: Path) -> int:
         errors.append("pixi_source_tree_stale_or_missing")
 
     receipt = {
-        "schema": "battle.tiered_live_qualification_gate.v1",
+        "schema": LIVE_GATE_SCHEMA,
         "status": "PASS" if not errors else "FAIL",
         "mocked": False,
         "live": True,
@@ -193,8 +210,11 @@ def validate_same_run(same_run_receipt: Path, out: Path) -> int:
         else {}
     )
 
-    if receipt_in.get("schema") != "battle.same_run_arena_pixi_qualification.v1":
-        errors.append("same_run_receipt_schema_mismatch")
+    same_run_schema = receipt_in.get("schema")
+    if same_run_schema == FAST_SANITY_SCHEMA:
+        errors.append("same_run_receipt_fast_sanity_substitution_rejected")
+    elif same_run_schema != SAME_RUN_LIVE_SCHEMA:
+        errors.append(f"same_run_receipt_schema_mismatch:{same_run_schema}:expected:{SAME_RUN_LIVE_SCHEMA}")
     if receipt_in.get("status") != "PASS":
         errors.append("same_run_receipt_status_not_pass")
     if receipt_in.get("mocked") is not False:
@@ -217,7 +237,7 @@ def validate_same_run(same_run_receipt: Path, out: Path) -> int:
         errors.append("same_run_published_fixture_metadata_missing")
 
     receipt = {
-        "schema": "battle.tiered_live_qualification_gate.v1",
+        "schema": LIVE_GATE_SCHEMA,
         "status": "PASS" if not errors else "FAIL",
         "mocked": False,
         "live": True,
@@ -253,7 +273,7 @@ def run_fast(out: Path) -> int:
     command = ["bash", str(SANITY_SH)]
     result = _run(command, cwd=REPO_ROOT)
     receipt = {
-        "schema": "battle.tiered_fast_sanity_gate.v1",
+        "schema": FAST_SANITY_SCHEMA,
         "status": "PASS" if result["exit_code"] == 0 else "FAIL",
         "mocked": False,
         "live": False,
