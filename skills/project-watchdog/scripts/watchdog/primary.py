@@ -419,7 +419,6 @@ def reattach_and_resume(root: Path, journal: Path, *, apply: bool, timeout_s: in
         rerun_reviewer = prior.get("terminal") is True and any(token in recovery_text for token in (
             "VerificationPlan", "verification plan", "review must supply exactly one",
             "proof plan does not cover", "native verification plan omits",
-            "independent proof gate failed", "predates this dispatch",
         ))
         finalize_only = (prior.get("terminal") is True
             and prior.get("terminal_status") in {"PASS", "COMPLETED"}

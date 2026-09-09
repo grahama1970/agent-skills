@@ -113,7 +113,10 @@ def observe(ask_root: Path) -> dict[str, Any] | None:
                 control = {}
         result_path = receipts / "command-spec-resume-result.json"
         fresh_result = file_hash(result_path) not in {None, fence["prior_result_sha256"]}
+        fallback_store_hash = None
         if not fresh_result:
+            unchanged = False
+            failed = False
             if command is not None:
                 unchanged = (
                     file_hash(receipts / "command-spec-resume-prep.json") == fence["prior_prep_sha256"]
@@ -126,7 +129,33 @@ def observe(ask_root: Path) -> dict[str, Any] | None:
                     reason="resume invocation failed before native state changed" if unchanged and failed
                     else "resume result absent; current execution not settled",
                 )
-            return observation
+            if failed:
+                if not unchanged:
+                    fallback_store_hash = fence.get("prior_store_sha256")
+                result_hash = file_hash(result_path)
+                result = load_json(result_path) if result_hash is not None else {}
+                result_journal = result.get("watchdog_journal") or {}
+                archive = Path(result.get("archive_path") or "")
+                archive_hash = file_hash(archive)
+                for prior in sorted(receipts.glob("watchdog-resume-generation-*.json"),
+                                    key=lambda item: item.stat().st_mtime, reverse=True):
+                    candidate = load_json(prior)
+                    if (candidate.get("schema") == "agent_skills.project_watchdog.resume_generation.v1"
+                            and Path(candidate.get("run_dir", "")).resolve() == run_dir.resolve()
+                            and candidate.get("source_sha256") == fence["source_sha256"]
+                            and candidate.get("journal") == fence["journal"]
+                            and result_hash not in {None, candidate.get("prior_result_sha256")}
+                            and result_journal.get("lease_event_id") == candidate.get("lease_event_id")
+                            and result_journal.get("lease_agent") == candidate.get("lease_agent")
+                            and archive_hash == candidate.get("prior_store_sha256")):
+                        path, fence = prior, candidate
+                        observation.update(resume_generation=fence["lease_event_id"], terminal_source=str(path),
+                                           recovered_from_failed_resume_generation=True,
+                                           failed_resume_changed_state=not unchanged)
+                        fresh_result = True
+                        break
+            if not fresh_result:
+                return observation
         result = load_json(result_path)
         plan_path = receipts / "command-spec-resume/dag.json"
         native_path = receipts / "dag-receipt.json"
@@ -154,7 +183,11 @@ def observe(ask_root: Path) -> dict[str, Any] | None:
         preserved = result.get("preserved_nodes") or []
         if native.get("durable") is True:
             before = _admitted(archive, source["dag_id"])
-            after = _admitted(receipts / "dag-run.sqlite3", source["dag_id"])
+            after_store = receipts / "dag-run.sqlite3"
+            if fallback_store_hash and file_hash(after_store) != fallback_store_hash:
+                after_store = next((p for p in receipts.glob("dag-run.command-spec-resume-*.sqlite3")
+                                    if file_hash(p) == fallback_store_hash), after_store)
+            after = _admitted(after_store, source["dag_id"])
             for node in preserved:
                 old_id, old = before[node]
                 _, new = after[node]
