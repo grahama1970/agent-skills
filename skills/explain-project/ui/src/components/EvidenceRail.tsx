@@ -53,9 +53,9 @@ export function EvidenceRail({
   return (
     <aside
       className={[
-        'space-y-3 overflow-y-auto rounded-xl',
+        'space-y-2.5 overflow-y-auto rounded-xl',
         'border border-zinc-800',
-        'bg-zinc-900/70 p-3 text-sm',
+        'bg-zinc-900/70 p-3 text-xs',
       ].join(' ')}
     >
       <div>
@@ -97,8 +97,8 @@ export function EvidenceRail({
           data-qs-action="SOURCE_REVEAL_REQUEST"
           title="Prepare a preserve-focus VS Code reveal intent"
           className={[
-            'mt-2 w-full rounded border border-zinc-700 bg-zinc-900',
-            'py-1.5 px-3 text-xs font-medium text-zinc-200',
+            'mt-2 w-full min-h-[44px] rounded border border-zinc-700 bg-zinc-900',
+            'py-2 px-3 text-xs font-medium text-zinc-200',
             'hover:border-cyan-500/50 hover:bg-zinc-800 transition-all',
           ].join(' ')}
           onClick={() => {
@@ -110,7 +110,7 @@ export function EvidenceRail({
           Reveal source
         </button>
 
-        <p className="mt-2 text-[11px] font-mono text-zinc-500">
+        <p className="mt-2 text-xs font-mono text-zinc-400">
           {state.source.reveal_intent
             ? (
                 `Intent r${state.source.reveal_intent.revision}; `
@@ -140,8 +140,8 @@ export function EvidenceRail({
         </p>
 
         {debuggerTarget?.locals.length ? (
-          <div className="mt-2 text-[11px] font-mono text-zinc-400 bg-zinc-900/60 p-1.5 rounded border border-zinc-800">
-            <span className="text-zinc-500">locals: </span>
+          <div className="mt-2 text-xs font-mono text-zinc-300 bg-zinc-900/60 p-1.5 rounded border border-zinc-800">
+            <span className="text-zinc-400">locals: </span>
             {debuggerTarget.locals.join(', ')}
           </div>
         ) : null}
@@ -152,8 +152,8 @@ export function EvidenceRail({
           data-qs-action="DEBUGGER_PREPARE_TARGET"
           title="Prepare debugger target without running the debugger"
           className={[
-            'mt-2 w-full rounded border border-zinc-700 bg-zinc-900',
-            'py-1.5 px-3 text-xs font-medium text-zinc-200',
+            'mt-2 w-full min-h-[44px] rounded border border-zinc-700 bg-zinc-900',
+            'py-2 px-3 text-xs font-medium text-zinc-200',
             'hover:border-cyan-500/50 hover:bg-zinc-800 transition-all',
           ].join(' ')}
           onClick={() => {
@@ -165,7 +165,7 @@ export function EvidenceRail({
           Prepare target
         </button>
 
-        <p className="mt-2 text-[11px] font-mono text-zinc-500">
+        <p className="mt-2 text-xs font-mono text-zinc-400">
           {state.debugger.prepare_intent
             ? 'Intent only; execution_allowed=false'
             : state.debugger.status}

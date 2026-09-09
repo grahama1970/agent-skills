@@ -4,10 +4,10 @@ import type {
 } from '../types'
 
 const tone: Record<IntegrationStatus, string> = {
-  READY: 'border-emerald-600/60 text-emerald-300 bg-emerald-950/30',
-  STALE: 'border-amber-600/60 text-amber-300 bg-amber-950/30',
-  FAILED: 'border-red-600/60 text-red-300 bg-red-950/30',
-  NOT_CONFIGURED: 'border-zinc-700 text-zinc-400 bg-zinc-900/50',
+  READY: 'border-emerald-600/60 text-emerald-300 bg-emerald-950/40',
+  STALE: 'border-amber-600/60 text-amber-300 bg-amber-950/40',
+  FAILED: 'border-red-600/60 text-red-300 bg-red-950/40',
+  NOT_CONFIGURED: 'border-zinc-700 text-zinc-400 bg-zinc-900/60',
 }
 
 const dotColor: Record<IntegrationStatus, string> = {
@@ -27,13 +27,13 @@ function HealthPill({
   return (
     <span
       className={[
-        'inline-flex items-center gap-1.5 rounded-md border px-2 py-1 font-mono text-[11px] leading-none',
+        'inline-flex items-center gap-1.5 rounded-md border px-2 py-1 font-mono text-xs leading-none',
         tone[status],
       ].join(' ')}
       title={`${label}: ${status}`}
     >
       <span className={`h-1.5 w-1.5 rounded-full ${dotColor[status]}`} />
-      <span>{label} : {status}</span>
+      <span>{label}: {status}</span>
     </span>
   )
 }

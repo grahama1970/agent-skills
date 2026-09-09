@@ -69,9 +69,9 @@ export function ExplainerNavigator({
 
   return (
     <section className="rounded-lg border border-zinc-800 bg-zinc-950/80 p-3">
-      <div className="mb-2 flex items-center justify-between text-xs text-zinc-400">
+      <div className="mb-2 flex items-center justify-between text-xs">
         <span className="font-semibold uppercase tracking-wider text-cyan-300">
-          Explainer Step
+          Explainer Catalog
         </span>
         <span className="font-mono font-bold text-cyan-400">
           {displayStep} / {totalCount}
@@ -86,7 +86,7 @@ export function ExplainerNavigator({
         data-qid="cockpit:explainer:slider"
         data-qs-action="EXPLAINER_SLIDER_SET"
         title="Jump to an explainer by index"
-        className="w-full cursor-pointer accent-cyan-400"
+        className="w-full h-1.5 cursor-pointer accent-cyan-400"
         onChange={(event) => {
           selectIndex(
             Number(event.currentTarget.value),
@@ -95,7 +95,7 @@ export function ExplainerNavigator({
       />
 
       <div className="mt-2 flex items-center gap-2 text-xs">
-        <span className="text-zinc-400">Jump:</span>
+        <span className="text-zinc-400 font-mono">Jump index:</span>
         <input
           type="number"
           min={1}
@@ -104,7 +104,7 @@ export function ExplainerNavigator({
           data-qid="cockpit:explainer:page-input"
           data-qs-action="EXPLAINER_PAGE_SET"
           title="Type an exact explainer index"
-          className="w-full rounded border border-zinc-800 bg-zinc-900 px-2 py-1 font-mono text-xs text-zinc-200 outline-none focus:border-cyan-500"
+          className="w-full rounded border border-zinc-700 bg-zinc-900 px-2 py-1 font-mono text-xs text-zinc-200 outline-none focus:border-cyan-500"
           onChange={(event) => {
             const val = Number(event.currentTarget.value)
             selectIndex(val - 1)

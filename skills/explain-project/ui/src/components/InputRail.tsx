@@ -66,7 +66,7 @@ function ExplainerButton({
       title={`Select ${explainer.title}`}
       aria-current={selected ? 'true' : undefined}
       className={[
-        'w-full block text-left rounded-lg border p-3 transition-all',
+        'w-full block text-left rounded-lg border p-3 min-h-[44px] transition-all',
         selected
           ? 'border-cyan-400 bg-cyan-950/40 text-cyan-100 shadow-sm'
           : 'border-zinc-800 bg-zinc-950/60 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900',
@@ -80,14 +80,14 @@ function ExplainerButton({
         )
       }}
     >
-      <span className="block text-sm font-medium leading-snug">
+      <span className="block text-xs font-semibold leading-snug">
         {explainer.title}
       </span>
 
       <span className="mt-1 flex items-center gap-1.5 text-xs text-zinc-400 font-mono">
         <span>{explainer.question_family}</span>
         <span>·</span>
-        <span className="text-cyan-300/80">{explainer.steps} steps</span>
+        <span className="text-cyan-300">{explainer.steps} steps</span>
       </span>
     </button>
   )
@@ -204,7 +204,7 @@ export function InputRail({
   return (
     <aside
       className={[
-        'space-y-3 overflow-y-auto rounded-xl',
+        'space-y-2.5 overflow-y-auto rounded-xl',
         'border border-zinc-800',
         'bg-zinc-900/70 p-3',
       ].join(' ')}
@@ -225,7 +225,7 @@ export function InputRail({
           title="Paste or type an interview question"
           className={[
             'min-w-0 flex-1 rounded-lg border border-zinc-700',
-            'bg-zinc-950 px-3 py-2 text-sm text-zinc-100',
+            'bg-zinc-950 px-3 py-2 text-xs text-zinc-100 min-h-[44px]',
             'placeholder-zinc-500 outline-none focus:border-cyan-500',
           ].join(' ')}
           placeholder="Paste interview question"
@@ -248,8 +248,8 @@ export function InputRail({
           data-qs-action="QUESTION_MANUAL_SUBMIT"
           title="Route the current interview question"
           className={[
-            'shrink-0 rounded-lg border border-cyan-500/80',
-            'bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300',
+            'shrink-0 min-h-[44px] rounded-lg border border-cyan-500/80',
+            'bg-cyan-500/10 px-4 py-2 text-xs font-semibold text-cyan-300',
             'hover:bg-cyan-500 hover:text-zinc-950 transition-all',
           ].join(' ')}
           onClick={() => {
@@ -272,7 +272,7 @@ export function InputRail({
         title="Search existing explainers"
         className={[
           'w-full rounded-lg border border-zinc-800 bg-zinc-950',
-          'px-3 py-2 text-xs outline-none focus:border-cyan-500',
+          'px-3 py-2 text-xs outline-none focus:border-cyan-500 min-h-[44px]',
         ].join(' ')}
         placeholder="Find explainer"
         value={query}
@@ -289,7 +289,7 @@ export function InputRail({
         data-qs-action="EXPLAINER_IMPORT_TOGGLE"
         title="Paste a session-only explainer"
         className={[
-          'w-full rounded-lg bg-cyan-500/20 border border-cyan-500/40',
+          'w-full min-h-[44px] rounded-lg bg-cyan-500/20 border border-cyan-500/40',
           'px-3 py-2 text-xs font-semibold text-cyan-200',
           'hover:bg-cyan-500 hover:text-zinc-950 transition-all',
         ].join(' ')}
@@ -327,7 +327,7 @@ export function InputRail({
             data-qs-action="EXPLAINER_IMPORT_APPLY"
             title="Validate and import pasted explainer"
             className={[
-              'w-full rounded-lg border border-cyan-500 px-3 py-1.5',
+              'w-full min-h-[44px] rounded-lg border border-cyan-500 px-3 py-1.5',
               'text-xs font-semibold text-cyan-300 hover:bg-cyan-950/50',
             ].join(' ')}
             onClick={() => {

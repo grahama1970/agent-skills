@@ -111,7 +111,7 @@ export function TeleprompterStage({
             'mt-6 rounded-xl',
             'border border-amber-400/40',
             'bg-amber-950/20 p-4',
-            'text-base text-amber-100',
+            'text-sm text-amber-100',
           ].join(' ')}
         >
           <div className="mb-1 text-xs font-bold uppercase tracking-[0.24em] text-amber-300">
@@ -134,7 +134,7 @@ export function TeleprompterStage({
             title="Previous step (ArrowLeft)"
             className={[
               'flex items-center gap-2 rounded-lg border border-zinc-700/80',
-              'bg-zinc-900 px-4 py-2 text-sm font-semibold text-zinc-300',
+              'bg-zinc-900 px-4 py-2 min-h-[44px] text-sm font-semibold text-zinc-300',
               'hover:border-zinc-500 hover:bg-zinc-800 transition-all',
             ].join(' ')}
             onClick={() => {
@@ -151,7 +151,7 @@ export function TeleprompterStage({
             title="Next step (ArrowRight)"
             className={[
               'flex items-center gap-2 rounded-lg border border-cyan-500/60',
-              'bg-cyan-950/40 px-5 py-2 text-sm font-semibold text-cyan-200',
+              'bg-cyan-950/40 px-5 py-2 min-h-[44px] text-sm font-semibold text-cyan-200',
               'hover:bg-cyan-500 hover:text-zinc-950 transition-all shadow-sm',
             ].join(' ')}
             onClick={() => {

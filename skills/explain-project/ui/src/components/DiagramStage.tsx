@@ -17,12 +17,12 @@ export function DiagramStage({
   const nodes = state.diagram.node_ids.map(
     (nodeId, index) => ({
       nodeId,
-      y: 22 + index * 36,
+      y: 18 + index * 30,
     }),
   )
   const height = Math.max(
-    90,
-    28 + nodes.length * 36,
+    70,
+    24 + nodes.length * 30,
   )
 
   return (
@@ -40,7 +40,7 @@ export function DiagramStage({
           viewBox={`0 0 280 ${height}`}
           role="img"
           aria-label="Current explainer diagram highlights"
-          className="cockpit-diagram-preview block w-full"
+          className="cockpit-diagram-preview block w-full max-h-36"
         >
           {nodes.length > 1 ? (
             <line
@@ -68,7 +68,7 @@ export function DiagramStage({
                   <circle
                     cx="22"
                     cy={y}
-                    r="11"
+                    r="10"
                     fill="none"
                     stroke="#22d3ee"
                     strokeWidth="1.5"
@@ -78,16 +78,16 @@ export function DiagramStage({
                 <circle
                   cx="22"
                   cy={y}
-                  r="6"
+                  r="5.5"
                   fill={isActive ? '#06b6d4' : '#27272a'}
                   stroke={isActive ? '#a5f3fc' : '#52525b'}
                   strokeWidth="2"
                 />
                 <text
-                  x="42"
+                  x="40"
                   y={y + 4}
                   fill={isActive ? '#cffafe' : '#a1a1aa'}
-                  fontSize="13"
+                  fontSize="12"
                   fontFamily="monospace"
                   fontWeight={isActive ? 'bold' : 'normal'}
                 >
@@ -113,13 +113,13 @@ export function DiagramStage({
         </p>
       ) : null}
 
-      <p className="mt-2 truncate font-mono text-[10px] text-zinc-500" title={state.diagram.rendered_svg_path ?? state.diagram.source_path ?? ''}>
+      <p className="mt-2 truncate font-mono text-xs text-zinc-400" title={state.diagram.rendered_svg_path ?? state.diagram.source_path ?? ''}>
         {state.diagram.rendered_svg_path
           ?? state.diagram.source_path
           ?? 'No diagram'}
       </p>
 
-      <p className="mt-2 text-[11px] font-mono text-zinc-500">
+      <p className="mt-2 text-xs font-mono text-zinc-400">
         {state.diagram.highlight_intent
           ? 'Display highlight only; mutation_allowed=false.'
           : 'No highlight intent.'}
