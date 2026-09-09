@@ -16,6 +16,7 @@ provides:
   - voice-render
 composes:
   - agentic-evals
+  - analyze-chatterbox-emotions
 complies:
   - best-practices-skills
   - best-practices-python
@@ -58,6 +59,9 @@ and writes a receipt. It is NOT the conversation control plane — that is
   it does not change rendering. Choose tone/intensity from it yourself (see
   `$best-practices-chatterbox`).
 - `--play`: local playback via `pw-play`.
+- `--analyze`: runs `/analyze-chatterbox-emotions` on the rendered WAV and embeds
+  the waveform/affect analysis in the receipt. Agentic evals use this as the
+  post-render evidence gate.
 
 Receipts and copies of the WAV go to
 `/mnt/storage12tb/skills/chatterbox-speak/outputs/`.

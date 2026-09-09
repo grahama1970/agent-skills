@@ -7,22 +7,24 @@
       "id": "speak-live-positive",
       "case_type": "positive",
       "real_world": true,
-      "command": "./run.sh speak --text 'Say something. [sigh]' --voice embry --tone neutral_warm --context 'eval fixture'",
+      "command": "./run.sh speak --text 'Say something. [sigh]' --voice embry --tone neutral_warm --context 'eval fixture' --analyze",
       "assertions": [
         "exit code 0",
         "stdout JSON has ok=true and existing non-empty wav path",
-        "receipt.json exists with schema chatterbox_speak.receipt.v1, mocked=false, live=true"
+        "receipt.json exists with schema chatterbox_speak.receipt.v1, mocked=false, live=true",
+        "receipt analysis (from analyze-chatterbox-emotions) present with affect.estimated_arousal, clipping, and duration metrics"
       ]
     },
     {
       "id": "speak-intensity-routing",
       "case_type": "positive",
       "real_world": true,
-      "command": "./run.sh speak --text 'This matters.' --voice embry --intensity high --tone firm_boundary",
+      "command": "./run.sh speak --text 'This matters.' --voice embry --intensity high --tone firm_boundary --analyze",
       "assertions": [
         "exit code 0",
         "receipt affect_effect.applied=true",
-        "backend id is chatterbox_base_affect (explicit intensity routes off turbo)"
+        "backend id is chatterbox_base_affect (explicit intensity routes off turbo)",
+        "receipt analysis affect.estimated_arousal >= 0.4 (high intensity should measure as elevated arousal)"
       ]
     },
     {
@@ -34,7 +36,7 @@
     }
   ],
   "claims": {
-    "proves": ["one-shot live render with receipt", "fail-closed on unknown voice"],
-    "does_not_prove": ["perceived emotional quality (use /analyze-chatterbox-emotions)", "conversation control plane behavior"]
+    "proves": ["one-shot live render with receipt", "fail-closed on unknown voice", "waveform-level affect evidence via analyze-chatterbox-emotions embedded in the receipt"],
+    "does_not_prove": ["real speaker emotion or human-perceived quality (acoustic proxies only)", "conversation control plane behavior"]
   }
 }

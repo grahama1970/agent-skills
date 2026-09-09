@@ -28,6 +28,8 @@ OUT_DIR = Path("/mnt/storage12tb/skills/chatterbox-speak/outputs")
 CONTAINER_OUT = "/out"
 HOST_OUT = Path.home() / "workspace/experiments/chatterbox/logs"
 
+ANALYZER = Path.home() / ".pi/agent/skills/analyze-chatterbox-emotions/run.sh"
+
 VOICES = {
     "embry": "/data/embry_ref.wav",
 }
@@ -80,6 +82,7 @@ def speak(
     intensity: str | None = typer.Option(None, help="low|medium|high; routes to base-affect backend (tags become literal)"),
     context: str = typer.Option("", help="Grounding note stored in the receipt (does not change rendering)"),
     play: bool = typer.Option(False, help="Play locally via pw-play"),
+    analyze: bool = typer.Option(False, help="Run /analyze-chatterbox-emotions on the WAV and embed the result in the receipt"),
 ) -> None:
     """Render one line and write WAV + receipt."""
     ref = ref_audio or VOICES.get(voice)
@@ -140,6 +143,17 @@ def speak(
     receipt_path = out / "receipt.json"
     receipt_path.write_text(json.dumps(record, indent=2))
 
+    if analyze:
+        proc = subprocess.run(
+            [str(ANALYZER), "analyze", "--audio", str(wav_copy), "--json"],
+            capture_output=True, text=True, check=False,
+        )
+        try:
+            record["analysis"] = json.loads(proc.stdout)
+        except json.JSONDecodeError:
+            _fail(f"analyzer failed (rc={proc.returncode}): {proc.stderr[:500]}")
+        receipt_path.write_text(json.dumps(record, indent=2))
+
     if play:
         rc = subprocess.run(["pw-play", str(wav_copy)], check=False).returncode
         record["playback"] = {"cmd": f"pw-play {wav_copy}", "returncode": rc}
@@ -148,7 +162,8 @@ def speak(
     print(json.dumps({"ok": True, "wav": str(wav_copy), "receipt": str(receipt_path),
                       "duration_seconds": receipt.duration_seconds,
                       "backend": (full.get("backend") or {}).get("id"),
-                      "tags_interpreted": (full.get("tag_handling") or {}).get("tags_interpreted")}, indent=2))
+                      "tags_interpreted": (full.get("tag_handling") or {}).get("tags_interpreted"),
+                      "analysis": (record.get("analysis") or {}).get("affect")}, indent=2))
 
 
 if __name__ == "__main__":
