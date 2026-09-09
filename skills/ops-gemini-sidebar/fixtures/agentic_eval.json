@@ -1,0 +1,78 @@
+{
+  "version": 2,
+  "skill": "ops-gemini-sidebar",
+  "trials": 3,
+  "proof_scope": "deterministic dry-run validation of typed coordinate plans and command receipts without desktop side effects",
+  "mocked": false,
+  "live": true,
+  "claims": {
+    "proves": "the skill validates coordinate plans, emits typed receipts, and keeps submit/copy-response dry-run by default",
+    "does_not_prove": "that a particular Chrome/Gemini window is present, that OS pointer injection works in this session, or that Gemini returns a useful answer"
+  },
+  "what_was_exercised": "plan, self-test, submit dry-run, and copy-response dry-run through the production run.sh entrypoint",
+  "what_remains_unverified": "live desktop DISPLAY targeting, Gemini provider response quality, dynamic copy-icon coordinates, and clipboard ownership across window managers",
+  "cases": [
+    {
+      "name": "coordinate-plan-emits-typed-json",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "readback": true,
+      "command": [
+        "bash",
+        "../run.sh",
+        "plan",
+        "--composer-x", "10",
+        "--composer-y", "20",
+        "--send-x", "30",
+        "--send-y", "40",
+        "--copy-x", "50",
+        "--copy-y", "60",
+        "--json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"schema\": \"ops_gemini_sidebar.coordinate_plan.v1\"",
+          "\"composer\"",
+          "\"copy\""
+        ]
+      }
+    },
+    {
+      "name": "self-test-validates-roundtrip",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "command": [
+        "bash",
+        "../run.sh",
+        "self-test",
+        "--json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"schema\": \"ops_gemini_sidebar.command_receipt.v1\"",
+          "\"status\": \"PASS\""
+        ]
+      }
+    },
+    {
+      "name": "sanity-keeps-live-actions-dry-run",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "bash",
+        "../sanity.sh"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "OPS_GEMINI_SIDEBAR_SANITY_PASS"
+        ]
+      }
+    }
+  ]
+}

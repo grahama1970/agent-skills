@@ -1,0 +1,13 @@
+[project]
+name = "ops-gemini-sidebar"
+version = "0.1.0"
+description = "OS-level clipboard and pointer loop for Chrome Gemini sidebar collaboration."
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "loguru>=0.7.0,<0.7.3",
+    "pydantic>=2.0",
+    "typer>=0.12.0",
+]
+
+[tool.uv]
+package = false

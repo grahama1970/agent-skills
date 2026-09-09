@@ -12,6 +12,15 @@ capabilities:
   meeting-companion-launch-plan:
     providers:
       - ops-google-meet
+  gemini-sidebar-clipboard-loop:
+    providers:
+      - ops-gemini-sidebar
+  browser-sidebar-coordinate-plan:
+    providers:
+      - ops-gemini-sidebar
+  gemini-response-copy-readback:
+    providers:
+      - ops-gemini-sidebar
   llm-completion:
     providers:
       - scillm
