@@ -23,6 +23,30 @@
       }
     },
     {
+      "name": "notify-bridge-skips-machine-actionable-needs-attention",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_watchdog_notify_bridge.py",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      },
+      "proves": "project-watchdog notify bridge does not page the human or Pi inbox for NEEDS_ATTENTION receipts that explicitly require no human input and provide authorized agent next steps.",
+      "does_not_prove": "Live Discord or Switchboard delivery; this is a deterministic policy gate over the bridge routing function."
+    },
+    {
       "name": "unit-suite",
       "type": "positive",
       "command": [

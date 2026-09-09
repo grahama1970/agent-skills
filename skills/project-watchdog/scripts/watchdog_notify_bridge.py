@@ -182,7 +182,20 @@ def _fmt(ev: dict) -> str:
     return "\n".join(lines)
 
 
+def requires_human_push(ev: dict) -> bool:
+    """Only page humans for human decisions, not machine-actionable repair receipts."""
+    if ev.get("status") == "COMPLETED":
+        return True
+    if ev.get("requires_human_input") is True:
+        return True
+    if ev.get("requires_human_input") is False and ev.get("next_steps"):
+        return False
+    return ev.get("status") in {"BLOCKED", "NEEDS_ATTENTION"}
+
+
 def push_webhook(ev: dict) -> str:
+    if not requires_human_push(ev):
+        return "skipped_machine_actionable"
     title = f"project-watchdog {ev.get('status')} — {ev.get('repo')}#{ev.get('issue')}"
     try:
         p = subprocess.run(
@@ -196,6 +209,14 @@ def push_webhook(ev: dict) -> str:
         return f"exit={p.returncode}"
     except Exception as exc:  # delivery failure never blocks
         return f"webhook_error: {exc}"[:200]
+
+
+def switchboard_delivery_decision(ev: dict, *, fresh: bool) -> str | None:
+    if not fresh:
+        return "skipped_stale"
+    if not requires_human_push(ev):
+        return "skipped_machine_actionable"
+    return None
 
 
 def push_switchboard(ev: dict) -> str:
@@ -252,7 +273,7 @@ def main() -> None:
         results.append({
             "dir": d.name, "status": ev.get("status"), "issue": ev.get("issue"),
             "webhook": push_webhook(ev),
-            "switchboard": push_switchboard(ev) if fresh else "skipped_stale",
+            "switchboard": switchboard_delivery_decision(ev, fresh=fresh) or push_switchboard(ev),
         })
     if not results:
         # Heartbeat: a silent stream is indistinguishable from a dead one.

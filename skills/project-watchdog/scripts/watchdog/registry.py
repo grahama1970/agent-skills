@@ -111,7 +111,8 @@ def prepare_repair_worktree(repo_dir: Path, worktree: Path, issue_number: int) -
 def worktree_readiness(worktree: Path, targets: set[str] | None = None) -> dict[str, Any]:
     from . import primary
     try:
-        return primary.readonly_preflight(worktree, primary.safe_targets(targets or {"?"}))
+        checked_targets = primary.safe_targets(targets) if targets is not None else ["__readiness_probe__"]
+        return primary.readonly_preflight(worktree, checked_targets)
     except (OSError, ValueError, RuntimeError) as exc:
         return {"ready": False, "worktree": str(worktree), "reasons": [str(exc)],
                 "requires_human_input": getattr(exc, "human", False)}
