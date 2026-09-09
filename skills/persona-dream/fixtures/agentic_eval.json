@@ -6,7 +6,7 @@
   "claims": {
     "proves": "Selected Persona Dream pipeline seams execute through real skill entrypoints: Pydantic step boundary triage, video_plan crew fail-closed gate, video_plan artifact production with crew bundle, provider packet dry-run routing, and pipeline-integrity audit surface with blocking finding readback.",
     "does_not_prove": "Live paid provider generation, human perceptual quality, manual review of every script, or semantic dream quality."
-  }, 
+  },
   "capability_claims": [
     {
       "id": "persona_dream.agentic_pipeline_driver",
@@ -19,6 +19,24 @@
     }
   ],
   "cases": [
+    {
+      "name": "spine-artifact-boundaries-reject-false-pass",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "real_world": true,
+      "required": true,
+      "supports_claims": ["persona_dream.agentic_pipeline_driver"],
+      "timeout_seconds": 240,
+      "command": [
+        "uv", "run", "--project", "..", "python", "../scripts/eval_spine_artifact_boundaries.py",
+        "--output", "/tmp/persona-dream-spine-boundary-agentic.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["SPINE_ARTIFACT_BOUNDARIES_OK"],
+        "artifacts": [{"path": "/tmp/persona-dream-spine-boundary-agentic.json", "json_pointer": "/status", "equals": "PASS"}]
+      }
+    },
     {
       "name": "pydantic-step-gate-triages-corrupt-input",
       "type": "adversarial",

@@ -9,21 +9,23 @@ yields Pydantic `errors()` data (`type`, `loc`, `ctx`) as the steering signal
 per best-practices-python `correctness-pydantic-steering` — never prose.
 
 Inputs: artifact paths. Outputs: [] on pass, or a list of pydantic error dicts.
-Failure modes: unreadable file, non-object JSON, missing/blank `schema` field,
-or a registered per-schema model rejecting the payload. Fail-closed: unknown
-schemas still must satisfy the envelope; registered schemas get the strict
-model. Extend the REGISTRY as schemas migrate off jsonschema (ticket tracks
-the full migration).
+Failure modes: unreadable file, malformed JSON/JSONL, missing/unknown schema,
+wrong artifact type or cycle, and rejected typed payload. The strict spine gate
+never admits an unknown schema using only an envelope. Legacy non-strict callers
+retain their documented envelope fallback.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 from pathlib import Path
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+
+from spine_artifact_models import SPINE_ARTIFACT_MODELS
 
 
 class ArtifactEnvelope(BaseModel):
@@ -51,9 +53,19 @@ class TriageError(BaseModel):
     next_command: str = Field(min_length=1)
 
 
+class ArtifactReference(BaseModel):
+    """A declared upstream artifact, not an arbitrary nested dict."""
+
+    model_config = ConfigDict(extra="allow")
+    path: str = Field(min_length=1)
+    sha256: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    bytes: int = Field(ge=0, strict=True)
+
+
 class NodeReceipt(ArtifactEnvelope):
     schema_name: Literal["tau.generic_dag_node_receipt.v1"] = Field(alias="schema")
     node_id: str = Field(min_length=1)
+    artifacts: list[ArtifactReference] = Field(default_factory=list)
     status: Literal["PASS", "BLOCKED"]
     verdict: Literal["PASS", "BLOCKED"]
     errors: list[str]
@@ -62,6 +74,10 @@ class NodeReceipt(ArtifactEnvelope):
 
     @model_validator(mode="after")
     def blocked_receipts_need_typed_error_data(self) -> "NodeReceipt":
+        if self.status != self.verdict:
+            raise ValueError("status and verdict must agree")
+        if self.status == "PASS" and (self.errors or self.pydantic_errors or self.triage_errors):
+            raise ValueError("PASS receipt cannot contain errors")
         if self.status == "BLOCKED" and not (self.pydantic_errors or self.triage_errors):
             raise ValueError("BLOCKED receipt requires pydantic_errors[] or triage_errors[]")
         if self.errors and not self.triage_errors:
@@ -310,40 +326,99 @@ def pydantic_first_check(schema: dict[str, Any], value: Any) -> None:
         raise jsonschema.exceptions.ValidationError("; ".join(messages))
 
 
-def validate_artifact(path: Path, require_schema: bool = False) -> list[dict[str, Any]]:
-    """Return pydantic-style error dicts; empty list means PASS."""
-    try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
-    except FileNotFoundError:
-        return [{"type": "artifact_missing", "loc": [str(path)], "msg": "file not found"}]
-    except (OSError, json.JSONDecodeError) as exc:
-        return [{"type": "artifact_unreadable", "loc": [str(path)], "msg": str(exc)}]
+def _artifact_value_errors(path: Path, raw: Any, require_schema: bool) -> list[dict[str, Any]]:
+    """Select by the consumer's filename contract before trusting a discriminator."""
     if not isinstance(raw, dict):
         return [{"type": "artifact_not_object", "loc": [str(path)], "msg": "JSON object required"}]
-    # Model resolution mirrors _resolve_model: declared schema field -> registry;
-    # else filename stem -> generated model; else object-shape check only.
-    # An artifact whose contract never declared a `schema` field must not be
-    # failed for lacking one (observed live: storyboard_plan.json 2026-09-06).
-    if "schema" in raw:
-        declared = raw.get("schema", "")
-        model = (
-            _load_generated_registry().get(declared)
-            or REGISTRY.get(declared, ArtifactEnvelope)
-        )
-    elif require_schema:
-        model = ArtifactEnvelope
-    else:
-        stem = path.name.removesuffix(".json").replace(".", "_").replace("-", "_") + "_schema"
-        _load_generated_registry()
-        model = _generated_by_stem.get(stem, GenericJsonObject)
     try:
+        if require_schema or "schema" in raw:
+            envelope = ArtifactEnvelope.model_validate(raw)
+            declared = envelope.schema_name
+            model = SPINE_ARTIFACT_MODELS.get(path.name) if require_schema else None
+            model = model or REGISTRY.get(declared) or _load_generated_registry().get(declared)
+            if model is None and require_schema:
+                return [{"type": "artifact_schema_unknown", "loc": [str(path), "schema"],
+                         "msg": f"no typed artifact contract registered for {declared!r}"}]
+            model = model or ArtifactEnvelope
+        else:
+            stem = path.name.removesuffix(".json").replace(".", "_").replace("-", "_") + "_schema"
+            _load_generated_registry()
+            model = _generated_by_stem.get(stem, GenericJsonObject)
         model.model_validate(raw)
     except ValidationError as exc:
-        return [
-            {**e, "loc": [str(path), *e["loc"]]}
-            for e in exc.errors(include_url=False, include_input=False)
-        ]
+        # errors() may contain ValueError instances in ctx; JSON serialization
+        # preserves the typed steering fields without crashing the blocked receipt.
+        return [{**e, "loc": [str(path), *e["loc"]]}
+                for e in json.loads(exc.json(include_url=False, include_input=False))]
+    if require_schema:
+        audio_refs = []
+        if path.name == "dynamic_conversation_receipt.v1.json":
+            audio_refs = [pair[role] for pair in raw["turn_pairs"] for role in ("horus", "embry")]
+        elif path.name == "JOURNAL_AUDIO_RECEIPT.json" or (path.name == "conversation.jsonl" and raw.get("audio")):
+            audio_refs = [raw]
+        for reference in audio_refs:
+            named = Path(reference["audio"])
+            audio = path.parent / named.name
+            declared = named if named.is_absolute() else (Path(__file__).resolve().parents[3] / named if len(named.parts) > 1 else path.parent / named)
+            if declared.resolve() != audio.resolve() or not audio.resolve().is_relative_to(path.parent.resolve()):
+                return [{"type": "artifact_audio_path_mismatch", "loc": [str(path), "audio"],
+                         "msg": "audio reference must name a file in this cycle directory"}]
+            try:
+                data = audio.read_bytes()
+            except OSError as exc:
+                return [{"type": "artifact_audio_missing", "loc": [str(path), "audio"], "msg": str(exc)}]
+            if "sha256:" + hashlib.sha256(data).hexdigest() != reference.get("audio_sha256"):
+                return [{"type": "artifact_audio_hash_mismatch", "loc": [str(path), "audio_sha256"],
+                         "msg": "referenced local WAV bytes do not match the receipt"}]
+            if not data or ("audio_bytes" in reference and len(data) != reference["audio_bytes"]):
+                return [{"type": "artifact_audio_size_mismatch", "loc": [str(path), "audio_bytes"],
+                         "msg": "referenced local WAV size does not match the receipt"}]
+        field = {"phase14_tom.json": "revision_id", "observation_packet.json": "source_revision_id",
+                 "dream_journal.v1.json": "cycle"}.get(path.name)
+        if field and raw[field] != path.parent.name:
+            return [{"type": "artifact_cycle_mismatch", "loc": [str(path), field],
+                     "msg": "artifact does not belong to the active cycle directory"}]
     return []
+
+
+def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    """JSON cannot use duplicate keys to overwrite a failed status or lineage."""
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON key: {key}")
+        result[key] = value
+    return result
+
+
+def _reject_constant(value: str) -> Any:
+    raise ValueError(f"non-standard JSON constant: {value}")
+
+
+def validate_artifact(path: Path, require_schema: bool = False) -> list[dict[str, Any]]:
+    """Validate JSON, or every non-empty JSONL row; [] means typed admission."""
+    try:
+        text = path.read_text(encoding="utf-8")
+        rows = [(i, line) for i, line in enumerate(text.splitlines(), 1) if line.strip()] if path.suffix.lower() == ".jsonl" else [(None, text)]
+        if not rows:
+            return [{"type": "artifact_empty", "loc": [str(path)], "msg": "empty JSONL artifact"}]
+        errors = []
+        for line_number, line in rows:
+            try:
+                raw = json.loads(line, object_pairs_hook=_unique_object, parse_constant=_reject_constant)
+            except ValueError as exc:
+                errors.append({"type": "artifact_unreadable", "loc": [str(path), line_number], "msg": str(exc)})
+                continue
+            row_errors = _artifact_value_errors(path, raw, require_schema)
+            if line_number is not None:
+                for error in row_errors:
+                    error["loc"].insert(1, line_number)
+            errors.extend(row_errors)
+        return errors
+    except FileNotFoundError:
+        return [{"type": "artifact_missing", "loc": [str(path)], "msg": "file not found"}]
+    except (OSError, UnicodeError) as exc:
+        return [{"type": "artifact_unreadable", "loc": [str(path)], "msg": str(exc)}]
 
 
 def validate_artifacts(
@@ -351,7 +426,7 @@ def validate_artifacts(
 ) -> list[dict[str, Any]]:
     errors: list[dict[str, Any]] = []
     for path in paths:
-        if json_only and path.suffix != ".json":
+        if json_only and path.suffix.lower() not in {".json", ".jsonl"}:
             continue
         errors.extend(validate_artifact(path, require_schema=require_schema))
     return errors

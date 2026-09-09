@@ -82,10 +82,13 @@ def build_spec(*, contract: Path, run_dir: Path, run_id: str,
 
     nodes: list[dict[str, Any]] = []
     previous: str | None = None
+    producers: dict[str, Path] = {}
 
     for step in spine["steps"]:
         node_id = str(step["id"])
-        produces = ",".join(str(p) for p in step.get("produces") or [])
+        if not isinstance(step.get("produces"), list) or not step["produces"]:
+            raise SystemExit(f"BLOCKED_STEP_{node_id}_MISSING_PRODUCES")
+        produces = ",".join(str(p) for p in step["produces"])
         # Pydantic-first input gate: every step consumes exactly what the
         # contract declares. No implicit previous-step guessing.
         if "consumes" not in step or not isinstance(step.get("consumes"), list):
@@ -93,7 +96,10 @@ def build_spec(*, contract: Path, run_dir: Path, run_id: str,
         validation = step.get("validation")
         if validation != {"input": "pydantic_first", "output": "pydantic_first", "failure": "triage-error"}:
             raise SystemExit(f"BLOCKED_STEP_{node_id}_VALIDATION_NOT_PYDANTIC_TRIAGE")
-        consumes = ",".join(str(c) for c in step.get("consumes") or [])
+        for name in [*step["consumes"], *step["produces"]]:
+            if not isinstance(name, str) or not name.strip() or Path(name).is_absolute() or ".." in Path(name).parts:
+                raise SystemExit(f"BLOCKED_STEP_{node_id}_UNSAFE_ARTIFACT_PATH: {name!r}")
+        consumes = ",".join(step["consumes"])
         run_dir_arg = step.get("run_dir_arg", "--run-dir")
 
         command = [
@@ -108,6 +114,17 @@ def build_spec(*, contract: Path, run_dir: Path, run_id: str,
             "--does-not-prove", str(step.get("does_not_prove") or ""),
             "--goal-hash", goal_hash,
         ]
+        upstream_receipts = set()
+        for name in step["consumes"]:
+            if name not in producers:
+                raise SystemExit(f"BLOCKED_STEP_{node_id}_UNBOUND_INPUT: {name}")
+            upstream_receipts.add(producers[name])
+        for receipt_path in sorted(upstream_receipts):
+            command += ["--input-receipt", str(receipt_path)]
+        for name in step["produces"]:
+            if name in producers:
+                raise SystemExit(f"BLOCKED_STEP_{node_id}_DUPLICATE_PRODUCER: {name}")
+            producers[name] = receipts_dir / f"{node_id}.json"
         # Omitted entirely when the step takes no run directory: Tau requires
         # every argv item to be a non-empty string, so an empty flag value is
         # not a way to say "none".

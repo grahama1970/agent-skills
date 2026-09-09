@@ -29,7 +29,7 @@ from typing import Any
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from pydantic_step_gate import validate_artifacts  # noqa: E402
+from pydantic_step_gate import NodeReceipt, TriageError, validate_artifact, validate_artifacts  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 RUN_SH = ROOT / "run.sh"
@@ -55,12 +55,16 @@ def _triage(signal: str) -> dict[str, Any]:
             timeout=30,
         )
         if proc.returncode == 0:
-            return json.loads(proc.stdout)
-    except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError):
-        pass
+            result = json.loads(proc.stdout)
+            if not isinstance(result, dict):
+                raise ValueError("triage must return an object")
+            result["next_command"] = result.get("next_command") or f"Inspect the named artifact and run {TRIAGE_RUN} classify --text <signal> --layer persona-dream"
+            return TriageError.model_validate(result).model_dump(mode="json")
+    except (OSError, subprocess.TimeoutExpired, ValueError, TypeError):
+        pass  # the explicit typed unavailable receipt below preserves the failure
     digest = hashlib.sha256(signal.encode("utf-8")).hexdigest()[:8]
     return {
-        "code": f"persona_dream_triage_unavailable_{digest}",
+        "code": f"persona_dream_unclassified_{digest}",
         "layer": "persona-dream",
         "cause": signal,
         "next_command": f"Run {TRIAGE_RUN} classify --text <signal> --layer persona-dream",
@@ -86,6 +90,8 @@ def main() -> int:
     ap.add_argument("--consumes", default="",
                     help="comma-separated input artifacts, pydantic-validated "
                          "BEFORE the step runs (first deterministic gate)")
+    ap.add_argument("--input-receipt", type=Path, action="append", default=[],
+                    help="upstream PASS receipt binding consumed artifact hashes; repeatable")
     ap.add_argument("--proves", default="")
     ap.add_argument("--does-not-prove", default="")
     ap.add_argument("--goal-hash", default="",
@@ -106,19 +112,56 @@ def main() -> int:
     stderr_tail = ""
 
     # Pydantic FIRST gate: consumed artifacts must validate before the step runs.
-    consume_dir = args.artifact_dir or args.run_dir
-    consumed = [consume_dir / n for n in args.consumes.split(",") if n]
-    pydantic_errors = [
-        {"type": "artifact_missing", "loc": [str(path)], "msg": "file not found"}
-        for path in consumed if not path.is_file()
-    ]
+    artifact_dir = args.artifact_dir or args.run_dir
+    pydantic_errors: list[dict[str, Any]] = []
+    unsafe = set()
+    for name in [*args.consumes.split(","), *produces]:
+        if not name:
+            continue
+        path = artifact_dir / name
+        if Path(name).is_absolute() or ".." in Path(name).parts or not path.resolve().is_relative_to(artifact_dir.resolve()):
+            unsafe.add(name)
+            pydantic_errors.append({"type": "artifact_path_escape", "loc": [name], "msg": "artifact must stay within the cycle directory"})
+    produces = [n for n in produces if n not in unsafe]
+    consumed = [artifact_dir / n for n in args.consumes.split(",") if n and n not in unsafe]
+    pydantic_errors.extend({"type": "artifact_missing", "loc": [str(p)], "msg": "file not found"}
+                           for p in consumed if not p.is_file())
     pydantic_errors += validate_artifacts([p for p in consumed if p.is_file()], require_schema=True)
+    input_hashes = {}
+    if not pydantic_errors:
+        for path in consumed:
+            try:
+                input_hashes[str(path.resolve())] = _sha256(path)
+            except OSError as exc:
+                pydantic_errors.append({"type": "artifact_unreadable", "loc": [str(path)], "msg": str(exc)})
+    bindings: dict[str, str] = {}
+    for receipt_path in args.input_receipt:
+        receipt_errors = validate_artifact(receipt_path, require_schema=True)
+        pydantic_errors.extend(receipt_errors)
+        if receipt_errors:
+            continue
+        upstream = json.loads(receipt_path.read_text(encoding="utf-8"))
+        if upstream.get("schema") != NODE_RECEIPT_SCHEMA or upstream.get("status") != "PASS" or upstream.get("goal_hash") != args.goal_hash:
+            pydantic_errors.append({"type": "upstream_receipt_rejected", "loc": [str(receipt_path)], "msg": "upstream PASS and matching goal hash required"})
+        for artifact in upstream.get("artifacts", []):
+            if isinstance(artifact, dict) and artifact.get("path"):
+                bindings[str(Path(artifact["path"]).resolve())] = artifact.get("sha256", "")
+    if args.input_receipt:
+        for path, digest in input_hashes.items():
+            if bindings.get(path) != digest:
+                pydantic_errors.append({"type": "upstream_artifact_hash_mismatch", "loc": [path], "msg": "consumed bytes do not match upstream receipt"})
     if pydantic_errors:
         errors.extend(
             f"pydantic_gate_input {e['type']} at {e['loc']}: {e.get('msg', '')}"
             for e in pydantic_errors
         )
 
+    prior_outputs = {}
+    for name in produces:
+        path = artifact_dir / name
+        if path.is_file():
+            stat = path.stat()
+            prior_outputs[name] = (stat.st_ino, stat.st_mtime_ns, stat.st_ctime_ns, stat.st_size)
     try:
         if errors:
             raise _PydanticGateBlocked
@@ -131,17 +174,21 @@ def main() -> int:
         errors.append(f"{args.command} exceeded 1800s")
     except _PydanticGateBlocked:
         pass  # consumed-artifact validation failed; step never ran
-    except FileNotFoundError:
-        errors.append(f"run.sh not executable at {RUN_SH}")
+    except OSError as exc:
+        errors.append(f"run.sh execution failed at {RUN_SH}: {exc}")
 
     # The artifact check. This is the part Tau cannot do for us.
-    artifact_dir = args.artifact_dir or args.run_dir
     artifacts: list[dict[str, Any]] = []
     for name in produces:
         path = artifact_dir / name
         if path.is_file():
+            stat = path.stat()
+            if stat.st_size == 0:
+                errors.append(f"declared artifact is empty: {path}")
+            if exit_code == 0 and prior_outputs.get(name) == (stat.st_ino, stat.st_mtime_ns, stat.st_ctime_ns, stat.st_size):
+                errors.append(f"declared artifact was not produced by this execution: {path}")
             artifacts.append({"path": str(path), "sha256": _sha256(path),
-                              "bytes": path.stat().st_size})
+                              "bytes": stat.st_size})
         else:
             errors.append(f"declared artifact not produced: {artifact_dir / name}")
     # Pydantic gate on produced JSON artifacts (producer-side seam validation).
@@ -155,6 +202,13 @@ def main() -> int:
     )
     pydantic_errors.extend(produced_errors)
 
+    for path, digest in input_hashes.items():
+        try:
+            unchanged = _sha256(Path(path)) == digest
+        except OSError:
+            unchanged = False
+        if not unchanged:
+            errors.append(f"consumed artifact changed during execution: {path}")
     triage_errors = [_triage(err) for err in errors]
 
     ok = not errors
@@ -178,10 +232,11 @@ def main() -> int:
         "does_not_prove": args.does_not_prove,
         "pydantic_errors": pydantic_errors,
         "mocked": False,
-        "live": True,
+        "live": exit_code is not None,
         "stderr_tail": stderr_tail,
     }
 
+    receipt = NodeReceipt.model_validate(receipt).model_dump(mode="json", by_alias=True)
     args.receipt.parent.mkdir(parents=True, exist_ok=True)
     args.receipt.write_text(json.dumps(receipt, indent=2, sort_keys=True), encoding="utf-8")
 

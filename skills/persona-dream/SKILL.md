@@ -1168,6 +1168,23 @@ before execution and produced JSON after execution. Any boundary failure writes
 `pydantic_errors[]` plus `$triage-error` `triage_errors[]` with `code`, `cause`,
 and `next_command`; a step cannot advance on exit-code-only success.
 
+The strict spine gate binds artifact filenames to the typed contracts in
+`scripts/spine_artifact_models.py`; a schema string alone is not admission.
+It rejects unknown schemas, wrong artifact types, malformed/empty JSONL,
+duplicate JSON keys, mismatched cycle identifiers and contradictory PASS data.
+The compiler supplies upstream receipts for every consumed artifact. The shim
+checks their PASS/goal binding and artifact hashes before execution, detects
+inputs changed during execution, and rejects empty or untouched pre-existing
+outputs. The step receipt is itself Pydantic-validated before writing.
+
+Retained check: `spine-artifact-boundaries-reject-false-pass` in the agentic-evals
+catalog. Its positive controls read the retained production cycle; corruptions
+exercise the actual step/run.sh/triage entrypoints without provider calls.
+This validates the cognition-spine boundary, not every internal producer write,
+visual quality, provider reliability, or all optional video/research paths.
+The pipeline-integrity audit is a source inventory: `reviewed` debt or a
+schema/status token is not proof of typed validation.
+
 After any step that writes artifacts into a revision, run the persistence
 audit gate. It verifies the active pointer, frozen-index integrity, classifies
 every unindexed on-disk file (machinery receipt or request-scoped Phase 11-13
