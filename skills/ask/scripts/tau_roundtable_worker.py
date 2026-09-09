@@ -6975,7 +6975,25 @@ def _requires_verdict(request_text: str, prior_receipts: list[dict[str, Any]]) -
     )
 
 
+_VERDICT_LINE_RE = re.compile(
+    r"^\s*(?:\*\*)?VERDICT:?\s*(NEEDS_ATTENTION|PASS|FAIL)\b", re.MULTILINE
+)
+
+
 def _extract_verdict(text: str) -> str | None:
+    """Return the handler's declared verdict, not a quoted one.
+
+    The final line-anchored ``VERDICT: X`` wins. The old implementation
+    searched for NEEDS_ATTENTION first anywhere in the text, so a creator
+    that declared ``VERDICT: PASS`` but quoted historical context containing
+    "REVIEW VERDICT: NEEDS_ATTENTION" was scored NEEDS_ATTENTION -- which
+    blocked every ticket_repair on 2026-09-09 (agent-skills #1615/#1616/#1628,
+    tau#345) at Tau's evidence_receipt_verdict_failed gate.
+    """
+    matches = _VERDICT_LINE_RE.findall(text.upper())
+    if matches:
+        return matches[-1]
+    # Fallback for handlers that emit an inline verdict on a shared line.
     upper = text.upper()
     for verdict in ("NEEDS_ATTENTION", "PASS", "FAIL"):
         if f"VERDICT: {verdict}" in upper or f"VERDICT {verdict}" in upper:
