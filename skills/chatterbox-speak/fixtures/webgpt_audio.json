@@ -1,0 +1,418 @@
+{
+  "version": 2,
+  "skill": "chatterbox-speak",
+  "trials": 3,
+  "proof_scope": "Six synthetic contextual cases: frozen independent WebGPT semantic assessment replay plus live Embry reply playback and waveform gates. NOT perceived-emotion readiness.",
+  "claims": {
+    "proves": [
+      "Context/turn/hash/judgment fail-closed gates",
+      "Model-specific contextual assessment with quoted evidence",
+      "Live spoken Embry responses with planned pauses and acoustic technical checks"
+    ],
+    "does_not_prove": [
+      "Full 50-scenario coverage",
+      "Independent repeated semantic judges",
+      "ASR intelligibility",
+      "Native tag realization by listening",
+      "Human-perceived emotion or hearing confirmation",
+      "Full skill readiness"
+    ]
+  },
+  "cases": [
+    {
+      "name": "celebration",
+      "type": "positive",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "command": [
+        "uv",
+        "run",
+        "--script",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/scripts/eval_webgpt_audio.py",
+        "evaluate",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/contextual_conversations.jsonl",
+        "celebration",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/celebration.jsonl",
+        "--judge-node",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual-judge-run/node-artifacts/handler-webgpt/node-receipt.json",
+        "--render"
+      ],
+      "expected": {
+        "exit_code": 2,
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/celebration.jsonl",
+            "json_pointer": "/contextual_appropriateness",
+            "equals": "PASS"
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/celebration.jsonl",
+            "json_pointer": "/overall",
+            "equals": "NOT_ESTABLISHED"
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/celebration.jsonl",
+            "json_pointer": "/technical_audio",
+            "equals": "PASS"
+          }
+        ]
+      }
+    },
+    {
+      "name": "quiet-achievement",
+      "type": "positive",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "command": [
+        "uv",
+        "run",
+        "--script",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/scripts/eval_webgpt_audio.py",
+        "evaluate",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/contextual_conversations.jsonl",
+        "quiet-achievement",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/quiet-achievement.jsonl",
+        "--judge-node",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual-judge-run/node-artifacts/handler-webgpt/node-receipt.json",
+        "--render"
+      ],
+      "expected": {
+        "exit_code": 2,
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/quiet-achievement.jsonl",
+            "json_pointer": "/contextual_appropriateness",
+            "equals": "PASS"
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/quiet-achievement.jsonl",
+            "json_pointer": "/overall",
+            "equals": "NOT_ESTABLISHED"
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/quiet-achievement.jsonl",
+            "json_pointer": "/technical_audio",
+            "equals": "PASS"
+          }
+        ]
+      }
+    },
+    {
+      "name": "grief-presence",
+      "type": "positive",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "command": [
+        "uv",
+        "run",
+        "--script",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/scripts/eval_webgpt_audio.py",
+        "evaluate",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/contextual_conversations.jsonl",
+        "grief-presence",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/grief-presence.jsonl",
+        "--judge-node",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual-judge-run/node-artifacts/handler-webgpt/node-receipt.json",
+        "--render"
+      ],
+      "expected": {
+        "exit_code": 2,
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/grief-presence.jsonl",
+            "json_pointer": "/contextual_appropriateness",
+            "equals": "PASS"
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/grief-presence.jsonl",
+            "json_pointer": "/overall",
+            "equals": "NOT_ESTABLISHED"
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/grief-presence.jsonl",
+            "json_pointer": "/technical_audio",
+            "equals": "PASS"
+          }
+        ]
+      }
+    },
+    {
+      "name": "flat-celebration",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "command": [
+        "uv",
+        "run",
+        "--script",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/scripts/eval_webgpt_audio.py",
+        "evaluate",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/contextual_conversations.jsonl",
+        "flat-celebration",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/flat-celebration.jsonl",
+        "--judge-node",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual-judge-run/node-artifacts/handler-webgpt/node-receipt.json"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/flat-celebration.jsonl",
+            "json_pointer": "/contextual_appropriateness",
+            "equals": "FAIL"
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/flat-celebration.jsonl",
+            "json_pointer": "/overall",
+            "equals": "FAIL"
+          }
+        ]
+      }
+    },
+    {
+      "name": "overblown-grief",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "command": [
+        "uv",
+        "run",
+        "--script",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/scripts/eval_webgpt_audio.py",
+        "evaluate",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/contextual_conversations.jsonl",
+        "overblown-grief",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/overblown-grief.jsonl",
+        "--judge-node",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual-judge-run/node-artifacts/handler-webgpt/node-receipt.json"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/overblown-grief.jsonl",
+            "json_pointer": "/contextual_appropriateness",
+            "equals": "FAIL"
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/overblown-grief.jsonl",
+            "json_pointer": "/overall",
+            "equals": "FAIL"
+          }
+        ]
+      }
+    },
+    {
+      "name": "wrong-context-celebration",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "command": [
+        "uv",
+        "run",
+        "--script",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/scripts/eval_webgpt_audio.py",
+        "evaluate",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/contextual_conversations.jsonl",
+        "wrong-context-celebration",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/wrong-context-celebration.jsonl",
+        "--judge-node",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual-judge-run/node-artifacts/handler-webgpt/node-receipt.json"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/wrong-context-celebration.jsonl",
+            "json_pointer": "/contextual_appropriateness",
+            "equals": "FAIL"
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/wrong-context-celebration.jsonl",
+            "json_pointer": "/overall",
+            "equals": "FAIL"
+          }
+        ]
+      }
+    },
+    {
+      "name": "missing-agent-judgment",
+      "type": "negative",
+      "evidence_class": "deterministic",
+      "command": [
+        "uv",
+        "run",
+        "--script",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/scripts/eval_webgpt_audio.py",
+        "evaluate",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/contextual_conversations.jsonl",
+        "celebration",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/missing-agent-judgment.jsonl"
+      ],
+      "expected": {
+        "exit_code": 2,
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/missing-agent-judgment.jsonl",
+            "json_pointer": "/overall",
+            "equals": "NOT_ESTABLISHED"
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/missing-agent-judgment.jsonl",
+            "json_pointer": "/audio_realization",
+            "equals": "NOT_ESTABLISHED"
+          }
+        ]
+      }
+    },
+    {
+      "name": "missing-waveform",
+      "type": "negative",
+      "evidence_class": "deterministic",
+      "command": [
+        "uv",
+        "run",
+        "--script",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/scripts/eval_webgpt_audio.py",
+        "evaluate",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/contextual_conversations.jsonl",
+        "celebration",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/missing-waveform.jsonl",
+        "--judge-node",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual-judge-run/node-artifacts/handler-webgpt/node-receipt.json"
+      ],
+      "expected": {
+        "exit_code": 2,
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/missing-waveform.jsonl",
+            "json_pointer": "/overall",
+            "equals": "NOT_ESTABLISHED"
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/missing-waveform.jsonl",
+            "json_pointer": "/audio_realization",
+            "equals": "NOT_ESTABLISHED"
+          }
+        ]
+      }
+    },
+    {
+      "name": "missing-context",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "uv",
+        "run",
+        "--script",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/scripts/eval_webgpt_audio.py",
+        "reject-control",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/contextual_conversations.jsonl",
+        "missing-context",
+        "--judge-node",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual-judge-run/node-artifacts/handler-webgpt/node-receipt.json"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "Field required"
+        ]
+      }
+    },
+    {
+      "name": "missing-turn",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "uv",
+        "run",
+        "--script",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/scripts/eval_webgpt_audio.py",
+        "reject-control",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/contextual_conversations.jsonl",
+        "missing-turn",
+        "--judge-node",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual-judge-run/node-artifacts/handler-webgpt/node-receipt.json"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "at least 1 item"
+        ]
+      }
+    },
+    {
+      "name": "tag-intensity-conflict",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "uv",
+        "run",
+        "--script",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/scripts/eval_webgpt_audio.py",
+        "reject-control",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/contextual_conversations.jsonl",
+        "tag-intensity-conflict",
+        "--judge-node",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual-judge-run/node-artifacts/handler-webgpt/node-receipt.json"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "cannot be realized together"
+        ]
+      }
+    },
+    {
+      "name": "stale-judgment",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "uv",
+        "run",
+        "--script",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/scripts/eval_webgpt_audio.py",
+        "reject-control",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures/contextual_conversations.jsonl",
+        "stale-judgment",
+        "--judge-node",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual-judge-run/node-artifacts/handler-webgpt/node-receipt.json"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "input hash mismatch"
+        ]
+      }
+    },
+    {
+      "name": "live-cli-context-acknowledgment",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "command": [
+        "uv",
+        "run",
+        "--script",
+        "/home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/scripts/eval_webgpt_audio.py",
+        "cli-canary",
+        "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/live-cli.jsonl"
+      ],
+      "expected": {
+        "exit_code": 2,
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/live-cli.jsonl",
+            "json_pointer": "/overall",
+            "equals": "NOT_ESTABLISHED"
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/live-cli.jsonl",
+            "json_pointer": "/technical_audio",
+            "equals": "PASS"
+          }
+        ]
+      }
+    }
+  ]
+}

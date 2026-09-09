@@ -3,4 +3,5 @@ set -euo pipefail
 cd "$(dirname "$0")"
 cmd="${1:-}"
 if [ "$cmd" = "probe" ]; then shift; exec uv run --script scripts/scenario_probe.py "$@"; fi
+if [ "$cmd" = "eval-context" ]; then shift; exec uv run --script scripts/eval_webgpt_audio.py "$@"; fi
 exec uv run --script scripts/speak.py "$@"

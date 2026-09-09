@@ -13,12 +13,15 @@ import json
 import shutil
 import subprocess
 import time
+import wave
+from uuid import uuid4
 from pathlib import Path
+from typing import Literal
 
 import httpx
 import typer
 from loguru import logger
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 app = typer.Typer(add_completion=False)
 
@@ -102,6 +105,30 @@ class SpeakRequest(BaseModel):
     voice_delivery: dict | None = None
 
 
+class RenderChunk(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    text: str = Field(min_length=1)
+    pause_after_ms: int = Field(ge=0, le=10000)
+    tone: str
+    role: str
+
+
+class RenderPlan(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    schema_id: Literal["best_practices_chatterbox.render_plan.v1"] = Field(alias="schema")
+    answer_text: str
+    render_chunks: list[RenderChunk] = Field(min_length=1)
+
+
+class BatchReceipt(BaseModel):
+    # Projection of the owning service contract; original bytes remain in the receipt.
+    model_config = ConfigDict(extra="allow", strict=True)
+    ok: Literal[True]
+    live: Literal[True]
+    mocked: Literal[False]
+    finished_response_audio: str
+
+
 class ServiceReceipt(BaseModel):
     """Minimal typed view of the service response; extra fields kept via model_extra."""
 
@@ -143,6 +170,7 @@ def speak(
     recall_context: bool = typer.Option(False, help="Fetch speaker-scoped context from $memory /recall into the receipt"),
     play: bool = typer.Option(False, help="Play locally via pw-play"),
     analyze: bool = typer.Option(False, help="Run /analyze-chatterbox-emotions on the WAV and embed the result in the receipt"),
+    planned_pauses: bool = typer.Option(False, help="Compile spaced ellipses/[pause:*] via best-practices-chatterbox and render exact chunk silence"),
 ) -> None:
     """Render one line and write WAV + receipt."""
     ref = ref_audio or VOICES.get(voice)
@@ -172,19 +200,44 @@ def speak(
         delivery = {"intensity": round(effective, 3), "emotion_realization": "audible"}
 
     try:
-        req = SpeakRequest(text=text, ref_audio=ref, tone=tone, voice_delivery=delivery)
+        req = SpeakRequest(text=text, ref_audio=ref, tone=tone, voice_delivery=delivery,
+                           label=f"chatterbox-speak-{uuid4().hex}")
     except ValidationError as exc:
         _fail(exc.json())
 
+    payload = req.model_dump(exclude_none=True)
+    endpoint = "synthesize"
+    plan = None
+    if planned_pauses:
+        compiler = Path(__file__).resolve().parents[2] / "best-practices-chatterbox/run.sh"
+        proc = subprocess.run([str(compiler), "plan-silence", "--text", text,
+                               "--tone", tone or "neutral_warm"], capture_output=True, text=True, timeout=30)
+        if proc.returncode:
+            _fail(f"pause compiler failed: {proc.stderr}")
+        plan = RenderPlan.model_validate_json(proc.stdout)
+        endpoint = "synthesize-batch"
+        payload = {"answer_text": plan.answer_text,
+                   "render_chunks": [c.model_dump() for c in plan.render_chunks],
+                   "label": req.label, "ref_audio": ref, "crossfade_ms": 0,
+                   "use_blessed_qra_cache": False, "asr_verify": False,
+                   "voice_delivery": {"tone": tone or "neutral_warm", **(delivery or {})}}
     try:
-        resp = httpx.post(f"{BASE_URL}/synthesize", json=req.model_dump(exclude_none=True), timeout=300)
+        resp = httpx.post(f"{BASE_URL}/{endpoint}", json=payload, timeout=300)
         resp.raise_for_status()
     except httpx.HTTPError as exc:
         detail = getattr(getattr(exc, "response", None), "text", "")
         _fail(f"chatterbox service call failed: {exc} {detail[:500]}")
 
     try:
-        receipt = ServiceReceipt.model_validate(resp.json())
+        if planned_pauses:
+            batch = BatchReceipt.model_validate(resp.json())
+            host_audio = HOST_OUT / Path(batch.finished_response_audio).relative_to(CONTAINER_OUT)
+            with wave.open(str(host_audio), "rb") as audio:
+                duration = audio.getnframes() / audio.getframerate()
+            receipt = ServiceReceipt(ok=True, live=True, mocked=False,
+                                     audio=batch.finished_response_audio, duration_seconds=duration, tone=tone)
+        else:
+            receipt = ServiceReceipt.model_validate(resp.json())
     except ValidationError as exc:
         _fail(f"service response failed typed validation: {exc.json()}")
     if not (receipt.ok and receipt.live) or receipt.mocked:
@@ -194,7 +247,7 @@ def speak(
     if not host_wav.is_file() or host_wav.stat().st_size == 0:
         _fail(f"rendered WAV missing/empty on host: {host_wav}")
 
-    run_id = f"{int(time.time())}-{Path(receipt.audio).stem}"
+    run_id = f"{int(time.time())}-{req.label}"
     out = OUT_DIR / run_id
     out.mkdir(parents=True, exist_ok=True)
     wav_copy = out / host_wav.name
@@ -216,7 +269,8 @@ def speak(
         "speaking_to": (state.speaker if state else to),
         "session": state.model_dump() if state else None,
         "memory_context": memory_context,
-        "request": req.model_dump(exclude_none=True),
+        "request": payload,
+        "chatterbox_pause_plan": [c.model_dump() for c in plan.render_chunks] if plan else [],
         "wav": str(wav_copy),
         "duration_seconds": receipt.duration_seconds,
         "mocked": receipt.mocked,
@@ -231,9 +285,13 @@ def speak(
 
     if analyze:
         proc = subprocess.run(
-            [str(ANALYZER), "analyze", "--audio", str(wav_copy), "--json"],
-            capture_output=True, text=True, check=False,
+            [str(ANALYZER), "analyze", "--audio", str(wav_copy), "--json",
+             "--expected-text", plan.answer_text if plan else text,
+             "--render-plan", str(receipt_path)],
+            capture_output=True, text=True, check=False, timeout=120,
         )
+        if proc.returncode:
+            _fail(f"analyzer failed (rc={proc.returncode}): {proc.stderr[:500]}")
         try:
             record["analysis"] = json.loads(proc.stdout)
         except json.JSONDecodeError:
@@ -241,9 +299,11 @@ def speak(
         receipt_path.write_text(json.dumps(record, indent=2))
 
     if play:
-        rc = subprocess.run(["pw-play", str(wav_copy)], check=False).returncode
+        rc = subprocess.run(["pw-play", str(wav_copy)], check=False, timeout=300).returncode
         record["playback"] = {"cmd": f"pw-play {wav_copy}", "returncode": rc}
         receipt_path.write_text(json.dumps(record, indent=2))
+        if rc:
+            _fail(f"playback failed (rc={rc})")
 
     print(json.dumps({"ok": True, "wav": str(wav_copy), "receipt": str(receipt_path),
                       "duration_seconds": receipt.duration_seconds,
