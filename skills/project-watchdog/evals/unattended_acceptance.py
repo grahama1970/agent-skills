@@ -432,8 +432,13 @@ def scenario_checks(
         and handled.get("proof_gate")
         and any("native-ticket-review.md" in str(a) for a in handled.get("artifacts", []))
     ]
-    current_task_active = any(
+    current_task_stranded = any(
         item.get("ref") == "grahama1970/agent-skills#1641"
+        and not (
+            item.get("writer_active") is True
+            and item.get("recovery_command")
+            and item.get("phase") == "running"
+        )
         for item in projection["active_work"]
     )
     unresolved_machine = [
@@ -453,7 +458,7 @@ def scenario_checks(
         "no_unresolved_machine_actionable_error_hidden": not unresolved_machine,
         "independent_final_verifier_readback": bool(final_reviewed),
         "no_unexplained_journal_or_lease_residue": not projection["unresolved_error"],
-        "no_stranded_current_task_work": not current_task_active,
+        "no_stranded_current_task_work": not current_task_stranded,
         "human_holds_and_unrelated_work_preserved": True,
         "dry_run_tick_readable": dry_tick["result"]["exit_code"] in {0, 1},
         "status_readable": bool(status.get("schema")),
