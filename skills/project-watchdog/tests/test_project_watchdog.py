@@ -2960,3 +2960,22 @@ def test_cron_env_missing_receipt_is_not_human_blocker(tmp_path, monkeypatch):
     monkeypatch.setattr(cp.config, "state_root", lambda: tmp_path)
     allowed, why = cp.dispatch_allowed()
     assert allowed is False and why["reason"] == "no_capability_receipt" and "next" in why
+
+
+def test_fleet_slo_is_order_independent():
+    import json as _j, random
+    from watchdog import fleet_slo
+    recs = [
+        {"run_id": "a", "status": "COMPLETED", "dispatched_at": 1, "closed_at": 5, "requires_human_input": False},
+        {"run_id": "b", "status": "BLOCKED", "requires_human_input": True},
+        {"run_id": "c", "status": "SKIPPED", "stop_reason": "capability_preflight_not_ready"},
+    ]
+    a = _j.dumps(fleet_slo.compute(recs), sort_keys=True)
+    s = list(recs); random.Random(3).shuffle(s)
+    assert _j.dumps(fleet_slo.compute(s), sort_keys=True) == a
+
+
+def test_fleet_slo_coverage_gap_is_red():
+    from watchdog import fleet_slo
+    r = fleet_slo.compute([{"run_id": "x"}])  # no status
+    assert r["health"] == "red" and any("missing_status" in i for i in r["coverage"]["incomplete"])
