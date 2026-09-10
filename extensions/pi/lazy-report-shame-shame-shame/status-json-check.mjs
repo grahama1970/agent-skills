@@ -9,6 +9,7 @@ import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { findJsonControlFrames, selectTerminalStatusFrame } from './terminal-status-frame.mjs';
 
 const CHECKER_VERSION = '2026-09-09.status-json-typed-context.v14';
 const TRUTHY_FLAG_VALUES = new Set(['1', 'true', 'yes']);
@@ -59,56 +60,6 @@ function emit(decision, reasonCodes, extra = {}, footerFailures = []) {
   };
   console.log(JSON.stringify(result, null, 2));
   process.exit(decision === 'pass' ? 0 : 1);
-}
-
-function lineBody(line) {
-  return String(line || '').replace('\r', '').replace('\n', '');
-}
-
-function fenceOpen(line) {
-  const s = lineBody(line).trim();
-  if (s === '```json') return { marker: '```' };
-  if (s === '~~~json') return { marker: '~~~' };
-  return null;
-}
-
-function fenceClose(line, marker) {
-  return lineBody(line).trim() === marker;
-}
-
-function findJsonFences(input) {
-  const lines = String(input || '').split('\n');
-  const fences = [];
-  let offset = 0;
-  let active = null;
-  for (const rawLine of lines) {
-    const line = `${rawLine}\n`;
-    const start = offset;
-    const end = offset + line.length;
-    if (active) {
-      if (fenceClose(line, active.marker)) {
-        const body = input.slice(active.bodyStart, start);
-        let parsed = null;
-        try { parsed = JSON.parse(body); } catch { parsed = null; }
-        fences.push({ body, start: active.start, end, parsed });
-        active = null;
-      }
-      offset = end;
-      continue;
-    }
-    const open = fenceOpen(line);
-    if (open) active = { marker: open.marker, start, bodyStart: end };
-    offset = end;
-  }
-  return fences;
-}
-
-function findStatusJson(input) {
-  const fences = findJsonFences(input);
-  for (let i = fences.length - 1; i >= 0; i -= 1) {
-    if (fences[i].parsed && fences[i].parsed.schema === 'pi.agent_status.v1') return fences[i];
-  }
-  return null;
 }
 
 const typedContextFailures = [];
@@ -443,8 +394,9 @@ function typedTurnContextFeature(immutableGoal = null) {
   };
 }
 
-const jsonFences = findJsonFences(text);
-const extractedStatus = findStatusJson(text);
+const jsonFences = findJsonControlFrames(text);
+const terminalStatus = selectTerminalStatusFrame(text);
+const extractedStatus = terminalStatus.statusFrame;
 const statusJson = extractedStatus?.body || null;
 
 if (FORMAT_ONLY_RETRY) {
@@ -486,6 +438,23 @@ if (FORMAT_ONLY_RETRY) {
       },
     });
   }
+}
+
+if (!terminalStatus.ok && terminalStatus.status_frame_count > 0) {
+  emit('reject', [terminalStatus.reason_code], {
+    status_frame_selection: {
+      json_fence_count: terminalStatus.json_fence_count,
+      status_frame_count: terminalStatus.status_frame_count,
+      status_frame_spans: terminalStatus.status_frame_spans,
+      parse_error: terminalStatus.parse_error || null,
+    },
+    validation_result: {
+      schema: 'pi.agent_status.validation_result.v1',
+      valid: false,
+      errors: [{ type: terminalStatus.reason_code, loc: [], msg: terminalStatus.reason_code, ctx: { status_frame_count: terminalStatus.status_frame_count } }],
+      steering: [{ code: terminalStatus.reason_code, loc: [], action: 'emit_one_valid_terminal_status_json', schema: 'pi.agent_status.v1' }],
+    },
+  });
 }
 
 if (!statusJson) {
@@ -662,6 +631,7 @@ if (answerRequired && terminalStates.has(String(verdict.state || '')) && !answer
 emit('pass', ['valid_agent_status_json'], {
   state: verdict.state,
   status: parsedStatus,
+  status_frame: terminalStatus.status_frame_spans[0],
   typed_turn_context: typedTurnContextFeature(immutableGoal),
   ignored_trailing_content_chars: trailingContent.length,
 });

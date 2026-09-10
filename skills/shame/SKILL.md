@@ -70,21 +70,31 @@ completion, because the final stop revalidates current proof bytes.
 
 ## Agent compliance recipe (do this, avoid the spiral)
 
-The observed spiral: author the status footer from memory, get rejected, spend
-the one blocked-tools `UNLAZY_FORCED_RETRY` on another guess, exhaust the
-budget. The mechanical exit:
+Normal agents should use only three states:
 
-1. Always end a mutating or `$shame`-invoked terminal reply with one fenced
+1. `done` — the work is finished and proof files already exist.
+2. `continuing` — agent-executable work remains; include exactly the next command.
+3. `needs_human` — one human action is required.
+
+Everything else is router/internal recovery. Do not choose Brave, Ask, WebGPT,
+roundtable, competition, or project-watchdog policy in a final status unless a
+skill explicitly handed you a typed packet for it.
+
+The mechanical exit:
+
+1. End a mutating or `$shame`-invoked terminal reply with one fenced
    ```` ```json ```` block containing `pi.agent_status.v1`. Prose "Status
    Report" lists never parse.
-2. For `state=done` with a plain-text proof file, verified items must be
+2. If unsure, use `state=continuing`, not `done`.
+3. For `state=done` with a plain-text proof file, verified items must be
    `{"command": "read <proof-file>", "result": "<exact substring of file>"}`.
-   Shell command/result pairs validate only against typed JSON receipts
-   (`agentic_evals.report.v2`, `lazy_report_shame.report_check.v2`,
-   `ticket.closure_receipt.v1`, `pi.receipt_envelope.v1`, `debugger.proof.v1`).
-3. Preflight before stopping, while tools are still available:
+4. Preflight before stopping, while tools are still available:
    `skills/shame/run.sh preflight /tmp/candidate.md` — stop only on
-   `decision: pass`. Never spend the retry on an unpreflighted guess.
+   `decision: pass`.
+
+If the guard returns `UNLAZY_FORCED_RETRY`, copy `packet.suggested_status` unless
+you can make a stricter `pi.agent_status.v1` from already-cited proof. Do not
+invent the schema from memory.
 
 ## Stop-boundary behavior
 

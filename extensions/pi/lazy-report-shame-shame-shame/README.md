@@ -10,6 +10,10 @@ Ponytail supplies generation guidance; this harness owns execution limits. Archi
 
 The extension is not a reminder. It is a rejection loop.
 
+Agent-facing rule: use only `done`, `continuing`, or `needs_human` unless another
+skill gave you a typed escalation packet. If a retry packet appears, copy
+`packet.suggested_status` rather than rebuilding the schema from memory.
+
 At terminal assistant `message_end` (`stopReason="stop"`, no tool calls or queued work), it:
 
 1. extracts the assistant’s final text;
@@ -21,7 +25,7 @@ At terminal assistant `message_end` (`stopReason="stop"`, no tool calls or queue
 7. ignores trailing prose after valid status JSON because pydantic data is authoritative and the renderer discards model prose;
 8. strips model-authored status JSON/prose from accepted output and renders the visible `Status Report` from the validated JSON, including concrete anchors such as `run_dir`, `artifacts[]`, `receipts[]`, `nodes[]`, `blocked[]`, and `missing_artifacts[]` when supplied;
 9. replaces rejected output with a compact `REJECTED_BY_SLOTH_COURT` notice that hashes raw diagnostics and points to the typed retry packet;
-10. prepares at most one output-only `UNLAZY_FORCED_RETRY` correction per reporting episode, armed or unarmed, and dispatches it only at `agent_end`; correction turns cannot call tools or request another correction; format-only retry output must be exactly one fenced `pi.agent_status.v1` JSON block, and guard-internal `lazy_report_shame.*` schemas are rejected as `format_retry_wrong_schema`;
+10. prepares at most one output-only `UNLAZY_FORCED_RETRY` correction per reporting episode, armed or unarmed, and dispatches it only at `agent_end`; correction turns cannot call tools or request another correction; the retry packet includes a copyable `suggested_status` continuing report; format-only retry output must be exactly one fenced `pi.agent_status.v1` JSON block, and guard-internal `lazy_report_shame.*` schemas are rejected as `format_retry_wrong_schema`;
 11. tells the human how to label the raw rejected candidate with `/shame reject|allow|warn <reason> -- <note>` after automatic repair is exhausted.
 
 The default mode is `normal`; ordinary chat is not forced through the status contract. Use `LAZY_REPORT_SHAME_DEFAULT_MODE=strict` for project-agent panes that must status-report at every terminal stop, or `/shame normal|off|strict` to override a session. Leading `$unlazy`/`/unlazy`/`/skill:unlazy` invocations add one-turn enforcement. Leading `$shame`/`/shame`/`/skill:shame` invocations request self-correction. Mentioning these skills or the phrase `acceptance ledger` in an advisory question does not activate a gate. New human input clears stale correction and skill-read flags. Report corrections are output-only even without an armed task budget; they cannot launch checks or reopen accepted work. Read-only failure history remains available outside correction turns. The `/lazy-report-shame-shame-shame` command enables session-wide enforcement explicitly. A continuation ledger file also enables status enforcement for that session because the guard has machine-readable unfinished work to check.

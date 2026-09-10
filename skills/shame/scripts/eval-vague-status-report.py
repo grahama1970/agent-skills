@@ -80,6 +80,8 @@ def main() -> None:
     index_text = INDEX.read_text(encoding="utf-8")
     assert "schema: \"lazy_report_shame.retry_request.v1\"" in index_text
     assert "schema: \"lazy_report_shame.follow_up.v1\"" in index_text
+    assert "suggested_status: suggestedRetryStatus(candidate, check)" in index_text
+    assert "Copy packet.suggested_status" in index_text
     notice = index_text[index_text.index("function rejectionNotice"):index_text.index("function retryEvidenceSnapshot")]
     assert "diagnostics_sha256" in notice
     assert "validation_result" not in notice
@@ -93,6 +95,7 @@ def main() -> None:
             "done status carries run_dir, artifact, receipt, and node fields through the checker",
             "visible renderer knows run dir, receipts, artifacts, node status, blocked, and missing artifact lines",
             "visible rejection notice is compact and hashes raw diagnostics",
+            "retry_request includes a copyable continuing suggested_status to avoid blind schema repair guesses",
             "retry_request and follow_up typed packet schemas remain present",
         ],
     }, indent=2))

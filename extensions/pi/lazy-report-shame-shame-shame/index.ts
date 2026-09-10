@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import { beginGuardTurn, claimGuardFollowUp, isAssistantStop, resetGuardRepairBudget } from "../_shared/guard-pipeline-shared.ts";
 import { installTaskBudget } from "./task-budget.ts";
 import { failureLogPath, historyOptions, readFailureHistory, recordFailure } from "./failure-history.mjs";
+import { stripTerminalStatusFrame } from "./terminal-status-frame.mjs";
 
 const EXTENSION_DIR = dirname(fileURLToPath(import.meta.url));
 // JSON-first checker (2026-09-01): regex/prose classification is banned.
@@ -149,25 +150,13 @@ type Candidate = {
 };
 
 function stripStatusJson(content: unknown): unknown {
-  // The model supplies data; the extension renders the human status. Drop the
-  // final machine JSON and any model-authored Status Report block before it.
-  const removeFrom = (text: string): string => {
-    const fenceStart = text.lastIndexOf("```json");
-    if (fenceStart === -1) return text;
-    const fenceEnd = text.indexOf("```", fenceStart + 7);
-    if (fenceEnd === -1) return text;
-    const block = text.slice(fenceStart, fenceEnd + 3);
-    if (!block.includes('"pi.agent_status.v1"')) return text;
-    const beforeJson = text.slice(0, fenceStart).trimEnd();
-    const reportAt = Math.max(beforeJson.lastIndexOf("\nStatus Report"), beforeJson.startsWith("Status Report") ? 0 : -1);
-    const beforeReport = reportAt >= 0 ? beforeJson.slice(0, reportAt).trimEnd() : beforeJson;
-    return beforeReport.trimEnd();
-  };
-  if (typeof content === "string") return removeFrom(content);
+  // The checker and renderer share one selector so validation and stripping
+  // agree on delimiters, ambiguity, and the exact frame span.
+  if (typeof content === "string") return stripTerminalStatusFrame(content);
   if (!Array.isArray(content)) return content;
   return content.map((part: any) => {
     if (part && part.type === "text" && typeof part.text === "string" && part.text.includes('"pi.agent_status.v1"')) {
-      return { ...part, text: removeFrom(part.text) };
+      return { ...part, text: stripTerminalStatusFrame(part.text) };
     }
     return part;
   });
@@ -932,15 +921,18 @@ ${JSON.stringify({
 \`\`\``;
 }
 
-function retryEvidenceSnapshot(candidate: Candidate, check: CheckResult): Array<Record<string, unknown>> {
-  let status: any = check.features?.status;
-  if (!status) {
-    const start = candidate.assistant_text.lastIndexOf("```json");
-    const end = start >= 0 ? candidate.assistant_text.indexOf("```", start + 7) : -1;
-    if (start >= 0 && end > start) {
-      try { status = JSON.parse(candidate.assistant_text.slice(start + 7, end)); } catch { status = null; }
-    }
+function statusFromCandidate(candidate: Candidate, check: CheckResult): any {
+  if (check.features?.status) return check.features.status;
+  const start = candidate.assistant_text.lastIndexOf("```json");
+  const end = start >= 0 ? candidate.assistant_text.indexOf("```", start + 7) : -1;
+  if (start >= 0 && end > start) {
+    try { return JSON.parse(candidate.assistant_text.slice(start + 7, end)); } catch { return null; }
   }
+  return null;
+}
+
+function retryEvidenceSnapshot(candidate: Candidate, check: CheckResult): Array<Record<string, unknown>> {
+  const status: any = statusFromCandidate(candidate, check);
   const proofs = Array.isArray(status?.proof) ? status.proof.map(String) : [];
   const errors = Array.isArray((check.features?.validation_result as any)?.errors) ? (check.features?.validation_result as any).errors : [];
   return proofs.slice(0, 8).map((proof: string) => {
@@ -956,6 +948,21 @@ function retryEvidenceSnapshot(candidate: Candidate, check: CheckResult): Array<
     }
     return item;
   });
+}
+
+function suggestedRetryStatus(candidate: Candidate, check: CheckResult): Record<string, unknown> {
+  const status: any = statusFromCandidate(candidate, check) || {};
+  const goal = String(status.goal || "continue the original task").trim();
+  return {
+    schema: "pi.agent_status.v1",
+    goal,
+    state: "continuing",
+    changed: Array.isArray(status.changed) && status.changed.length ? status.changed.map(String) : ["no change: status repair only"],
+    not_done: [{
+      item: "finish the original task with verified proof, then preflight the final status",
+      next_command: "write the final answer to /tmp/candidate.md and run skills/shame/run.sh preflight /tmp/candidate.md",
+    }],
+  };
 }
 
 function writeSpiralTicketRequest(candidate: Candidate, check: CheckResult, reviewPacketPath: string, decision: Record<string, unknown>): string {
@@ -1050,12 +1057,13 @@ function retryPrompt(candidate: Candidate, check: CheckResult, reviewPacketPath:
     validation_result: validationResult(check),
     recovery_decision: decision,
     evidence_snapshot: retryEvidenceSnapshot(candidate, check),
+    suggested_status: suggestedRetryStatus(candidate, check),
     next: rejectionAction(decision),
   };
   return `UNLAZY_FORCED_RETRY
-You have one output-only correction. Tools are forbidden.
-Your entire reply must be exactly one fenced json block whose object has "schema":"pi.agent_status.v1".
-Do not output lazy_report_shame.rejection_notice.v1 or any other lazy_report_shame.* schema; those are guard-internal receipts, not assistant status.
+Tools are forbidden. Reply with exactly one fenced json block.
+Copy packet.suggested_status unless you can make a stricter pi.agent_status.v1 from already-cited proof.
+Never output lazy_report_shame.*; those are guard-internal receipts.
 \`\`\`json
 ${JSON.stringify(packet)}
 \`\`\``;
