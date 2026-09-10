@@ -88,6 +88,7 @@ def _draft_or_file_ticket(report: dict[str, Any], target: str, receipt_path: str
         return {"ok": False, "error": "ticket skill not found"}
     args = [
         str(TICKET_RUN), "bug",
+        f"[{report['code']}] {report['cause'][:70]}",
         "--target", target,
         "--observed", f"[{report['code']}] {report['cause']}",
         "--expected", "The pipeline surfaces this unambiguous code + cause + a deterministic next command, not a generic error.",
@@ -107,6 +108,7 @@ def _store_memory(report: dict[str, Any]) -> dict[str, Any]:
     proc = _run([
         str(MEMORY_RUN), "learn",
         "-t", "Fragility", "-t", "error-taxonomy", "-t", str(report.get("layer") or "pipeline"),
+        "-t", str(report["code"]),
         "--problem", f"Ambiguous pipeline error assigned code {report['code']}: {report['cause']}",
         "--solution", (report.get("next_command") or "No deterministic fix yet; ticket + agentic-eval opened to pin it down."),
     ])
@@ -120,18 +122,73 @@ def catalog() -> None:
         typer.echo(f"{entry['code']:42} [{entry.get('layer','?'):7}] {entry.get('cause','')[:70]}")
 
 
+TAU_CLASSIFICATION_SCHEMA = "tau.triage_error_classification.v1"
+TAU_CONTRACT_LAYERS = frozenset(
+    {"tau", "dag-runtime", "scheduler", "adapter", "worker", "resource",
+     "workspace", "replay", "transition", "correction"}
+)
+
+
+def _tau_contract_payload(report: dict[str, Any]) -> dict[str, Any]:
+    """Map the simple classify() result onto tau's strict canonical contract.
+
+    tau.triage_error_classification.v1 consumers (the tau triage bridge) reject
+    anything else byte-level (`triage_contract_non_canonical_json`), which is
+    why every external classification degraded to triage_contract_invalid
+    before this existed. Output must be single-line compact sorted JSON.
+    """
+    code = str(report.get("code") or "triage_unclassified")
+    layer = str(report.get("layer") or "tau") or "tau"
+    if layer not in TAU_CONTRACT_LAYERS:
+        layer = "tau"
+    cause = " ".join(str(report.get("cause") or code).split()) or code
+    if "runner not found" in cause.lower() or code == "tau_triage_unavailable":
+        disposition, family = "UNAVAILABLE", "triage_unavailable"
+    else:
+        disposition, family = "AMBIGUOUS", "unknown_internal_failure"
+    return {
+        "schema": TAU_CLASSIFICATION_SCHEMA,
+        "code": code,
+        "layer": layer,
+        "cause": cause,
+        "repair_family": family,
+        "disposition": disposition,
+        "requires_human": bool(report.get("ambiguous")),
+        "diagnostics": {
+            "classifier_kind": "EXTERNAL_CLASSIFIER",
+            "next_command": report.get("next_command"),
+            "matched_tokens": report.get("matched_tokens") or [],
+            "recoverable": report.get("recoverable"),
+            "source": "triage-error skill",
+        },
+    }
+
+
+def _emit_tau_contract(report: dict[str, Any]) -> None:
+    payload = _tau_contract_payload(report)
+    typer.echo(json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False))
+
+
 @app.command(name="classify")
 def classify_cmd(
     text: str = typer.Option("", "--text", help="Raw error text."),
     receipt: Path = typer.Option(None, "--receipt", help="A lane receipt / *.meta.json to read."),
     layer: str = typer.Option("", "--layer", help="ask|tau|surf|scillm (optional)."),
+    contract: str = typer.Option(
+        "simple", "--contract",
+        help="simple (default) or tau (tau.triage_error_classification.v1 canonical, single-line).",
+    ),
 ) -> None:
     """Classify one error signal into a canonical (or minted) code."""
     signal = _read_signal(text, receipt)
     if not signal.strip():
         typer.echo(json.dumps({"error": "no --text or --receipt content"}))
         raise typer.Exit(2)
-    typer.echo(json.dumps(classify(signal, layer or None), indent=2))
+    report = classify(signal, layer or None)
+    if contract == "tau":
+        _emit_tau_contract(report)
+        return
+    typer.echo(json.dumps(report, indent=2))
 
 
 @app.command()

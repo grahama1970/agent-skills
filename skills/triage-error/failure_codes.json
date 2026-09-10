@@ -5,11 +5,17 @@
     {
       "code": "scillm_response_incomplete",
       "layer": "ask",
-      "match": ["scillm_response_incomplete"],
+      "match": [
+        "scillm_response_incomplete"
+      ],
       "cause": "The non-streaming provider response failed typed completion admission; inspect finish_reason and Pydantic validation_errors. Partial verdict text is not accepted evidence.",
       "next_command": "Inspect the failing Ask node's response.meta.json validation_errors and preserved response.raw.md; repair the output contract before authorizing a same-node retry.",
       "recoverable": true,
-      "not_this": ["reviewer semantic rejection", "provider authentication failure", "accepted complete response"]
+      "not_this": [
+        "reviewer semantic rejection",
+        "provider authentication failure",
+        "accepted complete response"
+      ]
     },
     {
       "code": "tau_seat_verdict_not_pass",
@@ -1509,6 +1515,34 @@
         "evidence_receipt_verdict_failed: handler_response_receipt for handler-codex node in project-watchdog ticket_repair lane; Tau blocked before reviewer ran (NO_RECEIPT downstream); cr"
       ],
       "cause": "Unclassified error signal: evidence_receipt_verdict_failed: handler_response_receipt for handler-codex node in project-watchdog ticket_repair lane; Tau blocked before reviewer ran (NO_RECEIPT downstream); creator response contained VERDICT: PASS and REVIEW_COMMIT but workspace diff included ~4MB of unrelated dirty agent-skill",
+      "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
+      "recoverable": true,
+      "not_this": []
+    },
+    {
+      "code": "tau_triage_bridge_contract_mismatch",
+      "layer": "tau",
+      "match": [
+        "triage_contract_invalid",
+        "triage-error runner not found",
+        "tau_triage_unavailable"
+      ],
+      "cause": "The external triage-error classifier output did not satisfy tau's tau.triage_error_classification.v1 canonical contract, or its runner was not discoverable, so the real failure code was masked.",
+      "next_command": "Run skills/triage-error/run.sh classify --contract tau against the raw signal; verify the tau bridge receipt shows classifier_kind EXTERNAL_CLASSIFIER, then repair the named underlying code.",
+      "recoverable": true,
+      "not_this": [
+        "provider authentication failure",
+        "reviewer semantic rejection"
+      ]
+    },
+    {
+      "code": "tau_unclassified_be556507",
+      "layer": "tau",
+      "match": [
+        "tau_unclassified_be556507",
+        "provider transport reset mid stream after 429 retry budget exhausted on handler-codex seat"
+      ],
+      "cause": "Unclassified error signal: provider transport reset mid stream after 429 retry budget exhausted on handler-codex seat",
       "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
       "recoverable": true,
       "not_this": []

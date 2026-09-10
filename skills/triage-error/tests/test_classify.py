@@ -322,3 +322,39 @@ def test_pi_research_gate_retry_command_mismatch_has_stable_code() -> None:
     assert r["recoverable"] is True
     assert "exact command" in r["next_command"]
 
+
+
+def test_classify_contract_tau_emits_strict_canonical_single_line():
+    """tau's bridge byte-compares stdout to canonical JSON; pretty or multi-line
+    output degrades every external classification to triage_contract_invalid."""
+    import json
+    import subprocess
+    import sys
+    out = subprocess.run(
+        [sys.executable, "triage_error.py", "classify", "--text",
+         "handler seat returned no verdict: triage_contract_invalid",
+         "--layer", "tau", "--contract", "tau"],
+        capture_output=True, text=True, check=True,
+    ).stdout
+    assert "\n" not in out.strip(), "contract output must be single-line"
+    payload = json.loads(out)
+    assert payload["schema"] == "tau.triage_error_classification.v1"
+    assert payload["disposition"] in {"KNOWN_REPAIR", "AMBIGUOUS", "NEEDS_HUMAN", "CONTRACT_INVALID", "UNAVAILABLE"}
+    assert payload["layer"] == "tau"
+    assert payload["code"]
+    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    assert out.strip() == canonical, "output must be canonical compact sorted JSON"
+
+
+def test_tau_contract_maps_unknown_layer_and_flattens_cause():
+    import json
+    import subprocess
+    import sys
+    out = subprocess.run(
+        [sys.executable, "triage_error.py", "classify", "--text", "weird surf crash boom",
+         "--layer", "surf", "--contract", "tau"],
+        capture_output=True, text=True, check=True,
+    ).stdout
+    payload = json.loads(out)
+    assert payload["layer"] == "tau", "layers outside tau's frozenset must collapse to tau"
+    assert "\n" not in payload["cause"]
