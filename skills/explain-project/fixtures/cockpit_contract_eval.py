@@ -217,9 +217,9 @@ def main() -> None:
         (
             right_state.integration_health.diagram == "READY"
             and right_state.integration_health.source_reveal
-            == "NOT_CONFIGURED"
+            == "STALE"
             and right_state.integration_health.debugger_target
-            == "NOT_CONFIGURED"
+            == "STALE"
         ),
         "integration health is not state-derived",
     )

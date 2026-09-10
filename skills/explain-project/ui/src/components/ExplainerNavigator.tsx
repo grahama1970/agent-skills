@@ -68,8 +68,8 @@ export function ExplainerNavigator({
   }
 
   return (
-    <section className="rounded-lg border border-zinc-800 bg-zinc-950/80 p-2.5">
-      <div className="mb-1.5 flex items-center justify-between text-xs">
+    <section className="shrink-0 rounded-lg border border-zinc-800 bg-zinc-950/80 p-2">
+      <div className="mb-1 flex items-center justify-between text-xs">
         <span className="font-semibold uppercase tracking-wider text-cyan-300">
           Explainer Index
         </span>
@@ -94,7 +94,7 @@ export function ExplainerNavigator({
         }}
       />
 
-      <div className="mt-2 flex items-center gap-2 text-xs">
+      <div className="mt-1.5 flex items-center gap-2 text-xs">
         <span className="text-zinc-400 font-mono">Jump index:</span>
         <input
           type="number"
@@ -104,7 +104,7 @@ export function ExplainerNavigator({
           data-qid="cockpit:explainer:page-input"
           data-qs-action="EXPLAINER_PAGE_SET"
           title="Type an exact explainer index"
-          className="w-full rounded border border-zinc-700 bg-zinc-900 px-2 py-1 font-mono text-xs text-zinc-200 outline-none focus:border-cyan-500"
+          className="w-full min-h-[34px] rounded border border-zinc-700 bg-zinc-900 px-2 py-0.5 font-mono text-xs text-zinc-200 outline-none focus:border-cyan-500"
           onChange={(event) => {
             const val = Number(event.currentTarget.value)
             selectIndex(val - 1)

@@ -1,72 +1,162 @@
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Lock,
+  RefreshCw,
+} from 'lucide-react'
+
+import type {
+  Dispatch,
+} from '../useCockpit'
+
+import {
+  useRegisterAction,
+} from '../useRegisterAction'
+
 import type {
   CockpitState,
   IntegrationStatus,
 } from '../types'
 
+type SyncLabel =
+  | 'SYNCED'
+  | 'OUT OF SYNC'
+  | 'DISCONNECTED'
+  | 'NOT CONFIGURED'
+
+const syncLabel: Record<IntegrationStatus, SyncLabel> = {
+  READY: 'SYNCED',
+  STALE: 'OUT OF SYNC',
+  FAILED: 'DISCONNECTED',
+  NOT_CONFIGURED: 'NOT CONFIGURED',
+}
+
 const tone: Record<IntegrationStatus, string> = {
-  READY: 'border-emerald-600/60 text-emerald-300 bg-emerald-950/40',
-  STALE: 'border-amber-600/60 text-amber-300 bg-amber-950/40',
-  FAILED: 'border-red-600/60 text-red-300 bg-red-950/40',
+  READY: 'border-green-500/70 text-green-300 bg-green-950/40',
+  STALE: 'border-amber-500/70 text-amber-300 bg-amber-950/40',
+  FAILED: 'border-red-500/70 text-red-300 bg-red-950/40',
   NOT_CONFIGURED: 'border-zinc-700 text-zinc-400 bg-zinc-900/60',
 }
 
-const dotColor: Record<IntegrationStatus, string> = {
-  READY: 'bg-emerald-400',
-  STALE: 'bg-amber-400',
-  FAILED: 'bg-red-400',
-  NOT_CONFIGURED: 'bg-zinc-500',
+function StatusIcon({
+  status,
+}: {
+  status: IntegrationStatus
+}) {
+  if (status === 'READY') {
+    return <CheckCircle2 aria-hidden="true" className="size-3.5 shrink-0" />
+  }
+
+  if (status === 'STALE') {
+    return <RefreshCw aria-hidden="true" className="size-3.5 shrink-0" />
+  }
+
+  if (status === 'FAILED') {
+    return <AlertTriangle aria-hidden="true" className="size-3.5 shrink-0" />
+  }
+
+  return <Lock aria-hidden="true" className="size-3.5 shrink-0" />
 }
 
 function HealthPill({
+  id,
   label,
   status,
+  onRetry,
 }: {
+  id: string
   label: string
   status: IntegrationStatus
+  onRetry: (id: string) => void
 }) {
+  const retryable = status !== 'READY'
+  const qid = `cockpit:health:status:${id}`
+
+  useRegisterAction({
+    element_id: qid,
+    app: 'explain-project',
+    action: 'SYNC_TARGET_RETRY',
+    label: `Retry ${label} sync`,
+    description: 'Request a bounded re-sync intent for a non-green cockpit target.',
+    params: { target: id },
+  })
+
   return (
-    <span
+    <button
+      type="button"
+      data-qid={`cockpit:health:status:${id}`}
+      data-qs-action="SYNC_TARGET_RETRY"
+      data-sync-status={syncLabel[status]}
       className={[
-        'inline-flex items-center gap-1.5 rounded-md border px-2 py-1 font-mono text-xs leading-none',
+        'inline-flex w-full items-center justify-between gap-2 rounded-md border px-2 py-1.5',
+        'font-mono text-xs leading-tight',
+        retryable ? 'cursor-pointer' : 'cursor-default',
         tone[status],
       ].join(' ')}
-      title={`${label}: ${status}`}
+      title={`${label}: ${syncLabel[status]}${retryable ? ' — click to request re-sync' : ''}`}
+      onClick={() => {
+        if (retryable) onRetry(id)
+      }}
     >
-      <span className={`h-1.5 w-1.5 rounded-full ${dotColor[status]}`} />
-      <span>{label}: {status}</span>
-    </span>
+      <span className="inline-flex min-w-0 items-center gap-2">
+        <StatusIcon status={status} />
+        <span className="truncate">{label}</span>
+      </span>
+      <span className="shrink-0 font-bold uppercase">{syncLabel[status]}</span>
+    </button>
   )
 }
 
 export function IntegrationHealth({
   state,
+  dispatch,
 }: {
   state: CockpitState
+  dispatch: Dispatch
 }) {
+  function retry(target: string): void {
+    window.dispatchEvent(new CustomEvent('cockpit:sync-target-retry', { detail: { target } }))
+
+    if (target === 'source' || target === 'web-ui') {
+      void dispatch('source.reveal.request')
+    }
+
+    if (target === 'debugger') {
+      void dispatch('debugger.prepare.request')
+    }
+  }
   return (
     <section className="rounded-lg border border-zinc-800 bg-zinc-950 p-3">
       <h2 className="text-xs font-semibold uppercase tracking-wider text-cyan-300">
         Integration health
       </h2>
 
-      <div className="mt-2 flex flex-wrap gap-1.5">
+      <div className="mt-2 grid gap-1.5">
         <HealthPill
+          id="live-evidence"
           label={state.question?.source === 'live_evidence_replay'
             ? 'Live Evidence (replay)'
             : 'Live Evidence intake'}
           status={state.integration_health.live_evidence}
+          onRetry={retry}
         />
         <HealthPill
-          label="Source"
+          id="source"
+          label="VS Code source"
           status={state.integration_health.source_reveal}
+          onRetry={retry}
         />
         <HealthPill
-          label="Debugger"
+          id="debugger"
+          label="Debugger DAP"
           status={state.integration_health.debugger_target}
+          onRetry={retry}
         />
         <HealthPill
-          label="Diagram"
+          id="web-ui"
+          label="Web UI / diagram"
           status={state.integration_health.diagram}
+          onRetry={retry}
         />
       </div>
     </section>

@@ -91,9 +91,11 @@ def _latest_step_receipt(
 def _receipt_health(
     receipt: AdapterReceipt | None,
     revision: int,
+    *,
+    configured: bool = False,
 ) -> str:
     if receipt is None:
-        return "NOT_CONFIGURED"
+        return "STALE" if configured else "NOT_CONFIGURED"
 
     if receipt.request_revision != revision - 1:
         return "STALE"
@@ -309,11 +311,16 @@ def project_state(
             source_reveal=_receipt_health(
                 source_receipt,
                 revision,
+                configured=True,
             ),
             debugger_target=(
                 "READY"
                 if proof is not None
-                else _receipt_health(debugger_receipt, revision)
+                else _receipt_health(
+                    debugger_receipt,
+                    revision,
+                    configured=debugger_target is not None,
+                )
             ),
             diagram=(
                 _receipt_health(diagram_receipt, revision)

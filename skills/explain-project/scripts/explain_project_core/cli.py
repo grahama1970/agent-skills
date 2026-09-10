@@ -430,12 +430,16 @@ def interaction_manifest_command(
         "cockpit:question:manual-submit",
         "cockpit:explainer:slider",
         "cockpit:explainer:page-input",
-        "cockpit:explainer:search",
+        "cockpit:explainer:search-input",
         "cockpit:explainer:paste-toggle",
         "cockpit:source:reveal",
         "cockpit:debugger:prepare",
         "cockpit:step:previous",
         "cockpit:step:next",
+        "cockpit:health:status:live-evidence",
+        "cockpit:health:status:source",
+        "cockpit:health:status:debugger",
+        "cockpit:health:status:web-ui",
     ]
 
     _emit(

@@ -1,4 +1,9 @@
 import {
+  ClipboardPaste,
+  CornerDownLeft,
+} from 'lucide-react'
+
+import {
   useState,
 } from 'react'
 
@@ -7,12 +12,12 @@ import type {
 } from '../useCockpit'
 
 import {
-  useFilteredExplainers,
-} from '../useCockpit'
-
-import {
   useRegisterAction,
 } from '../useRegisterAction'
+
+import {
+  ExplainerHistory,
+} from './ExplainerHistory'
 
 import {
   ExplainerNavigator,
@@ -30,67 +35,6 @@ interface Props {
   importRecord: (
     record: unknown,
   ) => Promise<boolean>
-}
-
-function ExplainerButton({
-  explainer,
-  dispatch,
-  selected,
-}: {
-  explainer: ExplainerSummary
-  dispatch: Dispatch
-  selected: boolean
-}) {
-  const id = explainer.feature_id
-  const qid = `cockpit:explainer:select:${id}`
-
-  useRegisterAction({
-    element_id: qid,
-    app: 'explain-project',
-    action: 'EXPLAINER_SELECT',
-    label: `Select ${explainer.title}`,
-    description: (
-      'Select one explainer and project its first '
-      + 'synchronized cockpit step.'
-    ),
-    params: {
-      feature_id: explainer.feature_id,
-    },
-  })
-
-  return (
-    <button
-      type="button"
-      data-qid={`cockpit:explainer:select:${id}`}
-      data-qs-action="EXPLAINER_SELECT"
-      title={`Select ${explainer.title}`}
-      aria-current={selected ? 'true' : undefined}
-      className={[
-        'w-full block text-left rounded-lg border p-2.5 min-h-[44px] transition-all',
-        selected
-          ? 'border-cyan-400 bg-cyan-950/40 text-cyan-100 shadow-sm shadow-cyan-950'
-          : 'border-zinc-800 bg-zinc-950/60 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900',
-      ].join(' ')}
-      onClick={() => {
-        void dispatch(
-          'explainer.select',
-          {
-            feature_id: explainer.feature_id,
-          },
-        )
-      }}
-    >
-      <span className="block text-xs font-semibold leading-snug">
-        {explainer.title}
-      </span>
-
-      <span className="mt-1 flex items-center gap-1.5 text-xs text-zinc-400 font-mono">
-        <span>{explainer.question_family}</span>
-        <span>·</span>
-        <span className="text-cyan-300 font-medium">{explainer.steps} steps</span>
-      </span>
-    </button>
-  )
 }
 
 export function InputRail({
@@ -118,17 +62,6 @@ export function InputRail({
     description: (
       'Route the current interview question through '
       + 'the deterministic explainer router.'
-    ),
-  })
-
-  useRegisterAction({
-    element_id: 'cockpit:explainer:search',
-    app: 'explain-project',
-    action: 'EXPLAINER_SEARCH_SET',
-    label: 'Search explainers',
-    description: (
-      'Filter the in-session explainer catalog without '
-      + 'changing cockpit revision.'
     ),
   })
 
@@ -166,14 +99,8 @@ export function InputRail({
   })
 
   const [question, setQuestion] = useState('')
-  const [query, setQuery] = useState('')
   const [pasteOpen, setPasteOpen] = useState(false)
   const [pastedJson, setPastedJson] = useState('')
-
-  const filtered = useFilteredExplainers(
-    explainers,
-    query,
-  )
 
   async function submitQuestion(): Promise<void> {
     const text = question.trim()
@@ -204,32 +131,32 @@ export function InputRail({
   return (
     <aside
       className={[
-        'space-y-2.5 overflow-y-auto rounded-xl',
+        'flex h-full min-h-0 flex-col gap-2.5 overflow-hidden rounded-xl',
         'border border-zinc-800',
-        'bg-zinc-900/70 p-3',
+        'bg-zinc-900/70 p-2.5',
       ].join(' ')}
     >
-      <div>
+      <div className="flex shrink-0 flex-col gap-1.5">
         <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">
           Question intake
         </h2>
-        <p className="mt-0.5 text-xs text-zinc-400">
+        <p className="text-xs leading-snug text-zinc-400">
           Route the interviewer’s question without changing the proof contract.
         </p>
       </div>
 
-      <div className="flex flex-col gap-2 w-full">
+      <div className="flex w-full shrink-0 flex-col gap-1.5">
         <textarea
           data-qid="cockpit:question:manual-input"
           data-qs-action="QUESTION_MANUAL_EDIT"
           title="Paste or type an interview question"
-          rows={3}
+          rows={2}
           className={[
             'w-full resize-none rounded-lg border border-zinc-700',
-            'bg-zinc-950 p-2.5 text-sm leading-relaxed text-zinc-100 min-h-[96px]',
+            'bg-zinc-950 p-2 text-sm leading-snug text-zinc-100 min-h-[72px]',
             'placeholder-zinc-500 outline-none focus:border-cyan-500',
           ].join(' ')}
-          placeholder="Paste interview question (Enter to route, Shift+Enter for line break)"
+          placeholder="Paste question (Press / to focus, Enter to route)"
           value={question}
           onChange={(event) => {
             setQuestion(
@@ -250,15 +177,16 @@ export function InputRail({
           data-qs-action="QUESTION_MANUAL_SUBMIT"
           title="Route the current interview question"
           className={[
-            'w-full min-h-[44px] rounded-lg border border-cyan-500/80',
-            'bg-cyan-600 px-3 py-2 text-xs font-semibold text-zinc-100',
+            'inline-flex w-full min-h-[38px] items-center justify-center gap-2 rounded-lg border border-cyan-500/80',
+            'bg-cyan-600 px-3 py-1.5 text-xs font-semibold text-zinc-100',
             'hover:bg-cyan-500 active:bg-cyan-700 transition-colors',
           ].join(' ')}
           onClick={() => {
             void submitQuestion()
           }}
         >
-          Ask Question
+          <span>Ask Question</span>
+          <CornerDownLeft aria-hidden="true" className="size-3.5 opacity-70" />
         </button>
       </div>
 
@@ -268,21 +196,10 @@ export function InputRail({
         dispatch={dispatch}
       />
 
-      <input
-        data-qid="cockpit:explainer:search"
-        data-qs-action="EXPLAINER_SEARCH_SET"
-        title="Search existing explainers"
-        className={[
-          'w-full rounded-lg border border-zinc-800 bg-zinc-950',
-          'px-2.5 py-2 text-xs outline-none focus:border-cyan-500 min-h-[44px]',
-        ].join(' ')}
-        placeholder="Find explainer"
-        value={query}
-        onChange={(event) => {
-          setQuery(
-            event.currentTarget.value,
-          )
-        }}
+      <ExplainerHistory
+        explainers={explainers}
+        state={state}
+        dispatch={dispatch}
       />
 
       <button
@@ -291,8 +208,8 @@ export function InputRail({
         data-qs-action="EXPLAINER_IMPORT_TOGGLE"
         title="Paste a session-only explainer"
         className={[
-          'w-full min-h-[44px] rounded-lg bg-cyan-500/20 border border-cyan-500/40',
-          'px-3 py-2 text-xs font-semibold text-cyan-200',
+          'inline-flex w-full min-h-[38px] shrink-0 items-center justify-center gap-2 rounded-lg bg-cyan-500/20 border border-cyan-500/40',
+          'px-3 py-1.5 text-xs font-semibold text-cyan-200',
           'hover:bg-cyan-500 hover:text-zinc-950 transition-all',
         ].join(' ')}
         onClick={() => {
@@ -301,7 +218,8 @@ export function InputRail({
           )
         }}
       >
-        Paste explainer
+        <ClipboardPaste aria-hidden="true" className="size-3.5" />
+        <span>Paste explainer</span>
       </button>
 
       {pasteOpen ? (
@@ -341,16 +259,6 @@ export function InputRail({
         </div>
       ) : null}
 
-      <div className="space-y-2 pt-0.5">
-        {filtered.map((explainer) => (
-          <ExplainerButton
-            key={explainer.feature_id}
-            explainer={explainer}
-            dispatch={dispatch}
-            selected={state.selection?.feature_id === explainer.feature_id}
-          />
-        ))}
-      </div>
     </aside>
   )
 }

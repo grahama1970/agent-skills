@@ -212,16 +212,27 @@ export function useCockpitKeys(
     function onKeyDown(
       event: KeyboardEvent,
     ): void {
+      if (event.key === 'Escape') {
+        window.dispatchEvent(new CustomEvent('cockpit:explainer:clear-search'))
+      }
+
       if (isTypingTarget(event.target)) {
         return
       }
 
-      if (event.key === 'ArrowRight') {
+      if (event.key === '/') {
+        event.preventDefault()
+        document
+          .querySelector<HTMLElement>('[data-qid="cockpit:question:manual-input"]')
+          ?.focus()
+      }
+
+      if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'j') {
         event.preventDefault()
         void dispatch('step.next')
       }
 
-      if (event.key === 'ArrowLeft') {
+      if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'k') {
         event.preventDefault()
         void dispatch('step.previous')
       }

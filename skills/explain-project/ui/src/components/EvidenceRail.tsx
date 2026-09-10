@@ -7,6 +7,11 @@ import {
 } from '../useRegisterAction'
 
 import {
+  Eye,
+  Play,
+} from 'lucide-react'
+
+import {
   DiagramStage,
 } from './DiagramStage'
 
@@ -53,7 +58,7 @@ export function EvidenceRail({
   return (
     <aside
       className={[
-        'space-y-2 overflow-y-auto rounded-xl',
+        'flex h-full min-h-0 flex-col gap-2 overflow-hidden rounded-xl',
         'border border-zinc-800',
         'bg-zinc-900/70 p-2.5 text-xs',
       ].join(' ')}
@@ -67,110 +72,104 @@ export function EvidenceRail({
         </p>
       </div>
 
-      <IntegrationHealth state={state} />
+      <IntegrationHealth state={state} dispatch={dispatch} />
 
-      <section
-        data-qid="cockpit:source:panel"
-        data-revision={state.source.revision}
-        className="rounded-lg border border-zinc-800 bg-zinc-950 p-2.5"
-      >
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-cyan-300">
-          Source
-        </h2>
-
-        <div className="mt-1 rounded bg-zinc-900 p-1.5 font-mono text-xs text-cyan-200 break-all select-all border border-zinc-800/80">
-          {location
-            ? [
-                location.file,
-                `${location.start_line}-${location.end_line}`,
-              ].join(':')
-            : 'No source selected'}
-        </div>
-
-        <p className="mt-1.5 text-xs text-zinc-300 leading-relaxed">
-          {state.source.explanation}
-        </p>
-
-        <button
-          type="button"
-          data-qid="cockpit:source:reveal"
-          data-qs-action="SOURCE_REVEAL_REQUEST"
-          title="Prepare a preserve-focus VS Code reveal intent"
-          className={[
-            'mt-2 w-full min-h-[40px] rounded border border-zinc-700 bg-zinc-900',
-            'py-1.5 px-3 text-xs font-medium text-zinc-200',
-            'hover:border-cyan-500/50 hover:bg-zinc-800 transition-all',
-          ].join(' ')}
-          onClick={() => {
-            void dispatch(
-              'source.reveal.request',
-            )
-          }}
+      <div className="grid shrink-0 grid-cols-2 gap-2">
+        <section
+          data-qid="cockpit:source:panel"
+          data-revision={state.source.revision}
+          className="min-w-0 rounded-lg border border-zinc-800 bg-zinc-950 p-2"
         >
-          Reveal source
-        </button>
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-cyan-300">
+            Source
+          </h2>
 
-        <p className="mt-1.5 text-xs font-mono text-zinc-400">
-          {state.source.reveal_intent
-            ? (
-                `Intent r${state.source.reveal_intent.revision}; `
-                + 'execute=false'
-              )
-            : 'No reveal intent emitted.'}
-        </p>
-      </section>
-
-      <section
-        data-qid="cockpit:debugger:panel"
-        data-revision={state.debugger.revision}
-        className="rounded-lg border border-zinc-800 bg-zinc-950 p-2.5"
-      >
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-cyan-300">
-          Debugger target only
-        </h2>
-
-        <div className="mt-1 rounded bg-zinc-900 p-1.5 font-mono text-xs text-cyan-200 break-all select-all border border-zinc-800/80">
-          {debuggerTarget
-            ? `${debuggerTarget.file}:${debuggerTarget.line}`
-            : 'No target'}
-        </div>
-
-        <p className="mt-1.5 text-xs text-zinc-300 leading-relaxed">
-          {debuggerTarget?.proves}
-        </p>
-
-        {debuggerTarget?.locals.length ? (
-          <div className="mt-1.5 text-xs font-mono text-zinc-300 bg-zinc-900/60 p-1.5 rounded border border-zinc-800">
-            <span className="text-zinc-400">locals: </span>
-            {debuggerTarget.locals.join(', ')}
+          <div className="mt-1 rounded bg-zinc-900 p-1.5 font-mono text-[11px] text-cyan-200 break-all select-all border border-zinc-800/80">
+            {location
+              ? [
+                  location.file,
+                  `${location.start_line}-${location.end_line}`,
+                ].join(':')
+              : 'No source selected'}
           </div>
-        ) : null}
 
-        <button
-          type="button"
-          data-qid="cockpit:debugger:prepare"
-          data-qs-action="DEBUGGER_PREPARE_TARGET"
-          title="Prepare debugger target without running the debugger"
-          className={[
-            'mt-2 w-full min-h-[40px] rounded border border-zinc-700 bg-zinc-900',
-            'py-1.5 px-3 text-xs font-medium text-zinc-200',
-            'hover:border-cyan-500/50 hover:bg-zinc-800 transition-all',
-          ].join(' ')}
-          onClick={() => {
-            void dispatch(
-              'debugger.prepare.request',
-            )
-          }}
+          <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-zinc-300">
+            {state.source.explanation}
+          </p>
+
+          <button
+            type="button"
+            data-qid="cockpit:source:reveal"
+            data-qs-action="SOURCE_REVEAL_REQUEST"
+            title="Prepare a preserve-focus VS Code reveal intent"
+            className={[
+              'mt-1.5 w-full min-h-[34px] rounded border border-zinc-700 bg-zinc-900',
+              'py-1 px-2 text-xs font-medium text-zinc-200',
+              'hover:border-cyan-500/50 hover:bg-zinc-800 transition-all',
+            ].join(' ')}
+            onClick={() => {
+              void dispatch(
+                'source.reveal.request',
+              )
+            }}
+          >
+            <Eye aria-hidden="true" className="inline size-3.5 align-[-2px]" />
+            <span className="ml-1.5">Reveal</span>
+          </button>
+
+          <p className="mt-1 text-[11px] font-mono text-zinc-400">
+            {state.source.reveal_intent
+              ? `Intent r${state.source.reveal_intent.revision}; execute=false`
+              : 'No intent.'}
+          </p>
+        </section>
+
+        <section
+          data-qid="cockpit:debugger:panel"
+          data-revision={state.debugger.revision}
+          className="min-w-0 rounded-lg border border-zinc-800 bg-zinc-950 p-2"
         >
-          Prepare target
-        </button>
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-cyan-300">
+            Debugger
+          </h2>
 
-        <p className="mt-1.5 text-xs font-mono text-zinc-400">
-          {state.debugger.prepare_intent
-            ? 'Intent only; execution_allowed=false'
-            : state.debugger.status}
-        </p>
-      </section>
+          <div className="mt-1 rounded bg-zinc-900 p-1.5 font-mono text-[11px] text-cyan-200 break-all select-all border border-zinc-800/80">
+            {debuggerTarget
+              ? `${debuggerTarget.file}:${debuggerTarget.line}`
+              : 'No target'}
+          </div>
+
+          <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-zinc-300">
+            {debuggerTarget?.proves}
+          </p>
+
+          <button
+            type="button"
+            data-qid="cockpit:debugger:prepare"
+            data-qs-action="DEBUGGER_PREPARE_TARGET"
+            title="Prepare debugger target without running the debugger"
+            className={[
+              'mt-1.5 w-full min-h-[34px] rounded border border-zinc-700 bg-zinc-900',
+              'py-1 px-2 text-xs font-medium text-zinc-200',
+              'hover:border-cyan-500/50 hover:bg-zinc-800 transition-all',
+            ].join(' ')}
+            onClick={() => {
+              void dispatch(
+                'debugger.prepare.request',
+              )
+            }}
+          >
+            <Play aria-hidden="true" className="inline size-3.5 align-[-2px]" />
+            <span className="ml-1.5">Prepare</span>
+          </button>
+
+          <p className="mt-1 text-[11px] font-mono text-zinc-400">
+            {state.debugger.prepare_intent
+              ? 'Intent only'
+              : state.debugger.status}
+          </p>
+        </section>
+      </div>
 
       <DiagramStage state={state} />
     </aside>

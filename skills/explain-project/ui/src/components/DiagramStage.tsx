@@ -40,10 +40,10 @@ export function DiagramStage({
     <section
       data-qid="cockpit:diagram:stage"
       data-revision={state.diagram.revision}
-      className="rounded-lg border border-zinc-800 bg-zinc-950 p-2.5"
+      className="min-h-0 flex-1 overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 p-2.5"
     >
       <h2 className="text-xs font-semibold uppercase tracking-wider text-cyan-300">
-        Diagram
+        Architecture map
       </h2>
 
       {rendered && artifact !== 'missing' ? (
@@ -68,7 +68,7 @@ export function DiagramStage({
         </p>
       ) : null}
 
-      <div className="relative mt-2 overflow-hidden rounded border border-zinc-800 bg-zinc-900/90 p-1.5">
+      <div className="relative mt-2 overflow-hidden rounded border border-zinc-800 bg-zinc-900/90 p-2">
         <svg
           viewBox={`0 0 280 ${height}`}
           role="img"
@@ -120,7 +120,7 @@ export function DiagramStage({
                   x="38"
                   y={y + 4}
                   fill={isActive ? '#cffafe' : '#a1a1aa'}
-                  fontSize="12"
+                  fontSize="13"
                   fontFamily="monospace"
                   fontWeight={isActive ? 'bold' : 'normal'}
                 >
@@ -130,6 +130,39 @@ export function DiagramStage({
             )
           })}
         </svg>
+      </div>
+
+      <div
+        data-qid="cockpit:diagram:node-list"
+        className="mt-2 max-h-40 space-y-1.5 overflow-y-auto"
+      >
+        {nodes.length ? nodes.map(({ nodeId }, index) => {
+          const isActive = active.has(nodeId)
+
+          return (
+            <div
+              key={nodeId}
+              data-node-id={nodeId}
+              data-active={isActive ? 'true' : 'false'}
+              className={[
+                'min-h-[44px] rounded-lg border px-2.5 py-2 font-mono text-sm',
+                'flex items-center justify-between gap-2',
+                isActive
+                  ? 'border-cyan-500 bg-cyan-950/40 text-cyan-100'
+                  : 'border-zinc-800 bg-zinc-950/80 text-zinc-400',
+              ].join(' ')}
+            >
+              <span className="truncate">{nodeId}</span>
+              <span className="text-[10px] uppercase tracking-wider text-zinc-500">
+                n{index + 1}
+              </span>
+            </div>
+          )
+        }) : (
+          <p className="rounded-lg border border-zinc-800 bg-zinc-950/80 p-2.5 font-mono text-sm text-zinc-500">
+            No diagram nodes.
+          </p>
+        )}
       </div>
 
       <p className="mt-1.5 text-xs font-mono text-cyan-300">

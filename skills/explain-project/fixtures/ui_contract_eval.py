@@ -127,6 +127,14 @@ def main() -> None:
         encoding="utf-8"
     )
 
+    history = (
+        root
+        / "components"
+        / "ExplainerHistory.tsx"
+    ).read_text(
+        encoding="utf-8"
+    )
+
     hook = (
         root
         / "useRegisterAction.ts"
@@ -144,9 +152,9 @@ def main() -> None:
     require(
         (
             "function ExplainerButton"
-            in input_rail
+            in history
             and "useRegisterAction({"
-            in input_rail
+            in history
         ),
         (
             "dynamic explainer action is not "
