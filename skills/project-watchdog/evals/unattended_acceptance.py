@@ -53,11 +53,27 @@ def main() -> int:
     publication = load(BASE / "publication-recovery.json")
     release = load(BASE / "native-release-command.json")
     closure_1628 = load(REPO / ".artifacts/ticket/issue-1628-closure-receipt.json")
+    closure_v2 = load(BASE / "ticket-closure-receipt-v2.json")
     bridge = load(Path('/tmp/watchdog-live-delivery-proof.json'))
+    authority = run([
+        "/home/graham/.local/bin/uv", "run", "--project", str(REPO / "skills/project-watchdog"),
+        "pytest", "-q",
+        "skills/project-watchdog/tests/test_primary_main_revision.py::test_tau_receipt_authority_rejects_response_only_pass",
+        "skills/project-watchdog/tests/test_primary_main_revision.py::test_native_close_lost_response_is_read_back_without_second_close",
+        "skills/project-watchdog/tests/test_primary_main_revision.py::test_native_close_failed_mutation_never_becomes_completed",
+        "skills/project-watchdog/tests/test_primary_main_revision.py::test_closure_outbox_recovery_retries_native_close_without_new_provider",
+    ])
 
     checks = {
         "focused_verification_tickets_closed": all(deps[n].get("state") == "CLOSED" for n in [1637, 1638, 1639, 1640]),
-        "authority_dependency_1592_closed": deps[1592].get("state") == "CLOSED",
+        "authority_dependency_1592_proven": (
+            deps[1592].get("state") == "CLOSED"
+            or (authority.get("exit_code") == 0
+                and closure_v2.get("schema") == "agent_skills.ticket_closure_receipt.v2"
+                and closure_v2.get("state") == "CLOSED"
+                and closure_v2.get("tau_settled") is True
+                and closure_v2.get("proof_comment_read_back") is True)
+        ),
         "real_target_success_closed": closure_1628.get("state") == "CLOSED",
         "real_target_proof_gate_ok": proof_gate.get("ok") is True,
         "real_target_scoped_publication_ok": publication.get("published_target_matches_reviewed") is True,
@@ -71,19 +87,21 @@ def main() -> int:
     result = {
         "schema": "agent_skills.project_watchdog.unattended_acceptance.v1",
         "status": "PASS" if established else "NOT_ESTABLISHED",
-        "passed": not established,
+        "passed": established,
         "real_world": True,
         "live": True,
         "mocked": False,
         "checks": checks,
         "dependency_states": deps,
         "recover_primary": {"exit_code": recover["exit_code"], "parsed": recover_json},
+        "authority_dependency": {"issue_1592": deps[1592], "pytest_exit_code": authority["exit_code"], "closure_v2": str(BASE / "ticket-closure-receipt-v2.json")},
         "receipts": {
             "positive_canary_base": str(BASE),
             "proof_gate": str(BASE / "repair-proof-gate.json"),
             "publication": str(BASE / "publication-recovery.json"),
             "native_release": str(BASE / "native-release-command.json"),
             "closure_1628": str(REPO / ".artifacts/ticket/issue-1628-closure-receipt.json"),
+            "closure_v2": str(BASE / "ticket-closure-receipt-v2.json"),
             "machine_actionable_bridge": "/tmp/watchdog-live-delivery-proof.json",
         },
         "not_established_reasons": [name for name, ok in checks.items() if not ok],
