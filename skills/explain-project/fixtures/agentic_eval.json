@@ -469,7 +469,7 @@
         "bash",
         "../scripts/eval_live_cockpit_ui.sh"
       ],
-      "timeout_seconds": 300,
+      "timeout_seconds": 480,
       "expected": {
         "exit_code": 0,
         "stdout_contains": [

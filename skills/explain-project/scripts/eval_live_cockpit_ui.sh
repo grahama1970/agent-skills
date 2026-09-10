@@ -131,6 +131,7 @@ api = None
 preview = None
 board = None
 board_tab_id = None
+board_restore_url = "https://excalidraw.com/"
 tab_id = None
 try:
     # 1. Disposable cockpit API on the oai-trial explainers.
@@ -152,8 +153,19 @@ try:
         stderr=subprocess.STDOUT,
     )
 
-    # 1b. Disposable ops-excalidraw whiteboard for the diagram tab.
-    board = subprocess.Popen(
+    # 1b. Persistent ops-excalidraw whiteboard (tab 837436448's home).
+    #     Boot a disposable one only as fallback.
+    BOARD_URL = "http://127.0.0.1:7683/"
+    board = None
+    try:
+        with urllib.request.urlopen(
+            BOARD_URL, timeout=2
+        ) as _r:
+            healthy = _r.status == 200
+    except Exception:
+        healthy = False
+    if not healthy:
+        board = subprocess.Popen(
         [
             "bash",
             str(SKILL.parent / "ops-excalidraw" / "run.sh"),
@@ -162,6 +174,8 @@ try:
         stdout=(T / "board.log").open("w"),
         stderr=subprocess.STDOUT,
     )
+        BOARD_URL = "http://127.0.0.1:7684/"
+    board_served = board is not None or healthy
 
     # 2. Disposable vite preview proxying /api to the API.
     preview = subprocess.Popen(
@@ -211,6 +225,9 @@ try:
         prev.stdout.strip().strip('"')
         or f"http://127.0.0.1:15176/"
     )
+    # Never restore into the eval's own navigation artifact.
+    if "liveui=1" in restore_url:
+        restore_url = "http://127.0.0.1:15176/"
     surf(
         "go",
         f"http://127.0.0.1:{UI_PORT}/?liveui=1",
@@ -306,27 +323,53 @@ try:
             "pipeline.py" in (dbg.get("target") or "")
             and stop_line
         ):
-            # Whiteboard tab for this breakpoint's diagram.
-            if board_tab_id is None and board is not None:
-                wb = surf(
-                    "tab.new",
-                    "http://127.0.0.1:7684/",
+            # Whiteboard tab for this breakpoint's diagram:
+            # ONE persistent entered tab id, navigated and restored.
+            if board_tab_id is None and board_served:
+                board_tab_id = int(
+                    os.environ.get(
+                        "LIVEUI_BOARD_TAB_ID",
+                        "837436448",
+                    )
                 )
-                m = re.search(
-                    r"Created tab (\d+):", wb.stdout
+                # Verify via tab.list (no debugger attach): a
+                # DevTools window on the tab wedges chrome.debugger.
+                listing = surf("tab.list", "--json")
+                entries = json.loads(listing.stdout)
+                entry = next(
+                    (
+                        e for e in entries
+                        if str(e.get("id"))
+                        == str(board_tab_id)
+                    ),
+                    None,
                 )
-                assert m, wb.stdout + wb.stderr
-                board_tab_id = int(m.group(1))
+                assert entry is not None, (
+                    "board tab not open: "
+                    + str(board_tab_id)
+                )
+                surf(
+                    "go", BOARD_URL,
+                    "--tab-id", str(board_tab_id),
+                )
                 time.sleep(2)
-                title_probe = dom_probe(
-                    board_tab_id,
-                    'JSON.stringify({t:document.title})',
+                listing = surf("tab.list", "--json")
+                entries = json.loads(listing.stdout)
+                entry = next(
+                    (
+                        e for e in entries
+                        if str(e.get("id"))
+                        == str(board_tab_id)
+                    ),
+                    None,
                 )
+                assert entry is not None
                 assert "whiteboard" in (
-                    title_probe.get("t") or ""
-                ), title_probe
+                    entry.get("title") or ""
+                ), entry
                 print(
-                    "WHITEBOARD_TAB_OK", board_tab_id
+                    "WHITEBOARD_TAB_OK",
+                    board_tab_id,
                 )
 
             # REAL headless breakpoint at the step's stop.
@@ -501,7 +544,12 @@ try:
     print("LIVE_COCKPIT_WALKTHROUGH_OK")
 finally:
     if board_tab_id is not None:
-        surf("tab.close", str(board_tab_id))
+        for _ in range(3):
+            surf(
+                "go", BOARD_URL,
+                "--tab-id", str(board_tab_id),
+            )
+            time.sleep(1)
     if board is not None:
         board.terminate()
         try:
