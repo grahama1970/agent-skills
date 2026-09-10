@@ -80,6 +80,12 @@ def _handled_result_allows_agent_followup(result: dict[str, Any]) -> bool:
 def _handled_tick_status(result: dict[str, Any], *, preview: bool) -> str:
     if preview:
         return "DRY_RUN"
+    if result.get("ok") is True and result.get("status") == "SKIPPED":
+        # Deliberate skips (creator_transport_outage, retained_operation_running)
+        # are quiet: no persisted receipt directory, no eventful log line. The
+        # outage record itself is the durable evidence; persisting a receipt per
+        # rotation recreated per-tick NEEDS_ATTENTION noise (2026-09-10 22:40Z).
+        return "SKIPPED"
     return "COMPLETED" if result.get("ok") is True else "NEEDS_ATTENTION"
 
 
