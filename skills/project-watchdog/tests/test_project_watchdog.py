@@ -2916,3 +2916,47 @@ def test_verdict_recovery_replay_is_idempotent(tmp_path):
     second = verdict_recovery.recover(tmp_path)
     assert Path(second["nodes"][0]["recovery_receipt"]) == receipt
     assert receipt.stat().st_mtime_ns == mtime  # not rewritten
+
+
+def test_dependency_preflight_all_ok_allows_dispatch(tmp_path, monkeypatch):
+    from watchdog import capability_preflight as cp, config as cfg
+    monkeypatch.setattr(cfg, "state_root", lambda: tmp_path)
+    monkeypatch.setattr(cp.config, "state_root", lambda: tmp_path)
+    monkeypatch.setattr(cp, "PROBES", {n: (lambda: (True, "ok")) for n in ("gh", "triage_runner", "memory", "ask")})
+    r = cp.run()
+    assert r["dispatch_ready"] is True and r["failed"] == []
+    allowed, why = cp.dispatch_allowed()
+    assert allowed is True and why["reason"] == "ready"
+
+
+def test_dependency_preflight_fault_injection_pauses_dispatch(tmp_path, monkeypatch):
+    from watchdog import capability_preflight as cp
+    monkeypatch.setattr(cp.config, "state_root", lambda: tmp_path)
+    for broken in ("gh", "triage_runner", "memory", "ask"):
+        probes = {n: (lambda: (True, "ok")) for n in ("gh", "triage_runner", "memory", "ask")}
+        probes[broken] = lambda: (False, f"{broken}_down")
+        monkeypatch.setattr(cp, "PROBES", probes)
+        r = cp.run()
+        assert r["dispatch_ready"] is False and broken in r["failed"]
+        allowed, why = cp.dispatch_allowed()
+        assert allowed is False and why["reason"] == "capability_dependency_down"
+        assert broken in why["failed"]
+
+
+def test_dependency_preflight_stale_receipt_refuses(tmp_path, monkeypatch):
+    from watchdog import capability_preflight as cp
+    import time as _t
+    monkeypatch.setattr(cp.config, "state_root", lambda: tmp_path)
+    monkeypatch.setattr(cp, "PROBES", {n: (lambda: (True, "ok")) for n in ("gh", "triage_runner", "memory", "ask")})
+    cp.run()
+    _real = _t.time
+    monkeypatch.setattr(_t, "time", lambda: _real() + cp.DEFAULT_MAX_AGE_SECONDS + 10)
+    allowed, why = cp.dispatch_allowed()
+    assert allowed is False and why["reason"] == "capability_receipt_stale"
+
+
+def test_cron_env_missing_receipt_is_not_human_blocker(tmp_path, monkeypatch):
+    from watchdog import capability_preflight as cp
+    monkeypatch.setattr(cp.config, "state_root", lambda: tmp_path)
+    allowed, why = cp.dispatch_allowed()
+    assert allowed is False and why["reason"] == "no_capability_receipt" and "next" in why

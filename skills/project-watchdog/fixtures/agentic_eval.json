@@ -1,1716 +1,1743 @@
 {
-  "version": 2,
-  "skill": "project-watchdog",
-  "trials": 3,
-  "proof_scope": "regression cases for defects observed in live operation, run against the real CLI and the real routing library with an isolated state root, including landed repair-worktree cleanup through ops-worktrees",
-  "claims": {
-    "proves": "each named failure mode is refused or handled as described, repeatably, through the skill's own entrypoint and routing functions; that the installed cron interval is never every-minute, that dispatch defers during the overnight batch window, that activate reports schedule and state together, and that auto-landed repairs invoke ops-worktrees cleanup before issue closure",
-    "does_not_prove": "that a live repair, closure audit, or completion attestation succeeds. Those dispatch models through $ask/Tau and are proven only by a live receipt read back from the produced artifact, not by this fixture."
+ "version": 2,
+ "skill": "project-watchdog",
+ "trials": 3,
+ "proof_scope": "regression cases for defects observed in live operation, run against the real CLI and the real routing library with an isolated state root, including landed repair-worktree cleanup through ops-worktrees",
+ "claims": {
+  "proves": "each named failure mode is refused or handled as described, repeatably, through the skill's own entrypoint and routing functions; that the installed cron interval is never every-minute, that dispatch defers during the overnight batch window, that activate reports schedule and state together, and that auto-landed repairs invoke ops-worktrees cleanup before issue closure",
+  "does_not_prove": "that a live repair, closure audit, or completion attestation succeeds. Those dispatch models through $ask/Tau and are proven only by a live receipt read back from the produced artifact, not by this fixture."
+ },
+ "cases": [
+  {
+   "name": "watchdog-proof-trust",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "python",
+    "../evals/proof_trust.py",
+    "/tmp/watchdog-proof-trust-result.json"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "artifacts": [
+     {
+      "path": "/tmp/watchdog-proof-trust-result.json",
+      "json_pointer": "/passed",
+      "equals": true
+     }
+    ]
+   },
+   "proves": "The repair proof gate rejects forged bare-boolean proof JSON, stale artifacts, missing/verdictless/ambiguous reviewers, count-contradicting and forged typed reports, while accepting valid typed READY and untyped domain READY payloads. Fault-injected deterministic; not live GitHub/provider closure evidence."
   },
-  "cases": [
-    {
-      "name": "watchdog-proof-trust",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "python",
-        "../evals/proof_trust.py",
-        "/tmp/watchdog-proof-trust-result.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "artifacts": [
-          {
-            "path": "/tmp/watchdog-proof-trust-result.json",
-            "json_pointer": "/passed",
-            "equals": true
-          }
-        ]
-      },
-      "proves": "The repair proof gate rejects forged bare-boolean proof JSON, stale artifacts, missing/verdictless/ambiguous reviewers, count-contradicting and forged typed reports, while accepting valid typed READY and untyped domain READY payloads. Fault-injected deterministic; not live GitHub/provider closure evidence."
-    },
-    {
-      "name": "watchdog-verify-plan-trust",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "python",
-        "../evals/verify_plan_trust.py",
-        "/tmp/watchdog-verify-plan-result.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "artifacts": [
-          {
-            "path": "/tmp/watchdog-verify-plan-result.json",
-            "json_pointer": "/passed",
-            "equals": true
-          }
-        ]
-      },
-      "proves": "validated_verification_plan admits only a complete reviewer-owned VERIFY_PLAN: truncated plan JSON, duplicate/missing plans, creator authority substitution, wrong artifact binding, blank coverage, and multiline command injection are all rejected. Fault-injected deterministic; not live closure evidence."
-    },
-    {
-      "name": "watchdog-scoped-primary-reservation",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_primary_main_revision.py::test_scoped_reservations_allow_disjoint_declared_targets",
-        "../tests/test_primary_main_revision.py::test_legacy_global_flock_does_not_block_declared_scoped_targets",
-        "../tests/test_primary_main_revision.py::test_scoped_reservations_serialize_overlapping_target_prefixes",
-        "../tests/test_primary_main_revision.py::test_scoped_publication_guard_rejects_commit_outside_reserved_target",
-        "../tests/test_project_rotation.py::test_tick_scans_disjoint_target_when_scoped_writer_is_active",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "5 passed"
-        ]
-      },
-      "proves": "Primary reservations use target-scoped nonblocking locks: disjoint declared targets can coexist, a legacy checkout-global flock does not block declared scoped targets, prefix-overlapping targets serialize, the publication guard rejects worker-attributable commits outside the reserved target scope, and the tick scanner treats active scoped writer targets as busy targets rather than a repository-wide stop. Fixture-backed only; no live GitHub/provider closure."
-    },
-    {
-      "name": "watchdog-publication-recovery",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 180,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "python",
-        "../evals/publication_recovery.py",
-        "/tmp/watchdog-publication-recovery-case.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "artifacts": [
-          {
-            "path": "/tmp/watchdog-publication-recovery-case.json",
-            "json_pointer": "/passed",
-            "equals": true
-          }
-        ]
-      },
-      "proves": "Retained #1639 regression coverage for publication races and native release recovery: disjoint remote-main advance, same-target conflict, failed push diagnostics, helper nonzero diagnostics, close readback still open, proof/publication/close/release interruption recovery, target parsing scope, foreign leases/holds, and closed-but-release-pending journal state. Fault-injected mock-GitHub tests supplement, not replace, live remote evidence.",
-      "does_not_prove": "The required live E2E against a real approved GitHub ticket; that remains a separate verification-plan command before closure."
-    },
-    {
-      "name": "watchdog-unattended-acceptance",
-      "type": "adversarial",
-      "evidence_class": "live_e2e",
-      "real_world": true,
-      "mocked": false,
-      "timeout_seconds": 180,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "python",
-        "../evals/unattended_acceptance.py",
-        "/tmp/watchdog-unattended-acceptance-result.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "artifacts": [
-          {
-            "path": "/tmp/watchdog-unattended-acceptance-result.json",
-            "json_pointer": "/status",
-            "equals": "PASS"
-          },
-          {
-            "path": "/tmp/watchdog-unattended-acceptance-result.json",
-            "json_pointer": "/passed",
-            "equals": true
-          },
-          {
-            "path": "/tmp/watchdog-unattended-acceptance-result.json",
-            "json_pointer": "/real_world",
-            "equals": true
-          },
-          {
-            "path": "/tmp/watchdog-unattended-acceptance-result.json",
-            "json_pointer": "/mocked",
-            "equals": false
-          }
-        ]
-      },
-      "proves": "#1641 acceptance gate reads live GitHub dependency state, retained watchdog receipts, cron starts, current dry-run tick output, current remote heads, native closure/readback receipts, and recover_primary pending output. It passes only when every required unattended scenario is established.",
-      "does_not_prove": "Unattended watchdog reliability when the result artifact reports NOT_ESTABLISHED or FAILED; those states are deliberate fail-closed outcomes and keep the ticket open."
-    },
-    {
-      "name": "watchdog-closure-authority",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 180,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_primary_main_revision.py::test_tau_receipt_authority_rejects_response_only_pass",
-        "../tests/test_primary_main_revision.py::test_completed_resume_result_outranks_nonzero_wrapper_receipt",
-        "../tests/test_primary_main_revision.py::test_native_close_lost_response_is_read_back_without_second_close",
-        "../tests/test_primary_main_revision.py::test_native_close_failed_mutation_never_becomes_completed",
-        "../tests/test_primary_main_revision.py::test_native_close_rejects_foreign_generation_and_changed_proof",
-        "../tests/test_primary_main_revision.py::test_closure_outbox_recovery_retries_native_close_without_new_provider",
-        "../tests/test_primary_main_revision.py::test_closed_ticket_with_release_pending_is_not_finished_completed",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "7 passed"
-        ]
-      },
-      "proves": "#1592 closure authority slice: response-only PASS cannot authorize closure; live Tau node receipts are required before the native ticket close path; lost/failed close responses are read back; foreign lease generations and mutated proof files fail closed; closure outbox recovery retries without launching a new provider; release-pending is not reported as finished COMPLETED. Fault-injected deterministic; live canary evidence remains separate.",
-      "does_not_prove": "Ten consecutive canary lifecycles across two repositories."
-    },
-    {
-      "name": "immutable-replay-proof-negative-controls",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_watchdog.py::test_immutable_replay_proof_checks_expected_failures_and_hashes",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "1 passed"
-        ]
-      }
-    },
-    {
-      "name": "native-release-retains-command-diagnostics",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_primary_main_revision.py::test_owned_release_does_not_remove_foreign_generation",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "1 passed"
-        ]
-      }
-    },
-    {
-      "name": "sanity-gates",
-      "type": "positive",
-      "command": [
-        "bash",
-        "../sanity.sh"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "0 failed"
-        ]
-      }
-    },
-    {
-      "name": "notify-bridge-skips-machine-actionable-needs-attention",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_watchdog_notify_bridge.py",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "5 passed"
-        ]
-      },
-      "proves": "project-watchdog notify bridge does not page the human or send HIGH/ALERT Switchboard pushes for NEEDS_ATTENTION receipts that explicitly require no human input, still wakes the Pi agent for machine-actionable work, and summarizes unsettled active operations with issue identity plus the recovery command instead of None#None.",
-      "does_not_prove": "Live Discord or Switchboard delivery; this is a deterministic policy gate over the bridge routing function."
-    },
-    {
-      "name": "watchdog-log-delivery",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "python",
-        "../evals/watchdog_log_delivery.py",
-        "/tmp/watchdog-log-delivery-proof.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "artifacts": [
-          {
-            "path": "/tmp/watchdog-log-delivery-proof.json",
-            "json_pointer": "/passed",
-            "equals": true
-          },
-          {
-            "path": "/tmp/watchdog-log-delivery-proof.json",
-            "json_pointer": "/checks/jsonl_bytes_rendered_terminal_event",
-            "equals": true
-          },
-          {
-            "path": "/tmp/watchdog-log-delivery-proof.json",
-            "json_pointer": "/checks/pi_checkpoint_after_ack",
-            "equals": true
-          },
-          {
-            "path": "/tmp/watchdog-log-delivery-proof.json",
-            "json_pointer": "/checks/agent_action_receipt_retained",
-            "equals": true
-          },
-          {
-            "path": "/tmp/watchdog-log-delivery-proof.json",
-            "json_pointer": "/checks/human_only_escalation_uses_ops_discord",
-            "equals": true
-          },
-          {
-            "path": "/tmp/watchdog-log-delivery-proof.json",
-            "json_pointer": "/checks/restart_catchup_no_loss",
-            "equals": true
-          },
-          {
-            "path": "/tmp/watchdog-log-delivery-proof.json",
-            "json_pointer": "/checks/restart_catchup_no_replay_flood",
-            "equals": true
-          },
-          {
-            "path": "/tmp/watchdog-log-delivery-proof.json",
-            "json_pointer": "/checks/stale_progress_never_live",
-            "equals": true
-          }
-        ]
-      },
-      "proves": "The real watchdog_notify_bridge.py entrypoint normalizes receipts into correlated JSONL terminal events with explicit unknown identity, source_time separate from observed_at, raw errors and triage details; advances per-destination checkpoints only after terminal/Pi/ops-discord readback; retains pending failed destinations for restart catch-up without replay flood; refuses concurrent collectors; keeps stale heartbeat progress out of LIVE; and sends ops-discord only for explicit human-input blockers.",
-      "does_not_prove": "Live Discord, live Pi Switchboard, live GitHub/Tau transition, or supervising agent acknowledgement. The command uses isolated receipts, a local HTTP stand-in, and a fake ops-discord executable; the ticket's live E2E proof remains a separate closure gate."
-    },
-    {
-      "name": "fleet-tick-running-writer-skips",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_rotation.py::test_fleet_tick_with_live_writer_is_quiet_skip",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "1 passed"
-        ]
-      },
-      "proves": "A fleet tick that only finds a retained live writer exits cleanly as SKIPPED/retained_operation_running and does not persist another NEEDS_ATTENTION receipt.",
-      "does_not_prove": "The live writer finished its repair; that is proven only by recover_primary reading back the run receipt after the writer exits."
-    },
-    {
-      "name": "recover-primary-running-writer-zero",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_recover_primary.py",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "2 passed"
-        ]
-      },
-      "proves": "The authorized recover_primary.py next command exits 0 while the original watchdog writer is still live, instead of creating another machine-actionable failure loop.",
-      "does_not_prove": "A live Ask/Tau repair has completed; it only proves the recovery command does not report a healthy running writer as a failed recovery."
-    },
-    {
-      "name": "unit-suite",
-      "type": "positive",
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0
-      }
-    },
-    {
-      "name": "project-watchdog-ui-snapshot-contract",
-      "category": "project-watchdog-ui",
-      "type": "positive",
-      "evidence_class": "deterministic",
-      "timeout_seconds": 120,
-      "command": [
-        "bash",
-        "-lc",
-        "../run.sh ui-data --receipt-limit 2 | jq -e '.schema == \"agent_skills.project_watchdog.ui_snapshot.v1\" and (.items | type == \"array\") and (.counts | has(\"TOTAL\"))' >/dev/null && node ../ui/scripts/check-ui-contract.mjs"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "\"ok\": true"
-        ]
-      },
-      "proves": "The project-watchdog UI data projection emits the declared read-only snapshot schema and the React/Tailwind interface keeps data-qid/data-qs-action/title, useRegisterAction, sticky filters, desktop table, mobile cards, Tau DAG, and receipt-chain contract literals.",
-      "does_not_prove": "A human has opened the UI in a browser or that a live Tau run is embedded; those require a local browser interaction receipt after serving the built app."
-    },
-    {
-      "name": "strict-project-does-not-fall-through-to-fleet",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_rotation.py::test_strict_project_tick_does_not_fall_through_to_another_project",
-        "../tests/test_project_rotation.py::test_all_project_tick_is_the_explicit_fleet_fallback",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "2 passed"
-        ]
-      }
-    },
-    {
-      "name": "dependency-gate-holds-and-unblocks-depends-on",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_rotation.py::test_open_dependency_blocks_dispatch",
-        "../tests/test_project_rotation.py::test_closed_dependency_apply_clears_hold_labels_without_same_tick_dispatch",
-        "../tests/test_project_rotation.py::test_unreadable_dependency_fails_closed",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "3 passed"
-        ]
-      }
-    },
-    {
-      "name": "closure-audit-prompt-omits-local-paths",
-      "type": "adversarial",
-      "evidence_class": "deterministic",
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_watchdog.py::test_closure_audit_prompt_omits_absolute_local_paths",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "1 passed"
-        ]
-      }
-    },
-    {
-      "name": "closure-audit-nonzero-needs-attention",
-      "category": "closure-audit-nonzero-needs-attention",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_watchdog.py::test_nonzero_audit_with_needs_attention_verdict_reopens_for_human",
-        "../tests/test_project_watchdog.py::test_unreadable_closure_artifact_reopens_for_machine_repair",
-        "../tests/test_project_watchdog.py::test_artifact_unreadable_receipt_requires_authorized_agent_steps",
-        "../tests/test_project_watchdog.py::test_nonzero_needs_attention_audit_cools_down_if_selected_again",
-        "../tests/test_p0_boundaries.py::test_receipt_schema_rejects_left_closed_unverified_closure_audit",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "5 passed"
-        ]
-      },
-      "proves": "A closure audit whose Ask/Tau wrapper exits nonzero but whose seats declare VERDICT: NEEDS_ATTENTION is not sent down the no-verdict path; it reopens the unverified ticket for human review, unreadable proof-artifact gaps reopen for machine repair with authorized_agent_next_steps instead of needs-human, rejects left-closed or incorrectly human-gated handled-issue receipts in Pydantic, and records cooldown state so the next tick does not re-launch the duplicate audit.",
-      "does_not_prove": "A live browser/provider closure audit succeeds; this is a fault-injected regression over the watchdog's own handler and cooldown path."
-    },
-    {
-      "name": "closure-audit-nonzero-fail-reopens",
-      "category": "closure-audit-nonzero-fail-reopens",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_watchdog.py::test_nonzero_audit_with_fail_verdict_is_reopened",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "1 passed"
-        ]
-      },
-      "proves": "A closure audit whose Ask/Tau wrapper exits nonzero because receipt evidence records VERDICT: FAIL still reaches the FAIL/reopen path instead of being downgraded to no usable panel verdict and retried forever.",
-      "does_not_prove": "A live browser/provider closure audit succeeds; this is a fault-injected regression over the watchdog handler path observed from issue #1519 receipts."
-    },
-    {
-      "name": "closure-auditors-use-local-claude-not-webclaude",
-      "category": "closure-auditors-use-local-claude-not-webclaude",
-      "type": "adversarial",
-      "evidence_class": "deterministic",
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_watchdog.py::test_default_closure_auditors_use_local_claude_not_webclaude",
-        "../tests/test_project_watchdog.py::test_markdown_receipt_paths_are_read_relative_to_the_project_worktree",
-        "../tests/test_project_watchdog.py::test_local_state_receipt_paths_are_read_from_watchdog_state_root",
-        "../tests/test_project_watchdog.py::test_proof_artifact_lines_are_collected_for_closure_audit",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "4 passed"
-        ]
-      },
-      "proves": "The default project-watchdog closure-audit roster uses the local Ask/Tau Claude Opus low-reasoning lane instead of the webclaude browser test seat; markdown receipt paths from issue comments are read relative to the target project worktree; local/state/project-watchdog paths are read from the watchdog state root; and PROOF_ARTIFACT lines are collected for auditors.",
-      "does_not_prove": "A live closure audit provider call succeeds; this is a deterministic configuration guard."
-    },
-    {
-      "name": "targeted-issue-does-not-lose-target-to-earlier-issue",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_rotation.py::test_targeted_issue_does_not_let_earlier_issue_claim_its_target",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "1 passed"
-        ]
-      }
-    },
-    {
-      "name": "dirty-registered-target-does-not-block-isolated-authoring",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_watchdog.py::test_a_dirty_registered_target_is_reported_but_does_not_block_isolated_authoring",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "1 passed"
-        ]
-      },
-      "proves": "A dirty target path in the registered checkout is reported but does not block project-watchdog from preparing an isolated repair worktree from origin/main.",
-      "does_not_prove": "A live Ask/Tau repair for the ticket succeeds."
-    },
-    {
-      "name": "skill-scoped-projects-only-route-owned-targets",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_rotation.py::test_missing_runtime_state_uses_project_default_state",
-        "../tests/test_project_rotation.py::test_skill_scoped_project_ignores_unrelated_agent_skills_tickets",
-        "../tests/test_project_rotation.py::test_broad_agent_skills_project_can_exclude_battle_tickets",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "3 passed"
-        ]
-      },
-      "notes": "Regression for Battle scope drift: a battle-scoped project sees only skills/battle issues, and the broad agent-skills project can exclude skills/battle so fleet rotation does not steal Battle tickets."
-    },
-    {
-      "name": "auto-landed-repair-worktree-cleanup",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_watchdog.py::test_landed_repair_cleanup_invokes_ops_worktrees_archive",
-        "../tests/test_project_watchdog.py::test_auto_landed_repair_archives_worktree_before_closing",
-        "../tests/test_project_watchdog.py::test_auto_landed_repair_cleanup_failure_keeps_ticket_open",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "3 passed"
-        ]
-      },
-      "proves": "After a reviewer-passed repair lands on main, project-watchdog invokes ops-worktrees archive --apply for the repair worktree before closing; if cleanup fails, the ticket stays open and is marked needs-attention.",
-      "does_not_prove": "A live GitHub repair branch was landed or a real filesystem worktree was archived; these tests mock the GitHub and subprocess effects and prove watchdog control flow only."
-    },
-    {
-      "name": "repair-dispatch-passes-explicit-ask-execution-timeout",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_watchdog.py::test_ticket_repair_dispatches_through_ask_tau_dag",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "1 passed"
-        ]
-      }
-    },
-    {
-      "name": "ticket-repair-preserves-tau-owned-scillm-boundary",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_watchdog.py::test_ticket_repair_dispatches_through_ask_tau_dag",
-        "../tests/test_project_watchdog.py::test_ticket_repair_documents_tau_owned_scillm_boundary",
-        "../tests/test_project_watchdog.py::test_web_model_creator_is_refused_before_ask_dispatch",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "3 passed"
-        ]
-      }
-    },
-    {
-      "name": "registered-repair-seats-can-author-and-review-code",
-      "type": "adversarial",
-      "evidence_class": "deterministic",
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_watchdog.py::test_registered_repair_seats_can_author_and_review_code",
-        "../tests/test_project_watchdog.py::test_tau_repair_reviewer_is_local_claude_opus_48_high",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "2 passed"
-        ]
-      }
-    },
-    {
-      "name": "ticket-repair-uses-codex-author-with-remote-reviewer",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_watchdog.py::test_repair_execution_handlers_keep_reviewer_remote",
-        "../tests/test_project_watchdog.py::test_remote_reviewer_prompt_defers_local_readback_to_watchdog",
-        "../tests/test_project_watchdog.py::test_required_proof_artifacts_ignore_out_dirs_and_strip_punctuation",
-        "../tests/test_project_watchdog.py::test_proof_artifact_ignores_provider_status_noise_and_domain_enums",
-        "../tests/test_project_watchdog.py::test_review_commit_lines_keep_invalid_sha_out_of_valid_set",
-        "../tests/test_project_watchdog.py::test_required_proof_clauses_skip_fenced_command_bodies",
-        "../tests/test_project_watchdog.py::test_proof_plan_coverage_all_required_clauses_is_valid",
-        "../tests/test_project_watchdog.py::test_repair_proof_gate_allows_stale_declared_artifacts_before_native_verify",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "8 passed"
-        ]
-      }
-    },
-    {
-      "name": "agent-actionable-attention-is-not-human-blocker",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_watchdog.py::test_a_failed_attestor_run_does_not_attest_but_authorizes_agent_followup",
-        "../tests/test_project_rotation.py::test_agent_actionable_attention_does_not_make_the_tick_a_human_blocker",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "2 passed"
-        ]
-      },
-      "proves": "A completion-attestation transport/parser failure remains unproven but is marked requires_human_input=false with authorized_agent_next_steps, and the top-level tick can complete without training supervising agents to stop for a fake human blocker.",
-      "does_not_prove": "A live completion attestation succeeds; this is a deterministic regression over watchdog control flow and handler metadata."
-    },
-    {
-      "name": "unknown-project-fails-closed-and-names-it",
-      "type": "negative",
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) ./run.sh tick --project not-a-real-project 2>&1 | grep -q \"unknown project_id\" && echo UNKNOWN_PROJECT_NAMED"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "UNKNOWN_PROJECT_NAMED"
-        ]
-      }
-    },
-    {
-      "name": "global-pause-refuses-to-dispatch",
-      "type": "negative",
-      "command": [
-        "bash",
-        "-c",
-        "d=$(mktemp -d); mkdir -p $d/receipts; printf '{\"schema\":\"agent_skills.project_watchdog.registry.v1\",\"projects\":[{\"project_id\":\"probe\",\"repo\":\"o/r\",\"worktree\":\"/nonexistent\"}]}' > $d/p.json; printf '{\"global\":{\"state\":\"paused\"},\"projects\":{\"probe\":{\"state\":\"active\"}}}' > $d/state.json; PROJECT_WATCHDOG_STATE_ROOT=$d PROJECT_WATCHDOG_PROJECTS_PATH=$d/p.json ../run.sh tick --apply --project probe | grep -o '\"status\": \"[A-Z]*\"' | head -1; echo DIRS=$(find $d/receipts -maxdepth 1 -type d -name 'project-watchdog-2*' | wc -l)"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "SKIPPED",
-          "DIRS=0"
-        ]
-      }
-    },
-    {
-      "name": "finished-repair-stops-being-routable",
-      "type": "adversarial",
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "python",
-        "-c",
-        "import sys; sys.path.insert(0,'../scripts'); from watchdog import registry, config; i={'number':1,'labels':[{'name':'agent-work'},{'name':config.DONE_LABEL}],'body':'target: src/x.py'}; a,r=registry.classify_issue_with_reason(i); assert a is None and r=='awaiting_review', (a,r); print('REFUSED', r)"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "REFUSED awaiting_review"
-        ]
-      }
-    },
-    {
-      "name": "worktree-holding-unmerged-work-is-not-reset",
-      "type": "adversarial",
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "-q",
-        "../tests/test_project_watchdog.py::test_a_worktree_holding_unmerged_work_is_not_reset"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "1 passed"
-        ]
-      }
-    },
-    {
-      "name": "tick-does-not-revert-an-operator-state-change",
-      "type": "adversarial",
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "python",
-        "-c",
-        "import sys, json, pathlib, tempfile; sys.path.insert(0,'../scripts'); from watchdog import commands, config; p=pathlib.Path(tempfile.mkdtemp())/'state.json'; config.state_path=lambda: p; p.write_text(json.dumps({'projects':{'tau':{'state':'active'}}})); stale={'projects':{'tau':{'state':'active'}},'last_served_project':'tau'}; live=json.loads(p.read_text()); live['projects']['new-project']={'state':'active'}; p.write_text(json.dumps(live)); commands._persist_tick_state(stale); after=json.loads(p.read_text()); assert 'new-project' in after['projects'], after; assert after['last_served_project']=='tau'; print('SURVIVED', sorted(after['projects']))"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "SURVIVED",
-          "new-project"
-        ]
-      }
-    },
-    {
-      "name": "duplicate-closure-is-not-audited-for-proof",
-      "type": "adversarial",
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "python",
-        "-c",
-        "import sys, json, datetime as dt; sys.path.insert(0,'../scripts'); from watchdog import registry; now=dt.datetime(2026,7,29,tzinfo=dt.UTC); ts=(now-dt.timedelta(hours=1)).isoformat().replace('+00:00','Z');\nmk=lambda n,reason: {'number':n,'title':'t','body':'','labels':[{'name':'agent-work'}],'closedAt':ts,'stateReason':reason,'url':'u'}\nregistry.run_cmd=lambda cmd, timeout_s=None: {'exit_code':0,'stdout':json.dumps([mk(1,'COMPLETED'),mk(2,'NOT_PLANNED')]),'stderr':''}\np=registry.list_closed_for_audit('r',{'repo':'o/r','project_id':'p'},now=now.timestamp()); assert [i['number'] for i in p]==[1], p; print('SKIPPED_DUPLICATE ok')"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "SKIPPED_DUPLICATE ok"
-        ]
-      }
-    },
-    {
-      "name": "single-seat-audit-panel-is-refused",
-      "type": "adversarial",
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "python",
-        "-c",
-        "import sys, pathlib, tempfile; sys.path.insert(0,'../scripts'); from watchdog import handlers; calls=[]; handlers.run_cmd=lambda *a, **k: calls.append(a) or {'exit_code':0}; d=pathlib.Path(tempfile.mkdtemp()); proj={'project_id':'p','repo':'o/r','worktree':str(d),'closure_auditors':['claude-opus-4-8']}; iss={'number':9,'title':'t','body':'','labels':[],'url':'u','closedAt':'2026-07-29T00:00:00Z','stateReason':'COMPLETED'}; res=handlers.handle_closure_audit('r', d, proj, iss, apply=True); assert res['status']=='BLOCKED', res; assert 'two distinct seats' in res['summary']; assert not calls; print('PANEL_REFUSED ok')"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "PANEL_REFUSED ok"
-        ]
-      }
-    },
-    {
-      "name": "identical-creator-and-reviewer-are-refused",
-      "type": "adversarial",
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "python",
-        "-c",
-        "import sys; sys.path.insert(0,'../scripts'); from watchdog import config; c=config.repair_creator({}); r=config.repair_reviewer({}); assert c!=r, (c,r); assert 'codex' not in r and 'gpt' not in r, r; print('SEATS_DIFFER', c, r)"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "SEATS_DIFFER"
-        ]
-      }
-    },
-    {
-      "name": "an-unreadable-target-does-not-block-the-fleet",
-      "type": "adversarial",
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "python",
-        "-c",
-        "import sys; sys.path.insert(0,'../scripts'); from watchdog import registry as g; U=g.UNKNOWN_TARGET; assert g.targets_are_blocked({'skills/ticket'}, {U}) is False; assert g.targets_are_blocked({U},{U}) is True; assert g.targets_are_blocked({U}, set()) is False; print('UNKNOWN_ISOLATED ok')"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "UNKNOWN_ISOLATED ok"
-        ]
-      }
-    },
-    {
-      "name": "oc-chat-repair-creator-is-refused",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_watchdog.py::test_oc_chat_creator_is_refused_before_ask_dispatch",
-        "../tests/test_project_watchdog.py::test_repair_execution_handlers_keep_reviewer_remote",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "2 passed"
-        ]
-      }
-    },
-    {
-      "name": "a-failed-lease-stops-the-dispatch",
-      "type": "adversarial",
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "python",
-        "-c",
-        "import sys, pathlib, tempfile; sys.path.insert(0,'../scripts'); from watchdog import handlers; res={'ok':True,'commands':[]}; handlers.github.issue_edit=lambda *a, **k: {'exit_code':1,'stderr':\"label 'agent-active' not found\"}; ok=handlers.acquire_lease('r', res, 'o/r', 7); assert ok is False; assert res['status']=='BLOCKED'; assert 'ensure-labels' in res['summary']; print('LEASE_FAILCLOSED ok')"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "LEASE_FAILCLOSED ok"
-        ]
-      }
-    },
-    {
-      "name": "stale-lease-expiry-and-reclaim",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_rotation.py::test_stale_lease_is_reclaimed_from_the_in_flight_set",
-        "../tests/test_project_rotation.py::test_fresh_lease_remains_in_flight",
-        "../tests/test_project_rotation.py::test_unknown_acquisition_time_fails_closed_as_in_flight",
-        "../tests/test_project_rotation.py::test_reclaim_removes_only_the_expired_lease_label",
-        "../tests/test_project_rotation.py::test_reclaimed_issue_is_not_redispatched_in_the_same_tick",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "5 passed"
-        ]
-      }
-    },
-    {
-      "name": "a-stall-that-needs-a-human-is-not-reported-as-success",
-      "type": "adversarial",
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "python",
-        "-c",
-        "import sys; sys.path.insert(0,'../scripts'); from watchdog import commands; r={'ok':True,'status':'SKIPPED'}; commands._record_fleet_stall(r,[{'project_id':'a','reason':'project_state_paused'},{'project_id':'b','reason':'lane_busy'}]); assert r['ok'] is False and r['status']=='NEEDS_ATTENTION', r; q={'ok':True,'status':'SKIPPED'}; commands._record_fleet_stall(q,[{'project_id':'a','reason':'lane_busy'}]); assert q['ok'] is True, q; print('STALL_HONEST ok')"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "STALL_HONEST ok"
-        ]
-      }
-    },
-    {
-      "name": "scheduler-short-lock-allows-unrelated-targets",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "real_world": true,
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/project-watchdog pytest -vv skills/project-watchdog/tests/test_project_rotation.py::test_scheduler_short_lock_allows_unrelated_target_tick"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "test_scheduler_short_lock_allows_unrelated_target_tick PASSED"
-        ]
-      },
-      "notes": "Proof for agent-skills#1508: while issue #1 is still inside handle_issue for skills/ask, a nested tick can acquire the released scheduler lock and dispatch issue #2 for skills/ticket."
-    },
-    {
-      "name": "scheduler-execution-lock-blocks-overlapping-targets",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "real_world": true,
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/project-watchdog pytest -vv skills/project-watchdog/tests/test_project_rotation.py::test_scheduler_execution_lock_blocks_overlapping_target_tick"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "test_scheduler_execution_lock_blocks_overlapping_target_tick PASSED"
-        ]
-      },
-      "notes": "Proof for agent-skills#1508: while issue #1 holds the execution lock for skills/ask, a nested tick for issue #2 on skills/ask returns without entering handle_issue."
-    },
-    {
-      "name": "overlapping-applied-ticks-skip-live",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "real_world": true,
-      "timeout_seconds": 600,
-      "command": [
-        "bash",
-        "-c",
-        "cd ..; D=$(mktemp -d); printf '%s\n' '{\"schema\":\"agent_skills.project_watchdog.registry.v1\",\"projects\":[]}' > $D/projects.json; printf '%s\n' '{\"global\":{\"state\":\"active\"},\"projects\":{}}' > $D/state.json; PROJECT_WATCHDOG_STATE_ROOT=$D PROJECT_WATCHDOG_PROJECTS_PATH=$D/projects.json PROJECT_WATCHDOG_TEST_HOLD_LOCK_SECONDS=8 ./run.sh tick --apply --project all --max-tickets 1 > $D/first.out 2> $D/first.err & first=$!; for i in $(seq 1 80); do [ -f $D/lock/owner.json ] && break; sleep 0.1; done; test -f $D/lock/owner.json || { echo FIRST_LOCK_NOT_OBSERVED; cat $D/first.err; kill $first 2>/dev/null || true; wait $first 2>/dev/null || true; exit 1; }; python3 - <<PY\nimport json, pathlib\np=pathlib.Path('$D/lock/owner.json')\nd=json.loads(p.read_text())\nd['epoch']=0\np.write_text(json.dumps(d, indent=2)+'\\n')\nprint('FIRST_RUN='+d['run_id'])\nPY\nPROJECT_WATCHDOG_STATE_ROOT=$D PROJECT_WATCHDOG_PROJECTS_PATH=$D/projects.json ./run.sh tick --apply --project all --max-tickets 1 > $D/second.out 2> $D/second.err; second_rc=$?; wait $first; first_rc=$?; python3 - <<PY\nimport json, pathlib, sys\nroot=pathlib.Path('$D')\nsecond_rc=int('$second_rc')\nfirst_rc=int('$first_rc')\nsecond=json.loads((root/'second.out').read_text())\nassert second_rc == 0, (second_rc, (root/'second.err').read_text())\nassert second['status']=='SKIPPED', second\nassert second['stop_reason']=='tick_already_running', second\nassert second.get('handled_issues') == [], second.get('handled_issues')\nassert second.get('receipt_persisted') is False, second\nassert first_rc == 0, (first_rc, (root/'first.err').read_text())\nprint('OVERLAP_SKIPPED_LIVE')\nPY"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "OVERLAP_SKIPPED_LIVE"
-        ]
-      }
-    },
-    {
-      "name": "path-literals-never-contain-shell-variables",
-      "type": "adversarial",
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "python",
-        "../scripts/check_path_literals.py",
-        "../scripts"
-      ],
-      "expected": {
-        "exit_code": 0
-      }
-    },
-    {
-      "name": "a-once-a-minute-schedule-is-refused",
-      "type": "adversarial",
-      "timeout_seconds": 120,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run --project . python -c \"import sys; sys.path.insert(0,'scripts')\nfrom watchdog import commands\nrc=commands.install_cron(apply=False, minute='*')\nassert rc==2, rc\nrc2=commands.install_cron(apply=False, minute='*/5')\nassert rc2==0, rc2\nprint('bare star refused; */5 accepted')\""
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "bare star refused"
-        ]
-      }
-    },
-    {
-      "name": "the-installed-interval-is-never-every-minute",
-      "type": "adversarial",
-      "timeout_seconds": 120,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && ./run.sh install-cron 2>/dev/null | python3 -c \"import json,sys; d=json.load(sys.stdin); line=d['cron_line']; minute=line.split()[0]; assert minute == '*/5', line; assert not line.startswith('* * * * *'), line; assert '--project all' in line, line; print('default interval is', minute, 'project all')\""
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "default interval is */5",
-          "project all"
-        ]
-      },
-      "real_world": true
-    },
-    {
-      "name": "overnight-batch-window-defers-dispatch",
-      "type": "adversarial",
-      "timeout_seconds": 120,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run --project . python -c \"import sys,datetime; sys.path.insert(0,'scripts')\nfrom watchdog import config\nw=config.quiet_window()\nassert w, 'quiet window must be configured'\nfor h in (2,3,4,6):\n    assert config.in_quiet_hours(datetime.datetime(2026,1,1,h)), h\nfor h in (9,14,20):\n    assert not config.in_quiet_hours(datetime.datetime(2026,1,1,h)), h\nprint('overnight window', w, 'defers batch hours and not daytime')\""
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "defers batch hours and not daytime"
-        ]
-      }
-    },
-    {
-      "name": "activate-is-idempotent-and-reports-both-facts",
-      "type": "positive",
-      "timeout_seconds": 150,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && ./run.sh activate 2>/dev/null | python3 -c \"import json,sys; d=json.load(sys.stdin); assert d['ok'] is True; steps={s['step'] for s in d['steps']}; assert 'install_cron' in steps and 'set_state_global_active' in steps, steps; assert d['apply'] is False, 'bare activate must be a dry run'; print('activate reports schedule and state together')\""
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "schedule and state together"
-        ]
-      },
-      "real_world": true
-    },
-    {
-      "name": "an-interval-shorter-than-the-worst-tick-is-rejected",
-      "type": "adversarial",
-      "timeout_seconds": 150,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run --project . python -c \"import sys; sys.path.insert(0,'scripts')\nfrom watchdog import commands\nfor bad in ('*','*/1'):\n    rc=commands.install_cron(apply=False, minute=bad)\n    assert rc!=0 or bad!='*', (bad, rc)\nassert commands.install_cron(apply=False, minute='*')==2\nprint('sub-tick intervals rejected')\""
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "sub-tick intervals rejected"
-        ]
-      }
-    },
-    {
-      "name": "a-quiet-window-crossing-midnight-is-handled",
-      "type": "adversarial",
-      "timeout_seconds": 150,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run --project . python -c \"import sys; sys.path.insert(0,'scripts')\nimport datetime, os\nos.environ['PROJECT_WATCHDOG_QUIET_HOURS']='22-7'\nimport importlib; from watchdog import config; importlib.reload(config)\nfor h in (23,0,3,6):\n    assert config.in_quiet_hours(datetime.datetime(2026,1,1,h)), h\nfor h in (8,12,21):\n    assert not config.in_quiet_hours(datetime.datetime(2026,1,1,h)), h\nprint('midnight-crossing window correct')\""
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "midnight-crossing window correct"
-        ]
-      }
-    },
-    {
-      "name": "a-malformed-quiet-window-does-not-silently-pass",
-      "type": "adversarial",
-      "timeout_seconds": 150,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run --project . python -c \"import sys; sys.path.insert(0,'scripts')\nimport os, importlib\nfor bad in ('abc','2-99','-','2-'):\n    os.environ['PROJECT_WATCHDOG_QUIET_HOURS']=bad\n    from watchdog import config; importlib.reload(config)\n    assert config.quiet_window() is None, bad\n    assert config.in_quiet_hours() is False, bad\nprint('malformed windows parse to disabled, never to a wrong window')\""
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "never to a wrong window"
-        ]
-      }
-    },
-    {
-      "name": "an-empty-quiet-window-disables-rather-than-defaulting",
-      "type": "adversarial",
-      "timeout_seconds": 150,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run --project . python -c \"import sys; sys.path.insert(0,'scripts')\nimport os, importlib\nos.environ['PROJECT_WATCHDOG_QUIET_HOURS']=''\nfrom watchdog import config; importlib.reload(config)\nassert config.quiet_window() is None\nassert config.in_quiet_hours() is False\nprint('empty window disables the guard explicitly')\""
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "disables the guard explicitly"
-        ]
-      }
-    },
-    {
-      "name": "a-dry-run-never-mutates-the-crontab",
-      "type": "adversarial",
-      "timeout_seconds": 150,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && ./scripts/eval_probes.sh crontab-untouched-by-dry-run"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "byte-identical"
-        ]
-      },
-      "real_world": true
-    },
-    {
-      "name": "activate-emits-exactly-one-json-document",
-      "type": "adversarial",
-      "timeout_seconds": 150,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && ./scripts/eval_probes.sh activate-single-document"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "one parseable document"
-        ]
-      },
-      "real_world": true
-    },
-    {
-      "name": "every-once-a-minute-spelling-is-refused",
-      "type": "adversarial",
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && ./scripts/eval_probes.sh frequency-not-spelling"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "every once-a-minute spelling refused"
-        ]
-      }
-    },
-    {
-      "name": "a-tick-cannot-start-just-before-the-batch-window",
-      "type": "adversarial",
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && ./scripts/eval_probes.sh quiet-hours-not-invaded"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "deferred, daytime is not"
-        ]
-      }
-    },
-    {
-      "name": "tick-deadline-cannot-span-a-firing",
-      "type": "adversarial",
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && ./scripts/eval_probes.sh deadline-shorter-than-period"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "stays inside the period"
-        ]
-      }
-    },
-    {
-      "name": "repair-seat-independence",
-      "type": "adversarial",
-      "real_world": true,
-      "timeout_seconds": 60,
-      "seams": [
-        "watchdog.repair_seats"
-      ],
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/project-watchdog\" && uv run --project . python scripts/eval_seat_independence.py"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "SEAT_INDEPENDENCE_OK"
-        ],
-        "stderr_excludes": [
-          "SAME_PROVIDER_ACCEPTED",
-          "BROWSER_REVIEWER_ACCEPTED"
-        ]
-      }
-    },
-    {
-      "name": "auto-land-main-alpha",
-      "type": "positive",
-      "real_world": true,
-      "timeout_seconds": 60,
-      "seams": [
-        "watchdog.auto_land"
-      ],
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/project-watchdog\" && uv run --project . python scripts/eval_auto_land.py"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "AUTO_LAND_OK"
-        ],
-        "stderr_excludes": [
-          "AUTO_LAND_NOT_WIRED",
-          "NO_FAIL_CLOSED",
-          "DEFAULT_NOT_OFF"
-        ]
-      }
-    },
-    {
-      "name": "memory-project-auto-lands-reviewer-passed-repairs",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "seams": [
-        "watchdog.auto_land",
-        "watchdog.dependency_gate"
-      ],
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_watchdog.py::test_memory_project_auto_lands_reviewer_passed_repairs",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "1 passed"
-        ]
-      }
-    },
-    {
-      "name": "dependency-unblock-does-not-dispatch-same-tick",
-      "type": "positive",
-      "real_world": true,
-      "timeout_seconds": 60,
-      "seams": [
-        "watchdog.dependency_gate",
-        "watchdog.ticket_dispatch"
-      ],
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/project-watchdog pytest -q skills/project-watchdog/tests/test_project_rotation.py::test_closed_dependency_apply_clears_hold_labels_without_same_tick_dispatch skills/project-watchdog/tests/test_project_rotation.py::test_closed_dependency_dry_run_still_reports_downstream_routable"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "2 passed"
-        ]
-      }
-    },
-    {
-      "name": "ticket-repair-rejects-needs-attention-without-proof",
-      "type": "adversarial",
-      "real_world": true,
-      "timeout_seconds": 180,
-      "seams": [
-        "watchdog.repair_proof_gate"
-      ],
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/project-watchdog\" && uv run --project . python scripts/eval_repair_proof_gate.py"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "REPAIR_PROOF_GATE_OK"
-        ],
-        "stderr_excludes": [
-          "CLOSED_WITHOUT_PROOF",
-          "LANDED_WITHOUT_PROOF",
-          "MARKED_DONE_WITHOUT_PROOF",
-          "NOT_NEEDS_ATTENTION",
-          "GATE_IS_A_WALL"
-        ]
-      }
-    },
-    {
-      "name": "ticket-repair-monitors-ask-tau-json-stream",
-      "type": "adversarial",
-      "evidence_class": "deterministic",
-      "mocked": false,
-      "real_world": true,
-      "timeout_seconds": 180,
-      "seams": [
-        "watchdog.ticket_repair",
-        "ask.tau_dag_stream",
-        "tau.json_stream"
-      ],
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/project-watchdog\" && uv run --project . pytest -q tests/test_project_watchdog.py::test_tau_stream_monitor_reads_terminal_progress_and_events tests/test_project_watchdog.py::test_ask_tau_dag_runner_polls_stream_until_process_exit"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "2 passed"
-        ]
-      },
-      "notes": "Regression guard for the watchdog stopping opaquely during long Ask/Tau runs: the repair lane must read Tau stream artifacts and write tau-stream-monitor.json instead of treating process exit or silence as progress proof."
-    },
-    {
-      "name": "blocked-receipt-alerts-human-via-ops-discord",
-      "type": "adversarial",
-      "real_world": true,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"from scripts.watchdog import alerts; r={'run_id':'e1','status':'BLOCKED','apply':False,'project':'memory','handled_issues':[{'issue_number':1,'status':'BLOCKED','summary':'x'}]}; alerts.maybe_alert(r); a=r['alert']; assert a['status'] in ('DRY_RUN','SENT','ALERT_DELIVERY_FAILED'), a; print('alert-status:'+a['status'])\""
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "alert-status:"
-        ]
-      }
-    },
-    {
-      "name": "noop-receipt-never-alerts",
-      "type": "negative",
-      "real_world": true,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"from scripts.watchdog import alerts; r={'status':'NOOP','apply':True}; alerts.maybe_alert(r); assert 'alert' not in r; print('noop-silent')\""
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "noop-silent"
-        ]
-      }
-    },
-    {
-      "name": "alert-delivery-failure-never-fails-the-tick",
-      "type": "adversarial",
-      "real_world": true,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"import pathlib; from scripts.watchdog import alerts; alerts.OPS_DISCORD_RUN_SH=pathlib.Path('/nonexistent/run.sh'); r={'status':'NEEDS_ATTENTION','apply':True,'run_id':'e3'}; alerts.maybe_alert(r); assert r['alert']['status']=='OPS_DISCORD_MISSING', r['alert']; print('soft-fail-ok')\""
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "soft-fail-ok"
-        ]
-      }
-    },
-    {
-      "name": "repeated-blocker-is-deduped-within-renotify-window",
-      "type": "adversarial",
-      "real_world": true,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"import json,time; from scripts.watchdog import alerts; r={'run_id':'e4','status':'BLOCKED','apply':False,'project':'m'}; fp=alerts._fingerprint(r); p=alerts._alerts_state_path(); p.parent.mkdir(parents=True,exist_ok=True); p.write_text(json.dumps({fp: time.time()})); alerts.maybe_alert(r); assert r['alert']['status']=='DEDUPED', r['alert']; print('dedupe-ok')\""
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "dedupe-ok"
-        ]
-      }
-    },
-    {
-      "name": "alert-transport-resolves-without-webhook-env",
-      "type": "adversarial",
-      "real_world": true,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && test -x ../ops-discord/run.sh && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"import os; os.environ.pop('OPS_DISCORD_WEBHOOK_WATCHDOG_URL',None); from scripts.watchdog import alerts; r={'run_id':'e5','status':'BLOCKED','apply':False,'project':'m','handled_issues':[]}; alerts.maybe_alert(r); a=r['alert']; nr=a.get('notify_receipt') or {}; assert nr.get('transport')=='discord_bot', (a.get('status'), nr); assert nr.get('status')!='NO_WEBHOOK', nr; assert a.get('delivered') is not True, a; print('bot-transport-selected:'+str(nr.get('status')))\""
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "bot-transport-selected:"
-        ]
-      },
-      "proves": "With no watchdog webhook env var, alerting selects the ops-discord Discord-bot transport (never NO_WEBHOOK) and never delivers in dry-run. Guards the 2026-09-03 webhook-assumption incident. Live channel resolution outcome (DRY_RUN vs rate-limited CHANNEL_LIST_FAILED) is environment-dependent and not asserted.",
-      "does_not_prove": "A live post from an applied tick; live proof is the message_id receipt from 2026-09-03 (1545107248219693187)."
-    },
-    {
-      "name": "e2e-three-agent-completed",
-      "type": "positive",
-      "real_world": true,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run python scripts/e2e_three_agent_probe.py completed"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "\"ok\": true"
-        ]
-      },
-      "proves": "Three-agent pipeline E2E scenario 'completed' through the real tick path (gh shim + ask seat stub faked; scan/route/lease/worktree/proof-gate/pydantic-validation/triage-self-heal/alerting live).",
-      "does_not_prove": "Live GitHub, live model seats, or live Discord delivery."
-    },
-    {
-      "name": "e2e-three-agent-needs-human",
-      "type": "adversarial",
-      "real_world": true,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run python scripts/e2e_three_agent_probe.py needs-human"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "\"ok\": true"
-        ]
-      },
-      "proves": "Three-agent pipeline E2E scenario 'needs-human' through the real tick path (gh shim + ask seat stub faked; scan/route/lease/worktree/proof-gate/pydantic-validation/triage-self-heal/alerting live).",
-      "does_not_prove": "Live GitHub, live model seats, or live Discord delivery."
-    },
-    {
-      "name": "e2e-three-agent-bad-code",
-      "type": "adversarial",
-      "real_world": true,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run python scripts/e2e_three_agent_probe.py bad-code"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "\"ok\": true"
-        ]
-      },
-      "proves": "Three-agent pipeline E2E scenario 'bad-code' through the real tick path (gh shim + ask seat stub faked; scan/route/lease/worktree/proof-gate/pydantic-validation/triage-self-heal/alerting live).",
-      "does_not_prove": "Live GitHub, live model seats, or live Discord delivery."
-    },
-    {
-      "name": "e2e-three-agent-ui-data",
-      "type": "positive",
-      "real_world": true,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run python scripts/e2e_three_agent_probe.py ui-data"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "\"ok\": true"
-        ]
-      },
-      "proves": "Three-agent pipeline E2E scenario 'ui-data' through the real tick path (gh shim + ask seat stub faked; scan/route/lease/worktree/proof-gate/pydantic-validation/triage-self-heal/alerting live).",
-      "does_not_prove": "Live GitHub, live model seats, or live Discord delivery."
-    },
-    {
-      "name": "worktree-created-with-lease",
-      "type": "positive",
-      "real_world": true,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run python scripts/prove_worktree_lease.py"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "\"ok\": true",
-          "cleanup.worktree_lease.v1",
-          "watchdog:watchdog/issue-42"
-        ]
-      },
-      "proves": "prepare_repair_worktree creates a real git worktree AND registers an ops-worktrees lease, read back from the lease registry file (issue #1577 named proof).",
-      "does_not_prove": "reaper reclamation behavior or GitHub dispatch."
-    },
-    {
-      "name": "watchdog-reviewer-resume",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "fault_injected_deterministic",
-      "timeout_seconds": 120,
-      "command": [
-        "bash",
-        "-lc",
-        "cd .. && uv run python scripts/eval_resume_generation.py --out /tmp/watchdog-resume-generation-eval/proof.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "artifacts": [
-          {
-            "path": "/tmp/watchdog-resume-generation-eval/proof.json",
-            "json_pointer": "/ok",
-            "equals": true
-          },
-          {
-            "path": "/tmp/watchdog-resume-generation-eval/proof.json",
-            "json_pointer": "/checks/old_PASS_not_reused",
-            "equals": true
-          },
-          {
-            "path": "/tmp/watchdog-resume-generation-eval/proof.json",
-            "json_pointer": "/checks/old_BLOCKED_not_reused",
-            "equals": true
-          },
-          {
-            "path": "/tmp/watchdog-resume-generation-eval/proof.json",
-            "json_pointer": "/checks/preserved_admission_mutation_rejected",
-            "equals": true
-          },
-          {
-            "path": "/tmp/watchdog-resume-generation-eval/proof.json",
-            "json_pointer": "/checks/truncated_reviewer_plan_rejected",
-            "equals": true
-          },
-          {
-            "path": "/tmp/watchdog-resume-generation-eval/proof.json",
-            "json_pointer": "/checks/broken_quoting_rejected",
-            "equals": true
-          },
-          {
-            "path": "/tmp/watchdog-resume-generation-eval/proof.json",
-            "json_pointer": "/checks/missing_mandatory_artifact_rejected",
-            "equals": true
-          },
-          {
-            "path": "/tmp/watchdog-resume-generation-eval/proof.json",
-            "json_pointer": "/checks/dict_coverage_rejected",
-            "equals": true
-          },
-          {
-            "path": "/tmp/watchdog-resume-generation-eval/proof.json",
-            "json_pointer": "/checks/valid_review_plan_admitted",
-            "equals": true
-          }
-        ]
-      },
-      "proves": "Public Ask/Tau local command execution, generation-fenced watchdog settlement, preserved creator admission, and pre-dispatch rejection without inheriting historical status.",
-      "does_not_prove": "Real GitHub lease acquisition, real provider invocation count, cooldown/retry budgets, supervisor-loss recovery, or native ticket closure. These remain #1638 live acceptance work."
-    }
-  ]
+  {
+   "name": "watchdog-verify-plan-trust",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "python",
+    "../evals/verify_plan_trust.py",
+    "/tmp/watchdog-verify-plan-result.json"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "artifacts": [
+     {
+      "path": "/tmp/watchdog-verify-plan-result.json",
+      "json_pointer": "/passed",
+      "equals": true
+     }
+    ]
+   },
+   "proves": "validated_verification_plan admits only a complete reviewer-owned VERIFY_PLAN: truncated plan JSON, duplicate/missing plans, creator authority substitution, wrong artifact binding, blank coverage, and multiline command injection are all rejected. Fault-injected deterministic; not live closure evidence."
+  },
+  {
+   "name": "watchdog-scoped-primary-reservation",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_primary_main_revision.py::test_scoped_reservations_allow_disjoint_declared_targets",
+    "../tests/test_primary_main_revision.py::test_legacy_global_flock_does_not_block_declared_scoped_targets",
+    "../tests/test_primary_main_revision.py::test_scoped_reservations_serialize_overlapping_target_prefixes",
+    "../tests/test_primary_main_revision.py::test_scoped_publication_guard_rejects_commit_outside_reserved_target",
+    "../tests/test_project_rotation.py::test_tick_scans_disjoint_target_when_scoped_writer_is_active",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "5 passed"
+    ]
+   },
+   "proves": "Primary reservations use target-scoped nonblocking locks: disjoint declared targets can coexist, a legacy checkout-global flock does not block declared scoped targets, prefix-overlapping targets serialize, the publication guard rejects worker-attributable commits outside the reserved target scope, and the tick scanner treats active scoped writer targets as busy targets rather than a repository-wide stop. Fixture-backed only; no live GitHub/provider closure."
+  },
+  {
+   "name": "watchdog-publication-recovery",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 180,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "python",
+    "../evals/publication_recovery.py",
+    "/tmp/watchdog-publication-recovery-case.json"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "artifacts": [
+     {
+      "path": "/tmp/watchdog-publication-recovery-case.json",
+      "json_pointer": "/passed",
+      "equals": true
+     }
+    ]
+   },
+   "proves": "Retained #1639 regression coverage for publication races and native release recovery: disjoint remote-main advance, same-target conflict, failed push diagnostics, helper nonzero diagnostics, close readback still open, proof/publication/close/release interruption recovery, target parsing scope, foreign leases/holds, and closed-but-release-pending journal state. Fault-injected mock-GitHub tests supplement, not replace, live remote evidence.",
+   "does_not_prove": "The required live E2E against a real approved GitHub ticket; that remains a separate verification-plan command before closure."
+  },
+  {
+   "name": "watchdog-unattended-acceptance",
+   "type": "adversarial",
+   "evidence_class": "live_e2e",
+   "real_world": true,
+   "mocked": false,
+   "timeout_seconds": 180,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "python",
+    "../evals/unattended_acceptance.py",
+    "/tmp/watchdog-unattended-acceptance-result.json"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "artifacts": [
+     {
+      "path": "/tmp/watchdog-unattended-acceptance-result.json",
+      "json_pointer": "/status",
+      "equals": "PASS"
+     },
+     {
+      "path": "/tmp/watchdog-unattended-acceptance-result.json",
+      "json_pointer": "/passed",
+      "equals": true
+     },
+     {
+      "path": "/tmp/watchdog-unattended-acceptance-result.json",
+      "json_pointer": "/real_world",
+      "equals": true
+     },
+     {
+      "path": "/tmp/watchdog-unattended-acceptance-result.json",
+      "json_pointer": "/mocked",
+      "equals": false
+     }
+    ]
+   },
+   "proves": "#1641 acceptance gate reads live GitHub dependency state, retained watchdog receipts, cron starts, current dry-run tick output, current remote heads, native closure/readback receipts, and recover_primary pending output. It passes only when every required unattended scenario is established.",
+   "does_not_prove": "Unattended watchdog reliability when the result artifact reports NOT_ESTABLISHED or FAILED; those states are deliberate fail-closed outcomes and keep the ticket open."
+  },
+  {
+   "name": "watchdog-closure-authority",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 180,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_primary_main_revision.py::test_tau_receipt_authority_rejects_response_only_pass",
+    "../tests/test_primary_main_revision.py::test_completed_resume_result_outranks_nonzero_wrapper_receipt",
+    "../tests/test_primary_main_revision.py::test_native_close_lost_response_is_read_back_without_second_close",
+    "../tests/test_primary_main_revision.py::test_native_close_failed_mutation_never_becomes_completed",
+    "../tests/test_primary_main_revision.py::test_native_close_rejects_foreign_generation_and_changed_proof",
+    "../tests/test_primary_main_revision.py::test_closure_outbox_recovery_retries_native_close_without_new_provider",
+    "../tests/test_primary_main_revision.py::test_closed_ticket_with_release_pending_is_not_finished_completed",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "7 passed"
+    ]
+   },
+   "proves": "#1592 closure authority slice: response-only PASS cannot authorize closure; live Tau node receipts are required before the native ticket close path; lost/failed close responses are read back; foreign lease generations and mutated proof files fail closed; closure outbox recovery retries without launching a new provider; release-pending is not reported as finished COMPLETED. Fault-injected deterministic; live canary evidence remains separate.",
+   "does_not_prove": "Ten consecutive canary lifecycles across two repositories."
+  },
+  {
+   "name": "immutable-replay-proof-negative-controls",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_project_watchdog.py::test_immutable_replay_proof_checks_expected_failures_and_hashes",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "1 passed"
+    ]
+   }
+  },
+  {
+   "name": "native-release-retains-command-diagnostics",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_primary_main_revision.py::test_owned_release_does_not_remove_foreign_generation",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "1 passed"
+    ]
+   }
+  },
+  {
+   "name": "sanity-gates",
+   "type": "positive",
+   "command": [
+    "bash",
+    "../sanity.sh"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "0 failed"
+    ]
+   }
+  },
+  {
+   "name": "notify-bridge-skips-machine-actionable-needs-attention",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_watchdog_notify_bridge.py",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "5 passed"
+    ]
+   },
+   "proves": "project-watchdog notify bridge does not page the human or send HIGH/ALERT Switchboard pushes for NEEDS_ATTENTION receipts that explicitly require no human input, still wakes the Pi agent for machine-actionable work, and summarizes unsettled active operations with issue identity plus the recovery command instead of None#None.",
+   "does_not_prove": "Live Discord or Switchboard delivery; this is a deterministic policy gate over the bridge routing function."
+  },
+  {
+   "name": "watchdog-log-delivery",
+   "type": "adversarial",
+   "real_world": true,
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "python",
+    "../evals/watchdog_log_delivery.py",
+    "/tmp/watchdog-log-delivery-proof.json"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "artifacts": [
+     {
+      "path": "/tmp/watchdog-log-delivery-proof.json",
+      "json_pointer": "/passed",
+      "equals": true
+     },
+     {
+      "path": "/tmp/watchdog-log-delivery-proof.json",
+      "json_pointer": "/checks/jsonl_bytes_rendered_terminal_event",
+      "equals": true
+     },
+     {
+      "path": "/tmp/watchdog-log-delivery-proof.json",
+      "json_pointer": "/checks/pi_checkpoint_after_ack",
+      "equals": true
+     },
+     {
+      "path": "/tmp/watchdog-log-delivery-proof.json",
+      "json_pointer": "/checks/agent_action_receipt_retained",
+      "equals": true
+     },
+     {
+      "path": "/tmp/watchdog-log-delivery-proof.json",
+      "json_pointer": "/checks/human_only_escalation_uses_ops_discord",
+      "equals": true
+     },
+     {
+      "path": "/tmp/watchdog-log-delivery-proof.json",
+      "json_pointer": "/checks/restart_catchup_no_loss",
+      "equals": true
+     },
+     {
+      "path": "/tmp/watchdog-log-delivery-proof.json",
+      "json_pointer": "/checks/restart_catchup_no_replay_flood",
+      "equals": true
+     },
+     {
+      "path": "/tmp/watchdog-log-delivery-proof.json",
+      "json_pointer": "/checks/stale_progress_never_live",
+      "equals": true
+     }
+    ]
+   },
+   "proves": "The real watchdog_notify_bridge.py entrypoint normalizes receipts into correlated JSONL terminal events with explicit unknown identity, source_time separate from observed_at, raw errors and triage details; advances per-destination checkpoints only after terminal/Pi/ops-discord readback; retains pending failed destinations for restart catch-up without replay flood; refuses concurrent collectors; keeps stale heartbeat progress out of LIVE; and sends ops-discord only for explicit human-input blockers.",
+   "does_not_prove": "Live Discord, live Pi Switchboard, live GitHub/Tau transition, or supervising agent acknowledgement. The command uses isolated receipts, a local HTTP stand-in, and a fake ops-discord executable; the ticket's live E2E proof remains a separate closure gate."
+  },
+  {
+   "name": "fleet-tick-running-writer-skips",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_project_rotation.py::test_fleet_tick_with_live_writer_is_quiet_skip",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "1 passed"
+    ]
+   },
+   "proves": "A fleet tick that only finds a retained live writer exits cleanly as SKIPPED/retained_operation_running and does not persist another NEEDS_ATTENTION receipt.",
+   "does_not_prove": "The live writer finished its repair; that is proven only by recover_primary reading back the run receipt after the writer exits."
+  },
+  {
+   "name": "recover-primary-running-writer-zero",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_recover_primary.py",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "2 passed"
+    ]
+   },
+   "proves": "The authorized recover_primary.py next command exits 0 while the original watchdog writer is still live, instead of creating another machine-actionable failure loop.",
+   "does_not_prove": "A live Ask/Tau repair has completed; it only proves the recovery command does not report a healthy running writer as a failed recovery."
+  },
+  {
+   "name": "unit-suite",
+   "type": "positive",
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0
+   }
+  },
+  {
+   "name": "project-watchdog-ui-snapshot-contract",
+   "category": "project-watchdog-ui",
+   "type": "positive",
+   "evidence_class": "deterministic",
+   "timeout_seconds": 120,
+   "command": [
+    "bash",
+    "-lc",
+    "../run.sh ui-data --receipt-limit 2 | jq -e '.schema == \"agent_skills.project_watchdog.ui_snapshot.v1\" and (.items | type == \"array\") and (.counts | has(\"TOTAL\"))' >/dev/null && node ../ui/scripts/check-ui-contract.mjs"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "\"ok\": true"
+    ]
+   },
+   "proves": "The project-watchdog UI data projection emits the declared read-only snapshot schema and the React/Tailwind interface keeps data-qid/data-qs-action/title, useRegisterAction, sticky filters, desktop table, mobile cards, Tau DAG, and receipt-chain contract literals.",
+   "does_not_prove": "A human has opened the UI in a browser or that a live Tau run is embedded; those require a local browser interaction receipt after serving the built app."
+  },
+  {
+   "name": "strict-project-does-not-fall-through-to-fleet",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_project_rotation.py::test_strict_project_tick_does_not_fall_through_to_another_project",
+    "../tests/test_project_rotation.py::test_all_project_tick_is_the_explicit_fleet_fallback",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "2 passed"
+    ]
+   }
+  },
+  {
+   "name": "dependency-gate-holds-and-unblocks-depends-on",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_project_rotation.py::test_open_dependency_blocks_dispatch",
+    "../tests/test_project_rotation.py::test_closed_dependency_apply_clears_hold_labels_without_same_tick_dispatch",
+    "../tests/test_project_rotation.py::test_unreadable_dependency_fails_closed",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "3 passed"
+    ]
+   }
+  },
+  {
+   "name": "closure-audit-prompt-omits-local-paths",
+   "type": "adversarial",
+   "evidence_class": "deterministic",
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_project_watchdog.py::test_closure_audit_prompt_omits_absolute_local_paths",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "1 passed"
+    ]
+   }
+  },
+  {
+   "name": "closure-audit-nonzero-needs-attention",
+   "category": "closure-audit-nonzero-needs-attention",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_project_watchdog.py::test_nonzero_audit_with_needs_attention_verdict_reopens_for_human",
+    "../tests/test_project_watchdog.py::test_unreadable_closure_artifact_reopens_for_machine_repair",
+    "../tests/test_project_watchdog.py::test_artifact_unreadable_receipt_requires_authorized_agent_steps",
+    "../tests/test_project_watchdog.py::test_nonzero_needs_attention_audit_cools_down_if_selected_again",
+    "../tests/test_p0_boundaries.py::test_receipt_schema_rejects_left_closed_unverified_closure_audit",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "5 passed"
+    ]
+   },
+   "proves": "A closure audit whose Ask/Tau wrapper exits nonzero but whose seats declare VERDICT: NEEDS_ATTENTION is not sent down the no-verdict path; it reopens the unverified ticket for human review, unreadable proof-artifact gaps reopen for machine repair with authorized_agent_next_steps instead of needs-human, rejects left-closed or incorrectly human-gated handled-issue receipts in Pydantic, and records cooldown state so the next tick does not re-launch the duplicate audit.",
+   "does_not_prove": "A live browser/provider closure audit succeeds; this is a fault-injected regression over the watchdog's own handler and cooldown path."
+  },
+  {
+   "name": "closure-audit-nonzero-fail-reopens",
+   "category": "closure-audit-nonzero-fail-reopens",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_project_watchdog.py::test_nonzero_audit_with_fail_verdict_is_reopened",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "1 passed"
+    ]
+   },
+   "proves": "A closure audit whose Ask/Tau wrapper exits nonzero because receipt evidence records VERDICT: FAIL still reaches the FAIL/reopen path instead of being downgraded to no usable panel verdict and retried forever.",
+   "does_not_prove": "A live browser/provider closure audit succeeds; this is a fault-injected regression over the watchdog handler path observed from issue #1519 receipts."
+  },
+  {
+   "name": "closure-auditors-use-local-claude-not-webclaude",
+   "category": "closure-auditors-use-local-claude-not-webclaude",
+   "type": "adversarial",
+   "evidence_class": "deterministic",
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_project_watchdog.py::test_default_closure_auditors_use_local_claude_not_webclaude",
+    "../tests/test_project_watchdog.py::test_markdown_receipt_paths_are_read_relative_to_the_project_worktree",
+    "../tests/test_project_watchdog.py::test_local_state_receipt_paths_are_read_from_watchdog_state_root",
+    "../tests/test_project_watchdog.py::test_proof_artifact_lines_are_collected_for_closure_audit",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "4 passed"
+    ]
+   },
+   "proves": "The default project-watchdog closure-audit roster uses the local Ask/Tau Claude Opus low-reasoning lane instead of the webclaude browser test seat; markdown receipt paths from issue comments are read relative to the target project worktree; local/state/project-watchdog paths are read from the watchdog state root; and PROOF_ARTIFACT lines are collected for auditors.",
+   "does_not_prove": "A live closure audit provider call succeeds; this is a deterministic configuration guard."
+  },
+  {
+   "name": "targeted-issue-does-not-lose-target-to-earlier-issue",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_project_rotation.py::test_targeted_issue_does_not_let_earlier_issue_claim_its_target",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "1 passed"
+    ]
+   }
+  },
+  {
+   "name": "dirty-registered-target-does-not-block-isolated-authoring",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_project_watchdog.py::test_a_dirty_registered_target_is_reported_but_does_not_block_isolated_authoring",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "1 passed"
+    ]
+   },
+   "proves": "A dirty target path in the registered checkout is reported but does not block project-watchdog from preparing an isolated repair worktree from origin/main.",
+   "does_not_prove": "A live Ask/Tau repair for the ticket succeeds."
+  },
+  {
+   "name": "skill-scoped-projects-only-route-owned-targets",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_project_rotation.py::test_missing_runtime_state_uses_project_default_state",
+    "../tests/test_project_rotation.py::test_skill_scoped_project_ignores_unrelated_agent_skills_tickets",
+    "../tests/test_project_rotation.py::test_broad_agent_skills_project_can_exclude_battle_tickets",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "3 passed"
+    ]
+   },
+   "notes": "Regression for Battle scope drift: a battle-scoped project sees only skills/battle issues, and the broad agent-skills project can exclude skills/battle so fleet rotation does not steal Battle tickets."
+  },
+  {
+   "name": "auto-landed-repair-worktree-cleanup",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_project_watchdog.py::test_landed_repair_cleanup_invokes_ops_worktrees_archive",
+    "../tests/test_project_watchdog.py::test_auto_landed_repair_archives_worktree_before_closing",
+    "../tests/test_project_watchdog.py::test_auto_landed_repair_cleanup_failure_keeps_ticket_open",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "3 passed"
+    ]
+   },
+   "proves": "After a reviewer-passed repair lands on main, project-watchdog invokes ops-worktrees archive --apply for the repair worktree before closing; if cleanup fails, the ticket stays open and is marked needs-attention.",
+   "does_not_prove": "A live GitHub repair branch was landed or a real filesystem worktree was archived; these tests mock the GitHub and subprocess effects and prove watchdog control flow only."
+  },
+  {
+   "name": "repair-dispatch-passes-explicit-ask-execution-timeout",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_project_watchdog.py::test_ticket_repair_dispatches_through_ask_tau_dag",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "1 passed"
+    ]
+   }
+  },
+  {
+   "name": "ticket-repair-preserves-tau-owned-scillm-boundary",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_project_watchdog.py::test_ticket_repair_dispatches_through_ask_tau_dag",
+    "../tests/test_project_watchdog.py::test_ticket_repair_documents_tau_owned_scillm_boundary",
+    "../tests/test_project_watchdog.py::test_web_model_creator_is_refused_before_ask_dispatch",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "3 passed"
+    ]
+   }
+  },
+  {
+   "name": "registered-repair-seats-can-author-and-review-code",
+   "type": "adversarial",
+   "evidence_class": "deterministic",
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_project_watchdog.py::test_registered_repair_seats_can_author_and_review_code",
+    "../tests/test_project_watchdog.py::test_tau_repair_reviewer_is_local_claude_opus_48_high",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "2 passed"
+    ]
+   }
+  },
+  {
+   "name": "ticket-repair-uses-codex-author-with-remote-reviewer",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_project_watchdog.py::test_repair_execution_handlers_keep_reviewer_remote",
+    "../tests/test_project_watchdog.py::test_remote_reviewer_prompt_defers_local_readback_to_watchdog",
+    "../tests/test_project_watchdog.py::test_required_proof_artifacts_ignore_out_dirs_and_strip_punctuation",
+    "../tests/test_project_watchdog.py::test_proof_artifact_ignores_provider_status_noise_and_domain_enums",
+    "../tests/test_project_watchdog.py::test_review_commit_lines_keep_invalid_sha_out_of_valid_set",
+    "../tests/test_project_watchdog.py::test_required_proof_clauses_skip_fenced_command_bodies",
+    "../tests/test_project_watchdog.py::test_proof_plan_coverage_all_required_clauses_is_valid",
+    "../tests/test_project_watchdog.py::test_repair_proof_gate_allows_stale_declared_artifacts_before_native_verify",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "8 passed"
+    ]
+   }
+  },
+  {
+   "name": "agent-actionable-attention-is-not-human-blocker",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_project_watchdog.py::test_a_failed_attestor_run_does_not_attest_but_authorizes_agent_followup",
+    "../tests/test_project_rotation.py::test_agent_actionable_attention_does_not_make_the_tick_a_human_blocker",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "2 passed"
+    ]
+   },
+   "proves": "A completion-attestation transport/parser failure remains unproven but is marked requires_human_input=false with authorized_agent_next_steps, and the top-level tick can complete without training supervising agents to stop for a fake human blocker.",
+   "does_not_prove": "A live completion attestation succeeds; this is a deterministic regression over watchdog control flow and handler metadata."
+  },
+  {
+   "name": "unknown-project-fails-closed-and-names-it",
+   "type": "negative",
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) ./run.sh tick --project not-a-real-project 2>&1 | grep -q \"unknown project_id\" && echo UNKNOWN_PROJECT_NAMED"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "UNKNOWN_PROJECT_NAMED"
+    ]
+   }
+  },
+  {
+   "name": "global-pause-refuses-to-dispatch",
+   "type": "negative",
+   "command": [
+    "bash",
+    "-c",
+    "d=$(mktemp -d); mkdir -p $d/receipts; printf '{\"schema\":\"agent_skills.project_watchdog.registry.v1\",\"projects\":[{\"project_id\":\"probe\",\"repo\":\"o/r\",\"worktree\":\"/nonexistent\"}]}' > $d/p.json; printf '{\"global\":{\"state\":\"paused\"},\"projects\":{\"probe\":{\"state\":\"active\"}}}' > $d/state.json; PROJECT_WATCHDOG_STATE_ROOT=$d PROJECT_WATCHDOG_PROJECTS_PATH=$d/p.json ../run.sh tick --apply --project probe | grep -o '\"status\": \"[A-Z]*\"' | head -1; echo DIRS=$(find $d/receipts -maxdepth 1 -type d -name 'project-watchdog-2*' | wc -l)"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "SKIPPED",
+     "DIRS=0"
+    ]
+   }
+  },
+  {
+   "name": "finished-repair-stops-being-routable",
+   "type": "adversarial",
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "python",
+    "-c",
+    "import sys; sys.path.insert(0,'../scripts'); from watchdog import registry, config; i={'number':1,'labels':[{'name':'agent-work'},{'name':config.DONE_LABEL}],'body':'target: src/x.py'}; a,r=registry.classify_issue_with_reason(i); assert a is None and r=='awaiting_review', (a,r); print('REFUSED', r)"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "REFUSED awaiting_review"
+    ]
+   }
+  },
+  {
+   "name": "worktree-holding-unmerged-work-is-not-reset",
+   "type": "adversarial",
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "-q",
+    "../tests/test_project_watchdog.py::test_a_worktree_holding_unmerged_work_is_not_reset"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "1 passed"
+    ]
+   }
+  },
+  {
+   "name": "tick-does-not-revert-an-operator-state-change",
+   "type": "adversarial",
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "python",
+    "-c",
+    "import sys, json, pathlib, tempfile; sys.path.insert(0,'../scripts'); from watchdog import commands, config; p=pathlib.Path(tempfile.mkdtemp())/'state.json'; config.state_path=lambda: p; p.write_text(json.dumps({'projects':{'tau':{'state':'active'}}})); stale={'projects':{'tau':{'state':'active'}},'last_served_project':'tau'}; live=json.loads(p.read_text()); live['projects']['new-project']={'state':'active'}; p.write_text(json.dumps(live)); commands._persist_tick_state(stale); after=json.loads(p.read_text()); assert 'new-project' in after['projects'], after; assert after['last_served_project']=='tau'; print('SURVIVED', sorted(after['projects']))"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "SURVIVED",
+     "new-project"
+    ]
+   }
+  },
+  {
+   "name": "duplicate-closure-is-not-audited-for-proof",
+   "type": "adversarial",
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "python",
+    "-c",
+    "import sys, json, datetime as dt; sys.path.insert(0,'../scripts'); from watchdog import registry; now=dt.datetime(2026,7,29,tzinfo=dt.UTC); ts=(now-dt.timedelta(hours=1)).isoformat().replace('+00:00','Z');\nmk=lambda n,reason: {'number':n,'title':'t','body':'','labels':[{'name':'agent-work'}],'closedAt':ts,'stateReason':reason,'url':'u'}\nregistry.run_cmd=lambda cmd, timeout_s=None: {'exit_code':0,'stdout':json.dumps([mk(1,'COMPLETED'),mk(2,'NOT_PLANNED')]),'stderr':''}\np=registry.list_closed_for_audit('r',{'repo':'o/r','project_id':'p'},now=now.timestamp()); assert [i['number'] for i in p]==[1], p; print('SKIPPED_DUPLICATE ok')"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "SKIPPED_DUPLICATE ok"
+    ]
+   }
+  },
+  {
+   "name": "single-seat-audit-panel-is-refused",
+   "type": "adversarial",
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "python",
+    "-c",
+    "import sys, pathlib, tempfile; sys.path.insert(0,'../scripts'); from watchdog import handlers; calls=[]; handlers.run_cmd=lambda *a, **k: calls.append(a) or {'exit_code':0}; d=pathlib.Path(tempfile.mkdtemp()); proj={'project_id':'p','repo':'o/r','worktree':str(d),'closure_auditors':['claude-opus-4-8']}; iss={'number':9,'title':'t','body':'','labels':[],'url':'u','closedAt':'2026-07-29T00:00:00Z','stateReason':'COMPLETED'}; res=handlers.handle_closure_audit('r', d, proj, iss, apply=True); assert res['status']=='BLOCKED', res; assert 'two distinct seats' in res['summary']; assert not calls; print('PANEL_REFUSED ok')"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "PANEL_REFUSED ok"
+    ]
+   }
+  },
+  {
+   "name": "identical-creator-and-reviewer-are-refused",
+   "type": "adversarial",
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "python",
+    "-c",
+    "import sys; sys.path.insert(0,'../scripts'); from watchdog import config; c=config.repair_creator({}); r=config.repair_reviewer({}); assert c!=r, (c,r); assert 'codex' not in r and 'gpt' not in r, r; print('SEATS_DIFFER', c, r)"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "SEATS_DIFFER"
+    ]
+   }
+  },
+  {
+   "name": "an-unreadable-target-does-not-block-the-fleet",
+   "type": "adversarial",
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "python",
+    "-c",
+    "import sys; sys.path.insert(0,'../scripts'); from watchdog import registry as g; U=g.UNKNOWN_TARGET; assert g.targets_are_blocked({'skills/ticket'}, {U}) is False; assert g.targets_are_blocked({U},{U}) is True; assert g.targets_are_blocked({U}, set()) is False; print('UNKNOWN_ISOLATED ok')"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "UNKNOWN_ISOLATED ok"
+    ]
+   }
+  },
+  {
+   "name": "oc-chat-repair-creator-is-refused",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_project_watchdog.py::test_oc_chat_creator_is_refused_before_ask_dispatch",
+    "../tests/test_project_watchdog.py::test_repair_execution_handlers_keep_reviewer_remote",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "2 passed"
+    ]
+   }
+  },
+  {
+   "name": "a-failed-lease-stops-the-dispatch",
+   "type": "adversarial",
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "python",
+    "-c",
+    "import sys, pathlib, tempfile; sys.path.insert(0,'../scripts'); from watchdog import handlers; res={'ok':True,'commands':[]}; handlers.github.issue_edit=lambda *a, **k: {'exit_code':1,'stderr':\"label 'agent-active' not found\"}; ok=handlers.acquire_lease('r', res, 'o/r', 7); assert ok is False; assert res['status']=='BLOCKED'; assert 'ensure-labels' in res['summary']; print('LEASE_FAILCLOSED ok')"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "LEASE_FAILCLOSED ok"
+    ]
+   }
+  },
+  {
+   "name": "stale-lease-expiry-and-reclaim",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_project_rotation.py::test_stale_lease_is_reclaimed_from_the_in_flight_set",
+    "../tests/test_project_rotation.py::test_fresh_lease_remains_in_flight",
+    "../tests/test_project_rotation.py::test_unknown_acquisition_time_fails_closed_as_in_flight",
+    "../tests/test_project_rotation.py::test_reclaim_removes_only_the_expired_lease_label",
+    "../tests/test_project_rotation.py::test_reclaimed_issue_is_not_redispatched_in_the_same_tick",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "5 passed"
+    ]
+   }
+  },
+  {
+   "name": "a-stall-that-needs-a-human-is-not-reported-as-success",
+   "type": "adversarial",
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "python",
+    "-c",
+    "import sys; sys.path.insert(0,'../scripts'); from watchdog import commands; r={'ok':True,'status':'SKIPPED'}; commands._record_fleet_stall(r,[{'project_id':'a','reason':'project_state_paused'},{'project_id':'b','reason':'lane_busy'}]); assert r['ok'] is False and r['status']=='NEEDS_ATTENTION', r; q={'ok':True,'status':'SKIPPED'}; commands._record_fleet_stall(q,[{'project_id':'a','reason':'lane_busy'}]); assert q['ok'] is True, q; print('STALL_HONEST ok')"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "STALL_HONEST ok"
+    ]
+   }
+  },
+  {
+   "name": "scheduler-short-lock-allows-unrelated-targets",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "real_world": true,
+   "timeout_seconds": 180,
+   "command": [
+    "bash",
+    "-c",
+    "repo=$(git rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/project-watchdog pytest -vv skills/project-watchdog/tests/test_project_rotation.py::test_scheduler_short_lock_allows_unrelated_target_tick"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "test_scheduler_short_lock_allows_unrelated_target_tick PASSED"
+    ]
+   },
+   "notes": "Proof for agent-skills#1508: while issue #1 is still inside handle_issue for skills/ask, a nested tick can acquire the released scheduler lock and dispatch issue #2 for skills/ticket."
+  },
+  {
+   "name": "scheduler-execution-lock-blocks-overlapping-targets",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "real_world": true,
+   "timeout_seconds": 180,
+   "command": [
+    "bash",
+    "-c",
+    "repo=$(git rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/project-watchdog pytest -vv skills/project-watchdog/tests/test_project_rotation.py::test_scheduler_execution_lock_blocks_overlapping_target_tick"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "test_scheduler_execution_lock_blocks_overlapping_target_tick PASSED"
+    ]
+   },
+   "notes": "Proof for agent-skills#1508: while issue #1 holds the execution lock for skills/ask, a nested tick for issue #2 on skills/ask returns without entering handle_issue."
+  },
+  {
+   "name": "overlapping-applied-ticks-skip-live",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "real_world": true,
+   "timeout_seconds": 600,
+   "command": [
+    "bash",
+    "-c",
+    "cd ..; D=$(mktemp -d); printf '%s\n' '{\"schema\":\"agent_skills.project_watchdog.registry.v1\",\"projects\":[]}' > $D/projects.json; printf '%s\n' '{\"global\":{\"state\":\"active\"},\"projects\":{}}' > $D/state.json; PROJECT_WATCHDOG_STATE_ROOT=$D PROJECT_WATCHDOG_PROJECTS_PATH=$D/projects.json PROJECT_WATCHDOG_TEST_HOLD_LOCK_SECONDS=8 ./run.sh tick --apply --project all --max-tickets 1 > $D/first.out 2> $D/first.err & first=$!; for i in $(seq 1 80); do [ -f $D/lock/owner.json ] && break; sleep 0.1; done; test -f $D/lock/owner.json || { echo FIRST_LOCK_NOT_OBSERVED; cat $D/first.err; kill $first 2>/dev/null || true; wait $first 2>/dev/null || true; exit 1; }; python3 - <<PY\nimport json, pathlib\np=pathlib.Path('$D/lock/owner.json')\nd=json.loads(p.read_text())\nd['epoch']=0\np.write_text(json.dumps(d, indent=2)+'\\n')\nprint('FIRST_RUN='+d['run_id'])\nPY\nPROJECT_WATCHDOG_STATE_ROOT=$D PROJECT_WATCHDOG_PROJECTS_PATH=$D/projects.json ./run.sh tick --apply --project all --max-tickets 1 > $D/second.out 2> $D/second.err; second_rc=$?; wait $first; first_rc=$?; python3 - <<PY\nimport json, pathlib, sys\nroot=pathlib.Path('$D')\nsecond_rc=int('$second_rc')\nfirst_rc=int('$first_rc')\nsecond=json.loads((root/'second.out').read_text())\nassert second_rc == 0, (second_rc, (root/'second.err').read_text())\nassert second['status']=='SKIPPED', second\nassert second['stop_reason']=='tick_already_running', second\nassert second.get('handled_issues') == [], second.get('handled_issues')\nassert second.get('receipt_persisted') is False, second\nassert first_rc == 0, (first_rc, (root/'first.err').read_text())\nprint('OVERLAP_SKIPPED_LIVE')\nPY"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "OVERLAP_SKIPPED_LIVE"
+    ]
+   }
+  },
+  {
+   "name": "path-literals-never-contain-shell-variables",
+   "type": "adversarial",
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "python",
+    "../scripts/check_path_literals.py",
+    "../scripts"
+   ],
+   "expected": {
+    "exit_code": 0
+   }
+  },
+  {
+   "name": "a-once-a-minute-schedule-is-refused",
+   "type": "adversarial",
+   "timeout_seconds": 120,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && uv run --project . python -c \"import sys; sys.path.insert(0,'scripts')\nfrom watchdog import commands\nrc=commands.install_cron(apply=False, minute='*')\nassert rc==2, rc\nrc2=commands.install_cron(apply=False, minute='*/5')\nassert rc2==0, rc2\nprint('bare star refused; */5 accepted')\""
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "bare star refused"
+    ]
+   }
+  },
+  {
+   "name": "the-installed-interval-is-never-every-minute",
+   "type": "adversarial",
+   "timeout_seconds": 120,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && ./run.sh install-cron 2>/dev/null | python3 -c \"import json,sys; d=json.load(sys.stdin); line=d['cron_line']; minute=line.split()[0]; assert minute == '*/5', line; assert not line.startswith('* * * * *'), line; assert '--project all' in line, line; print('default interval is', minute, 'project all')\""
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "default interval is */5",
+     "project all"
+    ]
+   },
+   "real_world": true
+  },
+  {
+   "name": "overnight-batch-window-defers-dispatch",
+   "type": "adversarial",
+   "timeout_seconds": 120,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && uv run --project . python -c \"import sys,datetime; sys.path.insert(0,'scripts')\nfrom watchdog import config\nw=config.quiet_window()\nassert w, 'quiet window must be configured'\nfor h in (2,3,4,6):\n    assert config.in_quiet_hours(datetime.datetime(2026,1,1,h)), h\nfor h in (9,14,20):\n    assert not config.in_quiet_hours(datetime.datetime(2026,1,1,h)), h\nprint('overnight window', w, 'defers batch hours and not daytime')\""
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "defers batch hours and not daytime"
+    ]
+   }
+  },
+  {
+   "name": "activate-is-idempotent-and-reports-both-facts",
+   "type": "positive",
+   "timeout_seconds": 150,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && ./run.sh activate 2>/dev/null | python3 -c \"import json,sys; d=json.load(sys.stdin); assert d['ok'] is True; steps={s['step'] for s in d['steps']}; assert 'install_cron' in steps and 'set_state_global_active' in steps, steps; assert d['apply'] is False, 'bare activate must be a dry run'; print('activate reports schedule and state together')\""
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "schedule and state together"
+    ]
+   },
+   "real_world": true
+  },
+  {
+   "name": "an-interval-shorter-than-the-worst-tick-is-rejected",
+   "type": "adversarial",
+   "timeout_seconds": 150,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && uv run --project . python -c \"import sys; sys.path.insert(0,'scripts')\nfrom watchdog import commands\nfor bad in ('*','*/1'):\n    rc=commands.install_cron(apply=False, minute=bad)\n    assert rc!=0 or bad!='*', (bad, rc)\nassert commands.install_cron(apply=False, minute='*')==2\nprint('sub-tick intervals rejected')\""
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "sub-tick intervals rejected"
+    ]
+   }
+  },
+  {
+   "name": "a-quiet-window-crossing-midnight-is-handled",
+   "type": "adversarial",
+   "timeout_seconds": 150,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && uv run --project . python -c \"import sys; sys.path.insert(0,'scripts')\nimport datetime, os\nos.environ['PROJECT_WATCHDOG_QUIET_HOURS']='22-7'\nimport importlib; from watchdog import config; importlib.reload(config)\nfor h in (23,0,3,6):\n    assert config.in_quiet_hours(datetime.datetime(2026,1,1,h)), h\nfor h in (8,12,21):\n    assert not config.in_quiet_hours(datetime.datetime(2026,1,1,h)), h\nprint('midnight-crossing window correct')\""
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "midnight-crossing window correct"
+    ]
+   }
+  },
+  {
+   "name": "a-malformed-quiet-window-does-not-silently-pass",
+   "type": "adversarial",
+   "timeout_seconds": 150,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && uv run --project . python -c \"import sys; sys.path.insert(0,'scripts')\nimport os, importlib\nfor bad in ('abc','2-99','-','2-'):\n    os.environ['PROJECT_WATCHDOG_QUIET_HOURS']=bad\n    from watchdog import config; importlib.reload(config)\n    assert config.quiet_window() is None, bad\n    assert config.in_quiet_hours() is False, bad\nprint('malformed windows parse to disabled, never to a wrong window')\""
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "never to a wrong window"
+    ]
+   }
+  },
+  {
+   "name": "an-empty-quiet-window-disables-rather-than-defaulting",
+   "type": "adversarial",
+   "timeout_seconds": 150,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && uv run --project . python -c \"import sys; sys.path.insert(0,'scripts')\nimport os, importlib\nos.environ['PROJECT_WATCHDOG_QUIET_HOURS']=''\nfrom watchdog import config; importlib.reload(config)\nassert config.quiet_window() is None\nassert config.in_quiet_hours() is False\nprint('empty window disables the guard explicitly')\""
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "disables the guard explicitly"
+    ]
+   }
+  },
+  {
+   "name": "a-dry-run-never-mutates-the-crontab",
+   "type": "adversarial",
+   "timeout_seconds": 150,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && ./scripts/eval_probes.sh crontab-untouched-by-dry-run"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "byte-identical"
+    ]
+   },
+   "real_world": true
+  },
+  {
+   "name": "activate-emits-exactly-one-json-document",
+   "type": "adversarial",
+   "timeout_seconds": 150,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && ./scripts/eval_probes.sh activate-single-document"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "one parseable document"
+    ]
+   },
+   "real_world": true
+  },
+  {
+   "name": "every-once-a-minute-spelling-is-refused",
+   "type": "adversarial",
+   "timeout_seconds": 180,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && ./scripts/eval_probes.sh frequency-not-spelling"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "every once-a-minute spelling refused"
+    ]
+   }
+  },
+  {
+   "name": "a-tick-cannot-start-just-before-the-batch-window",
+   "type": "adversarial",
+   "timeout_seconds": 180,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && ./scripts/eval_probes.sh quiet-hours-not-invaded"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "deferred, daytime is not"
+    ]
+   }
+  },
+  {
+   "name": "tick-deadline-cannot-span-a-firing",
+   "type": "adversarial",
+   "timeout_seconds": 180,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && ./scripts/eval_probes.sh deadline-shorter-than-period"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "stays inside the period"
+    ]
+   }
+  },
+  {
+   "name": "repair-seat-independence",
+   "type": "adversarial",
+   "real_world": true,
+   "timeout_seconds": 60,
+   "seams": [
+    "watchdog.repair_seats"
+   ],
+   "command": [
+    "bash",
+    "-c",
+    "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/project-watchdog\" && uv run --project . python scripts/eval_seat_independence.py"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "SEAT_INDEPENDENCE_OK"
+    ],
+    "stderr_excludes": [
+     "SAME_PROVIDER_ACCEPTED",
+     "BROWSER_REVIEWER_ACCEPTED"
+    ]
+   }
+  },
+  {
+   "name": "auto-land-main-alpha",
+   "type": "positive",
+   "real_world": true,
+   "timeout_seconds": 60,
+   "seams": [
+    "watchdog.auto_land"
+   ],
+   "command": [
+    "bash",
+    "-c",
+    "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/project-watchdog\" && uv run --project . python scripts/eval_auto_land.py"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "AUTO_LAND_OK"
+    ],
+    "stderr_excludes": [
+     "AUTO_LAND_NOT_WIRED",
+     "NO_FAIL_CLOSED",
+     "DEFAULT_NOT_OFF"
+    ]
+   }
+  },
+  {
+   "name": "memory-project-auto-lands-reviewer-passed-repairs",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "seams": [
+    "watchdog.auto_land",
+    "watchdog.dependency_gate"
+   ],
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "pytest",
+    "../tests/test_project_watchdog.py::test_memory_project_auto_lands_reviewer_passed_repairs",
+    "-q"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "1 passed"
+    ]
+   }
+  },
+  {
+   "name": "dependency-unblock-does-not-dispatch-same-tick",
+   "type": "positive",
+   "real_world": true,
+   "timeout_seconds": 60,
+   "seams": [
+    "watchdog.dependency_gate",
+    "watchdog.ticket_dispatch"
+   ],
+   "command": [
+    "bash",
+    "-c",
+    "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/project-watchdog pytest -q skills/project-watchdog/tests/test_project_rotation.py::test_closed_dependency_apply_clears_hold_labels_without_same_tick_dispatch skills/project-watchdog/tests/test_project_rotation.py::test_closed_dependency_dry_run_still_reports_downstream_routable"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "2 passed"
+    ]
+   }
+  },
+  {
+   "name": "ticket-repair-rejects-needs-attention-without-proof",
+   "type": "adversarial",
+   "real_world": true,
+   "timeout_seconds": 180,
+   "seams": [
+    "watchdog.repair_proof_gate"
+   ],
+   "command": [
+    "bash",
+    "-c",
+    "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/project-watchdog\" && uv run --project . python scripts/eval_repair_proof_gate.py"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "REPAIR_PROOF_GATE_OK"
+    ],
+    "stderr_excludes": [
+     "CLOSED_WITHOUT_PROOF",
+     "LANDED_WITHOUT_PROOF",
+     "MARKED_DONE_WITHOUT_PROOF",
+     "NOT_NEEDS_ATTENTION",
+     "GATE_IS_A_WALL"
+    ]
+   }
+  },
+  {
+   "name": "ticket-repair-monitors-ask-tau-json-stream",
+   "type": "adversarial",
+   "evidence_class": "deterministic",
+   "mocked": false,
+   "real_world": true,
+   "timeout_seconds": 180,
+   "seams": [
+    "watchdog.ticket_repair",
+    "ask.tau_dag_stream",
+    "tau.json_stream"
+   ],
+   "command": [
+    "bash",
+    "-c",
+    "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/project-watchdog\" && uv run --project . pytest -q tests/test_project_watchdog.py::test_tau_stream_monitor_reads_terminal_progress_and_events tests/test_project_watchdog.py::test_ask_tau_dag_runner_polls_stream_until_process_exit"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "2 passed"
+    ]
+   },
+   "notes": "Regression guard for the watchdog stopping opaquely during long Ask/Tau runs: the repair lane must read Tau stream artifacts and write tau-stream-monitor.json instead of treating process exit or silence as progress proof."
+  },
+  {
+   "name": "blocked-receipt-alerts-human-via-ops-discord",
+   "type": "adversarial",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"from scripts.watchdog import alerts; r={'run_id':'e1','status':'BLOCKED','apply':False,'project':'memory','handled_issues':[{'issue_number':1,'status':'BLOCKED','summary':'x'}]}; alerts.maybe_alert(r); a=r['alert']; assert a['status'] in ('DRY_RUN','SENT','ALERT_DELIVERY_FAILED'), a; print('alert-status:'+a['status'])\""
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "alert-status:"
+    ]
+   }
+  },
+  {
+   "name": "noop-receipt-never-alerts",
+   "type": "negative",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"from scripts.watchdog import alerts; r={'status':'NOOP','apply':True}; alerts.maybe_alert(r); assert 'alert' not in r; print('noop-silent')\""
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "noop-silent"
+    ]
+   }
+  },
+  {
+   "name": "alert-delivery-failure-never-fails-the-tick",
+   "type": "adversarial",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"import pathlib; from scripts.watchdog import alerts; alerts.OPS_DISCORD_RUN_SH=pathlib.Path('/nonexistent/run.sh'); r={'status':'NEEDS_ATTENTION','apply':True,'run_id':'e3'}; alerts.maybe_alert(r); assert r['alert']['status']=='OPS_DISCORD_MISSING', r['alert']; print('soft-fail-ok')\""
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "soft-fail-ok"
+    ]
+   }
+  },
+  {
+   "name": "repeated-blocker-is-deduped-within-renotify-window",
+   "type": "adversarial",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"import json,time; from scripts.watchdog import alerts; r={'run_id':'e4','status':'BLOCKED','apply':False,'project':'m'}; fp=alerts._fingerprint(r); p=alerts._alerts_state_path(); p.parent.mkdir(parents=True,exist_ok=True); p.write_text(json.dumps({fp: time.time()})); alerts.maybe_alert(r); assert r['alert']['status']=='DEDUPED', r['alert']; print('dedupe-ok')\""
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "dedupe-ok"
+    ]
+   }
+  },
+  {
+   "name": "alert-transport-resolves-without-webhook-env",
+   "type": "adversarial",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && test -x ../ops-discord/run.sh && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"import os; os.environ.pop('OPS_DISCORD_WEBHOOK_WATCHDOG_URL',None); from scripts.watchdog import alerts; r={'run_id':'e5','status':'BLOCKED','apply':False,'project':'m','handled_issues':[]}; alerts.maybe_alert(r); a=r['alert']; nr=a.get('notify_receipt') or {}; assert nr.get('transport')=='discord_bot', (a.get('status'), nr); assert nr.get('status')!='NO_WEBHOOK', nr; assert a.get('delivered') is not True, a; print('bot-transport-selected:'+str(nr.get('status')))\""
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "bot-transport-selected:"
+    ]
+   },
+   "proves": "With no watchdog webhook env var, alerting selects the ops-discord Discord-bot transport (never NO_WEBHOOK) and never delivers in dry-run. Guards the 2026-09-03 webhook-assumption incident. Live channel resolution outcome (DRY_RUN vs rate-limited CHANNEL_LIST_FAILED) is environment-dependent and not asserted.",
+   "does_not_prove": "A live post from an applied tick; live proof is the message_id receipt from 2026-09-03 (1545107248219693187)."
+  },
+  {
+   "name": "e2e-three-agent-completed",
+   "type": "positive",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && uv run python scripts/e2e_three_agent_probe.py completed"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "\"ok\": true"
+    ]
+   },
+   "proves": "Three-agent pipeline E2E scenario 'completed' through the real tick path (gh shim + ask seat stub faked; scan/route/lease/worktree/proof-gate/pydantic-validation/triage-self-heal/alerting live).",
+   "does_not_prove": "Live GitHub, live model seats, or live Discord delivery."
+  },
+  {
+   "name": "e2e-three-agent-needs-human",
+   "type": "adversarial",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && uv run python scripts/e2e_three_agent_probe.py needs-human"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "\"ok\": true"
+    ]
+   },
+   "proves": "Three-agent pipeline E2E scenario 'needs-human' through the real tick path (gh shim + ask seat stub faked; scan/route/lease/worktree/proof-gate/pydantic-validation/triage-self-heal/alerting live).",
+   "does_not_prove": "Live GitHub, live model seats, or live Discord delivery."
+  },
+  {
+   "name": "e2e-three-agent-bad-code",
+   "type": "adversarial",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && uv run python scripts/e2e_three_agent_probe.py bad-code"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "\"ok\": true"
+    ]
+   },
+   "proves": "Three-agent pipeline E2E scenario 'bad-code' through the real tick path (gh shim + ask seat stub faked; scan/route/lease/worktree/proof-gate/pydantic-validation/triage-self-heal/alerting live).",
+   "does_not_prove": "Live GitHub, live model seats, or live Discord delivery."
+  },
+  {
+   "name": "e2e-three-agent-ui-data",
+   "type": "positive",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && uv run python scripts/e2e_three_agent_probe.py ui-data"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "\"ok\": true"
+    ]
+   },
+   "proves": "Three-agent pipeline E2E scenario 'ui-data' through the real tick path (gh shim + ask seat stub faked; scan/route/lease/worktree/proof-gate/pydantic-validation/triage-self-heal/alerting live).",
+   "does_not_prove": "Live GitHub, live model seats, or live Discord delivery."
+  },
+  {
+   "name": "worktree-created-with-lease",
+   "type": "positive",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && uv run python scripts/prove_worktree_lease.py"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "\"ok\": true",
+     "cleanup.worktree_lease.v1",
+     "watchdog:watchdog/issue-42"
+    ]
+   },
+   "proves": "prepare_repair_worktree creates a real git worktree AND registers an ops-worktrees lease, read back from the lease registry file (issue #1577 named proof).",
+   "does_not_prove": "reaper reclamation behavior or GitHub dispatch."
+  },
+  {
+   "name": "watchdog-reviewer-resume",
+   "type": "adversarial",
+   "real_world": true,
+   "evidence_class": "fault_injected_deterministic",
+   "timeout_seconds": 120,
+   "command": [
+    "bash",
+    "-lc",
+    "cd .. && uv run python scripts/eval_resume_generation.py --out /tmp/watchdog-resume-generation-eval/proof.json"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "artifacts": [
+     {
+      "path": "/tmp/watchdog-resume-generation-eval/proof.json",
+      "json_pointer": "/ok",
+      "equals": true
+     },
+     {
+      "path": "/tmp/watchdog-resume-generation-eval/proof.json",
+      "json_pointer": "/checks/old_PASS_not_reused",
+      "equals": true
+     },
+     {
+      "path": "/tmp/watchdog-resume-generation-eval/proof.json",
+      "json_pointer": "/checks/old_BLOCKED_not_reused",
+      "equals": true
+     },
+     {
+      "path": "/tmp/watchdog-resume-generation-eval/proof.json",
+      "json_pointer": "/checks/preserved_admission_mutation_rejected",
+      "equals": true
+     },
+     {
+      "path": "/tmp/watchdog-resume-generation-eval/proof.json",
+      "json_pointer": "/checks/truncated_reviewer_plan_rejected",
+      "equals": true
+     },
+     {
+      "path": "/tmp/watchdog-resume-generation-eval/proof.json",
+      "json_pointer": "/checks/broken_quoting_rejected",
+      "equals": true
+     },
+     {
+      "path": "/tmp/watchdog-resume-generation-eval/proof.json",
+      "json_pointer": "/checks/missing_mandatory_artifact_rejected",
+      "equals": true
+     },
+     {
+      "path": "/tmp/watchdog-resume-generation-eval/proof.json",
+      "json_pointer": "/checks/dict_coverage_rejected",
+      "equals": true
+     },
+     {
+      "path": "/tmp/watchdog-resume-generation-eval/proof.json",
+      "json_pointer": "/checks/valid_review_plan_admitted",
+      "equals": true
+     }
+    ]
+   },
+   "proves": "Public Ask/Tau local command execution, generation-fenced watchdog settlement, preserved creator admission, and pre-dispatch rejection without inheriting historical status.",
+   "does_not_prove": "Real GitHub lease acquisition, real provider invocation count, cooldown/retry budgets, supervisor-loss recovery, or native ticket closure. These remain #1638 live acceptance work."
+  },
+  {
+   "name": "watchdog-capability-preflight",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "python",
+    "../evals/capability_preflight_eval.py",
+    "/tmp/watchdog-capability-preflight-result.json"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "artifacts": [
+     {
+      "path": "/tmp/watchdog-capability-preflight-result.json",
+      "json_pointer": "/passed",
+      "equals": true
+     }
+    ]
+   },
+   "proves": "Cron capability preflight: fault-injecting each dependency (gh, triage_runner, memory, ask) names it in the receipt, pauses NEW leases with a retryable capability_dependency_down reason (no human hold, no ops-discord), restoring+re-running auto-resumes, and stale/missing receipts refuse with actionable reasons. Fault-injected deterministic; not live cron."
+  }
+ ]
 }

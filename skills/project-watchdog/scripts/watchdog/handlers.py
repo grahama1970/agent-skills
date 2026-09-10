@@ -1284,6 +1284,19 @@ def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[
                       summary=(f"codex authoring transport outage until {resume_iso}; "
                                "dispatch skipped without burning a lease or DAG run"))
         return result
+    # Cron capability preflight (#1644): a missing/stale/failed capability
+    # receipt pauses NEW leases quietly (no lease, no DAG, no ops-discord while
+    # retryable) and auto-resumes when the next preflight rewrites the receipt.
+    # Recovery, native close, and release live in other functions and are never
+    # gated here.
+    from . import capability_preflight
+    cap_ok, cap_why = capability_preflight.dispatch_allowed()
+    if apply and not cap_ok:
+        result.update(ok=True, status="SKIPPED", stop_reason="capability_preflight_not_ready",
+                      capability=cap_why,
+                      summary=(f"capability preflight not ready ({cap_why.get('reason')}); "
+                               "new-lease dispatch paused without burning a lease or DAG run"))
+        return result
     result["worktree_readiness"] = primary.readonly_preflight(root, targets)
     primary.assert_repository(root, repo)
     if not apply:
