@@ -2,24 +2,104 @@
   "version": 2,
   "skill": "goal-helper",
   "trials": 3,
-  "proof_scope": "static skill contract validation",
+  "proof_scope": "static goal-helper skill contract validation, including immutable-goal explain-project closure gate",
   "claims": {
-    "proves": "the skill contract can be parsed and checked by the best-practices-skills validator",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+    "proves": "goal-helper declares explain-project/ops-excalidraw composition and contains a fail-closed immutable-goal closure gate requiring source-bound explainability proof before MET/DONE closure.",
+    "does_not_prove": "any target project's immutable goal is met, any live explain-project package is complete, or any Excalidraw board renders to approved SVG."
   },
+  "capability_claims": [
+    {
+      "id": "goal_helper.immutable_goal_explain_gate",
+      "description": "Immutable-goal closure is blocked unless explain-project validates, answers load-bearing questions, has editable Excalidraw boards, and binds diagrams back to source/docstrings.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "goal_helper.skill_contract",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "claim_id": "goal_helper.immutable_goal_explain_gate",
+      "required_evidence": [
+        "deterministic"
+      ]
+    }
+  ],
   "cases": [
     {
       "name": "skill-contract-validation",
       "type": "positive",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": [
+        "goal_helper.immutable_goal_explain_gate"
+      ],
+      "seams": [
+        "goal_helper.skill_contract"
+      ],
       "command": [
         "python3",
         "../../best-practices-skills/scripts/validate_skill.py",
-        "..",
-        "--json"
+        ".."
       ],
       "expected": {
-        "exit_code": 0
-      }
+        "exit_code": 0,
+        "stdout_contains": [
+          "Result: PASS"
+        ]
+      },
+      "timeout_seconds": 60
+    },
+    {
+      "name": "immutable-goal-explain-gate-present",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": [
+        "goal_helper.immutable_goal_explain_gate"
+      ],
+      "seams": [
+        "goal_helper.skill_contract"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "python3 - <<'PY'\nfrom pathlib import Path\ntext = Path('../SKILL.md').read_text()\nrequired = [\n    'No immutable goal can be marked `MET`, `DONE`, or accepted as closed until',\n    '$explain-project validate',\n    '$explain-project ask',\n    '$ops-excalidraw',\n    'Code points back to diagrams',\n    'NOT_MET',\n    '- explain-project',\n    '- ops-excalidraw',\n]\nmissing = [item for item in required if item not in text]\nif missing:\n    raise SystemExit(f'missing immutable-goal gate text: {missing}')\nprint('IMMUTABLE_GOAL_EXPLAIN_GATE_PRESENT')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "IMMUTABLE_GOAL_EXPLAIN_GATE_PRESENT"
+        ]
+      },
+      "timeout_seconds": 60
+    },
+    {
+      "name": "missing-explain-gate-fails-closed",
+      "type": "negative",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": [
+        "goal_helper.immutable_goal_explain_gate"
+      ],
+      "seams": [
+        "goal_helper.skill_contract"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "TMP=$(mktemp -d); cp -R .. \"$TMP/goal-helper\"; TMPD=\"$TMP\" python3 - <<'PY'\nimport os\nfrom pathlib import Path\np = Path(os.environ['TMPD']) / 'goal-helper' / 'SKILL.md'\ntext = p.read_text()\nstart = text.index('## Immutable Goal Closure Gate')\nend = text.index('## Proof Surface Guide')\np.write_text(text[:start] + text[end:])\nmutated = p.read_text()\nrequired = ['No immutable goal can be marked `MET`', '$explain-project validate', '$ops-excalidraw']\nmissing = [item for item in required if item not in mutated]\nif missing != required:\n    raise SystemExit(f'unexpected missing set: {missing}')\nprint('MISSING_EXPLAIN_GATE_DETECTED')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "MISSING_EXPLAIN_GATE_DETECTED"
+        ]
+      },
+      "timeout_seconds": 60
     }
   ]
 }

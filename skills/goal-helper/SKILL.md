@@ -16,6 +16,9 @@ triggers:
   - define proof command
   - measurable definition of done
   - blocker report
+  - immutable goal closure
+  - immutable goal met
+  - goal acceptance proof
 provides:
   - task-planning
   - progress-tracking
@@ -23,6 +26,12 @@ provides:
   - blocker-reporting
 composes:
   - agentic-evals
+  - explain-project
+  - ops-excalidraw
+  - best-practices-project
+complies:
+  - best-practices-skills
+  - best-practices-project
 taxonomy:
   - precision
   - resilience
@@ -89,6 +98,36 @@ Every goal must name:
 6. **Prevent shortcut success**
    - Ban weakening tests, hiding errors, bypassing auth, deleting checks, fabricating data, or claiming success from a reviewer opinion alone.
    - For memory, extraction, security, persistence, and compliance work, require raw proof artifacts or live query output.
+
+
+## Immutable Goal Closure Gate
+
+No immutable goal can be marked `MET`, `DONE`, or accepted as closed until
+`$explain-project` works for that project. A goal may have passing runtime proof
+and still be `NOT_MET` if a developer cannot ask how the system works and get a
+source-bound answer.
+
+For immutable-goal closure, require these explainability proofs:
+
+1. **Explainer catalog validates** — `$explain-project validate
+   docs/explain/explainers.jsonl` passes.
+2. **Load-bearing questions answer** — `$explain-project ask` answers the
+   project's likely reviewer/operator questions with cockpit bullets, source
+   ranges, and proof-boundary language.
+3. **Editable diagrams exist** — every required concept record points at a real
+   `$ops-excalidraw` `.excalidraw` board; validate each required board with
+   `skills/ops-excalidraw/run.sh validate <board> --profile fanout` unless the
+   board intentionally uses a documented non-fanout profile.
+4. **Code points back to diagrams** — relevant entrypoint/module docstrings or
+   README sections name the durable diagram ID or Excalidraw source path near the
+   code being explained.
+5. **Non-claims are explicit** — missing live debugger proof, rendered SVG
+   approval, provider availability, or human acceptance remains listed as
+   unverified instead of being inferred from docs.
+
+If any required explainability proof is missing, report the immutable goal as
+`NOT_MET` or `USABLE_WITH_GAPS` and make the next legal move an
+`$explain-project` or `$ops-excalidraw` repair command, not goal closure.
 
 ## Proof Surface Guide
 
