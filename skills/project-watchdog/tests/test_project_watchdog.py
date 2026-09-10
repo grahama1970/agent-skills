@@ -2873,3 +2873,46 @@ def test_quarantine_already_labeled_stays_quiet():
     issue = {"number": 1, "labels": [{"name": "next:human"}], "watchdog_action": "ticket_repair"}
     result = primary._quarantine_unfixable_ticket(project, issue, "unusable literal repair target: '?'")
     assert result is not None and result["status"] == "SKIPPED"
+
+
+def _mk_node(run_dir, node_id, text):
+    d = run_dir / "lane" / "node-artifacts" / node_id
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "response.md").write_text(text)
+
+
+def test_verdict_recovery_recovers_missed_verdict(tmp_path):
+    from watchdog import verdict_recovery
+    _mk_node(tmp_path, "handler-codex", "Analysis...\nVERDICT: NEEDS_ATTENTION\nreason\n")
+    r = verdict_recovery.recover(tmp_path)
+    node = r["nodes"][0]
+    assert node["outcome"] == "RECOVERED" and node["recovered_verdict"] == "NEEDS_ATTENTION"
+    assert Path(node["recovery_receipt"]).is_file()
+
+
+def test_verdict_recovery_ambiguous_stays_blocked(tmp_path):
+    from watchdog import verdict_recovery
+    _mk_node(tmp_path, "handler-codex", "VERDICT: PASS\n...later...\nVERDICT: FAIL\n")
+    r = verdict_recovery.recover(tmp_path)
+    assert r["ambiguous"] is True
+    assert r["nodes"][0]["outcome"] == "AMBIGUOUS" and not r["recovered"]
+
+
+def test_verdict_recovery_absent_is_retry_eligible(tmp_path):
+    from watchdog import verdict_recovery
+    _mk_node(tmp_path, "handler-codex", "no verdict here, truncated response")
+    r = verdict_recovery.recover(tmp_path)
+    assert r["nodes"][0]["outcome"] == "ABSENT" and r["nodes"][0]["retry_eligible"] is True
+    assert r["retry_eligible_nodes"] == ["handler-codex"]
+
+
+def test_verdict_recovery_replay_is_idempotent(tmp_path):
+    from watchdog import verdict_recovery
+    _mk_node(tmp_path, "handler-codex", "VERDICT: PASS\n")
+    first = verdict_recovery.recover(tmp_path)
+    receipt = Path(first["nodes"][0]["recovery_receipt"])
+    mtime = receipt.stat().st_mtime_ns
+    import time as _t; _t.sleep(0.01)
+    second = verdict_recovery.recover(tmp_path)
+    assert Path(second["nodes"][0]["recovery_receipt"]) == receipt
+    assert receipt.stat().st_mtime_ns == mtime  # not rewritten

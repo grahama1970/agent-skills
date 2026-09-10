@@ -1412,6 +1412,11 @@ def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[
         # ladder; this slice only repairs classification, never closure: an
         # extracted PASS still goes through the full proof gate below.
         extracted: dict[str, str] = {}
+        from . import verdict_recovery as _vr
+        try:
+            result["verdict_recovery"] = _vr.recover(ask_dir)
+        except OSError:
+            result["verdict_recovery"] = {"error": "unreadable"}
         from . import transport_health as _th
         for packet in sorted(ask_dir.glob("*/node-artifacts/*/handler-recovery-packet.json")):
             try:
