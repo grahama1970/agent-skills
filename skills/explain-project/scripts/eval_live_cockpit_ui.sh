@@ -10,7 +10,7 @@
 # mutation, no VS Code GUI control.
 set -euo pipefail
 
-exec python3 - "$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)" <<'PY'
+exec python3 -u - "$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)" <<'PY'
 import json
 import os
 import re
@@ -26,6 +26,7 @@ UI = SKILL / "ui"
 OAI = Path("/home/graham/workspace/experiments/oai-trial")
 SURF = SKILL.parent / "surf" / "run.sh"
 SPEAK = SKILL.parent / "chatterbox-speak" / "run.sh"
+DBG = SKILL.parent / "debugger" / "run.sh"
 T = Path(tempfile.mkdtemp())
 API_PORT = 18773
 UI_PORT = 15177
@@ -42,6 +43,23 @@ QUESTION = (
 BOOT_JS = "JSON.stringify({rev:document.querySelector(\"[data-qid='cockpit:state:root']\")?.getAttribute(\"data-revision\"),ready:!!document.querySelector(\"[data-qid='cockpit:question:manual-input']\")})"
 PROBE_JS = "JSON.stringify({rev:document.querySelector(\"[data-qid='cockpit:state:root']\")?.getAttribute(\"data-revision\"),banner:document.querySelector(\"[data-qid='cockpit:stage:active-question']\")?.textContent,title:document.querySelector(\"h1\")?.textContent,bullets:document.querySelectorAll(\"section.cockpit-stage li\").length,step:(document.body.textContent.split(\"Step \")[1]||\"\").slice(0,8)})"
 DBG_JS = "JSON.stringify({target:document.querySelector(\"[data-qid='cockpit:debugger:panel']\")?.textContent})"
+
+
+def last_json_object(text):
+    """Return the last top-level JSON object printed in stdout."""
+    lines = text.splitlines()
+    for i in range(len(lines) - 1, -1, -1):
+        if lines[i].rstrip().endswith("}"):
+            start = i
+            while start >= 0 and not lines[start].lstrip().startswith("{"):
+                start -= 1
+            if start < 0:
+                continue
+            chunk = "\n".join(lines[start:i + 1])
+            if '"schema"' not in chunk:
+                continue
+            return json.loads(chunk)
+    raise ValueError("no JSON object in output")
 
 
 def post(path, body):
@@ -63,7 +81,7 @@ def surf(*args, tab=None):
     )
 
 
-def surf_retry(*args, tab=None, tries=4, delay=2.0):
+def surf_retry(*args, tab=None, tries=6, delay=3.0):
     last = None
     for _ in range(tries):
         last = surf(*args, tab=tab)
@@ -111,6 +129,8 @@ def dom_probe(tab, expression, tries=20):
 
 api = None
 preview = None
+board = None
+board_tab_id = None
 tab_id = None
 try:
     # 1. Disposable cockpit API on the oai-trial explainers.
@@ -129,6 +149,17 @@ try:
         ],
         cwd=SKILL,
         stdout=(T / "api.log").open("w"),
+        stderr=subprocess.STDOUT,
+    )
+
+    # 1b. Disposable ops-excalidraw whiteboard for the diagram tab.
+    board = subprocess.Popen(
+        [
+            "bash",
+            str(SKILL.parent / "ops-excalidraw" / "run.sh"),
+            "whiteboard", "--port", "7684",
+        ],
+        stdout=(T / "board.log").open("w"),
         stderr=subprocess.STDOUT,
     )
 
@@ -236,26 +267,189 @@ try:
         "bullets", seen["bullets"],
     )
 
-    # 6. Drive the UI with the J hotkey; the revision fence must move.
-    before_rev = int(seen["rev"])
-    surf("key", "j", tab=tab_id)
-    time.sleep(2)
-    after = dom_probe(tab_id, PROBE_JS)
-    assert int(after["rev"]) > before_rev, after
-    print(
-        "HOTKEY_STEP_OK rev",
-        before_rev, "->", after["rev"],
-    )
-
-    # 7. Debugger target visible in the evidence rail (expand with E).
-    surf("key", "e", tab=tab_id)
+    # 6. Per-step walkthrough: 1-2 sentence context + bullets per step,
+    #    the real $debugger break + receipt flipping the live UI at the
+    #    breakpoint step, and the ops-excalidraw whiteboard tab open.
+    surf("key", "e", tab=tab_id)  # expand evidence rail once
     time.sleep(1)
-    dbg = dom_probe(tab_id, DBG_JS)
-    assert "pipeline.py" in (
-        dbg.get("target") or ""
-    ), dbg
-    assert "210" in dbg["target"], dbg
-    print("DEBUGGER_TARGET_IN_DOM_OK pipeline.py:210")
+
+    def bootstrap():
+        with urllib.request.urlopen(
+            f"{BASE}/api/cockpit/bootstrap", timeout=10
+        ) as r:
+            return json.loads(r.read())["state"]
+
+    # authoritative step count from the API, not a fuzzy DOM text match
+    step_total = bootstrap()["selection"]["step_count"]
+    for step_index in range(step_total):
+        snap = dom_probe(tab_id, PROBE_JS)
+        state = bootstrap()
+        assert snap["bullets"] >= 2, snap
+        assert snap["title"], snap
+        src = dom_probe(
+            tab_id,
+            'JSON.stringify({src:document.querySelector('
+            '"[data-qid=\'cockpit:source:panel\']")'
+            '?.textContent})',
+        )
+        explanation = (src.get("src") or "").strip()
+        assert explanation and len(explanation) < 400, src
+        print(
+            "PER_STEP_EXPLAINER_OK step", step_index + 1,
+            snap["title"][:30], "bullets", snap["bullets"],
+        )
+
+        dbg = dom_probe(tab_id, DBG_JS)
+        stop_line = state["debugger"]["target"]["line"] \
+            if state["debugger"]["target"] else None
+        if (
+            "pipeline.py" in (dbg.get("target") or "")
+            and stop_line
+        ):
+            # Whiteboard tab for this breakpoint's diagram.
+            if board_tab_id is None and board is not None:
+                wb = surf(
+                    "tab.new",
+                    "http://127.0.0.1:7684/",
+                )
+                m = re.search(
+                    r"Created tab (\d+):", wb.stdout
+                )
+                assert m, wb.stdout + wb.stderr
+                board_tab_id = int(m.group(1))
+                time.sleep(2)
+                title_probe = dom_probe(
+                    board_tab_id,
+                    'JSON.stringify({t:document.title})',
+                )
+                assert "whiteboard" in (
+                    title_probe.get("t") or ""
+                ), title_probe
+                print(
+                    "WHITEBOARD_TAB_OK", board_tab_id
+                )
+
+            # REAL headless breakpoint at the step's stop.
+            driver = T / "driver.py"
+            driver.write_text(
+                "from pathlib import Path\n"
+                "import tempfile\n"
+                "from anonymization_trial.fixture "
+                "import generate_fixture\n"
+                "from anonymization_trial.pipeline "
+                "import run_pipeline\n"
+                "root = Path(tempfile.mkdtemp())\n"
+                "inp = root / 'input'\n"
+                "out = root / 'output'\n"
+                "generate_fixture(inp, records=50)\n"
+                "run_pipeline(inp, out)\n"
+            )
+            brk = subprocess.run(
+                [
+                    "bash", str(DBG), "break",
+                    f"src/anonymization_trial/pipeline.py:{stop_line}",
+                    "--local", "tmp",
+                    "--local", "report_path",
+                    "--local", "output_corpus",
+                    "--out", str(T / "proof.json"),
+                    "--", "python3", str(driver),
+                ],
+                capture_output=True, text=True,
+                cwd=OAI,
+                env={
+                    **os.environ,
+                    "PYTHONPATH": str(OAI / "src"),
+                },
+                timeout=180,
+            )
+            (T / "break.log").write_text(
+                brk.stdout + brk.stderr
+            )
+            assert brk.returncode == 0, (
+                T / "break.log"
+            ).read_text()[-300:]
+            val = subprocess.run(
+                [
+                    "bash", str(DBG), "validate",
+                    str(T / "proof.json"),
+                    "--expect-valid",
+                    "--repo-root", str(OAI),
+                    "--canonical-out",
+                    str(T / "canonical.json"),
+                ],
+                capture_output=True, text=True,
+                cwd=OAI, timeout=60,
+            )
+            assert "debugger proof validation passed" in (
+                val.stdout + val.stderr
+            ), (val.stdout + val.stderr)[-300:]
+            rec = subprocess.run(
+                [
+                    "bash", str(SKILL / "run.sh"),
+                    "debugger-runtime-proof-receipt",
+                    "--proof", str(T / "canonical.json"),
+                    "--workspace", str(OAI),
+                    "--target-file",
+                    "src/anonymization_trial/pipeline.py",
+                    "--start-line", str(stop_line - 30),
+                    "--end-line", str(stop_line + 10),
+                    "--feature-id", "publish.report_last",
+                    "--step-id",
+                    state["selection"]["step_id"],
+                    "--request-revision",
+                    str(state["revision"]),
+                    "--local", "tmp",
+                    "--local", "report_path",
+                    "--local", "output_corpus",
+                    "--proves",
+                    "paused runtime at atomic publish rename",
+                ],
+                capture_output=True, text=True,
+                cwd=SKILL, timeout=120,
+            )
+            receipt = last_json_object(rec.stdout)
+            assert receipt["adapter"] == "debugger_proof"
+            post("/api/cockpit/event", {
+                "schema":
+                    "explain_project.cockpit_event.v1",
+                "event_id":
+                    f"liveui-dbg-{step_index}",
+                "type": "adapter.receipt",
+                "expected_revision": state["revision"],
+                "payload": {"receipt": receipt},
+            })
+
+            # The live UI must flip to PROOF_RECEIVED.
+            for _ in range(15):
+                time.sleep(1)
+                flip = dom_probe(
+                    tab_id,
+                    'JSON.stringify({d:document.querySelector('
+                    '"[data-qid=\'cockpit:debugger:panel\']")'
+                    '?.textContent})',
+                )
+                if "PROOF_RECEIVED" in (
+                    flip.get("d") or ""
+                ):
+                    break
+            assert "PROOF_RECEIVED" in (
+                flip.get("d") or ""
+            ), flip
+            print(
+                "DEBUGGER_PROOF_UI_OK step",
+                step_index + 1,
+            )
+
+        if step_index < step_total - 1:
+            before_rev = int(snap["rev"])
+            surf("key", "j", tab=tab_id)
+            time.sleep(2)
+            after = dom_probe(tab_id, PROBE_JS)
+            assert int(after["rev"]) > before_rev, after
+            print(
+                "HOTKEY_STEP_OK rev",
+                before_rev, "->", after["rev"],
+            )
 
     # 8. Embry narrates the stop (render receipt; no playback).
     try:
@@ -306,13 +500,21 @@ try:
 
     print("LIVE_COCKPIT_WALKTHROUGH_OK")
 finally:
+    if board_tab_id is not None:
+        surf("tab.close", str(board_tab_id))
+    if board is not None:
+        board.terminate()
+        try:
+            board.wait(timeout=10)
+        except Exception:
+            board.kill()
     if tab_id is not None:
-        for _ in range(3):
-            back = surf_retry(
+        for _ in range(4):
+            back = surf(
                 "go", restore_url,
                 "--tab-id", str(tab_id),
             )
-            time.sleep(1)
+            time.sleep(2)
             check = surf_retry(
                 "js", "--no-activate", "location.href",
                 tab=tab_id,

@@ -157,7 +157,7 @@ try:
     assert target["file"].endswith(
         "src/anonymization_trial/pipeline.py"
     ), target
-    assert target["line"] == 210, target
+    assert target["line"] > 0, target
     assert (
         target_state["integration_health"]["debugger_target"]
         == "STALE"
@@ -187,7 +187,7 @@ try:
     brk = run(
         [
             "bash", str(DBG), "break",
-            "src/anonymization_trial/pipeline.py:210",
+            f"src/anonymization_trial/pipeline.py:{target['line']}",
             "--local", "tmp",
             "--local", "report_path",
             "--local", "output_corpus",
@@ -241,7 +241,8 @@ try:
         "--workspace", str(OAI),
         "--target-file",
         "src/anonymization_trial/pipeline.py",
-        "--start-line", "180", "--end-line", "220",
+        "--start-line", str(target["line"] - 30),
+        "--end-line", str(target["line"] + 10),
         "--feature-id", "publish.report_last",
         "--step-id", step_id,
         "--request-revision", str(rev),

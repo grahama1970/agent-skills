@@ -1001,3 +1001,124 @@ def validate_proof_command(
         )
     ):
         raise typer.Exit(1)
+
+
+@app.command("propose-docstring-links")
+def propose_docstring_links_command(
+    repo: Path = typer.Option(..., "--repo"),
+    explainers: Path = typer.Option(..., "--explainers"),
+    out: Path = typer.Option(..., "--out"),
+) -> None:
+    """Propose docstring diagram-link lines for each debugger breakpoint.
+
+    Reads a strict explainer JSONL, finds every step with a debugger
+    stop, locates the owning top-level function, and writes a typed
+    proposal artifact (explain_project.docstring_link_proposal.v1)
+    containing the exact docstring line to add per breakpoint. Never
+    mutates source; the human/project-agent applies the patch once.
+    """
+
+    rows = read_jsonl(explainers)
+    proposals: list[dict[str, Any]] = []
+
+    for row in rows:
+        diagram = row.diagram
+        pointer = (
+            f"Excalidraw source: {diagram.source_path}"
+        )
+        if diagram.source_kind != "excalidraw":
+            pointer = f"Diagram: {diagram.source_path}"
+
+        seen_functions: set[tuple[str, str]] = set()
+        for step in row.steps:
+            if step.debugger_stop_index is None:
+                continue
+            stop = row.debugger_stops[
+                step.debugger_stop_index
+            ]
+            source = (repo / stop.file).resolve()
+            if not source.is_file():
+                continue
+            lines = source.read_text(
+                encoding="utf-8"
+            ).splitlines()
+            line_no = min(
+                max(stop.line - 1, 0), len(lines) - 1
+            )
+
+            owning = None
+            for i in range(line_no, -1, -1):
+                text = lines[i]
+                if text.startswith("def "):
+                    owning = text.split("(")[0][4:].strip()
+                    break
+                if text.startswith("class "):
+                    owning = text.split("(")[0][6:].strip()
+                    break
+                if text.startswith("async def "):
+                    owning = text.split("(")[0][10:].strip()
+                    break
+
+            key = (str(stop.file), owning or "")
+            if owning is None or key in seen_functions:
+                continue
+
+            # Docstring already carries a diagram pointer?
+            # Bound the check to the owning function's own docstring
+            # (def line to its closing triple quote), not a raw window.
+            def_line = next(
+                i for i in range(line_no, -1, -1)
+                if lines[i].lstrip().startswith(
+                    ("def ", "class ", "async def ")
+                )
+            )
+            doc = []
+            opened = False
+            for j in range(def_line, min(def_line + 40, len(lines))):
+                if '"""' in lines[j]:
+                    count = lines[j].count('"""')
+                    if not opened and count >= 2:
+                        doc.append(lines[j])
+                        break
+                    if not opened:
+                        opened = True
+                    else:
+                        doc.append(lines[j])
+                        break
+                if opened:
+                    doc.append(lines[j])
+                elif j > def_line + 2:
+                    break
+            window = "\n".join(doc)
+            already_linked = (
+                "Excalidraw source:" in window
+                or "Diagram ID:" in window
+                or "Diagram:" in window
+            )
+            if already_linked:
+                continue
+            seen_functions.add(key)
+
+            proposals.append({
+                "file": str(stop.file),
+                "function": owning,
+                "breakpoint_line": stop.line,
+                "proposed_docstring_line": pointer,
+                "diagram_id": diagram.source_path,
+            })
+
+    artifact = {
+        "schema":
+            "explain_project.docstring_link_proposal.v1",
+        "repo": str(repo),
+        "mutation": "proposal-only",
+        "proposals": proposals,
+    }
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(
+        json.dumps(artifact, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    typer.echo(
+        f"proposed {len(proposals)} docstring link(s) -> {out}"
+    )

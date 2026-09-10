@@ -475,14 +475,35 @@
         "stdout_contains": [
           "UI_TAB_READY",
           "LIVE_DOM_ORACLE_OK",
+          "PER_STEP_EXPLAINER_OK",
+          "WHITEBOARD_TAB_OK",
+          "DEBUGGER_PROOF_UI_OK",
           "HOTKEY_STEP_OK",
-          "DEBUGGER_TARGET_IN_DOM_OK",
-          "LIVE_COCKPIT_WALKTHROUGH_OK"
+          "EMBRY_NARRATION_OK",
+          "LIVE_COCKPIT_WALKTHROUGH_OK",
+          "TAB_RESTORED_OK"
         ]
       },
       "readback": true,
       "evidence_class": "live_e2e",
-      "notes": "Real first interviewer question through the live-evidence intake boundary drives the actual React cockpit in a real Chrome tab opened via Surf; the DOM is the readback oracle (active-question banner with the real question text, >=2 scannable bullets, Step N/M, revision fence r1->r2 via the J hotkey, evidence drawer shows debugger target pipeline.py:210 after E), and chatterbox-speak renders the Embry-voice narration for the stop (render receipt only). Disposable API+preview+tab; closes only its own tab/processes. No mic, no playback, no Excalidraw mutation, no VS Code GUI control."
+      "notes": "Real first interviewer question through the live-evidence intake boundary drives the REAL cockpit UI in the single persistent Chrome tab (LIVEUI_TAB_ID, default 837436340; navigated and restored, never new/closed). Per step: 1-2 sentence source context + >=2 scannable bullets asserted in the live DOM. At each breakpoint step: ops-excalidraw whiteboard opened in ONE dedicated tab (title verified, closed after), REAL headless $debugger break at the step's stop line (dynamic from the API state), canonical debugger.proof.v1, adapter receipt posted, and the live UI flips to PROOF_RECEIVED. J hotkey advances with revision fence. Embry narration render receipt. No mic, no playback, no Excalidraw mutation, no VS Code GUI control."
+    },
+    {
+      "name": "docstring-link-proposal",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "../scripts/eval_docstring_proposal.sh"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXPLAIN_PROJECT_DOCSTRING_PROPOSAL_OK"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "deterministic"
     }
   ]
 }

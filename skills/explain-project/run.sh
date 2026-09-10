@@ -30,7 +30,7 @@ case "$cmd" in
   validate-deploy)
     python3 "$DIR/scripts/validate_deploy.py" "$@"
     ;;
-  validate|list|ask|sample|scaffold|milestone|answer-question|cockpit-proof|cockpit|validate-proof|interaction-manifest|debugger-source-reveal-receipt|debugger-runtime-proof-receipt|excalidraw-proposal-receipt)
+  validate|list|ask|sample|scaffold|milestone|answer-question|cockpit-proof|cockpit|validate-proof|interaction-manifest|debugger-source-reveal-receipt|debugger-runtime-proof-receipt|excalidraw-proposal-receipt|propose-docstring-links)
     PYTHONPATH="$DIR/scripts" \
       uv run \
       --isolated \
