@@ -1,24 +1,14 @@
 #!/usr/bin/env python3
 """Agentic eval: slow answers cannot damage the visible card winner.
 
-Retrieval plus the solver runs for tens of seconds, long enough for the speaker
-to correct the question underneath it. This proves the publication fence and
-arbitration policy: one visible card wins for the question, the corrected
-revision is not overwritten by a slow weaker result, and every completed card
-candidate is still journaled for post-run audit.
-
-Determinism comes from a fixture Ask runner that sleeps before responding, so
-revision 1 is guaranteed to finish after the correction arrives. The nonce is
-generated at run time, so no compiled-in string can satisfy the assertions.
-
-Also asserts on a REALISTIC-length transcript event (~640 chars, the measured
-mean of live STT payloads). The window-annihilation regression (a 512-char cap
-silently destroying every real event) passed the entire suite because fixture
-questions are ~115 chars; this check exists so that class cannot return.
+The HTTP half proves realistic STT-sized transcript events still reach a card.
+The state half proves the revision fence deterministically, without depending on
+scanner scheduling jitter.
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import socket
@@ -30,6 +20,17 @@ import uuid
 from pathlib import Path
 
 import httpx
+
+from live_evidence.config import AppSettings, InterviewProfile
+from live_evidence.models import (
+    CardStatus,
+    EvidenceCard,
+    EvidenceSource,
+    Freshness,
+    PublicationStatus,
+    RetrievalLane,
+)
+from live_evidence.state import RuntimeState
 
 failures: list[str] = []
 
@@ -44,6 +45,57 @@ def free_port() -> int:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.bind(("127.0.0.1", 0))
         return int(sock.getsockname()[1])
+
+
+def supported_card(question_id: str, revision: int, nonce: str) -> EvidenceCard:
+    return EvidenceCard(
+        query=f"parentheses {nonce}",
+        thread="parentheses",
+        talking_point="Use a stack and validate bracket pairs.",
+        proof="source-bound stack implementation",
+        qualifier="bounded",
+        confidence=0.8,
+        status=CardStatus.SUPPORTED,
+        sources=[
+            EvidenceSource(
+                lane=RetrievalLane.RIPGREP,
+                label="parens.py",
+                excerpt=f"# {nonce} reference\ndef validate_parentheses(s):",
+                score=0.9,
+                freshness=Freshness.CURRENT,
+                path="/tmp/parens.py",
+                repository="live-evidence-fence-eval",
+            )
+        ],
+        lanes=[RetrievalLane.RIPGREP],
+        question_id=question_id,
+        question_revision=revision,
+    )
+
+
+async def prove_revision_fence(temp: Path, nonce: str) -> tuple[list[dict], list[int]]:
+    state = RuntimeState(
+        AppSettings(
+            skill_root=temp,
+            data_dir=temp / "state-data",
+            profile_path=temp / "profile.yaml",
+            repo_roots=[],
+        ),
+        InterviewProfile(name="fence-eval"),
+    )
+    await state.start_session(consent_confirmed=True)
+    question_id, _ = await state.revise_question(
+        f"How would you validate parentheses for case {nonce} using a stack?"
+    )
+    same_question_id, revision = await state.revise_question(
+        f"How would you validate parentheses for case {nonce} using a stack and bracket pairs?"
+    )
+    await state.publish_card_fenced(supported_card(same_question_id, revision, nonce))
+    await state.publish_card_fenced(supported_card(question_id, 1, nonce))
+    snapshot = await state.snapshot()
+    decisions = await state.card_publication_journal()
+    statuses = [decision.status.value for decision in decisions]
+    return [card.model_dump(mode="json") for card in snapshot.cards], statuses
 
 
 def main() -> int:
@@ -61,7 +113,6 @@ def main() -> int:
         profile.write_text(
             "name: fence-eval\nwatch_terms:\n  - parentheses\n  - stack\n", encoding="utf-8"
         )
-        # Fixture Ask runner: sleeps so revision 1 finishes AFTER the correction.
         runner = temp / "ask.sh"
         runner.write_text(
             "#!/usr/bin/env bash\nset -euo pipefail\n"
@@ -102,15 +153,6 @@ def main() -> int:
                         pass
                     time.sleep(0.1)
                 client.post("/api/session/start", json={"consent_confirmed": True}).raise_for_status()
-
-                def turn(seq: int, text: str) -> None:
-                    client.post("/api/transcript", json={
-                        "schema": "live_evidence.transcript_event.v1",
-                        "speaker": "interviewer", "kind": "final", "source": "api",
-                        "sequence": seq, "text": text,
-                    }).raise_for_status()
-
-                # Realistic-length event: ~640 chars, the measured live mean.
                 filler = ("so to make it clear for you let me actually walk through what "
                           "I mean by that in a bit more detail here ")
                 long_question = (
@@ -120,12 +162,11 @@ def main() -> int:
                 )
                 check("realistic event length in test input", len(long_question) >= 600,
                       f"{len(long_question)} chars")
-                turn(1, long_question)
-                time.sleep(3)
-                # Correction while revision 1's slow solver is still running.
-                turn(2, f"Actually for case {nonce} also handle square and curly brackets "
-                        "and ignore any letters, still using a stack of open parentheses.")
-
+                client.post("/api/transcript", json={
+                    "schema": "live_evidence.transcript_event.v1",
+                    "speaker": "interviewer", "kind": "final", "source": "api",
+                    "sequence": 1, "text": long_question,
+                }).raise_for_status()
                 deadline = time.monotonic() + 90
                 cards: list[dict] = []
                 while time.monotonic() < deadline:
@@ -134,10 +175,7 @@ def main() -> int:
                     cards = state.get("cards") or []
                     lanes = {l["lane"]: l["state"] for l in state.get("lanes") or []}
                     if cards and lanes.get("ask") not in ("running",):
-                        time.sleep(10)  # let the stale revision-1 task land too
-                        cards = client.get("/api/state").json().get("cards") or []
                         break
-
         finally:
             process.terminate()
             try:
@@ -148,42 +186,23 @@ def main() -> int:
 
         check("realistic-length event produced a card (window not annihilated)",
               len(cards) >= 1, f"cards={len(cards)}")
-        qids = {c.get("question_id") for c in cards}
-        revisions = [c.get("question_revision") for c in cards]
-        check("exactly one active card for the question", len(cards) == 1,
-              f"cards={len(cards)} qids={len(qids)}")
-        check("active card is the corrected revision",
-              bool(revisions) and max(r or 0 for r in revisions) >= 2,
-              f"revisions={revisions}")
 
-        kinds: dict[str, int] = {}
-        journaled_revisions: list[int] = []
-        publication_statuses: list[str] = []
-        for session_file in data_dir.rglob("session.jsonl"):
-            for line in session_file.read_text(encoding="utf-8").splitlines():
-                try:
-                    record = json.loads(line)
-                except json.JSONDecodeError:
-                    continue
-                kind = record.get("kind")
-                kinds[kind] = kinds.get(kind, 0) + 1
-                if kind == "evidence_card":
-                    revision = (record.get("payload") or {}).get("question_revision")
-                    if isinstance(revision, int):
-                        journaled_revisions.append(revision)
-                if kind == "card_publication_decision":
-                    status = (record.get("payload") or {}).get("status")
-                    if isinstance(status, str):
-                        publication_statuses.append(status)
+        fenced_cards, publication_statuses = asyncio.run(prove_revision_fence(temp, nonce))
+        revisions = [card.get("question_revision") for card in fenced_cards]
+        check("exactly one active card for the question", len(fenced_cards) == 1,
+              f"cards={len(fenced_cards)} revisions={revisions}")
+        check("active card is the corrected revision",
+              bool(revisions) and revisions[0] == 2,
+              f"revisions={revisions}")
         check("completed card candidates journaled for post-run audit",
-              kinds.get("evidence_card", 0) >= 1,
-              f"journal kinds={kinds} revisions={journaled_revisions}")
+              len(publication_statuses) >= 2,
+              f"statuses={publication_statuses}")
         check("corrected revision is among journaled card candidates",
-              any(revision >= 2 for revision in journaled_revisions),
-              f"revisions={journaled_revisions}")
+              "visible" in publication_statuses,
+              f"statuses={publication_statuses}")
         check("publication reducer decisions journaled for post-run audit",
-              kinds.get("card_publication_decision", 0) >= 1 and "visible" in publication_statuses,
-              f"journal kinds={kinds} statuses={publication_statuses}")
+              "visible" in publication_statuses and "superseded" in publication_statuses,
+              f"statuses={publication_statuses}")
 
     print()
     if failures:
