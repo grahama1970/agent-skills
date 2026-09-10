@@ -214,16 +214,8 @@ FIRST_ASK_HANDLER_BY_PROJECT_AGENT_FAMILY = {
     "openai": "claude-fable-low",
     "claude": "gpt-5.5-high",
 }
-PROJECT_AGENT_FAMILY_ENV_VARS = (
-    "LRSSS_PROJECT_AGENT_FAMILY",
-    "LAZY_REPORT_SHAME_PROJECT_AGENT_FAMILY",
-    "PI_PROJECT_AGENT_FAMILY",
-)
-ASK_HANDLER_AVAILABILITY_ENV_VARS = (
-    "LRSSS_AVAILABLE_ASK_HANDLERS",
-    "LAZY_REPORT_SHAME_AVAILABLE_ASK_HANDLERS",
-    "ASK_AVAILABLE_HANDLERS",
-)
+PROJECT_AGENT_FAMILY_ENV_VARS = ("LRSSS_PROJECT_AGENT_FAMILY", "LAZY_REPORT_SHAME_PROJECT_AGENT_FAMILY", "PI_PROJECT_AGENT_FAMILY")
+ASK_HANDLER_AVAILABILITY_ENV_VARS = ("LRSSS_AVAILABLE_ASK_HANDLERS", "LAZY_REPORT_SHAME_AVAILABLE_ASK_HANDLERS", "ASK_AVAILABLE_HANDLERS")
 
 
 def receipt_parent_ref(ref: ParentRef) -> dict[str, str]:
@@ -266,7 +258,7 @@ def runtime_project_agent_family() -> tuple[str, str | None]:
     return "", None
 
 
-def configured_ask_handlers() -> frozenset[str]:
+def runtime_configured_ask_handlers() -> tuple[frozenset[str], str | None]:
     for name in ASK_HANDLER_AVAILABILITY_ENV_VARS:
         raw = os.environ.get(name, "").strip()
         if raw:
@@ -275,9 +267,9 @@ def configured_ask_handlers() -> frozenset[str]:
             except Exception:
                 parsed = None
             if isinstance(parsed, list):
-                return frozenset(str(item).strip() for item in parsed if str(item).strip())
-            return frozenset(part for part in raw.replace(",", " ").split() if part)
-    return frozenset(FIRST_ASK_HANDLER_BY_PROJECT_AGENT_FAMILY.values())
+                return frozenset(str(item).strip() for item in parsed if str(item).strip()), name
+            return frozenset(part for part in raw.replace(",", " ").split() if part), name
+    return frozenset(), None
 
 
 def resolve_parent_ref(ref: ParentRef, goal_hash: str | None, state: str) -> ResolvedParent:
@@ -418,10 +410,6 @@ class NeedsBraveSearch(BaseModel):
     queries: list[str] = Field(min_length=1)
 
 
-def has_parent_producer(refs: list[ResolvedParent], producer: str) -> bool:
-    return any(ref.producer == producer for ref in refs)
-
-
 def has_parent_receipt(refs: list[ResolvedParent], producer: str, payload_schema: str) -> bool:
     return any(ref.producer == producer and ref.payload_schema == payload_schema for ref in refs)
 
@@ -478,7 +466,13 @@ class NeedsAgent(BaseModel):
                     "allowed_handler": required_handler,
                 },
             )
-        available_handlers = configured_ask_handlers()
+        available_handlers, handler_source = runtime_configured_ask_handlers()
+        if handler_source is None:
+            raise PydanticCustomError(
+                "needs_agent_ask_handlers_missing",
+                "state=needs_agent requires runtime-configured Ask handler availability",
+                {"required_env": list(ASK_HANDLER_AVAILABILITY_ENV_VARS)},
+            )
         if required_handler not in available_handlers:
             raise PydanticCustomError(
                 "needs_agent_first_handler_unavailable",
@@ -487,6 +481,7 @@ class NeedsAgent(BaseModel):
                     "runtime_family": runtime_family,
                     "family_source": family_source,
                     "required_handler": required_handler,
+                    "handler_source": handler_source,
                     "configured_handlers": sorted(available_handlers),
                 },
             )
@@ -498,10 +493,6 @@ class NeedsWebgpt(BaseModel):
     model_config = ConfigDict(extra="forbid")
     question: str = Field(min_length=1)
     parent_refs: list[ParentRef] = Field(min_length=2, description="Must include typed brave-search and ask receipt refs")
-
-    @model_validator(mode="after")
-    def enforce_prior_rungs(self) -> "NeedsWebgpt":
-        return self
 
 
 class NeedsRoundtable(BaseModel):
@@ -734,20 +725,20 @@ def steering_from_error(error: dict[str, Any]) -> dict[str, Any]:
 
 
 def minimal_example(state: str) -> dict[str, Any]:
-    """Return a minimal schema-valid pi.agent_status.v1 example for a state.
-
-    Generated next to the pydantic contract so docs cannot drift. Used in
-    rejection notices so a tool-blocked retry never has to guess field shapes.
-    """
+    """Return a minimal schema-valid pi.agent_status.v1 example for a state."""
     base: dict[str, Any] = {"schema": "pi.agent_status.v1", "goal": "<one-line goal>", "changed": ["no change: <reason>"]}
     payloads: dict[str, dict[str, Any]] = {
-        "done": {"verified": [{"command": "read /path/proof.txt", "result": "<exact substring of that file>"}], "proof": ["/path/proof.txt"]},
-        "continuing": {"not_done": [{"item": "<remaining item>"}], "next_command": "<runnable command>"},
+        "done": {
+            "verified": [{"command": "read /path/proof.txt", "result": "<exact substring of that file>"}],
+            "proof": ["/path/proof.txt"],
+        },
+        "continuing": {"not_done": [{"item": "<remaining item>", "next_command": "<runnable command>"}]},
         "needs_human": {"needs_human": {"action": "<exact human action>", "reason": "<why>"}},
         "failed": {"failure": {"triage": {"code": "<triage-error catalog code>"}}},
-        "needs_brave_search": {"queries": ["<query>"]},
+        "needs_brave_search": {"needs_brave_search": {"queries": ["<query>"]}},
     }
-    return {**base, "state": state if state in payloads else "done", **payloads.get(state, payloads["done"])}
+    example_state = state if state in payloads else "done"
+    return {**base, "state": example_state, **payloads[example_state]}
 
 
 def invalid_payload(errors: list[dict[str, Any]], state_hint: str = "done") -> dict[str, Any]:
