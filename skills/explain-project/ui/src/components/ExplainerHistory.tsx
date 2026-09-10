@@ -92,6 +92,51 @@ function ExplainerButton({
   )
 }
 
+function FamilyPill({
+  family,
+  active,
+  onPick,
+}: {
+  family: string
+  active: boolean
+  onPick: (family: string | null) => void
+}) {
+  const id = family
+
+  useRegisterAction({
+    element_id: `cockpit:explainer:family-filter:${id}`,
+    app: 'explain-project',
+    action: 'EXPLAINER_FAMILY_FILTER_SET',
+    label: `Filter explainers by ${family}`,
+    description: (
+      'Set the explainer filter to one family '
+      + 'without changing cockpit revision.'
+    ),
+    params: { family },
+  })
+
+  return (
+    <button
+      type="button"
+      data-qid={`cockpit:explainer:family-filter:${id}`}
+      data-qs-action="EXPLAINER_FAMILY_FILTER_SET"
+      title={`Show only ${family} explainers`}
+      className={[
+        'rounded-full border px-2 py-0.5 font-mono text-[10px] font-semibold',
+        'uppercase tracking-wide transition-colors',
+        active
+          ? 'border-cyan-400 bg-cyan-500/20 text-cyan-200'
+          : 'border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-500',
+      ].join(' ')}
+      onClick={() => {
+        onPick(active ? null : family)
+      }}
+    >
+      {family}
+    </button>
+  )
+}
+
 export function ExplainerHistory({
   explainers,
   state,
@@ -112,6 +157,14 @@ export function ExplainerHistory({
     ),
   })
 
+  useRegisterAction({
+    element_id: 'cockpit:explainer:family-filter:all',
+    app: 'explain-project',
+    action: 'EXPLAINER_FAMILY_FILTER_SET',
+    label: 'Clear explainer family filter',
+    description: 'Show all explainers regardless of family.',
+  })
+
   const [query, setQuery] = useState('')
 
   const filtered = useFilteredExplainers(
@@ -124,6 +177,18 @@ export function ExplainerHistory({
     window.addEventListener('cockpit:explainer:clear-search', clearSearch)
     return () => window.removeEventListener('cockpit:explainer:clear-search', clearSearch)
   }, [])
+
+  const families = Array.from(
+    new Set(
+      explainers.map(
+        (explainer) => explainer.question_family,
+      ),
+    ),
+  ).sort()
+
+  const activeFamily = query.startsWith('family:')
+    ? query.slice('family:'.length)
+    : null
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-1.5 border-t border-zinc-800 pt-2">
@@ -162,6 +227,37 @@ export function ExplainerHistory({
             }
           }}
         />
+      </div>
+
+      <div className="flex flex-wrap gap-1">
+        <button
+          type="button"
+          data-qid="cockpit:explainer:family-filter:all"
+          data-qs-action="EXPLAINER_FAMILY_FILTER_SET"
+          title="Show all explainers"
+          className={[
+            'rounded-full border px-2 py-0.5 font-mono text-[10px] font-semibold',
+            'uppercase tracking-wide transition-colors',
+            activeFamily === null
+              ? 'border-cyan-400 bg-cyan-500/20 text-cyan-200'
+              : 'border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-500',
+          ].join(' ')}
+          onClick={() => setQuery('')}
+        >
+          all
+        </button>
+        {families.map((family) => (
+          <FamilyPill
+            key={family}
+            family={family}
+            active={activeFamily === family}
+            onPick={(next) => {
+              setQuery(
+                next ? `family:${next}` : '',
+              )
+            }}
+          />
+        ))}
       </div>
 
       <div

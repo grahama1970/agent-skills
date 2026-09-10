@@ -130,6 +130,13 @@ input, textarea {
   font-size: 0.75rem;
 }
 
+
+/* Icon well: unlayered global input padding beats Tailwind pl-8,
+   so indent text past the absolutely-positioned Search icon here. */
+input[data-qid="cockpit:explainer:search-input"] {
+  padding-left: 2.25rem;
+}
+
 textarea[data-qid="cockpit:question:manual-input"] {
   min-height: 72px;
   font-size: 0.875rem;

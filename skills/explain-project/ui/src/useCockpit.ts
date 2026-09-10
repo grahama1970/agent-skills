@@ -254,31 +254,67 @@ export function useCockpitKeys(
   }, [dispatch])
 }
 
+function matchesFamily(
+  explainer: ExplainerSummary,
+  family: string,
+): boolean {
+  return (
+    explainer.question_family.toLowerCase()
+      === family
+    || explainer.feature_id
+      .toLowerCase()
+      .startsWith(`${family}.`)
+  )
+}
+
 export function useFilteredExplainers(
   explainers: ExplainerSummary[],
   query: string,
 ): ExplainerSummary[] {
   return useMemo(() => {
-    const needle = query
-      .trim()
-      .toLowerCase()
+    const raw = query.trim().toLowerCase()
 
-    if (!needle) {
+    if (!raw) {
       return explainers
     }
 
-    return explainers.filter(
-      (explainer) => (
-        [
-          explainer.feature_id,
-          explainer.title,
-          explainer.question,
-          explainer.question_family,
-        ]
-          .join(' ')
-          .toLowerCase()
-          .includes(needle)
-      ),
-    )
+    const familyTokens: string[] = []
+    const textTokens: string[] = []
+
+    for (const token of raw.split(/\s+/)) {
+      const family = token.match(
+        /^(?:family:|#)([a-z0-9_-]+)$/,
+      )
+      if (family) {
+        familyTokens.push(family[1])
+      } else {
+        textTokens.push(token)
+      }
+    }
+
+    return explainers.filter((explainer) => {
+      if (
+        familyTokens.length > 0
+        && !familyTokens.every((family) => (
+          matchesFamily(explainer, family)
+        ))
+      ) {
+        return false
+      }
+
+      if (textTokens.length === 0) {
+        return true
+      }
+
+      return [
+        explainer.feature_id,
+        explainer.title,
+        explainer.question,
+        explainer.question_family,
+      ]
+        .join(' ')
+        .toLowerCase()
+        .includes(textTokens.join(' '))
+    })
   }, [explainers, query])
 }
