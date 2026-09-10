@@ -87,7 +87,8 @@ def main():
     nodes = []
     for name, next_node in [("coder", "reviewer"), ("reviewer", "human")]:
         handoff = {
-            "schema": "tau.agent_handoff.v1", "github": target, "goal": goal,
+            "schema": "tau.agent_handoff.v1", "status": "PASS", "verdict": "PASS",
+            "github": target, "goal": goal,
             "previous_subagent": name, "context": {"summary": name, "artifacts": []},
             "result": {"status": "PASS", "summary": name, "evidence": []},
             "rationale": "Follow the declared edge.",
