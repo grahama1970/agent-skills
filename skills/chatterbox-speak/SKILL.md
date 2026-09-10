@@ -40,6 +40,40 @@ skill validates the request, calls `/synthesize` (or `/synthesize-batch` for
 planned pauses), validates the response, and writes a receipt. It is NOT the conversation control plane — that is
 `embry-voice-control`.
 
+## Emotion delivery: what works at each intensity (human-verified 2026-09-10)
+
+The caller chooses intensity 1-10 from context. Rungs author the variants;
+three bands pool them for weighted-random selection with session no-repeat:
+low (1-3), medium (4-7), high (8-10). Target roughly 15-20 verified macros per
+emotion: ~5 per band, deepest in medium where most conversation lives.
+
+| Band | Rungs | Pattern that works | Cost |
+|---|---|---|---|
+| high | 8-10 | ElevenLabs v3 whole-sentence in the Embry clone (`[laughs] [giggles] [chuckles] [sighs]` woven mid-thought) | ~1-4s, cache or mask with a Turbo reaction beat |
+| medium | 4-7 | Turbo native: `[happy]` line tag + at most one `[laugh]`/`[chuckle]` + `...` pause, tone playful_light | <1s |
+| low | 1-3 | Plain Turbo tone (neutral_warm) or a cached v3 interjection clip at sentence boundaries | ~0s added |
+
+Hard rules (each earned by a human-rejected render):
+- Never splice clips mid-clause; prosody breaks and it sounds robotic. Whole
+  sentences only; SFX/clips at boundaries.
+- Never overlap-mix SFX under speech (rejected: robotic).
+- Emotion in the insert must not exceed the speaking voice's intensity
+  (a huge sob next to flat Turbo speech = fake).
+- `[crying]` on Turbo is inert (measured; upstream issue #186 concurs) and
+  `[excited]` does not exist. Sadness = `[sigh]` + halting text + compiled
+  pauses on Turbo; crying arcs come from cached v3 clones at boundaries.
+- Numeric intensity on base-affect reads aggressive, not emotional. Turbo
+  ignores exaggeration/cfg_weight (source-verified). Temperature (0.05-1.5)
+  is the real Turbo expressiveness knob.
+
+Live assets: `outputs/sfx-library/manifest.json` (SFX macros, orchestration
+rules, intensity pools), `happy-variations-webgpt.json` /
+`sadness-variations-webgpt.json` (banks; human_verified status per entry),
+ElevenLabs clone voice `embry-nonverbal` (orfFiGOiB0Kn2nOHPNIP). Recall
+verified recipes first: `compare-memory recall '<situation>'` — the banks
+teach what works; the project agent selects by context metadata (use_when /
+avoid_when, emotion metatags like `emotion:celebratory` + `avoid:aggressive`).
+
 ## Usage
 
 ```bash
