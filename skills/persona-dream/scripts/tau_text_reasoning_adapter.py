@@ -30,6 +30,22 @@ from typing import Any
 TAU_REPO = Path(os.environ.get("TAU_REPO", os.path.expanduser("~/workspace/experiments/tau")))
 TAU_TEXT_MODULE = "tau_coding.persona_dream_text_reasoning_agent"
 DEFAULT_MODEL = os.environ.get("PERSONA_DREAM_SCILLM_MODEL", "gpt-5.5")
+# Quota walls on one provider must fall through to the next funded lane
+# (operator 2026-09-10: zai GLM when codex-oauth hits its usage limit).
+DEFAULT_CHAIN = "gpt-5.5,zai-glm,zai-glm-flash"
+
+
+def _model_chain(model: str | None) -> list[str]:
+    chain = [m.strip() for m in os.environ.get("PERSONA_DREAM_SCILLM_MODEL_CHAIN", DEFAULT_CHAIN).split(",") if m.strip()]
+    if model:
+        if model in chain:
+            chain = chain[chain.index(model):]
+        else:
+            chain = [model] + chain
+    # de-dup, preserve order
+    seen: set[str] = set()
+    ordered = [m for m in chain if not (m in seen or seen.add(m))]
+    return ordered
 
 
 class TauRoutingError(RuntimeError):
@@ -87,7 +103,7 @@ def _arm_process_group_timeout(proc: subprocess.Popen[str], timeout_s: float) ->
     return timer, timed_out
 
 
-def dispatch_text_reasoning(
+def _dispatch_once(
     prompt: str,
     role: str,
     *,
@@ -97,11 +113,7 @@ def dispatch_text_reasoning(
     timeout_s: float = 240.0,
     tau_repo: Path | None = None,
 ) -> tuple[dict[str, Any] | None, dict[str, Any]]:
-    """Route one text-reasoning prompt through the Tau node.
-
-    Returns ``(parsed_json, tau_receipt)``. ``parsed_json`` is ``None`` when the
-    node did not return a parseable JSON object (fail-closed for the caller).
-    """
+    """Route one text-reasoning prompt through the Tau node (single model)."""
     tau_repo = tau_repo or TAU_REPO
     if not tau_repo.exists():
         raise TauRoutingError(f"Tau repo not found: {tau_repo}")
@@ -160,6 +172,53 @@ def dispatch_text_reasoning(
     return parsed, receipt
 
 
+def dispatch_text_reasoning(
+    prompt: str,
+    role: str,
+    *,
+    output_contract: dict[str, Any] | None = None,
+    caller_skill: str = "persona-dream",
+    model: str | None = None,
+    timeout_s: float = 240.0,
+    tau_repo: Path | None = None,
+) -> tuple[dict[str, Any] | None, dict[str, Any]]:
+    """Route one text-reasoning prompt through the Tau node with model fallback.
+
+    Tries each model in the chain (default ``gpt-5.5,zai-glm,zai-glm-flash``;
+    override with ``PERSONA_DREAM_SCILLM_MODEL_CHAIN``). A quota/rate-limited
+    model (429 / exhausted groups) falls through to the next funded lane;
+    ``TauRoutingError`` still raises. Returns ``(parsed_json, tau_receipt)``;
+    the receipt carries ``model_chain`` and ``model_fallback_attempts``.
+    """
+    chain = _model_chain(model)
+    attempts: list[dict[str, Any]] = []
+    last_receipt: dict[str, Any] = {}
+    for candidate in chain:
+        parsed, receipt = _dispatch_once(
+            prompt, role,
+            output_contract=output_contract,
+            caller_skill=caller_skill,
+            model=candidate,
+            timeout_s=timeout_s,
+            tau_repo=tau_repo,
+        )
+        if parsed is not None:
+            receipt = dict(receipt)
+            receipt["model_chain"] = chain
+            receipt["model_fallback_attempts"] = attempts
+            return parsed, receipt
+        attempts.append({
+            "model": candidate,
+            "http_status": receipt.get("http_status"),
+            "error": str(receipt.get("error"))[:300],
+        })
+        last_receipt = receipt
+    final = dict(last_receipt)
+    final["model_chain"] = chain
+    final["model_fallback_attempts"] = attempts
+    return None, final
+
+
 def receipt_provenance(receipt: dict[str, Any]) -> dict[str, Any]:
     """Compact provenance summary of a Tau text-reasoning receipt for phase output."""
     return {
@@ -167,6 +226,7 @@ def receipt_provenance(receipt: dict[str, Any]) -> dict[str, Any]:
         "tau_receipt_schema": receipt.get("schema"),
         "model": receipt.get("model"),
         "api_key_source": receipt.get("api_key_source"),
+        "model_fallback_attempts": receipt.get("model_fallback_attempts"),
         "prompt_sha256": receipt.get("prompt_sha256"),
         "output_contract_sha256": receipt.get("output_contract_sha256"),
         "http_status": receipt.get("http_status"),
