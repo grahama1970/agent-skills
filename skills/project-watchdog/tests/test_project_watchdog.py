@@ -2740,3 +2740,34 @@ def test_prepare_reusable_output_ignores_non_battle_commands(tmp_path: Path) -> 
     native_ticket._prepare_reusable_output(f"echo --out {out}")
 
     assert out.exists()
+
+
+def test_tau_cli_crash_before_scheduler_settles_as_blocked(tmp_path):
+    """A tau dag-run that died at import (no receipts at all) is settled, not a forever-loop."""
+    from watchdog import handlers
+    run = tmp_path / "ask-run"
+    run.mkdir()
+    (run / "dag.json").write_text(json.dumps({"nodes": [{"id": "handler-codex"}]}))
+    (run / "tau-receipts").mkdir()
+    (run / "tau-receipts/dag-contract.json").write_text("{}")
+    (run / "execution-status.json").write_text(json.dumps({
+        "dag_run_returncode": 1,
+        "dag_run_stderr": "Traceback (most recent call last):\nImportError: cannot import name 'X'",
+    }))
+    stream = handlers.inspect_tau_stream(tmp_path)
+    assert stream["terminal"] is True
+    assert stream["terminal_status"] == "BLOCKED"
+    assert stream["upstream_failure"]["failure_code"] == "tau_cli_launch_crash"
+
+
+def test_tau_cli_nonzero_exit_with_progress_is_not_crash_settled(tmp_path):
+    """A nonzero exit with scheduler artifacts present must not settle via the crash path."""
+    from watchdog import handlers
+    run = tmp_path / "ask-run"
+    run.mkdir()
+    (run / "dag.json").write_text(json.dumps({"nodes": [{"id": "handler-codex"}]}))
+    (run / "execution-status.json").write_text(json.dumps({
+        "dag_run_returncode": 1, "dag_run_stderr": "boom"}))
+    (run / "dag-progress.json").write_text(json.dumps({"status": "RUNNING"}))
+    stream = handlers.inspect_tau_stream(tmp_path)
+    assert stream["terminal"] is False

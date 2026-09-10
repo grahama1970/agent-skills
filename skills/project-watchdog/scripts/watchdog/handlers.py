@@ -471,6 +471,35 @@ def _blocked_native_dag_receipt(plan_path: Path) -> dict[str, Any] | None:
             "failure_code": str(error.get("failure_code")), "dag_error": error}
 
 
+def _crashed_before_scheduler(plan_path: Path) -> dict[str, Any] | None:
+    """Recognize a tau CLI process crash before any scheduler artifact as settled.
+
+    2026-09-10: `tau dag-run` for agent-skills#1641 died at import time
+    (ImportError from a torn mid-checkpoint tau worktree). execution-status.json
+    durably recorded returncode 1 and the stderr traceback, tau-receipts held
+    only dag-contract.json, and no events/progress/node receipts ever existed.
+    Without this recognizer recovery loops on "not settled" forever even though
+    the exact run terminally failed and left durable process evidence.
+    """
+    root = plan_path.parent
+    execution = _json_from_file(root / "execution-status.json") or {}
+    stderr = execution.get("dag_run_stderr")
+    if not (
+        plan_path.is_file()
+        and execution.get("dag_run_returncode") not in {None, 0}
+        and isinstance(stderr, str) and stderr.strip()
+        and not (root / "tau-receipts/dag-receipt.json").is_file()
+        and not list(root.glob("**/events.jsonl"))
+        and not list(root.glob("**/dag-progress.json"))
+        and not list(root.glob("**/node-receipt.json"))
+    ):
+        return None
+    return {"path": str(root / "execution-status.json"),
+            "failure_code": "tau_cli_launch_crash",
+            "dag_run_returncode": execution.get("dag_run_returncode"),
+            "stderr_tail": stderr.strip()[-800:]}
+
+
 class _CompileStopObservation(BaseModel):
     """Strict watchdog observation of an Ask rejection before DAG emission."""
     model_config = ConfigDict(extra="forbid", strict=True)
@@ -637,6 +666,10 @@ def inspect_tau_stream(ask_run_dir: Path) -> dict[str, Any]:
     elif len(plans) == 1 and (refusal := _blocked_native_dag_receipt(plans[0])):
         record.update(terminal=True, terminal_status="BLOCKED", current_status="BLOCKED",
                       terminal_source=refusal["path"], semantic_refusal=refusal)
+    elif len(plans) == 1 and (crash := _crashed_before_scheduler(plans[0])):
+        record.update(terminal=True, terminal_status="BLOCKED", current_status="BLOCKED",
+                      terminal_source=crash["path"], upstream_failure=crash,
+                      reason="tau CLI crashed before scheduler start; durable nonzero returncode and stderr recorded")
     # Node receipts remain progress evidence only; they cannot settle a DAG.
     record["stream_readable"] = bool(
         record["event_count"] or any(p.get("readable") for p in record["progress_files"] + record["node_receipts"])
