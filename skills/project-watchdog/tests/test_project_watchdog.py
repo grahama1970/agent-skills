@@ -2805,3 +2805,35 @@ def test_repair_task_creator_round_contract_defers_proof_to_reviewer():
     assert "not expected to have run the ticket's proof command" in task.replace("NOT ", "not ")
     creator_clause = task.split("REVIEWER ROUND")[0]
     assert "proof command has actually run" not in creator_clause
+
+
+def test_transport_outage_records_and_expires(tmp_path, monkeypatch):
+    from watchdog import transport_health, config as cfg
+    monkeypatch.setenv("PROJECT_WATCHDOG_STATE_ROOT", str(tmp_path))
+    monkeypatch.setattr(cfg, "state_root", lambda: tmp_path)
+    assert transport_health.active_outage("codex") is None
+    out = transport_health.record_outage("codex", evidence="You've hit your usage limit")
+    assert transport_health.active_outage("codex") is not None
+    import time as _t
+    monkeypatch.setattr(_t, "time", lambda: out.resume_at + 1)
+    assert transport_health.active_outage("codex") is None
+
+
+def test_dead_codex_seats_substitute_to_glm_during_outage(tmp_path, monkeypatch):
+    from watchdog import transport_health, config as cfg
+    monkeypatch.setattr(cfg, "state_root", lambda: tmp_path)
+    seats, subs = transport_health.substitute_dead_codex_seats(["claude-opus-5-low", "gpt-5.5-xhigh"])
+    assert seats == ["claude-opus-5-low", "gpt-5.5-xhigh"] and subs == []
+    transport_health.record_outage("codex", evidence="rate limit")
+    seats, subs = transport_health.substitute_dead_codex_seats(["claude-opus-5-low", "gpt-5.5-xhigh"])
+    assert seats == ["claude-opus-5-low", "zai-glm-high"]
+    assert subs[0]["from"] == "gpt-5.5-xhigh" and subs[0]["reason"] == "codex_transport_outage"
+
+
+def test_reset_time_parses_provider_hint():
+    from watchdog import transport_health
+    ts = transport_health.parse_reset_time(
+        "ERROR: You've hit your usage limit. Visit x or try again at Sep 14th, 2026 9:36 PM.")
+    assert ts is not None
+    import datetime
+    assert datetime.datetime.fromtimestamp(ts, tz=datetime.timezone.utc).strftime("%Y-%m-%d %H:%M") == "2026-09-14 21:36"

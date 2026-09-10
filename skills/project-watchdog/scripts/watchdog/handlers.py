@@ -1270,6 +1270,20 @@ def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[
     result.update(requires_human_input=False, targets=targets)
     if registry.policy_held(repo, number):
         raise primary.Refusal("standing pitchdeck hold is immutable", human=True)
+    # Automatic transport fallback (2026-09-10): while the codex authoring
+    # transport is in a recorded quota/rate-limit outage, skip dispatch cheaply
+    # -- no lease, no DAG burn, no per-tick receipt -- and resume automatically
+    # when the outage window passes. Creators cannot be substituted because
+    # only the codex transport can author (workspace binding).
+    from . import transport_health
+    creator_seat, reviewer_seat = config.repair_seats(project)
+    probe_creator, _ = repair_execution_handlers(creator_seat, reviewer_seat)
+    if probe_creator == "codex" and (outage := transport_health.active_outage("codex")):
+        resume_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(outage.resume_at))
+        result.update(ok=True, status="SKIPPED", stop_reason="creator_transport_outage",
+                      summary=(f"codex authoring transport outage until {resume_iso}; "
+                               "dispatch skipped without burning a lease or DAG run"))
+        return result
     result["worktree_readiness"] = primary.readonly_preflight(root, targets)
     primary.assert_repository(root, repo)
     if not apply:
@@ -1398,6 +1412,17 @@ def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[
         # ladder; this slice only repairs classification, never closure: an
         # extracted PASS still goes through the full proof gate below.
         extracted: dict[str, str] = {}
+        from . import transport_health as _th
+        for packet in sorted(ask_dir.glob("*/node-artifacts/*/handler-recovery-packet.json")):
+            try:
+                excerpt = str((json.loads(packet.read_text()).get("evidence") or {}).get("failure_excerpt") or "")
+            except (OSError, ValueError):
+                continue
+            if _th.quota_signal(excerpt):
+                # One detection records the outage; every later tick skips
+                # dispatch cheaply until the provider window resets.
+                _th.record_outage("codex", resume_at=_th.parse_reset_time(excerpt), evidence=excerpt)
+                break
         for resp in sorted(ask_dir.glob("*/node-artifacts/*/response.md")):
             node = resp.parent.name
             if node == "join":
@@ -1690,7 +1715,11 @@ def handle_closure_audit(
     repo = project_repo(project)
     issue_number = int(issue["number"])
     auditors = config.closure_auditors(project)
+    from . import transport_health
+    auditors, seat_substitutions = transport_health.substitute_dead_codex_seats(auditors)
     result = _new_result(project, issue, "closure_audit")
+    if seat_substitutions:
+        result["seat_substitutions"] = seat_substitutions
     result["selected_agent"] = ",".join(auditors)
     result["auditors"] = auditors
     log_event(run_id, "closure_audit_start", issue=issue_number, repo=repo, auditors=auditors)
