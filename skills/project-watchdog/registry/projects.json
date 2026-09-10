@@ -69,8 +69,8 @@
       "notes": [
         "Tau has a local one-tick cron/handoff path plus a live generic issue-to-handoff watchdog proof for project-watchdog-action:tau-handoff-dispatch."
       ],
-      "repair_creator": "claude",
-      "repair_reviewer": "opencode-go/deepseek-v4-flash",
+      "repair_creator": "gpt-5.5-high",
+      "repair_reviewer": "claude-opus-4-8-high",
       "service": {
         "kind": "none",
         "note": "CLI DAG engine; runs from source per invocation, no long-running daemon to restart",
@@ -277,8 +277,8 @@
       "notes": [
         "The repository is currently very dirty; watchdog mutation should require a clean-worktree policy or explicit dirty-worktree handling."
       ],
-      "repair_creator": "claude",
-      "repair_reviewer": "opencode-go/deepseek-v4-flash",
+      "repair_creator": "gpt-5.5-high",
+      "repair_reviewer": "claude-opus-4-8-high",
       "ticket_repair_timeout_s": 10800,
       "service": {
         "kind": "none",
