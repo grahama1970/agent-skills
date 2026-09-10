@@ -23,6 +23,10 @@ provides:
 composes:
   - agentic-evals
   - ops-streamdeck
+  - triage-error
+  - project-watchdog
+  - pi-intercom
+  - ops-herdr
 complies:
   - best-practices-skills
   - best-practices-python
@@ -54,7 +58,8 @@ never a bare traceback or generic timeout.
 | Command | Surface | Description |
 | --- | --- | --- |
 | `run.sh status [--host --port --password --timeout]` | live | Version + GetStats + stream/record state + health findings |
-| `run.sh watch [--interval N]` | live | Continuous NDJSON monitoring, Ctrl+C to stop |
+| `run.sh watch [--interval N] [--notify-tab TAB]` | live | Continuous NDJSON monitoring; messages TAB via the ops-herdr bridge on crit findings |
+| `run.sh notify TEXT --tab TAB` | local | Send a message to a Herdr tab through the ops-herdr pi-herdr bridge |
 | `run.sh stream start\|stop\|toggle\|status` | live | Stream control (start/stop tolerate wrong-state errors 500/501) |
 | `run.sh record start\|stop\|toggle\|status` | live | Record control; `stop` prints the output path |
 | `run.sh scene list` / `run.sh scene set NAME` | live | List scenes / switch program scene |
@@ -90,6 +95,39 @@ Config roots detected in order: Flatpak
 | `obs_ws_auth_failed` | handshake rejected | verify password in OBS settings |
 | `obs_ws_request_failed` | RequestResponse result=false (code+comment surfaced) | run `stream/record status` or `doctor` |
 | `obs_ws_protocol_error` | unexpected/malformed message | check obs-websocket ≥ 5.0 |
+| `obs_notify_bridge_unavailable` | ops-herdr bridge CLI or node missing | verify pi-herdr-bridge and node |
+| `obs_notify_failed` | bridge rejected the send (unknown tab/pane) | `bridge-cli.mjs list`, use exact tab label |
+
+Every failure envelope also carries a `triage` block: the same signal classified
+through the shared `/triage-error` catalog (`../triage-error/run.sh classify
+--layer ops-obs`). The `obs_ws_*` and `obs_notify_*` codes are catalog entries,
+not local inventions, so any layer can resolve them to one
+`{code, cause, next_command}`.
+
+## Self-healing loop
+
+1. Any command failure emits the typed envelope + `triage` classification.
+2. Recurring or serious failures get filed via `/ticket` (stamps `agent-work`).
+3. `project-watchdog` dispatches them: the `grahama1970/agent-skills` registry
+   entry already covers `skills/ops-obs` (only `skills/battle` is carved out to
+   its own project), so ticks route ops-obs tickets through the creator-reviewer
+   repair DAG in the primary checkout on main, with the proof gate before close.
+
+## Intercom / Herdr addressing
+
+The OBS lane is a pi session in a Herdr pane with tab label **`obs`**. Herdr tab
+labels are not visible to plain `intercom list` — address the lane through the
+ops-herdr bridge:
+
+```bash
+node ~/.pi/agent/skills/ops-herdr/pi-herdr-bridge/bridge-cli.mjs list   # shows {tab:<label>}
+node ~/.pi/agent/skills/ops-herdr/pi-herdr-bridge/bridge-cli.mjs send --to obs --text "run ops-obs doctor"
+```
+
+Other pi sessions use pi-intercom (`send`/`ask` to the aliased session) once the
+pane is live; the bridge is the discovery path when only the tab label is known.
+Outbound: `run.sh notify` and `watch --notify-tab obs` push crit findings to that
+tab through the same bridge.
 
 ## Stream Deck integration
 

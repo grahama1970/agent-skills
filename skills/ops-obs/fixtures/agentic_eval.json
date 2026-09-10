@@ -55,7 +55,28 @@
       "command": ["bash", "../run.sh", "status", "--host", "127.0.0.1", "--port", "1", "--timeout", "3"],
       "expected": {
         "exit_code": 1,
-        "stdout_contains": ["obs_ws_connection_refused", "next_command"]
+        "stdout_contains": ["obs_ws_connection_refused", "next_command", "triage"]
+      }
+    },
+    {
+      "name": "triage-catalog-resolution",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "../../triage-error/run.sh", "classify", "--text", "obs_ws_server_disabled: server off", "--layer", "ops-obs"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["obs_ws_server_disabled", "\"ambiguous\": false"]
+      }
+    },
+    {
+      "name": "notify-unknown-tab",
+      "type": "adversarial",
+      "real_world": true,
+      "command": ["bash", "../run.sh", "notify", "probe", "--tab", "__no_such_tab__"],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": ["obs_notify"],
+        "stdout_excludes": ["Traceback"]
       }
     },
     {

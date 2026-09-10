@@ -14,6 +14,7 @@ import base64
 import hashlib
 import json
 import os
+import subprocess
 import uuid
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -65,6 +66,8 @@ class FailureCode(StrEnum):
     SERVER_DISABLED = "obs_ws_server_disabled"
     REQUEST_FAILED = "obs_ws_request_failed"
     PROTOCOL = "obs_ws_protocol_error"
+    NOTIFY_BRIDGE_UNAVAILABLE = "obs_notify_bridge_unavailable"
+    NOTIFY_FAILED = "obs_notify_failed"
 
 
 class TypedFailure(Exception):
@@ -82,6 +85,35 @@ def fail(code: FailureCode, cause: str, next_command: str) -> None:
     raise TypedFailure(code, cause, next_command)
 
 
+TRIAGE_RUN = Path(__file__).resolve().parents[2] / "triage-error" / "run.sh"
+BRIDGE_CLI = Path(__file__).resolve().parents[2] / "ops-herdr" / "pi-herdr-bridge" / "bridge-cli.mjs"
+
+
+def classify_through_triage(exc: TypedFailure) -> dict[str, Any] | None:
+    """Enrich a failure with the shared triage-error catalog classification.
+
+    Enrichment is best-effort and logged: the typed envelope itself is the
+    primary artifact and still renders when triage-error is unavailable.
+    """
+    if not TRIAGE_RUN.is_file():
+        logger.error("triage-error runner not found at {}", TRIAGE_RUN)
+        return None
+    try:
+        r = subprocess.run(
+            [str(TRIAGE_RUN), "classify", "--text", f"{exc.code.value}: {exc.cause}", "--layer", "ops-obs"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        if r.returncode == 0:
+            return json.loads(r.stdout)
+        logger.error("triage classify exited {}: {}", r.returncode, r.stderr.strip()[:200])
+    except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError) as err:
+        logger.error("triage classify failed: {}", err)
+    return None
+
+
 def render_failure(exc: TypedFailure) -> None:
     logger.error("ops-obs failure {}: {}", exc.code.value, exc.cause)
     emit(
@@ -90,6 +122,7 @@ def render_failure(exc: TypedFailure) -> None:
             "code": exc.code.value,
             "cause": exc.cause,
             "next_command": exc.next_command,
+            "triage": classify_through_triage(exc),
             "ts": datetime.now(UTC).isoformat(),
         }
     )

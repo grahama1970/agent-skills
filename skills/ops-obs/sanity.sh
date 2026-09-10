@@ -33,7 +33,17 @@ set -e
 [ "$rc" -eq 1 ] || fail_ "status against closed port exited $rc, expected 1"
 echo "$out" | grep -q "obs_ws_connection_refused" || fail_ "typed code obs_ws_connection_refused missing"
 echo "$out" | grep -q "next_command" || fail_ "next_command missing from failure envelope"
+echo "$out" | grep -q '"triage"' || fail_ "triage classification block missing from failure envelope"
 if echo "$out" | grep -q "Traceback"; then fail_ "traceback leaked to stdout"; fi
+
+# adversarial: notify through the ops-herdr bridge to an unknown tab fails typed
+set +e
+out=$("$SCRIPT_DIR/run.sh" notify probe --tab "__no_such_tab__" 2>/dev/null)
+rc=$?
+set -e
+[ "$rc" -eq 1 ] || fail_ "notify unknown tab exited $rc, expected 1"
+echo "$out" | grep -q "obs_notify" || fail_ "typed obs_notify code missing"
+if echo "$out" | grep -q "Traceback"; then fail_ "traceback leaked to stdout (notify)"; fi
 
 # schema/artifact gate: protocol auth vector regression
 "$SCRIPT_DIR/run.sh" selftest | grep -q "DH8rJzw8w3csbWfcnTbO18+zOu0c+LSevHghwA2BbW0=" \

@@ -27,6 +27,7 @@ from loguru import logger
 load_dotenv()
 from obs_protocol import (
     AUTH_VECTOR,
+    BRIDGE_CLI,
     DEFAULT_PORT,
     DISK_CRIT_GB,
     DISK_WARN_GB,
@@ -124,6 +125,7 @@ def status(
 @app.command()
 def watch(
     interval: float = typer.Option(5.0, "--interval", min=0.1, help="seconds between samples"),
+    notify_tab: str | None = typer.Option(None, "--notify-tab", help="Herdr tab label to message on crit findings (via ops-herdr bridge)"),
     host: HostOpt = None,
     port: PortOpt = None,
     password: PasswordOpt = None,
@@ -135,6 +137,10 @@ def watch(
         while True:
             snapshot = {"ok": True, "ts": datetime.now(UTC).isoformat(), **_gather(client)}
             print(json.dumps(snapshot, default=str), flush=True)
+            if notify_tab:
+                crits = [f["check"] for f in snapshot["health"] if f["status"] == "crit"]
+                if crits:
+                    _bridge_send(notify_tab, f"ops-obs CRIT: {', '.join(crits)} (fps={snapshot['stats']['activeFps']})")
             time.sleep(interval)
     except KeyboardInterrupt:
         logger.info("watch stopped")
@@ -443,6 +449,44 @@ def deck_status(
     else:
         token = "OFFLINE"
     print(token)
+
+
+def _bridge_send(tab: str, text: str) -> None:
+    """Send text to a Herdr tab through the ops-herdr bridge; typed failures only."""
+    if not BRIDGE_CLI.is_file() or shutil.which("node") is None:
+        fail(
+            FailureCode.NOTIFY_BRIDGE_UNAVAILABLE,
+            f"ops-herdr bridge CLI or node runtime missing ({BRIDGE_CLI})",
+            "verify skills/ops-herdr/pi-herdr-bridge/bridge-cli.mjs and the node runtime",
+        )
+    try:
+        r = subprocess.run(
+            ["node", str(BRIDGE_CLI), "send", "--to", tab, "--text", text],
+            capture_output=True,
+            text=True,
+            timeout=15,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired) as err:
+        logger.error("bridge send failed: {}", err)
+        fail(FailureCode.NOTIFY_FAILED, f"bridge send error: {err}", "list tabs with bridge-cli.mjs list and retry")
+    if r.returncode != 0:
+        detail = (r.stderr.strip() or r.stdout.strip())[:200]
+        fail(
+            FailureCode.NOTIFY_FAILED,
+            f"bridge send to tab '{tab}' rejected: {detail}",
+            "list tabs with bridge-cli.mjs list and use the exact tab label",
+        )
+
+
+@app.command()
+def notify(
+    text: str = typer.Argument(..., help="message text"),
+    tab: str = typer.Option(..., "--tab", help="Herdr tab label to message via the ops-herdr bridge"),
+) -> None:
+    """Send a message to a Herdr tab through the ops-herdr pi-herdr bridge."""
+    _bridge_send(tab, text)
+    emit({"ok": True, "tab": tab, "sent": text})
 
 
 @app.command()

@@ -1562,6 +1562,131 @@
         "reviewer semantic rejection",
         "provider authentication failure"
       ]
+    },
+    {
+      "code": "obs_ws_connection_refused",
+      "layer": "ops-obs",
+      "match": [
+        "obs_ws_connection_refused"
+      ],
+      "cause": "No obs-websocket server is listening at the target host:port.",
+      "next_command": "start OBS and enable Tools -> WebSocket Server Settings, or pass --host/--port",
+      "recoverable": true,
+      "not_this": [
+        "auth failure",
+        "timeout"
+      ]
+    },
+    {
+      "code": "obs_ws_server_disabled",
+      "layer": "ops-obs",
+      "match": [
+        "obs_ws_server_disabled"
+      ],
+      "cause": "OBS is present and its config names this port, but the obs-websocket server is disabled, so nothing listens.",
+      "next_command": "In OBS: Tools -> WebSocket Server Settings -> Enable, then rerun the ops-obs command",
+      "recoverable": true,
+      "not_this": [
+        "wrong host/port",
+        "OBS not installed"
+      ]
+    },
+    {
+      "code": "obs_ws_timeout",
+      "layer": "ops-obs",
+      "match": [
+        "obs_ws_timeout"
+      ],
+      "cause": "Connect, handshake, or request exceeded the websocket timeout against a slow or hung OBS instance.",
+      "next_command": "raise --timeout, confirm OBS is responsive, restart OBS if hung",
+      "recoverable": true,
+      "not_this": [
+        "connection refused",
+        "auth failure"
+      ]
+    },
+    {
+      "code": "obs_ws_password_required",
+      "layer": "ops-obs",
+      "match": [
+        "obs_ws_password_required"
+      ],
+      "cause": "The obs-websocket server sent an auth challenge but no password was resolvable from --password, OBS_WS_PASSWORD, or the OBS plugin config.",
+      "next_command": "set OBS_WS_PASSWORD or pass --password matching the OBS WebSocket Server Settings password",
+      "recoverable": true,
+      "not_this": [
+        "wrong password",
+        "server disabled"
+      ]
+    },
+    {
+      "code": "obs_ws_auth_failed",
+      "layer": "ops-obs",
+      "match": [
+        "obs_ws_auth_failed"
+      ],
+      "cause": "The obs-websocket handshake was rejected after authentication was attempted (wrong password or changed salt).",
+      "next_command": "verify the websocket password in OBS WebSocket Server Settings and retry",
+      "recoverable": true,
+      "not_this": [
+        "server disabled",
+        "connection refused"
+      ]
+    },
+    {
+      "code": "obs_ws_request_failed",
+      "layer": "ops-obs",
+      "match": [
+        "obs_ws_request_failed"
+      ],
+      "cause": "obs-websocket returned result=false for a request; the numeric request code and comment are carried in the envelope cause.",
+      "next_command": "run 'ops-obs stream status'/'ops-obs record status' or 'ops-obs doctor' to inspect the output/encoder state",
+      "recoverable": true,
+      "not_this": [
+        "transport failure",
+        "handshake failure"
+      ]
+    },
+    {
+      "code": "obs_ws_protocol_error",
+      "layer": "ops-obs",
+      "match": [
+        "obs_ws_protocol_error"
+      ],
+      "cause": "An unexpected or malformed obs-websocket message arrived (wrong opcode or failed schema validation).",
+      "next_command": "check obs-websocket version >= 5.0 is installed and restart OBS",
+      "recoverable": true,
+      "not_this": [
+        "request-level failure",
+        "auth failure"
+      ]
+    },
+    {
+      "code": "obs_notify_bridge_unavailable",
+      "layer": "ops-obs",
+      "match": [
+        "obs_notify_bridge_unavailable"
+      ],
+      "cause": "The ops-herdr pi-herdr-bridge CLI or node runtime is missing, so a Herdr tab notification cannot be sent.",
+      "next_command": "verify skills/ops-herdr/pi-herdr-bridge/bridge-cli.mjs and node are installed",
+      "recoverable": true,
+      "not_this": [
+        "delivery to a live tab"
+      ]
+    },
+    {
+      "code": "obs_notify_failed",
+      "layer": "ops-obs",
+      "match": [
+        "obs_notify_failed"
+      ],
+      "cause": "The ops-herdr bridge rejected the send (unknown tab name, no such Herdr pane, or bridge error).",
+      "next_command": "list tabs with bridge-cli.mjs list and retry with the exact tab label",
+      "recoverable": true,
+      "not_this": [
+        "obs-websocket failure",
+        "skill CLI failure"
+      ]
     }
   ],
   "aliases": {}
