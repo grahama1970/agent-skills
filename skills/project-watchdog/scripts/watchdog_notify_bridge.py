@@ -410,9 +410,27 @@ def requires_human_push(ev: dict) -> bool:
     return False
 
 
+def _is_non_ticket_event(ev: dict) -> bool:
+    """Install/state/fleet-scan receipts are operational, not ticket work.
+
+    They carry no repo/issue and were rendering as
+    ``UNKNOWN(repo:receipt_missing_repo)#UNKNOWN(...)`` NEEDS_ATTENTION pushes
+    (2026-09-10 log noise, #1648). Identify them by the UNKNOWN identity
+    sentinels so a genuinely malformed ticket receipt still surfaces.
+    """
+    repo, issue = str(ev.get("repo") or ""), str(ev.get("issue") or "")
+    return ("receipt_missing_repo" in repo and "receipt_missing_issue" in issue)
+
+
 def requires_agent_push(ev: dict) -> bool:
     """Project-agent visibility is broader than human paging."""
-    return ev.get("status") not in {"NOOP", "SKIPPED"}
+    if ev.get("status") in {"NOOP", "SKIPPED"}:
+        return False
+    if _is_non_ticket_event(ev):
+        # Not a ticket: write the terminal JSONL record but do not push an
+        # UNKNOWN#UNKNOWN NEEDS_ATTENTION alert to the project agent.
+        return False
+    return True
 
 
 def push_webhook(ev: dict) -> dict[str, Any]:

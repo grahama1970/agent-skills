@@ -144,3 +144,17 @@ def test_switchboard_push_dedupes_same_fingerprint_across_receipts(tmp_path, mon
     monkeypatch.setattr(_time, "time", lambda: real_time() + 90000)
     later = bridge.deliver(dict(base, event_id="e3", dir="d3"), checkpoint, fresh=True)
     assert later["switchboard"]["status"] == "SENT" and len(sent) == 2
+
+
+def test_non_ticket_receipts_do_not_push_unknown_alerts():
+    """#1648: install/state/fleet-scan receipts have no repo/issue and were
+    rendered as UNKNOWN(repo:receipt_missing_repo) NEEDS_ATTENTION pushes."""
+    bridge = load_bridge()
+    install = {"status": "NEEDS_ATTENTION",
+               "repo": "UNKNOWN(repo:receipt_missing_repo)",
+               "issue": "UNKNOWN(issue:receipt_missing_issue_number)"}
+    assert bridge.requires_agent_push(install) is False
+    real = {"status": "NEEDS_ATTENTION", "repo": "grahama1970/tau", "issue": "343"}
+    assert bridge.requires_agent_push(real) is True
+    malformed = {"status": "NEEDS_ATTENTION", "repo": "UNKNOWN(repo:receipt_missing_repo)", "issue": "343"}
+    assert bridge.requires_agent_push(malformed) is True
