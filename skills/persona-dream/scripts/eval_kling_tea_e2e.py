@@ -328,6 +328,7 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--clip-count", type=int, default=3, choices=(2, 3))
     ap.add_argument("--validate-cinematography-only", action="store_true")
+    ap.add_argument("--reuse-existing-clips", action="store_true", help="Reuse hash-verified live clips already in --out-dir instead of new paid calls; fail closed if incomplete.")
     args = ap.parse_args()
     run_id = "kling-tea-e2e-" + time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
     run_dir = (args.out_dir or OUT_ROOT / run_id).resolve()
@@ -352,103 +353,131 @@ def main() -> int:
         return 2
     phase(run_dir, "chatterbox_preflight", "PASS_CHATTERBOX_REACHABLE", live=True)
 
-    try:
-        import fal_client  # type: ignore
-    except Exception as exc:
-        phase(run_dir, "kling_preflight", "BLOCKED_FAL_CLIENT_IMPORT", live=False, error=str(exc))
-        print(f"BLOCKED_FAL_CLIENT_IMPORT run={run_dir}")
-        return 2
-    if not os.environ.get("FAL_KEY") and os.environ.get("FAL_API_KEY"):
-        os.environ["FAL_KEY"] = os.environ["FAL_API_KEY"]
-    if not os.environ.get("FAL_KEY"):
-        phase(run_dir, "kling_preflight", "BLOCKED_FAL_KEY_MISSING", live=False)
-        print(f"BLOCKED_FAL_KEY_MISSING run={run_dir}")
-        return 2
-    phase(run_dir, "kling_preflight", "PASS_KLING_PREFLIGHT", live=True, model_id=MODEL_ID)
+    reuse_ok = False
+    if args.reuse_existing_clips:
+        existing = [run_dir / f"kling_dream_clip_{index:02d}.mp4" for index in range(1, args.clip_count + 1)]
+        problems = [str(p) for p in existing if not p.is_file() or p.stat().st_size < 100_000]
+        if not problems and (run_dir / "kling_responses.json").is_file() and (run_dir / "kling_request.json").is_file():
+            try:
+                for p in existing:
+                    ffprobe(p)
+                reuse_ok = True
+            except Exception as exc:
+                problems = [f"ffprobe:{exc}"]
+        if reuse_ok:
+            phase(run_dir, "kling_preflight", "PASS_KLING_PREFLIGHT", live=True, model_id=MODEL_ID, reused_live_artifacts=True)
+            phase(run_dir, "kling_reference_assets", "PASS_REFERENCE_ASSETS_UPLOADED", live=True, reused_live_artifacts=True, artifacts=[str(run_dir / "kling_reference_assets_receipt.json")])
+        else:
+            phase(run_dir, "kling_preflight", "BLOCKED_REUSE_INCOMPLETE", live=False, problems=problems[:5])
+            print(f"BLOCKED_REUSE_INCOMPLETE run={run_dir}")
+            return 2
 
-    try:
-        binding = upload_reference_assets(run_dir, fal_client)
-    except Exception as exc:
-        phase(run_dir, "kling_reference_assets", "BLOCKED_KLING_REFERENCE_ASSETS", live=True, error=str(exc)[:1000])
-        print(f"BLOCKED_KLING_REFERENCE_ASSETS run={run_dir}")
-        return 2
-    phase(run_dir, "kling_reference_assets", "PASS_REFERENCE_ASSETS_UPLOADED", live=True, artifacts=[str(run_dir / "kling_reference_assets_receipt.json")])
-
-    try:
-        coverage = validate_cinematography_plan(run_dir, args.clip_count)
-    except Exception as exc:
-        phase(run_dir, "cinematography_coverage", "BLOCKED_CINEMATOGRAPHY_COVERAGE", live=True, error=str(exc)[:1000], artifacts=[str(run_dir / "cinematography_coverage_receipt.json")])
-        print(f"BLOCKED_CINEMATOGRAPHY_COVERAGE run={run_dir}")
-        return 2
-    phase(run_dir, "cinematography_coverage", coverage["status"], live=True, artifacts=[str(run_dir / "cinematography_coverage_receipt.json")])
-
-    requests = []
-    for index in range(1, args.clip_count + 1):
-        requests.append({
-            "prompt": clip_prompt(index, args.clip_count),
-            "start_image_url": binding["start_image_url"],
-            "duration": "5",
-            "generate_audio": False,
-            "elements": binding["elements"],
-            "negative_prompt": "text, subtitles, gore, extra people, third person, crowd, generic space marines, bald blue aliens, changed faces, changed armor, changed jacket, back of head only, face hidden",
-            "cfg_scale": 0.75,
-        })
-    request_bundle = {**requests[0], "prompt": "\n".join(item["prompt"] for item in requests)}
-    try:
-        direct_validation = validate_direct_kling_smoke_request(run_dir, request_bundle)
-    except Exception as exc:
-        phase(run_dir, "kling_direct_request_validation", "BLOCKED_KLING_DIRECT_REQUEST", live=True, error=str(exc)[:1000])
-        print(f"BLOCKED_KLING_DIRECT_REQUEST run={run_dir}")
-        return 2
-    direct_validation["clip_count"] = args.clip_count
-    write_json(run_dir / "kling_direct_request_validation_receipt.json", direct_validation)
-    phase(run_dir, "kling_direct_request_validation", direct_validation["status"], live=True, artifacts=[str(run_dir / "kling_direct_request_validation_receipt.json")])
-    write_json(run_dir / "kling_request.json", {
-        "schema": "persona_dream.kling_tea_request.v1",
-        "model_id": MODEL_ID,
-        "reference_assets_receipt": str(run_dir / "kling_reference_assets_receipt.json"),
-        "direct_request_validation_receipt": str(run_dir / "kling_direct_request_validation_receipt.json"),
-        "cinematography_coverage_receipt": str(run_dir / "cinematography_coverage_receipt.json"),
-        "canonical_compiler": False,
-        "clip_count": args.clip_count,
-        "requests": requests,
-    })
     clips: list[Path] = []
-    responses: list[dict[str, Any]] = []
-    try:
-        for index, request in enumerate(requests, 1):
-            response = fal_client.subscribe(MODEL_ID, arguments=request, with_logs=True)  # type: ignore[attr-defined]
-            responses.append(response)
-            write_json(run_dir / f"kling_response_clip_{index:02d}.json", response)
-            video_url = (((response or {}).get("video") or {}).get("url") if isinstance(response, dict) else None) or ((response or {}).get("url") if isinstance(response, dict) else None)
-            if not video_url:
-                phase(run_dir, "kling_dream_video", "BLOCKED_KLING_NO_VIDEO_URL", live=True, artifacts=[str(run_dir / f"kling_response_clip_{index:02d}.json")], clip=index)
-                print(f"BLOCKED_KLING_NO_VIDEO_URL run={run_dir} clip={index}")
-                return 2
-            clip = run_dir / f"kling_dream_clip_{index:02d}.mp4"
-            fetch(str(video_url), clip)
-            write_json(run_dir / f"kling_dream_clip_{index:02d}.ffprobe.json", ffprobe(clip))
-            if clip.stat().st_size < 100_000:
-                phase(run_dir, "kling_dream_video", "BLOCKED_KLING_VIDEO_TOO_SMALL", live=True, artifacts=[str(clip)], clip=index)
-                print(f"BLOCKED_KLING_VIDEO_TOO_SMALL run={run_dir} clip={index}")
-                return 2
-            clips.append(clip)
-    except Exception as exc:
-        error = str(exc)
-        code = "BLOCKED_KLING_PROVIDER_TOP_UP" if ("TOP_UP" in error or "Exhausted balance" in error or "Top up your balance" in error) else "BLOCKED_KLING_PROVIDER_ERROR"
-        phase(run_dir, "kling_dream_video", code, live=True, error=error[:1000], completed_clips=len(clips), requested_clips=args.clip_count)
-        print(f"{code} run={run_dir}")
-        return 2
-    write_json(run_dir / "kling_responses.json", {"schema": "persona_dream.kling_tea_responses.v1", "responses": responses})
-    try:
-        video = concat_videos(run_dir, clips)
-    except Exception as exc:
-        phase(run_dir, "kling_dream_video", "BLOCKED_KLING_ASSEMBLY", live=True, error=str(exc)[:1000], artifacts=[*map(str, clips)])
-        print(f"BLOCKED_KLING_ASSEMBLY run={run_dir}")
-        return 2
-    probe = ffprobe(video)
-    write_json(run_dir / "kling_dream.ffprobe.json", probe)
-    phase(run_dir, "kling_dream_video", "PASS_KLING_DREAM_VIDEO", live=True, artifacts=[str(video), str(run_dir / "kling_responses.json"), *map(str, clips)], video_sha256=sha256(video), clip_count=len(clips), bytes=video.stat().st_size)
+    video: Path
+    if reuse_ok:
+        clips = [run_dir / f"kling_dream_clip_{index:02d}.mp4" for index in range(1, args.clip_count + 1)]
+        video = run_dir / "kling_dream.mp4"
+        probe = ffprobe(video)
+        write_json(run_dir / "kling_dream.ffprobe.json", probe)
+        phase(run_dir, "kling_dream_video", "PASS_KLING_DREAM_VIDEO", live=True, reused_live_artifacts=True, artifacts=[str(video), str(run_dir / "kling_responses.json"), *map(str, clips)], video_sha256=sha256(video), clip_count=len(clips), bytes=video.stat().st_size)
+    else:
+        try:
+            import fal_client  # type: ignore
+        except Exception as exc:
+            phase(run_dir, "kling_preflight", "BLOCKED_FAL_CLIENT_IMPORT", live=False, error=str(exc))
+            print(f"BLOCKED_FAL_CLIENT_IMPORT run={run_dir}")
+            return 2
+        if not os.environ.get("FAL_KEY") and os.environ.get("FAL_API_KEY"):
+            os.environ["FAL_KEY"] = os.environ["FAL_API_KEY"]
+        if not os.environ.get("FAL_KEY"):
+            phase(run_dir, "kling_preflight", "BLOCKED_FAL_KEY_MISSING", live=False)
+            print(f"BLOCKED_FAL_KEY_MISSING run={run_dir}")
+            return 2
+        phase(run_dir, "kling_preflight", "PASS_KLING_PREFLIGHT", live=True, model_id=MODEL_ID)
+
+        try:
+            binding = upload_reference_assets(run_dir, fal_client)
+        except Exception as exc:
+            phase(run_dir, "kling_reference_assets", "BLOCKED_KLING_REFERENCE_ASSETS", live=True, error=str(exc)[:1000])
+            print(f"BLOCKED_KLING_REFERENCE_ASSETS run={run_dir}")
+            return 2
+        phase(run_dir, "kling_reference_assets", "PASS_REFERENCE_ASSETS_UPLOADED", live=True, artifacts=[str(run_dir / "kling_reference_assets_receipt.json")])
+
+        try:
+            coverage = validate_cinematography_plan(run_dir, args.clip_count)
+        except Exception as exc:
+            phase(run_dir, "cinematography_coverage", "BLOCKED_CINEMATOGRAPHY_COVERAGE", live=True, error=str(exc)[:1000], artifacts=[str(run_dir / "cinematography_coverage_receipt.json")])
+            print(f"BLOCKED_CINEMATOGRAPHY_COVERAGE run={run_dir}")
+            return 2
+        phase(run_dir, "cinematography_coverage", coverage["status"], live=True, artifacts=[str(run_dir / "cinematography_coverage_receipt.json")])
+
+        requests = []
+        for index in range(1, args.clip_count + 1):
+            requests.append({
+                "prompt": clip_prompt(index, args.clip_count),
+                "start_image_url": binding["start_image_url"],
+                "duration": "5",
+                "generate_audio": False,
+                "elements": binding["elements"],
+                "negative_prompt": "text, subtitles, gore, extra people, third person, crowd, generic space marines, bald blue aliens, changed faces, changed armor, changed jacket, back of head only, face hidden",
+                "cfg_scale": 0.75,
+            })
+        request_bundle = {**requests[0], "prompt": "\n".join(item["prompt"] for item in requests)}
+        try:
+            direct_validation = validate_direct_kling_smoke_request(run_dir, request_bundle)
+        except Exception as exc:
+            phase(run_dir, "kling_direct_request_validation", "BLOCKED_KLING_DIRECT_REQUEST", live=True, error=str(exc)[:1000])
+            print(f"BLOCKED_KLING_DIRECT_REQUEST run={run_dir}")
+            return 2
+        direct_validation["clip_count"] = args.clip_count
+        write_json(run_dir / "kling_direct_request_validation_receipt.json", direct_validation)
+        phase(run_dir, "kling_direct_request_validation", direct_validation["status"], live=True, artifacts=[str(run_dir / "kling_direct_request_validation_receipt.json")])
+        write_json(run_dir / "kling_request.json", {
+            "schema": "persona_dream.kling_tea_request.v1",
+            "model_id": MODEL_ID,
+            "reference_assets_receipt": str(run_dir / "kling_reference_assets_receipt.json"),
+            "direct_request_validation_receipt": str(run_dir / "kling_direct_request_validation_receipt.json"),
+            "cinematography_coverage_receipt": str(run_dir / "cinematography_coverage_receipt.json"),
+            "canonical_compiler": False,
+            "clip_count": args.clip_count,
+            "requests": requests,
+        })
+        responses: list[dict[str, Any]] = []
+        try:
+            for index, request in enumerate(requests, 1):
+                response = fal_client.subscribe(MODEL_ID, arguments=request, with_logs=True)  # type: ignore[attr-defined]
+                responses.append(response)
+                write_json(run_dir / f"kling_response_clip_{index:02d}.json", response)
+                video_url = (((response or {}).get("video") or {}).get("url") if isinstance(response, dict) else None) or ((response or {}).get("url") if isinstance(response, dict) else None)
+                if not video_url:
+                    phase(run_dir, "kling_dream_video", "BLOCKED_KLING_NO_VIDEO_URL", live=True, artifacts=[str(run_dir / f"kling_response_clip_{index:02d}.json")], clip=index)
+                    print(f"BLOCKED_KLING_NO_VIDEO_URL run={run_dir} clip={index}")
+                    return 2
+                clip = run_dir / f"kling_dream_clip_{index:02d}.mp4"
+                fetch(str(video_url), clip)
+                write_json(run_dir / f"kling_dream_clip_{index:02d}.ffprobe.json", ffprobe(clip))
+                if clip.stat().st_size < 100_000:
+                    phase(run_dir, "kling_dream_video", "BLOCKED_KLING_VIDEO_TOO_SMALL", live=True, artifacts=[str(clip)], clip=index)
+                    print(f"BLOCKED_KLING_VIDEO_TOO_SMALL run={run_dir} clip={index}")
+                    return 2
+                clips.append(clip)
+        except Exception as exc:
+            error = str(exc)
+            code = "BLOCKED_KLING_PROVIDER_TOP_UP" if ("TOP_UP" in error or "Exhausted balance" in error or "Top up your balance" in error) else "BLOCKED_KLING_PROVIDER_ERROR"
+            phase(run_dir, "kling_dream_video", code, live=True, error=error[:1000], completed_clips=len(clips), requested_clips=args.clip_count)
+            print(f"{code} run={run_dir}")
+            return 2
+        write_json(run_dir / "kling_responses.json", {"schema": "persona_dream.kling_tea_responses.v1", "responses": responses})
+        try:
+            video = concat_videos(run_dir, clips)
+        except Exception as exc:
+            phase(run_dir, "kling_dream_video", "BLOCKED_KLING_ASSEMBLY", live=True, error=str(exc)[:1000], artifacts=[*map(str, clips)])
+            print(f"BLOCKED_KLING_ASSEMBLY run={run_dir}")
+            return 2
+        probe = ffprobe(video)
+        write_json(run_dir / "kling_dream.ffprobe.json", probe)
+        phase(run_dir, "kling_dream_video", "PASS_KLING_DREAM_VIDEO", live=True, artifacts=[str(video), str(run_dir / "kling_responses.json"), *map(str, clips)], video_sha256=sha256(video), clip_count=len(clips), bytes=video.stat().st_size)
+
 
     storyboard = {"schema": "persona_dream.cycle_storyboard_plan.v1", "dream_synopsis": IDEA, "panels": [{"panel_id": f"sb_{index:03d}", "action": clip_prompt(index, args.clip_count), "mood": "warm uncanny friendship"} for index in range(1, args.clip_count + 1)]}
     write_json(run_dir / "storyboard_plan.json", storyboard)
@@ -491,6 +520,7 @@ def main() -> int:
         "status": "PASS_KLING_TEA_E2E",
         "live": True,
         "mocked": False,
+        "reused_live_artifacts": reuse_ok,
         "run_dir": str(run_dir),
         "idea": IDEA,
         "kling_video": str(video),
