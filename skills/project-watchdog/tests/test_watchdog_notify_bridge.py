@@ -52,6 +52,30 @@ def test_human_needed_pages_but_completed_receipts_do_not_page():
     assert bridge.requires_human_push({"status": "COMPLETED", "requires_human_input": False}) is False
 
 
+def test_summarize_uses_handled_issue_human_flag(tmp_path, monkeypatch):
+    bridge = load_bridge()
+    monkeypatch.setattr(bridge, "RECEIPTS", tmp_path)
+    receipt_dir = tmp_path / "project-watchdog-test"
+    receipt_dir.mkdir()
+    (receipt_dir / "receipt.json").write_text(json.dumps({
+        "run_id": "project-watchdog-test",
+        "status": "NEEDS_ATTENTION",
+        "requires_human_input": False,
+        "handled_issues": [{
+            "repo": "grahama1970/agent-skills",
+            "issue_number": 1641,
+            "action": "ticket_repair",
+            "requires_human_input": True,
+            "summary": "operator approval required",
+        }],
+    }))
+
+    ev = bridge.summarize(receipt_dir)
+
+    assert ev["requires_human_input"] is True
+    assert bridge.switchboard_payload(ev)["type"] == "alert"
+
+
 def test_summarize_unsettled_running_operation_names_issue_and_recovery(tmp_path, monkeypatch):
     bridge = load_bridge()
     monkeypatch.setattr(bridge, "RECEIPTS", tmp_path)

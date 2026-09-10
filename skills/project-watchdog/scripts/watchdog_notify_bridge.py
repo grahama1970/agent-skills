@@ -356,7 +356,9 @@ def summarize(receipt_dir: Path) -> dict | None:
         "phase": handled.get("action") or op.get("phase") or r.get("stop_reason") or "receipt",
         "action": handled.get("action") or op.get("action"),
         "summary": (handled.get("summary") or r.get("summary") or r.get("reason") or r.get("stop_reason") or "")[:300],
-        "requires_human_input": r.get("requires_human_input"),
+        "requires_human_input": (
+            True if handled.get("requires_human_input") is True else r.get("requires_human_input")
+        ),
         "triage_code": triage.get("code"),
         "triage_cause": (triage.get("cause") or "")[:200],
         "seats": _seats(handled),

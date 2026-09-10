@@ -400,6 +400,24 @@ def test_eventful_receipts_are_persisted(tmp_path, monkeypatch, capsys, status: 
     assert json.loads(written.read_text(encoding="utf-8"))["status"] == status
 
 
+def test_finish_promotes_handled_human_blocker_to_receipt(tmp_path, monkeypatch, capsys) -> None:
+    monkeypatch.setenv("PROJECT_WATCHDOG_STATE_ROOT", str(tmp_path))
+    receipt_dir = config.receipt_root() / "run-human"
+    receipt_dir.mkdir(parents=True)
+    receipt = core.base_receipt("run-human", receipt_dir, True)
+    receipt.update({
+        "status": "NEEDS_ATTENTION",
+        "requires_human_input": False,
+        "handled_issues": [{"requires_human_input": True, "status": "NEEDS_ATTENTION"}],
+    })
+
+    core.finish("run-human", receipt_dir, receipt, 1)
+
+    capsys.readouterr()
+    written = json.loads((receipt_dir / "receipt.json").read_text(encoding="utf-8"))
+    assert written["requires_human_input"] is True
+
+
 # --------------------------------------------------------------------------- #
 # Idle-streak escalation — silence must not read as success
 # --------------------------------------------------------------------------- #

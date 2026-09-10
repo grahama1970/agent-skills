@@ -453,6 +453,11 @@ def finish(
     # webhook outage cannot fail or block a tick.
     from . import alerts
 
+    if any(
+        isinstance(handled, dict) and handled.get("requires_human_input") is True
+        for handled in receipt.get("handled_issues") or []
+    ):
+        receipt["requires_human_input"] = True
     alerts.maybe_alert(receipt)
     alert_status = str((receipt.get("alert") or {}).get("status") or "SKIPPED")
     for handled in receipt.get("handled_issues") or []:
