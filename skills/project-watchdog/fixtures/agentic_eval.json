@@ -118,6 +118,45 @@
       "does_not_prove": "The required live E2E against a real approved GitHub ticket; that remains a separate verification-plan command before closure."
     },
     {
+      "name": "watchdog-unattended-acceptance",
+      "type": "adversarial",
+      "evidence_class": "live_e2e",
+      "real_world": true,
+      "mocked": false,
+      "timeout_seconds": 180,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "python",
+        "../evals/unattended_acceptance.py",
+        "/tmp/watchdog-unattended-acceptance-result.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/tmp/watchdog-unattended-acceptance-result.json",
+            "json_pointer": "/status",
+            "equals": "NOT_ESTABLISHED"
+          },
+          {
+            "path": "/tmp/watchdog-unattended-acceptance-result.json",
+            "json_pointer": "/real_world",
+            "equals": true
+          },
+          {
+            "path": "/tmp/watchdog-unattended-acceptance-result.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          }
+        ]
+      },
+      "proves": "#1641 acceptance gate reads live GitHub dependency state, retained watchdog receipts, and recover_primary output, then fails closed as NOT_ESTABLISHED when required unattended scenarios are absent instead of converting partial closure evidence into reliability.",
+      "does_not_prove": "Unattended watchdog reliability. NOT_ESTABLISHED is the required safe result until #1592, a genuine human-only ops-discord receipt, and ten consecutive canary lifecycles are proven."
+    },
+    {
       "name": "immutable-replay-proof-negative-controls",
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",
