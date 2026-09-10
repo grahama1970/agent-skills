@@ -2,14 +2,23 @@
   "version": 2,
   "skill": "explain-project",
   "trials": 2,
-  "proof_scope": "Strict Pydantic explainers, MATCHED/AMBIGUOUS/NO_MATCH routing and reducer/receipt contracts, plus live Chrome/HTTP external-update synchronization with replayed questions and fault-injected response ordering. Browser case owns disposable tab/API/preview processes. No microphone, VS Code, Excalidraw board or debugger execution proof.",
+  "proof_scope": "Strict Pydantic explainers, MATCHED/AMBIGUOUS/NO_MATCH routing and reducer/receipt contracts, live Chrome/HTTP external-update synchronization with replayed questions and fault-injected response ordering, and a focused question-first fixture that creates an Excalidraw board file, stores ops-excalidraw diagram registry metadata, creates breakpoint targets, and validates debugger proof. Browser case owns disposable tab/API/preview processes. No microphone, visible VS Code control, human-accepted Excalidraw board mutation, or all-language debugger coverage.",
   "cases": [
     {
       "name": "sample-command-live-entrypoint",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "-c", "cd .. && T=$(mktemp -d) && ./run.sh sample --output $T/explainers.jsonl && ./run.sh cockpit-proof $T/explainers.jsonl --question 'A worker crashes before success; what prevents incomplete release?' | tee $T/proof.json && python3 - <<'PY' $T/proof.json\nimport json,sys\np=json.load(open(sys.argv[1])); assert p['status']=='PASS' and p['assertions']['projection_revisions_equal']\nprint('EXPLAIN_PROJECT_SAMPLE_ENTRYPOINT_OK')\nPY"],
-      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_SAMPLE_ENTRYPOINT_OK"]},
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && T=$(mktemp -d) && ./run.sh sample --output $T/explainers.jsonl && ./run.sh cockpit-proof $T/explainers.jsonl --question 'A worker crashes before success; what prevents incomplete release?' | tee $T/proof.json && python3 - <<'PY' $T/proof.json\nimport json,sys\np=json.load(open(sys.argv[1])); assert p['status']=='PASS' and p['assertions']['projection_revisions_equal']\nprint('EXPLAIN_PROJECT_SAMPLE_ENTRYPOINT_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXPLAIN_PROJECT_SAMPLE_ENTRYPOINT_OK"
+        ]
+      },
       "readback": true,
       "evidence_class": "deterministic"
     },
@@ -17,8 +26,17 @@
       "name": "sample-jsonl-validates",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "-c", "cd .. && ./run.sh validate fixtures/sample.explainers.jsonl | tee /tmp/explain-project-validate.json && python3 - <<'PY'\nimport json\nd=json.load(open('/tmp/explain-project-validate.json'))\nassert d['status']=='PASS' and d['records']==1 and d['features']==['publish.report_last']\nprint('EXPLAIN_PROJECT_VALIDATE_OK')\nPY"],
-      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_VALIDATE_OK"]},
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh validate fixtures/sample.explainers.jsonl | tee /tmp/explain-project-validate.json && python3 - <<'PY'\nimport json\nd=json.load(open('/tmp/explain-project-validate.json'))\nassert d['status']=='PASS' and d['records']==1 and d['features']==['publish.report_last']\nprint('EXPLAIN_PROJECT_VALIDATE_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXPLAIN_PROJECT_VALIDATE_OK"
+        ]
+      },
       "readback": true,
       "evidence_class": "deterministic"
     },
@@ -26,24 +44,51 @@
       "name": "manual-route-match",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "-c", "cd .. && ./run.sh ask fixtures/sample.explainers.jsonl --question 'A worker crashes before success; what prevents incomplete release?' | tee /tmp/explain-project-route.json && python3 - <<'PY'\nimport json\nd=json.load(open('/tmp/explain-project-route.json'))\nassert d['route']['status']=='MATCHED' and d['matched_feature']=='publish.report_last'\nprint('EXPLAIN_PROJECT_ROUTE_MATCH_OK')\nPY"],
-      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_ROUTE_MATCH_OK"]},
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh ask fixtures/sample.explainers.jsonl --question 'A worker crashes before success; what prevents incomplete release?' | tee /tmp/explain-project-route.json && python3 - <<'PY'\nimport json\nd=json.load(open('/tmp/explain-project-route.json'))\nassert d['route']['status']=='MATCHED' and d['matched_feature']=='publish.report_last'\nprint('EXPLAIN_PROJECT_ROUTE_MATCH_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXPLAIN_PROJECT_ROUTE_MATCH_OK"
+        ]
+      },
       "readback": true,
       "evidence_class": "deterministic"
     },
     {
       "name": "route-no-match",
       "type": "negative",
-      "command": ["bash", "-c", "cd .. && ./run.sh ask fixtures/sample.explainers.jsonl --question 'oauth calendar webhook aliens' | tee /tmp/explain-project-no-match.json && python3 - <<'PY'\nimport json\nd=json.load(open('/tmp/explain-project-no-match.json'))\nassert d['route']['status']=='NO_MATCH' and 'matched_feature' not in d\nprint('EXPLAIN_PROJECT_NO_MATCH_OK')\nPY"],
-      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_NO_MATCH_OK"]},
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh ask fixtures/sample.explainers.jsonl --question 'oauth calendar webhook aliens' | tee /tmp/explain-project-no-match.json && python3 - <<'PY'\nimport json\nd=json.load(open('/tmp/explain-project-no-match.json'))\nassert d['route']['status']=='NO_MATCH' and 'matched_feature' not in d\nprint('EXPLAIN_PROJECT_NO_MATCH_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXPLAIN_PROJECT_NO_MATCH_OK"
+        ]
+      },
       "readback": true,
       "evidence_class": "fault_injected_deterministic"
     },
     {
       "name": "route-ambiguous",
       "type": "negative",
-      "command": ["bash", "-c", "cd .. && T=$(mktemp -d) && cp fixtures/sample.explainers.jsonl $T/e.jsonl && python3 - <<'PY' $T/e.jsonl\nimport json,sys\np=sys.argv[1]\nd=json.loads(open(p).readline()); d['feature_id']='publish.report_last_alt'; d['title']='Report-last publication alternate'\nopen(p,'a').write(json.dumps(d)+'\\n')\nPY\n./run.sh ask $T/e.jsonl --question 'worker crashes before reporting success' | tee $T/out.json && python3 - <<'PY' $T/out.json\nimport json,sys\nd=json.load(open(sys.argv[1])); assert d['route']['status']=='AMBIGUOUS' and len(d['route']['candidates'])==2\nprint('EXPLAIN_PROJECT_AMBIGUOUS_OK')\nPY"],
-      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_AMBIGUOUS_OK"]},
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && T=$(mktemp -d) && cp fixtures/sample.explainers.jsonl $T/e.jsonl && python3 - <<'PY' $T/e.jsonl\nimport json,sys\np=sys.argv[1]\nd=json.loads(open(p).readline()); d['feature_id']='publish.report_last_alt'; d['title']='Report-last publication alternate'\nopen(p,'a').write(json.dumps(d)+'\\n')\nPY\n./run.sh ask $T/e.jsonl --question 'worker crashes before reporting success' | tee $T/out.json && python3 - <<'PY' $T/out.json\nimport json,sys\nd=json.load(open(sys.argv[1])); assert d['route']['status']=='AMBIGUOUS' and len(d['route']['candidates'])==2\nprint('EXPLAIN_PROJECT_AMBIGUOUS_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXPLAIN_PROJECT_AMBIGUOUS_OK"
+        ]
+      },
       "readback": true,
       "evidence_class": "fault_injected_deterministic"
     },
@@ -51,24 +96,51 @@
       "name": "three-step-sync-no-live-effects",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "-c", "cd .. && ./run.sh cockpit-proof fixtures/sample.explainers.jsonl --question 'A worker crashes before success; what prevents incomplete release?' | tee /tmp/explain-project-cockpit-proof.json && python3 - <<'PY'\nimport json\np=json.load(open('/tmp/explain-project-cockpit-proof.json'))\nassert p['status']=='PASS'\nassert p['assertions']['projection_revisions_equal']\nassert p['assertions']['navigation_changed_expected_steps']\nassert p['assertions']['debugger_execution_count_zero']\nassert p['assertions']['excalidraw_mutation_count_zero']\nassert p['assertions']['live_capture_claim_count_zero']\nprint('EXPLAIN_PROJECT_COCKPIT_SYNC_OK')\nPY"],
-      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_COCKPIT_SYNC_OK"]},
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh cockpit-proof fixtures/sample.explainers.jsonl --question 'A worker crashes before success; what prevents incomplete release?' | tee /tmp/explain-project-cockpit-proof.json && python3 - <<'PY'\nimport json\np=json.load(open('/tmp/explain-project-cockpit-proof.json'))\nassert p['status']=='PASS'\nassert p['assertions']['projection_revisions_equal']\nassert p['assertions']['navigation_changed_expected_steps']\nassert p['assertions']['debugger_execution_count_zero']\nassert p['assertions']['excalidraw_mutation_count_zero']\nassert p['assertions']['live_capture_claim_count_zero']\nprint('EXPLAIN_PROJECT_COCKPIT_SYNC_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXPLAIN_PROJECT_COCKPIT_SYNC_OK"
+        ]
+      },
       "readback": true,
       "evidence_class": "deterministic"
     },
     {
       "name": "invalid-step-source-ref-triaged",
       "type": "negative",
-      "command": ["bash", "-c", "cd .. && T=$(mktemp -d) && cp fixtures/sample.explainers.jsonl $T/bad.jsonl && python3 - <<'PY' $T/bad.jsonl\nimport json,sys\np=sys.argv[1]; d=json.loads(open(p).readline()); d['steps'][0]['source_range_index']=99; open(p,'w').write(json.dumps(d)+'\\n')\nPY\nif ./run.sh validate $T/bad.jsonl >$T/out.json; then exit 1; fi\ngrep -q PYDANTIC_VALIDATION_FAILED $T/out.json && echo EXPLAIN_PROJECT_STEP_REF_REFUSED"],
-      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_STEP_REF_REFUSED"]},
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && T=$(mktemp -d) && cp fixtures/sample.explainers.jsonl $T/bad.jsonl && python3 - <<'PY' $T/bad.jsonl\nimport json,sys\np=sys.argv[1]; d=json.loads(open(p).readline()); d['steps'][0]['source_range_index']=99; open(p,'w').write(json.dumps(d)+'\\n')\nPY\nif ./run.sh validate $T/bad.jsonl >$T/out.json; then exit 1; fi\ngrep -q PYDANTIC_VALIDATION_FAILED $T/out.json && echo EXPLAIN_PROJECT_STEP_REF_REFUSED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXPLAIN_PROJECT_STEP_REF_REFUSED"
+        ]
+      },
       "readback": true,
       "evidence_class": "fault_injected_deterministic"
     },
     {
       "name": "unknown-diagram-node-triaged",
       "type": "negative",
-      "command": ["bash", "-c", "cd .. && T=$(mktemp -d) && cp fixtures/sample.explainers.jsonl $T/bad.jsonl && python3 - <<'PY' $T/bad.jsonl\nimport json,sys\np=sys.argv[1]; d=json.loads(open(p).readline()); d['steps'][0]['diagram_node_ids']=['missing-node']; open(p,'w').write(json.dumps(d)+'\\n')\nPY\nif ./run.sh validate $T/bad.jsonl >$T/out.json; then exit 1; fi\ngrep -q PYDANTIC_VALIDATION_FAILED $T/out.json && echo EXPLAIN_PROJECT_DIAGRAM_REF_REFUSED"],
-      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_DIAGRAM_REF_REFUSED"]},
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && T=$(mktemp -d) && cp fixtures/sample.explainers.jsonl $T/bad.jsonl && python3 - <<'PY' $T/bad.jsonl\nimport json,sys\np=sys.argv[1]; d=json.loads(open(p).readline()); d['steps'][0]['diagram_node_ids']=['missing-node']; open(p,'w').write(json.dumps(d)+'\\n')\nPY\nif ./run.sh validate $T/bad.jsonl >$T/out.json; then exit 1; fi\ngrep -q PYDANTIC_VALIDATION_FAILED $T/out.json && echo EXPLAIN_PROJECT_DIAGRAM_REF_REFUSED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXPLAIN_PROJECT_DIAGRAM_REF_REFUSED"
+        ]
+      },
       "readback": true,
       "evidence_class": "fault_injected_deterministic"
     },
@@ -76,8 +148,17 @@
       "name": "live-evidence-intake-deduplicates",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "-c", "cd .. && PYTHONPATH=scripts uv run --with pydantic --with httpx --with loguru python3 - <<'PY'\nfrom explain_project_core.catalog import sample_record\nfrom explain_project_core.server import CockpitSession\nfrom fixtures.cockpit_contract_eval import candidate_payload\n\nsession = CockpitSession([sample_record()], 'http://127.0.0.1:8601')\naccepted = session.intake_live_evidence(candidate_payload())\nduplicate = session.intake_live_evidence(candidate_payload())\nassert accepted.status == 'ACCEPTED'\nassert accepted.state.revision == 1\nassert accepted.state.question.source == 'live_evidence_replay'\nassert duplicate.status == 'DUPLICATE'\nassert duplicate.state.revision == accepted.state.revision\nprint('EXPLAIN_PROJECT_LIVE_INTAKE_DEDUP_OK')\nPY"],
-      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_LIVE_INTAKE_DEDUP_OK"]},
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && PYTHONPATH=scripts uv run --with pydantic --with httpx --with loguru python3 - <<'PY'\nfrom explain_project_core.catalog import sample_record\nfrom explain_project_core.server import CockpitSession\nfrom fixtures.cockpit_contract_eval import candidate_payload\n\nsession = CockpitSession([sample_record()], 'http://127.0.0.1:8601')\naccepted = session.intake_live_evidence(candidate_payload())\nduplicate = session.intake_live_evidence(candidate_payload())\nassert accepted.status == 'ACCEPTED'\nassert accepted.state.revision == 1\nassert accepted.state.question.source == 'live_evidence_replay'\nassert duplicate.status == 'DUPLICATE'\nassert duplicate.state.revision == accepted.state.revision\nprint('EXPLAIN_PROJECT_LIVE_INTAKE_DEDUP_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXPLAIN_PROJECT_LIVE_INTAKE_DEDUP_OK"
+        ]
+      },
       "readback": true,
       "evidence_class": "deterministic"
     },
@@ -85,8 +166,17 @@
       "name": "interaction-manifest-qid-only",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "-c", "cd .. && ./run.sh interaction-manifest --base-url http://127.0.0.1:8766 | tee /tmp/explain-project-interaction-manifest.json && python3 - <<'PY'\nimport json\nm=json.load(open('/tmp/explain-project-interaction-manifest.json'))\nselectors=[i['target'] for s in m['surfaces'] for e in s['elements'] for i in e['interactions']]\nassert m['discovery']['qid_only_executable_selectors'] is True\nassert \"[data-qid='cockpit:explainer:slider']\" in selectors\nassert \"[data-qid='cockpit:explainer:page-input']\" in selectors\nassert all(sel.startswith('[data-qid=') for sel in selectors)\nprint('EXPLAIN_PROJECT_INTERACTION_MANIFEST_OK')\nPY"],
-      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_INTERACTION_MANIFEST_OK"]},
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh interaction-manifest --base-url http://127.0.0.1:8766 | tee /tmp/explain-project-interaction-manifest.json && python3 - <<'PY'\nimport json\nm=json.load(open('/tmp/explain-project-interaction-manifest.json'))\nselectors=[i['target'] for s in m['surfaces'] for e in s['elements'] for i in e['interactions']]\nassert m['discovery']['qid_only_executable_selectors'] is True\nassert \"[data-qid='cockpit:explainer:slider']\" in selectors\nassert \"[data-qid='cockpit:explainer:page-input']\" in selectors\nassert all(sel.startswith('[data-qid=') for sel in selectors)\nprint('EXPLAIN_PROJECT_INTERACTION_MANIFEST_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXPLAIN_PROJECT_INTERACTION_MANIFEST_OK"
+        ]
+      },
       "readback": true,
       "evidence_class": "deterministic"
     },
@@ -94,8 +184,17 @@
       "name": "react-cockpit-ui-builds",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "-c", "cd ../ui && npm install --package-lock-only && npm run build"],
-      "expected": {"exit_code": 0, "stdout_contains": ["built in"]},
+      "command": [
+        "bash",
+        "-c",
+        "cd ../ui && npm install --package-lock-only && npm run build"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "built in"
+        ]
+      },
       "readback": true,
       "evidence_class": "deterministic"
     },
@@ -103,8 +202,17 @@
       "name": "debugger-source-reveal-receipt-boundary",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "-c", "cd .. && python3 - <<'PY' >/tmp/explain-project-debugger-reveal-status.json\nimport json\nprint(json.dumps({\"id\":\"debugger-reveal-fixture-12345\",\"requestHash\":\"a\"*64,\"proofValid\":True,\"status\":\"revealed\",\"reveal\":{\"file\":\"/tmp/explain-project-workspace/src/anonymization_trial/pipeline.py\",\"line\":210,\"selected\":True,\"api\":[\"workspace.openTextDocument\",\"window.showTextDocument(preserveFocus)\",\"TextEditor.selection\",\"TextEditor.revealRange\"]}}))\nPY\nmkdir -p /tmp/explain-project-workspace/src/anonymization_trial && ./run.sh debugger-source-reveal-receipt --status /tmp/explain-project-debugger-reveal-status.json --workspace /tmp/explain-project-workspace --source-file src/anonymization_trial/pipeline.py --start-line 180 --end-line 220 --feature-id publish.report_last --step-id staging --request-revision 1 | tee /tmp/explain-project-debugger-source-reveal-receipt.json && python3 - <<'PY'\nimport json\nd=json.load(open('/tmp/explain-project-debugger-source-reveal-receipt.json'))\nassert d['schema'] == 'explain_project.adapter_receipt.v1'\nassert d['adapter'] == 'source_reveal'\nassert d['status'] == 'REVEALED'\nprint('EXPLAIN_PROJECT_DEBUGGER_SOURCE_REVEAL_RECEIPT_OK')\nPY"],
-      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_DEBUGGER_SOURCE_REVEAL_RECEIPT_OK"]},
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && python3 - <<'PY' >/tmp/explain-project-debugger-reveal-status.json\nimport json\nprint(json.dumps({\"id\":\"debugger-reveal-fixture-12345\",\"requestHash\":\"a\"*64,\"proofValid\":True,\"status\":\"revealed\",\"reveal\":{\"file\":\"/tmp/explain-project-workspace/src/anonymization_trial/pipeline.py\",\"line\":210,\"selected\":True,\"api\":[\"workspace.openTextDocument\",\"window.showTextDocument(preserveFocus)\",\"TextEditor.selection\",\"TextEditor.revealRange\"]}}))\nPY\nmkdir -p /tmp/explain-project-workspace/src/anonymization_trial && ./run.sh debugger-source-reveal-receipt --status /tmp/explain-project-debugger-reveal-status.json --workspace /tmp/explain-project-workspace --source-file src/anonymization_trial/pipeline.py --start-line 180 --end-line 220 --feature-id publish.report_last --step-id staging --request-revision 1 | tee /tmp/explain-project-debugger-source-reveal-receipt.json && python3 - <<'PY'\nimport json\nd=json.load(open('/tmp/explain-project-debugger-source-reveal-receipt.json'))\nassert d['schema'] == 'explain_project.adapter_receipt.v1'\nassert d['adapter'] == 'source_reveal'\nassert d['status'] == 'REVEALED'\nprint('EXPLAIN_PROJECT_DEBUGGER_SOURCE_REVEAL_RECEIPT_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXPLAIN_PROJECT_DEBUGGER_SOURCE_REVEAL_RECEIPT_OK"
+        ]
+      },
       "readback": true,
       "evidence_class": "deterministic"
     },
@@ -112,8 +220,17 @@
       "name": "debugger-runtime-proof-receipt-boundary",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "-c", "cd .. && python3 - <<'PY' >/tmp/explain-project-debugger-proof.json\nimport json\nprint(json.dumps({\"schema\":\"debugger.proof.v1\",\"assessment\":{\"proofValid\":True,\"variableInspectionValid\":True},\"stopped\":{\"hit\":True,\"frame\":{\"file\":\"/tmp/explain-project-workspace/src/anonymization_trial/pipeline.py\",\"line\":205}},\"captures\":{\"locals\":{\"report_path\":\"/tmp/report.json\",\"output_corpus\":\"/tmp/corpus\"}}}))\nPY\nmkdir -p /tmp/explain-project-workspace/src/anonymization_trial && ./run.sh debugger-runtime-proof-receipt --proof /tmp/explain-project-debugger-proof.json --workspace /tmp/explain-project-workspace --target-file src/anonymization_trial/pipeline.py --start-line 180 --end-line 220 --feature-id publish.report_last --step-id staging --request-revision 1 --local report_path --local output_corpus --proves 'paused runtime captured' | tee /tmp/explain-project-debugger-runtime-proof-receipt.json && python3 - <<'PY'\nimport json\nd=json.load(open('/tmp/explain-project-debugger-runtime-proof-receipt.json'))\nassert d['schema'] == 'explain_project.adapter_receipt.v1'\nassert d['adapter'] == 'debugger_proof'\nassert d['status'] == 'PROOF_RECEIVED'\nassert d['proof']['validated'] is True\nprint('EXPLAIN_PROJECT_DEBUGGER_RUNTIME_PROOF_RECEIPT_OK')\nPY"],
-      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_DEBUGGER_RUNTIME_PROOF_RECEIPT_OK"]},
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && python3 - <<'PY' >/tmp/explain-project-debugger-proof.json\nimport json\nprint(json.dumps({\"schema\":\"debugger.proof.v1\",\"assessment\":{\"proofValid\":True,\"variableInspectionValid\":True},\"stopped\":{\"hit\":True,\"frame\":{\"file\":\"/tmp/explain-project-workspace/src/anonymization_trial/pipeline.py\",\"line\":205}},\"captures\":{\"locals\":{\"report_path\":\"/tmp/report.json\",\"output_corpus\":\"/tmp/corpus\"}}}))\nPY\nmkdir -p /tmp/explain-project-workspace/src/anonymization_trial && ./run.sh debugger-runtime-proof-receipt --proof /tmp/explain-project-debugger-proof.json --workspace /tmp/explain-project-workspace --target-file src/anonymization_trial/pipeline.py --start-line 180 --end-line 220 --feature-id publish.report_last --step-id staging --request-revision 1 --local report_path --local output_corpus --proves 'paused runtime captured' | tee /tmp/explain-project-debugger-runtime-proof-receipt.json && python3 - <<'PY'\nimport json\nd=json.load(open('/tmp/explain-project-debugger-runtime-proof-receipt.json'))\nassert d['schema'] == 'explain_project.adapter_receipt.v1'\nassert d['adapter'] == 'debugger_proof'\nassert d['status'] == 'PROOF_RECEIVED'\nassert d['proof']['validated'] is True\nprint('EXPLAIN_PROJECT_DEBUGGER_RUNTIME_PROOF_RECEIPT_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXPLAIN_PROJECT_DEBUGGER_RUNTIME_PROOF_RECEIPT_OK"
+        ]
+      },
       "readback": true,
       "evidence_class": "deterministic"
     },
@@ -121,8 +238,17 @@
       "name": "excalidraw-proposal-receipt-boundary",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "-c", "cd .. && python3 - <<'PY' >/tmp/explain-project-ops-excalidraw-proposal.json\nimport json\nprint(json.dumps({\"schema\":\"ops_excalidraw.push_board.v1\",\"status\":\"PASS\",\"mode\":\"proposal\",\"version\":1,\"elements\":3}))\nPY\n./run.sh excalidraw-proposal-receipt --receipt /tmp/explain-project-ops-excalidraw-proposal.json --feature-id publish.report_last --step-id staging --request-revision 1 | tee /tmp/explain-project-excalidraw-proposal-receipt.json && python3 - <<'PY'\nimport json\nd=json.load(open('/tmp/explain-project-excalidraw-proposal-receipt.json'))\nassert d['schema'] == 'explain_project.adapter_receipt.v1'\nassert d['adapter'] == 'excalidraw_proposal'\nassert d['status'] == 'PROPOSED'\nprint('EXPLAIN_PROJECT_EXCALIDRAW_PROPOSAL_RECEIPT_OK')\nPY"],
-      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_EXCALIDRAW_PROPOSAL_RECEIPT_OK"]},
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && python3 - <<'PY' >/tmp/explain-project-ops-excalidraw-proposal.json\nimport json\nprint(json.dumps({\"schema\":\"ops_excalidraw.push_board.v1\",\"status\":\"PASS\",\"mode\":\"proposal\",\"version\":1,\"elements\":3}))\nPY\n./run.sh excalidraw-proposal-receipt --receipt /tmp/explain-project-ops-excalidraw-proposal.json --feature-id publish.report_last --step-id staging --request-revision 1 | tee /tmp/explain-project-excalidraw-proposal-receipt.json && python3 - <<'PY'\nimport json\nd=json.load(open('/tmp/explain-project-excalidraw-proposal-receipt.json'))\nassert d['schema'] == 'explain_project.adapter_receipt.v1'\nassert d['adapter'] == 'excalidraw_proposal'\nassert d['status'] == 'PROPOSED'\nprint('EXPLAIN_PROJECT_EXCALIDRAW_PROPOSAL_RECEIPT_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXPLAIN_PROJECT_EXCALIDRAW_PROPOSAL_RECEIPT_OK"
+        ]
+      },
       "readback": true,
       "evidence_class": "deterministic"
     },
@@ -133,9 +259,22 @@
       "evidence_class": "adversarial_live_e2e",
       "readback": true,
       "notes": "Real Chrome through Surf, disposable production API/preview and skill-generated sample data. Replayed question, real 409 interleaving and delayed real response; no fabricated server responses or adapter proofs. Not microphone, live provider, VS Code or Excalidraw execution proof.",
-      "command": ["bash", "../run.sh", "eval-browser-sync"],
+      "command": [
+        "bash",
+        "../run.sh",
+        "eval-browser-sync"
+      ],
       "timeout_seconds": 180,
-      "expected": {"exit_code": 0, "stdout_contains": ["BROWSER_SYNC_PASS", "external-replay-updates-open-tab", "stale action not replayed", "late-snapshot-does-not-regress", "external import appears without reload"]}
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BROWSER_SYNC_PASS",
+          "external-replay-updates-open-tab",
+          "stale action not replayed",
+          "late-snapshot-does-not-regress",
+          "external import appears without reload"
+        ]
+      }
     },
     {
       "name": "bridge-execution-safety",
@@ -144,18 +283,118 @@
       "evidence_class": "fault_injected_deterministic",
       "readback": true,
       "notes": "Production API + bridge worker on a generated workspace: cross-origin refusal, IDLE without intent, typed dry-run default, honest BLOCKED without a trusted VS Code bridge, and no dispatch of superseded intents. Live VS Code reveal readback is a separate operator-run mode (--live-vscode) and is not claimed here.",
-      "command": ["bash", "../run.sh", "eval-bridge-execution"],
+      "command": [
+        "bash",
+        "../run.sh",
+        "eval-bridge-execution"
+      ],
       "timeout_seconds": 300,
-      "expected": {"exit_code": 0, "stdout_contains": ["BRIDGE_EXECUTION_PASS", "cross-origin mutation refused", "without a trusted bridge the executor blocks honestly", "superseded intent is never dispatched as current"]}
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BRIDGE_EXECUTION_PASS",
+          "cross-origin mutation refused",
+          "without a trusted bridge the executor blocks honestly",
+          "superseded intent is never dispatched as current"
+        ]
+      }
     },
     {
       "name": "ui-contract-static-check",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "-c", "cd .. && python3 fixtures/ui_contract_eval.py"],
-      "expected": {"exit_code": 0, "stdout_contains": ["EXPLAIN_PROJECT_UI_CONTRACT_EVAL_OK"]},
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && python3 fixtures/ui_contract_eval.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXPLAIN_PROJECT_UI_CONTRACT_EVAL_OK"
+        ]
+      },
       "readback": true,
       "evidence_class": "deterministic"
+    },
+    {
+      "name": "scaffold-any-project-entrypoint-diagrams",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && T=$(mktemp -d) && printf '{\"schema\":\"project_state.report.v1\",\"project\":\"fixture\"}\n' > $T/project-state.json && ./run.sh scaffold --repo fixtures/scaffold-project --entrypoint app.py --project-state $T/project-state.json --output $T/explainers.jsonl | tee $T/scaffold.json && ./run.sh validate $T/explainers.jsonl >/tmp/explain-project-scaffold-validate.json && python3 - <<'PYCODE' $T/scaffold.json $T/explainers.jsonl /tmp/explain-project-scaffold-validate.json\nimport json,sys\ns=json.load(open(sys.argv[1])); r=json.loads(open(sys.argv[2]).readline()); v=json.load(open(sys.argv[3]))\nassert s['status']=='PASS'\nassert v['status']=='PASS'\nassert r['feature_id']=='project.entrypoint'\nassert r['source_ranges'][0]['file']=='app.py'\nassert r['debugger_stops'][0]['line'] >= r['source_ranges'][0]['start_line']\nassert r['diagram']['source_path']=='docs/architecture.svg'\nassert r['diagram']['rendered_svg_path']=='docs/architecture.svg'\nassert 'Project-state receipt:' in r['proof_boundary']\nprint('EXPLAIN_PROJECT_SCAFFOLD_ANY_PROJECT_OK')\nPYCODE"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXPLAIN_PROJECT_SCAFFOLD_ANY_PROJECT_OK"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "deterministic",
+      "notes": "Generic project scaffold from caller-provided entrypoint. Binds an existing project-state receipt path and discovers SVG/Excalidraw references from source docstrings/docs. Does not claim architecture completeness."
+    },
+    {
+      "name": "first-interview-question-cockpit-debugger-excalidraw",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && T=$(mktemp -d) && ./run.sh eval-interview-cockpit-path --out-dir $T | tee $T/stdout.jsonl && python3 - <<'PYCODE' $T/stdout.jsonl\nimport json,sys\ntext=open(sys.argv[1]).read()\nstart=text.index('{'); end=text.rindex('}')+1\np=json.loads(text[start:end])\nassert p['status']=='PASS'\nassert p['first_question'].startswith('Walk me through your solution')\nassert p['route']['matched_feature']=='publish.report_last'\nassert p['debugger']['stopped']['hit'] is True\nassert sorted(p['debugger']['locals'])==['output_corpus','report_path','tmp']\nassert p['ops_excalidraw']['mode']=='proposal'\nassert p['adapter_receipts']['debugger_runtime']['status']=='PROOF_RECEIVED'\nassert p['adapter_receipts']['excalidraw_proposal']['status']=='PROPOSED'\nprint('EXPLAIN_PROJECT_FIRST_INTERVIEW_PATH_OK')\nPYCODE"
+      ],
+      "timeout_seconds": 300,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXPLAIN_PROJECT_FIRST_INTERVIEW_PATH_OK"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e",
+      "notes": "Replays the retained first pasted interview question through the oai-trial explainer catalog, headless cockpit reducer, real Python-bdb $debugger breakpoint, $debugger validator, and safe ops-excalidraw proposal. Does not claim microphone input, visible VS Code control, accepted board mutation, or rendered speech."
+    },
+    {
+      "name": "milestone-refresh-writes-project-state-bundle",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && T=$(mktemp -d) && ./run.sh milestone --repo fixtures/scaffold-project --entrypoint app.py --milestone demo-alpha --output-dir $T/milestone | tee $T/milestone.json && ./run.sh validate $T/milestone/explainers.jsonl >/tmp/explain-project-milestone-validate.json && python3 - <<'PYCODE' $T/milestone.json /tmp/explain-project-milestone-validate.json\nimport json,sys,pathlib\nr=json.load(open(sys.argv[1])); v=json.load(open(sys.argv[2]))\nroot=pathlib.Path(r['output_dir'])\nassert r['status']=='PASS'\nassert v['status']=='PASS'\nassert (root/'receipt.json').is_file()\nassert (root/'project-state.quick.json').is_file()\nassert (root/'explainers.jsonl').is_file()\nassert r['diagram']['source_path']=='docs/architecture.svg'\nassert 'cockpit' in r['next_commands']\nprint('EXPLAIN_PROJECT_MILESTONE_REFRESH_OK')\nPYCODE"
+      ],
+      "timeout_seconds": 180,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXPLAIN_PROJECT_MILESTONE_REFRESH_OK"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "deterministic",
+      "notes": "Per-milestone refresh writes project-state.quick.json, explainers.jsonl, and receipt.json into a bundle. It does not mutate project source docstrings."
+    },
+    {
+      "name": "question-first-project-walkthrough",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && T=$(mktemp -d) && ./run.sh answer-question --repo fixtures/question-first/project --question 'Why does publish wait for the report marker?' --out $T --debug-command 'python app.py' | tee $T/answer.json && ./run.sh validate $T/explainers.jsonl >/tmp/explain-project-question-first-validate.json && ../debugger/run.sh validate $T/debugger-proof.json --expect-valid --repo-root fixtures/question-first/project >/tmp/explain-project-question-first-debugger.txt && python3 - <<'PYCODE' $T/answer.json $T/monitor.json /tmp/explain-project-question-first-validate.json /tmp/explain-project-question-first-debugger.txt\nimport json,pathlib,sys\na=json.load(open(sys.argv[1])); m=json.load(open(sys.argv[2])); v=json.load(open(sys.argv[3])); d=open(sys.argv[4]).read()\nassert a['status']=='PASS' and m['status']=='PASS'\nassert v['status']=='PASS'\nassert 'debugger proof validation passed' in d\nassert a['route']=='CREATED'\nassert a['selected_source']['symbol']=='publish'\nassert a['breakpoints'] and a['debugger_proof']\nassert pathlib.Path(a['diagram']['source_path']).is_file()\nassert a['diagram_registry_receipt']['status']=='PASS'\nassert pathlib.Path(a['diagram_registry_receipt']['registry']).is_file()\nassert a['teaching_tone']=='plain spoken concise'\nprint('EXPLAIN_PROJECT_QUESTION_FIRST_WALKTHROUGH_OK')\nPYCODE"
+      ],
+      "timeout_seconds": 300,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXPLAIN_PROJECT_QUESTION_FIRST_WALKTHROUGH_OK"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e",
+      "notes": "Question-first walkthrough creates a monitor receipt, strict explainer, missing Excalidraw diagram board, ops-excalidraw diagram registry metadata, breakpoint target, and validated debugger proof. Tone must remain plain spoken and concise."
     }
   ]
 }

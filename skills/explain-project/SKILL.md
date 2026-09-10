@@ -36,8 +36,14 @@ Create or validate a project-wide explainability package after substantial code
 or skill work. This is for technical interviews and for developers who need to
 understand what an agent changed.
 
+Immutable goals: `immutable_goal.json` is the completed cockpit-v1 foundation;
+`immutable_goal.v2.json` is the active question-first project walkthrough goal.
+
 Default output location: `docs/explain/explainers.jsonl` in the target project.
 Each line is a strict Pydantic `project.feature_explainer.v1` record.
+
+Teaching tone: plain spoken and concise. Start with the direct answer, name the
+source file, then walk one code/diagram/runtime-state step at a time.
 
 ## Commands
 
@@ -45,7 +51,10 @@ Each line is a strict Pydantic `project.feature_explainer.v1` record.
 skills/explain-project/run.sh validate docs/explain/explainers.jsonl
 skills/explain-project/run.sh list docs/explain/explainers.jsonl
 skills/explain-project/run.sh ask docs/explain/explainers.jsonl --question "What breaks first at scale?"
+skills/explain-project/run.sh answer-question --repo <project> --question "Why does publish wait?" --out /tmp/explain-project-answer --debug-command "python app.py"
 skills/explain-project/run.sh sample --output docs/explain/explainers.jsonl
+skills/explain-project/run.sh scaffold --repo <project> --entrypoint <path> --run-project-state
+skills/explain-project/run.sh eval-interview-cockpit-path --out-dir /tmp/explain-project-first-question
 skills/explain-project/run.sh eval-browser-sync --out-dir /tmp/explain-project-browser-sync
 skills/explain-project/run.sh bridge --repo <workspace> --base-url http://127.0.0.1:15174 --out-dir <artifacts> --execute
 skills/explain-project/run.sh eval-bridge-execution --out-dir /tmp/explain-project-bridge-eval
@@ -61,8 +70,14 @@ question -> teleprompter notes -> Excalidraw/SVG node -> VS Code range -> option
 
 Use Excalidraw as the default editable architecture source. Use SVG as a rendered
 portable artifact when stable or when `$create-svg` verification has produced a
-safe self-contained diagram. Use `$debugger` only when live runtime state answers
-the question.
+safe self-contained diagram. Put durable diagram pointers near the code that
+needs them, especially entrypoint/module docstrings, using plain references such
+as `Diagram ID: project.publish-flow`, `Diagram: docs/architecture.svg`, or
+`Excalidraw source: docs/architecture.excalidraw`. `answer-question` creates a
+missing Excalidraw board and stores stable metadata through `$ops-excalidraw`;
+`scaffold` scans README/PROJECT_STATE/docs/docstrings and binds the first
+existing diagram into the generated cockpit record. Use `$debugger` only when
+live runtime state answers the question.
 
 ## Browser synchronization
 
@@ -96,10 +111,11 @@ Imported explainer `runtime_launch` commands are never executed.
 
 ## Current scope
 
-The current implementation validates/list/searches explainer JSONL, runs a
-headless cockpit proof, serves a loopback cockpit API, and ships a React cockpit
-harness under `ui/`. It ingests typed Live Evidence question candidates,
-debugger source/proof receipts, and ops-excalidraw proposal receipts. It does not
-claim live microphone transcription, arbitrary visible VS Code control, debugger
-execution from navigation, or accepted Excalidraw board mutation without the
-owning skill receipts.
+The current implementation validates/list/searches explainer JSONL, scaffolds a
+starter explainer from any project entrypoint, runs a headless cockpit proof,
+serves a loopback cockpit API, and ships a React cockpit harness under `ui/`. It
+ingests typed Live Evidence question candidates, debugger source/proof receipts,
+and ops-excalidraw proposal receipts. It does not claim live microphone
+transcription, arbitrary visible VS Code control, debugger execution from
+navigation, or accepted Excalidraw board mutation without the owning skill
+receipts.

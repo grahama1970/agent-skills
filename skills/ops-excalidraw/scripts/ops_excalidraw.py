@@ -7,6 +7,7 @@ import json
 import sys
 from pathlib import Path
 from typing import Any, Literal
+from datetime import datetime, timezone
 
 import typer
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
@@ -146,6 +147,27 @@ class CompileResult(BaseModel):
     animation_tokens: int
     target_count: int
     timeline_events: int
+
+
+class DiagramRegistryItem(BaseModel):
+    """Stable diagram metadata for project walkthrough tools."""
+
+    model_config = ConfigDict(extra="forbid")
+    diagram_id: str = Field(min_length=1)
+    owner_project: str = Field(min_length=1)
+    source_path: str | None = None
+    source_url: str | None = None
+    edit_url: str | None = None
+    rendered_svg_path: str | None = None
+    rendered_svg_url: str | None = None
+    bound_symbols: list[str] = Field(default_factory=list)
+    updated_at: str
+
+    @model_validator(mode="after")
+    def has_source(self) -> "DiagramRegistryItem":
+        if not (self.source_path or self.source_url or self.edit_url):
+            raise ValueError("diagram registry item needs source_path, source_url, or edit_url")
+        return self
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -596,6 +618,53 @@ def render_board_command(
             subprocess.Popen(["xdg-open", str(output)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         print(json.dumps({"schema": "ops_excalidraw.render_board.v1", "status": "PASS", "output": str(output), "bytes": output.stat().st_size}))
     except (OSError, ValueError, ValidationError, json.JSONDecodeError, subprocess.SubprocessError) as exc:
+        fail(exc)
+
+
+@app.command(name="register-diagram")
+def register_diagram_command(
+    diagram_id: str = typer.Option(..., "--diagram-id"),
+    owner_project: str = typer.Option(..., "--owner-project"),
+    source_path: str | None = typer.Option(None, "--source-path"),
+    source_url: str | None = typer.Option(None, "--source-url"),
+    edit_url: str | None = typer.Option(None, "--edit-url"),
+    rendered_svg_path: str | None = typer.Option(None, "--rendered-svg-path"),
+    rendered_svg_url: str | None = typer.Option(None, "--rendered-svg-url"),
+    bound_symbol: list[str] = typer.Option(None, "--bound-symbol"),
+    registry: Path = typer.Option(
+        Path("/mnt/storage12tb/skills/ops-excalidraw/diagram-registry.json"),
+        "--registry",
+    ),
+) -> None:
+    """Upsert stable project diagram metadata by diagram_id."""
+
+    try:
+        item = DiagramRegistryItem(
+            diagram_id=diagram_id,
+            owner_project=owner_project,
+            source_path=source_path,
+            source_url=source_url,
+            edit_url=edit_url,
+            rendered_svg_path=rendered_svg_path,
+            rendered_svg_url=rendered_svg_url,
+            bound_symbols=bound_symbol or [],
+            updated_at=datetime.now(timezone.utc).isoformat(),
+        )
+        registry.parent.mkdir(parents=True, exist_ok=True)
+        items: dict[str, dict[str, Any]] = {}
+        if registry.is_file():
+            raw = json.loads(registry.read_text() or "[]")
+            if not isinstance(raw, list):
+                raise ValueError("registry must be a JSON list")
+            for existing in raw:
+                parsed = DiagramRegistryItem.model_validate(existing)
+                items[parsed.diagram_id] = parsed.model_dump()
+        items[item.diagram_id] = item.model_dump()
+        tmp = registry.with_suffix(registry.suffix + ".tmp")
+        tmp.write_text(json.dumps(list(items.values()), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        tmp.replace(registry)
+        print(json.dumps({"schema": "ops_excalidraw.diagram_registry.v1", "status": "PASS", "registry": str(registry), "diagram_id": item.diagram_id, "count": len(items)}))
+    except Exception as exc:  # noqa: BLE001 - single CLI boundary
         fail(exc)
 
 

@@ -36,7 +36,7 @@ Use this skill to make Excalidraw the movable whiteboard layer and `$create-svg`
 
 ## Contract
 
-- Excalidraw owns editable composition: `.excalidraw` boards and `.excalidrawlib` toolkit items.
+- Excalidraw owns editable composition: `.excalidraw` boards, `.excalidrawlib` toolkit items, and stable diagram registry metadata.
 - Animation intent is represented by visible toolkit tokens with `customData.opsExcalidraw.kind = "animation"`.
 - `$create-svg` owns final rendering, CSS animation, reduced-motion base state, SVG safety, and verification.
 - This skill emits `$create-svg` scene/timeline JSON; it does not emit final SVG.
@@ -58,6 +58,7 @@ Accent values on nodes must stay within the create-svg set: cyan, green, amber, 
 skills/ops-excalidraw/run.sh toolkit --output /tmp/interview-animation-toolkit.excalidrawlib
 skills/ops-excalidraw/run.sh validate skills/ops-excalidraw/fixtures/interview-board.excalidraw
 skills/ops-excalidraw/run.sh compile skills/ops-excalidraw/fixtures/interview-board.excalidraw /tmp/interview-scene.yml
+skills/ops-excalidraw/run.sh register-diagram --diagram-id project.flow --owner-project my-project --source-path docs/flow.excalidraw --bound-symbol src/app.py:main
 skills/create-svg/run.sh render /tmp/interview-scene.yml /tmp/interview.svg
 ```
 
@@ -79,7 +80,15 @@ skills/ops-excalidraw/run.sh push-board chart.excalidraw --port 7683         # p
 skills/ops-excalidraw/run.sh render-board chart.excalidraw --output out.svg  # compile+render to SVG (add --show to open)
 ```
 
-`render-board` needs no server; `push-library`/`push-board` target a running whiteboard. All fail closed on invalid input.
+`render-board` and `register-diagram` need no server; `push-library`/`push-board` target a running whiteboard. All fail closed on invalid input.
+
+Register stable diagram metadata for project walkthrough tools:
+
+```bash
+skills/ops-excalidraw/run.sh register-diagram --diagram-id oai-trial.publish-flow --owner-project oai-trial --source-path docs/explain/boards/publish-flow.excalidraw --rendered-svg-path docs/explain/svg/publish-flow.svg --bound-symbol src/anonymization_trial/pipeline.py:publish_report
+```
+
+The registry defaults to `/mnt/storage12tb/skills/ops-excalidraw/diagram-registry.json` and upserts by `diagram_id`. The id is not a URL; source/edit/rendered fields carry paths or URLs.
 
 Draft a board from a one-line spec (meeting speed) and push it as a proposal:
 

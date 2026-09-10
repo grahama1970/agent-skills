@@ -1,0 +1,55 @@
+{
+  "schema": "explain_project.immutable_goal.v1",
+  "goal_id": "explain-project-question-first-project-walkthrough-v2",
+  "parent_goal_id": "explain-project-interview-cockpit-v1",
+  "parent_goal_hash": "sha256:ffcc1465f1e222c3043e3730a5113de05b898aa5f398dbb5f87d3f9cb0b9c00d",
+  "outcome": "Make explain-project answer arbitrary client or Graham questions about a project by finding the relevant code path, binding existing or newly proposed diagrams, creating debugger breakpoint targets when runtime state helps, and walking the human through synchronized cockpit steps that explain source, diagram, project-state context, proof boundary, and live debugger evidence per question. Entrypoints are only one discovery seed, not the only starting point.",
+  "primary_proof": {
+    "command": "cd /home/graham/workspace/experiments/agent-skills && skills/explain-project/run.sh answer-question --repo skills/explain-project/fixtures/question-first/project --question 'Why does publish wait for the report marker?' --out /tmp/explain-project-question-first --debug-command 'python app.py' && skills/explain-project/run.sh validate /tmp/explain-project-question-first/explainers.jsonl && skills/debugger/run.sh validate /tmp/explain-project-question-first/debugger-proof.json --expect-valid --repo-root skills/explain-project/fixtures/question-first/project && skills/agentic-evals/run.sh run skills/explain-project/fixtures/agentic_eval.json --case question-first-project-walkthrough --output /tmp/explain-project-question-first-agentic-eval.json",
+    "expected": "The question-first command reports MATCHED or CREATED, cites the selected files/functions, writes a strict explainer JSONL, binds a project-state receipt, binds an ops-excalidraw diagram id plus editable/rendered URLs or paths, creates at least one debugger breakpoint target for the relevant source range when runtime state is required, validates any runtime proof through skills/debugger, and agentic-evals reports READY with zero FAIL/BLOCKED cases for the question-first walkway."
+  },
+  "completion_criteria": [
+    "A human question can start from any known project surface: entrypoint, existing explainer, diagram id, source symbol, project-state finding, Live Evidence question candidate, or free-text project question.",
+    "Cockpit teaching output uses a plain spoken concise tone: direct answer first, source file second, then one code/diagram/runtime-state step at a time.",
+    "Question routing returns MATCHED, AMBIGUOUS, NO_MATCH, or CREATED; CREATED means the project agent found a relevant source path and wrote a new strict project.feature_explainer.v1 record with no LLM-only assertions.",
+    "The project agent reads local code and project-state evidence before creating a walkthrough; every claim in cockpit output has a source range, receipt, diagram binding, or explicit INFERENCE label.",
+    "Relevant source selection can target functions/classes/modules outside the entrypoint; entrypoint scaffold remains only the onboarding/default path.",
+    "Debugger breakpoint targets are generated per explanation step only when paused runtime state would answer the question better than static reading; execution is explicit and debugger-owned.",
+    "Runtime debugger proof is accepted only as canonical debugger.proof.v1 validated by skills/debugger/run.sh validate, then converted into explain_project.adapter_receipt.v1 with revision binding.",
+    "Ops Excalidraw owns stable diagram metadata: diagram_id, owner_project, source_path or source_url, edit_url when present, rendered_svg_path or rendered_svg_url, bound symbols, and current proposal/acceptance state.",
+    "The cockpit includes a filterable, collapsible left Diagrams Explorer built from the shared ux-lab LeftPane pattern and consistent with Sparta Explorer pane behavior; it can select existing diagrams and start a proposal-safe new diagram flow.",
+    "Docstrings and nearby docs may include diagram links using durable plain references such as Diagram ID, Diagram, and Excalidraw source; explain-project discovers those links but does not silently mutate source without an explicit proposed patch.",
+    "Milestone refresh writes a dated explain-project bundle containing project-state.quick.json, explainers.jsonl, diagram metadata, receipt.json, stale/missing diagram findings, and next cockpit/debugger commands.",
+    "Project-state remains read-only context and freshness reporting; it does not own diagram creation, Excalidraw mutation, debugger execution, or docstring edits.",
+    "Create-architecture owns architecture analysis and diagram content proposals; ops-excalidraw owns editable whiteboard state/proposals; create-svg owns portable SVG rendering and verification; explain-project composes them into cockpit walkthroughs.",
+    "Retained agentic-evals cover entrypoint scaffold, question-first non-entrypoint selection, existing diagram discovery from docstrings/docs, diagram id metadata, safe new diagram proposal, debugger target/proof binding, project-state milestone refresh, ambiguous/no-match fail-closed behavior, and browser Diagrams Explorer interactions."
+  ],
+  "allowed_scope": [
+    "skills/explain-project/**",
+    "skills/best-practices-explain-project/**",
+    "skills/ops-excalidraw diagram metadata and proposal-safe endpoints only when required for diagram ids/URLs",
+    "skills/debugger integration only through documented run.sh/bridge/proof contracts",
+    "skills/create-architecture integration through generated architecture/diagram proposal artifacts",
+    "skills/create-svg integration through verified SVG render/verify receipts",
+    "skills/project-state integration through read-only report artifacts",
+    "skills/ux-lab shared LeftPane imports or vendored sync only for cockpit Diagrams Explorer",
+    "skills/live-evidence question candidate ingestion through documented policy gates",
+    "skills/agentic-evals retained fixtures for question-first walkthroughs"
+  ],
+  "forbidden_drift": [
+    "Do not make project-state mutate source files, docstrings, diagrams, Excalidraw boards, or debugger state.",
+    "Do not claim an arbitrary question is answered from semantic similarity alone; cite source ranges and receipts or mark the answer as unresolved.",
+    "Do not auto-run debugger or execute imported runtime_launch commands without explicit human/project-agent action and debugger-owned receipts.",
+    "Do not replace Excalidraw proposal/acceptance with silent board replacement for human-owned diagrams.",
+    "Do not fork a separate left-pane UX; use ux-lab shared LeftPane behavior and data-qid patterns unless a verified project constraint blocks it.",
+    "Do not treat generated SVG as editable source; editable source remains Excalidraw or a declared source diagram file.",
+    "Do not broaden into a generic IDE, dashboard, or document management system beyond question-first project walkthroughs."
+  ],
+  "retry_stop_rule": {
+    "attempts_per_blocker": 2,
+    "stop_condition": "If the same question-first proof blocker survives two focused attempts, stop implementation and emit a blocker report with the failed command, exact output/error, changed files, artifact paths, hypothesis, and one recommended next command; route ambiguous failures through triage-error first."
+  },
+  "proof_boundary": "The v2 proof must establish question-first routing, concise plain-spoken teaching output, source/diagram/project-state binding, safe diagram proposal metadata, and debugger proof ingestion for representative project questions. It does not prove all possible project questions, all languages/debugger adapters, human acceptance of every diagram proposal, or live meeting/microphone intake unless those specific receipts are present.",
+  "final_report_rule": "A final report may claim v2 is met only after the primary proof passes, the question-first agentic-evals case is READY with zero failing outcomes, browser Diagrams Explorer checks pass, and the report names unsupported languages, live integrations, and unresolved diagram/docstring freshness gaps.",
+  "goal_hash": "sha256:5b6e822c81a37c270fb27c73562afa2f6bac2ab9e91e025f3b0808a9bdd736ec"
+}

@@ -2,7 +2,7 @@
 
 ![Explain Project cockpit screenshot](assets/readme/cockpit-screenshot.png)
 
-`explain-project` turns finished agent work into an interview cockpit: a strict explainer record drives the teleprompter, source range, debugger target, and Excalidraw diagram state from one typed revision.
+`explain-project` turns project questions into a plain-spoken interview cockpit: a strict explainer record drives the concise teaching answer, source range, debugger target, and Excalidraw diagram state from one typed revision.
 
 We needed it during the OpenAI work-trial interview prep because the submission had too many proof surfaces for a normal slide deck: frozen runtime, privacy boundaries, source ranges, debugger proof, diagrams, and likely interviewer follow-ups. This skill would have put the answer, the exact source, the proof boundary, and the safe live controls on one 15-inch presenter surface instead of forcing a scramble across notes, VS Code, Excalidraw, and receipts.
 
@@ -10,7 +10,7 @@ We needed it during the OpenAI work-trial interview prep because the submission 
 
 ![Question to cockpit flow](assets/readme/cockpit-flow.svg)
 
-Read [`DESIGN.md`](DESIGN.md) for the cockpit visual contract and [`PROJECT_KNOWLEDGE.md`](PROJECT_KNOWLEDGE.md) for the current proof boundary.
+Read [`DESIGN.md`](DESIGN.md) for the cockpit visual contract, [`PROJECT_KNOWLEDGE.md`](PROJECT_KNOWLEDGE.md) for the current proof boundary, [`immutable_goal.json`](immutable_goal.json) for completed cockpit-v1, and [`immutable_goal.v2.json`](immutable_goal.v2.json) for the active question-first walkthrough goal.
 
 ## Start here
 
@@ -18,10 +18,37 @@ Read [`DESIGN.md`](DESIGN.md) for the cockpit visual contract and [`PROJECT_KNOW
 | --- | --- |
 | Validate explainer JSONL | `skills/explain-project/run.sh validate <explainers.jsonl>` |
 | Ask a question against explainers | `skills/explain-project/run.sh ask <explainers.jsonl> --question "..."` |
+| Create a question-first walkthrough | `skills/explain-project/run.sh answer-question --repo <project> --question "..." --out <dir> [--debug-command "python app.py"]` |
+| Scaffold from any project entrypoint | `skills/explain-project/run.sh scaffold --repo <project> --entrypoint <path> --run-project-state` |
+| Re-run the retained oai-trial first-question path | `skills/explain-project/run.sh eval-interview-cockpit-path --out-dir <proof-dir>` |
 | Run deterministic cockpit proof | `skills/explain-project/run.sh cockpit --repo fixtures/cockpit/project --explainers fixtures/cockpit/project/docs/explain/explainers.jsonl --headless --script fixtures/cockpit/scripts/worker-crash-walkthrough.json --out <proof.json>` |
 | Serve the React cockpit API | `skills/explain-project/run.sh cockpit --explainers <explainers.jsonl>` |
 | Build the browser cockpit | `cd skills/explain-project/ui && npm run build` |
 | Emit `$test-interactions` manifest | `skills/explain-project/run.sh interaction-manifest --base-url http://127.0.0.1:8766` |
+
+## Diagram discovery convention
+
+For project agents, put durable diagram pointers in the code or docs closest to
+the walkthrough surface:
+
+```python
+"""Entrypoint for the worker.
+
+Diagram ID: project.production-architecture
+Diagram: docs/architecture.svg
+Excalidraw source: docs/architecture.excalidraw
+"""
+```
+
+`answer-question` scans source for the relevant path, creates a missing
+Excalidraw board when no diagram exists, stores stable diagram metadata through
+`$ops-excalidraw`, writes breakpoint targets, and keeps the teaching tone plain,
+spoken, and concise. `scaffold` scans the entrypoint, README,
+PROJECT_STATE/PROJECT_KNOWLEDGE, and `docs/**/*.md|*.py` for `.svg`,
+`.excalidraw`, and Excalidraw URLs. It binds the first existing reference into
+the generated explainer, adds a `$debugger` breakpoint target near the entrypoint,
+and records the `$project-state` receipt path when supplied or generated with
+`--run-project-state`.
 
 ## Helper skills
 
@@ -30,7 +57,7 @@ Read [`DESIGN.md`](DESIGN.md) for the cockpit visual contract and [`PROJECT_KNOW
 | [`best-practices-explain-project`](../best-practices-explain-project/SKILL.md) | Defines the explainer record and cockpit route: question -> cue -> source -> debugger -> diagram. |
 | [`live-evidence`](../live-evidence/SKILL.md) | Supplies consented or replayed `live_evidence.question_candidate.v1` question candidates; the cockpit only ingests typed candidates. |
 | [`debugger`](../debugger/SKILL.md) | Owns source reveal, breakpoint setup, and runtime proof receipts; the cockpit never auto-runs it from navigation. |
-| [`ops-excalidraw`](../ops-excalidraw/SKILL.md) | Owns editable `.excalidraw` boards and proposal-safe board pushes. |
+| [`ops-excalidraw`](../ops-excalidraw/SKILL.md) | Owns editable `.excalidraw` boards, proposal-safe board pushes, and stable diagram registry metadata. |
 | [`create-svg`](../create-svg/SKILL.md) | Renders safe portable SVG diagrams from semantic scenes or ops-excalidraw output. |
 | [`test-interactions`](../test-interactions/SKILL.md) | Replays stable `[data-qid]` controls against the cockpit through Surf. |
 | [`surf`](../surf/SKILL.md) | Captures browser proof and screenshots of the real cockpit surface. |
@@ -47,6 +74,7 @@ Read [`DESIGN.md`](DESIGN.md) for the cockpit visual contract and [`PROJECT_KNOW
 | Path | Purpose |
 | --- | --- |
 | `immutable_goal.json` | Frozen cockpit goal and proof boundary. |
+| `scripts/explain_project_core/scaffold.py` | Generic project intake: question-first source selection, entrypoint source range, `$project-state` binding, docstring/docs diagram discovery or diagram creation, registry metadata, and starter debugger target. |
 | `scripts/explain_project_core/models.py` | Strict Pydantic contracts for explainers, cockpit state, adapter receipts, Live Evidence intake, debugger proof, and Excalidraw proposal receipts. |
 | `scripts/explain_project_core/reducer.py` | Single reducer that keeps teleprompter, source, debugger, diagram, and health projections revision-aligned. |
 | `scripts/explain_project_core/server.py` | Loopback HTTP API for the React cockpit and Live Evidence intake seam. |

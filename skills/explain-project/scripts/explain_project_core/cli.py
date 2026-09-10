@@ -37,6 +37,12 @@ from .proof import (
     validate_proof,
 )
 from .routing import route
+from .scaffold import (
+    answer_question,
+    run_project_state,
+    write_milestone,
+    write_scaffold,
+)
 from .server import serve
 
 SKILL_DIR = Path(__file__).resolve().parents[2]
@@ -231,6 +237,144 @@ def sample_command(
             "status": "PASS",
             "output": str(output),
         }
+    )
+
+
+@app.command("scaffold")
+def scaffold_command(
+    repo: Path = typer.Option(
+        ...,
+        "--repo",
+        help="Project root to explain.",
+    ),
+    entrypoint: Path = typer.Option(
+        ...,
+        "--entrypoint",
+        help="Project entrypoint, relative to --repo unless absolute.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        help="Destination explainer JSONL. Defaults to docs/explain/explainers.jsonl.",
+    ),
+    project_state: Path | None = typer.Option(
+        None,
+        "--project-state",
+        help="Existing $project-state JSON receipt to bind.",
+    ),
+    run_state: bool = typer.Option(
+        False,
+        "--run-project-state",
+        help="Run a quick $project-state JSON report before writing the scaffold.",
+    ),
+) -> None:
+    """Create a starter explainer for any project from its entrypoint."""
+
+    resolved_repo = repo.resolve()
+    resolved_entrypoint = _resolve_input(
+        resolved_repo,
+        entrypoint,
+    ).resolve()
+    resolved_output = (
+        output
+        if output is not None
+        else resolved_repo / "docs/explain/explainers.jsonl"
+    )
+    if not resolved_output.is_absolute():
+        resolved_output = resolved_repo / resolved_output
+
+    resolved_project_state = project_state
+    if resolved_project_state is not None and not resolved_project_state.is_absolute():
+        resolved_project_state = resolved_repo / resolved_project_state
+    if run_state:
+        resolved_project_state = run_project_state(
+            resolved_repo,
+            resolved_output.parent / "project-state.quick.json",
+        )
+
+    _emit(
+        write_scaffold(
+            resolved_repo,
+            resolved_entrypoint,
+            resolved_output,
+            resolved_project_state,
+        )
+    )
+
+
+@app.command("milestone")
+def milestone_command(
+    repo: Path = typer.Option(
+        ...,
+        "--repo",
+        help="Project root to refresh.",
+    ),
+    entrypoint: Path = typer.Option(
+        ...,
+        "--entrypoint",
+        help="Project entrypoint, relative to --repo unless absolute.",
+    ),
+    milestone: str = typer.Option(
+        "current",
+        "--milestone",
+        help="Milestone name used under docs/explain/milestones/.",
+    ),
+    output_dir: Path | None = typer.Option(
+        None,
+        "--output-dir",
+        help="Override milestone bundle directory.",
+    ),
+) -> None:
+    """Refresh per-milestone project-state and explainer scaffold."""
+
+    resolved_repo = repo.resolve()
+    resolved_entrypoint = _resolve_input(
+        resolved_repo,
+        entrypoint,
+    ).resolve()
+    resolved_output_dir = output_dir
+    if resolved_output_dir is not None and not resolved_output_dir.is_absolute():
+        resolved_output_dir = resolved_repo / resolved_output_dir
+
+    _emit(
+        write_milestone(
+            resolved_repo,
+            resolved_entrypoint,
+            milestone,
+            resolved_output_dir,
+        )
+    )
+
+
+@app.command("answer-question")
+def answer_question_command(
+    repo: Path = typer.Option(..., "--repo"),
+    question: str = typer.Option(..., "--question"),
+    out: Path = typer.Option(..., "--out"),
+    entrypoint: Path | None = typer.Option(None, "--entrypoint"),
+    debug_command: str | None = typer.Option(
+        None,
+        "--debug-command",
+        help="Optional command to run under $debugger from --repo.",
+    ),
+) -> None:
+    """Create a question-first cockpit bundle for a project question."""
+
+    resolved_repo = repo.resolve()
+    resolved_entrypoint = None
+    if entrypoint is not None:
+        resolved_entrypoint = _resolve_input(
+            resolved_repo,
+            entrypoint,
+        ).resolve()
+    _emit(
+        answer_question(
+            resolved_repo,
+            question,
+            out.resolve(),
+            resolved_entrypoint,
+            debug_command,
+        )
     )
 
 

@@ -3,10 +3,10 @@ set -euo pipefail
 
 DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 
+usage="usage: $0 validate|list|ask|sample|scaffold|milestone|answer-question|cockpit-proof|cockpit|validate-proof|eval-browser-sync|eval-interview-cockpit-path|interaction-manifest|debugger-source-reveal-receipt|debugger-runtime-proof-receipt|excalidraw-proposal-receipt ..."
+
 if (($# == 0)); then
-  echo \
-    "usage: $0 validate|list|ask|sample|cockpit-proof|cockpit|validate-proof|eval-browser-sync|interaction-manifest|debugger-source-reveal-receipt|debugger-runtime-proof-receipt|excalidraw-proposal-receipt ..." \
-    >&2
+  echo "$usage" >&2
   exit 2
 fi
 
@@ -24,7 +24,10 @@ case "$cmd" in
   eval-bridge-execution)
     uv run --isolated --with httpx python3 "$DIR/scripts/eval_bridge_execution.py" "$@"
     ;;
-  validate|list|ask|sample|cockpit-proof|cockpit|validate-proof|interaction-manifest|debugger-source-reveal-receipt|debugger-runtime-proof-receipt|excalidraw-proposal-receipt)
+  eval-interview-cockpit-path)
+    uv run --isolated --with pydantic --with typer --with httpx --with loguru python3 "$DIR/scripts/eval_interview_cockpit_path.py" "$@"
+    ;;
+  validate|list|ask|sample|scaffold|milestone|answer-question|cockpit-proof|cockpit|validate-proof|interaction-manifest|debugger-source-reveal-receipt|debugger-runtime-proof-receipt|excalidraw-proposal-receipt)
     PYTHONPATH="$DIR/scripts" \
       uv run \
       --isolated \
@@ -36,9 +39,7 @@ case "$cmd" in
       "$cmd" "$@"
     ;;
   *)
-    echo \
-      "usage: $0 validate|list|ask|sample|cockpit-proof|cockpit|validate-proof|eval-browser-sync|interaction-manifest|debugger-source-reveal-receipt|debugger-runtime-proof-receipt|excalidraw-proposal-receipt ..." \
-      >&2
+    echo "$usage" >&2
     exit 2
     ;;
 esac
