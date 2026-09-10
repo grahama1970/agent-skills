@@ -218,17 +218,18 @@ export function InputRail({
         </p>
       </div>
 
-      <div className="flex flex-row items-center gap-1.5 w-full">
-        <input
+      <div className="flex flex-col gap-2 w-full">
+        <textarea
           data-qid="cockpit:question:manual-input"
           data-qs-action="QUESTION_MANUAL_EDIT"
           title="Paste or type an interview question"
+          rows={3}
           className={[
-            'min-w-0 flex-1 rounded-lg border border-zinc-700',
-            'bg-zinc-950 px-2.5 py-1.5 text-xs text-zinc-100 min-h-[44px]',
+            'w-full resize-none rounded-lg border border-zinc-700',
+            'bg-zinc-950 p-2.5 text-sm leading-relaxed text-zinc-100 min-h-[96px]',
             'placeholder-zinc-500 outline-none focus:border-cyan-500',
           ].join(' ')}
-          placeholder="Paste interview question"
+          placeholder="Paste interview question (Enter to route, Shift+Enter for line break)"
           value={question}
           onChange={(event) => {
             setQuestion(
@@ -236,7 +237,8 @@ export function InputRail({
             )
           }}
           onKeyDown={(event) => {
-            if (event.key === 'Enter') {
+            if (event.key === 'Enter' && !event.shiftKey) {
+              event.preventDefault()
               void submitQuestion()
             }
           }}
@@ -248,15 +250,15 @@ export function InputRail({
           data-qs-action="QUESTION_MANUAL_SUBMIT"
           title="Route the current interview question"
           className={[
-            'shrink-0 min-h-[44px] rounded-lg border border-cyan-500/80',
-            'bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-300',
-            'hover:bg-cyan-500 hover:text-zinc-950 transition-all',
+            'w-full min-h-[44px] rounded-lg border border-cyan-500/80',
+            'bg-cyan-600 px-3 py-2 text-xs font-semibold text-zinc-100',
+            'hover:bg-cyan-500 active:bg-cyan-700 transition-colors',
           ].join(' ')}
           onClick={() => {
             void submitQuestion()
           }}
         >
-          Ask
+          Ask Question
         </button>
       </div>
 

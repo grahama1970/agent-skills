@@ -207,12 +207,13 @@
       "command": [
         "bash",
         "-c",
-        "cd ../ui && npm install --package-lock-only && npm run build"
+        "cd ../ui && npm install --package-lock-only && npm run build && grep -q 'data-qid=\"cockpit:stage:active-question\"' src/components/TeleprompterStage.tsx && grep -q '<textarea' src/components/InputRail.tsx && echo EXPLAIN_PROJECT_1080_QUESTION_INTAKE_OK"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "built in"
+          "built in",
+          "EXPLAIN_PROJECT_1080_QUESTION_INTAKE_OK"
         ]
       },
       "readback": true,

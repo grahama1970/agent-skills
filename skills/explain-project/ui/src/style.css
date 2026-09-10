@@ -116,6 +116,14 @@ input, textarea {
   font-size: 0.75rem;
 }
 
+textarea[data-qid="cockpit:question:manual-input"] {
+  min-height: 96px;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 input:focus, textarea:focus {
   outline: 2px solid #22d3ee;
   outline-offset: 1px;

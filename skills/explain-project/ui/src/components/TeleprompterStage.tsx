@@ -39,6 +39,8 @@ export function TeleprompterStage({
     ),
   })
 
+  const activeQuestion = state.question?.text ?? state.route?.question
+
   return (
     <section
       data-qid="cockpit:teleprompter:stage"
@@ -72,6 +74,24 @@ export function TeleprompterStage({
       </div>
 
       <div className="flex-1 flex flex-col justify-center my-auto py-2 space-y-5">
+        {activeQuestion ? (
+          <div
+            data-qid="cockpit:stage:active-question"
+            data-revision={state.revision}
+            className={[
+              'rounded-xl border border-cyan-500/30 bg-cyan-950/20',
+              'p-3.5 text-cyan-100 shadow-sm shadow-cyan-950/40',
+            ].join(' ')}
+          >
+            <div className="mb-1 text-[11px] font-bold uppercase tracking-[0.22em] text-cyan-300">
+              Active interview question
+            </div>
+            <p className="text-base font-semibold leading-snug text-cyan-50 xl:text-lg">
+              {activeQuestion}
+            </p>
+          </div>
+        ) : null}
+
         <div>
           <p className="mb-1.5 text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300">
             Speaker cue
