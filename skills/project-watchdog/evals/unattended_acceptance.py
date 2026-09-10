@@ -13,7 +13,8 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-BASE = Path('/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260909T224502Z-b5644c5a67aa')
+RECEIPTS = Path('/home/graham/.local/state/project-watchdog/receipts')
+BASE = RECEIPTS / 'project-watchdog-20260909T224502Z-b5644c5a67aa'
 
 
 def run(cmd: list[str], *, cwd: Path = REPO) -> dict[str, object]:
@@ -33,6 +34,30 @@ def load(path: Path) -> dict[str, object]:
         return json.loads(path.read_text())
     except Exception as exc:  # noqa: BLE001 - receipt verifier records exact failure.
         return {"_error": str(exc), "_path": str(path)}
+
+
+def human_only_receipts() -> list[str]:
+    found: list[str] = []
+    for path in RECEIPTS.glob('project-watchdog-*/receipt.json'):
+        data = load(path)
+        rows = [data]
+        if isinstance(data.get('result'), dict):
+            rows.append(data['result'])
+        if any(row.get('requires_human_input') is True for row in rows if isinstance(row, dict)):
+            found.append(str(path))
+    return sorted(found)
+
+
+def canary_lifecycles() -> list[dict[str, object]]:
+    rows: list[dict[str, object]] = []
+    for path in RECEIPTS.glob('project-watchdog-*/ticket-closure-receipt-v2.json'):
+        data = load(path)
+        if (data.get('schema') == 'agent_skills.ticket_closure_receipt.v2'
+                and data.get('state') == 'CLOSED'
+                and data.get('tau_settled') is True
+                and data.get('proof_comment_read_back') is True):
+            rows.append({'path': str(path), 'repo': data.get('repo'), 'issue': data.get('issue'), 'run_id': data.get('run_id')})
+    return sorted(rows, key=lambda row: str(row['path']))
 
 
 def main() -> int:
@@ -64,6 +89,10 @@ def main() -> int:
         "skills/project-watchdog/tests/test_primary_main_revision.py::test_closure_outbox_recovery_retries_native_close_without_new_provider",
     ])
 
+    human_receipts = human_only_receipts()
+    lifecycles = canary_lifecycles()
+    lifecycle_repos = {row.get('repo') for row in lifecycles}
+
     checks = {
         "focused_verification_tickets_closed": all(deps[n].get("state") == "CLOSED" for n in [1637, 1638, 1639, 1640]),
         "authority_dependency_1592_proven": (
@@ -80,8 +109,8 @@ def main() -> int:
         "native_release_ok": release.get("exit_code") == 0,
         "agent_skills_recovery_queue_empty": recover.get("exit_code") == 0 and recover_json.get("pending") is False,
         "machine_actionable_bridge_proven": bridge.get("status") in {"PASS", "COMPLETED"} or bridge.get("ok") is True,
-        "human_only_ops_discord_live_receipt_present": False,
-        "ten_consecutive_canary_lifecycles_proven": False,
+        "human_only_ops_discord_live_receipt_present": bool(human_receipts),
+        "ten_consecutive_canary_lifecycles_proven": len(lifecycles) >= 10 and len(lifecycle_repos) >= 2,
     }
     established = all(checks.values())
     result = {
@@ -95,6 +124,8 @@ def main() -> int:
         "dependency_states": deps,
         "recover_primary": {"exit_code": recover["exit_code"], "parsed": recover_json},
         "authority_dependency": {"issue_1592": deps[1592], "pytest_exit_code": authority["exit_code"], "closure_v2": str(BASE / "ticket-closure-receipt-v2.json")},
+        "human_only_receipts": human_receipts,
+        "canary_lifecycles": {"count": len(lifecycles), "repos": sorted(str(repo) for repo in lifecycle_repos), "items": lifecycles[-10:]},
         "receipts": {
             "positive_canary_base": str(BASE),
             "proof_gate": str(BASE / "repair-proof-gate.json"),
