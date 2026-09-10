@@ -237,70 +237,51 @@ button,
   min-height: 44px;
 }
 
-/* Header mic indicator (Google-Meet-style 3-dot). */
-.cockpit-audio__wrapper {
+/* Header mic badge (mic icon + RMS-driven pulse ring). */
+.cockpit-audio__badge {
   position: relative;
-  display: flex;
-  width: 18px;
-  height: 18px;
+  color: #a1a1aa;
+  transition: color 0.3s ease;
+  --mic-volume: 0;
+}
+
+.cockpit-audio__badge--standby {
+  border-color: #3f3f46;
+  background-color: #18181b;
+  color: #a1a1aa;
+}
+
+.cockpit-audio__badge--listening {
+  border-color: rgba(34, 211, 238, 0.5);
+  background-color: rgba(8, 47, 73, 0.4);
+  color: #67e8f9;
+}
+
+.cockpit-audio__icon-wrap {
+  position: relative;
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
   align-items: center;
   justify-content: center;
-  transition: transform 0.08s ease-out;
-}
-
-.cockpit-audio__core {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  width: 100%;
-  height: 100%;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  border-radius: 9999px;
-  background-color: #06b6d4;
-  box-shadow: 0 0 8px rgba(6, 182, 212, 0.35);
-}
-
-.cockpit-audio__dot {
-  width: 2.5px;
-  height: 2.5px;
-  border-radius: 9999px;
-  background-color: #fff;
-}
-
-.cockpit-audio__wrapper[data-speaking='true'] .cockpit-audio__dot {
-  animation: cockpit-audio-dot-bounce 0.7s infinite ease-in-out;
-}
-
-.cockpit-audio__wrapper[data-speaking='true'] .cockpit-audio__dot:nth-child(2) {
-  animation-delay: 0.12s;
-}
-
-.cockpit-audio__wrapper[data-speaking='true'] .cockpit-audio__dot:nth-child(3) {
-  animation-delay: 0.24s;
 }
 
 .cockpit-audio__ring {
   position: absolute;
-  inset: 0;
-  z-index: 1;
+  width: 20px;
+  height: 20px;
   border-radius: 9999px;
-  background-color: #06b6d4;
-  opacity: 0.5;
-  animation: cockpit-audio-pulse 1.1s infinite cubic-bezier(0, 0, 0.2, 1);
+  background-color: rgba(34, 211, 238, 0.4);
+  transform: scale(calc(1 + var(--mic-volume, 0) * 1.8));
+  opacity: calc(var(--mic-volume, 0) * 0.9);
+  transition:
+    transform 0.05s ease-out,
+    opacity 0.05s ease-out;
+  pointer-events: none;
 }
 
-.cockpit-audio__ring--2 {
-  animation-delay: 0.35s;
-}
-
-@keyframes cockpit-audio-dot-bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
-}
-
-@keyframes cockpit-audio-pulse {
-  0% { transform: scale(1); opacity: 0.5; }
-  100% { transform: scale(1.8); opacity: 0; }
+.cockpit-audio__icon {
+  position: relative;
+  z-index: 1;
+  color: currentColor;
 }

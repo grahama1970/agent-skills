@@ -1,4 +1,9 @@
 import {
+  Mic,
+} from 'lucide-react'
+
+import {
+  useRef,
   useState,
 } from 'react'
 
@@ -11,14 +16,28 @@ import {
 } from '../useRegisterAction'
 
 /**
- * Google-Meet-style 3-dot mic indicator for the header.
+ * Header mic badge: mic icon + volume-driven pulse ring.
  *
- * Off by default: click (or grant mic) to start listening so the
- * page never auto-prompts for microphone permission on load.
+ * RMS volume drives a CSS variable on this element directly
+ * (no React re-render per frame); only STANDBY/LISTENING
+ * transitions re-render, debounced by hysteresis.
+ *
+ * Off by default: click to start listening so the page never
+ * auto-prompts for microphone permission on load.
  */
 export function CockpitAudioIndicator() {
   const [enabled, setEnabled] = useState(false)
-  const { volume, isSpeaking, denied } = useAudioVolume(enabled)
+  const badgeRef = useRef<HTMLButtonElement>(null)
+
+  const { audioState, denied } = useAudioVolume(
+    enabled,
+    (rms) => {
+      badgeRef.current?.style.setProperty(
+        '--mic-volume',
+        rms.toFixed(3),
+      )
+    },
+  )
 
   useRegisterAction({
     element_id: 'cockpit:audio:listen-toggle',
@@ -26,26 +45,24 @@ export function CockpitAudioIndicator() {
     action: 'AUDIO_LISTEN_TOGGLE',
     label: 'Toggle live mic listening indicator',
     description: (
-      'Start or stop the browser-local microphone volume '
+      'Start or stop the browser-local microphone RMS '
       + 'indicator. No transcript or speaker identity claimed.'
     ),
   })
 
-  const scale = isSpeaking
-    ? 1 + volume * 0.45
-    : 1
+  const listening = enabled && !denied
+    && audioState === 'LISTENING'
 
   const label = !enabled
     ? 'MIC OFF'
     : denied
       ? 'MIC BLOCKED'
-      : isSpeaking
-        ? 'LISTENING'
-        : 'STANDBY'
+      : audioState
 
   return (
     <button
       type="button"
+      ref={badgeRef}
       data-qid="cockpit:audio:listen-toggle"
       data-qs-action="AUDIO_LISTEN_TOGGLE"
       data-audio-state={label.toLowerCase().replace(' ', '-')}
@@ -54,35 +71,20 @@ export function CockpitAudioIndicator() {
         : 'Mic indicator off — click to listen'}
       aria-pressed={enabled}
       className={[
+        'cockpit-audio__badge',
         'inline-flex h-7 items-center gap-2 rounded-full border',
-        'px-2.5 font-mono text-[10px] font-semibold tracking-wider uppercase',
-        'transition-colors',
-        enabled && !denied
-          ? 'border-cyan-500/50 bg-cyan-950/40 text-cyan-300'
-          : 'border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-500',
+        'px-2.5 font-mono text-[10px] font-semibold uppercase',
+        listening
+          ? 'cockpit-audio__badge--listening'
+          : 'cockpit-audio__badge--standby',
       ].join(' ')}
       onClick={() => {
         setEnabled((on) => !on)
       }}
     >
-      <span
-        className="cockpit-audio__wrapper"
-        data-speaking={isSpeaking ? 'true' : 'false'}
-        style={{ transform: `scale(${scale})` }}
-        aria-hidden="true"
-      >
-        {isSpeaking ? (
-          <>
-            <span className="cockpit-audio__ring cockpit-audio__ring--1" />
-            <span className="cockpit-audio__ring cockpit-audio__ring--2" />
-          </>
-        ) : null}
-
-        <span className="cockpit-audio__core">
-          <span className="cockpit-audio__dot" />
-          <span className="cockpit-audio__dot" />
-          <span className="cockpit-audio__dot" />
-        </span>
+      <span className="cockpit-audio__icon-wrap" aria-hidden="true">
+        <span className="cockpit-audio__ring" />
+        <Mic className="cockpit-audio__icon size-3.5" />
       </span>
 
       <span>{label}</span>

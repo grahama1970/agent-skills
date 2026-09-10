@@ -4,30 +4,56 @@ import {
   useState,
 } from 'react'
 
+export type AudioMonitorState =
+  | 'STANDBY'
+  | 'LISTENING'
+
 /**
- * Live microphone volume via Web Audio AnalyserNode.
+ * Live microphone RMS monitor with hysteresis.
  *
- * Browser-local only: this drives the header listening indicator.
- * It is NOT a RealtimeSTT transcript or speaker-identity claim.
+ * - RMS energy (0..1) per animation frame, delivered via
+ *   onVolume so callers can drive a CSS variable without
+ *   React re-renders.
+ * - State transitions use hysteresis: speech threshold 0.02
+ *   RMS, 700ms hold before dropping back to STANDBY so
+ *   pauses in speech do not flicker the label.
+ *
+ * Browser-local only: no transcript or speaker identity.
  */
-export function useAudioVolume(enabled: boolean) {
-  const [volume, setVolume] = useState(0)
-  const [isSpeaking, setIsSpeaking] = useState(false)
+export function useAudioVolume(
+  enabled: boolean,
+  onVolume: (rms: number) => void,
+): {
+  audioState: AudioMonitorState
+  denied: boolean
+} {
+  const [audioState, setAudioState]
+    = useState<AudioMonitorState>('STANDBY')
   const [denied, setDenied] = useState(false)
-  const frame = useRef<number | null>(null)
+
+  const volumeRef = useRef(onVolume)
+  volumeRef.current = onVolume
 
   useEffect(() => {
     if (!enabled) {
-      setVolume(0)
-      setIsSpeaking(false)
+      setAudioState('STANDBY')
       setDenied(false)
+      volumeRef.current(0)
       return
     }
+
+    const VOLUME_THRESHOLD = 0.02
+    const HOLD_MS = 700
 
     let context: AudioContext | null = null
     let analyser: AnalyserNode | null = null
     let stream: MediaStream | null = null
+    let frame: number | null = null
+    let silenceTimer: ReturnType<
+      typeof setTimeout
+    > | null = null
     let cancelled = false
+    let state: AudioMonitorState = 'STANDBY'
 
     async function init(): Promise<void> {
       try {
@@ -41,7 +67,7 @@ export function useAudioVolume(enabled: boolean) {
 
         context = new AudioContext()
         analyser = context.createAnalyser()
-        analyser.fftSize = 64
+        analyser.fftSize = 256
         context.createMediaStreamSource(stream)
           .connect(analyser)
 
@@ -49,32 +75,53 @@ export function useAudioVolume(enabled: boolean) {
           analyser.frequencyBinCount,
         )
 
-        const tick = (): void => {
+        const setState = (
+          next: AudioMonitorState,
+        ): void => {
+          state = next
+          setAudioState(next)
+        }
+
+        const loop = (): void => {
           if (analyser === null) return
 
           analyser.getByteFrequencyData(data)
 
           let sum = 0
           for (let i = 0; i < data.length; i += 1) {
-            sum += data[i]
+            const value = data[i] / 255
+            sum += value * value
+          }
+          const rms = Math.sqrt(sum / data.length)
+
+          volumeRef.current(rms)
+
+          if (rms >= VOLUME_THRESHOLD) {
+            if (silenceTimer !== null) {
+              clearTimeout(silenceTimer)
+              silenceTimer = null
+            }
+            if (state !== 'LISTENING') {
+              setState('LISTENING')
+            }
+          } else if (
+            state === 'LISTENING'
+            && silenceTimer === null
+          ) {
+            silenceTimer = setTimeout(() => {
+              silenceTimer = null
+              setState('STANDBY')
+            }, HOLD_MS)
           }
 
-          // Quantize to 2 decimals so React re-renders
-          // only on meaningful volume changes, not 60fps.
-          const normalized = Math.min(
-            1,
-            Math.round((sum / data.length / 120) * 100) / 100,
-          )
-
-          setVolume(normalized)
-          setIsSpeaking(normalized > 0.05)
-          frame.current = requestAnimationFrame(tick)
+          frame = requestAnimationFrame(loop)
         }
 
-        tick()
+        loop()
       } catch {
         // Permission denied or no mic: stay in standby.
         setDenied(true)
+        volumeRef.current(0)
       }
     }
 
@@ -82,9 +129,8 @@ export function useAudioVolume(enabled: boolean) {
 
     return () => {
       cancelled = true
-      if (frame.current !== null) {
-        cancelAnimationFrame(frame.current)
-      }
+      if (frame !== null) cancelAnimationFrame(frame)
+      if (silenceTimer !== null) clearTimeout(silenceTimer)
       if (stream !== null) {
         stream.getTracks().forEach((track) => track.stop())
       }
@@ -94,5 +140,5 @@ export function useAudioVolume(enabled: boolean) {
     }
   }, [enabled])
 
-  return { volume, isSpeaking, denied }
+  return { audioState, denied }
 }
