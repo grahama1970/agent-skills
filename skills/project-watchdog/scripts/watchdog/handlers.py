@@ -1384,7 +1384,27 @@ def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[
         # honest fail-closed refusals (2026-09-09: every ticket_repair receipt
         # said "failed or timed out" while creators had declared
         # VERDICT: NEEDS_ATTENTION with the reason in their response).
+        # 2026-09-10 second pass: tau's dag-receipt alert evidence sometimes
+        # carries receipt_verdict=None even though the handler response text
+        # contains an explicit VERDICT line (observed on handler-claude-fable-5,
+        # receipt 20260910T180501Z). Extract from the response bytes before
+        # falling back to the alert evidence so the refusal names the real
+        # verdict. #1643 will generalize this into the hash-bound recovery
+        # ladder; this slice only repairs classification, never closure: an
+        # extracted PASS still goes through the full proof gate below.
+        extracted: dict[str, str] = {}
+        for resp in sorted(ask_dir.glob("*/node-artifacts/*/response.md")):
+            node = resp.parent.name
+            if node == "join":
+                continue
+            try:
+                verdict = _extract_verdict(resp.read_text(errors="replace"))
+            except OSError:
+                continue
+            if verdict:
+                extracted[node] = verdict
         detail = f"Tau terminal {stream.get('terminal_status')}"
+        named = False
         for dr in sorted(ask_dir.glob("*/tau-receipts/dag-receipt.json")):
             try:
                 alerts = json.loads(dr.read_text()).get("alerts") or []
@@ -1392,9 +1412,20 @@ def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[
                 continue
             if alerts:
                 ev = alerts[0].get("evidence") or {}
-                detail += (f": {alerts[0].get('code')} node={ev.get('node_id')}"
-                           f" seat_verdict={ev.get('receipt_verdict')}")
+                node_id = str(ev.get("node_id") or "")
+                verdict = extracted.get(node_id) or ev.get("receipt_verdict")
+                detail += (f": {alerts[0].get('code')} node={node_id}"
+                           f" seat_verdict={verdict}")
+                named = True
                 break
+        if not named and extracted:
+            detail += f": extracted seat verdicts {extracted}"
+        if extracted and stream.get("terminal_status") in {"PASS", "COMPLETED"} \
+                and "PASS" in extracted.values():
+            # The handler DID state PASS; let the deterministic proof gate and
+            # native verification decide closure instead of refusing on the
+            # receipt_verdict=None classification gap alone.
+            return finish_primary_operation(primary.current())
         raise primary.Refusal(f"seat verdict did not pass; ticket stays open ({detail})")
     return finish_primary_operation(primary.current())
 

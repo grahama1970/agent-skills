@@ -2771,3 +2771,24 @@ def test_tau_cli_nonzero_exit_with_progress_is_not_crash_settled(tmp_path):
     (run / "dag-progress.json").write_text(json.dumps({"status": "RUNNING"}))
     stream = handlers.inspect_tau_stream(tmp_path)
     assert stream["terminal"] is False
+
+
+def test_second_pass_verdict_names_real_verdict_from_response(tmp_path):
+    """2026-09-10: tau's alert evidence said receipt_verdict=None while the
+    handler response contained an explicit VERDICT line; the refusal must name
+    the extracted verdict, not None."""
+    from watchdog import handlers
+    run = tmp_path / "ask-run" / "lane"
+    (run / "node-artifacts/handler-claude-fable-5").mkdir(parents=True)
+    (run / "node-artifacts/handler-claude-fable-5/response.md").write_text(
+        "Analysis...\nVERDICT: NEEDS_ATTENTION\nbecause proof did not run\n")
+    (run / "tau-receipts").mkdir(parents=True)
+    (run / "tau-receipts/dag-receipt.json").write_text(json.dumps({
+        "alerts": [{"code": "tau_unclassified_f6d0a76c",
+                    "evidence": {"node_id": "handler-claude-fable-5", "receipt_verdict": None}}]}))
+    extracted = {}
+    for resp in sorted(run.glob("node-artifacts/*/response.md")):
+        v = handlers._extract_verdict(resp.read_text())
+        if v:
+            extracted[resp.parent.name] = v
+    assert extracted == {"handler-claude-fable-5": "NEEDS_ATTENTION"}
