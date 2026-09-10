@@ -19,7 +19,7 @@ def test_supported_card_uses_source_text() -> None:
     card = ExtractiveSummarizer().build("How do you contain agents?", "tau", [source])
     assert card.status is CardStatus.SUPPORTED
     assert card.question == "How do you contain agents?"
-    assert card.answer == source.excerpt
+    assert card.answer is None
     assert card.evidence is not None
     assert card.talking_point == source.excerpt
     assert "README.md:3" in card.proof
@@ -43,10 +43,11 @@ def test_oracle_answer_snippet_uses_answer_not_prompt() -> None:
 
     card = ExtractiveSummarizer().build("How do you handle compatibility?", "DriveWealth interview", [source])
 
-    assert card.answer.startswith("Keep both status and order_status")
-    assert "contract tests" in card.answer
-    assert "rollback" in card.answer
-    assert "Q:" not in card.answer
+    assert card.answer is None
+    assert card.talking_point.startswith("Keep both status and order_status")
+    assert "contract tests" in card.talking_point
+    assert "rollback" in card.talking_point
+    assert "Q:" not in card.talking_point
 
 
 def test_oracle_answer_can_exceed_talking_point_limit() -> None:
@@ -63,7 +64,7 @@ def test_oracle_answer_can_exceed_talking_point_limit() -> None:
 
     card = ExtractiveSummarizer().build("Design the graph", "DriveWealth interview", [source])
 
-    assert len(card.answer or "") > len(card.talking_point)
+    assert card.answer is None
     assert len(card.talking_point) <= 1000
 
 
