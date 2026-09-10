@@ -683,6 +683,44 @@ def reconcile(root: Path) -> dict[str, Any] | None:
     return remaining if (remaining["writer_active"] or remaining["operations"] or remaining["invalid_operations"]) else None
 
 
+#: Prep refusals that are deterministic properties of the ticket body itself:
+#: they can never clear on their own, so cycling them every 5 minutes forever
+#: is pure noise (observed chatgpt-lab#20 'unusable literal repair target: ?').
+#: The SKILL mandates next:human when no safe machine repair exists.
+_UNFIXABLE_PREP_REFUSALS = (
+    "unusable literal repair target",
+    "repair has no concrete authorized targets",
+)
+
+
+def _quarantine_unfixable_ticket(project: dict[str, Any], issue: dict[str, Any],
+                                 message: str) -> dict[str, Any] | None:
+    """Label a structurally-broken ticket next:human once, then stop cycling it."""
+    if not any(marker in message for marker in _UNFIXABLE_PREP_REFUSALS):
+        return None
+    from . import github
+    repo, number = project["repo"], int(issue["number"])
+    labels = {str(l.get("name")) for l in issue.get("labels", []) if isinstance(l, dict)}
+    if "next:human" in labels:
+        # Already quarantined; a scan should not have selected it. Stay quiet.
+        return {"project_id": project["project_id"], "repo": repo, "issue_number": number,
+                "action": issue.get("watchdog_action", "ticket_repair"), "ok": True,
+                "status": "SKIPPED", "stop_reason": "quarantined_unfixable_ticket",
+                "commands": [], "artifacts": []}
+    edit = github.issue_edit(repo, number, add=["next:human"])
+    if edit.get("exit_code") != 0:
+        return None  # could not quarantine; fall through to the normal failure path
+    github.issue_comment(repo, number,
+        f"project-watchdog: {message}. This is a structural property of the ticket "
+        "(the target cannot be parsed), so it cannot be machine-repaired. Labeled "
+        "`next:human` to stop the repair lane from re-attempting it every tick; fix "
+        "the `target:` line and remove `next:human` to re-enable.")
+    return {"project_id": project["project_id"], "repo": repo, "issue_number": number,
+            "action": issue.get("watchdog_action", "ticket_repair"), "ok": True,
+            "status": "SKIPPED", "stop_reason": "quarantined_unfixable_ticket",
+            "requires_human_input": False, "commands": [edit], "artifacts": []}
+
+
 def dispatch(run_id: str, receipt_dir: Path, project: dict[str, Any], issue: dict[str, Any],
              operation: Callable[..., dict[str, Any]], *, apply: bool) -> dict[str, Any]:
     global _CURRENT, _FD
@@ -695,8 +733,14 @@ def dispatch(run_id: str, receipt_dir: Path, project: dict[str, Any], issue: dic
             return failure(project, issue, str(exc), human=getattr(exc, "human", False))
     fd = None
     try:
-        targets = safe_targets(issue.get("watchdog_targets") or __import__(
-            __package__ + ".registry", fromlist=["issue_targets"]).issue_targets(issue))
+        try:
+            targets = safe_targets(issue.get("watchdog_targets") or __import__(
+                __package__ + ".registry", fromlist=["issue_targets"]).issue_targets(issue))
+        except Refusal as exc:
+            quarantined = _quarantine_unfixable_ticket(project, issue, str(exc))
+            if quarantined is not None:
+                return quarantined
+            raise
         readonly_preflight(root, targets)
         assert_repository(root, project["repo"])
         fd = _lock(root, targets)

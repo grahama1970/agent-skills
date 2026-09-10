@@ -2837,3 +2837,39 @@ def test_reset_time_parses_provider_hint():
     assert ts is not None
     import datetime
     assert datetime.datetime.fromtimestamp(ts, tz=datetime.timezone.utc).strftime("%Y-%m-%d %H:%M") == "2026-09-14 21:36"
+
+
+def test_quarantine_unfixable_target_labels_next_human(monkeypatch):
+    from watchdog import primary
+    calls = {}
+    def fake_edit(repo, number, *, add=None, remove=None):
+        calls["edit"] = (repo, number, add)
+        return {"exit_code": 0}
+    def fake_comment(repo, number, body):
+        calls["comment"] = (repo, number)
+        return {"exit_code": 0}
+    import watchdog.github as gh
+    monkeypatch.setattr(gh, "issue_edit", fake_edit)
+    monkeypatch.setattr(gh, "issue_comment", fake_comment)
+    project = {"project_id": "chatgpt-lab", "repo": "grahama1970/chatgpt-lab"}
+    issue = {"number": 20, "labels": [], "watchdog_action": "ticket_repair"}
+    result = primary._quarantine_unfixable_ticket(project, issue, "unusable literal repair target: '?'")
+    assert result is not None and result["status"] == "SKIPPED"
+    assert result["stop_reason"] == "quarantined_unfixable_ticket"
+    assert calls["edit"] == ("grahama1970/chatgpt-lab", 20, ["next:human"])
+    assert "comment" in calls
+
+
+def test_quarantine_ignores_ordinary_refusals(monkeypatch):
+    from watchdog import primary
+    project = {"project_id": "x", "repo": "o/r"}
+    issue = {"number": 1, "labels": [], "watchdog_action": "ticket_repair"}
+    assert primary._quarantine_unfixable_ticket(project, issue, "target ownership conflict") is None
+
+
+def test_quarantine_already_labeled_stays_quiet():
+    from watchdog import primary
+    project = {"project_id": "x", "repo": "o/r"}
+    issue = {"number": 1, "labels": [{"name": "next:human"}], "watchdog_action": "ticket_repair"}
+    result = primary._quarantine_unfixable_ticket(project, issue, "unusable literal repair target: '?'")
+    assert result is not None and result["status"] == "SKIPPED"
