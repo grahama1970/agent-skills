@@ -820,6 +820,10 @@ def seat_response_text(ask_run_dir: Path, handler: str, occurrence: int = 1) -> 
     """Require one unambiguous response for this run/seat, not first-PASS wins."""
     node_id = repair_node_id(handler, occurrence)
     candidates = list(ask_run_dir.glob(f"*/node-artifacts/{node_id}/response.md"))
+    direct = ask_run_dir / "node-artifacts" / node_id / "response.md"
+    if direct.is_file():
+        candidates.append(direct)
+    candidates = sorted(set(candidates))
     if len(candidates) != 1:
         return None
     try:
@@ -832,6 +836,10 @@ def seat_node_receipt(ask_run_dir: Path, handler: str, occurrence: int = 1) -> d
     """Read the Tau/Ask-owned handler receipt for exactly one repair seat."""
     node_id = repair_node_id(handler, occurrence)
     candidates = list(ask_run_dir.glob(f"*/node-artifacts/{node_id}/node-receipt.json"))
+    direct = ask_run_dir / "node-artifacts" / node_id / "node-receipt.json"
+    if direct.is_file():
+        candidates.append(direct)
+    candidates = sorted(set(candidates))
     if len(candidates) != 1:
         return None
     receipt = _json_from_file(candidates[0])

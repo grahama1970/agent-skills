@@ -7,6 +7,7 @@ GitHub/provider substitutes are explicitly boundary tests, NOT live proof.
 from __future__ import annotations
 import json
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -508,6 +509,9 @@ def test_tau_receipt_authority_rejects_response_only_pass(tmp_path):
             "live": True, "mocked": False, "provider_live": True,
         })
     assert handlers.repair_tau_authority(tmp_path / "ask", "codex", "reviewer")["ok"] is True
+    direct = tmp_path / "direct"
+    shutil.copytree(tmp_path / "ask" / "run" / "node-artifacts", direct / "node-artifacts")
+    assert handlers.repair_tau_authority(direct, "codex", "reviewer")["ok"] is True
 
 
 @pytest.fixture
