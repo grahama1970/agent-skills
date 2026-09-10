@@ -2,8 +2,61 @@
   "active_blockers": [
     "#1058 human listener collection remains open for human-perception wording only: 0/20 valid rows and SIGNED_INTERPRETATION.json missing; not an immutable-goal blocker under GOAL.md completion rule.",
     "Production-scale reliability and deployed SPARTA production operation remain non-claims; not required for GOAL.md disposition closure.",
-    "Kling/provider video execution remains out of scope unless explicitly reactivated; GOAL.md does not require more Kling videos."
+    "Clarified-bar V2 Kling E2E is a direct provider smoke; the canonical scene-table/create-kling-scene compiler path remains unproven and separately scoped."
   ],
+  "clarified_bar_v2": {
+    "boundary": "Live 3-clip reference-bound Kling dream E2E with cinematography coverage, Embry journal, Chatterbox journal audio, and a dynamic voiced Horus/Embry conversation, plus explain-project records/cockpit/debugger proof. Direct provider smoke, NOT the canonical scene-table/create-kling-scene compiler path; human perception, production reliability, and provider reliability remain non-claims.",
+    "captured_at": "2026-09-10T17:05:00Z",
+    "evidence_root": "/mnt/storage12tb/skills/persona-dream/outputs/clarified-bar-kling-e2e-20260910T170000Z",
+    "headline": "CLARIFIED_BAR_V2: PASS_KLING_TEA_E2E + explainability package",
+    "model_fallback": "tau_text_reasoning_adapter chain gpt-5.5 -> zai-glm -> zai-glm-flash (codex-oauth 429 fell through to zai-glm live)",
+    "receipts": {
+      "agentic_evals_kling_report": {
+        "outcome_counts": {
+          "BLOCKED": 0,
+          "FAIL": 0,
+          "NOT_TESTED": 0,
+          "PASS": 3
+        },
+        "path": "skills/persona-dream/local/proofs/clarified-bar-kling-e2e-20260910T170000Z/agentic_evals_kling_report.json",
+        "readiness": "READY",
+        "sha256": "sha256:7bc6fe8bf8d33502136500ba6b62b96ba5d6579864e294e22e654a4db2c46556"
+      },
+      "agentic_evals_main_report": {
+        "outcome_counts": {
+          "BLOCKED": 0,
+          "FAIL": 0,
+          "NOT_TESTED": 0,
+          "PASS": 7
+        },
+        "path": "skills/persona-dream/local/proofs/clarified-bar-kling-e2e-20260910T170000Z/agentic_evals_main_report.json",
+        "readiness": "READY",
+        "sha256": "sha256:9de0984f763a0bbc5f080d6516b67cd1327196347a9711bc83f16a3239b7cf18"
+      },
+      "cinematography_coverage_receipt": {
+        "path": "skills/persona-dream/local/proofs/clarified-bar-kling-e2e-20260910T170000Z/cinematography_coverage_receipt.json",
+        "sha256": "sha256:c2f1ea02b428ff89efc661ae89fe15efaf9ec6868160480167e9436b2c814436"
+      },
+      "debugger_proof": {
+        "path": "skills/persona-dream/local/proofs/clarified-bar-kling-e2e-20260910T170000Z/debugger_proof.json",
+        "sha256": "sha256:9f7b13f43873ed89be303930ccb650accca6627e960a965eb0dd86143b606aef"
+      },
+      "explain_cockpit_proof": {
+        "path": "skills/persona-dream/local/proofs/clarified-bar-kling-e2e-20260910T170000Z/explain_cockpit_proof.json",
+        "sha256": "sha256:11e29f8249ed3e4e3f1dc14a3afe36c3ca2be14a23849ab1d26a24f6bbe4af02",
+        "status": "PASS"
+      },
+      "explain_validate": {
+        "path": "skills/persona-dream/local/proofs/clarified-bar-kling-e2e-20260910T170000Z/explain_validate.json",
+        "sha256": "sha256:c98488fbe566c27a3110c066c5dc4e120e9e1bb006c52f83fff339de0836a836"
+      },
+      "kling_e2e_receipt": {
+        "path": "skills/persona-dream/local/proofs/clarified-bar-kling-e2e-20260910T170000Z/KlingTeaE2E.RECEIPT.json",
+        "sha256": "sha256:0fc964b330fbaf90ff9dbe8c3bd38205fb178ffa9ff9aa3566692e7eecff4fd9"
+      }
+    },
+    "status": "PASS_CLARIFIED_BAR_V2"
+  },
   "continuity_state": {
     "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard, accepted historical dream/source Watch evidence bound to a fresh live-chain cycle id, live Memory writes and exact rereads for accepted synthetic dream, Watch binding, journal, and ledger snapshot, first-person synthetic journal validation, one bounded arc delta append/reread, deterministic session mood selected before turn 1, stable mood id across three turns, answer text exact-match invariance, live Chatterbox /synthesize-batch rendering of the session-derived voice_delivery envelope through chatterbox_base with strict ASR WER 0.0 on all three turns, durable WAV snapshots copied into the live-chain report directory, and resemblyzer speaker-recognition/adversarial scoring with failed_gates=[] and separation=0.159977; session arc-bias artifact publication from ledger epoch 2 with bounded intensity_delta=0.18 and valence_delta=-0.18, no emitted tone category, and 7/7 fail-closed negative controls for missing/stale/mutated/unbound ledger inputs; SPARTA arc-bias handoff contract publication with hash-bound session_arc_bias source, explicit consumer fields, no tone emission, no answer-text authority, and 7/7 fail-closed negative controls; SPARTA-owned local live API consumption of the current session_arc_bias artifact before the first turn, stable reuse of the same artifact across three turns without resupplying it, canonical answer-text preservation, per-turn tone-category preservation, and neutral fallback when no Persona Dream artifact is supplied; five-cycle live-chain reliability pilot with 5 attempted, 5 completed, 5 passed, 0 blocked, 0 errored, 0 duplicate accepted effects, Wilson 95% lower bound 0.565509, and per-cycle live Memory/Chatterbox/recognition receipts bound by recomputed SHA-256; blinded-listener study stimuli restored from exact preregistered Chatterbox WAV hashes, response schema and rater instructions are present, response validation rejects empty/malformed rater rows, live ASR validates all four stimuli with WER 0.0, and a static blinded rater page now copies those WAVs into stimulus-id filenames S01-S04 without condition-labelled audio paths in the HTML; the separate listener-study analysis guard writes BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS until human_responses_complete and signed_human_interpretation_missing are cleared; valid human responses remain 0/20",
     "latest_agent_listening_signoff": {
@@ -495,13 +548,13 @@
     ]
   },
   "next_step": {
-    "default": "Post-closure: keep production reliability, human listener preference, and provider video work as separately scoped future goals.",
+    "default": "Post-clarified-bar: canonical create-kling-scene compiler E2E, #1058 human listener collection, and production reliability remain separately scoped future goals.",
     "ordered_steps": [
-      "Do not claim production reliability from this proof.",
-      "Do not claim human preference/perception without a signed listener study.",
+      "Do not claim canonical compiler path from the direct-smoke E2E receipt.",
+      "Do not claim human preference/perception without 20 valid listener rows plus SIGNED_INTERPRETATION.json (#1058).",
       "Commit/push only scoped Persona Dream closure artifacts and code."
     ],
-    "receipt_target": "skills/persona-dream/local/proofs/immutable-goal-full-e2e-20260907T141200Z/proof.json"
+    "receipt_target": "skills/persona-dream/local/proofs/clarified-bar-kling-e2e-20260910T170000Z/KlingTeaE2E.RECEIPT.json"
   },
   "pctom_r_workstream": {
     "latest_goal_coverage_receipt": "reports/goal_v5/closure/pctom_final/20260902T165849Z/PCTOM_GOAL_COVERAGE_RECEIPT.json",
@@ -707,5 +760,5 @@
   },
   "schema": "persona_dream.current_status.v1",
   "transfer_ledger": "skills/persona-dream/TRANSFER_LEDGER.md",
-  "updated_at": "2026-09-07T14:12:00Z"
+  "updated_at": "2026-09-10T17:22:58Z"
 }

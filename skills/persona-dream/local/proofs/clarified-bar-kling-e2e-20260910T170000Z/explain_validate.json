@@ -1,0 +1,9 @@
+{
+  "schema": "explain_project.validation.v1",
+  "status": "PASS",
+  "records": 2,
+  "features": [
+    "persona-dream.cinematography-coverage",
+    "persona-dream.kling-e2e"
+  ]
+}

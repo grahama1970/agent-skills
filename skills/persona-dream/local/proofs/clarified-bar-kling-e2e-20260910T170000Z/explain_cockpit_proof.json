@@ -1,0 +1,652 @@
+{
+  "schema": "explain_project.cockpit_proof.v1",
+  "status": "PASS",
+  "states": [
+    {
+      "schema": "explain_project.cockpit_state.v1",
+      "revision": 0,
+      "route": null,
+      "question": null,
+      "selection": null,
+      "teleprompter": {
+        "revision": 0,
+        "title": null,
+        "bullets": [],
+        "proof_boundary": null,
+        "confidence": null,
+        "verification": "not_live_proof"
+      },
+      "source": {
+        "revision": 0,
+        "location": null,
+        "explanation": null,
+        "reveal_intent": null
+      },
+      "debugger": {
+        "revision": 0,
+        "target": null,
+        "status": "NONE",
+        "prepare_intent": null,
+        "proof": null
+      },
+      "diagram": {
+        "revision": 0,
+        "source_kind": null,
+        "source_path": null,
+        "rendered_svg_path": null,
+        "node_ids": [],
+        "active_node_ids": [],
+        "verified_binding": false,
+        "highlight_intent": null
+      },
+      "integration_health": {
+        "live_evidence": "NOT_CONFIGURED",
+        "source_reveal": "NOT_CONFIGURED",
+        "debugger_target": "NOT_CONFIGURED",
+        "diagram": "NOT_CONFIGURED"
+      },
+      "adapter_receipts": []
+    },
+    {
+      "schema": "explain_project.cockpit_state.v1",
+      "revision": 1,
+      "route": {
+        "schema": "explain_project.route_decision.v1",
+        "status": "MATCHED",
+        "question": "How does Persona Dream prevent static two-shot dialogue clips when the speaker changes?",
+        "scores": {
+          "persona-dream.kling-e2e": 4,
+          "persona-dream.cinematography-coverage": 11
+        },
+        "matched_feature": "persona-dream.cinematography-coverage",
+        "candidates": [
+          "persona-dream.cinematography-coverage"
+        ]
+      },
+      "question": {
+        "schema": "explain_project.question_input.v1",
+        "input_id": "evt-89e857cd0d6b47ff9a401381bb4c4364",
+        "source": "manual",
+        "text": "How does Persona Dream prevent static two-shot dialogue clips when the speaker changes?",
+        "source_ref": null,
+        "source_fingerprint": null,
+        "provenance": "manual"
+      },
+      "selection": {
+        "feature_id": "persona-dream.cinematography-coverage",
+        "step_id": "coverage-default",
+        "step_index": 0,
+        "step_count": 2
+      },
+      "teleprompter": {
+        "revision": 1,
+        "title": "Coverage is default pipeline state",
+        "bullets": [
+          "The video_plan builder creates shot_specs with speaker-specific coverage.",
+          "The receipt names best-practices-cinematography and records stable eyelines.",
+          "The generated storyboard, timed transcript, and prompts copy speaker/coverage fields."
+        ],
+        "proof_boundary": "This proves planning grammar, not generated pixel quality.",
+        "confidence": "high",
+        "verification": "not_live_proof"
+      },
+      "source": {
+        "revision": 1,
+        "location": {
+          "file": "skills/persona-dream/scripts/persona_dream.py",
+          "start_line": 948,
+          "end_line": 1124,
+          "symbol": "_build_video_plan"
+        },
+        "explanation": "_build_video_plan creates cinematography_coverage and writes speaker/coverage/eyeline into the downstream artifacts.",
+        "reveal_intent": null
+      },
+      "debugger": {
+        "revision": 1,
+        "target": {
+          "file": "skills/persona-dream/scripts/persona_dream.py",
+          "line": 998,
+          "locals": [
+            "shot_specs",
+            "cinematography_coverage"
+          ],
+          "watches": [
+            "[shot['speaker'] for shot in shot_specs]"
+          ],
+          "proves": "The default video_plan builder constructs the coverage receipt from speaker-specific shot specs, not from free prose."
+        },
+        "status": "TARGET_READY",
+        "prepare_intent": null,
+        "proof": null
+      },
+      "diagram": {
+        "revision": 1,
+        "source_kind": "excalidraw",
+        "source_path": "skills/persona-dream/docs/explain/boards/persona-dream-kling-e2e.excalidraw",
+        "rendered_svg_path": null,
+        "node_ids": [
+          "src",
+          "t0",
+          "t1",
+          "t2",
+          "t3"
+        ],
+        "active_node_ids": [
+          "t0",
+          "t1"
+        ],
+        "verified_binding": false,
+        "highlight_intent": {
+          "schema": "explain_project.diagram_highlight_intent.v1",
+          "revision": 1,
+          "source_kind": "excalidraw",
+          "source_path": "skills/persona-dream/docs/explain/boards/persona-dream-kling-e2e.excalidraw",
+          "rendered_svg_path": null,
+          "active_node_ids": [
+            "t0",
+            "t1"
+          ],
+          "mode": "display_highlight_only",
+          "mutation_allowed": false
+        }
+      },
+      "integration_health": {
+        "live_evidence": "NOT_CONFIGURED",
+        "source_reveal": "STALE",
+        "debugger_target": "STALE",
+        "diagram": "NOT_CONFIGURED"
+      },
+      "adapter_receipts": []
+    },
+    {
+      "schema": "explain_project.cockpit_state.v1",
+      "revision": 2,
+      "route": {
+        "schema": "explain_project.route_decision.v1",
+        "status": "MATCHED",
+        "question": "How does Persona Dream prevent static two-shot dialogue clips when the speaker changes?",
+        "scores": {
+          "persona-dream.kling-e2e": 4,
+          "persona-dream.cinematography-coverage": 11
+        },
+        "matched_feature": "persona-dream.cinematography-coverage",
+        "candidates": [
+          "persona-dream.cinematography-coverage"
+        ]
+      },
+      "question": {
+        "schema": "explain_project.question_input.v1",
+        "input_id": "evt-89e857cd0d6b47ff9a401381bb4c4364",
+        "source": "manual",
+        "text": "How does Persona Dream prevent static two-shot dialogue clips when the speaker changes?",
+        "source_ref": null,
+        "source_fingerprint": null,
+        "provenance": "manual"
+      },
+      "selection": {
+        "feature_id": "persona-dream.cinematography-coverage",
+        "step_id": "diarization-boundary",
+        "step_index": 1,
+        "step_count": 2
+      },
+      "teleprompter": {
+        "revision": 2,
+        "title": "Diarization remains Watch-owned",
+        "bullets": [
+          "Persona Dream says post-mux who-spoke-when requires Watch pyannote.",
+          "Live Evidence can supply live speaker-turn transcript events.",
+          "Live Evidence is not treated as the diarization authority."
+        ],
+        "proof_boundary": "Watch pyannote must still run on a muxed audio/video artifact before claiming acoustic speaker timing.",
+        "confidence": "high",
+        "verification": "not_live_proof"
+      },
+      "source": {
+        "revision": 2,
+        "location": {
+          "file": "skills/persona-dream/SKILL.md",
+          "start_line": 101,
+          "end_line": 113,
+          "symbol": "Kling/video-oriented coverage contract"
+        },
+        "explanation": "SKILL.md defines the ownership boundary so the pipeline does not invent a second diarizer.",
+        "reveal_intent": null
+      },
+      "debugger": {
+        "revision": 2,
+        "target": null,
+        "status": "NONE",
+        "prepare_intent": null,
+        "proof": null
+      },
+      "diagram": {
+        "revision": 2,
+        "source_kind": "excalidraw",
+        "source_path": "skills/persona-dream/docs/explain/boards/persona-dream-kling-e2e.excalidraw",
+        "rendered_svg_path": null,
+        "node_ids": [
+          "src",
+          "t0",
+          "t1",
+          "t2",
+          "t3"
+        ],
+        "active_node_ids": [
+          "t2",
+          "t3"
+        ],
+        "verified_binding": false,
+        "highlight_intent": {
+          "schema": "explain_project.diagram_highlight_intent.v1",
+          "revision": 2,
+          "source_kind": "excalidraw",
+          "source_path": "skills/persona-dream/docs/explain/boards/persona-dream-kling-e2e.excalidraw",
+          "rendered_svg_path": null,
+          "active_node_ids": [
+            "t2",
+            "t3"
+          ],
+          "mode": "display_highlight_only",
+          "mutation_allowed": false
+        }
+      },
+      "integration_health": {
+        "live_evidence": "NOT_CONFIGURED",
+        "source_reveal": "STALE",
+        "debugger_target": "NOT_CONFIGURED",
+        "diagram": "NOT_CONFIGURED"
+      },
+      "adapter_receipts": []
+    },
+    {
+      "schema": "explain_project.cockpit_state.v1",
+      "revision": 3,
+      "route": {
+        "schema": "explain_project.route_decision.v1",
+        "status": "MATCHED",
+        "question": "How does Persona Dream prevent static two-shot dialogue clips when the speaker changes?",
+        "scores": {
+          "persona-dream.kling-e2e": 4,
+          "persona-dream.cinematography-coverage": 11
+        },
+        "matched_feature": "persona-dream.cinematography-coverage",
+        "candidates": [
+          "persona-dream.cinematography-coverage"
+        ]
+      },
+      "question": {
+        "schema": "explain_project.question_input.v1",
+        "input_id": "evt-89e857cd0d6b47ff9a401381bb4c4364",
+        "source": "manual",
+        "text": "How does Persona Dream prevent static two-shot dialogue clips when the speaker changes?",
+        "source_ref": null,
+        "source_fingerprint": null,
+        "provenance": "manual"
+      },
+      "selection": {
+        "feature_id": "persona-dream.cinematography-coverage",
+        "step_id": "diarization-boundary",
+        "step_index": 1,
+        "step_count": 2
+      },
+      "teleprompter": {
+        "revision": 3,
+        "title": "Diarization remains Watch-owned",
+        "bullets": [
+          "Persona Dream says post-mux who-spoke-when requires Watch pyannote.",
+          "Live Evidence can supply live speaker-turn transcript events.",
+          "Live Evidence is not treated as the diarization authority."
+        ],
+        "proof_boundary": "Watch pyannote must still run on a muxed audio/video artifact before claiming acoustic speaker timing.",
+        "confidence": "high",
+        "verification": "not_live_proof"
+      },
+      "source": {
+        "revision": 3,
+        "location": {
+          "file": "skills/persona-dream/SKILL.md",
+          "start_line": 101,
+          "end_line": 113,
+          "symbol": "Kling/video-oriented coverage contract"
+        },
+        "explanation": "SKILL.md defines the ownership boundary so the pipeline does not invent a second diarizer.",
+        "reveal_intent": {
+          "schema": "explain_project.source_reveal_intent.v1",
+          "revision": 3,
+          "adapter": "debugger_vscode_bridge",
+          "operation": "source_reveal",
+          "target": {
+            "file": "skills/persona-dream/SKILL.md",
+            "start_line": 101,
+            "end_line": 113,
+            "symbol": "Kling/video-oriented coverage contract"
+          },
+          "preserve_focus": true,
+          "bridge_required": true,
+          "execute": false
+        }
+      },
+      "debugger": {
+        "revision": 3,
+        "target": null,
+        "status": "NONE",
+        "prepare_intent": null,
+        "proof": null
+      },
+      "diagram": {
+        "revision": 3,
+        "source_kind": "excalidraw",
+        "source_path": "skills/persona-dream/docs/explain/boards/persona-dream-kling-e2e.excalidraw",
+        "rendered_svg_path": null,
+        "node_ids": [
+          "src",
+          "t0",
+          "t1",
+          "t2",
+          "t3"
+        ],
+        "active_node_ids": [
+          "t2",
+          "t3"
+        ],
+        "verified_binding": false,
+        "highlight_intent": {
+          "schema": "explain_project.diagram_highlight_intent.v1",
+          "revision": 3,
+          "source_kind": "excalidraw",
+          "source_path": "skills/persona-dream/docs/explain/boards/persona-dream-kling-e2e.excalidraw",
+          "rendered_svg_path": null,
+          "active_node_ids": [
+            "t2",
+            "t3"
+          ],
+          "mode": "display_highlight_only",
+          "mutation_allowed": false
+        }
+      },
+      "integration_health": {
+        "live_evidence": "NOT_CONFIGURED",
+        "source_reveal": "STALE",
+        "debugger_target": "NOT_CONFIGURED",
+        "diagram": "NOT_CONFIGURED"
+      },
+      "adapter_receipts": []
+    },
+    {
+      "schema": "explain_project.cockpit_state.v1",
+      "revision": 3,
+      "route": {
+        "schema": "explain_project.route_decision.v1",
+        "status": "MATCHED",
+        "question": "How does Persona Dream prevent static two-shot dialogue clips when the speaker changes?",
+        "scores": {
+          "persona-dream.kling-e2e": 4,
+          "persona-dream.cinematography-coverage": 11
+        },
+        "matched_feature": "persona-dream.cinematography-coverage",
+        "candidates": [
+          "persona-dream.cinematography-coverage"
+        ]
+      },
+      "question": {
+        "schema": "explain_project.question_input.v1",
+        "input_id": "evt-89e857cd0d6b47ff9a401381bb4c4364",
+        "source": "manual",
+        "text": "How does Persona Dream prevent static two-shot dialogue clips when the speaker changes?",
+        "source_ref": null,
+        "source_fingerprint": null,
+        "provenance": "manual"
+      },
+      "selection": {
+        "feature_id": "persona-dream.cinematography-coverage",
+        "step_id": "diarization-boundary",
+        "step_index": 1,
+        "step_count": 2
+      },
+      "teleprompter": {
+        "revision": 3,
+        "title": "Diarization remains Watch-owned",
+        "bullets": [
+          "Persona Dream says post-mux who-spoke-when requires Watch pyannote.",
+          "Live Evidence can supply live speaker-turn transcript events.",
+          "Live Evidence is not treated as the diarization authority."
+        ],
+        "proof_boundary": "Watch pyannote must still run on a muxed audio/video artifact before claiming acoustic speaker timing.",
+        "confidence": "high",
+        "verification": "not_live_proof"
+      },
+      "source": {
+        "revision": 3,
+        "location": {
+          "file": "skills/persona-dream/SKILL.md",
+          "start_line": 101,
+          "end_line": 113,
+          "symbol": "Kling/video-oriented coverage contract"
+        },
+        "explanation": "SKILL.md defines the ownership boundary so the pipeline does not invent a second diarizer.",
+        "reveal_intent": {
+          "schema": "explain_project.source_reveal_intent.v1",
+          "revision": 3,
+          "adapter": "debugger_vscode_bridge",
+          "operation": "source_reveal",
+          "target": {
+            "file": "skills/persona-dream/SKILL.md",
+            "start_line": 101,
+            "end_line": 113,
+            "symbol": "Kling/video-oriented coverage contract"
+          },
+          "preserve_focus": true,
+          "bridge_required": true,
+          "execute": false
+        }
+      },
+      "debugger": {
+        "revision": 3,
+        "target": null,
+        "status": "NONE",
+        "prepare_intent": null,
+        "proof": null
+      },
+      "diagram": {
+        "revision": 3,
+        "source_kind": "excalidraw",
+        "source_path": "skills/persona-dream/docs/explain/boards/persona-dream-kling-e2e.excalidraw",
+        "rendered_svg_path": null,
+        "node_ids": [
+          "src",
+          "t0",
+          "t1",
+          "t2",
+          "t3"
+        ],
+        "active_node_ids": [
+          "t2",
+          "t3"
+        ],
+        "verified_binding": false,
+        "highlight_intent": {
+          "schema": "explain_project.diagram_highlight_intent.v1",
+          "revision": 3,
+          "source_kind": "excalidraw",
+          "source_path": "skills/persona-dream/docs/explain/boards/persona-dream-kling-e2e.excalidraw",
+          "rendered_svg_path": null,
+          "active_node_ids": [
+            "t2",
+            "t3"
+          ],
+          "mode": "display_highlight_only",
+          "mutation_allowed": false
+        }
+      },
+      "integration_health": {
+        "live_evidence": "NOT_CONFIGURED",
+        "source_reveal": "STALE",
+        "debugger_target": "NOT_CONFIGURED",
+        "diagram": "NOT_CONFIGURED"
+      },
+      "adapter_receipts": []
+    },
+    {
+      "schema": "explain_project.cockpit_state.v1",
+      "revision": 4,
+      "route": {
+        "schema": "explain_project.route_decision.v1",
+        "status": "MATCHED",
+        "question": "How does Persona Dream prevent static two-shot dialogue clips when the speaker changes?",
+        "scores": {
+          "persona-dream.kling-e2e": 4,
+          "persona-dream.cinematography-coverage": 11
+        },
+        "matched_feature": "persona-dream.cinematography-coverage",
+        "candidates": [
+          "persona-dream.cinematography-coverage"
+        ]
+      },
+      "question": {
+        "schema": "explain_project.question_input.v1",
+        "input_id": "evt-89e857cd0d6b47ff9a401381bb4c4364",
+        "source": "manual",
+        "text": "How does Persona Dream prevent static two-shot dialogue clips when the speaker changes?",
+        "source_ref": null,
+        "source_fingerprint": null,
+        "provenance": "manual"
+      },
+      "selection": {
+        "feature_id": "persona-dream.cinematography-coverage",
+        "step_id": "coverage-default",
+        "step_index": 0,
+        "step_count": 2
+      },
+      "teleprompter": {
+        "revision": 4,
+        "title": "Coverage is default pipeline state",
+        "bullets": [
+          "The video_plan builder creates shot_specs with speaker-specific coverage.",
+          "The receipt names best-practices-cinematography and records stable eyelines.",
+          "The generated storyboard, timed transcript, and prompts copy speaker/coverage fields."
+        ],
+        "proof_boundary": "This proves planning grammar, not generated pixel quality.",
+        "confidence": "high",
+        "verification": "not_live_proof"
+      },
+      "source": {
+        "revision": 4,
+        "location": {
+          "file": "skills/persona-dream/scripts/persona_dream.py",
+          "start_line": 948,
+          "end_line": 1124,
+          "symbol": "_build_video_plan"
+        },
+        "explanation": "_build_video_plan creates cinematography_coverage and writes speaker/coverage/eyeline into the downstream artifacts.",
+        "reveal_intent": null
+      },
+      "debugger": {
+        "revision": 4,
+        "target": {
+          "file": "skills/persona-dream/scripts/persona_dream.py",
+          "line": 998,
+          "locals": [
+            "shot_specs",
+            "cinematography_coverage"
+          ],
+          "watches": [
+            "[shot['speaker'] for shot in shot_specs]"
+          ],
+          "proves": "The default video_plan builder constructs the coverage receipt from speaker-specific shot specs, not from free prose."
+        },
+        "status": "TARGET_READY",
+        "prepare_intent": null,
+        "proof": null
+      },
+      "diagram": {
+        "revision": 4,
+        "source_kind": "excalidraw",
+        "source_path": "skills/persona-dream/docs/explain/boards/persona-dream-kling-e2e.excalidraw",
+        "rendered_svg_path": null,
+        "node_ids": [
+          "src",
+          "t0",
+          "t1",
+          "t2",
+          "t3"
+        ],
+        "active_node_ids": [
+          "t0",
+          "t1"
+        ],
+        "verified_binding": false,
+        "highlight_intent": {
+          "schema": "explain_project.diagram_highlight_intent.v1",
+          "revision": 4,
+          "source_kind": "excalidraw",
+          "source_path": "skills/persona-dream/docs/explain/boards/persona-dream-kling-e2e.excalidraw",
+          "rendered_svg_path": null,
+          "active_node_ids": [
+            "t0",
+            "t1"
+          ],
+          "mode": "display_highlight_only",
+          "mutation_allowed": false
+        }
+      },
+      "integration_health": {
+        "live_evidence": "NOT_CONFIGURED",
+        "source_reveal": "STALE",
+        "debugger_target": "STALE",
+        "diagram": "NOT_CONFIGURED"
+      },
+      "adapter_receipts": []
+    }
+  ],
+  "events": [
+    {
+      "schema": "explain_project.cockpit_event.v1",
+      "event_id": "evt-89e857cd0d6b47ff9a401381bb4c4364",
+      "expected_revision": 0,
+      "type": "question.manual",
+      "payload": {
+        "text": "How does Persona Dream prevent static two-shot dialogue clips when the speaker changes?"
+      }
+    },
+    {
+      "schema": "explain_project.cockpit_event.v1",
+      "event_id": "evt-88993b357d7c4fd79127b408d9f9cabf",
+      "expected_revision": 1,
+      "type": "step.next",
+      "payload": {}
+    },
+    {
+      "schema": "explain_project.cockpit_event.v1",
+      "event_id": "evt-e9eb029779a845598dfb9ab586e89f02",
+      "expected_revision": 2,
+      "type": "source.reveal.request",
+      "payload": {}
+    },
+    {
+      "schema": "explain_project.cockpit_event.v1",
+      "event_id": "evt-a6326ded9b0f4ea180b8b108355fde29",
+      "expected_revision": 3,
+      "type": "debugger.prepare.request",
+      "payload": {}
+    },
+    {
+      "schema": "explain_project.cockpit_event.v1",
+      "event_id": "evt-2730bce7738340b5aba480add75c5e7e",
+      "expected_revision": 3,
+      "type": "step.previous",
+      "payload": {}
+    }
+  ],
+  "assertions": {
+    "projection_revisions_equal": true,
+    "navigation_changed_expected_steps": true,
+    "arrow_source_reveal_intent_count_zero": true,
+    "arrow_debugger_prepare_intent_count_zero": true,
+    "debugger_execution_count_zero": true,
+    "excalidraw_mutation_count_zero": true,
+    "source_reveal_intent_only": true,
+    "debugger_prepare_intent_only": true,
+    "live_capture_claim_count_zero": true
+  },
+  "proof_scope": "Headless deterministic reducer and intent proof. No live microphone, visible VS Code, debugger execution, or Excalidraw mutation is claimed."
+}

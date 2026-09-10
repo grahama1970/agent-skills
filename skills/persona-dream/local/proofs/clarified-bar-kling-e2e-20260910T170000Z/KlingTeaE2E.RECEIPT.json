@@ -1,0 +1,44 @@
+{
+  "cinematography_coverage_receipt": "/tmp/persona-dream-kling-tea-e2e-agentic-live/cinematography_coverage_receipt.json",
+  "clip_count": 3,
+  "clips": [
+    {
+      "bytes": 3627773,
+      "path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream_clip_01.mp4",
+      "sha256": "sha256:93b231ce68a695429fab5fadd89de3dd2352ea8b5902a987a87eedcaf0a59427"
+    },
+    {
+      "bytes": 3603378,
+      "path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream_clip_02.mp4",
+      "sha256": "sha256:bae61d0ca2530e25044829236768894436e6a3131424b889a80b1e53a7776f32"
+    },
+    {
+      "bytes": 3329587,
+      "path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream_clip_03.mp4",
+      "sha256": "sha256:6e220380790c667c734c1ff4eb43e0ca2ac0dbf512ba51d3465b0e05fc7a7c5c"
+    }
+  ],
+  "conversation_turns": 12,
+  "idea": "Embry and Horus have tea on a void world, discussing SPARTA Explorer casually as friends, with the Zeitch Eye and Tyranids in the background.",
+  "journal_audio": "/tmp/persona-dream-kling-tea-e2e-agentic-live/journal.wav",
+  "kling_video": "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream.mp4",
+  "kling_video_sha256": "sha256:0c69be604fbbf69837c4be61f108bbc9a8992e617e67031930f9bb3ae850cf5a",
+  "live": true,
+  "mocked": false,
+  "phase_receipts": [
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/receipts/chatterbox_discussion.json",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/receipts/chatterbox_preflight.json",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/receipts/cinematography_coverage.json",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/receipts/idea_lineage.json",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/receipts/journal_audio.json",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/receipts/journal_entry.json",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/receipts/kling_direct_request_validation.json",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/receipts/kling_dream_video.json",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/receipts/kling_preflight.json",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/receipts/kling_reference_assets.json"
+  ],
+  "reused_live_artifacts": true,
+  "run_dir": "/tmp/persona-dream-kling-tea-e2e-agentic-live",
+  "schema": "persona_dream.kling_tea_e2e_receipt.v1",
+  "status": "PASS_KLING_TEA_E2E"
+}

@@ -1,0 +1,773 @@
+{
+  "schema": "agentic_evals.report.v2",
+  "source": "../persona-dream/fixtures/agentic_eval.kling_tea_e2e.json",
+  "run_id": "88201a1c859a",
+  "fixture_sha256": "sha256:e04e2f2dd48353b009380f2086ba18db51c8f10aad0219c507c4849eb85ae7fd",
+  "repo": {
+    "sha": "7c32f2310c9f932b9f0a2fd6735cdb40254379f9",
+    "ref": "main"
+  },
+  "mocked": false,
+  "fixture_backed": true,
+  "live": true,
+  "proof_scope": "live cross-stage smoke using 2-3 direct reference-bound Kling image-to-video clips, Embry journal, and Chatterbox Horus/Embry discussion; uses paid/live provider credentials when available; the Kling leg intentionally does not prove the canonical scene-table/create-kling-scene compiler path",
+  "claims": {
+    "proves": "The specified human idea can execute through a live 2-3 clip direct reference-bound Kling image-to-video provider smoke, clip assembly, journal artifact creation, Chatterbox journal audio, and a dynamic voiced Horus/Embry conversation with read-back artifacts.",
+    "does_not_prove": "Persona Dream -> scene_script.scene_table.v1 -> create-kling-scene compilation, production reliability, human preference, or that every historical Persona Dream media lane is complete."
+  },
+  "what_was_exercised": "local commands declared in the fixture manifest",
+  "what_remains_unverified": "semantic correctness, live services, LLM judge behavior, and release readiness",
+  "readiness": "READY",
+  "case_readiness": "READY",
+  "capability_readiness": {
+    "aggregate_readiness": "READY",
+    "critical_claim_count": 1,
+    "critical_claims_proven": 1,
+    "claims": [
+      {
+        "id": "persona_dream.kling_tea_e2e",
+        "description": "Human idea -> Kling dream video -> Embry journal -> Chatterbox Horus/Embry dream discussion completes with typed phase receipts and read-back artifacts.",
+        "criticality": "critical",
+        "required_evidence": [
+          "adversarial_live_e2e",
+          "live_e2e"
+        ],
+        "verdict": "PROVEN",
+        "per_class": {
+          "adversarial_live_e2e": {
+            "status": "PROVEN",
+            "cases": [
+              "kling-tea-e2e-dry-run-cannot-pass"
+            ]
+          },
+          "live_e2e": {
+            "status": "PROVEN",
+            "cases": [
+              "kling-tea-e2e-live"
+            ]
+          }
+        },
+        "missing_evidence": [],
+        "blocked_evidence": [],
+        "exempt_evidence": [],
+        "exemptions": [],
+        "unqualified_live_cases": [],
+        "ineligible_supporting_cases": [],
+        "supporting_cases": [
+          "kling-tea-e2e-live",
+          "kling-tea-cinematography-coverage-plan",
+          "kling-tea-e2e-dry-run-cannot-pass"
+        ]
+      }
+    ]
+  },
+  "claims_coverage": "manifest-spanning",
+  "focused_cases": [],
+  "generated_at": "2026-09-10T17:21:12.337043+00:00",
+  "case_count": 3,
+  "required_case_count": 3,
+  "outcome_counts": {
+    "PASS": 3,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "NOT_TESTED": 0
+  },
+  "trial_count": 6,
+  "cases": [
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "kling-tea-e2e-live",
+      "type": "positive",
+      "case_id": "88201a1c859a-c000",
+      "required": true,
+      "outcome": "PASS",
+      "observed_outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "set -euo pipefail\nOUT=/tmp/persona-dream-kling-tea-e2e-agentic-live\nuv run --project .. python ../scripts/eval_kling_tea_e2e.py --out-dir \"$OUT\" --reuse-existing-clips"
+      ],
+      "execution_mode": "regression_replay",
+      "execution_provenance": {
+        "execution_mode": "regression_replay",
+        "fixture_sha256": "sha256:e04e2f2dd48353b009380f2086ba18db51c8f10aad0219c507c4849eb85ae7fd",
+        "test_source_sha256": "sha256:9194a3b075c00cca397c7428754eea7cf1953e5ca26023b55dab269b86406798",
+        "oracle_sha256": "sha256:9e718efa2089a417e031908564c5925684074495f09cf7a6760e7abec1432e4b",
+        "generated_test_lineage": null,
+        "generation_id": "sha256:bd78da52efbd47fe293929b38",
+        "prior_test_source_sha256": null,
+        "prior_oracle_sha256": null,
+        "application_identity": {
+          "repo": {
+            "sha": "7c32f2310c9f932b9f0a2fd6735cdb40254379f9",
+            "ref": "main"
+          }
+        },
+        "mutation_provenance": {
+          "flags": {
+            "assertion_changed": false,
+            "case_ownership_changed": false,
+            "category_map_changed": false,
+            "evidence_requirement_changed": false,
+            "exclusion_changed": false,
+            "expected_output_changed": false,
+            "fixture_changed": false,
+            "fixture_input_changed": false,
+            "locator_changed": false,
+            "locator_healed": false,
+            "oracle_changed": false,
+            "proof_command_changed": false,
+            "protected_surface_changed": false,
+            "readiness_logic_changed": false,
+            "step_changed": false,
+            "test_exclusion_changed": false,
+            "test_mutated": false
+          },
+          "declared": false,
+          "test_hash_changed": false,
+          "oracle_hash_changed": false,
+          "changed_between_failure_and_observed_pass": false,
+          "protected_surface_changed": false,
+          "external_result": null
+        },
+        "evidence_eligibility": {
+          "eligible": true,
+          "eligible_for_existing_claim": true,
+          "requires_requalification": false,
+          "reason_codes": [],
+          "integrity_errors": []
+        }
+      },
+      "test_source_sha256": "sha256:9194a3b075c00cca397c7428754eea7cf1953e5ca26023b55dab269b86406798",
+      "oracle_sha256": "sha256:9e718efa2089a417e031908564c5925684074495f09cf7a6760e7abec1432e4b",
+      "application_identity": {
+        "repo": {
+          "sha": "7c32f2310c9f932b9f0a2fd6735cdb40254379f9",
+          "ref": "main"
+        }
+      },
+      "generated_test_lineage": null,
+      "evidence_eligibility": {
+        "eligible": true,
+        "eligible_for_existing_claim": true,
+        "requires_requalification": false,
+        "reason_codes": [],
+        "integrity_errors": []
+      },
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "live_e2e",
+      "live_qualified": true,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "persona_dream.kling_tea_e2e"
+      ],
+      "seams": [],
+      "passed_trials": 2,
+      "total_trials": 2,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 533031.749,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "PASS_KLING_TEA_E2E run=/tmp/persona-dream-kling-tea-e2e-agentic-live clips=3 turns=8 video_bytes=10558579\n",
+          "stderr": "",
+          "duration_ms": 521812.405,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "88201a1c859a-c000-t00",
+          "artifact_hashes": {
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/KlingTeaE2E.RECEIPT.json": "sha256:c60f725f088f1dd1bd9a6e50555aed1d95e9d733c285f2061f5dcc1aba69f393",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_request.json": "sha256:53d9ec9991f8ccf482390b9670ac0ea848a21d1ecff063f4fbdefd91f25738fc",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_reference_assets_receipt.json": "sha256:c3166712058bb70dce02a3020b9bf19061e6c07f2ec9e293a2562601d81da34c",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_direct_request_validation_receipt.json": "sha256:a2f8427747451c5c07ee6e2634d52fbc87702eadc8fd4ec1787c1da595bd5c28",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/cinematography_coverage_receipt.json": "sha256:c2f1ea02b428ff89efc661ae89fe15efaf9ec6868160480167e9436b2c814436",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream_clip_01.mp4": "sha256:93b231ce68a695429fab5fadd89de3dd2352ea8b5902a987a87eedcaf0a59427",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream_clip_02.mp4": "sha256:bae61d0ca2530e25044829236768894436e6a3131424b889a80b1e53a7776f32",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream_clip_03.mp4": "sha256:6e220380790c667c734c1ff4eb43e0ca2ac0dbf512ba51d3465b0e05fc7a7c5c",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream.mp4": "sha256:0c69be604fbbf69837c4be61f108bbc9a8992e617e67031930f9bb3ae850cf5a",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/journal.wav": "sha256:d9aa2e71d2192b606cd329b9c3cb95802bab574513b7f611d0f182b03d730e1e",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/dynamic_conversation_receipt.v1.json": "sha256:842eab81069408b7faf14659bd2fa294a04b041c5779e7a96e6c3e99e9d56c7c"
+          },
+          "outcome": "PASS",
+          "problems": [],
+          "execution_provenance": {
+            "execution_mode": "regression_replay",
+            "fixture_sha256": "sha256:e04e2f2dd48353b009380f2086ba18db51c8f10aad0219c507c4849eb85ae7fd",
+            "test_source_sha256": "sha256:9194a3b075c00cca397c7428754eea7cf1953e5ca26023b55dab269b86406798",
+            "oracle_sha256": "sha256:9e718efa2089a417e031908564c5925684074495f09cf7a6760e7abec1432e4b",
+            "generation_id": "sha256:bd78da52efbd47fe293929b38",
+            "generated_test_lineage": null,
+            "prior_test_source_sha256": null,
+            "prior_oracle_sha256": null,
+            "application_identity": {
+              "repo": {
+                "sha": "7c32f2310c9f932b9f0a2fd6735cdb40254379f9",
+                "ref": "main"
+              }
+            },
+            "mutation_provenance": {
+              "flags": {
+                "assertion_changed": false,
+                "case_ownership_changed": false,
+                "category_map_changed": false,
+                "evidence_requirement_changed": false,
+                "exclusion_changed": false,
+                "expected_output_changed": false,
+                "fixture_changed": false,
+                "fixture_input_changed": false,
+                "locator_changed": false,
+                "locator_healed": false,
+                "oracle_changed": false,
+                "proof_command_changed": false,
+                "protected_surface_changed": false,
+                "readiness_logic_changed": false,
+                "step_changed": false,
+                "test_exclusion_changed": false,
+                "test_mutated": false
+              },
+              "declared": false,
+              "test_hash_changed": false,
+              "oracle_hash_changed": false,
+              "changed_between_failure_and_observed_pass": false,
+              "protected_surface_changed": false,
+              "external_result": null
+            },
+            "evidence_eligibility": {
+              "eligible": true,
+              "eligible_for_existing_claim": true,
+              "requires_requalification": false,
+              "reason_codes": [],
+              "integrity_errors": []
+            }
+          }
+        },
+        {
+          "exit_code": 0,
+          "stdout": "PASS_KLING_TEA_E2E run=/tmp/persona-dream-kling-tea-e2e-agentic-live clips=3 turns=12 video_bytes=10558579\n",
+          "stderr": "",
+          "duration_ms": 544251.093,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "88201a1c859a-c000-t01",
+          "artifact_hashes": {
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/KlingTeaE2E.RECEIPT.json": "sha256:0fc964b330fbaf90ff9dbe8c3bd38205fb178ffa9ff9aa3566692e7eecff4fd9",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_request.json": "sha256:53d9ec9991f8ccf482390b9670ac0ea848a21d1ecff063f4fbdefd91f25738fc",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_reference_assets_receipt.json": "sha256:c3166712058bb70dce02a3020b9bf19061e6c07f2ec9e293a2562601d81da34c",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_direct_request_validation_receipt.json": "sha256:a2f8427747451c5c07ee6e2634d52fbc87702eadc8fd4ec1787c1da595bd5c28",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/cinematography_coverage_receipt.json": "sha256:c2f1ea02b428ff89efc661ae89fe15efaf9ec6868160480167e9436b2c814436",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream_clip_01.mp4": "sha256:93b231ce68a695429fab5fadd89de3dd2352ea8b5902a987a87eedcaf0a59427",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream_clip_02.mp4": "sha256:bae61d0ca2530e25044829236768894436e6a3131424b889a80b1e53a7776f32",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream_clip_03.mp4": "sha256:6e220380790c667c734c1ff4eb43e0ca2ac0dbf512ba51d3465b0e05fc7a7c5c",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream.mp4": "sha256:0c69be604fbbf69837c4be61f108bbc9a8992e617e67031930f9bb3ae850cf5a",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/journal.wav": "sha256:d37e338a943e4d8759f9a12c27e0a4bbfe6d61774e6c8427c620898034173c4b",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/dynamic_conversation_receipt.v1.json": "sha256:47c31e310918176a5bb57ea8d241a190452e0d3684e78bc0ce51c0eaafe61a2b"
+          },
+          "outcome": "PASS",
+          "problems": [],
+          "execution_provenance": {
+            "execution_mode": "regression_replay",
+            "fixture_sha256": "sha256:e04e2f2dd48353b009380f2086ba18db51c8f10aad0219c507c4849eb85ae7fd",
+            "test_source_sha256": "sha256:9194a3b075c00cca397c7428754eea7cf1953e5ca26023b55dab269b86406798",
+            "oracle_sha256": "sha256:9e718efa2089a417e031908564c5925684074495f09cf7a6760e7abec1432e4b",
+            "generation_id": "sha256:bd78da52efbd47fe293929b38",
+            "generated_test_lineage": null,
+            "prior_test_source_sha256": null,
+            "prior_oracle_sha256": null,
+            "application_identity": {
+              "repo": {
+                "sha": "7c32f2310c9f932b9f0a2fd6735cdb40254379f9",
+                "ref": "main"
+              }
+            },
+            "mutation_provenance": {
+              "flags": {
+                "assertion_changed": false,
+                "case_ownership_changed": false,
+                "category_map_changed": false,
+                "evidence_requirement_changed": false,
+                "exclusion_changed": false,
+                "expected_output_changed": false,
+                "fixture_changed": false,
+                "fixture_input_changed": false,
+                "locator_changed": false,
+                "locator_healed": false,
+                "oracle_changed": false,
+                "proof_command_changed": false,
+                "protected_surface_changed": false,
+                "readiness_logic_changed": false,
+                "step_changed": false,
+                "test_exclusion_changed": false,
+                "test_mutated": false
+              },
+              "declared": false,
+              "test_hash_changed": false,
+              "oracle_hash_changed": false,
+              "changed_between_failure_and_observed_pass": false,
+              "protected_surface_changed": false,
+              "external_result": null
+            },
+            "evidence_eligibility": {
+              "eligible": true,
+              "eligible_for_existing_claim": true,
+              "requires_requalification": false,
+              "reason_codes": [],
+              "integrity_errors": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "kling-tea-cinematography-coverage-plan",
+      "type": "positive",
+      "case_id": "88201a1c859a-c001",
+      "required": true,
+      "outcome": "PASS",
+      "observed_outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "set -euo pipefail\nOUT=/tmp/persona-dream-kling-tea-cinematography-agentic\nrm -rf \"$OUT\"\nuv run --project .. python ../scripts/eval_kling_tea_e2e.py --out-dir \"$OUT\" --validate-cinematography-only --clip-count 3"
+      ],
+      "execution_mode": "regression_replay",
+      "execution_provenance": {
+        "execution_mode": "regression_replay",
+        "fixture_sha256": "sha256:e04e2f2dd48353b009380f2086ba18db51c8f10aad0219c507c4849eb85ae7fd",
+        "test_source_sha256": "sha256:88d9162b425351c4c209257a87491bd1ca3f6c10548f485ac3c55f9d83bbb7f2",
+        "oracle_sha256": "sha256:7a0d9721e61ff5a7c8184556f18fdc242256e44e056217666ec2f5f5da0e6975",
+        "generated_test_lineage": null,
+        "generation_id": "sha256:633a982ffca30f5934b420a10",
+        "prior_test_source_sha256": null,
+        "prior_oracle_sha256": null,
+        "application_identity": {
+          "repo": {
+            "sha": "7c32f2310c9f932b9f0a2fd6735cdb40254379f9",
+            "ref": "main"
+          }
+        },
+        "mutation_provenance": {
+          "flags": {
+            "assertion_changed": false,
+            "case_ownership_changed": false,
+            "category_map_changed": false,
+            "evidence_requirement_changed": false,
+            "exclusion_changed": false,
+            "expected_output_changed": false,
+            "fixture_changed": false,
+            "fixture_input_changed": false,
+            "locator_changed": false,
+            "locator_healed": false,
+            "oracle_changed": false,
+            "proof_command_changed": false,
+            "protected_surface_changed": false,
+            "readiness_logic_changed": false,
+            "step_changed": false,
+            "test_exclusion_changed": false,
+            "test_mutated": false
+          },
+          "declared": false,
+          "test_hash_changed": false,
+          "oracle_hash_changed": false,
+          "changed_between_failure_and_observed_pass": false,
+          "protected_surface_changed": false,
+          "external_result": null
+        },
+        "evidence_eligibility": {
+          "eligible": true,
+          "eligible_for_existing_claim": true,
+          "requires_requalification": false,
+          "reason_codes": [],
+          "integrity_errors": []
+        }
+      },
+      "test_source_sha256": "sha256:88d9162b425351c4c209257a87491bd1ca3f6c10548f485ac3c55f9d83bbb7f2",
+      "oracle_sha256": "sha256:7a0d9721e61ff5a7c8184556f18fdc242256e44e056217666ec2f5f5da0e6975",
+      "application_identity": {
+        "repo": {
+          "sha": "7c32f2310c9f932b9f0a2fd6735cdb40254379f9",
+          "ref": "main"
+        }
+      },
+      "generated_test_lineage": null,
+      "evidence_eligibility": {
+        "eligible": true,
+        "eligible_for_existing_claim": true,
+        "requires_requalification": false,
+        "reason_codes": [],
+        "integrity_errors": []
+      },
+      "declared_evidence_class": "deterministic",
+      "effective_evidence_class": "deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "persona_dream.kling_tea_e2e"
+      ],
+      "seams": [],
+      "passed_trials": 2,
+      "total_trials": 2,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 168.952,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "PASS_CINEMATOGRAPHY_COVERAGE run=/tmp/persona-dream-kling-tea-cinematography-agentic clips=3\n",
+          "stderr": "",
+          "duration_ms": 170.607,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "88201a1c859a-c001-t00",
+          "artifact_hashes": {
+            "/tmp/persona-dream-kling-tea-cinematography-agentic/cinematography_coverage_receipt.json": "sha256:c2f1ea02b428ff89efc661ae89fe15efaf9ec6868160480167e9436b2c814436"
+          },
+          "outcome": "PASS",
+          "problems": [],
+          "execution_provenance": {
+            "execution_mode": "regression_replay",
+            "fixture_sha256": "sha256:e04e2f2dd48353b009380f2086ba18db51c8f10aad0219c507c4849eb85ae7fd",
+            "test_source_sha256": "sha256:88d9162b425351c4c209257a87491bd1ca3f6c10548f485ac3c55f9d83bbb7f2",
+            "oracle_sha256": "sha256:7a0d9721e61ff5a7c8184556f18fdc242256e44e056217666ec2f5f5da0e6975",
+            "generation_id": "sha256:633a982ffca30f5934b420a10",
+            "generated_test_lineage": null,
+            "prior_test_source_sha256": null,
+            "prior_oracle_sha256": null,
+            "application_identity": {
+              "repo": {
+                "sha": "7c32f2310c9f932b9f0a2fd6735cdb40254379f9",
+                "ref": "main"
+              }
+            },
+            "mutation_provenance": {
+              "flags": {
+                "assertion_changed": false,
+                "case_ownership_changed": false,
+                "category_map_changed": false,
+                "evidence_requirement_changed": false,
+                "exclusion_changed": false,
+                "expected_output_changed": false,
+                "fixture_changed": false,
+                "fixture_input_changed": false,
+                "locator_changed": false,
+                "locator_healed": false,
+                "oracle_changed": false,
+                "proof_command_changed": false,
+                "protected_surface_changed": false,
+                "readiness_logic_changed": false,
+                "step_changed": false,
+                "test_exclusion_changed": false,
+                "test_mutated": false
+              },
+              "declared": false,
+              "test_hash_changed": false,
+              "oracle_hash_changed": false,
+              "changed_between_failure_and_observed_pass": false,
+              "protected_surface_changed": false,
+              "external_result": null
+            },
+            "evidence_eligibility": {
+              "eligible": true,
+              "eligible_for_existing_claim": true,
+              "requires_requalification": false,
+              "reason_codes": [],
+              "integrity_errors": []
+            }
+          }
+        },
+        {
+          "exit_code": 0,
+          "stdout": "PASS_CINEMATOGRAPHY_COVERAGE run=/tmp/persona-dream-kling-tea-cinematography-agentic clips=3\n",
+          "stderr": "",
+          "duration_ms": 167.297,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "88201a1c859a-c001-t01",
+          "artifact_hashes": {
+            "/tmp/persona-dream-kling-tea-cinematography-agentic/cinematography_coverage_receipt.json": "sha256:c2f1ea02b428ff89efc661ae89fe15efaf9ec6868160480167e9436b2c814436"
+          },
+          "outcome": "PASS",
+          "problems": [],
+          "execution_provenance": {
+            "execution_mode": "regression_replay",
+            "fixture_sha256": "sha256:e04e2f2dd48353b009380f2086ba18db51c8f10aad0219c507c4849eb85ae7fd",
+            "test_source_sha256": "sha256:88d9162b425351c4c209257a87491bd1ca3f6c10548f485ac3c55f9d83bbb7f2",
+            "oracle_sha256": "sha256:7a0d9721e61ff5a7c8184556f18fdc242256e44e056217666ec2f5f5da0e6975",
+            "generation_id": "sha256:633a982ffca30f5934b420a10",
+            "generated_test_lineage": null,
+            "prior_test_source_sha256": null,
+            "prior_oracle_sha256": null,
+            "application_identity": {
+              "repo": {
+                "sha": "7c32f2310c9f932b9f0a2fd6735cdb40254379f9",
+                "ref": "main"
+              }
+            },
+            "mutation_provenance": {
+              "flags": {
+                "assertion_changed": false,
+                "case_ownership_changed": false,
+                "category_map_changed": false,
+                "evidence_requirement_changed": false,
+                "exclusion_changed": false,
+                "expected_output_changed": false,
+                "fixture_changed": false,
+                "fixture_input_changed": false,
+                "locator_changed": false,
+                "locator_healed": false,
+                "oracle_changed": false,
+                "proof_command_changed": false,
+                "protected_surface_changed": false,
+                "readiness_logic_changed": false,
+                "step_changed": false,
+                "test_exclusion_changed": false,
+                "test_mutated": false
+              },
+              "declared": false,
+              "test_hash_changed": false,
+              "oracle_hash_changed": false,
+              "changed_between_failure_and_observed_pass": false,
+              "protected_surface_changed": false,
+              "external_result": null
+            },
+            "evidence_eligibility": {
+              "eligible": true,
+              "eligible_for_existing_claim": true,
+              "requires_requalification": false,
+              "reason_codes": [],
+              "integrity_errors": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "kling-tea-e2e-dry-run-cannot-pass",
+      "type": "adversarial",
+      "case_id": "88201a1c859a-c002",
+      "required": true,
+      "outcome": "PASS",
+      "observed_outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "set -euo pipefail\nOUT=/tmp/persona-dream-kling-tea-e2e-agentic-dry-run\nrm -rf \"$OUT\"\nuv run --project .. python ../scripts/eval_kling_tea_e2e.py --out-dir \"$OUT\" --dry-run --clip-count 2"
+      ],
+      "execution_mode": "regression_replay",
+      "execution_provenance": {
+        "execution_mode": "regression_replay",
+        "fixture_sha256": "sha256:e04e2f2dd48353b009380f2086ba18db51c8f10aad0219c507c4849eb85ae7fd",
+        "test_source_sha256": "sha256:fc5ee02b023d39d71a3b196a80f7a81c98b3f3b21f8e4b59b55e120f0df501a8",
+        "oracle_sha256": "sha256:749269a5650225cfa54341730ceacd3d1a013e3cae65c86d6803c0956401994e",
+        "generated_test_lineage": null,
+        "generation_id": "sha256:559f83854327005420db11f6c",
+        "prior_test_source_sha256": null,
+        "prior_oracle_sha256": null,
+        "application_identity": {
+          "repo": {
+            "sha": "7c32f2310c9f932b9f0a2fd6735cdb40254379f9",
+            "ref": "main"
+          }
+        },
+        "mutation_provenance": {
+          "flags": {
+            "assertion_changed": false,
+            "case_ownership_changed": false,
+            "category_map_changed": false,
+            "evidence_requirement_changed": false,
+            "exclusion_changed": false,
+            "expected_output_changed": false,
+            "fixture_changed": false,
+            "fixture_input_changed": false,
+            "locator_changed": false,
+            "locator_healed": false,
+            "oracle_changed": false,
+            "proof_command_changed": false,
+            "protected_surface_changed": false,
+            "readiness_logic_changed": false,
+            "step_changed": false,
+            "test_exclusion_changed": false,
+            "test_mutated": false
+          },
+          "declared": false,
+          "test_hash_changed": false,
+          "oracle_hash_changed": false,
+          "changed_between_failure_and_observed_pass": false,
+          "protected_surface_changed": false,
+          "external_result": null
+        },
+        "evidence_eligibility": {
+          "eligible": true,
+          "eligible_for_existing_claim": true,
+          "requires_requalification": false,
+          "reason_codes": [],
+          "integrity_errors": []
+        }
+      },
+      "test_source_sha256": "sha256:fc5ee02b023d39d71a3b196a80f7a81c98b3f3b21f8e4b59b55e120f0df501a8",
+      "oracle_sha256": "sha256:749269a5650225cfa54341730ceacd3d1a013e3cae65c86d6803c0956401994e",
+      "application_identity": {
+        "repo": {
+          "sha": "7c32f2310c9f932b9f0a2fd6735cdb40254379f9",
+          "ref": "main"
+        }
+      },
+      "generated_test_lineage": null,
+      "evidence_eligibility": {
+        "eligible": true,
+        "eligible_for_existing_claim": true,
+        "requires_requalification": false,
+        "reason_codes": [],
+        "integrity_errors": []
+      },
+      "declared_evidence_class": "adversarial_live_e2e",
+      "effective_evidence_class": "adversarial_live_e2e",
+      "live_qualified": true,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "persona_dream.kling_tea_e2e"
+      ],
+      "seams": [],
+      "passed_trials": 2,
+      "total_trials": 2,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 166.044,
+      "trials": [
+        {
+          "exit_code": 2,
+          "stdout": "BLOCKED_DRY_RUN_NOT_E2E run=/tmp/persona-dream-kling-tea-e2e-agentic-dry-run\n",
+          "stderr": "",
+          "duration_ms": 167.372,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "88201a1c859a-c002-t00",
+          "artifact_hashes": {
+            "/tmp/persona-dream-kling-tea-e2e-agentic-dry-run/receipts/kling_dream_video.json": "sha256:0a909d5a52204b643a44d5fe69842f8c439198223972d3292d2751e22e5de859"
+          },
+          "outcome": "PASS",
+          "problems": [],
+          "execution_provenance": {
+            "execution_mode": "regression_replay",
+            "fixture_sha256": "sha256:e04e2f2dd48353b009380f2086ba18db51c8f10aad0219c507c4849eb85ae7fd",
+            "test_source_sha256": "sha256:fc5ee02b023d39d71a3b196a80f7a81c98b3f3b21f8e4b59b55e120f0df501a8",
+            "oracle_sha256": "sha256:749269a5650225cfa54341730ceacd3d1a013e3cae65c86d6803c0956401994e",
+            "generation_id": "sha256:559f83854327005420db11f6c",
+            "generated_test_lineage": null,
+            "prior_test_source_sha256": null,
+            "prior_oracle_sha256": null,
+            "application_identity": {
+              "repo": {
+                "sha": "7c32f2310c9f932b9f0a2fd6735cdb40254379f9",
+                "ref": "main"
+              }
+            },
+            "mutation_provenance": {
+              "flags": {
+                "assertion_changed": false,
+                "case_ownership_changed": false,
+                "category_map_changed": false,
+                "evidence_requirement_changed": false,
+                "exclusion_changed": false,
+                "expected_output_changed": false,
+                "fixture_changed": false,
+                "fixture_input_changed": false,
+                "locator_changed": false,
+                "locator_healed": false,
+                "oracle_changed": false,
+                "proof_command_changed": false,
+                "protected_surface_changed": false,
+                "readiness_logic_changed": false,
+                "step_changed": false,
+                "test_exclusion_changed": false,
+                "test_mutated": false
+              },
+              "declared": false,
+              "test_hash_changed": false,
+              "oracle_hash_changed": false,
+              "changed_between_failure_and_observed_pass": false,
+              "protected_surface_changed": false,
+              "external_result": null
+            },
+            "evidence_eligibility": {
+              "eligible": true,
+              "eligible_for_existing_claim": true,
+              "requires_requalification": false,
+              "reason_codes": [],
+              "integrity_errors": []
+            }
+          }
+        },
+        {
+          "exit_code": 2,
+          "stdout": "BLOCKED_DRY_RUN_NOT_E2E run=/tmp/persona-dream-kling-tea-e2e-agentic-dry-run\n",
+          "stderr": "",
+          "duration_ms": 164.716,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "88201a1c859a-c002-t01",
+          "artifact_hashes": {
+            "/tmp/persona-dream-kling-tea-e2e-agentic-dry-run/receipts/kling_dream_video.json": "sha256:0a909d5a52204b643a44d5fe69842f8c439198223972d3292d2751e22e5de859"
+          },
+          "outcome": "PASS",
+          "problems": [],
+          "execution_provenance": {
+            "execution_mode": "regression_replay",
+            "fixture_sha256": "sha256:e04e2f2dd48353b009380f2086ba18db51c8f10aad0219c507c4849eb85ae7fd",
+            "test_source_sha256": "sha256:fc5ee02b023d39d71a3b196a80f7a81c98b3f3b21f8e4b59b55e120f0df501a8",
+            "oracle_sha256": "sha256:749269a5650225cfa54341730ceacd3d1a013e3cae65c86d6803c0956401994e",
+            "generation_id": "sha256:559f83854327005420db11f6c",
+            "generated_test_lineage": null,
+            "prior_test_source_sha256": null,
+            "prior_oracle_sha256": null,
+            "application_identity": {
+              "repo": {
+                "sha": "7c32f2310c9f932b9f0a2fd6735cdb40254379f9",
+                "ref": "main"
+              }
+            },
+            "mutation_provenance": {
+              "flags": {
+                "assertion_changed": false,
+                "case_ownership_changed": false,
+                "category_map_changed": false,
+                "evidence_requirement_changed": false,
+                "exclusion_changed": false,
+                "expected_output_changed": false,
+                "fixture_changed": false,
+                "fixture_input_changed": false,
+                "locator_changed": false,
+                "locator_healed": false,
+                "oracle_changed": false,
+                "proof_command_changed": false,
+                "protected_surface_changed": false,
+                "readiness_logic_changed": false,
+                "step_changed": false,
+                "test_exclusion_changed": false,
+                "test_mutated": false
+              },
+              "declared": false,
+              "test_hash_changed": false,
+              "oracle_hash_changed": false,
+              "changed_between_failure_and_observed_pass": false,
+              "protected_surface_changed": false,
+              "external_result": null
+            },
+            "evidence_eligibility": {
+              "eligible": true,
+              "eligible_for_existing_claim": true,
+              "requires_requalification": false,
+              "reason_codes": [],
+              "integrity_errors": []
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "artifacts": [
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/conversation.jsonl",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/dynamic_conversation_receipt.v1.json",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/pd_horus_persona-dream-kling-tea-e2e-agentic-live_t1_86550390.wav",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/pd_reply_persona-dream-kling-tea-e2e-agentic-live_23629889.wav",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/pd_horus_persona-dream-kling-tea-e2e-agentic-live_t2_13723901.wav",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/pd_reply_persona-dream-kling-tea-e2e-agentic-live_64250735.wav",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/pd_horus_persona-dream-kling-tea-e2e-agentic-live_t1_31568075.wav",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/pd_reply_persona-dream-kling-tea-e2e-agentic-live_24479540.wav",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/pd_horus_persona-dream-kling-tea-e2e-agentic-live_t2_95205214.wav",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/pd_reply_persona-dream-kling-tea-e2e-agentic-live_85124637.wav",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/pd_horus_persona-dream-kling-tea-e2e-agentic-live_t1_66212198.wav",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/pd_reply_persona-dream-kling-tea-e2e-agentic-live_69561742.wav",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/pd_horus_persona-dream-kling-tea-e2e-agentic-live_t2_33991304.wav",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/pd_reply_persona-dream-kling-tea-e2e-agentic-live_8619927.wav"
+  ],
+  "details": {},
+  "live": true,
+  "mocked": false,
+  "phase": "chatterbox_discussion",
+  "schema": "persona_dream.kling_tea_e2e_phase.v1",
+  "status": "PASS_CHATTERBOX_DREAM_DISCUSSION"
+}

@@ -1,0 +1,95 @@
+{
+  "canonical_compiler": false,
+  "cinematography_coverage_receipt": "/tmp/persona-dream-kling-tea-e2e-agentic-live/cinematography_coverage_receipt.json",
+  "clip_count": 3,
+  "direct_request_validation_receipt": "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_direct_request_validation_receipt.json",
+  "model_id": "fal-ai/kling-video/v3/standard/image-to-video",
+  "reference_assets_receipt": "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_reference_assets_receipt.json",
+  "requests": [
+    {
+      "cfg_scale": 0.75,
+      "duration": "5",
+      "elements": [
+        {
+          "frontal_image_url": "https://v3b.fal.media/files/b/0aa9e23c/jTDZKkqy298doI1ewPdkS_horus_q1_front.png",
+          "reference_image_urls": [
+            "https://v3b.fal.media/files/b/0aa9e254/szY6RuEB6tIvCYjVAjxoG_horus_q4_face.png"
+          ]
+        },
+        {
+          "frontal_image_url": "https://v3b.fal.media/files/b/0aa9e254/SYsx7gruMTB7BbM4HU1hz_embry_q1_front.png",
+          "reference_image_urls": [
+            "https://v3b.fal.media/files/b/0aa9e23c/CKYM9wOQPXesK_NtKRXAB_embry_q4_face.png"
+          ]
+        },
+        {
+          "frontal_image_url": "https://v3b.fal.media/files/b/0aa9e254/PkFf_7CavDZk_naKE3NCQ_tyranid_environment_q1_front.png",
+          "reference_image_urls": [
+            "https://v3b.fal.media/files/b/0aa9e23c/YWGjvY_mNWUxnnpTLEn-Q_tyranid_environment_q3_side.png"
+          ]
+        }
+      ],
+      "generate_audio": false,
+      "negative_prompt": "text, subtitles, gore, extra people, third person, crowd, generic space marines, bald blue aliens, changed faces, changed armor, changed jacket, back of head only, face hidden",
+      "prompt": "Clip 1 of 3, continuous dialogue coverage, one speaking beat only. @Element1 is Horus Lupercal. @Element2 is Embry Lawson. Exactly two people, no one else present. Speaker: embry. Coverage: master-to-embry-medium-close-up. Framing: master two-shot resolves into Embry favored medium close-up. 180-degree line: Embry stays screen-left facing camera-right; Horus stays screen-right facing camera-left. Embry speaks first about the glowing SPARTA Explorer evidence map between their tea cups; Horus listens in profile. Speaker mouth clearly visible during the line; listener reacts in profile; end with closed mouth. Motivated light comes from the glowing SPARTA Explorer map on the table and purple storm sky. @Element3 is one distant Tyranid creature in the background only. No text overlays.",
+      "start_image_url": "https://v3b.fal.media/files/b/0aa9e23c/AmySchAR6apwA0JKtf_wH_kling_start_frame.png"
+    },
+    {
+      "cfg_scale": 0.75,
+      "duration": "5",
+      "elements": [
+        {
+          "frontal_image_url": "https://v3b.fal.media/files/b/0aa9e23c/jTDZKkqy298doI1ewPdkS_horus_q1_front.png",
+          "reference_image_urls": [
+            "https://v3b.fal.media/files/b/0aa9e254/szY6RuEB6tIvCYjVAjxoG_horus_q4_face.png"
+          ]
+        },
+        {
+          "frontal_image_url": "https://v3b.fal.media/files/b/0aa9e254/SYsx7gruMTB7BbM4HU1hz_embry_q1_front.png",
+          "reference_image_urls": [
+            "https://v3b.fal.media/files/b/0aa9e23c/CKYM9wOQPXesK_NtKRXAB_embry_q4_face.png"
+          ]
+        },
+        {
+          "frontal_image_url": "https://v3b.fal.media/files/b/0aa9e254/PkFf_7CavDZk_naKE3NCQ_tyranid_environment_q1_front.png",
+          "reference_image_urls": [
+            "https://v3b.fal.media/files/b/0aa9e23c/YWGjvY_mNWUxnnpTLEn-Q_tyranid_environment_q3_side.png"
+          ]
+        }
+      ],
+      "generate_audio": false,
+      "negative_prompt": "text, subtitles, gore, extra people, third person, crowd, generic space marines, bald blue aliens, changed faces, changed armor, changed jacket, back of head only, face hidden",
+      "prompt": "Clip 2 of 3, continuous dialogue coverage, one speaking beat only. @Element1 is Horus Lupercal. @Element2 is Embry Lawson. Exactly two people, no one else present. Speaker: horus. Coverage: horus-reverse-medium-close-up. Framing: Horus favored medium close-up, matched size to Embry's single. 180-degree line: Horus remains screen-right facing camera-left; Embry remains screen-left facing camera-right as the listener in profile. Horus answers calmly while purple storm light from the Zeitch Eye crosses his armor and face. Speaker mouth clearly visible during the line; listener reacts in profile; end with closed mouth. Motivated light comes from the glowing SPARTA Explorer map on the table and purple storm sky. @Element3 is one distant Tyranid creature in the background only. No text overlays.",
+      "start_image_url": "https://v3b.fal.media/files/b/0aa9e23c/AmySchAR6apwA0JKtf_wH_kling_start_frame.png"
+    },
+    {
+      "cfg_scale": 0.75,
+      "duration": "5",
+      "elements": [
+        {
+          "frontal_image_url": "https://v3b.fal.media/files/b/0aa9e23c/jTDZKkqy298doI1ewPdkS_horus_q1_front.png",
+          "reference_image_urls": [
+            "https://v3b.fal.media/files/b/0aa9e254/szY6RuEB6tIvCYjVAjxoG_horus_q4_face.png"
+          ]
+        },
+        {
+          "frontal_image_url": "https://v3b.fal.media/files/b/0aa9e254/SYsx7gruMTB7BbM4HU1hz_embry_q1_front.png",
+          "reference_image_urls": [
+            "https://v3b.fal.media/files/b/0aa9e23c/CKYM9wOQPXesK_NtKRXAB_embry_q4_face.png"
+          ]
+        },
+        {
+          "frontal_image_url": "https://v3b.fal.media/files/b/0aa9e254/PkFf_7CavDZk_naKE3NCQ_tyranid_environment_q1_front.png",
+          "reference_image_urls": [
+            "https://v3b.fal.media/files/b/0aa9e23c/YWGjvY_mNWUxnnpTLEn-Q_tyranid_environment_q3_side.png"
+          ]
+        }
+      ],
+      "generate_audio": false,
+      "negative_prompt": "text, subtitles, gore, extra people, third person, crowd, generic space marines, bald blue aliens, changed faces, changed armor, changed jacket, back of head only, face hidden",
+      "prompt": "Clip 3 of 3, continuous dialogue coverage, one speaking beat only. @Element1 is Horus Lupercal. @Element2 is Embry Lawson. Exactly two people, no one else present. Speaker: embry. Coverage: embry-reaction-medium-close-up. Framing: Embry favored medium close-up, same lens and size as the reverse shot. 180-degree line: Embry remains screen-left facing camera-right; Horus remains screen-right facing camera-left. Embry closes the exchange with a small smile as a distant Tyranid crosses behind them without approaching. Speaker mouth clearly visible during the line; listener reacts in profile; end with closed mouth. Motivated light comes from the glowing SPARTA Explorer map on the table and purple storm sky. @Element3 is one distant Tyranid creature in the background only. No text overlays.",
+      "start_image_url": "https://v3b.fal.media/files/b/0aa9e23c/AmySchAR6apwA0JKtf_wH_kling_start_frame.png"
+    }
+  ],
+  "schema": "persona_dream.kling_tea_request.v1"
+}

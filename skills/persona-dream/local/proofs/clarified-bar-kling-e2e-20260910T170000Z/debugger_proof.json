@@ -1,0 +1,58 @@
+{
+  "allow_watch_eval": true,
+  "breakpoints": [
+    {
+      "file": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/eval_kling_tea_e2e.py",
+      "line": 339
+    }
+  ],
+  "capture_all_locals": false,
+  "command": [
+    "python",
+    "skills/persona-dream/scripts/eval_kling_tea_e2e.py",
+    "--out-dir",
+    "/tmp/persona-dream-debugger-cinematography",
+    "--validate-cinematography-only",
+    "--clip-count",
+    "3"
+  ],
+  "duration_ms": 260,
+  "hit_count": 1,
+  "hits": [
+    {
+      "file": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/scripts/eval_kling_tea_e2e.py",
+      "function": "main",
+      "line": 339,
+      "locals": {
+        "args": "Namespace(out_dir=PosixPath('/tmp/persona-dream-debugger-cinematography'), dry_run=False, clip_count=3, validate_cinematography_only=True)",
+        "coverage": "{'schema': 'persona_dream.cinematography_coverage_receipt.v1', 'status': 'PASS_CINEMATOGRAPHY_COVERAGE', 'complies_with': 'best-practices-cinematography', 'rules': ['coverage before prompts', 'stable 180-degree line and eyelines', 'one beat per clip, speaker favored', 'matched shot/reverse-shot framing', 'motivated lighting from SPARTA map and Zeitch Eye'], 'watch_diarization_boundary': 'After dialogue audio is muxed, verify who-spoke-when with $watch --diarization pyannote --require-diarization; silent Kling clips carry planned_speaker only.', 'live_evidence_boundary': '$live-evidence supplies live transcript speaker-turn events, not pyannote diarization; its own contract says diarization is deferred.', 'clip_count': 3, 'shot_plan': [{'clip': 1, 'speaker': 'embry', 'coverage': 'master-to-embry-medium-close-up', 'framing': 'master two-shot resolves into Embry favored medium close-up', 'eyeline': 'Embry stays screen-left facing camera-right; Horus stays screen-right facing camera-left', 'beat': 'Embry speaks first about the glowing SPARTA Explorer evidence map between their tea cups; Horus listens in profile.'}, {'clip': 2, 'speaker': 'horus', 'coverage': 'horus-reverse-medium-cl...",
+        "run_dir": "PosixPath('/tmp/persona-dream-debugger-cinematography')"
+      },
+      "source": "phase(run_dir, \"cinematography_coverage\", coverage[\"status\"], live=False, artifacts=[str(run_dir / \"cinematography_coverage_receipt.json\")])",
+      "watches": {
+        "args.clip_count": {
+          "ok": "true",
+          "value": "3"
+        },
+        "coverage[\"shot_plan\"][1][\"speaker\"]": {
+          "ok": "true",
+          "value": "'horus'"
+        }
+      }
+    }
+  ],
+  "locals_allowlist": [
+    "args",
+    "run_dir",
+    "coverage"
+  ],
+  "status": {
+    "error": null,
+    "exit": 0,
+    "ok": true
+  },
+  "watches": [
+    "args.clip_count",
+    "coverage[\"shot_plan\"][1][\"speaker\"]"
+  ]
+}

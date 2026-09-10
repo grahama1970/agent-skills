@@ -1,0 +1,20 @@
+{
+  "artifacts": [
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream.mp4",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_responses.json",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream_clip_01.mp4",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream_clip_02.mp4",
+    "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream_clip_03.mp4"
+  ],
+  "details": {
+    "bytes": 10558579,
+    "clip_count": 3,
+    "reused_live_artifacts": true,
+    "video_sha256": "sha256:0c69be604fbbf69837c4be61f108bbc9a8992e617e67031930f9bb3ae850cf5a"
+  },
+  "live": true,
+  "mocked": false,
+  "phase": "kling_dream_video",
+  "schema": "persona_dream.kling_tea_e2e_phase.v1",
+  "status": "PASS_KLING_DREAM_VIDEO"
+}

@@ -1,0 +1,42 @@
+{
+  "clip_count": 3,
+  "complies_with": "best-practices-cinematography",
+  "errors": [],
+  "live_evidence_boundary": "$live-evidence supplies live transcript speaker-turn events, not pyannote diarization; its own contract says diarization is deferred.",
+  "rules": [
+    "coverage before prompts",
+    "stable 180-degree line and eyelines",
+    "one beat per clip, speaker favored",
+    "matched shot/reverse-shot framing",
+    "motivated lighting from SPARTA map and Zeitch Eye"
+  ],
+  "schema": "persona_dream.cinematography_coverage_receipt.v1",
+  "shot_plan": [
+    {
+      "beat": "Embry speaks first about the glowing SPARTA Explorer evidence map between their tea cups; Horus listens in profile.",
+      "clip": 1,
+      "coverage": "master-to-embry-medium-close-up",
+      "eyeline": "Embry stays screen-left facing camera-right; Horus stays screen-right facing camera-left",
+      "framing": "master two-shot resolves into Embry favored medium close-up",
+      "speaker": "embry"
+    },
+    {
+      "beat": "Horus answers calmly while purple storm light from the Zeitch Eye crosses his armor and face.",
+      "clip": 2,
+      "coverage": "horus-reverse-medium-close-up",
+      "eyeline": "Horus remains screen-right facing camera-left; Embry remains screen-left facing camera-right as the listener in profile",
+      "framing": "Horus favored medium close-up, matched size to Embry's single",
+      "speaker": "horus"
+    },
+    {
+      "beat": "Embry closes the exchange with a small smile as a distant Tyranid crosses behind them without approaching.",
+      "clip": 3,
+      "coverage": "embry-reaction-medium-close-up",
+      "eyeline": "Embry remains screen-left facing camera-right; Horus remains screen-right facing camera-left",
+      "framing": "Embry favored medium close-up, same lens and size as the reverse shot",
+      "speaker": "embry"
+    }
+  ],
+  "status": "PASS_CINEMATOGRAPHY_COVERAGE",
+  "watch_diarization_boundary": "After dialogue audio is muxed, verify who-spoke-when with $watch --diarization pyannote --require-diarization; silent Kling clips carry planned_speaker only."
+}
