@@ -801,6 +801,10 @@ def test_immutable_replay_proof_checks_expected_failures_and_hashes(tmp_path) ->
         assert handlers.inspect_proof_artifact(str(artifact), not_before=0)["passed"] is False
     artifact.write_text(json.dumps({"schema": original["schema"], "passed": True}))
     assert handlers.inspect_proof_artifact(str(artifact), not_before=0)["passed"] is False
+    artifact.write_text(json.dumps({"status": "PASS", "passed": True, "live": True, "mocked": False}))
+    record = handlers.inspect_proof_artifact(str(artifact), not_before=0)
+    assert record["passed"] is False
+    assert "lacks command/artifact/run binding" in record["reason"]
 
 
 def test_review_commit_lines_keep_invalid_sha_out_of_valid_set() -> None:

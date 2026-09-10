@@ -1008,6 +1008,15 @@ def inspect_proof_artifact(raw_path: str, *, not_before: float) -> dict[str, Any
     elif isinstance(payload, dict) and payload.get("schema") == "agentic_evals.issue1631.live_e2e_result.v1":
         values = ["PASS" if _immutable_replay_proof_passed(payload) else "FAIL"]
     else:
+        if isinstance(payload, dict) and payload.get("live") is True:
+            evidence_keys = {
+                "artifact", "artifacts", "cases", "checks", "command", "commands",
+                "github_live", "provider_live", "receipt", "receipts", "run_id", "steps", "trials",
+            }
+            if not any(key in payload for key in evidence_keys):
+                record["machine_readable"] = True
+                record["reason"] = "live proof lacks command/artifact/run binding"
+                return record
         values = _result_values(payload)
     record["machine_readable"] = bool(values)
     failing = sorted({v for v in values if v in PROOF_FAIL_VALUES})

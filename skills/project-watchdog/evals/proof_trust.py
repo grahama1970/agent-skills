@@ -97,6 +97,12 @@ def main() -> int:
         gate = _gate(d, _reviewer(d / "result.json"), {"passed": True, "live": True})
         check("fabricated_bare_passed_true_rejected", gate, False)
 
+        # NEGATIVE: generic PASS plus live:true is still not a bound live proof.
+        d = tmp / "n1b"; d.mkdir()
+        gate = _gate(d, _reviewer(d / "result.json"),
+                     {"status": "PASS", "passed": True, "live": True, "mocked": False})
+        check("fabricated_generic_live_pass_rejected", gate, False, "lacks command/artifact/run binding")
+
         # POSITIVE: untyped domain payload {"readiness": "READY"} remains
         # accepted — the retained contract from #1499-era tests must not break.
         d = tmp / "p2"; d.mkdir()
