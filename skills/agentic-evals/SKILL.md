@@ -314,6 +314,28 @@ instead of substituting a generic fixture-only claim, and reports `live: true`
 when the manifest declares it or any case is `real_world`. Reports are written
 atomically.
 
+Every executed case/trial also carries `execution_provenance`. The closed
+`execution_mode` vocabulary is:
+
+- `exploration` — candidate generation/discovery; never counts as executed
+  capability proof.
+- `regression_replay` — default for compatible v2 fixtures; may satisfy a claim
+  only when no test/oracle mutation is declared or detected, and when any
+  claim-level `admitted_evidence` record matches the frozen test/oracle hashes.
+- `test_repair` — intentional locator/step/input/assertion/oracle maintenance;
+  reports before/after hashes and requires explicit requalification before a
+  later unchanged replay may satisfy a claim.
+
+The runner records `test_source_sha256`, `oracle_sha256`,
+`generated_test_lineage`/`generation_id` when supplied,
+`prior_test_source_sha256`, `prior_oracle_sha256`, application/build identity,
+closed mutation flags (`test_mutated`, `locator_healed`, `oracle_changed`,
+`expected_output_changed`, etc.), and `evidence_eligibility`. Provider/import
+adapters may declare self-heal provenance through `external_result` or
+`provider_result`, but a provider-reported pass with mutation flags is treated
+as repair evidence, not readiness authority. Undeclared test/oracle hash changes
+fail closed as evidence-integrity errors.
+
 Self-tests for every behavior above: `fixtures/runner_selftest.json`.
 
 ## Remediation loop (categorize → ticket-with-depends-on → fix → re-run until green)

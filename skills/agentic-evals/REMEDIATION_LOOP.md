@@ -125,6 +125,16 @@ logic, the runner/oracles, evidence-class requirements, proof commands, or test
 exclusions. Such changes are prohibited within a remediation ticket and must
 escalate to a separate eval-contract-change path.
 
+The runner enforces the executable half of this policy for replay evidence:
+every case/trial report records closed mutation provenance and immutable
+test/oracle hashes. A replay with changed locator, step, fixture input,
+assertion, exclusion, evidence requirement, expected output, proof command, or
+other protected surface is ineligible for the original evidence slot; undeclared
+test/oracle hash drift is an evidence-integrity error. Legitimate maintenance
+uses `execution_mode: "test_repair"` and carries prior/current hashes, then a
+later `regression_replay` must be explicitly admitted as the new canonical
+generation before it can satisfy readiness.
+
 Immutable goal is written to preserve the contract, not just to green a subset:
 > "Remove the category defect WITHOUT weakening eval fixtures, oracles, category
 > maps, or proof commands, and without introducing new full-suite failures. The

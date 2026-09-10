@@ -90,6 +90,14 @@
       "evidence_required": {
         "live_e2e": true
       }
+    },
+    {
+      "id": "ae.provenance.immutable_replay",
+      "description": "repaired or healed tests cannot satisfy the original frozen replay identity until requalified",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
     }
   ],
   "seams": [
@@ -148,6 +156,18 @@
       "criticality": "important",
       "failure_modes": [
         "unreadable/absent report"
+      ],
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "runner.provenance",
+      "claim_id": "ae.provenance.immutable_replay",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "failure_modes": [
+        "healed test counted as original regression proof"
       ],
       "required_evidence": [
         "live_e2e"
@@ -423,6 +443,40 @@
         ],
         "stdout_excludes": [
           "semantic_fingerprint"
+        ]
+      }
+    },
+    {
+      "name": "immutable-replay-rejects-healed-test-and-accepts-app-repair",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "ae.provenance.immutable_replay"
+      ],
+      "seams": [
+        "runner.provenance"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "/home/graham/workspace/experiments/agent-skills/skills/agentic-evals",
+        "python",
+        "/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/scripts/issue1631_live_e2e.py",
+        "run-proof",
+        "--output",
+        "/home/graham/.local/state/agentic-evals/issue1631/live-e2e-result.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/home/graham/.local/state/agentic-evals/issue1631/live-e2e-result.json",
+            "json_pointer": "/passed",
+            "equals": true
+          }
         ]
       }
     }

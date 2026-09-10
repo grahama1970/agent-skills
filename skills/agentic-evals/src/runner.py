@@ -29,6 +29,7 @@ from loguru import logger
 import claims as claims_mod
 import coverage as coverage_mod
 import evidence as evidence_mod
+import provenance as provenance_mod
 import regressions as regressions_mod
 
 load_dotenv(override=False)
@@ -226,6 +227,7 @@ def load_manifest(path: Path, *, focused: bool = False) -> dict[str, Any]:
     class_problems.extend(claims_mod.validate_claims(manifest))
     class_problems.extend(coverage_mod.validate_seams(manifest))
     class_problems.extend(_supports_claims_problems(manifest, cases))
+    class_problems.extend(provenance_mod.validate_manifest_provenance(manifest, cases))
     if class_problems:
         raise typer.BadParameter("; ".join(class_problems))
     if not focused:
@@ -542,9 +544,16 @@ def readiness_for(case_reports: list[dict[str, Any]]) -> str:
         return "NOT_ESTABLISHED"
     required = [c for c in case_reports if c.get("required", True)]
     scored = required or case_reports
-    if all(c.get("outcome", OUTCOME_NOT_TESTED) == OUTCOME_PASS for c in scored):
+    if all(
+        c.get("outcome", OUTCOME_NOT_TESTED) == OUTCOME_PASS
+        and c.get("evidence_eligibility", {}).get("eligible", True)
+        for c in scored
+    ):
         return "READY"
-    if any(c["passed_trials"] > 0 for c in scored):
+    if any(
+        c["passed_trials"] > 0 and c.get("evidence_eligibility", {}).get("eligible", True)
+        for c in scored
+    ):
         return "USABLE_WITH_GAPS"
     return "NOT_READY"
 
@@ -586,6 +595,8 @@ def evaluate_manifest(
     trials = manifest.get("trials", 3)
     cwd = path.parent
     run_id = uuid.uuid4().hex[:12]
+    fixture_sha256 = _sha256_file(path)
+    repo = _repo_provenance(cwd)
     cases = []
     raw_cases = manifest["cases"]
     if only_cases:
@@ -606,6 +617,12 @@ def evaluate_manifest(
             case_timeout = max(0.1, float(case_timeout))
         except (TypeError, ValueError):
             case_timeout = timeout_seconds
+        provenance = provenance_mod.case_provenance(
+            manifest,
+            case,
+            fixture_sha256=fixture_sha256,
+            repo=repo,
+        )
         results = []
         outcomes = []
         problems: list[str] = []
@@ -615,6 +632,19 @@ def evaluate_manifest(
             outcome, why = trial_outcome(case, trial, cwd)
             trial["outcome"] = outcome
             trial["problems"] = why
+            trial["execution_provenance"] = {
+                "execution_mode": provenance["execution_mode"],
+                "fixture_sha256": provenance["fixture_sha256"],
+                "test_source_sha256": provenance["test_source_sha256"],
+                "oracle_sha256": provenance["oracle_sha256"],
+                "generation_id": provenance["generation_id"],
+                "generated_test_lineage": provenance["generated_test_lineage"],
+                "prior_test_source_sha256": provenance["prior_test_source_sha256"],
+                "prior_oracle_sha256": provenance["prior_oracle_sha256"],
+                "application_identity": provenance["application_identity"],
+                "mutation_provenance": provenance["mutation_provenance"],
+                "evidence_eligibility": provenance["evidence_eligibility"],
+            }
             # Raw streams were for oracle matching only; the persisted report
             # keeps the redacted+bounded copies.
             trial.pop("_stdout_raw", None)
@@ -625,6 +655,20 @@ def evaluate_manifest(
         passed_trials = sum(1 for outcome in outcomes if outcome == OUTCOME_PASS)
         infra_blocked_trials = sum(1 for outcome in outcomes if outcome == OUTCOME_INFRA_BLOCKED)
         qual = evidence_mod.qualify(case)
+        observed_outcome = case_outcome(outcomes)
+        force_integrity_fail = bool(
+            provenance["evidence_eligibility"]["integrity_errors"]
+            or (
+                provenance["execution_mode"] == provenance_mod.ExecutionMode.REGRESSION_REPLAY.value
+                and provenance["mutation_provenance"]["changed_between_failure_and_observed_pass"]
+            )
+        )
+        outcome = OUTCOME_FAIL if observed_outcome == OUTCOME_PASS and force_integrity_fail else observed_outcome
+        if force_integrity_fail:
+            problems.extend(
+                f"evidence integrity: {reason}"
+                for reason in provenance["evidence_eligibility"]["reason_codes"]
+            )
         cases.append(
             {
                 "infra_blocked_trials": infra_blocked_trials,
@@ -635,9 +679,17 @@ def evaluate_manifest(
                 "type": case["type"],
                 "case_id": case_id,
                 "required": bool(case.get("required", True)),
-                "outcome": case_outcome(outcomes),
+                "outcome": outcome,
+                "observed_outcome": observed_outcome,
                 "problems": sorted(set(problems)),
                 "argv": list(case["command"]),
+                "execution_mode": provenance["execution_mode"],
+                "execution_provenance": provenance,
+                "test_source_sha256": provenance["test_source_sha256"],
+                "oracle_sha256": provenance["oracle_sha256"],
+                "application_identity": provenance["application_identity"],
+                "generated_test_lineage": provenance["generated_test_lineage"],
+                "evidence_eligibility": provenance["evidence_eligibility"],
                 "declared_evidence_class": qual["declared"],
                 "effective_evidence_class": qual["effective"],
                 "live_qualified": qual["live_qualified"],
@@ -685,8 +737,8 @@ def evaluate_manifest(
         "schema": "agentic_evals.report.v2",
         "source": str(path),
         "run_id": run_id,
-        "fixture_sha256": _sha256_file(path),
-        "repo": _repo_provenance(cwd),
+        "fixture_sha256": fixture_sha256,
+        "repo": repo,
         "mocked": bool(manifest.get("mocked", False)),
         "fixture_backed": True,
         "live": live,

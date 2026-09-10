@@ -109,6 +109,7 @@ def _exempt_classes(claim: dict[str, Any], now_iso: str) -> dict[str, dict[str, 
 def _class_status(
     required_class: str,
     supporting: list[dict[str, Any]],
+    claim: dict[str, Any],
 ) -> tuple[str, list[str]]:
     """Status of one required evidence class from its matching supporting cases.
 
@@ -116,7 +117,13 @@ def _class_status(
     a case that declared live but was downgraded by the real-E2E contract never
     satisfies a live slot.
     """
-    matching = [c for c in supporting if c["effective_class"] == required_class]
+    matching = [
+        c
+        for c in supporting
+        if c["effective_class"] == required_class
+        and c.get("evidence_eligible", True)
+        and _admitted_for_claim(claim, c)
+    ]
     case_names = [c["name"] for c in matching]
     if any(c["outcome"] == "PASS" for c in matching):
         return _PROVEN, [c["name"] for c in matching if c["outcome"] == "PASS"]
@@ -138,7 +145,7 @@ def compute_claim(
 
     per_class: dict[str, dict[str, Any]] = {}
     for rclass in required:
-        status, names = _class_status(rclass, supporting_cases)
+        status, names = _class_status(rclass, supporting_cases, claim)
         if status == _MISSING and rclass in exempt:
             status = _EXEMPT
         per_class[rclass] = {"status": status, "cases": names}
@@ -174,6 +181,19 @@ def compute_claim(
         for c in supporting_cases
         if c["declared_class"] in LIVE_CLASSES and not c["live_qualified"]
     ]
+    ineligible = [
+        {
+            "name": c["name"],
+            "execution_mode": c.get("execution_mode"),
+            "generation_id": c.get("generation_id"),
+            "test_source_sha256": c.get("test_source_sha256"),
+            "oracle_sha256": c.get("oracle_sha256"),
+            "reasons": c.get("evidence_ineligible_reasons", []),
+            "admitted_for_claim": _admitted_for_claim(claim, c),
+        }
+        for c in supporting_cases
+        if not c.get("evidence_eligible", True) or not _admitted_for_claim(claim, c)
+    ]
 
     return {
         "id": claim.get("id"),
@@ -187,6 +207,7 @@ def compute_claim(
         "exempt_evidence": exempted,
         "exemptions": [exempt[c] for c in exempted],
         "unqualified_live_cases": unqualified,
+        "ineligible_supporting_cases": ineligible,
         "supporting_cases": [c["name"] for c in supporting_cases],
     }
 
@@ -213,7 +234,33 @@ def enrich_case(case_report: dict[str, Any], case_spec: dict[str, Any], qual: di
         "qualify_reasons": qual["reasons"] + ([] if live_multi_ok else ["supports multiple claims without independent per-claim artifacts"]),
         "supports_claims": supports,
         "seams": case_spec.get("seams") or [],
+        "execution_mode": case_report.get("execution_mode", "regression_replay"),
+        "evidence_eligible": case_report.get("evidence_eligibility", {}).get("eligible", True),
+        "evidence_ineligible_reasons": case_report.get("evidence_eligibility", {}).get("reason_codes", []),
+        "generation_id": case_report.get("execution_provenance", {}).get("generation_id"),
+        "test_source_sha256": case_report.get("test_source_sha256"),
+        "oracle_sha256": case_report.get("oracle_sha256"),
     }
+
+
+def _admitted_for_claim(claim: dict[str, Any], case: dict[str, Any]) -> bool:
+    """True when a case matches a claim's optional frozen evidence identity."""
+    records = claim.get("admitted_evidence") or claim.get("admitted_generations") or []
+    if not records:
+        return True
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        if record.get("case") and record["case"] != case.get("name"):
+            continue
+        if record.get("generation_id") and record["generation_id"] != case.get("generation_id"):
+            continue
+        if record.get("test_source_sha256") and record["test_source_sha256"] != case.get("test_source_sha256"):
+            continue
+        if record.get("oracle_sha256") and record["oracle_sha256"] != case.get("oracle_sha256"):
+            continue
+        return True
+    return False
 
 
 def compute_readiness(

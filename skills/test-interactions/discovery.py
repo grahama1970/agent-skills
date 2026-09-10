@@ -19,16 +19,6 @@ from cdp_client import CDPClient
 
 DISCOVERY_FINDING_SCHEMA = "test-interactions.discovery-finding.v1"
 
-STATIC_ENDPOINT_SUFFIXES = {
-    ".doc",
-    ".docx",
-    ".ics",
-    ".md",
-    ".pdf",
-    ".txt",
-    ".zip",
-}
-
 
 DISCOVER_INTERACTIVES_JS = r"""
 (function() {
@@ -77,7 +67,6 @@ DISCOVER_INTERACTIVES_JS = r"""
       title: el.getAttribute('title') || '',
       qsAction: el.getAttribute('data-qs-action') || '',
       href: el.href || el.getAttribute('href') || '',
-      download: el.getAttribute('download') || '',
       visible: isVisible(el),
       enabled: !disabled,
       text: (el.innerText || el.value || el.getAttribute('aria-label') || '').trim().slice(0, 120),
@@ -200,16 +189,12 @@ def _url_path(url: str) -> str:
 
 
 def _is_expected_navigation(item: dict[str, Any], before_url: str, after_url: str) -> bool:
+    if after_url == before_url:
+        return False
     href = str(item.get("href") or "")
     tag = str(item.get("tag") or "").lower()
     if tag == "a" and href:
-        if _is_expected_link_endpoint(item, _url_origin(before_url)):
-            return True
-        if after_url == before_url:
-            return False
         return True
-    if after_url == before_url:
-        return False
     label = " ".join(str(item.get(key) or "").lower() for key in ("qid", "title", "qsAction", "text"))
     return any(token in label for token in ("nav_", "open_", "download", "email", "mailto", "link"))
 
@@ -223,47 +208,9 @@ def _is_external_href(href: str, base_origin: str) -> bool:
     return False
 
 
-def _is_static_file_href(href: str) -> bool:
-    suffix = Path(urlsplit(href).path).suffix.lower()
-    return suffix in STATIC_ENDPOINT_SUFFIXES
-
-
-def _is_expected_link_endpoint(item: dict[str, Any], base_origin: str) -> bool:
-    """Return true for links whose intended effect is outside the current DOM.
-
-    Browser download handling, plain-text documents, mail clients, and external
-    origins may not mutate DOM state in a CDP session. Those are still valid
-    interactions when the link target is explicit and discoverable.
-    """
-    href = str(item.get("href") or "")
-    if str(item.get("tag") or "").lower() != "a" or not href:
-        return False
-    if item.get("download"):
-        return True
-    if _is_external_href(href, base_origin):
-        return True
-    return _is_static_file_href(href)
-
-
-def _should_skip_discovery_activation(item: dict[str, Any], base_origin: str) -> bool:
-    return _is_replay_link_endpoint(item) or _is_expected_link_endpoint(item, base_origin)
-
-
-def _is_replay_link_endpoint(item: dict[str, Any]) -> bool:
-    return str(item.get("tag") or "").lower() == "a" and bool(str(item.get("href") or ""))
-
-
 def _should_assert_visible_after_click(item: dict[str, Any]) -> bool:
     label = " ".join(str(item.get(key) or "").lower() for key in ("qid", "text", "title", "qsAction"))
     return not any(token in label for token in ("close", "dismiss", "cancel"))
-
-
-def _is_ignorable_log_entry(entry: dict[str, Any]) -> bool:
-    level = str(entry.get("level") or "").lower()
-    text = str(entry.get("text") or "")
-    if level == "warning" and "was preloaded using link preload but not used" in text:
-        return True
-    return False
 
 
 def _events_to_findings(run_id: str, events: list[dict[str, Any]], element: dict[str, Any], state: str) -> list[dict[str, Any]]:
@@ -283,8 +230,6 @@ def _events_to_findings(run_id: str, events: list[dict[str, Any]], element: dict
             ))
         elif method == "Log.entryAdded":
             entry = params.get("entry") or {}
-            if _is_ignorable_log_entry(entry):
-                continue
             if entry.get("level") in {"error", "warning"}:
                 findings.append(_finding(
                     run_id,
@@ -349,9 +294,8 @@ def _build_manifest(url: str, snapshots: list[dict[str, Any]]) -> dict[str, Any]
         for qid, item in by_qid.items():
             selector = _manifest_selector_for_qid(qid)
             external_href = _is_external_href(str(item.get("href") or ""), target_origin)
-            link_endpoint = _is_replay_link_endpoint(item)
             interaction: dict[str, Any] = {
-                "action": "wait" if link_endpoint else "click",
+                "action": "wait" if external_href else "click",
                 "target": selector,
                 "description": f"Discovered live interaction: {qid}",
                 "assert_timing": "before",
@@ -365,10 +309,6 @@ def _build_manifest(url: str, snapshots: list[dict[str, Any]]) -> dict[str, Any]
             if external_href:
                 interaction["allow_external_navigation"] = True
                 interaction["description"] = f"Assert external link without launching it: {qid}"
-            elif _is_expected_link_endpoint(item, target_origin):
-                interaction["description"] = f"Assert static link endpoint without launching it: {qid}"
-            elif link_endpoint:
-                interaction["description"] = f"Assert internal link endpoint without navigating away: {qid}"
             elements.append({"name": qid.replace(":", "-"), "interactions": [interaction]})
         surfaces.append({
             "name": "discovered-main" if path == _url_path(url) else f"discovered-{path.strip('/').replace('/', '-') or 'root'}",
@@ -416,7 +356,6 @@ def discover_live_dom(
     findings: list[dict[str, Any]] = []
     state_graph: list[dict[str, Any]] = []
     covered = _manifest_coverage(existing_manifest)
-    target_origin = _url_origin(url)
 
     queue: list[tuple[int, str | None, dict[str, Any] | None]] = [(0, None, None)]
     visited: set[str] = set()
@@ -484,15 +423,6 @@ def discover_live_dom(
         for item in candidates:
             if actions_run >= max_actions or len(snapshots) >= max_states:
                 break
-            if _should_skip_discovery_activation(item, target_origin):
-                state_graph.append({
-                    "from": state,
-                    "to": state,
-                    "via_qid": item.get("qid"),
-                    "clicked": {"ok": True, "skipped": True, "reason": "link_endpoint_inspected_without_launch"},
-                    "depth": depth + 1,
-                })
-                continue
             selector = item["selector"]
             before_url = cdp.current_url()
             before_state = state

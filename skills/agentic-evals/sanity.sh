@@ -30,12 +30,12 @@ assert report["fixture_backed"] is True
 # enforces on others (#1445-#1448): live, claim-annotated, and READY only when
 # every critical claim is PROVEN through real run.sh invocations.
 assert report["live"] is True
-assert report["case_count"] == 5
-assert report["trial_count"] == 10
+assert report["case_count"] == 11
+assert report["trial_count"] == 22
 assert all(case["pass_rate"] == 1.0 for case in report["cases"])
 cap = report["capability_readiness"]
 assert cap is not None and cap["aggregate_readiness"] == "READY"
-assert cap["critical_claims_proven"] == cap["critical_claim_count"] == 4
+assert cap["critical_claims_proven"] == cap["critical_claim_count"] == 10
 assert {c["verdict"] for c in cap["claims"]} == {"PROVEN"}
 PY
 
