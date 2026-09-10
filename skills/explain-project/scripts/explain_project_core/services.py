@@ -55,35 +55,41 @@ def probe_debugger(repo: Path | None) -> ServiceHealth:
             )
 
         bridge_dir = repo / ".vscode" / "debugger-bridge"
-        statuses = sorted(
-            bridge_dir.glob("status.*.json"),
-            key=lambda p: p.stat().st_mtime,
-            reverse=True,
-        ) if bridge_dir.is_dir() else []
+        candidates: list[Path] = []
+        if bridge_dir.is_dir():
+            # status files = debug sessions; request.json /
+            # processed-ids.json = any live bridge request (e.g.
+            # `open --bridge` selections). Bridge liveness is the
+            # newest of all three.
+            candidates = [
+                bridge_dir / "request.json",
+                bridge_dir / "processed-ids.json",
+                *bridge_dir.glob("status.*.json"),
+            ]
+        newest = max(
+            (p.stat().st_mtime for p in candidates if p.is_file()),
+            default=None,
+        )
 
-        if not statuses:
+        if newest is None:
             return ServiceHealth(
                 service="debugger",
                 status="NOT_CONFIGURED",
-                detail="no bridge status files in --repo",
+                detail="no bridge artifacts in --repo",
             )
 
-        age = time.time() - statuses[0].stat().st_mtime
+        age = time.time() - newest
         if age > 900:
             return ServiceHealth(
                 service="debugger",
                 status="DEGRADED",
-                detail=(
-                    "bridge idle "
-                    f"{int(age // 60)}m "
-                    f"({statuses[0].name})"
-                ),
+                detail=f"bridge idle {int(age // 60)}m",
             )
 
         return ServiceHealth(
             service="debugger",
             status="ONLINE",
-            detail=f"bridge status fresh ({statuses[0].name})",
+            detail=f"bridge answered {int(age)}s ago",
         )
 
     return _cached("debugger", fingerprint, build)
