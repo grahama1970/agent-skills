@@ -119,6 +119,7 @@ required = [
     "technique_selection.json",
     "script_dna_selection.json",
     "look_lock.json",
+    "cinematography_coverage_receipt.json",
     "storyboard.json",
     "timed_transcript.json",
     "multimodal_prompts.json",
@@ -137,6 +138,7 @@ voice = json.loads((out / "voice_handoff_plan.json").read_text())
 bible = json.loads((out / "character_scene_bible.json").read_text())
 report = json.loads((out / "pipeline_stage_report.json").read_text())
 manifest = json.loads((out / "manifest.json").read_text())
+coverage = json.loads((out / "cinematography_coverage_receipt.json").read_text())
 
 shots = timed["shots"]
 prompt_items = prompts["prompts"]
@@ -152,7 +154,14 @@ assert frame_counts == [121, 121, 121, 121]
 assert voice["schema"] == "persona_dream.voice_handoff_plan.v1"
 assert voice["owner"] == "create-movie/audio-lane"
 assert {speaker["speaker_id"] for speaker in voice["speakers"]} == {"embry", "horus"}
-assert [line["speaker_id"] for line in voice["lines"]] == ["horus", "embry", "horus", "horus"]
+assert [line["speaker_id"] for line in voice["lines"]] == ["embry", "horus", "embry", "horus"]
+assert coverage["schema"] == "persona_dream.cinematography_coverage_receipt.v1"
+assert coverage["status"] == "PASS_CINEMATOGRAPHY_COVERAGE"
+assert coverage["complies_with"] == "best-practices-cinematography"
+assert [s["speaker"] for s in coverage["shot_plan"]] == ["embry", "horus", "embry", "horus"]
+assert all(p["speaker"] == s["speaker"] and p["coverage"] == s["coverage"] for p, s in zip(prompt_items, shots))
+assert "$watch --diarization pyannote --require-diarization" in coverage["watch_diarization_boundary"]
+assert "cinematography_coverage_receipt.json" in manifest["required_modes"]["video_plan"]
 assert any("voice_identity_boundary_receipt.json" in receipt for receipt in voice["required_receipts"])
 assert bible["schema"] == "persona_dream.character_scene_bible.v1"
 assert {character["character_id"] for character in bible["characters"]} == {"embry", "horus"}

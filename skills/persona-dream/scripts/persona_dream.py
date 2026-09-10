@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+"""Persona Dream generate CLI.
+
+Diagram ID: persona-dream.kling-e2e
+Excalidraw source: skills/persona-dream/docs/explain/boards/persona-dream-kling-e2e.excalidraw
+"""
 from __future__ import annotations
 
 from pydantic_step_gate import validate_http_json
@@ -954,40 +959,107 @@ Core tension: {core_tension}
     }
 
     shot_specs = [
-        ("shot_01", "Establish the impossible calm", "wide", "The patio umbrella and tea table sit on a void-world terrace while Tyranids tumble in the distance like strange pets.", "No evidence without a case, Embry. Even xenos understand perimeter discipline."),
-        ("shot_02", "Embry explains the app", "medium on Embry", "Embry gestures to holographic SPARTA Explorer panels: Chat, Evidence Workspace, Coverage, QRAs, Controls.", "It has to feel like someone sitting with you, not a dashboard judging you."),
-        ("shot_03", "Horus reframes it as campaign logic", "two-shot", "Horus taps the table; evidence receipts arrange like a campaign map while Embry relaxes enough to smile.", "Then make the receipt a battle standard: case, state, reason, artifact, next action. No theater."),
-        ("shot_04", "Agreement and dream close", "slow push-in", "The Tyranids settle beyond the patio; the table projection becomes a compact SPARTA Chat evidence receipt and the tea steam drifts through it.", "A trusted colleague at the table. Fine. I will permit this little workbench to exist."),
+        {
+            "shot_id": "shot_01",
+            "beat": "Establish Embry's first speaking beat",
+            "camera": "master two-shot resolving to Embry-favored medium close-up",
+            "coverage": "master-to-embry-medium-close-up",
+            "speaker": "embry",
+            "eyeline": "Embry screen-left faces camera-right; Horus screen-right faces camera-left",
+            "visual": "Embry gestures to the glowing SPARTA Explorer evidence map between the tea cups while Horus listens in profile.",
+            "dialogue": "It has to feel like someone sitting with you, not a dashboard judging you.",
+        },
+        {
+            "shot_id": "shot_02",
+            "beat": "Horus answers in reverse coverage",
+            "camera": "Horus-favored medium close-up, matched to Embry's single",
+            "coverage": "horus-reverse-medium-close-up",
+            "speaker": "horus",
+            "eyeline": "Horus screen-right faces camera-left; Embry screen-left listens in profile",
+            "visual": "Horus taps the table; evidence receipts arrange like a campaign map under the purple Zeitch Eye light.",
+            "dialogue": "Then make the receipt a battle standard: case, state, reason, artifact, next action. No theater.",
+        },
+        {
+            "shot_id": "shot_03",
+            "beat": "Embry reacts and closes the emotional turn",
+            "camera": "Embry-favored medium close-up, same lens and size as the reverse shot",
+            "coverage": "embry-reaction-medium-close-up",
+            "speaker": "embry",
+            "eyeline": "Embry screen-left faces camera-right; Horus screen-right stays the listener",
+            "visual": "Embry smiles as the Tyranids stay distant and the table projection becomes a compact SPARTA Chat evidence receipt.",
+            "dialogue": "A trusted colleague at the table. That is the version I can keep building.",
+        },
+        {
+            "shot_id": "shot_04",
+            "beat": "Horus grants the final dry approval",
+            "camera": "Horus-favored medium close-up, matched reverse angle",
+            "coverage": "horus-closing-medium-close-up",
+            "speaker": "horus",
+            "eyeline": "Horus screen-right faces camera-left; Embry remains screen-left in profile",
+            "visual": "Horus lifts the tea cup like a war trophy while the SPARTA map glow and storm sky motivate the same key light.",
+            "dialogue": "Fine. I will permit this little workbench to exist.",
+        },
     ]
+    cinematography_coverage = {
+        "schema": "persona_dream.cinematography_coverage_receipt.v1",
+        "status": "PASS_CINEMATOGRAPHY_COVERAGE",
+        "complies_with": "best-practices-cinematography",
+        "default_for": "persona-dream video_plan dialogue scenes",
+        "watch_diarization_boundary": "After dialogue audio is muxed, verify who-spoke-when with $watch --diarization pyannote --require-diarization; silent Kling clips carry planned_speaker only.",
+        "live_evidence_boundary": "$live-evidence supplies live transcript speaker-turn events, not pyannote diarization; its own contract says diarization is deferred.",
+        "rules": [
+            "coverage before prompts",
+            "one speaking beat per clip",
+            "speaker-favored framing",
+            "stable 180-degree line and eyelines",
+            "matched shot/reverse-shot framing",
+            "motivated lighting from the SPARTA map and Zeitch Eye",
+        ],
+        "shot_plan": [
+            {key: shot[key] for key in ("shot_id", "speaker", "coverage", "camera", "eyeline", "beat")}
+            for shot in shot_specs
+        ],
+        "post_audio_required_receipts": [
+            "watch.diarization.v1",
+            "watch.speaker_attribution.v1 or human-accepted speaker mapping",
+        ],
+    }
     storyboard = []
     timed = []
     prompts = []
-    for idx, ((start, end), (shot_id, beat, camera, visual, dialogue)) in enumerate(zip(starts, shot_specs), 1):
-        speaker = "embry" if shot_id == "shot_02" else "horus"
+    for idx, ((start, end), shot) in enumerate(zip(starts, shot_specs), 1):
+        visual = shot["visual"]
         storyboard.append({
-            "shot_id": shot_id,
+            "shot_id": shot["shot_id"],
             "scene_id": "void_patio",
-            "beat": beat,
-            "camera": camera,
+            "beat": shot["beat"],
+            "camera": shot["camera"],
+            "coverage": shot["coverage"],
+            "speaker": shot["speaker"],
+            "eyeline": shot["eyeline"],
             "visual": visual,
             "characters": ["embry", "horus"],
             "background_action": "Tyranids play in the far background without threatening the table.",
             "source_residue_ids": residue_ids,
         })
         timed.append({
-            "shot_id": shot_id,
+            "shot_id": shot["shot_id"],
             "start_sec": start,
             "end_sec": end,
             "duration_sec": round(end - start, 3),
             "characters": ["embry", "horus"],
-            "speaker": speaker,
-            "dialogue": dialogue,
+            "speaker": shot["speaker"],
+            "dialogue": shot["dialogue"],
             "action": visual,
-            "camera": camera,
+            "camera": shot["camera"],
+            "coverage": shot["coverage"],
+            "eyeline": shot["eyeline"],
             "audio_cue": "quiet tea porcelain, low void wind, distant non-threatening chitter, warm conversational tone",
+            "diarization_plan": "Verify this line's time window after mux with $watch pyannote diarization; silent video remains planned-speaker only.",
         })
         prompt = (
             f"cinematic dream video frame, {scenario}, {visual} "
+            f"Speaker-favored dialogue coverage: {shot['coverage']}; {shot['eyeline']}. "
             f"Embry: brown hair, olive green eyes, faint nose bridge scar, practical aerospace intern clothing. "
             f"Horus: dark regal machine-spirit warmaster avatar, severe black and gold silhouette, seated at tea. "
             f"SPARTA Explorer holographic UI on the patio table: {', '.join(sparta_terms[:4])}. "
@@ -996,9 +1068,12 @@ Core tension: {core_tension}
         )
         prompts.append({
             "prompt_id": f"prompt_{idx:02d}",
-            "shot_id": shot_id,
+            "shot_id": shot["shot_id"],
             "model_lane": "ComfyUI Z-Image/keyframe workflow -> ComfyUI TurboDiffusion TurboWan2.2-I2V-A14B-720P; Chutes non-Turbo fallback only after canary",
             "source_keyframe_id": f"keyframe_{idx:02d}",
+            "speaker": shot["speaker"],
+            "coverage": shot["coverage"],
+            "eyeline": shot["eyeline"],
             "prompt": prompt,
             "negative_prompt": "robotic office meeting, generic dashboard, hostile attack, gore, unreadable faces, extra characters at table, text artifacts, watermark",
             "duration_sec": round(end - start, 3),
@@ -1017,6 +1092,8 @@ Core tension: {core_tension}
                 "tea/patio/umbrella visible",
                 "Tyranids in background but non-threatening",
                 "SPARTA Explorer conversation implied by table holograms",
+                "speaker-favored framing matches the timed transcript speaker",
+                "stable 180-degree eyeline is preserved",
                 "friendly personal tone, not sterile office mood",
             ],
             "synthetic_output_label": True,
@@ -1042,6 +1119,7 @@ Core tension: {core_tension}
             "synthetic": True,
         },
         "character_scene_bible": bible,
+        "cinematography_coverage": cinematography_coverage,
         "storyboard": {"schema": "persona_dream.storyboard.v1", "shots": storyboard},
         "timed_transcript": {
             "schema": "persona_dream.timed_transcript.v1",
@@ -1737,6 +1815,7 @@ def generate(
         (out / "dream_story.md").write_text(video_plan_artifacts["dream_story_md"])
         _write_json(out / "dream_story.json", video_plan_artifacts["dream_story_json"])
         _write_json(out / "character_scene_bible.json", video_plan_artifacts["character_scene_bible"])
+        _write_json(out / "cinematography_coverage_receipt.json", video_plan_artifacts["cinematography_coverage"])
         _write_json(out / "storyboard.json", video_plan_artifacts["storyboard"])
         _write_json(out / "timed_transcript.json", video_plan_artifacts["timed_transcript"])
         _write_json(out / "multimodal_prompts.json", video_plan_artifacts["multimodal_prompts"])
@@ -1745,6 +1824,7 @@ def generate(
             "dream_story.md",
             "dream_story.json",
             "character_scene_bible.json",
+            "cinematography_coverage_receipt.json",
             "storyboard.json",
             "timed_transcript.json",
             "multimodal_prompts.json",
@@ -1807,6 +1887,7 @@ def generate(
                 "dream_story.md",
                 "dream_story.json",
                 "character_scene_bible.json",
+                "cinematography_coverage_receipt.json",
                 "storyboard.json",
                 "timed_transcript.json",
                 "multimodal_prompts.json",

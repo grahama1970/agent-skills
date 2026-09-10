@@ -101,7 +101,13 @@ dream packet -> story -> character/scene bible -> storyboard
 
 For Kling/video-oriented runs, insert a Look Lock step before storyboard prompt
 composition. If the scene has dialogue or character conflict, the same selector
-must also emit Script DNA before storyboard prompt composition:
+must also emit Script DNA before storyboard prompt composition. Dialogue scenes
+must also emit cinematography coverage by default before provider prompts: one
+speaking beat per clip, speaker-favored shot/reverse-shot coverage, stable
+180-degree line/eyelines, matched framing, and motivated lighting. After dialogue
+audio is muxed, Persona Dream consumes `$watch` pyannote diarization receipts for
+who-spoke-when verification; `$live-evidence` speaker turns are live transcript
+evidence, not the diarization authority.
 
 ```text
 story + visual entities + memory/project recalls
@@ -322,12 +328,27 @@ technique_selection.json
 script_dna_selection.json
 look_lock.json
 storyboard.json
+cinematography_coverage_receipt.json
 timed_transcript.json
 multimodal_prompts.json
 voice_handoff_plan.json
 pipeline_stage_report.json
 pipeline_stage_report.md
 manifest.json
+```
+
+`cinematography_coverage_receipt.json` must preserve the default
+`$best-practices-cinematography` dialogue grammar and name the post-audio
+verification owner:
+
+```text
+coverage before prompts
+one speaking beat per clip
+speaker-favored framing per speaking beat
+stable 180-degree line and eyelines
+matched shot/reverse-shot framing
+$watch diarization required after dialogue audio is muxed
+$live-evidence speaker turns are not diarization
 ```
 
 `voice_handoff_plan.json` must preserve:
@@ -363,6 +384,12 @@ If the 7.5-second path is unstable, fall back to six 5-second clips:
 ## Fail-Closed Rules
 
 - If no residue is recalled, return `blocked` with `reason: no_dream`.
+- In `video_plan` mode, dialogue scenes must fail closed before provider prompt
+  readiness unless `cinematography_coverage_receipt.json` passes the
+  `$best-practices-cinematography` coverage rules and the voice handoff names
+  `$watch --diarization pyannote --require-diarization` as the post-mux
+  who-spoke-when proof path. Silent Kling clips may carry only `planned_speaker`;
+  they are not diarized evidence.
 - In `video_plan` mode, if the phase_03_crew casting bundle is absent from
   `--crew-dir` or fails validation, return `blocked` with
   `reason: crew_casting_required` and `required_step: phase_03_crew_casting`, and

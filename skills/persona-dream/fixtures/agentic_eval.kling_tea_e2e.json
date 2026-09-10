@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "persona-dream",
   "trials": 2,
-  "proof_scope": "live cross-stage smoke using a direct reference-bound Kling image-to-video request, Embry journal, and Chatterbox Horus/Embry discussion; uses paid/live provider credentials when available; the Kling leg intentionally does not prove the canonical scene-table/create-kling-scene compiler path",
+  "proof_scope": "live cross-stage smoke using 2-3 direct reference-bound Kling image-to-video clips, Embry journal, and Chatterbox Horus/Embry discussion; uses paid/live provider credentials when available; the Kling leg intentionally does not prove the canonical scene-table/create-kling-scene compiler path",
   "claims": {
-    "proves": "The specified human idea can execute through a live direct reference-bound Kling image-to-video provider smoke, journal artifact creation, Chatterbox journal audio, and a dynamic voiced Horus/Embry conversation with read-back artifacts.",
+    "proves": "The specified human idea can execute through a live 2-3 clip direct reference-bound Kling image-to-video provider smoke, clip assembly, journal artifact creation, Chatterbox journal audio, and a dynamic voiced Horus/Embry conversation with read-back artifacts.",
     "does_not_prove": "Persona Dream -> scene_script.scene_table.v1 -> create-kling-scene compilation, production reliability, human preference, or that every historical Persona Dream media lane is complete."
   },
   "capability_claims": [
@@ -39,15 +39,51 @@
           {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/KlingTeaE2E.RECEIPT.json", "json_pointer": "/status", "equals": "PASS_KLING_TEA_E2E"},
           {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/KlingTeaE2E.RECEIPT.json", "json_pointer": "/live", "equals": true},
           {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/KlingTeaE2E.RECEIPT.json", "json_pointer": "/mocked", "equals": false},
+          {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/KlingTeaE2E.RECEIPT.json", "json_pointer": "/clip_count", "equals": 3},
           {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_request.json", "json_pointer": "/model_id", "equals": "fal-ai/kling-video/v3/standard/image-to-video"},
           {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_request.json", "json_pointer": "/canonical_compiler", "equals": false},
+          {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_request.json", "json_pointer": "/clip_count", "equals": 3},
           {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_reference_assets_receipt.json", "json_pointer": "/status", "equals": "PASS_REFERENCE_ASSETS_UPLOADED"},
           {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_reference_assets_receipt.json", "json_pointer": "/element_count", "equals": 3},
           {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_direct_request_validation_receipt.json", "json_pointer": "/status", "equals": "PASS_DIRECT_KLING_SMOKE_REQUEST"},
           {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_direct_request_validation_receipt.json", "json_pointer": "/canonical_compiler", "equals": false},
+          {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_direct_request_validation_receipt.json", "json_pointer": "/clip_count", "equals": 3},
+          {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/cinematography_coverage_receipt.json", "json_pointer": "/status", "equals": "PASS_CINEMATOGRAPHY_COVERAGE"},
+          {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/cinematography_coverage_receipt.json", "json_pointer": "/complies_with", "equals": "best-practices-cinematography"},
+          {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/cinematography_coverage_receipt.json", "json_pointer": "/clip_count", "equals": 3},
+          {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/cinematography_coverage_receipt.json", "json_pointer": "/watch_diarization_boundary", "equals": "After dialogue audio is muxed, verify who-spoke-when with $watch --diarization pyannote --require-diarization; silent Kling clips carry planned_speaker only."},
+          {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/cinematography_coverage_receipt.json", "json_pointer": "/live_evidence_boundary", "equals": "$live-evidence supplies live transcript speaker-turn events, not pyannote diarization; its own contract says diarization is deferred."},
+          {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream_clip_01.mp4", "min_bytes": 100000},
+          {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream_clip_02.mp4", "min_bytes": 100000},
+          {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream_clip_03.mp4", "min_bytes": 100000},
           {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream.mp4", "min_bytes": 100000},
           {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/journal.wav", "min_bytes": 10000},
           {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/dynamic_conversation_receipt.v1.json", "json_pointer": "/status", "equals": "PASS_DYNAMIC_CONVERSATION"}
+        ]
+      }
+    },
+    {
+      "name": "kling-tea-cinematography-coverage-plan",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": ["persona_dream.kling_tea_e2e"],
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail\nOUT=/tmp/persona-dream-kling-tea-cinematography-agentic\nrm -rf \"$OUT\"\nuv run --project .. python ../scripts/eval_kling_tea_e2e.py --out-dir \"$OUT\" --validate-cinematography-only --clip-count 3"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PASS_CINEMATOGRAPHY_COVERAGE"],
+        "artifacts": [
+          {"path": "/tmp/persona-dream-kling-tea-cinematography-agentic/cinematography_coverage_receipt.json", "json_pointer": "/status", "equals": "PASS_CINEMATOGRAPHY_COVERAGE"},
+          {"path": "/tmp/persona-dream-kling-tea-cinematography-agentic/cinematography_coverage_receipt.json", "json_pointer": "/rules/2", "equals": "one beat per clip, speaker favored"},
+          {"path": "/tmp/persona-dream-kling-tea-cinematography-agentic/cinematography_coverage_receipt.json", "json_pointer": "/shot_plan/0/speaker", "equals": "embry"},
+          {"path": "/tmp/persona-dream-kling-tea-cinematography-agentic/cinematography_coverage_receipt.json", "json_pointer": "/shot_plan/1/speaker", "equals": "horus"},
+          {"path": "/tmp/persona-dream-kling-tea-cinematography-agentic/cinematography_coverage_receipt.json", "json_pointer": "/shot_plan/2/speaker", "equals": "embry"},
+          {"path": "/tmp/persona-dream-kling-tea-cinematography-agentic/cinematography_coverage_receipt.json", "json_pointer": "/watch_diarization_boundary", "equals": "After dialogue audio is muxed, verify who-spoke-when with $watch --diarization pyannote --require-diarization; silent Kling clips carry planned_speaker only."},
+          {"path": "/tmp/persona-dream-kling-tea-cinematography-agentic/cinematography_coverage_receipt.json", "json_pointer": "/live_evidence_boundary", "equals": "$live-evidence supplies live transcript speaker-turn events, not pyannote diarization; its own contract says diarization is deferred."}
         ]
       }
     },
@@ -60,7 +96,7 @@
       "command": [
         "bash",
         "-c",
-        "set -euo pipefail\nOUT=/tmp/persona-dream-kling-tea-e2e-agentic-dry-run\nrm -rf \"$OUT\"\nuv run --project .. python ../scripts/eval_kling_tea_e2e.py --out-dir \"$OUT\" --dry-run"
+        "set -euo pipefail\nOUT=/tmp/persona-dream-kling-tea-e2e-agentic-dry-run\nrm -rf \"$OUT\"\nuv run --project .. python ../scripts/eval_kling_tea_e2e.py --out-dir \"$OUT\" --dry-run --clip-count 2"
       ],
       "expected": {
         "exit_code": 2,

@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Live E2E: human idea -> Kling dream video -> Embry journal -> Chatterbox conversation."""
+"""Live E2E: human idea -> 2-3 Kling clips -> Embry journal -> Chatterbox conversation.
+
+Diagram ID: persona-dream.kling-e2e
+Excalidraw source: skills/persona-dream/docs/explain/boards/persona-dream-kling-e2e.excalidraw
+"""
 from __future__ import annotations
 
 import argparse
@@ -177,6 +181,99 @@ def validate_direct_kling_smoke_request(run_dir: Path, request: dict[str, Any]) 
     return receipt
 
 
+SHOT_PLAN = [
+    {
+        "clip": 1,
+        "speaker": "embry",
+        "coverage": "master-to-embry-medium-close-up",
+        "framing": "master two-shot resolves into Embry favored medium close-up",
+        "eyeline": "Embry stays screen-left facing camera-right; Horus stays screen-right facing camera-left",
+        "beat": "Embry speaks first about the glowing SPARTA Explorer evidence map between their tea cups; Horus listens in profile.",
+    },
+    {
+        "clip": 2,
+        "speaker": "horus",
+        "coverage": "horus-reverse-medium-close-up",
+        "framing": "Horus favored medium close-up, matched size to Embry's single",
+        "eyeline": "Horus remains screen-right facing camera-left; Embry remains screen-left facing camera-right as the listener in profile",
+        "beat": "Horus answers calmly while purple storm light from the Zeitch Eye crosses his armor and face.",
+    },
+    {
+        "clip": 3,
+        "speaker": "embry",
+        "coverage": "embry-reaction-medium-close-up",
+        "framing": "Embry favored medium close-up, same lens and size as the reverse shot",
+        "eyeline": "Embry remains screen-left facing camera-right; Horus remains screen-right facing camera-left",
+        "beat": "Embry closes the exchange with a small smile as a distant Tyranid crosses behind them without approaching.",
+    },
+]
+
+
+def validate_cinematography_plan(run_dir: Path, clip_count: int) -> dict[str, Any]:
+    plan = SHOT_PLAN[:clip_count]
+    speakers = [shot["speaker"] for shot in plan]
+    coverages = [shot["coverage"] for shot in plan]
+    errors = []
+    if len(set(speakers)) < 2:
+        errors.append("coverage must change by speaking character")
+    if len(set(coverages)) != len(coverages):
+        errors.append("each speaking beat needs distinct coverage")
+    if not all("screen-left facing camera-right" in shot["eyeline"] and "screen-right facing camera-left" in shot["eyeline"] for shot in plan):
+        errors.append("180-degree line and eyelines must stay explicit")
+    if not all("medium close-up" in shot["framing"] for shot in plan):
+        errors.append("speaker singles must use matched medium close-up framing")
+    status = "PASS_CINEMATOGRAPHY_COVERAGE" if not errors else "BLOCKED_CINEMATOGRAPHY_COVERAGE"
+    receipt = {
+        "schema": "persona_dream.cinematography_coverage_receipt.v1",
+        "status": status,
+        "complies_with": "best-practices-cinematography",
+        "rules": [
+            "coverage before prompts",
+            "stable 180-degree line and eyelines",
+            "one beat per clip, speaker favored",
+            "matched shot/reverse-shot framing",
+            "motivated lighting from SPARTA map and Zeitch Eye",
+        ],
+        "watch_diarization_boundary": "After dialogue audio is muxed, verify who-spoke-when with $watch --diarization pyannote --require-diarization; silent Kling clips carry planned_speaker only.",
+        "live_evidence_boundary": "$live-evidence supplies live transcript speaker-turn events, not pyannote diarization; its own contract says diarization is deferred.",
+        "clip_count": clip_count,
+        "shot_plan": plan,
+        "errors": errors,
+    }
+    write_json(run_dir / "cinematography_coverage_receipt.json", receipt)
+    if errors:
+        raise RuntimeError("; ".join(errors))
+    return receipt
+
+
+def clip_prompt(index: int, clip_count: int) -> str:
+    shot = SHOT_PLAN[index - 1]
+    return (
+        f"Clip {index} of {clip_count}, continuous dialogue coverage, one speaking beat only. "
+        "@Element1 is Horus Lupercal. @Element2 is Embry Lawson. Exactly two people, no one else present. "
+        f"Speaker: {shot['speaker']}. Coverage: {shot['coverage']}. Framing: {shot['framing']}. "
+        f"180-degree line: {shot['eyeline']}. {shot['beat']} "
+        "Speaker mouth clearly visible during the line; listener reacts in profile; end with closed mouth. "
+        "Motivated light comes from the glowing SPARTA Explorer map on the table and purple storm sky. "
+        "@Element3 is one distant Tyranid creature in the background only. No text overlays."
+    )
+
+
+def concat_videos(run_dir: Path, clips: list[Path]) -> Path:
+    list_path = run_dir / "kling_clips.ffconcat"
+    list_path.write_text("ffconcat version 1.0\n" + "".join(f"file '{clip.name}'\n" for clip in clips), encoding="utf-8")
+    out = run_dir / "kling_dream.mp4"
+    proc = subprocess.run(
+        ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", str(list_path), "-c", "copy", str(out)],
+        text=True,
+        capture_output=True,
+        timeout=180,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr[-1000:])
+    return out
+
+
 def render_journal_audio(run_dir: Path, run_id: str, text: str) -> Path:
     request = {
         "answer_text": text,
@@ -229,12 +326,19 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out-dir", type=Path, default=None)
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--clip-count", type=int, default=3, choices=(2, 3))
+    ap.add_argument("--validate-cinematography-only", action="store_true")
     args = ap.parse_args()
     run_id = "kling-tea-e2e-" + time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
     run_dir = (args.out_dir or OUT_ROOT / run_id).resolve()
     run_dir.mkdir(parents=True, exist_ok=True)
 
     phase(run_dir, "idea_lineage", "PASS_IDEA_LINEAGE", live=True, idea=IDEA, source="human_prompt")
+    if args.validate_cinematography_only:
+        coverage = validate_cinematography_plan(run_dir, args.clip_count)
+        phase(run_dir, "cinematography_coverage", coverage["status"], live=False, artifacts=[str(run_dir / "cinematography_coverage_receipt.json")])
+        print(f"PASS_CINEMATOGRAPHY_COVERAGE run={run_dir} clips={args.clip_count}")
+        return 0
     if args.dry_run:
         phase(run_dir, "kling_dream_video", "BLOCKED_DRY_RUN_NOT_E2E", live=False)
         print(f"BLOCKED_DRY_RUN_NOT_E2E run={run_dir}")
@@ -270,65 +374,85 @@ def main() -> int:
         return 2
     phase(run_dir, "kling_reference_assets", "PASS_REFERENCE_ASSETS_UPLOADED", live=True, artifacts=[str(run_dir / "kling_reference_assets_receipt.json")])
 
-    prompt = (
-        "@Element1 is Horus Lupercal. @Element2 is Embry Lawson. Exactly two people sit at the tea table in the start frame; "
-        "both faces stay clearly visible in three-quarter view toward camera. They lean toward the glowing SPARTA Explorer evidence map. "
-        "Storm wind pushes across the table so tea steam tears sideways while purple lightning flickers across their faces. "
-        "@Element3 is one distant Tyranid creature crossing behind them without approaching. "
-        "A dark eclipsed black sphere ringed by a glowing purple corona hangs in the storm sky. "
-        "Camera: slow intimate push-in; warm uncanny friendship; no text overlays."
-    )
-    request = {
-        "prompt": prompt,
-        "start_image_url": binding["start_image_url"],
-        "duration": "5",
-        "generate_audio": False,
-        "elements": binding["elements"],
-        "negative_prompt": "text, subtitles, gore, extra people, third person, crowd, generic space marines, bald blue aliens, changed faces, changed armor, changed jacket, back of head only, face hidden",
-        "cfg_scale": 0.75,
-    }
     try:
-        direct_validation = validate_direct_kling_smoke_request(run_dir, request)
+        coverage = validate_cinematography_plan(run_dir, args.clip_count)
+    except Exception as exc:
+        phase(run_dir, "cinematography_coverage", "BLOCKED_CINEMATOGRAPHY_COVERAGE", live=True, error=str(exc)[:1000], artifacts=[str(run_dir / "cinematography_coverage_receipt.json")])
+        print(f"BLOCKED_CINEMATOGRAPHY_COVERAGE run={run_dir}")
+        return 2
+    phase(run_dir, "cinematography_coverage", coverage["status"], live=True, artifacts=[str(run_dir / "cinematography_coverage_receipt.json")])
+
+    requests = []
+    for index in range(1, args.clip_count + 1):
+        requests.append({
+            "prompt": clip_prompt(index, args.clip_count),
+            "start_image_url": binding["start_image_url"],
+            "duration": "5",
+            "generate_audio": False,
+            "elements": binding["elements"],
+            "negative_prompt": "text, subtitles, gore, extra people, third person, crowd, generic space marines, bald blue aliens, changed faces, changed armor, changed jacket, back of head only, face hidden",
+            "cfg_scale": 0.75,
+        })
+    request_bundle = {**requests[0], "prompt": "\n".join(item["prompt"] for item in requests)}
+    try:
+        direct_validation = validate_direct_kling_smoke_request(run_dir, request_bundle)
     except Exception as exc:
         phase(run_dir, "kling_direct_request_validation", "BLOCKED_KLING_DIRECT_REQUEST", live=True, error=str(exc)[:1000])
         print(f"BLOCKED_KLING_DIRECT_REQUEST run={run_dir}")
         return 2
+    direct_validation["clip_count"] = args.clip_count
+    write_json(run_dir / "kling_direct_request_validation_receipt.json", direct_validation)
     phase(run_dir, "kling_direct_request_validation", direct_validation["status"], live=True, artifacts=[str(run_dir / "kling_direct_request_validation_receipt.json")])
     write_json(run_dir / "kling_request.json", {
         "schema": "persona_dream.kling_tea_request.v1",
         "model_id": MODEL_ID,
         "reference_assets_receipt": str(run_dir / "kling_reference_assets_receipt.json"),
         "direct_request_validation_receipt": str(run_dir / "kling_direct_request_validation_receipt.json"),
+        "cinematography_coverage_receipt": str(run_dir / "cinematography_coverage_receipt.json"),
         "canonical_compiler": False,
-        "request": request,
+        "clip_count": args.clip_count,
+        "requests": requests,
     })
+    clips: list[Path] = []
+    responses: list[dict[str, Any]] = []
     try:
-        response = fal_client.subscribe(MODEL_ID, arguments=request, with_logs=True)  # type: ignore[attr-defined]
+        for index, request in enumerate(requests, 1):
+            response = fal_client.subscribe(MODEL_ID, arguments=request, with_logs=True)  # type: ignore[attr-defined]
+            responses.append(response)
+            write_json(run_dir / f"kling_response_clip_{index:02d}.json", response)
+            video_url = (((response or {}).get("video") or {}).get("url") if isinstance(response, dict) else None) or ((response or {}).get("url") if isinstance(response, dict) else None)
+            if not video_url:
+                phase(run_dir, "kling_dream_video", "BLOCKED_KLING_NO_VIDEO_URL", live=True, artifacts=[str(run_dir / f"kling_response_clip_{index:02d}.json")], clip=index)
+                print(f"BLOCKED_KLING_NO_VIDEO_URL run={run_dir} clip={index}")
+                return 2
+            clip = run_dir / f"kling_dream_clip_{index:02d}.mp4"
+            fetch(str(video_url), clip)
+            write_json(run_dir / f"kling_dream_clip_{index:02d}.ffprobe.json", ffprobe(clip))
+            if clip.stat().st_size < 100_000:
+                phase(run_dir, "kling_dream_video", "BLOCKED_KLING_VIDEO_TOO_SMALL", live=True, artifacts=[str(clip)], clip=index)
+                print(f"BLOCKED_KLING_VIDEO_TOO_SMALL run={run_dir} clip={index}")
+                return 2
+            clips.append(clip)
     except Exception as exc:
         error = str(exc)
         code = "BLOCKED_KLING_PROVIDER_TOP_UP" if ("TOP_UP" in error or "Exhausted balance" in error or "Top up your balance" in error) else "BLOCKED_KLING_PROVIDER_ERROR"
-        phase(run_dir, "kling_dream_video", code, live=True, error=error[:1000])
+        phase(run_dir, "kling_dream_video", code, live=True, error=error[:1000], completed_clips=len(clips), requested_clips=args.clip_count)
         print(f"{code} run={run_dir}")
         return 2
-    write_json(run_dir / "kling_response.json", response)
-    video_url = (((response or {}).get("video") or {}).get("url") if isinstance(response, dict) else None) or ((response or {}).get("url") if isinstance(response, dict) else None)
-    if not video_url:
-        phase(run_dir, "kling_dream_video", "BLOCKED_KLING_NO_VIDEO_URL", live=True, artifacts=[str(run_dir / "kling_response.json")])
-        print(f"BLOCKED_KLING_NO_VIDEO_URL run={run_dir}")
+    write_json(run_dir / "kling_responses.json", {"schema": "persona_dream.kling_tea_responses.v1", "responses": responses})
+    try:
+        video = concat_videos(run_dir, clips)
+    except Exception as exc:
+        phase(run_dir, "kling_dream_video", "BLOCKED_KLING_ASSEMBLY", live=True, error=str(exc)[:1000], artifacts=[*map(str, clips)])
+        print(f"BLOCKED_KLING_ASSEMBLY run={run_dir}")
         return 2
-    video = run_dir / "kling_dream.mp4"
-    fetch(str(video_url), video)
     probe = ffprobe(video)
     write_json(run_dir / "kling_dream.ffprobe.json", probe)
-    if video.stat().st_size < 100_000:
-        phase(run_dir, "kling_dream_video", "BLOCKED_KLING_VIDEO_TOO_SMALL", live=True, artifacts=[str(video)])
-        print(f"BLOCKED_KLING_VIDEO_TOO_SMALL run={run_dir}")
-        return 2
-    phase(run_dir, "kling_dream_video", "PASS_KLING_DREAM_VIDEO", live=True, artifacts=[str(video), str(run_dir / "kling_response.json")], video_sha256=sha256(video), bytes=video.stat().st_size)
+    phase(run_dir, "kling_dream_video", "PASS_KLING_DREAM_VIDEO", live=True, artifacts=[str(video), str(run_dir / "kling_responses.json"), *map(str, clips)], video_sha256=sha256(video), clip_count=len(clips), bytes=video.stat().st_size)
 
-    storyboard = {"schema": "persona_dream.cycle_storyboard_plan.v1", "dream_synopsis": IDEA, "panels": [{"panel_id": "sb_001", "action": "Embry and Horus share tea beside a floating SPARTA Explorer evidence map while the Zeitch Eye and Tyranids remain behind them.", "mood": "warm uncanny friendship"}]}
+    storyboard = {"schema": "persona_dream.cycle_storyboard_plan.v1", "dream_synopsis": IDEA, "panels": [{"panel_id": f"sb_{index:03d}", "action": clip_prompt(index, args.clip_count), "mood": "warm uncanny friendship"} for index in range(1, args.clip_count + 1)]}
     write_json(run_dir / "storyboard_plan.json", storyboard)
-    write_json(run_dir / "observation_packet.json", {"schema": "persona_dream.cycle_storyboard_observation_packet.v1", "status": "PASS_KLING_VIDEO_OBSERVED", "frame_evidence": [{"panel_id": "sb_001", "observed_entities": ["Embry", "Horus", "tea", "SPARTA Explorer", "Zeitch Eye", "Tyranids"]}]})
+    write_json(run_dir / "observation_packet.json", {"schema": "persona_dream.cycle_storyboard_observation_packet.v1", "status": "PASS_KLING_VIDEO_OBSERVED", "clip_count": args.clip_count, "frame_evidence": [{"panel_id": f"sb_{index:03d}", "observed_entities": ["Embry", "Horus", "tea", "SPARTA Explorer", "Zeitch Eye", "Tyranids"]} for index in range(1, args.clip_count + 1)]})
     write_json(run_dir / "residue_links.json", {"schema": "persona_dream.residue_links.v1", "idea_id": run_id, "items": [{"source_id": "human_idea", "scope": "human_prompt", "text": IDEA, "type": "explicit_human_idea"}]})
     write_json(run_dir / "day_context.json", {"schema": "persona_dream.day_context.v1", "items": [{"source_id": "human_idea", "text": IDEA}]})
     write_json(run_dir / "transcript_context.json", {"schema": "persona_dream.transcript_context.v1", "items": []})
@@ -371,12 +495,15 @@ def main() -> int:
         "idea": IDEA,
         "kling_video": str(video),
         "kling_video_sha256": sha256(video),
+        "clip_count": len(clips),
+        "clips": [{"path": str(clip), "sha256": sha256(clip), "bytes": clip.stat().st_size} for clip in clips],
         "journal_audio": str(run_dir / "journal.wav"),
         "conversation_turns": len(turns),
+        "cinematography_coverage_receipt": str(run_dir / "cinematography_coverage_receipt.json"),
         "phase_receipts": sorted(str(p) for p in (run_dir / "receipts").glob("*.json")),
     }
     write_json(run_dir / "KlingTeaE2E.RECEIPT.json", receipt)
-    print(f"PASS_KLING_TEA_E2E run={run_dir} turns={len(turns)} video_bytes={video.stat().st_size}")
+    print(f"PASS_KLING_TEA_E2E run={run_dir} clips={len(clips)} turns={len(turns)} video_bytes={video.stat().st_size}")
     return 0
 
 

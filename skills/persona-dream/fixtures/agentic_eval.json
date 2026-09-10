@@ -25,16 +25,32 @@
       "evidence_class": "fault_injected_deterministic",
       "real_world": true,
       "required": true,
-      "supports_claims": ["persona_dream.agentic_pipeline_driver"],
+      "supports_claims": [
+        "persona_dream.agentic_pipeline_driver"
+      ],
       "timeout_seconds": 240,
       "command": [
-        "uv", "run", "--project", "..", "python", "../scripts/eval_spine_artifact_boundaries.py",
-        "--output", "/tmp/persona-dream-spine-boundary-agentic.json"
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "python",
+        "../scripts/eval_spine_artifact_boundaries.py",
+        "--output",
+        "/tmp/persona-dream-spine-boundary-agentic.json"
       ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["SPINE_ARTIFACT_BOUNDARIES_OK"],
-        "artifacts": [{"path": "/tmp/persona-dream-spine-boundary-agentic.json", "json_pointer": "/status", "equals": "PASS"}]
+        "stdout_contains": [
+          "SPINE_ARTIFACT_BOUNDARIES_OK"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/persona-dream-spine-boundary-agentic.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          }
+        ]
       }
     },
     {
@@ -95,7 +111,7 @@
       "command": [
         "bash",
         "-lc",
-        "D=$(mktemp -d /tmp/persona-dream-eval-video-plan.XXXXXX); bash ../run.sh generate --mode video_plan --persona horus --secondary-persona embry --fixture ../scripts/fixtures/sample_residue.json --crew-dir ../scripts/fixtures/crew --about 'creating the SPARTA Explorer app' --scene 'Horus and Embry have tea under a patio umbrella on a void world.' --duration-seconds 30 --output-dir \"$D\" --run-id eval-video-plan --no-write-memory >/dev/null; python3 - \"$D\" <<'PY'\nimport json, sys\nfrom pathlib import Path\nout=Path(sys.argv[1])\nfor name in ['storyboard.json','timed_transcript.json','multimodal_prompts.json','voice_handoff_plan.json','manifest.json']:\n    assert (out/name).is_file(), name\ntimed=json.loads((out/'timed_transcript.json').read_text())\nvoice=json.loads((out/'voice_handoff_plan.json').read_text())\nassert timed['duration_seconds']==30 and len(timed['shots'])==4, timed\nassert voice['owner']=='create-movie/audio-lane', voice\nprint('VIDEO_PLAN_CREW_ARTIFACT_READBACK_OK')\nPY"
+        "D=$(mktemp -d /tmp/persona-dream-eval-video-plan.XXXXXX); bash ../run.sh generate --mode video_plan --persona horus --secondary-persona embry --fixture ../scripts/fixtures/sample_residue.json --crew-dir ../scripts/fixtures/crew --about 'creating the SPARTA Explorer app' --scene 'Horus and Embry have tea under a patio umbrella on a void world.' --duration-seconds 30 --output-dir \"$D\" --run-id eval-video-plan --no-write-memory >/dev/null; python3 - \"$D\" <<'PY'\nimport json, sys\nfrom pathlib import Path\nout=Path(sys.argv[1])\nfor name in ['storyboard.json','cinematography_coverage_receipt.json','timed_transcript.json','multimodal_prompts.json','voice_handoff_plan.json','manifest.json']:\n    assert (out/name).is_file(), name\ntimed=json.loads((out/'timed_transcript.json').read_text())\nvoice=json.loads((out/'voice_handoff_plan.json').read_text())\ncoverage=json.loads((out/'cinematography_coverage_receipt.json').read_text())\nprompts=json.loads((out/'multimodal_prompts.json').read_text())\nassert timed['duration_seconds']==30 and len(timed['shots'])==4, timed\nassert voice['owner']=='create-movie/audio-lane', voice\nassert coverage['status']=='PASS_CINEMATOGRAPHY_COVERAGE', coverage\nassert coverage['complies_with']=='best-practices-cinematography', coverage\nassert '$watch --diarization pyannote --require-diarization' in coverage['watch_diarization_boundary'], coverage\nassert 'diarization is deferred' in coverage['live_evidence_boundary'], coverage\nassert [s['speaker'] for s in coverage['shot_plan'][:3]] == ['embry','horus','embry'], coverage\nassert all(p.get('speaker') == t.get('speaker') and p.get('coverage') == t.get('coverage') for p,t in zip(prompts['prompts'], timed['shots'])), (prompts, timed)\nprint('VIDEO_PLAN_CREW_ARTIFACT_READBACK_OK')\nPY"
       ],
       "expected": {
         "exit_code": 0,
