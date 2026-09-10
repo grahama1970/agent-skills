@@ -63,7 +63,8 @@ function ExplainerButton({
         'flex flex-col gap-0.5',
         selected
           ? 'border-cyan-500 bg-cyan-950/40 text-cyan-100 shadow-sm shadow-cyan-950'
-          : 'border-zinc-800 bg-zinc-950/60 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900',
+          : 'border-zinc-800 bg-zinc-950/60 text-zinc-300',
+        'hover:-translate-y-px hover:border-cyan-500/60 hover:bg-zinc-900',
       ].join(' ')}
       onClick={() => {
         void dispatch(
@@ -94,10 +95,12 @@ function ExplainerButton({
 
 function FamilyPill({
   family,
+  count,
   active,
   onPick,
 }: {
   family: string
+  count: number
   active: boolean
   onPick: (family: string | null) => void
 }) {
@@ -132,7 +135,7 @@ function FamilyPill({
         onPick(active ? null : family)
       }}
     >
-      {family}
+      {family} {count}
     </button>
   )
 }
@@ -250,6 +253,9 @@ export function ExplainerHistory({
           <FamilyPill
             key={family}
             family={family}
+            count={explainers.filter(
+              (explainer) => explainer.question_family === family,
+            ).length}
             active={activeFamily === family}
             onPick={(next) => {
               setQuery(

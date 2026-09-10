@@ -62,7 +62,7 @@ function StatusGlyph({
   status: ServiceStatusKind
 }) {
   if (status === 'ONLINE') {
-    return <span className="size-2 shrink-0 rounded-full bg-green-400 shadow-[0_0_8px_#22c55e]" />
+    return <span className="status-dot-live size-2 shrink-0 rounded-full bg-green-400 shadow-[0_0_8px_#22c55e]" />
   }
   if (status === 'DEGRADED') {
     return <TriangleAlert aria-hidden="true" className="size-3.5 shrink-0" />

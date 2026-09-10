@@ -244,6 +244,34 @@ button,
   min-height: 44px;
 }
 
+
+/* Shared keycap hint. */
+.kbd-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  margin-left: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  color: #a1a1aa;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* Live-status dot pulse (ONLINE / READY only). */
+.status-dot-live {
+  animation: cockpit-status-pulse 2s infinite ease-in-out;
+}
+
+@keyframes cockpit-status-pulse {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
 /* Header mic badge (mic icon + RMS-driven pulse ring). */
 .cockpit-audio__badge {
   position: relative;

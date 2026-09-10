@@ -5,6 +5,10 @@ import {
   ShieldAlert,
 } from 'lucide-react'
 
+import {
+  Kbd,
+} from './Kbd'
+
 import type {
   Dispatch,
 } from '../useCockpit'
@@ -173,9 +177,7 @@ export function TeleprompterStage({
         >
           <ChevronLeft aria-hidden="true" className="size-4" />
           <span>Previous</span>
-          <kbd className="ml-1 rounded border border-zinc-700 bg-zinc-800 px-1.5 py-0.5 text-[10px] text-zinc-300">
-            ← / K
-          </kbd>
+          <Kbd>← / K</Kbd>
         </button>
 
         <button
@@ -193,9 +195,7 @@ export function TeleprompterStage({
           }}
         >
           <span>Next</span>
-          <kbd className="ml-1 rounded border border-zinc-700 bg-zinc-800 px-1.5 py-0.5 text-[10px] text-cyan-100">
-            → / J
-          </kbd>
+          <Kbd>→ / J</Kbd>
           <ChevronRight aria-hidden="true" className="size-4" />
         </button>
       </div>

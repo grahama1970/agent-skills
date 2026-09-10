@@ -21,6 +21,10 @@ import {
 } from './components/CockpitAudioIndicator'
 
 import {
+  Kbd,
+} from './components/Kbd'
+
+import {
   InputRail,
 } from './components/InputRail'
 
@@ -291,9 +295,7 @@ export function CockpitApp({
                 <span className="[writing-mode:vertical-lr] rotate-180 text-[10px] uppercase tracking-widest">
                   Evidence / Debug
                 </span>
-                <kbd className="rounded border border-zinc-700 bg-zinc-800 px-1 py-0.5 text-[9px]">
-                  E
-                </kbd>
+                <Kbd>E</Kbd>
               </>
             )}
           </button>
