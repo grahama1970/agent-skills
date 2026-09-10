@@ -2,8 +2,15 @@ import {
   ChevronLeft,
   ChevronRight,
   Gauge,
+  Lightbulb,
   ShieldAlert,
 } from 'lucide-react'
+
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 
 import {
   Kbd,
@@ -20,6 +27,30 @@ import {
 import type {
   CockpitState,
 } from '../types'
+
+/** Interpolate {{key}} template vars; unbound keys render [key]. */
+function interpolateVars(
+  text: string,
+  vars: Record<string, string>,
+): string {
+  return text.replace(
+    /\{\{(\w+)\}\}/g,
+    (_, key: string) => vars[key] ?? `[${key}]`,
+  )
+}
+
+function paceStatus(wpm: number): {
+  label: string
+  color: string
+} {
+  if (wpm > 170) {
+    return { label: 'TOO FAST', color: '#ef4444' }
+  }
+  if (wpm < 110) {
+    return { label: 'TOO SLOW', color: '#f59e0b' }
+  }
+  return { label: 'OPTIMAL PACE', color: '#10b981' }
+}
 
 export function TeleprompterStage({
   state,
@@ -50,7 +81,52 @@ export function TeleprompterStage({
     ),
   })
 
+  useRegisterAction({
+    element_id: 'cockpit:stage:deep-dive',
+    app: 'explain-project',
+    action: 'STEP_DEEP_DIVE_TOGGLE',
+    label: 'Toggle deep-dive drawer for the current step',
+    description: (
+      'Reveal the drill-down material: source explanation, '
+      + 'debugger target, diagram nodes. Read-only.'
+    ),
+  })
+
   const activeQuestion = state.question?.text ?? state.route?.question
+
+  // Derived pace: words on this step / dwell time on this step.
+  // NOT speech recognition — honest telemetry from step dwell.
+  const selection = state.selection
+  const stepKey = selection
+    ? `${selection.feature_id}:${selection.step_index}`
+    : 'none'
+  const enteredAt = useRef(Date.now())
+  const [dwellMs, setDwellMs] = useState(0)
+  useEffect(() => {
+    enteredAt.current = Date.now()
+    setDwellMs(0)
+  }, [stepKey])
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setDwellMs(Date.now() - enteredAt.current)
+    }, 1000)
+    return () => window.clearInterval(timer)
+  }, [])
+  const stepWords = [
+    state.teleprompter.title ?? '',
+    ...state.teleprompter.bullets,
+  ].join(' ').split(/\s+/).filter(Boolean).length
+  const minutes = dwellMs / 60_000
+  const wpm = minutes >= 0.05
+    ? Math.round(stepWords / minutes)
+    : 0
+  const pace = wpm > 0 ? paceStatus(wpm) : null
+
+  const vars: Record<string, string> = {
+    feature: selection?.feature_id ?? '',
+    project: 'oai-trial',
+    step: state.teleprompter.title ?? '',
+  }
 
   return (
     <section
@@ -83,6 +159,19 @@ export function TeleprompterStage({
               ? 'Debugger proof'
               : 'Narrative only'}
           </span>
+          {pace ? (
+            <span
+              className="pace-badge"
+              style={{ borderColor: pace.color }}
+              title={`Derived from step dwell time (not speech recognition): ${stepWords} words over ${Math.round(dwellMs / 1000)}s`}
+            >
+              <span
+                className="pace-dot"
+                style={{ background: pace.color }}
+              />
+              {wpm} WPM • {pace.label}
+            </span>
+          ) : null}
         </div>
       </div>
 
@@ -117,8 +206,10 @@ export function TeleprompterStage({
               'text-balance xl:text-4xl text-white',
             ].join(' ')}
           >
-            {state.teleprompter.title
-              ?? 'Select an explainer'}
+            {interpolateVars(
+              state.teleprompter.title ?? 'Select an explainer',
+              vars,
+            )}
           </h1>
         </div>
 
@@ -133,7 +224,7 @@ export function TeleprompterStage({
             (bullet) => (
               <li key={bullet} className="flex items-start gap-3 bg-zinc-950/70 border border-zinc-800/80 rounded-xl p-2.5 shadow-sm">
                 <span className="text-cyan-400 font-bold shrink-0 mt-0.5">•</span>
-                <span className="text-zinc-100">{bullet}</span>
+                <span className="text-zinc-100">{interpolateVars(bullet, vars)}</span>
               </li>
             ),
           )}
@@ -153,6 +244,46 @@ export function TeleprompterStage({
           {state.teleprompter.proof_boundary
             ?? 'No live proof claimed.'}
         </div>
+
+        {state.source.location ? (
+          <details className="deep-dive-accordion">
+            <summary
+              data-qid="cockpit:stage:deep-dive"
+              data-qs-action="STEP_DEEP_DIVE_TOGGLE"
+              title="Reveal drill-down material for this step"
+              className="deep-dive-trigger inline-flex items-center gap-2"
+            >
+              <Lightbulb aria-hidden="true" className="size-3.5" />
+              If asked for drill-down: {state.teleprompter.title}
+            </summary>
+            <div className="deep-dive-content space-y-1">
+              <div>
+                Source: {state.source.location.file}
+                :{state.source.location.start_line}
+                -{state.source.location.end_line}
+              </div>
+              <div>
+                {interpolateVars(
+                  state.source.explanation ?? '',
+                  vars,
+                )}
+              </div>
+              {state.debugger.target ? (
+                <div>
+                  Debugger: {state.debugger.target.file}
+                  :{state.debugger.target.line} — proves:{' '}
+                  {state.debugger.target.proves}
+                </div>
+              ) : null}
+              {state.diagram.active_node_ids.length ? (
+                <div>
+                  Diagram nodes:{' '}
+                  {state.diagram.active_node_ids.join(', ')}
+                </div>
+              ) : null}
+            </div>
+          </details>
+        ) : null}
       </div>
 
       <div
