@@ -5,6 +5,7 @@ branch/worktree/reset/stash/rebase/clean commands and never touch a user's repo.
 GitHub/provider substitutes are explicitly boundary tests, NOT live proof.
 """
 from __future__ import annotations
+import hashlib
 import json
 import os
 import shutil
@@ -460,6 +461,37 @@ def test_node_pass_cannot_settle_missing_reviewer(tmp_path):
     assert handlers.inspect_tau_stream(tmp_path)["terminal"] is False
     core.write_json(tmp_path / "reviewer/node-receipt.json", {"node_id": "reviewer", "status": "PASS"})
     assert handlers.inspect_tau_stream(tmp_path)["terminal"] is True
+
+
+def test_native_blocked_dag_settles_even_when_downstream_nodes_never_launch(tmp_path):
+    goal_hash = "sha256:" + "a" * 64
+    plan = {
+        "schema": "tau.dag_contract.v1",
+        "dag_id": "fixture-dag",
+        "goal": {"goal_hash": goal_hash},
+        "nodes": [{"id": "creator"}, {"id": "reviewer"}, {"id": "join"}],
+    }
+    core.write_json(tmp_path / "dag.json", plan)
+    native = {
+        "schema": "tau.dag_receipt.v1",
+        "status": "BLOCKED",
+        "durable": True,
+        "dag_id": "fixture-dag",
+        "active_goal_hash": goal_hash,
+        "contract_sha256": "sha256:" + hashlib.sha256((tmp_path / "dag.json").read_bytes()).hexdigest(),
+        "node_terminal_states": {"creator": "blocked", "reviewer": "pending", "join": "pending"},
+        "dispatches": [{"status": "COMPLETED", "stop_reason": "response_consumed"}],
+        "alerts": [{"code": "tau_triage_unavailable_unclassified_16d0c7b5"}],
+        "scheduler_events": [{"event": "scheduler_finished"}],
+        "dag_error": {"failure_code": "tau_triage_unavailable_unclassified_16d0c7b5"},
+    }
+    core.write_json(tmp_path / "tau-receipts/dag-receipt.json", native)
+    core.write_json(tmp_path / "tau-receipts/dag-progress.json", {"schema": "tau.dag_progress.v1", "status": "BLOCKED", "dag_id": "fixture-dag", "active_subagents": []})
+    core.write_json(tmp_path / "execution-status.json", {"schema": "ask.tau_dag_execution.v1", "status": "BLOCKED", "receipt": native})
+    observed = handlers.inspect_tau_stream(tmp_path)
+    assert observed["terminal"] is True
+    assert observed["terminal_status"] == "BLOCKED"
+    assert observed["semantic_refusal"]["failure_code"] == "tau_triage_unavailable_unclassified_16d0c7b5"
 
 
 @pytest.mark.parametrize("payload", [

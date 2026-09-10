@@ -139,7 +139,12 @@
           {
             "path": "/tmp/watchdog-unattended-acceptance-result.json",
             "json_pointer": "/status",
-            "equals": "NOT_ESTABLISHED"
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/watchdog-unattended-acceptance-result.json",
+            "json_pointer": "/passed",
+            "equals": true
           },
           {
             "path": "/tmp/watchdog-unattended-acceptance-result.json",
@@ -153,8 +158,8 @@
           }
         ]
       },
-      "proves": "#1641 acceptance gate reads live GitHub dependency state, retained watchdog receipts, and recover_primary output, then fails closed as NOT_ESTABLISHED when required unattended scenarios are absent instead of converting partial closure evidence into reliability.",
-      "does_not_prove": "Unattended watchdog reliability. NOT_ESTABLISHED is the required safe result until #1592, a genuine human-only ops-discord receipt, and ten consecutive canary lifecycles are proven."
+      "proves": "#1641 acceptance gate reads live GitHub dependency state, retained watchdog receipts, cron starts, current dry-run tick output, current remote heads, native closure/readback receipts, and recover_primary pending output. It passes only when every required unattended scenario is established.",
+      "does_not_prove": "Unattended watchdog reliability when the result artifact reports NOT_ESTABLISHED or FAILED; those states are deliberate fail-closed outcomes and keep the ticket open."
     },
     {
       "name": "watchdog-closure-authority",

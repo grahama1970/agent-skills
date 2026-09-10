@@ -190,6 +190,7 @@ PY
 
 audit_worktrees_for_retention() {
     local issue="${1:-}"
+    shift || true
     [[ "$DRY_RUN" == "1" ]] && return 0
     if [[ "${GH_TICKET_SKIP_WORKTREE_AUDIT:-}" == "1" ]]; then
         echo "WARN skipping worktree retention audit because GH_TICKET_SKIP_WORKTREE_AUDIT=1" >&2
@@ -203,7 +204,9 @@ audit_worktrees_for_retention() {
     repo_root="$(git rev-parse --show-toplevel)"
     local -a scope_args=()
     local target
-    if [[ -n "$issue" ]]; then
+    if [[ "$#" -gt 0 ]]; then
+        scope_args=("$@")
+    elif [[ -n "$issue" ]]; then
         while IFS= read -r target; do
             [[ -n "$target" ]] || continue
             scope_args+=(--scope-path "$target")
@@ -491,6 +494,7 @@ cmd_release() {
     local issue="$1"; shift
     local agent=""
     local reason=""
+    local -a scope_args=()
     while [[ $# -gt 0 ]]; do
         parse_common_flag "$@"
         if [[ "$PARSED" -gt 0 ]]; then shift "$PARSED"; continue; fi
@@ -501,13 +505,16 @@ cmd_release() {
             --reason)
                 [[ $# -ge 2 ]] || die "--reason requires a file"
                 reason="$2"; shift 2 ;;
+            --scope-path)
+                [[ $# -ge 2 ]] || die "--scope-path requires a value"
+                scope_args+=(--scope-path "$2"); shift 2 ;;
             *) die "unknown release arg: $1" ;;
         esac
     done
     [[ -n "$agent" ]] || die "release requires --agent"
     [[ -n "$reason" ]] || die "release requires --reason FILE"
     require_file "reason" "$reason"
-    audit_worktrees_for_retention "$issue"
+    audit_worktrees_for_retention "$issue" "${scope_args[@]}"
     run_gh gh issue comment "$issue" "${repo_args[@]}" --body-file "$reason"
     run_gh gh issue edit "$issue" "${repo_args[@]}" --remove-label maintainer-active
     json_ok release issue "$issue" agent "$agent" reason "$reason"
@@ -534,6 +541,7 @@ cmd_close() {
     local review=""
     local receipt=""
     local reason="completed"
+    local -a scope_args=()
     while [[ $# -gt 0 ]]; do
         parse_common_flag "$@"
         if [[ "$PARSED" -gt 0 ]]; then shift "$PARSED"; continue; fi
@@ -550,6 +558,9 @@ cmd_close() {
             --reason)
                 [[ $# -ge 2 ]] || die "--reason requires a value"
                 reason="$(normalize_close_reason "$2")"; shift 2 ;;
+            --scope-path)
+                [[ $# -ge 2 ]] || die "--scope-path requires a value"
+                scope_args+=(--scope-path "$2"); shift 2 ;;
             *) die "unknown close arg: $1" ;;
         esac
     done
@@ -557,7 +568,7 @@ cmd_close() {
     require_file "proof" "$proof"
     [[ -z "$review" ]] || require_file "review" "$review"
     assert_ticket_closable "$issue"
-    audit_worktrees_for_retention "$issue"
+    audit_worktrees_for_retention "$issue" "${scope_args[@]}"
     run_gh gh issue comment "$issue" "${repo_args[@]}" --body-file "$proof"
     if [[ -n "$review" ]]; then
         run_gh gh issue comment "$issue" "${repo_args[@]}" --body-file "$review"

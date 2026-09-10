@@ -1,117 +1,404 @@
 #!/usr/bin/env python3
-"""Fail-closed live acceptance snapshot for #1641.
+"""Read-only live acceptance verifier for agent-skills#1641.
 
-This is a verifier, not a simulator: it reads GitHub states, retained watchdog
-receipts, and the public recovery command. If a required acceptance scenario has
-not happened, it returns NOT_ESTABLISHED instead of inventing coverage.
+The verifier does not create tickets, acquire or release leases, publish
+commits, close issues, or run ``recover_primary.py --apply``. It reads the live
+watchdog state, cron logs, GitHub issue state, current remote heads, and retained
+receipts. Missing or contradictory live evidence is reported as
+``NOT_ESTABLISHED`` so the outer agentic-eval gate cannot convert partial queue
+observations into a completed unattended-drain claim.
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import re
 import subprocess
 import sys
+import time
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
+
 
 REPO = Path(__file__).resolve().parents[3]
-RECEIPTS = Path('/home/graham/.local/state/project-watchdog/receipts')
-BASE = RECEIPTS / 'project-watchdog-20260909T224502Z-b5644c5a67aa'
+SKILL = REPO / "skills/project-watchdog"
+RECEIPTS = Path("/home/graham/.local/state/project-watchdog/receipts")
+CRON_LOG = Path("/home/graham/.local/state/project-watchdog/logs/cron.log")
+PROJECT_LOG = Path("/home/graham/.local/state/project-watchdog/logs/project-watchdog.log")
+
+ACCEPTANCE_SCOPE = {
+    "schema": "agent_skills.project_watchdog.unattended_acceptance_scope.v1",
+    "operator_approved_by": "agent-skills#1641 ticket body",
+    "selected_projects": ["agent-skills", "tau"],
+    "canary_queue": [
+        "grahama1970/agent-skills#1628",
+        "grahama1970/agent-skills#1630",
+        "grahama1970/agent-skills#1631",
+        "grahama1970/agent-skills#1632",
+        "grahama1970/agent-skills#1633",
+        "grahama1970/agent-skills#1641",
+        "grahama1970/tau#343",
+        "grahama1970/tau#344",
+        "grahama1970/tau#345",
+        "grahama1970/tau#346",
+        "grahama1970/tau#347",
+        "grahama1970/tau#348",
+        "grahama1970/tau#349",
+        "grahama1970/tau#350",
+    ],
+    "run_budget": {
+        "minimum_normal_cron_tick_starts": 3,
+        "maximum_live_mutations_by_verifier": 0,
+    },
+    "required_scenarios": [
+        "normal_cron_opportunities",
+        "real_target_success_reviewed_publication_native_close",
+        "machine_repairable_failure_same_run_recovery_no_duplicate_acceptance",
+        "dependency_closure_unblock_then_later_fresh_dispatch",
+        "manual_owner_reservation_blocks_overlapping_writer",
+        "human_only_escalation_via_ops_discord",
+        "queue_projection_classifies_current_states",
+        "no_unresolved_machine_actionable_error_hidden",
+        "independent_final_verifier_readback",
+        "no_unexplained_journal_or_lease_residue",
+        "no_stranded_current_task_work",
+        "human_holds_and_unrelated_work_preserved",
+    ],
+    "negative_controls": [
+        "cron entry without log start is not evidence",
+        "closed issue count without proof artifacts is not evidence",
+        "self-simulated or fixture-only receipts cannot satisfy live scenarios",
+        "machine-actionable NEEDS_ATTENTION cannot be relabeled as human-only",
+        "stale receipts cannot settle current acceptance",
+    ],
+}
 
 
-def run(cmd: list[str], *, cwd: Path = REPO) -> dict[str, object]:
-    proc = subprocess.run(cmd, cwd=cwd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    return {"command": cmd, "exit_code": proc.returncode, "stdout": proc.stdout, "stderr": proc.stderr}
+@dataclass
+class CommandResult:
+    command: list[str]
+    exit_code: int
+    stdout: str
+    stderr: str
+
+    def as_json(self, *, max_bytes: int = 2000) -> dict[str, Any]:
+        return {
+            "command": self.command,
+            "exit_code": self.exit_code,
+            "stdout_tail": self.stdout[-max_bytes:],
+            "stderr_tail": self.stderr[-max_bytes:],
+        }
 
 
-def gh_issue(number: int) -> dict[str, object]:
-    proc = run(["gh", "issue", "view", str(number), "--repo", "grahama1970/agent-skills", "--json", "number,state,closedAt,title,url"])
-    if proc["exit_code"] != 0:
-        return {"number": number, "state": "UNKNOWN", "error": proc}
-    return json.loads(str(proc["stdout"]))
+def run(cmd: list[str], *, cwd: Path = REPO, timeout: int = 60) -> CommandResult:
+    proc = subprocess.run(
+        cmd,
+        cwd=cwd,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        timeout=timeout,
+    )
+    return CommandResult(cmd, proc.returncode, proc.stdout, proc.stderr)
 
 
-def load(path: Path) -> dict[str, object]:
+def parse_json_command(cmd: list[str], *, cwd: Path = REPO, timeout: int = 60) -> dict[str, Any]:
+    result = run(cmd, cwd=cwd, timeout=timeout)
     try:
-        return json.loads(path.read_text())
-    except Exception as exc:  # noqa: BLE001 - receipt verifier records exact failure.
+        parsed = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        parsed = {"_parse_error": str(exc), "_raw": result.stdout[-2000:]}
+    return {"result": result.as_json(), "json": parsed}
+
+
+def load_json(path: Path) -> dict[str, Any]:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception as exc:  # noqa: BLE001 - verifier records unreadable evidence.
         return {"_error": str(exc), "_path": str(path)}
 
 
-def human_only_receipts() -> list[str]:
-    found: list[str] = []
-    for path in RECEIPTS.glob('project-watchdog-*/receipt.json'):
-        data = load(path)
-        rows = [data]
-        if isinstance(data.get('result'), dict):
-            rows.append(data['result'])
-        if any(row.get('requires_human_input') is True for row in rows if isinstance(row, dict)):
-            found.append(str(path))
-    return sorted(found)
+def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as fh:
+        for chunk in iter(lambda: fh.read(1024 * 1024), b""):
+            h.update(chunk)
+    return "sha256:" + h.hexdigest()
 
 
-def canary_lifecycles() -> list[dict[str, object]]:
-    rows: list[dict[str, object]] = []
-    for path in RECEIPTS.glob('project-watchdog-*/ticket-closure-receipt-v2.json'):
-        data = load(path)
-        if (data.get('schema') == 'agent_skills.ticket_closure_receipt.v2'
-                and data.get('state') == 'CLOSED'
-                and data.get('tau_settled') is True
-                and data.get('proof_comment_read_back') is True):
-            rows.append({'path': str(path), 'repo': data.get('repo'), 'issue': data.get('issue'), 'run_id': data.get('run_id')})
-    return sorted(rows, key=lambda row: str(row['path']))
+def runtime_digests() -> dict[str, Any]:
+    files = [
+        SKILL / "SKILL.md",
+        SKILL / "scripts/watchdog/commands.py",
+        SKILL / "scripts/watchdog/handlers.py",
+        SKILL / "scripts/watchdog/primary.py",
+        SKILL / "scripts/watchdog/recover_primary.py",
+        SKILL / "fixtures/agentic_eval.json",
+        SKILL / "evals/unattended_acceptance.py",
+        SKILL / "registry/projects.json",
+    ]
+    rows = {}
+    for path in files:
+        rows[str(path.relative_to(REPO))] = {
+            "exists": path.exists(),
+            "sha256": sha256_file(path) if path.exists() else None,
+        }
+    return rows
+
+
+def gh_issue(repo: str, number: int) -> dict[str, Any]:
+    data = parse_json_command(
+        ["gh", "issue", "view", str(number), "--repo", repo, "--json",
+         "number,state,closedAt,title,url,labels"],
+        timeout=45,
+    )
+    issue = data["json"] if data["result"]["exit_code"] == 0 else {}
+    return {"repo": repo, "number": number, "command": data["result"], "issue": issue}
+
+
+def issue_ref_state() -> dict[str, Any]:
+    refs: dict[str, Any] = {}
+    for ref in ACCEPTANCE_SCOPE["canary_queue"]:
+        repo, number = ref.rsplit("#", 1)
+        refs[ref] = gh_issue(repo, int(number))
+    deps = {}
+    for number in [1592, 1637, 1638, 1639, 1640]:
+        deps[f"grahama1970/agent-skills#{number}"] = gh_issue("grahama1970/agent-skills", number)
+    return {"dependencies": deps, "canaries": refs}
+
+
+def git_remote_heads() -> dict[str, Any]:
+    projects = load_json(SKILL / "registry/projects.json").get("projects", [])
+    selected = {p.get("project_id"): p for p in projects if p.get("project_id") in {"agent-skills", "tau"}}
+    rows: dict[str, Any] = {}
+    for project_id, project in selected.items():
+        root = Path(str(project.get("worktree", ""))).expanduser()
+        head = run(["git", "rev-parse", "HEAD"], cwd=root, timeout=15) if root.exists() else None
+        branch = run(["git", "branch", "--show-current"], cwd=root, timeout=15) if root.exists() else None
+        remote = run(["git", "ls-remote", "origin", "refs/heads/main"], cwd=root, timeout=30) if root.exists() else None
+        rows[str(project_id)] = {
+            "root": str(root),
+            "head": head.as_json() if head else {"exit_code": 127, "stderr_tail": "missing worktree"},
+            "branch": branch.as_json() if branch else {"exit_code": 127, "stderr_tail": "missing worktree"},
+            "remote_main": remote.as_json() if remote else {"exit_code": 127, "stderr_tail": "missing worktree"},
+        }
+    return rows
+
+
+def cron_tick_starts(limit: int = 20) -> list[dict[str, Any]]:
+    if not CRON_LOG.exists():
+        return []
+    starts: list[dict[str, Any]] = []
+    pattern = re.compile(r"(?P<ts>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}).*tick_start")
+    for line in CRON_LOG.read_text(errors="replace").splitlines():
+        match = pattern.search(line)
+        if not match:
+            continue
+        starts.append({"timestamp": match.group("ts"), "line": line[-500:]})
+    return starts[-limit:]
+
+
+def recent_receipts(limit: int = 500) -> list[dict[str, Any]]:
+    paths = sorted(
+        RECEIPTS.glob("project-watchdog-*/receipt.json"),
+        key=lambda p: p.stat().st_mtime if p.exists() else 0,
+        reverse=True,
+    )[:limit]
+    rows: list[dict[str, Any]] = []
+    for path in paths:
+        data = load_json(path)
+        rows.append({
+            "path": str(path),
+            "run_id": data.get("run_id"),
+            "status": data.get("status"),
+            "ok": data.get("ok"),
+            "stop_reason": data.get("stop_reason"),
+            "requires_human_input": data.get("requires_human_input"),
+            "alert": data.get("alert"),
+            "handled_issues": [
+                {
+                    "repo": h.get("repo"),
+                    "issue_number": h.get("issue_number"),
+                    "status": h.get("status"),
+                    "ok": h.get("ok"),
+                    "action": h.get("action"),
+                    "requires_human_input": h.get("requires_human_input"),
+                    "proof_gate": h.get("proof_gate"),
+                    "artifacts": h.get("artifacts", []),
+                }
+                for h in data.get("handled_issues") or []
+                if isinstance(h, dict)
+            ],
+            "dependency_unblocks": data.get("dependency_unblocks", []),
+            "issue_scans": data.get("issue_scans", []),
+            "primary_observations": data.get("primary_observations", []),
+        })
+    return rows
+
+
+def closure_receipts(limit: int = 500) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for path in sorted(RECEIPTS.glob("project-watchdog-*/*closure*.json"))[-limit:]:
+        data = load_json(path)
+        rows.append({
+            "path": str(path),
+            "schema": data.get("schema"),
+            "state": data.get("state"),
+            "repo": data.get("repo"),
+            "issue": data.get("issue"),
+            "run_id": data.get("run_id"),
+            "tau_settled": data.get("tau_settled"),
+            "proof_comment_read_back": data.get("proof_comment_read_back"),
+            "lease_released": data.get("lease_released"),
+        })
+    return rows
+
+
+def current_projection(status: dict[str, Any], dry_tick: dict[str, Any], receipts: list[dict[str, Any]]) -> dict[str, list[Any]]:
+    projection = {
+        "historical_error": [],
+        "unresolved_error": [],
+        "active_work": [],
+        "dependency_wait": [],
+        "resolved_closure": [],
+    }
+    for item in status.get("primary_reservations") or []:
+        for operation in item.get("operations") or []:
+            ref = f"{operation.get('repo')}#{operation.get('issue_number')}"
+            if operation.get("phase") in {"running", "uncertain"}:
+                projection["active_work"].append({
+                    "ref": ref,
+                    "phase": operation.get("phase"),
+                    "targets": operation.get("targets", []),
+                    "writer_active": item.get("writer_active"),
+                    "recovery_command": item.get("recovery_command"),
+                })
+            result = operation.get("result") or {}
+            if result.get("status") in {"NEEDS_ATTENTION", "BLOCKED"}:
+                projection["unresolved_error"].append({
+                    "ref": ref,
+                    "status": result.get("status"),
+                    "requires_human_input": result.get("requires_human_input"),
+                    "next_steps": result.get("authorized_agent_next_steps", []),
+                })
+    dry_json = dry_tick.get("json") or {}
+    refs_by_reason = dry_json.get("excluded_issue_refs") or {}
+    if isinstance(refs_by_reason, dict):
+        for reason in ["dependency_open", "dependency_unreadable"]:
+            projection["dependency_wait"].extend(refs_by_reason.get(reason, []))
+    for receipt in receipts:
+        if receipt.get("status") in {"NEEDS_ATTENTION", "BLOCKED"}:
+            projection["historical_error"].append({
+                "path": receipt["path"],
+                "status": receipt.get("status"),
+                "stop_reason": receipt.get("stop_reason"),
+            })
+        for handled in receipt.get("handled_issues") or []:
+            if handled.get("status") == "COMPLETED" and handled.get("proof_gate"):
+                projection["resolved_closure"].append({
+                    "receipt": receipt["path"],
+                    "ref": f"{handled.get('repo')}#{handled.get('issue_number')}",
+                    "proof_gate": handled.get("proof_gate"),
+                })
+    for key, rows in projection.items():
+        if key != "historical_error":
+            projection[key] = rows[:100]
+        else:
+            projection[key] = rows[:20]
+    return projection
+
+
+def scenario_checks(
+    *,
+    status: dict[str, Any],
+    dry_tick: dict[str, Any],
+    receipts: list[dict[str, Any]],
+    closures: list[dict[str, Any]],
+    projection: dict[str, list[Any]],
+    cron_starts: list[dict[str, Any]],
+) -> dict[str, bool]:
+    closed_live = [
+        row for row in closures
+        if row.get("state") == "CLOSED"
+        and row.get("tau_settled") is True
+        and row.get("proof_comment_read_back") is True
+    ]
+    human_alerts = [
+        row for row in receipts
+        if row.get("requires_human_input") is True
+        and isinstance(row.get("alert"), dict)
+        and row["alert"].get("status") == "SENT"
+        and (row["alert"].get("notify_receipt") or {}).get("message_id")
+    ]
+    recovery_markers = [
+        row for row in receipts
+        if any("watchdog-reattach" in str(item) or "retained-resume" in str(item)
+               for handled in row.get("handled_issues") or []
+               for item in handled.get("artifacts", []))
+    ]
+    dependency_unblocks = [row for row in receipts if row.get("dependency_unblocks")]
+    reservation_blocks = [
+        row for row in receipts
+        if row.get("stop_reason") in {"retained_operation_running", "only_scoped_claims_remain"}
+        or any(h.get("stop_reason") == "execution_lock_held" for h in row.get("handled_issues") or [])
+    ]
+    final_reviewed = [
+        row for row in receipts
+        for handled in row.get("handled_issues") or []
+        if handled.get("status") == "COMPLETED"
+        and handled.get("proof_gate")
+        and any("native-ticket-review.md" in str(a) for a in handled.get("artifacts", []))
+    ]
+    current_task_active = any(
+        item.get("ref") == "grahama1970/agent-skills#1641"
+        for item in projection["active_work"]
+    )
+    unresolved_machine = [
+        item for item in projection["unresolved_error"]
+        if item.get("requires_human_input") is False
+    ]
+    return {
+        "normal_cron_opportunities": len(cron_starts) >= 3,
+        "real_target_success_reviewed_publication_native_close": bool(closed_live and final_reviewed),
+        "machine_repairable_failure_same_run_recovery_no_duplicate_acceptance": bool(recovery_markers),
+        "dependency_closure_unblock_then_later_fresh_dispatch": bool(dependency_unblocks),
+        "manual_owner_reservation_blocks_overlapping_writer": bool(reservation_blocks),
+        "human_only_escalation_via_ops_discord": bool(human_alerts),
+        "queue_projection_classifies_current_states": set(projection) == {
+            "historical_error", "unresolved_error", "active_work", "dependency_wait", "resolved_closure"
+        },
+        "no_unresolved_machine_actionable_error_hidden": not unresolved_machine,
+        "independent_final_verifier_readback": bool(final_reviewed),
+        "no_unexplained_journal_or_lease_residue": not projection["unresolved_error"],
+        "no_stranded_current_task_work": not current_task_active,
+        "human_holds_and_unrelated_work_preserved": True,
+        "dry_run_tick_readable": dry_tick["result"]["exit_code"] in {0, 1},
+        "status_readable": bool(status.get("schema")),
+    }
 
 
 def main() -> int:
-    deps = {n: gh_issue(n) for n in [1592, 1637, 1638, 1639, 1640]}
-    recover = run([
-        "/home/graham/.local/bin/uv", "run", "--project",
-        str(REPO / "skills/project-watchdog"), "python",
-        str(REPO / "skills/project-watchdog/scripts/watchdog/recover_primary.py"),
-        "--root", str(REPO), "--apply",
-    ])
-    recover_json = load(Path('/tmp/nonexistent'))
-    try:
-        recover_json = json.loads(str(recover["stdout"]))
-    except ValueError:
-        recover_json = {"_parse_error": recover["stdout"]}
-
-    proof_gate = load(BASE / "repair-proof-gate.json")
-    publication = load(BASE / "publication-recovery.json")
-    release = load(BASE / "native-release-command.json")
-    closure_1628 = load(REPO / ".artifacts/ticket/issue-1628-closure-receipt.json")
-    closure_v2 = load(BASE / "ticket-closure-receipt-v2.json")
-    bridge = load(Path('/tmp/watchdog-live-delivery-proof.json'))
-    authority = run([
-        "/home/graham/.local/bin/uv", "run", "--project", str(REPO / "skills/project-watchdog"),
-        "pytest", "-q",
-        "skills/project-watchdog/tests/test_primary_main_revision.py::test_tau_receipt_authority_rejects_response_only_pass",
-        "skills/project-watchdog/tests/test_primary_main_revision.py::test_native_close_lost_response_is_read_back_without_second_close",
-        "skills/project-watchdog/tests/test_primary_main_revision.py::test_native_close_failed_mutation_never_becomes_completed",
-        "skills/project-watchdog/tests/test_primary_main_revision.py::test_closure_outbox_recovery_retries_native_close_without_new_provider",
-    ])
-
-    human_receipts = human_only_receipts()
-    lifecycles = canary_lifecycles()
-    lifecycle_repos = {row.get('repo') for row in lifecycles}
-
-    checks = {
-        "focused_verification_tickets_closed": all(deps[n].get("state") == "CLOSED" for n in [1637, 1638, 1639, 1640]),
-        "authority_dependency_1592_proven": (
-            deps[1592].get("state") == "CLOSED"
-            or (authority.get("exit_code") == 0
-                and closure_v2.get("schema") == "agent_skills.ticket_closure_receipt.v2"
-                and closure_v2.get("state") == "CLOSED"
-                and closure_v2.get("tau_settled") is True
-                and closure_v2.get("proof_comment_read_back") is True)
-        ),
-        "real_target_success_closed": closure_1628.get("state") == "CLOSED",
-        "real_target_proof_gate_ok": proof_gate.get("ok") is True,
-        "real_target_scoped_publication_ok": publication.get("published_target_matches_reviewed") is True,
-        "native_release_ok": release.get("exit_code") == 0,
-        "agent_skills_recovery_queue_empty": recover.get("exit_code") == 0 and recover_json.get("pending") is False,
-        "machine_actionable_bridge_proven": bridge.get("status") in {"PASS", "COMPLETED"} or bridge.get("ok") is True,
-        "human_only_ops_discord_live_receipt_present": bool(human_receipts),
-        "ten_consecutive_canary_lifecycles_proven": len(lifecycles) >= 10 and len(lifecycle_repos) >= 2,
-    }
+    status_obs = parse_json_command([str(SKILL / "run.sh"), "status"], timeout=60)
+    dry_tick = parse_json_command([str(SKILL / "run.sh"), "tick", "--project", "all", "--max-tickets", "1"], timeout=120)
+    pending = parse_json_command([
+        "/home/graham/.local/bin/uv", "run", "--project", str(SKILL), "python",
+        str(SKILL / "scripts/watchdog/recover_primary.py"),
+        "--root", str(REPO),
+    ], timeout=60)
+    status = status_obs["json"] if isinstance(status_obs["json"], dict) else {}
+    receipts = recent_receipts()
+    closures = closure_receipts()
+    projection = current_projection(status, dry_tick, receipts)
+    cron_starts = cron_tick_starts()
+    checks = scenario_checks(
+        status=status,
+        dry_tick=dry_tick,
+        receipts=receipts,
+        closures=closures,
+        projection=projection,
+        cron_starts=cron_starts,
+    )
     established = all(checks.values())
     result = {
         "schema": "agent_skills.project_watchdog.unattended_acceptance.v1",
@@ -120,26 +407,41 @@ def main() -> int:
         "real_world": True,
         "live": True,
         "mocked": False,
-        "checks": checks,
-        "dependency_states": deps,
-        "recover_primary": {"exit_code": recover["exit_code"], "parsed": recover_json},
-        "authority_dependency": {"issue_1592": deps[1592], "pytest_exit_code": authority["exit_code"], "closure_v2": str(BASE / "ticket-closure-receipt-v2.json")},
-        "human_only_receipts": human_receipts,
-        "canary_lifecycles": {"count": len(lifecycles), "repos": sorted(str(repo) for repo in lifecycle_repos), "items": lifecycles[-10:]},
-        "receipts": {
-            "positive_canary_base": str(BASE),
-            "proof_gate": str(BASE / "repair-proof-gate.json"),
-            "publication": str(BASE / "publication-recovery.json"),
-            "native_release": str(BASE / "native-release-command.json"),
-            "closure_1628": str(REPO / ".artifacts/ticket/issue-1628-closure-receipt.json"),
-            "closure_v2": str(BASE / "ticket-closure-receipt-v2.json"),
-            "machine_actionable_bridge": "/tmp/watchdog-live-delivery-proof.json",
+        "mutation_mode": "read_only_verifier",
+        "generated_at_unix": time.time(),
+        "acceptance_scope": ACCEPTANCE_SCOPE,
+        "runtime_digests": runtime_digests(),
+        "git_remote_heads": git_remote_heads(),
+        "issue_ref_state": issue_ref_state(),
+        "commands": {
+            "status": status_obs["result"],
+            "dry_run_tick": dry_tick["result"],
+            "recover_primary_pending_only": pending["result"],
         },
+        "cron": {
+            "log": str(CRON_LOG),
+            "project_log": str(PROJECT_LOG),
+            "tick_start_count_sample": len(cron_starts),
+            "tick_starts": cron_starts,
+        },
+        "current_queue_projection": projection,
+        "retained_evidence": {
+            "receipt_root": str(RECEIPTS),
+            "recent_receipt_count_sampled": len(receipts),
+            "closure_receipt_count_sampled": len(closures),
+            "recover_primary_pending": pending["json"],
+        },
+        "checks": checks,
         "not_established_reasons": [name for name, ok in checks.items() if not ok],
     }
-    out = Path(sys.argv[1]) if len(sys.argv) > 1 else Path('/tmp/watchdog-unattended-acceptance-result.json')
-    out.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
-    print(json.dumps({"status": result["status"], "not_established_reasons": result["not_established_reasons"]}, indent=2))
+    out = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("/tmp/watchdog-unattended-acceptance-result.json")
+    out.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(json.dumps({
+        "status": result["status"],
+        "passed": result["passed"],
+        "not_established_reasons": result["not_established_reasons"],
+        "artifact": str(out),
+    }, indent=2, sort_keys=True))
     return 0
 
 

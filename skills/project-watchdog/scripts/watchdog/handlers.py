@@ -439,13 +439,15 @@ def _settled_semantic_refusal(plan_path: Path, expected: set[str]) -> dict[str, 
         and progress.get("active_subagents") == []
         and expected and set(states) == expected
         and set(states.values()) <= {"pending", "blocked", "completed"}
+        and "blocked" in set(states.values())
         and dispatches and all(d.get("status") == "COMPLETED" and d.get("stop_reason") == "response_consumed" for d in dispatches)
-        and alerts and all(a.get("code") == "evidence_receipt_verdict_failed" for a in alerts)
+        and alerts and all(isinstance(a.get("code"), str) and a.get("code") for a in alerts)
         and events and events[-1].get("event") == "scheduler_finished"
     ):
         return None
+    error = native.get("dag_error") if isinstance(native.get("dag_error"), dict) else {}
     return {"path": str(root / "tau-receipts/dag-receipt.json"),
-            "failure_code": "evidence_receipt_verdict_failed",
+            "failure_code": str(error.get("failure_code") or alerts[0].get("code")),
             "dag_error": native.get("dag_error")}
 
 

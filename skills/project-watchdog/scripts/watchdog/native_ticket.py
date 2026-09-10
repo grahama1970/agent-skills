@@ -121,6 +121,13 @@ def owns(record: Operation) -> bool:
             and lease_event(record.repo, record.issue_number) == record.lease_event)
 
 
+def _scope_args(paths: list[str]) -> list[str]:
+    args: list[str] = []
+    for path in paths:
+        args.extend(["--scope-path", path])
+    return args
+
+
 def release(record: Operation) -> bool:
     from .registry import policy_held
     if policy_held(record.repo, record.issue_number):
@@ -137,7 +144,8 @@ def release(record: Operation) -> bool:
             "Release only this native lease; retain all files, refs and worktrees.\n")
     reason.write_text(body)
     result = invoke(Path(record.root), record.repo, "release", record.issue_number,
-                    "--agent", record.lease_agent, "--reason", str(reason))
+                    "--agent", record.lease_agent, "--reason", str(reason),
+                    *_scope_args(record.targets))
     write_json(Path(record.receipt_dir) / "native-release-command.json", result)
     now = github.get_issue(record.repo, record.issue_number)
     return result.get("exit_code") == 0 and NATIVE_LABEL not in labels(now)
@@ -250,7 +258,8 @@ def close(record: Operation) -> dict[str, Any]:
     if not owns(record):
         raise ContentConflict("native closure no longer owns the exact lease generation")
     row = invoke(root, record.repo, "close", record.issue_number,
-                 "--proof", str(proof), "--review", str(review), "--reason", "completed")
+                 "--proof", str(proof), "--review", str(review), "--reason", "completed",
+                 *_scope_args(closure.scope))
     # Read back even after a nonzero/lost response: mutation may already have occurred.
     now = github.get_issue(record.repo, record.issue_number)
     posted = any(c.get("body") == proof.read_text() for c in comments(record.repo, record.issue_number))
