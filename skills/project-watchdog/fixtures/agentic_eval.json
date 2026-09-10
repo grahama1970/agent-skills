@@ -157,6 +157,36 @@
       "does_not_prove": "Unattended watchdog reliability. NOT_ESTABLISHED is the required safe result until #1592, a genuine human-only ops-discord receipt, and ten consecutive canary lifecycles are proven."
     },
     {
+      "name": "watchdog-closure-authority",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 180,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_primary_main_revision.py::test_tau_receipt_authority_rejects_response_only_pass",
+        "../tests/test_primary_main_revision.py::test_completed_resume_result_outranks_nonzero_wrapper_receipt",
+        "../tests/test_primary_main_revision.py::test_native_close_lost_response_is_read_back_without_second_close",
+        "../tests/test_primary_main_revision.py::test_native_close_failed_mutation_never_becomes_completed",
+        "../tests/test_primary_main_revision.py::test_native_close_rejects_foreign_generation_and_changed_proof",
+        "../tests/test_primary_main_revision.py::test_closure_outbox_recovery_retries_native_close_without_new_provider",
+        "../tests/test_primary_main_revision.py::test_closed_ticket_with_release_pending_is_not_finished_completed",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "7 passed"
+        ]
+      },
+      "proves": "#1592 closure authority slice: response-only PASS cannot authorize closure; live Tau node receipts are required before the native ticket close path; lost/failed close responses are read back; foreign lease generations and mutated proof files fail closed; closure outbox recovery retries without launching a new provider; release-pending is not reported as finished COMPLETED. Fault-injected deterministic; live canary evidence remains separate.",
+      "does_not_prove": "Ten consecutive canary lifecycles across two repositories."
+    },
+    {
       "name": "immutable-replay-proof-negative-controls",
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",

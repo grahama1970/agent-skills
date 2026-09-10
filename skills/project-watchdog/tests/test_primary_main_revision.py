@@ -494,6 +494,22 @@ def test_machine_followup_authority_does_not_turn_failure_into_success():
     assert commands._handled_tick_status(row, preview=False) == "NEEDS_ATTENTION"
 
 
+def test_tau_receipt_authority_rejects_response_only_pass(tmp_path):
+    node_root = tmp_path / "ask" / "run" / "node-artifacts"
+    for node in ["handler-codex", "handler-reviewer"]:
+        (node_root / node).mkdir(parents=True)
+        (node_root / node / "response.md").write_text("VERDICT: PASS\n", encoding="utf-8")
+    authority = handlers.repair_tau_authority(tmp_path / "ask", "codex", "reviewer")
+    assert authority["ok"] is False
+    assert "no unique Tau node receipt" in " | ".join(authority["reasons"])
+    for node in ["handler-codex", "handler-reviewer"]:
+        core.write_json(node_root / node / "node-receipt.json", {
+            "schema": "ask.tau_dag_handler_receipt.v1", "status": "PASS", "verdict": "PASS",
+            "live": True, "mocked": False, "provider_live": True,
+        })
+    assert handlers.repair_tau_authority(tmp_path / "ask", "codex", "reviewer")["ok"] is True
+
+
 @pytest.fixture
 def closing_record(repository):
     from watchdog.primary_models import NativeClosure, LeaseEvent
@@ -828,3 +844,85 @@ def test_retryable_resume_reattaches_native_lease_and_sets_watchdog_journal(repo
     if not finalize_only:
         command_receipt = core.load_json(receipts / "watchdog-reattach-resume-command.json")
         assert "--watchdog-journal" in command_receipt["stdout"]
+
+
+def test_completed_resume_result_outranks_nonzero_wrapper_receipt(repository, monkeypatch):
+    from watchdog.primary_models import LeaseEvent
+    root, _, receipts = repository
+    receipts.mkdir(parents=True, exist_ok=True)
+    ask_dir = receipts / "ask"
+    output = receipts / "proof-result.json"
+    output.write_text(json.dumps({"readiness": "READY"}), encoding="utf-8")
+    node_root = ask_dir / "run-0" / "node-artifacts"
+    (node_root / "handler-codex").mkdir(parents=True)
+    (node_root / "handler-codex" / "response.md").write_text("VERDICT: PASS\n", encoding="utf-8")
+    core.write_json(node_root / "handler-codex" / "node-receipt.json", {
+        "schema": "ask.tau_dag_handler_receipt.v1", "status": "PASS", "verdict": "PASS",
+        "live": True, "mocked": False, "provider_live": True,
+    })
+    before = scope_snapshot(root)
+    review = (
+        "VERDICT: PASS\n"
+        f"REVIEW_COMMIT: {before.remote_sha}\n"
+        f"PROOF_ARTIFACT: {output}\n"
+        "VERIFY_PLAN: "
+        + json.dumps({
+            "schema": "agent_skills.project_watchdog.verification_plan.v1",
+            "commands": [f"python -m json.tool {output}"],
+            "artifacts": [str(output)],
+            "coverage": {"all_required_clauses": "rewrites and reads proof-result.json"},
+        })
+        + "\n"
+    )
+    (node_root / "handler-reviewer").mkdir()
+    (node_root / "handler-reviewer" / "response.md").write_text(review, encoding="utf-8")
+    core.write_json(node_root / "handler-reviewer" / "node-receipt.json", {
+        "schema": "ask.tau_dag_handler_receipt.v1", "status": "PASS", "verdict": "PASS",
+        "live": True, "mocked": False, "provider_live": True,
+    })
+    issue_payload = issue(42, "skills/project-watchdog")
+    issue_payload["body"] = f"## Required proof\n\nRun proof --output {output} and read it back.\n"
+    record = operation(root, receipts).model_copy(update={
+        "ask_run_dir": str(ask_dir),
+        "dispatched_at": time.time() - 60,
+        "phase": "settled",
+        "tau_settled": True,
+        "task_sha256": content.digest(issue_payload["body"].encode()),
+        "lease_event": LeaseEvent(id=11, event="labeled", actor="fixture", created_at="now"),
+        "lease_agent": "project-watchdog-fixture-token",
+    })
+    record = Operation.model_validate(encoded(record))
+    core.write_json(Path(record.journal), encoded(record))
+    core.write_json(receipts / "dispatch-project.json", {"project_id": "fixture", "repo": "fixture/repo", "worktree": str(root)})
+    core.write_json(receipts / "dispatch-issue.json", issue_payload)
+    core.write_json(receipts / "primary-before.json", encoded(before))
+    monkeypatch.setattr(primary, "_CURRENT", record)
+    monkeypatch.setattr(github, "get_issue", lambda *a: issue_payload)
+    monkeypatch.setattr(registry, "policy_held", lambda *a: False)
+    monkeypatch.setattr(native_ticket, "assert_mutable", lambda row, closing=False: issue_payload)
+    monkeypatch.setattr(primary, "readonly_preflight", lambda *a: {"ready": True})
+    monkeypatch.setattr(config, "repair_seats", lambda project: ("codex", "reviewer"))
+    monkeypatch.setattr(config, "auto_land_main", lambda project: False)
+    monkeypatch.setattr(handlers, "inspect_tau_stream", lambda path: {
+        "terminal": True,
+        "terminal_status": "PASS",
+        "resume_generation": 11,
+        "command_receipt": {"exit_code": 1, "timed_out": False, "stdout": ""},
+        "resume_control": {"schema": "ask.run_control.v1", "action": "resume", "outcome": "failed", "returncode": 1},
+        "resume_result": {"status": "PASS"},
+    })
+
+    def verify(_root, _number, _plan, *, timeout_s):
+        output.write_text(json.dumps({"readiness": "READY", "status": "PASS"}), encoding="utf-8")
+        return [{"exit_code": 0, "command": ["ticket", "verify"]}]
+
+    monkeypatch.setattr(native_ticket, "verify", verify)
+    monkeypatch.setattr(content, "publish", lambda *a, **kw: before.remote_sha)
+    monkeypatch.setattr(native_ticket, "close", lambda row: {
+        "ok": True, "status": "COMPLETED", "ticket_closed": True, "commands": []})
+
+    result = handlers.finish_primary_operation(record)
+
+    assert result["status"] == "COMPLETED"
+    gate = core.load_json(receipts / "repair-proof-gate.json")
+    assert gate["native_artifacts"][0]["passed"] is True

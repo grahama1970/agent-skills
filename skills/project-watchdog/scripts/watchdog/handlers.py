@@ -828,6 +828,46 @@ def seat_response_text(ask_run_dir: Path, handler: str, occurrence: int = 1) -> 
         return None
 
 
+def seat_node_receipt(ask_run_dir: Path, handler: str, occurrence: int = 1) -> dict[str, Any] | None:
+    """Read the Tau/Ask-owned handler receipt for exactly one repair seat."""
+    node_id = repair_node_id(handler, occurrence)
+    candidates = list(ask_run_dir.glob(f"*/node-artifacts/{node_id}/node-receipt.json"))
+    if len(candidates) != 1:
+        return None
+    receipt = _json_from_file(candidates[0])
+    if isinstance(receipt, dict):
+        receipt["_path"] = str(candidates[0])
+        return receipt
+    return None
+
+
+def repair_tau_authority(ask_run_dir: Path, creator: str, reviewer: str) -> dict[str, Any]:
+    """Closure authority comes from Tau/Ask receipts, not response prose alone."""
+    out: dict[str, Any] = {"ok": False, "seats": {}, "reasons": []}
+    for role, handler, occurrence in (("creator", creator, 1), ("reviewer", reviewer, 2 if reviewer == creator else 1)):
+        receipt = seat_node_receipt(ask_run_dir, handler, occurrence)
+        node_id = repair_node_id(handler, occurrence)
+        summary = {"handler": handler, "node_id": node_id, "receipt_path": None, "status": None, "verdict": None}
+        if receipt is None:
+            out["reasons"].append(f"{role} seat {handler} has no unique Tau node receipt")
+            out["seats"][role] = summary
+            continue
+        summary.update(receipt_path=receipt.get("_path"), status=receipt.get("status"), verdict=receipt.get("verdict"),
+                       schema=receipt.get("schema"), live=receipt.get("live"), mocked=receipt.get("mocked"),
+                       provider_live=receipt.get("provider_live"))
+        out["seats"][role] = summary
+        if receipt.get("schema") != "ask.tau_dag_handler_receipt.v1":
+            out["reasons"].append(f"{role} seat {handler} receipt has wrong schema")
+        if str(receipt.get("status", "")).upper() != "PASS" or str(receipt.get("verdict", "")).upper() != "PASS":
+            out["reasons"].append(f"{role} seat {handler} Tau receipt did not PASS")
+        if receipt.get("live") is not True or receipt.get("mocked") is True:
+            out["reasons"].append(f"{role} seat {handler} Tau receipt is not live provider evidence")
+        if receipt.get("provider_live") is not True:
+            out["reasons"].append(f"{role} seat {handler} lacks provider_live receipt evidence")
+    out["ok"] = not out["reasons"]
+    return out
+
+
 def _clean_proof_path(path: str) -> str:
     return path.strip().lstrip("`").rstrip("`.,;:)]}")
 
@@ -2307,6 +2347,9 @@ def finish_primary_operation(record) -> dict[str, Any]:
             raise primary.Refusal("retained Ask invocation failed/timed out; no automatic closure")
     creator, reviewer = config.repair_seats(project)
     creator_handler, reviewer_handler = repair_execution_handlers(creator, reviewer)
+    tau_authority = repair_tau_authority(Path(record.ask_run_dir), creator_handler, reviewer_handler)
+    if not tau_authority["ok"]:
+        raise primary.Refusal("Tau receipt authority failed: " + "; ".join(tau_authority["reasons"]))
     text = seat_response_text(Path(record.ask_run_dir), reviewer_handler) or ""
     creator_text = seat_response_text(Path(record.ask_run_dir), creator_handler) or ""
     declared = valid_review_commits(text)
@@ -2376,6 +2419,7 @@ def finish_primary_operation(record) -> dict[str, Any]:
     gate = {**initial_gate, "native_verification": commands, "native_artifacts": artifacts,
             "coverage": plan.coverage, "reviewed_commit": review_commit,
             "verification_plan_source": plan_source,
+            "tau_authority": tau_authority,
             "commit_binding_warnings": commit_binding_warnings}
     write_json(gate_path, gate)
     result_for_phases = record.result or _new_result(project, issue, record.action)
