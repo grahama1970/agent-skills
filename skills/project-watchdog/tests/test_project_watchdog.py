@@ -2792,3 +2792,16 @@ def test_second_pass_verdict_names_real_verdict_from_response(tmp_path):
         if v:
             extracted[resp.parent.name] = v
     assert extracted == {"handler-claude-fable-5": "NEEDS_ATTENTION"}
+
+
+def test_repair_task_creator_round_contract_defers_proof_to_reviewer():
+    """#1655: the claude-lane creator applied the reviewer's 'proof must have
+    run' rule to its own first round and fail-closed without proposing."""
+    from watchdog.handlers import build_repair_task
+    task = build_repair_task(repo="r/x", issue_number=1, issue_title="t",
+                             issue_body="body", targets=["skills/x"])
+    assert "CREATOR ROUND" in task and "REVIEWER ROUND" in task
+    assert "CREATOR: DONE" in task
+    assert "not expected to have run the ticket's proof command" in task.replace("NOT ", "not ")
+    creator_clause = task.split("REVIEWER ROUND")[0]
+    assert "proof command has actually run" not in creator_clause
