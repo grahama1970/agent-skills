@@ -1,0 +1,163 @@
+{
+  "schema": "explain_project.schema_catalog.v1",
+  "skill": "explain-project",
+  "memory_collection": "skill_schemas",
+  "alternate_memory_collection": "explain_project_schemas",
+  "memory_write_boundary": "Export artifact only. Write through $memory /store or /upsert after the memory service is available; do not write ArangoDB directly.",
+  "question_reuse_command": "skills/explain-project/run.sh ask <explainers.jsonl> --question '<question>'",
+  "route_statuses": [
+    "MATCHED",
+    "AMBIGUOUS",
+    "NO_MATCH"
+  ],
+  "record_contracts": [
+    {
+      "schema": "project.feature_explainer.v1",
+      "format": "jsonl",
+      "validator": "skills/explain-project/run.sh validate <explainers.jsonl>",
+      "required_surfaces": [
+        "question",
+        "teleprompter_points",
+        "source_ranges",
+        "diagram.node_ids",
+        "steps[].bullets",
+        "steps[].source_range_index",
+        "steps[].diagram_node_ids",
+        "debugger_stops",
+        "diagram_id",
+        "source_path",
+        "rendered_svg_path",
+        "estimated_read_seconds",
+        "steps[].estimated_speak_seconds"
+      ],
+      "read_time": {
+        "wpm_default": 150,
+        "explainer_field": "estimated_read_seconds",
+        "step_field": "estimated_speak_seconds",
+        "computed_from": [
+          "teleprompter_points",
+          "steps[].bullets"
+        ],
+        "boundary": "Planning estimate for chatterbox-speak. Actual rendered audio duration requires a chatterbox-speak receipt."
+      },
+      "runtime_schema_status": {
+        "estimated_read_seconds": "implemented",
+        "steps[].estimated_speak_seconds": "implemented",
+        "diagram_id": "required_next_schema_change",
+        "source_path": "required_next_schema_change",
+        "rendered_svg_path": "required_next_schema_change"
+      }
+    },
+    {
+      "schema": "explain_project.route_decision.v1",
+      "format": "json",
+      "validator": "skills/explain-project/run.sh ask <explainers.jsonl> --question '<question>'",
+      "purpose": "Assess whether an incoming question is already answered before creating a new explainer."
+    },
+    {
+      "schema": "explain_project.voice_driver_intent.v1",
+      "format": "json",
+      "status": "disabled_by_default_optional_boundary",
+      "actions": [
+        "current-step",
+        "next",
+        "previous",
+        "ask-question",
+        "speak-step"
+      ],
+      "required_fields": [
+        "schema",
+        "intent_id",
+        "revision",
+        "action"
+      ],
+      "optional_fields": [
+        "question",
+        "emotion",
+        "voice",
+        "step_id"
+      ],
+      "allowed_mutations": "Only revision-fenced explain-project intents for current/next/previous/ask-question/speak-step.",
+      "forbidden_mutations": [
+        "debugger",
+        "excalidraw",
+        "source"
+      ],
+      "receipt_boundary": "chatterbox-speak owns actual audio rendering receipts; explain-project does not claim render duration."
+    }
+  ],
+  "graph_export_contract": {
+    "schema": "explain_project.memory_graph_export.v1",
+    "artifact": "deploy/memory-graph-export.example.json",
+    "memory_collection": "explain_project_graph_exports",
+    "node_types": [
+      "Project",
+      "Explainer",
+      "Question",
+      "Diagram",
+      "SourceSymbol",
+      "DebuggerStop",
+      "Schema"
+    ],
+    "edge_types": [
+      "ANSWERS",
+      "USES_DIAGRAM",
+      "CITES_SOURCE",
+      "HAS_BREAKPOINT",
+      "RELATED_TO",
+      "SAME_DIAGRAM_AS",
+      "IMPLEMENTS_SCHEMA"
+    ],
+    "purpose": "Enable Memory recall to find related explainers by question reuse, shared diagram/source symbols, breakpoint targets, project, and schema metadata.",
+    "required_fields": [
+      "diagram_id",
+      "source_path",
+      "rendered_svg_path",
+      "estimated_read_seconds",
+      "estimated_speak_seconds"
+    ]
+  },
+  "voice_driver_boundary": {
+    "schema": "explain_project.voice_driver_intent.v1",
+    "driver": "chatterbox-speak",
+    "disabled_by_default": true,
+    "revision_fenced": true,
+    "allowed_actions": [
+      "current-step",
+      "next",
+      "previous",
+      "ask-question",
+      "speak-step"
+    ],
+    "automatic_audio_capture": false,
+    "receipt_owner": "chatterbox-speak"
+  },
+  "source_of_truth": "Strict Pydantic project.feature_explainer.v1 JSONL remains the source of truth; deploy artifacts describe wiring and export shape only.",
+  "prior_answer_routing": "Every incoming question must produce MATCHED, AMBIGUOUS, or NO_MATCH before a new explainer is created.",
+  "graph_recall_fields": [
+    "diagram_id",
+    "source_path",
+    "rendered_svg_path"
+  ],
+  "emotion_intent_boundary": {
+    "emitter": "explain-project",
+    "emits": "affect intent only",
+    "owner": "chatterbox-speak",
+    "owned_by_chatterbox": [
+      "tags",
+      "pauses",
+      "render_chunks",
+      "render",
+      "analyzer receipt"
+    ]
+  },
+  "interrupt_boundary": {
+    "listener": "RealtimeSTT/listener",
+    "event_contract": "typed interruption events",
+    "explain_project_role": "revision-fence interruption events before reducer use",
+    "voice_coordinator_role": "cancel or stale-mark Chatterbox chunks",
+    "transcript_is_speaker_identity": false,
+    "health_is_readiness": false
+  },
+  "ops_terraform_boundary": "infra/terraform is provider-free and exposes locals/outputs for ops-terraform validation without cloud credentials."
+}

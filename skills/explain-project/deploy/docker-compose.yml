@@ -1,0 +1,38 @@
+services:
+  explain-project-api:
+    image: ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+    working_dir: /workspace/agent-skills/skills/explain-project
+    command: >
+      sh -lc './run.sh cockpit --host 0.0.0.0 --port "${EXPLAIN_PROJECT_API_PORT:-8766}" --repo . --explainers "${EXPLAIN_PROJECT_EXPLAINERS:-fixtures/sample.explainers.jsonl}" --memory-url "${MEMORY_URL:-http://host.docker.internal:8601}"'
+    environment:
+      EXPLAIN_PROJECT_API_PORT: ${EXPLAIN_PROJECT_API_PORT:-8766}
+      EXPLAIN_PROJECT_EXPLAINERS: ${EXPLAIN_PROJECT_EXPLAINERS:-fixtures/sample.explainers.jsonl}
+      MEMORY_URL: ${MEMORY_URL:-http://host.docker.internal:8601}
+      CHATTERBOX_URL: ${CHATTERBOX_URL:-}
+      REALTIMESTT_URL: ${REALTIMESTT_URL:-}
+    ports:
+      - "${EXPLAIN_PROJECT_API_PORT:-8766}:${EXPLAIN_PROJECT_API_PORT:-8766}"
+    volumes:
+      - ${AGENT_SKILLS_ROOT:-../../..}:/workspace/agent-skills:ro
+
+  explain-project-ui:
+    image: node:22-alpine
+    working_dir: /workspace/agent-skills/skills/explain-project/ui
+    command: >
+      sh -lc 'npm ci --cache /tmp/npm-cache && npm run dev -- --host 0.0.0.0 --port "${EXPLAIN_PROJECT_UI_PORT:-5174}"'
+    depends_on:
+      - explain-project-api
+    environment:
+      EXPLAIN_PROJECT_UI_PORT: ${EXPLAIN_PROJECT_UI_PORT:-5174}
+      EXPLAIN_PROJECT_API_URL: http://explain-project-api:${EXPLAIN_PROJECT_API_PORT:-8766}
+      MEMORY_URL: ${MEMORY_URL:-http://host.docker.internal:8601}
+      CHATTERBOX_URL: ${CHATTERBOX_URL:-}
+      REALTIMESTT_URL: ${REALTIMESTT_URL:-}
+    ports:
+      - "${EXPLAIN_PROJECT_UI_PORT:-5174}:${EXPLAIN_PROJECT_UI_PORT:-5174}"
+    volumes:
+      - ${AGENT_SKILLS_ROOT:-../../..}:/workspace/agent-skills:ro
+      - explain_project_ui_node_modules:/workspace/agent-skills/skills/explain-project/ui/node_modules
+
+volumes:
+  explain_project_ui_node_modules:

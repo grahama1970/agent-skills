@@ -25,6 +25,42 @@ Read [`DESIGN.md`](DESIGN.md) for the cockpit visual contract, [`PROJECT_KNOWLED
 | Serve the React cockpit API | `skills/explain-project/run.sh cockpit --explainers <explainers.jsonl>` |
 | Build the browser cockpit | `cd skills/explain-project/ui && npm run build` |
 | Emit `$test-interactions` manifest | `skills/explain-project/run.sh interaction-manifest --base-url http://127.0.0.1:8766` |
+| Check deploy templates | `skills/explain-project/run.sh validate-deploy` |
+
+## Deploy elsewhere
+
+`deploy/docker-compose.yml` runs the cockpit API and React UI from a mounted
+agent-skills checkout. Copy `deploy/.env.example` to `deploy/.env`, set ports and
+external `MEMORY_URL`, `CHATTERBOX_URL`, and `REALTIMESTT_URL` values, then run
+Docker Compose from `skills/explain-project/deploy`.
+
+`infra/terraform/` is a provider-free module for ops handoff: it renders the
+compose file path, API/UI ingress contract, schema-catalog pointer, and the same
+service URL env map for `$ops-terraform` detection. It is not a cloud
+provisioner.
+
+`deploy/schema-catalog.json` and `deploy/memory-graph-export.example.json` are
+Memory-ready export artifacts, not direct database writers. They describe strict
+`project.feature_explainer.v1` JSONL, `ask` routing for reusing previous
+explainers, read/speak time fields (`estimated_read_seconds`,
+`estimated_speak_seconds`, 150 WPM), and graph nodes/edges for Project,
+Explainer, Question, Diagram, SourceSymbol, DebuggerStop, Schema, ANSWERS,
+USES_DIAGRAM, HAS_BREAKPOINT, CITES_SOURCE, RELATED_TO, SAME_DIAGRAM_AS, and
+IMPLEMENTS_SCHEMA. Ingest them only
+through `$memory` `/store` or `/upsert` when the Memory service is available.
+
+Optional voice-driver intent metadata is cataloged for Chatterbox: current step,
+next, previous, ask-question, and speak-step are revision-fenced control intents;
+`chatterbox-speak` owns actual audio rendering and receipts. RealtimeSTT
+interruptions are separate typed listener events that the coordinator must
+revision-fence before canceling or stale-marking Chatterbox chunks. Neither path
+may mutate debugger, Excalidraw, or source state.
+
+Proof boundary: `validate-deploy` checks template presence, required env keys,
+compose markers, schema/graph export shape, and Terraform fmt/validate through
+`$ops-terraform` when Terraform is installed. It does not run containers, deploy
+Memory, Chatterbox, or RealtimeSTT, write Memory, render audio, or run Terraform
+plan/apply.
 
 ## Diagram discovery convention
 

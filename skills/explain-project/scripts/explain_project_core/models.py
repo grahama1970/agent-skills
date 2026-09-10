@@ -9,6 +9,8 @@ not execute debugger commands, reveal VS Code, capture audio, or mutate boards.
 
 from __future__ import annotations
 
+import re
+
 from enum import StrEnum
 from typing import Annotated, Any, Literal, TypeAlias
 
@@ -68,6 +70,15 @@ IntegrationStatus: TypeAlias = Literal[
     "FAILED",
     "NOT_CONFIGURED",
 ]
+
+READ_ALOUD_WPM = 150
+
+
+def estimate_spoken_seconds(parts: list[str]) -> int:
+    """Deterministic read/speak estimate for Chatterbox planning."""
+
+    words = sum(len(re.findall(r"\b[\w'-]+\b", part)) for part in parts)
+    return max(1, (words * 60 + READ_ALOUD_WPM - 1) // READ_ALOUD_WPM)
 
 
 class SourceRange(StrictModel):
@@ -132,6 +143,13 @@ class ExplainerStep(StrictModel):
     diagram_node_ids: list[str] = Field(min_length=1)
     proof_boundary: str | None = None
     confidence: Confidence | None = None
+    estimated_speak_seconds: int | None = Field(default=None, ge=1)
+
+    @model_validator(mode="after")
+    def fill_estimated_speak_seconds(self) -> "ExplainerStep":
+        if self.estimated_speak_seconds is None:
+            self.estimated_speak_seconds = estimate_spoken_seconds(self.bullets)
+        return self
 
 
 class FeatureExplainer(StrictModel):
@@ -152,6 +170,7 @@ class FeatureExplainer(StrictModel):
     confidence: Confidence = "medium"
     last_verified: str | None = None
     steps: list[ExplainerStep] | None = None
+    estimated_read_seconds: int | None = Field(default=None, ge=1)
 
     @field_validator("feature_id")
     @classmethod
@@ -166,6 +185,12 @@ class FeatureExplainer(StrictModel):
 
     @model_validator(mode="after")
     def step_refs_exist(self) -> "FeatureExplainer":
+        if self.estimated_read_seconds is None:
+            text = list(self.teleprompter_points)
+            for step in self.steps or []:
+                text.extend(step.bullets)
+            self.estimated_read_seconds = estimate_spoken_seconds(text)
+
         if not self.steps:
             return self
 

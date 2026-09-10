@@ -57,6 +57,7 @@ skills/explain-project/run.sh scaffold --repo <project> --entrypoint <path> --ru
 skills/explain-project/run.sh eval-interview-cockpit-path --out-dir /tmp/explain-project-first-question
 skills/explain-project/run.sh eval-browser-sync --out-dir /tmp/explain-project-browser-sync
 skills/explain-project/run.sh bridge --repo <workspace> --base-url http://127.0.0.1:15174 --out-dir <artifacts> --execute
+skills/explain-project/run.sh validate-deploy
 skills/explain-project/run.sh eval-bridge-execution --out-dir /tmp/explain-project-bridge-eval
 ```
 
@@ -78,6 +79,29 @@ missing Excalidraw board and stores stable metadata through `$ops-excalidraw`;
 `scaffold` scans README/PROJECT_STATE/docs/docstrings and binds the first
 existing diagram into the generated cockpit record. Use `$debugger` only when
 live runtime state answers the question.
+
+## Deployment templates
+
+Portable deployment templates live under `deploy/` and `infra/terraform/`.
+They are configuration-only: `deploy/docker-compose.yml` runs the cockpit API/UI
+from a mounted agent-skills checkout, `.env.example` exposes Memory,
+Chatterbox, and RealtimeSTT URL knobs, and the provider-free Terraform module
+models the compose host ingress/env contract for `$ops-terraform` validation.
+`deploy/schema-catalog.json` and
+`deploy/memory-graph-export.example.json` are export artifacts for Memory
+publishers: they keep `project.feature_explainer.v1` strict JSONL discoverable,
+state that `ask` must check old explainers before creating a new one, and model
+related explainer graph nodes/edges by question, diagram, source, breakpoint,
+schema, and estimated read/speak time. Optional
+`explain_project.voice_driver_intent.v1` is catalog-only here: a Chatterbox
+driver may request current-step/next/previous/ask-question/speak-step through
+revision-fenced reducer actions, but `chatterbox-speak` owns actual audio
+rendering receipts. RealtimeSTT interruptions are separate typed listener events;
+explain-project only revision-fences them before any coordinator cancels or
+stale-marks Chatterbox chunks. Run `skills/explain-project/run.sh validate-deploy`
+before copying templates. This validates template files and Terraform syntax
+only; it does not run Docker, Terraform plan/apply, Memory writes, audio
+rendering, or live dependency services.
 
 ## Browser synchronization
 

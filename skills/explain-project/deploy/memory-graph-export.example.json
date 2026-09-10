@@ -1,0 +1,141 @@
+{
+  "schema": "explain_project.memory_graph_export.v1",
+  "memory_collection": "explain_project_graph_exports",
+  "write_boundary": "Export artifact only. Ingest through $memory /store or /upsert when the memory service is available; do not write ArangoDB directly.",
+  "nodes": [
+    {
+      "type": "Project",
+      "id": "project:example",
+      "label": "Example project"
+    },
+    {
+      "type": "Explainer",
+      "id": "explainer:publish.report_last",
+      "schema": "project.feature_explainer.v1",
+      "feature_id": "publish.report_last",
+      "estimated_read_seconds": 17,
+      "speak_wpm": 150,
+      "voice_driver_actions": [
+        "current-step",
+        "next",
+        "previous",
+        "ask-question",
+        "speak-step"
+      ]
+    },
+    {
+      "type": "Question",
+      "id": "question:worker-crash-before-success",
+      "text": "A worker crashes before success; what prevents incomplete release?",
+      "estimated_speak_seconds": 5
+    },
+    {
+      "type": "Diagram",
+      "id": "diagram:publish-flow",
+      "diagram_id": "publish-flow",
+      "source_path": "docs/architecture.excalidraw",
+      "rendered_svg_path": "docs/architecture.svg"
+    },
+    {
+      "type": "SourceSymbol",
+      "id": "source:src/publish.py:publish_report",
+      "file": "src/publish.py",
+      "symbol": "publish_report"
+    },
+    {
+      "type": "DebuggerStop",
+      "id": "debugger:src/publish.py:210",
+      "file": "src/publish.py",
+      "line": 210,
+      "locals": [
+        "tmp",
+        "report_path"
+      ]
+    },
+    {
+      "type": "Schema",
+      "id": "schema:project.feature_explainer.v1",
+      "name": "project.feature_explainer.v1"
+    },
+    {
+      "type": "Schema",
+      "id": "schema:explain_project.voice_driver_intent.v1",
+      "name": "explain_project.voice_driver_intent.v1",
+      "receipt_owner": "chatterbox-speak"
+    }
+  ],
+  "edges": [
+    {
+      "type": "ANSWERS",
+      "from": "explainer:publish.report_last",
+      "to": "question:worker-crash-before-success"
+    },
+    {
+      "type": "USES_DIAGRAM",
+      "from": "explainer:publish.report_last",
+      "to": "diagram:publish-flow"
+    },
+    {
+      "type": "HAS_BREAKPOINT",
+      "from": "explainer:publish.report_last",
+      "to": "debugger:src/publish.py:210"
+    },
+    {
+      "type": "CITES_SOURCE",
+      "from": "explainer:publish.report_last",
+      "to": "source:src/publish.py:publish_report"
+    },
+    {
+      "type": "RELATED_TO",
+      "from": "explainer:publish.report_last",
+      "to": "project:example"
+    },
+    {
+      "type": "SAME_DIAGRAM_AS",
+      "from": "explainer:publish.report_last",
+      "to": "diagram:publish-flow"
+    },
+    {
+      "type": "IMPLEMENTS_SCHEMA",
+      "from": "explainer:publish.report_last",
+      "to": "schema:project.feature_explainer.v1"
+    },
+    {
+      "type": "RELATED_TO",
+      "from": "explainer:publish.report_last",
+      "to": "schema:explain_project.voice_driver_intent.v1"
+    }
+  ],
+  "read_time": {
+    "wpm_default": 150,
+    "fields": [
+      "estimated_read_seconds",
+      "estimated_speak_seconds"
+    ],
+    "actual_audio_duration_boundary": "Requires chatterbox-speak receipt."
+  },
+  "voice_driver_boundary": {
+    "schema": "explain_project.voice_driver_intent.v1",
+    "revision_fenced": true,
+    "allowed_actions": [
+      "current-step",
+      "next",
+      "previous",
+      "ask-question",
+      "speak-step"
+    ],
+    "forbidden_mutations": [
+      "debugger",
+      "excalidraw",
+      "source"
+    ]
+  },
+  "interrupt_boundary": {
+    "listener": "RealtimeSTT/listener",
+    "event_contract": "typed interruption events",
+    "explain_project_role": "revision-fence interruption events before reducer use",
+    "voice_coordinator_role": "cancel or stale-mark Chatterbox chunks",
+    "transcript_is_speaker_identity": false,
+    "health_is_readiness": false
+  }
+}

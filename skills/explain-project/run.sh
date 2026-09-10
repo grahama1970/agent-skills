@@ -3,7 +3,7 @@ set -euo pipefail
 
 DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 
-usage="usage: $0 validate|list|ask|sample|scaffold|milestone|answer-question|cockpit-proof|cockpit|validate-proof|eval-browser-sync|eval-interview-cockpit-path|interaction-manifest|debugger-source-reveal-receipt|debugger-runtime-proof-receipt|excalidraw-proposal-receipt ..."
+usage="usage: $0 validate|list|ask|sample|scaffold|milestone|answer-question|cockpit-proof|cockpit|validate-proof|validate-deploy|eval-browser-sync|eval-interview-cockpit-path|interaction-manifest|debugger-source-reveal-receipt|debugger-runtime-proof-receipt|excalidraw-proposal-receipt ..."
 
 if (($# == 0)); then
   echo "$usage" >&2
@@ -26,6 +26,9 @@ case "$cmd" in
     ;;
   eval-interview-cockpit-path)
     uv run --isolated --with pydantic --with typer --with httpx --with loguru python3 "$DIR/scripts/eval_interview_cockpit_path.py" "$@"
+    ;;
+  validate-deploy)
+    python3 "$DIR/scripts/validate_deploy.py" "$@"
     ;;
   validate|list|ask|sample|scaffold|milestone|answer-question|cockpit-proof|cockpit|validate-proof|interaction-manifest|debugger-source-reveal-receipt|debugger-runtime-proof-receipt|excalidraw-proposal-receipt)
     PYTHONPATH="$DIR/scripts" \

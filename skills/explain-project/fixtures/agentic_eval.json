@@ -11,7 +11,7 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && T=$(mktemp -d) && ./run.sh sample --output $T/explainers.jsonl && ./run.sh cockpit-proof $T/explainers.jsonl --question 'A worker crashes before success; what prevents incomplete release?' | tee $T/proof.json && python3 - <<'PY' $T/proof.json\nimport json,sys\np=json.load(open(sys.argv[1])); assert p['status']=='PASS' and p['assertions']['projection_revisions_equal']\nprint('EXPLAIN_PROJECT_SAMPLE_ENTRYPOINT_OK')\nPY"
+        "cd .. && T=$(mktemp -d) && ./run.sh sample --output $T/explainers.jsonl && ./run.sh cockpit-proof $T/explainers.jsonl --question 'A worker crashes before success; what prevents incomplete release?' | tee $T/proof.json && python3 - <<'PY' $T/proof.json $T/explainers.jsonl\nimport json,sys\np=json.load(open(sys.argv[1])); r=json.loads(open(sys.argv[2]).readline())\nassert p['status']=='PASS' and p['assertions']['projection_revisions_equal']\nassert r['estimated_read_seconds'] >= 1 and all(s['estimated_speak_seconds'] >= 1 for s in r['steps'])\nprint('EXPLAIN_PROJECT_SAMPLE_ENTRYPOINT_OK')\nPY"
       ],
       "expected": {
         "exit_code": 0,
@@ -20,7 +20,27 @@
         ]
       },
       "readback": true,
-      "evidence_class": "deterministic"
+      "evidence_class": "deterministic",
+      "notes": "Also asserts deterministic read/speak estimates emitted on generated strict JSONL for chatterbox-speak planning; actual audio duration remains unclaimed."
+    },
+    {
+      "name": "deploy-config-validates",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh validate-deploy | tee /tmp/explain-project-deploy-validation.json && python3 - <<'PYCODE'\nimport json\nd=json.load(open('/tmp/explain-project-deploy-validation.json'))\nassert d['status']=='PASS'\nassert d['compose']['memory_url'] and d['compose']['chatterbox_url'] and d['compose']['realtimestt_url']\nassert d['memory_publish']['memory_collection']=='skill_schemas'\nassert d['schema_catalog']['read_time']['wpm_default']==150\nassert d['memory_graph_export']['read_time_ok'] and d['memory_graph_export']['voice_driver_ok']\nassert d['memory_graph_export']['interrupt_boundary_ok']\nassert d['memory_graph_export']['required_fields_ok']\nassert 'DebuggerStop' in d['memory_graph_export']['node_types']\nassert 'IMPLEMENTS_SCHEMA' in d['memory_graph_export']['edge_types']\nassert 'explain_project.voice_driver_intent.v1' in d['schema_catalog']['schemas']\nassert not d['failures']\nprint('EXPLAIN_PROJECT_DEPLOY_VALIDATE_OK')\nPYCODE"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXPLAIN_PROJECT_DEPLOY_VALIDATE_OK"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "deterministic",
+      "notes": "Validates deploy/docker-compose.yml, deploy/.env.example, schema catalog, memory graph export, optional voice-driver boundary, read-time fields, and the detection-only Terraform module. It does not start containers, run Terraform plan/apply, write Memory, or prove live Memory/Chatterbox/RealtimeSTT service behavior."
     },
     {
       "name": "sample-jsonl-validates",
