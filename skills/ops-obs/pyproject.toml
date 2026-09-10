@@ -1,0 +1,15 @@
+[project]
+name = "ops-obs"
+version = "0.1.0"
+description = "Monitor and optimize OBS Studio on KDE Plasma Ubuntu via obs-websocket v5 and local diagnostics."
+requires-python = ">=3.11"
+dependencies = [
+    "typer>=0.9",
+    "loguru>=0.7",
+    "pydantic>=2.0",
+    "websocket-client>=1.6",
+    "python-dotenv>=1.0.0",
+]
+
+[tool.uv]
+package = false

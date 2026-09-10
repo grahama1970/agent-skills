@@ -1,0 +1,100 @@
+{
+  "version": 2,
+  "skill": "ops-obs",
+  "trials": 3,
+  "proof_scope": "CLI wiring, live local doctor/paths, typed websocket failure path, usage validation, protocol auth vector, streamdeck bindings emission",
+  "claims": {
+    "proves": "the declared commands exit with expected status and typed envelopes on this host",
+    "does_not_prove": "live obs-websocket control (server disabled on this host), physical Stream Deck rendering, streaming quality"
+  },
+  "cases": [
+    {
+      "name": "cli-help",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "../run.sh", "--help"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["doctor", "streamdeck"]
+      }
+    },
+    {
+      "name": "paths-live",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "../run.sh", "paths"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["config_root"]
+      }
+    },
+    {
+      "name": "doctor-live",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "../run.sh", "doctor"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["obs_install", "checks"]
+      }
+    },
+    {
+      "name": "streamdeck-bindings",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "../run.sh", "streamdeck", "bindings"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["ops-obs.streamdeck_bindings.v1", "stream toggle"]
+      }
+    },
+    {
+      "name": "ws-connection-refused",
+      "type": "adversarial",
+      "real_world": true,
+      "command": ["bash", "../run.sh", "status", "--host", "127.0.0.1", "--port", "1", "--timeout", "3"],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": ["obs_ws_connection_refused", "next_command"]
+      }
+    },
+    {
+      "name": "scene-missing-argument",
+      "type": "negative",
+      "command": ["bash", "../run.sh", "scene", "set"],
+      "expected": {
+        "exit_code": 2
+      }
+    },
+    {
+      "name": "watch-invalid-interval",
+      "type": "negative",
+      "command": ["bash", "../run.sh", "watch", "--interval", "0"],
+      "expected": {
+        "exit_code": 2
+      }
+    },
+    {
+      "name": "protocol-auth-vector",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "../run.sh", "selftest"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["DH8rJzw8w3csbWfcnTbO18+zOu0c+LSevHghwA2BbW0="]
+      }
+    },
+    {
+      "name": "status-live-optional",
+      "type": "positive",
+      "real_world": true,
+      "required": false,
+      "command": ["bash", "../run.sh", "status", "--timeout", "3"],
+      "blocked_when_stdout_contains": ["obs_ws_server_disabled"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["stats"]
+      }
+    }
+  ]
+}

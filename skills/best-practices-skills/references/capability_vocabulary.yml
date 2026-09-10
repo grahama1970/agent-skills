@@ -244,3 +244,12 @@ capabilities:
   human-named-target-authority-rule:
     description: A human-named delivery target is binding; undeliverable means NEEDS_ATTENTION, never reroute
     providers: [best-practices-delivery-proof]
+  obs-monitoring:
+    description: Live OBS Studio stats, health findings, and local install diagnostics via obs-websocket v5
+    providers: [ops-obs]
+  obs-control:
+    description: OBS Studio stream/record/scene control through the obs-websocket v5 RPC surface
+    providers: [ops-obs]
+  obs-streamdeck-bindings:
+    description: Validated Stream Deck button definitions and one-token OBS state probe for icon widgets
+    providers: [ops-obs]
