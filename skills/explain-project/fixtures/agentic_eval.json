@@ -434,6 +434,32 @@
       },
       "readback": true,
       "evidence_class": "deterministic"
+    },
+    {
+      "name": "first-question-chain-rehearsal",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "../scripts/eval_first_question_chain.sh"
+      ],
+      "timeout_seconds": 300,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "STEP1_ROUTE_OK",
+          "DEBUGGER_STEP_OK",
+          "REAL_BREAK_OK",
+          "DEBUGGER_RECEIPT_OK",
+          "EXCALIDRAW_RECEIPT_OK",
+          "COCKPIT_BULLETS_OK",
+          "FIRST_QUESTION_CHAIN_OK",
+          "CHATTERBOX_WALKTHROUGH_OK"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e",
+      "notes": "Real first interviewer question through the live-evidence intake boundary, MATCHED route to publish.report_last, walk to the debugger-target step, REAL headless breakpoint stop at src/anonymization_trial/pipeline.py:210 under python -m anonymization_trial demo (locals tmp/report_path/output_corpus), debugger-proof adapter receipt flips health to READY, excalidraw proposal receipt (display-only) keeps diagram READY, cockpit scannable-bullets contract asserted (>=2 bullets, <=160 chars), and chatterbox-speak narrates the breakpoint stop (title + source context + proves + diagram nodes + bullets) with a render receipt when the service is live. No microphone, no playback, no Excalidraw mutation, no VS Code GUI control."
     }
   ]
 }
