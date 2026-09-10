@@ -440,6 +440,9 @@ def interaction_manifest_command(
         "cockpit:health:status:source",
         "cockpit:health:status:debugger",
         "cockpit:health:status:web-ui",
+        "cockpit:service:surf",
+        "cockpit:service:surf-tab-input",
+        "cockpit:service:surf-tab-apply",
     ]
 
     _emit(

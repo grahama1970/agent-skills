@@ -1,6 +1,7 @@
 import type {
   BootstrapResponse,
   CockpitState,
+  ServiceHealthResponse,
 } from './types'
 
 export type EventType =
@@ -82,4 +83,18 @@ export async function importExplainer(
   )
 
   return readJson<BootstrapResponse>(response)
+}
+
+export async function fetchServices(
+  tabId?: string,
+): Promise<ServiceHealthResponse> {
+  const query = tabId ? `?tab_id=${encodeURIComponent(tabId)}` : ''
+  const response = await fetch(
+    `/api/cockpit/services${query}`,
+    { cache: 'no-store', signal: AbortSignal.timeout(6000) },
+  )
+  if (!response.ok) {
+    throw new CockpitApiError(response.status, await response.json())
+  }
+  return response.json() as Promise<ServiceHealthResponse>
 }

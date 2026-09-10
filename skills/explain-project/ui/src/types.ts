@@ -183,3 +183,20 @@ export interface ActionDefinition {
   params?: Record<string, unknown>
   tags?: string[]
 }
+
+export type ServiceStatusKind =
+  | 'ONLINE'
+  | 'DEGRADED'
+  | 'OFFLINE'
+  | 'NOT_CONFIGURED'
+
+export interface SkillServiceHealth {
+  service: 'live_evidence' | 'debugger' | 'surf'
+  status: ServiceStatusKind
+  detail: string
+}
+
+export interface ServiceHealthResponse {
+  schema: 'explain_project.service_health.v1'
+  services: SkillServiceHealth[]
+}

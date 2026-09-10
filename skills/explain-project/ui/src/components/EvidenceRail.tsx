@@ -19,6 +19,10 @@ import {
   IntegrationHealth,
 } from './IntegrationHealth'
 
+import {
+  ServiceHealth,
+} from './ServiceHealth'
+
 import type {
   CockpitState,
 } from '../types'
@@ -73,6 +77,8 @@ export function EvidenceRail({
       </div>
 
       <IntegrationHealth state={state} dispatch={dispatch} />
+
+      <ServiceHealth />
 
       <div className="grid shrink-0 grid-cols-2 gap-2">
         <section

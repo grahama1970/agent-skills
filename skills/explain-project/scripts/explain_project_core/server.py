@@ -38,6 +38,7 @@ from .models import (
     LiveEvidenceIntakeRequest,
     LiveEvidenceIntakeResponse,
     LiveEvidenceQuestionCandidate,
+    ServiceHealthResponse,
     TriagedFailure,
 )
 from .reducer import (
@@ -46,6 +47,7 @@ from .reducer import (
     project_state,
     reduce_cockpit,
 )
+from .services import probe_services
 
 MAX_BODY_BYTES = 2_000_000
 
@@ -220,6 +222,10 @@ class CockpitSession:
         self._seen_live_questions: set[str] = set()
         self._lock = threading.Lock()
         self.actions = ActionRegistry(memory_url)
+
+    @property
+    def repo(self) -> Path | None:
+        return self._repo
 
     def diagram_svg(self) -> bytes | None:
         """Bytes of the currently bound rendered SVG artifact, or None."""
@@ -493,6 +499,27 @@ def _handler_factory(
                 self.send_header("content-length", str(len(payload)))
                 self.end_headers()
                 self.wfile.write(payload)
+                return
+
+            if (
+                self.path.split("?")[0]
+                == "/api/cockpit/services"
+            ):
+                from urllib.parse import parse_qs
+
+                query = parse_qs(
+                    urlsplit(self.path).query,
+                )
+                tab_ids = query.get("tab_id", [None])
+                self._json(
+                    HTTPStatus.OK,
+                    ServiceHealthResponse(
+                        services=probe_services(
+                            repo=session.repo,
+                            surf_tab_id=tab_ids[0],
+                        ),
+                    ),
+                )
                 return
 
             if self.path == "/api/health":

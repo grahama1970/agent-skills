@@ -819,3 +819,37 @@ class CockpitProof(StrictModel):
     events: list[CockpitEvent]
     assertions: CockpitAssertions
     proof_scope: str
+
+
+ServiceStatus = Literal[
+    "ONLINE",
+    "DEGRADED",
+    "OFFLINE",
+    "NOT_CONFIGURED",
+]
+
+
+class ServiceHealth(StrictModel):
+    """Ambient liveness of one sibling skill service.
+
+    Informational probe result; never an adapter receipt or
+    cockpit proof claim.
+    """
+
+    service: Literal[
+        "live_evidence",
+        "debugger",
+        "surf",
+    ]
+    status: ServiceStatus
+    detail: str = Field(max_length=120)
+
+
+class ServiceHealthResponse(StrictModel):
+    schema_: Literal[
+        "explain_project.service_health.v1"
+    ] = Field(
+        alias="schema",
+        default="explain_project.service_health.v1",
+    )
+    services: list[ServiceHealth] = Field(min_length=1)
