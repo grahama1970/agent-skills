@@ -460,6 +460,29 @@
       "readback": true,
       "evidence_class": "live_e2e",
       "notes": "Real first interviewer question through the live-evidence intake boundary, MATCHED route to publish.report_last, walk to the debugger-target step, REAL headless breakpoint stop at src/anonymization_trial/pipeline.py:210 under python -m anonymization_trial demo (locals tmp/report_path/output_corpus), debugger-proof adapter receipt flips health to READY, excalidraw proposal receipt (display-only) keeps diagram READY, cockpit scannable-bullets contract asserted (>=2 bullets, <=160 chars), and chatterbox-speak narrates the breakpoint stop (title + source context + proves + diagram nodes + bullets) with a render receipt when the service is live. No microphone, no playback, no Excalidraw mutation, no VS Code GUI control."
+    },
+    {
+      "name": "live-cockpit-walkthrough-ui",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "../scripts/eval_live_cockpit_ui.sh"
+      ],
+      "timeout_seconds": 300,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "UI_TAB_READY",
+          "LIVE_DOM_ORACLE_OK",
+          "HOTKEY_STEP_OK",
+          "DEBUGGER_TARGET_IN_DOM_OK",
+          "LIVE_COCKPIT_WALKTHROUGH_OK"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e",
+      "notes": "Real first interviewer question through the live-evidence intake boundary drives the actual React cockpit in a real Chrome tab opened via Surf; the DOM is the readback oracle (active-question banner with the real question text, >=2 scannable bullets, Step N/M, revision fence r1->r2 via the J hotkey, evidence drawer shows debugger target pipeline.py:210 after E), and chatterbox-speak renders the Embry-voice narration for the stop (render receipt only). Disposable API+preview+tab; closes only its own tab/processes. No mic, no playback, no Excalidraw mutation, no VS Code GUI control."
     }
   ]
 }
