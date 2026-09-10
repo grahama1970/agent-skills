@@ -82,13 +82,25 @@ def surf(*args, tab=None):
 
 
 def surf_retry(*args, tab=None, tries=6, delay=3.0):
+    """Retry a surf call through debugger-attach conflicts.
+
+    A killed mid-js eval leaves a leaked chrome.debugger session wedging
+    the tab; one clean extension.reload releases it. Recover once, then
+    keep retrying.
+    """
     last = None
-    for _ in range(tries):
+    reloaded = False
+    for attempt in range(tries):
         last = surf(*args, tab=tab)
         combined = last.stdout + last.stderr
         if "Another debugger is already attached" not in combined:
             return last
-        time.sleep(delay)
+        if not reloaded and attempt >= 1:
+            reloaded = True
+            surf("extension.reload")
+            time.sleep(8)
+        else:
+            time.sleep(delay)
     return last
 
 
