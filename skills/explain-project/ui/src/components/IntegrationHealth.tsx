@@ -102,7 +102,6 @@ function HealthPill({
         <StatusIcon status={status} />
         <span className="truncate">{label}</span>
       </span>
-      <span className="shrink-0 font-bold uppercase">{syncLabel[status]}</span>
     </button>
   )
 }

@@ -1,6 +1,10 @@
 import {
+  CheckCircle2,
+  Lock,
   PanelRightClose,
   PanelRightOpen,
+  RefreshCw,
+  TriangleAlert,
 } from 'lucide-react'
 
 import {
@@ -53,6 +57,7 @@ function statusDotClass(status: string): string {
 function masterSync(state: CockpitState): {
   label: string
   className: string
+  icon: 'synced' | 'stale' | 'failed' | 'unconfigured'
 } {
   const statuses = Object.values(state.integration_health)
 
@@ -60,6 +65,7 @@ function masterSync(state: CockpitState): {
     return {
       label: 'ALL SYSTEMS SYNCED',
       className: 'border-green-500/70 bg-green-950/40 text-green-300',
+      icon: 'synced',
     }
   }
 
@@ -67,6 +73,7 @@ function masterSync(state: CockpitState): {
     return {
       label: 'SYNC DISCONNECTED',
       className: 'border-red-500/70 bg-red-950/40 text-red-300',
+      icon: 'failed',
     }
   }
 
@@ -74,13 +81,22 @@ function masterSync(state: CockpitState): {
     return {
       label: 'OUT OF SYNC',
       className: 'border-amber-500/70 bg-amber-950/40 text-amber-300',
+      icon: 'stale',
     }
   }
 
   return {
     label: 'SYNC NOT CONFIGURED',
     className: 'border-zinc-700 bg-zinc-900/70 text-zinc-400',
+    icon: 'unconfigured',
   }
+}
+
+function masterSyncIcon(kind: 'synced' | 'stale' | 'failed' | 'unconfigured') {
+  if (kind === 'synced') return <CheckCircle2 aria-hidden="true" className="size-4" />
+  if (kind === 'stale') return <RefreshCw aria-hidden="true" className="size-4" />
+  if (kind === 'failed') return <TriangleAlert aria-hidden="true" className="size-4" />
+  return <Lock aria-hidden="true" className="size-4" />
 }
 
 export function CockpitApp({
@@ -185,13 +201,15 @@ export function CockpitApp({
           <span
             data-qid="cockpit:health:master-sync"
             data-revision={state.revision}
+            aria-label={`Master sync: ${sync.label}`}
             className={[
-              'rounded-full border px-3 py-1 font-bold uppercase tracking-wider',
+              'inline-flex items-center justify-center rounded-full border',
+              'size-7 p-0',
               sync.className,
             ].join(' ')}
-            title="Master sync status across Live Evidence, VS Code, debugger, and web UI targets"
+            title={`Master sync: ${sync.label} — Live Evidence, VS Code, debugger, and web UI targets`}
           >
-            {sync.label}
+            {masterSyncIcon(sync.icon)}
           </span>
           <span className="text-zinc-300 font-semibold">
             Evidence: <span className="text-cyan-300">{state.route?.status ?? 'NO_MATCH'}</span> · r{state.revision}

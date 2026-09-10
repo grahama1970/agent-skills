@@ -1,5 +1,6 @@
 import {
   Mic,
+  MicOff,
 } from 'lucide-react'
 
 import {
@@ -53,11 +54,13 @@ export function CockpitAudioIndicator() {
   const listening = enabled && !denied
     && audioState === 'LISTENING'
 
-  const label = !enabled
+  const stateWord = !enabled
     ? 'MIC OFF'
     : denied
       ? 'MIC BLOCKED'
       : audioState
+
+  const Icon = enabled && !denied ? Mic : MicOff
 
   return (
     <button
@@ -65,10 +68,9 @@ export function CockpitAudioIndicator() {
       ref={badgeRef}
       data-qid="cockpit:audio:listen-toggle"
       data-qs-action="AUDIO_LISTEN_TOGGLE"
-      data-audio-state={label.toLowerCase().replace(' ', '-')}
-      title={enabled
-        ? 'Mic indicator active — click to stop'
-        : 'Mic indicator off — click to listen'}
+      data-audio-state={stateWord.toLowerCase().replace(' ', '-')}
+      title={`${stateWord}${enabled ? ' — click to stop' : ' — click to listen'}`}
+      aria-label={`Microphone indicator: ${stateWord}`}
       aria-pressed={enabled}
       className={[
         'cockpit-audio__badge',
@@ -84,10 +86,8 @@ export function CockpitAudioIndicator() {
     >
       <span className="cockpit-audio__icon-wrap" aria-hidden="true">
         <span className="cockpit-audio__ring" />
-        <Mic className="cockpit-audio__icon size-3.5" />
+        <Icon className="cockpit-audio__icon size-3.5" />
       </span>
-
-      <span>{label}</span>
     </button>
   )
 }
