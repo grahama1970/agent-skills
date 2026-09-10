@@ -454,7 +454,10 @@ NOOP_ESCALATION_SECONDS = _env_seconds("PROJECT_WATCHDOG_IDLE_ESCALATION_SECONDS
 #: ``webclaude`` is a browser transport test seat, not a better closure auditor:
 #: it has no Ask-controlled reasoning effort and consumes Chrome/SURF capacity.
 #: Use the local Claude Ask/Tau lane for Anthropic-family closure review.
-DEFAULT_CLOSURE_AUDITORS = ("claude-opus-5-low", "gpt-5.5-xhigh")
+#: gpt-5.5-xhigh runs on the codex transport, whose subscription quota
+#: died 2026-09-10 (resets Sep 14): every closure audit became one-PASS-
+#: plus-one-failed. Default to seats on independent live transports.
+DEFAULT_CLOSURE_AUDITORS = ("claude-opus-5-low", "opencode-go/deepseek-v4-flash")
 
 
 def closure_auditors(project: dict[str, Any] | None = None) -> list[str]:
