@@ -162,8 +162,9 @@ def classify(root: Path, current: TargetSnapshot, *, repo: str, number: int,
              task_sha256: str, owned: OwnedTargets | None) -> dict[str, str]:
     """Never grant authority from HEAD dirtiness or an operator blanket hash map."""
     remote = remote_entries(root, current.remote_sha, current.targets)
-    previous = owned if (owned and owned.repo == repo and owned.issue_number == number
-                         and owned.task_sha256 == task_sha256 and owned.targets == current.targets) else None
+    same_issue = owned if (owned and owned.repo == repo and owned.issue_number == number) else None
+    previous = same_issue if (same_issue and same_issue.task_sha256 == task_sha256
+                             and same_issue.targets == current.targets) else None
     result = {}
     for name, version in current.files.items():
         value = None if version.kind == "absent" else (version.mode, version.oid)
@@ -171,6 +172,13 @@ def classify(root: Path, current: TargetSnapshot, *, repo: str, number: int,
             result[name] = "verified_remote_identical"
         elif previous is not None and previous.files.get(name) == version:
             result[name] = "verified_current_task_owned"
+        elif same_issue is not None and same_issue.files.get(name) == version:
+            # Same ticket, earlier task version: helper-authored bytes that
+            # survived an acceptance-body edit. Adopt them as the baseline for
+            # the new attempt instead of refusing as an unowned edit every
+            # tick (observed on tau#343/#348/#350, 2026-09-10: each body edit
+            # orphaned the prior owned checkpoint into a permanent conflict).
+            result[name] = "verified_prior_task_owned"
         else:
             result[name] = "unowned_target_edit"
     # Staged intent distinct from both the shipped and the observed target bytes

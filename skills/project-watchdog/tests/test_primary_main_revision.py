@@ -967,3 +967,27 @@ def test_completed_resume_result_outranks_nonzero_wrapper_receipt(repository, mo
     assert result["status"] == "COMPLETED"
     gate = core.load_json(receipts / "repair-proof-gate.json")
     assert gate["native_artifacts"][0]["passed"] is True
+
+
+def test_same_issue_prior_task_bytes_are_adopted_not_conflicted(repository):
+    """tau#343/#348/#350 regression: a body edit after a checkpoint must not
+    orphan same-ticket helper-authored bytes into a permanent conflict."""
+    root, _, _ = repository
+    (root / "skills/project-watchdog/registry.py").write_text("retained repair\n")
+    current = scope_snapshot(root)
+    owned = OwnedTargets(repo="fixture/repo", issue_number=42, task_sha256="old-task", run_id="prior",
+                         targets=current.targets, files=current.files, provenance="authored_checkpoint")
+    new_task = content.classify(root, current, repo="fixture/repo", number=42,
+                                task_sha256="edited-task", owned=owned)
+    assert set(new_task.values()) == {"verified_prior_task_owned"}
+
+
+def test_foreign_issue_prior_task_bytes_still_conflict(repository):
+    root, _, _ = repository
+    (root / "skills/project-watchdog/registry.py").write_text("retained repair\n")
+    current = scope_snapshot(root)
+    owned = OwnedTargets(repo="fixture/repo", issue_number=1618, task_sha256="old-task", run_id="prior",
+                         targets=current.targets, files=current.files, provenance="authored_checkpoint")
+    other = content.classify(root, current, repo="fixture/repo", number=1620,
+                             task_sha256="edited-task", owned=owned)
+    assert "unowned_target_edit" in other.values()

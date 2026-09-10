@@ -41,6 +41,7 @@ RECEIPTS = STATE_ROOT / "receipts"
 CURSOR = STATE_ROOT / "notify-bridge-cursor.json"
 CHECKPOINTS = STATE_ROOT / "notify-bridge-checkpoints.json"
 BRIDGE_LOCK = STATE_ROOT / "notify-bridge.lock"
+SWITCHBOARD_DEDUP = STATE_ROOT / "notify-bridge-dedup.json"
 SWITCHBOARD = os.environ.get("SWITCHBOARD_URL", "http://127.0.0.1:7890")
 PI_AGENT_INBOX = os.environ.get("WATCHDOG_BRIDGE_PI_INBOX", "agent-skills")
 OPS_DISCORD = Path(
@@ -447,6 +448,36 @@ def push_webhook(ev: dict) -> dict[str, Any]:
         return {"status": "ALERT_DELIVERY_FAILED", "error": str(exc)[:200]}
 
 
+def _renotify_seconds() -> int:
+    try:
+        return int(os.environ.get("PROJECT_WATCHDOG_ALERT_RENOTIFY_SECONDS") or 86400)
+    except ValueError:
+        return 86400
+
+
+def _event_fingerprint(ev: dict[str, Any]) -> str:
+    """Stable identity of the condition, not the receipt.
+
+    The watchdog mints a new receipt (new event_id) every tick for the same
+    stuck ticket, so per-event_id dedup alone let the identical
+    NEEDS_ATTENTION push reach Switchboard every 5 minutes (2026-09-10:
+    ownership-conflict/seat-refusal spam). Fingerprint on repo+issue+status+
+    triage code so one condition pushes once per renotify window.
+    """
+    return json.dumps(
+        [ev.get("repo"), ev.get("issue"), ev.get("status"), ev.get("triage_code")],
+        sort_keys=True,
+    )
+
+
+def _load_dedup_state() -> dict[str, float]:
+    try:
+        parsed = json.loads(SWITCHBOARD_DEDUP.read_text())
+        return parsed if isinstance(parsed, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
 def switchboard_delivery_decision(ev: dict, *, fresh: bool) -> str | None:
     if not fresh:
         return "skipped_stale"
@@ -579,10 +610,22 @@ def deliver(ev: dict[str, Any], checkpoint: BridgeCheckpoint, *, fresh: bool) ->
     if decision:
         result["switchboard"] = {"status": "SKIPPED", "reason": decision}
     elif not _delivered(checkpoint, "pi_agent", event_id):
-        receipt = push_switchboard(ev)
-        result["switchboard"] = receipt
-        if receipt.get("status") == "SENT":
+        fp = _event_fingerprint(ev)
+        state = _load_dedup_state()
+        now = time.time()
+        if now - state.get(fp, 0) < _renotify_seconds():
+            receipt = {"status": "DEDUPED", "fingerprint": fp,
+                       "last_sent_at": state.get(fp)}
+            result["switchboard"] = receipt
             _mark_delivered(checkpoint, "pi_agent", event_id, receipt)
+        else:
+            receipt = push_switchboard(ev)
+            result["switchboard"] = receipt
+            if receipt.get("status") == "SENT":
+                # Only a real delivery advances the dedupe clock (alerts.py rule).
+                state[fp] = now
+                _write_text_durable(SWITCHBOARD_DEDUP, json.dumps(state, sort_keys=True) + "\n")
+                _mark_delivered(checkpoint, "pi_agent", event_id, receipt)
     else:
         result["switchboard"] = {"status": "DEDUPED"}
     if not requires_human_push(ev):

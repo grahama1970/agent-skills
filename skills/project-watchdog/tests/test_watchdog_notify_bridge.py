@@ -10,6 +10,8 @@ def load_bridge():
     spec = importlib.util.spec_from_file_location("watchdog_notify_bridge", path)
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
+    import sys
+    sys.modules[spec.name] = module  # required for `from __future__ import annotations` resolution
     spec.loader.exec_module(module)
     return module
 
@@ -110,3 +112,35 @@ def test_summarize_unsettled_running_operation_names_issue_and_recovery(tmp_path
     assert ev["action"] == "ticket_repair"
     assert ev["next_steps"] == ["recover --apply"]
     assert bridge.switchboard_delivery_decision(ev, fresh=True) is None
+
+
+def test_switchboard_push_dedupes_same_fingerprint_across_receipts(tmp_path, monkeypatch):
+    """2026-09-10 spam: identical (repo,issue,status,triage) from a NEW receipt
+    every 5 minutes must not push to Switchboard more than once per window."""
+    import time as _time
+    bridge = load_bridge()
+    monkeypatch.setattr(bridge, "RECEIPTS", tmp_path)
+    monkeypatch.setattr(bridge, "SWITCHBOARD_DEDUP", tmp_path / "notify-bridge-dedup.json")
+    checkpoint = bridge.BridgeCheckpoint()
+    sent: list[dict] = []
+
+    def fake_push(ev):
+        sent.append(ev)
+        return {"status": "SENT"}
+
+    monkeypatch.setattr(bridge, "push_switchboard", fake_push)
+    monkeypatch.setattr(bridge, "_write_agent_action_receipt", lambda *a, **k: None)
+    base = {"event_id": "e1", "dir": "d1", "status": "NEEDS_ATTENTION", "repo": "grahama1970/tau",
+            "issue": "343", "triage_code": "project_watchdog_target_ownership_conflict",
+            "run_id": "r1", "node": "n", "attempt": "1", "phase": "p",
+            "source_time": "t", "observed_at": "t", "receipt": "x",
+            "identity": {"repo": "grahama1970/tau", "issue_number": 343}}
+    first = bridge.deliver(dict(base), checkpoint, fresh=True)
+    assert first["switchboard"]["status"] == "SENT" and len(sent) == 1
+    replay = dict(base, event_id="e2", dir="d2")  # next tick, new receipt id
+    second = bridge.deliver(replay, checkpoint, fresh=True)
+    assert second["switchboard"]["status"] == "DEDUPED" and len(sent) == 1
+    real_time = _time.time
+    monkeypatch.setattr(_time, "time", lambda: real_time() + 90000)
+    later = bridge.deliver(dict(base, event_id="e3", dir="d3"), checkpoint, fresh=True)
+    assert later["switchboard"]["status"] == "SENT" and len(sent) == 2

@@ -1289,7 +1289,8 @@ def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[
     result["target_ownership"] = classification
     write_json(receipt_dir / "target-ownership.json", classification)
     conflicts = {p: why for p, why in classification.items()
-                 if why not in {"verified_remote_identical", "verified_current_task_owned"}}
+                 if why not in {"verified_remote_identical", "verified_current_task_owned",
+                                "verified_prior_task_owned"}}
     if conflicts:
         raise primary.Refusal(f"target ownership conflict (not checkout dirtiness): {conflicts}")
     legacy = primary.legacy_inventory(root, number)
