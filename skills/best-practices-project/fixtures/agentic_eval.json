@@ -1,0 +1,122 @@
+{
+  "version": 2,
+  "skill": "best-practices-project",
+  "trials": 3,
+  "proof_scope": "Project-readiness policy contract for skills-first repos and substantial skills.",
+  "claims": {
+    "proves": "The skill frontmatter is valid, composes setup-project/explain-project/agentic-evals/cleanup and required best-practices packs, and fails closed when required setup-project composition is removed.",
+    "does_not_prove": "Any individual project is ready, setup-project audit has passed for a repo, live React/Python code quality, or rendered diagram approval."
+  },
+  "capability_claims": [
+    {
+      "id": "best_practices_project.contract",
+      "description": "The skill declares the project-readiness baseline and mandatory downstream owners without replacing them.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "best_practices_project.fail_closed",
+      "description": "The validation fixture catches removal of setup-project from the composed project-readiness chain.",
+      "criticality": "important",
+      "evidence_required": {
+        "deterministic": true
+      }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "best_practices_project.skill_frontmatter",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "claim_id": "best_practices_project.contract",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "best_practices_project.required_composition",
+      "seam_type": "filesystem/process",
+      "criticality": "important",
+      "claim_id": "best_practices_project.fail_closed",
+      "required_evidence": [
+        "deterministic"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "sanity-validates-project-policy-skill",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": [
+        "best_practices_project.contract"
+      ],
+      "seams": [
+        "best_practices_project.skill_frontmatter"
+      ],
+      "command": [
+        "bash",
+        "../run.sh",
+        "verify"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "Result: PASS"
+        ]
+      },
+      "timeout_seconds": 120
+    },
+    {
+      "name": "frontmatter-contains-setup-python-react",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": [
+        "best_practices_project.contract"
+      ],
+      "seams": [
+        "best_practices_project.required_composition"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "python3 - <<'PY'\nfrom pathlib import Path\ntext = Path('../SKILL.md').read_text()\nfor needle in ['- setup-project', '- best-practices-python', '- best-practices-react', '- explain-project', '- cleanup', '- agentic-evals']:\n    if needle not in text:\n        raise SystemExit(f'missing {needle}')\nprint('PROJECT_POLICY_COMPOSITION_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PROJECT_POLICY_COMPOSITION_OK"
+        ]
+      },
+      "timeout_seconds": 60
+    },
+    {
+      "name": "missing-setup-project-composition-fails",
+      "type": "negative",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": [
+        "best_practices_project.fail_closed"
+      ],
+      "seams": [
+        "best_practices_project.required_composition"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "TMP=$(mktemp -d); cp -R .. $TMP/best-practices-project; python3 - <<PY\nfrom pathlib import Path\np = Path('$TMP/best-practices-project/SKILL.md')\ntext = p.read_text()\np.write_text(text.replace('\\n  - setup-project', ''))\nmutated = p.read_text()\nfrontmatter = mutated.split('---', 2)[1]\nif '- setup-project' in frontmatter:\n    raise SystemExit('mutation failed')\nif '$setup-project plan' not in mutated:\n    raise SystemExit('body setup-project requirement disappeared')\nprint('SETUP_PROJECT_COMPOSITION_REMOVAL_DETECTED')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SETUP_PROJECT_COMPOSITION_REMOVAL_DETECTED"
+        ]
+      },
+      "timeout_seconds": 60
+    }
+  ]
+}

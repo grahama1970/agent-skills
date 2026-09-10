@@ -433,6 +433,11 @@ recovery-packet seams.
 
 ## Project State / Readiness Report Standard
 
+For repo/project readiness, apply `$best-practices-project`; this section is the
+skill-package readiness pattern it composes. Substantial or project-like skills
+SHOULD declare `best-practices-project` in `complies:` when they make developer
+readiness, setup, cleanup, explainability, or retained-proof claims.
+
 Skills that orchestrate other skills, external services, Docker stacks, or long-running
 agent workflows SHOULD provide a machine-readable project state report and a human HTML
 view. The goal is to make current project state inspectable at a glance and prevent
@@ -681,6 +686,9 @@ rationale for fixture depth, but that is not an exemption from composing
   `fixtures/agentic_eval.json`; scaffold fixtures are first posture only and
   must be strengthened with real-world positive, negative, and adversarial
   cases.
+- Substantial or project-like skills that claim developer readiness, setup
+  provenance, cleanup/readiness, or explainability declare `best-practices-project`
+  in `complies:` and follow its project baseline.
 - Complex, high-risk, UI-facing, security, compliance, orchestration, or
   subagent skills include `.ask/browser-oracles.yaml` so `$browser-oracle`
   can resolve the correct WebGPT review project by directory walk-up.
