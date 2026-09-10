@@ -75,7 +75,11 @@
         "kind": "none",
         "note": "CLI DAG engine; runs from source per invocation, no long-running daemon to restart",
         "proof_needs_restart": false
-      }
+      },
+      "closure_auditors": [
+        "claude-opus-5-low",
+        "opencode-go/deepseek-v4-flash"
+      ]
     },
     {
       "project_id": "scillm",
@@ -285,7 +289,11 @@
         "note": "skills run from source; individual skill services (if any) restart per their own contract",
         "proof_needs_restart": false
       },
-      "auto_land_main": true
+      "auto_land_main": true,
+      "closure_auditors": [
+        "claude-opus-5-low",
+        "opencode-go/deepseek-v4-flash"
+      ]
     },
     {
       "project_id": "pi-mono",
