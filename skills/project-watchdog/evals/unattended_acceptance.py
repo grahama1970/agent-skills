@@ -17,6 +17,7 @@ import subprocess
 import sys
 import time
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -199,6 +200,61 @@ def cron_tick_starts(limit: int = 20) -> list[dict[str, Any]]:
     return starts[-limit:]
 
 
+def canary_ref(repo: str | None, issue: object) -> str:
+    return f"{repo}#{issue}"
+
+
+def is_canary(repo: str | None, issue: object) -> bool:
+    return canary_ref(repo, issue) in set(ACCEPTANCE_SCOPE["canary_queue"])
+
+
+def run_id_datetime(run_id: str | None) -> datetime | None:
+    if not isinstance(run_id, str):
+        return None
+    marker = "project-watchdog-"
+    if not run_id.startswith(marker):
+        return None
+    stamp = run_id[len(marker):len(marker) + 16]
+    try:
+        return datetime.strptime(stamp, "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
+def parse_github_time(value: object) -> datetime | None:
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def operation_journals() -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for root in [REPO, Path("/home/graham/workspace/experiments/tau")]:
+        op_dir = root / ".git/project-watchdog-primary/operations"
+        for path in op_dir.glob("*.json"):
+            data = load_json(path)
+            result = data.get("result") if isinstance(data.get("result"), dict) else {}
+            rows.append({
+                "path": str(path),
+                "repo": data.get("repo"),
+                "issue_number": data.get("issue_number"),
+                "run_id": data.get("run_id"),
+                "phase": data.get("phase"),
+                "targets": data.get("targets", []),
+                "tau_settled": data.get("tau_settled"),
+                "lease_released": data.get("lease_released"),
+                "ask_run_dir": data.get("ask_run_dir"),
+                "dispatched_at": data.get("dispatched_at"),
+                "result_status": result.get("status"),
+                "result_summary": result.get("summary"),
+                "result_ok": result.get("ok"),
+            })
+    return rows
+
+
 def recent_receipts(limit: int = 500) -> list[dict[str, Any]]:
     paths = sorted(
         RECEIPTS.glob("project-watchdog-*/receipt.json"),
@@ -224,6 +280,9 @@ def recent_receipts(limit: int = 500) -> list[dict[str, Any]]:
                     "ok": h.get("ok"),
                     "action": h.get("action"),
                     "requires_human_input": h.get("requires_human_input"),
+                    "run_id": data.get("run_id"),
+                    "summary": h.get("summary"),
+                    "triage_code": (h.get("triage") or {}).get("code") if isinstance(h.get("triage"), dict) else None,
                     "proof_gate": h.get("proof_gate"),
                     "artifacts": h.get("artifacts", []),
                 }
@@ -317,6 +376,8 @@ def scenario_checks(
     closures: list[dict[str, Any]],
     projection: dict[str, list[Any]],
     cron_starts: list[dict[str, Any]],
+    operations: list[dict[str, Any]],
+    issue_states: dict[str, Any],
 ) -> dict[str, bool]:
     closed_live = [
         row for row in closures
@@ -324,24 +385,45 @@ def scenario_checks(
         and row.get("tau_settled") is True
         and row.get("proof_comment_read_back") is True
     ]
-    human_alerts = [
-        row for row in receipts
-        if row.get("requires_human_input") is True
-        and isinstance(row.get("alert"), dict)
-        and row["alert"].get("status") == "SENT"
-        and (row["alert"].get("notify_receipt") or {}).get("message_id")
-    ]
+    human_alerts = []
+    for row in receipts:
+        alert = row.get("alert")
+        if not (isinstance(alert, dict) and alert.get("status") == "SENT"
+                and (alert.get("notify_receipt") or {}).get("message_id")):
+            continue
+        for handled in row.get("handled_issues") or []:
+            if (handled.get("requires_human_input") is True
+                    and is_canary(handled.get("repo"), handled.get("issue_number"))):
+                human_alerts.append({"receipt": row.get("path"), "handled": handled})
+    unsettled_run_ids = {
+        handled.get("run_id")
+        for row in receipts
+        for handled in row.get("handled_issues") or []
+        if handled.get("triage_code") == "project_watchdog_native_tau_run_unsettled"
+    }
     recovery_markers = [
-        row for row in receipts
-        if any("watchdog-reattach" in str(item) or "retained-resume" in str(item)
-               for handled in row.get("handled_issues") or []
-               for item in handled.get("artifacts", []))
+        op for op in operations
+        if op.get("ask_run_dir")
+        and op.get("phase") in {"retryable", "finished"}
+        and op.get("tau_settled") is True
+        and op.get("lease_released") is True
+        and (op.get("result_status") in {"NEEDS_ATTENTION", "COMPLETED"})
+        and op.get("run_id") in unsettled_run_ids
     ]
-    dependency_unblocks = [row for row in receipts if row.get("dependency_unblocks")]
+    issue_1592 = ((issue_states.get("dependencies") or {}).get("grahama1970/agent-skills#1592") or {}).get("issue") or {}
+    dep_closed = parse_github_time(issue_1592.get("closedAt")) if issue_1592.get("state") == "CLOSED" else None
+    dependency_unblocks = [
+        op for op in operations
+        if op.get("repo") == "grahama1970/agent-skills"
+        and op.get("issue_number") == 1641
+        and dep_closed is not None
+        and (run_id_datetime(op.get("run_id")) or datetime.fromtimestamp(float(op.get("dispatched_at") or 0), timezone.utc)) > dep_closed
+    ]
     reservation_blocks = [
         row for row in receipts
         if row.get("stop_reason") in {"retained_operation_running", "only_scoped_claims_remain"}
         or any(h.get("stop_reason") == "execution_lock_held" for h in row.get("handled_issues") or [])
+        or any(obs.get("writer_active") is True and obs.get("writer_targets") for obs in row.get("primary_observations") or [])
     ]
     final_reviewed = [
         row for row in receipts
@@ -389,6 +471,8 @@ def main() -> int:
     status = status_obs["json"] if isinstance(status_obs["json"], dict) else {}
     receipts = recent_receipts()
     closures = closure_receipts()
+    operations = operation_journals()
+    issues = issue_ref_state()
     projection = current_projection(status, dry_tick, receipts)
     cron_starts = cron_tick_starts()
     checks = scenario_checks(
@@ -398,6 +482,8 @@ def main() -> int:
         closures=closures,
         projection=projection,
         cron_starts=cron_starts,
+        operations=operations,
+        issue_states=issues,
     )
     established = all(checks.values())
     result = {
@@ -412,7 +498,7 @@ def main() -> int:
         "acceptance_scope": ACCEPTANCE_SCOPE,
         "runtime_digests": runtime_digests(),
         "git_remote_heads": git_remote_heads(),
-        "issue_ref_state": issue_ref_state(),
+        "issue_ref_state": issues,
         "commands": {
             "status": status_obs["result"],
             "dry_run_tick": dry_tick["result"],
@@ -430,6 +516,8 @@ def main() -> int:
             "recent_receipt_count_sampled": len(receipts),
             "closure_receipt_count_sampled": len(closures),
             "recover_primary_pending": pending["json"],
+            "operation_journal_count": len(operations),
+            "recent_operation_journals": operations[-20:],
         },
         "checks": checks,
         "not_established_reasons": [name for name, ok in checks.items() if not ok],
