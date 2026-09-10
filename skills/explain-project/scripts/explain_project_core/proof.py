@@ -166,14 +166,8 @@ def run_script(
     debugger_intent_only = (
         bool(debugger_request_indexes)
         and all(
-            states[index].debugger.prepare_intent is not None
-            and (
-                states[index]
-                .debugger
-                .prepare_intent
-                .execution_allowed
-                is False
-            )
+            states[index].debugger.prepare_intent is None
+            or states[index].debugger.prepare_intent.execution_allowed is False
             for index in debugger_request_indexes
         )
     )
