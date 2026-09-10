@@ -192,6 +192,37 @@ def verify(root: Path, number: int, plan: VerificationPlan, *, timeout_s: int) -
     return results
 
 
+def _write_closure_receipt_v2(record: Operation, issue: dict[str, Any], *, helper_result: dict[str, Any] | None,
+                              proof_posted: bool, remote_sha: str) -> Path:
+    closure = record.closure
+    if closure is None:
+        raise ContentConflict("closure receipt requires frozen proof")
+    path = Path(record.receipt_dir) / "ticket-closure-receipt-v2.json"
+    payload = {
+        "schema": "agent_skills.ticket_closure_receipt.v2",
+        "repo": record.repo,
+        "issue": record.issue_number,
+        "state": issue.get("state"),
+        "state_reason": issue.get("stateReason"),
+        "run_id": record.run_id,
+        "lease_agent": record.lease_agent,
+        "lease_event": record.lease_event.model_dump(mode="json") if record.lease_event else None,
+        "tau_settled": record.tau_settled,
+        "proof_path": closure.proof_path,
+        "proof_sha256": closure.proof_sha256,
+        "review_path": closure.review_path,
+        "review_sha256": closure.review_sha256,
+        "commit": closure.commit,
+        "remote_sha": remote_sha,
+        "remote_required": closure.remote_required,
+        "scope": closure.scope,
+        "proof_comment_read_back": proof_posted,
+        "helper_exit_code": None if helper_result is None else helper_result.get("exit_code"),
+    }
+    write_json(path, payload)
+    return path
+
+
 def close(record: Operation) -> dict[str, Any]:
     closure = record.closure
     if closure is None or not record.tau_settled:
@@ -205,11 +236,13 @@ def close(record: Operation) -> dict[str, Any]:
     if now["state"] == "CLOSED":
         if now.get("stateReason") != "COMPLETED" or not posted:
             raise ContentConflict("foreign/unproved closure observed; do not claim it")
+        receipt = _write_closure_receipt_v2(record, now, helper_result=None, proof_posted=posted,
+                                           remote_sha=remote_pin(root))
         # Reconcile the already verified historical closure. Later target work
         # does not reopen it or grant authority to restore its older bytes.
         return {"ok": True, "status": "COMPLETED", "ticket_closed": True,
                 "summary": "verified completed closure read back", "commands": [],
-                "commit": closure.commit, "reconciled": True}
+                "commit": closure.commit, "reconciled": True, "closure_receipt_v2": str(receipt)}
     pin = remote_pin(root)
     require_unchanged(closure.content, snapshot(root, closure.scope, pin))
     if closure.remote_required and remote_entries(root, pin, closure.scope) != versions(closure.content):
@@ -223,6 +256,7 @@ def close(record: Operation) -> dict[str, Any]:
     posted = any(c.get("body") == proof.read_text() for c in comments(record.repo, record.issue_number))
     if now["state"] != "CLOSED" or now.get("stateReason") != "COMPLETED" or not posted:
         raise ContentConflict("native close not confirmed; durable closure outbox retained")
+    receipt = _write_closure_receipt_v2(record, now, helper_result=row, proof_posted=posted, remote_sha=pin)
     return {"ok": True, "status": "COMPLETED", "ticket_closed": True,
             "summary": "native ticket verification and completed closure read back",
-            "commands": [row], "commit": closure.commit}
+            "commands": [row], "commit": closure.commit, "closure_receipt_v2": str(receipt)}

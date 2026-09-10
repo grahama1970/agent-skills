@@ -542,7 +542,12 @@ def test_native_close_lost_response_is_read_back_without_second_close(closing_re
         state.update(state="CLOSED", stateReason="COMPLETED")
         return {"exit_code": 124, "stdout": "", "stderr": "lost reply AFTER mutation"}
     monkeypatch.setattr(native_ticket, "invoke", close_mutation)
-    assert native_ticket.close(record)["ticket_closed"] is True
+    close_result = native_ticket.close(record)
+    assert close_result["ticket_closed"] is True
+    receipt_v2 = core.load_json(Path(close_result["closure_receipt_v2"]))
+    assert receipt_v2["schema"] == "agent_skills.ticket_closure_receipt.v2"
+    assert receipt_v2["lease_event"]["id"] == record.lease_event.id
+    assert receipt_v2["proof_comment_read_back"] is True
     # Subsequent legitimate target edits must not be rolled back to acknowledge closure.
     (Path(record.root) / "skills/project-watchdog/registry.py").write_text("next task\n")
     assert native_ticket.close(record)["reconciled"] is True
