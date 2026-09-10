@@ -63,10 +63,21 @@ def surf(*args, tab=None):
     )
 
 
+def surf_retry(*args, tab=None, tries=4, delay=2.0):
+    last = None
+    for _ in range(tries):
+        last = surf(*args, tab=tab)
+        combined = last.stdout + last.stderr
+        if "Another debugger is already attached" not in combined:
+            return last
+        time.sleep(delay)
+    return last
+
+
 def dom_probe(tab, expression, tries=20):
     last = ""
     for _ in range(tries):
-        r = surf(
+        r = surf_retry(
             "js", "--no-activate", expression, tab=tab
         )
         out = (r.stdout + r.stderr).strip()
@@ -156,20 +167,24 @@ try:
             + (T / "preview.log").read_text()[-200:]
         )
 
-    # 3. Real Chrome tab through Surf.
-    new = surf(
-        "tab.new",
+    # 3. ONE persistent cockpit tab (default 837436340) — navigate it
+    #    to the disposable preview and restore its URL afterwards.
+    #    Never tab.new / tab.close here.
+    tab_id = int(
+        os.environ.get("LIVEUI_TAB_ID", "837436340")
+    )
+    prev = surf_retry(
+        "js", "--no-activate", "location.href", tab=tab_id
+    )
+    restore_url = (
+        prev.stdout.strip().strip('"')
+        or f"http://127.0.0.1:15176/"
+    )
+    surf(
+        "go",
         f"http://127.0.0.1:{UI_PORT}/?liveui=1",
+        "--tab-id", str(tab_id),
     )
-    match = re.search(
-        r"Created tab (\d+):", new.stdout
-    )
-    if match is None:
-        raise SystemExit(
-            "tab.new gave no id: "
-            + (new.stdout + new.stderr)[-300:]
-        )
-    tab_id = int(match.group(1))
     time.sleep(2)
 
     boot = dom_probe(tab_id, BOOT_JS)
@@ -292,7 +307,19 @@ try:
     print("LIVE_COCKPIT_WALKTHROUGH_OK")
 finally:
     if tab_id is not None:
-        surf("tab.close", str(tab_id))
+        for _ in range(3):
+            back = surf_retry(
+                "go", restore_url,
+                "--tab-id", str(tab_id),
+            )
+            time.sleep(1)
+            check = surf_retry(
+                "js", "--no-activate", "location.href",
+                tab=tab_id,
+            )
+            if restore_url.split("?")[0] in check.stdout:
+                print("TAB_RESTORED_OK", restore_url)
+                break
     for proc in (preview, api):
         if proc is not None:
             proc.terminate()
