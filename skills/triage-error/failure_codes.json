@@ -1546,6 +1546,22 @@
       "next_command": "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
       "recoverable": true,
       "not_this": []
+    },
+    {
+      "code": "codex_handler_quota_exhausted",
+      "layer": "tau",
+      "match": [
+        "You've hit your usage limit",
+        "purchase more credits",
+        "codex_handler_failed"
+      ],
+      "cause": "The codex CLI seat hit its subscription usage limit; every creator dispatch on this transport fails until quota resets or the seat is rotated.",
+      "next_command": "Rotate repair_creator in skills/project-watchdog/registry/projects.json to a non-codex seat (e.g. opencode-go/*) or wait for the subscription reset; do not re-dispatch on the dead seat.",
+      "recoverable": true,
+      "not_this": [
+        "reviewer semantic rejection",
+        "provider authentication failure"
+      ]
     }
   ],
   "aliases": {}
