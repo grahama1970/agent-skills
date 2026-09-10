@@ -1008,14 +1008,23 @@ def propose_docstring_links_command(
     repo: Path = typer.Option(..., "--repo"),
     explainers: Path = typer.Option(..., "--explainers"),
     out: Path = typer.Option(..., "--out"),
+    include_source_ranges: bool = typer.Option(
+        False,
+        "--include-source-ranges",
+        help=(
+            "Also propose for source-range symbol owners "
+            "without debugger stops."
+        ),
+    ),
 ) -> None:
     """Propose docstring diagram-link lines for each debugger breakpoint.
 
     Reads a strict explainer JSONL, finds every step with a debugger
-    stop, locates the owning top-level function, and writes a typed
-    proposal artifact (explain_project.docstring_link_proposal.v1)
-    containing the exact docstring line to add per breakpoint. Never
-    mutates source; the human/project-agent applies the patch once.
+    stop (or every source-range symbol with --include-source-ranges),
+    locates the owning top-level function, and writes a typed proposal
+    artifact (explain_project.docstring_link_proposal.v1) containing
+    the exact docstring line to add per breakpoint. Never mutates
+    source; the human/project-agent applies the patch once.
     """
 
     rows = read_jsonl(explainers)
@@ -1030,20 +1039,29 @@ def propose_docstring_links_command(
             pointer = f"Diagram: {diagram.source_path}"
 
         seen_functions: set[tuple[str, str]] = set()
+        targets: list[tuple[str, int]] = []
         for step in row.steps:
             if step.debugger_stop_index is None:
                 continue
             stop = row.debugger_stops[
                 step.debugger_stop_index
             ]
-            source = (repo / stop.file).resolve()
+            targets.append((stop.file, stop.line))
+        if include_source_ranges:
+            for source_range in row.source_ranges:
+                targets.append(
+                    (source_range.file, source_range.start_line)
+                )
+        for target_file, target_line in targets:
+            stop_file, stop_line = target_file, target_line
+            source = (repo / stop_file).resolve()
             if not source.is_file():
                 continue
             lines = source.read_text(
                 encoding="utf-8"
             ).splitlines()
             line_no = min(
-                max(stop.line - 1, 0), len(lines) - 1
+                max(stop_line - 1, 0), len(lines) - 1
             )
 
             owning = None
@@ -1100,9 +1118,9 @@ def propose_docstring_links_command(
             seen_functions.add(key)
 
             proposals.append({
-                "file": str(stop.file),
+                "file": str(stop_file),
                 "function": owning,
-                "breakpoint_line": stop.line,
+                "breakpoint_line": stop_line,
                 "proposed_docstring_line": pointer,
                 "diagram_id": diagram.source_path,
             })

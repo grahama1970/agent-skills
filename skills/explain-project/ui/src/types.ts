@@ -166,6 +166,9 @@ export interface ExplainerSummary {
   question_family: string
   question: string
   steps: number
+  diagram_source?: string | null
+  diagram_verified?: boolean
+  diagram_nodes?: number
 }
 
 export interface BootstrapResponse {

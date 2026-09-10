@@ -16,6 +16,10 @@ import {
 } from '../useRegisterAction'
 
 import {
+  DiagramsExplorerPane,
+} from './DiagramsExplorerPane'
+
+import {
   ExplainerHistory,
 } from './ExplainerHistory'
 
@@ -199,6 +203,11 @@ export function InputRail({
       <ExplainerHistory
         explainers={explainers}
         state={state}
+        dispatch={dispatch}
+      />
+
+      <DiagramsExplorerPane
+        explainers={explainers}
         dispatch={dispatch}
       />
 

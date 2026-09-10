@@ -700,6 +700,9 @@ class ExplainerSummary(StrictModel):
     question_family: Family
     question: str
     steps: int = Field(ge=1)
+    diagram_source: str | None = None
+    diagram_verified: bool = False
+    diagram_nodes: int = 0
 
 
 class BootstrapResponse(StrictModel):

@@ -308,6 +308,33 @@ def write_milestone(repo: Path, entrypoint: Path, milestone: str, output_dir: Pa
         },
         "proof_boundary": "Milestone refresh updates explain-project scaffolds and a quick project-state receipt. It does not mutate code docstrings, accept Excalidraw proposals, or prove diagram freshness without human/project-agent review.",
     }
+    # Curated catalog + stale/missing diagram findings (criterion #11).
+    curated_path = repo / "docs" / "explain" / "explainers.jsonl"
+    stale_diagrams: list[dict[str, Any]] = []
+    curated_count = 0
+    if curated_path.is_file():
+        from .catalog import read_jsonl as _read_jsonl
+
+        curated_rows = _read_jsonl(curated_path)
+        curated_count = len(curated_rows)
+        for row in curated_rows:
+            finding = {
+                "feature_id": row.feature_id,
+                "source_path": row.diagram.source_path,
+                "verified": bool(row.diagram.sha256),
+            }
+            rendered = row.diagram.rendered_svg_path
+            if not row.diagram.source_path:
+                finding["finding"] = "missing-diagram-source"
+            elif not row.diagram.sha256:
+                finding["finding"] = "unverified-diagram-binding"
+            elif rendered and not (repo / rendered).is_file():
+                finding["finding"] = "rendered-svg-missing"
+            else:
+                continue
+            stale_diagrams.append(finding)
+    receipt["curated_explainers"] = curated_count
+    receipt["stale_diagrams"] = stale_diagrams
     dump_path = root / "receipt.json"
     dump_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return receipt

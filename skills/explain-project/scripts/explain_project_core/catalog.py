@@ -135,6 +135,9 @@ def summaries(
             question_family=row.question_family,
             question=row.question,
             steps=len(steps_for(row)),
+            diagram_source=row.diagram.source_path,
+            diagram_verified=bool(row.diagram.sha256),
+            diagram_nodes=len(row.diagram.node_ids),
         )
         for row in sorted(
             rows,
