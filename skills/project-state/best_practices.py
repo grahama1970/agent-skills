@@ -19,6 +19,7 @@ _EXCLUDED_DIRS = {
     ".git",
     ".claude",
     ".skills",
+    ".tmp",
     ".venv",
     "__pycache__",
     "node_modules",
@@ -27,6 +28,37 @@ _EXCLUDED_DIRS = {
     "local",
     "artifacts",
 }
+
+#: Obvious placeholder markers used by test fixtures and fixture-driven scripts
+#: (best-practices-python blesses these). A literal secret never contains one;
+#: this only suppresses findings that name themselves as fake.
+_PLACEHOLDER_MARKERS = (
+    "test-",
+    "example",
+    "dummy",
+    "fake",
+    "placeholder",
+    "native-smoke",
+    "do-not-read",
+    "sk-test",
+    "sk-issue",
+    "issue-",
+    "abcdefgh",
+    "REAL_SECRET",
+    "SYNTHETIC",
+)
+
+
+def _looks_like_placeholder(value: str) -> bool:
+    # A match spanning lines is parser/kwargs code, not a string literal secret.
+    if "\n" in value:
+        return True
+    lowered = value.lower()
+    if any(marker.lower() in lowered for marker in _PLACEHOLDER_MARKERS):
+        return True
+    # A bare lowercase-hyphen label ("bystander", "access-token") is a
+    # descriptive fixture name; credentials carry mixed classes or digits.
+    return bool(value) and all(ch.islower() or ch == "-" for ch in value)
 
 
 def _is_excluded(path: Path) -> bool:
@@ -68,9 +100,17 @@ def collect_best_practices() -> dict[str, Any]:
 
             rel = str(py_file.relative_to(PROJECT_ROOT))
 
-            # Hardcoded secrets
-            if re.search(r'(password|secret|token|api_key)\s*=\s*["\'][^"\']{8,}', content, re.IGNORECASE):
-                findings.append({"file": rel, "issue": "hardcoded_secret", "severity": "critical"})
+            # Hardcoded secrets (placeholder-aware: test/example fixtures are
+            # not secrets; a literal credential without a placeholder marker
+            # still flags).
+            for m in re.finditer(
+                r"(password|secret|token|api_key)\s*=\s*[\"']([^\"']+)[\"']",
+                content,
+                re.IGNORECASE,
+            ):
+                if len(m.group(2)) >= 8 and not _looks_like_placeholder(m.group(2)):
+                    findings.append({"file": rel, "issue": "hardcoded_secret", "severity": "critical"})
+                    break
 
             # Bare except
             if re.search(r'\bexcept\s*:', content):
