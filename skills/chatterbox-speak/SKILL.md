@@ -115,18 +115,23 @@ Three named vocabularies the agent selects by context (all human-verified by ear
   diagram search/create), `searching` (research), plus a `working_long` heartbeat.
   Short lexical lines rendered LIVE on Turbo (<1s), weighted-random per stage with
   session no-repeat.
-- **Delivery cover = the fast lane** (`scripts/cover_plan.py`): every macro carries
-  a `delivery_cover` — the instant filler that plays WHILE the slow answer builds.
-  Two-lane model (best-practices-chatterbox-agent): **Lane A** = the deterministic
-  cover planner maps `(stage, intensity, tags)` → ordered cover (thinking sound →
-  progress line → pause, or a mood-matched hum on idle/long waits) in ~0ms, zero
-  reasoning (like memory `/intent fast:true`); Embry speaks it immediately.
-  **Lane B** = the high-reasoning agent does the real work (sets breakpoints via
-  $debugger, finds/draws diagrams via $ops-excalidraw, gathers evidence). When B is
-  ready, barge-in hands off. The concurrent two-lane runtime is owned by
-  `embry-voice-control`; chatterbox-speak owns the vocabulary + the deterministic
-  planner. Only a context tagged `ambiguous` escalates to a tiny model
-  (glm-5.3-flash) to break a tie — the default is deterministic and instant.
+- **Delivery cover = TWO concurrent agents** (`scripts/cover_plan.py`): every macro
+  carries a `delivery_cover` — the instant filler that plays WHILE the real answer
+  builds (best-practices-chatterbox-agent two-agent model):
+  - **Agent A — Voice/Cover agent (fast lane).** Near-instant, low-reasoning; owns
+    the mouth. Runs the deterministic cover planner: `(stage, intensity, tags)` →
+    ordered cover (thinking sound → progress line → pause, or a mood-matched hum on
+    idle/long waits) in ~0ms, zero reasoning (like memory `/intent fast:true`).
+    Only a context tagged `ambiguous` escalates to a tiny model (glm-5.3-flash)
+    to break a tie; the default is deterministic and instant.
+  - **Agent B — Solver agent (slow lane).** High-reasoning; does the real work —
+    sets breakpoints via $debugger, finds/draws diagrams via $ops-excalidraw,
+    gathers evidence, composes the answer.
+  - **Channel:** B emits stage events (`debugging`/`diagramming`/`searching`/
+    `answer`…); A maps each to the matching progress pool and voices it. When B's
+    answer is ready, barge-in hands off and Embry speaks B's content.
+  The concurrent two-agent runtime is owned by `embry-voice-control`;
+  chatterbox-speak owns the renderer + macro vocabulary + the deterministic planner.
 - **Song-hum macros** (`fixtures/song_hum_macros.json`): public-domain Hawaiian /
   hapa-haole tunes Embry hums. ALL picks are compositions published 1930 or earlier
   (US PD as of 2026, Duke CSPD). The 1930s film-era hits (Sweet Leilani 1937,
