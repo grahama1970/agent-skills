@@ -377,7 +377,8 @@ def _require_agentic_eval_proof(proof: str, ticket_type: str, route: str) -> Non
         )
 
 
-def _validate_common(ticket_type: str, target: str, proof: str, route: str) -> None:
+def _validate_common(ticket_type: str, target: str, proof: str, route: str,
+                     human_first: bool = False) -> None:
     _validate_live_proof(proof, ticket_type)
     _require_agentic_eval_proof(proof, ticket_type, route)
     if ticket_type not in VALID_TYPES:
@@ -387,7 +388,11 @@ def _validate_common(ticket_type: str, target: str, proof: str, route: str) -> N
     if not proof.strip() and ticket_type != "triage":
         _die("required proof is required; use triage when proof is unknown")
     if route not in VALID_ROUTES:
-        _die(f"unknown route {route!r}; use unknown if unsure")
+        if human_first:
+            route = "unknown"  # accepted override: filed human-first, no agent-work label
+        else:
+            _die(f"unknown route {route!r}; VALID_ROUTES: {', '.join(sorted(VALID_ROUTES))}; "
+                 "use unknown if unsure, or pass --human-first to file it human-first")
 
 
 def _section(title: str, value: str) -> str:
@@ -518,8 +523,9 @@ def _draft(
     memory_identifiers: list[str] | None = None,
     memory_anchors: list[str] | None = None,
     lane: str = "",
+    human_first: bool = False,
 ) -> TicketDraft:
-    _validate_common(ticket_type, target, proof, route)
+    _validate_common(ticket_type, target, proof, route, human_first=human_first)
     body = _body(
         ticket_type=ticket_type,
         target=target,
@@ -631,6 +637,7 @@ def _create_or_preview(draft: TicketDraft, *, repo: Optional[str], apply: bool, 
 @app.command()
 def bug(
     title: str,
+    human_first: bool = typer.Option(False, "--human-first", help="File a bogus/unknown route human-first instead of failing closed (route recorded as unknown; no agent-work label)."),
     target: str = typer.Option(..., "--target"),
     observed: str = typer.Option(..., "--observed"),
     expected: str = typer.Option(..., "--expected"),
@@ -683,6 +690,7 @@ def bug(
         memory_symbols=list(memory_symbol),
         memory_identifiers=list(memory_identifier),
         memory_anchors=list(memory_anchor),
+        human_first=human_first,
     )
     _create_or_preview(draft, repo=repo, apply=apply, as_json=as_json)
 
@@ -690,6 +698,7 @@ def bug(
 @app.command()
 def feature(
     title: str,
+    human_first: bool = typer.Option(False, "--human-first", help="File a bogus/unknown route human-first instead of failing closed (route recorded as unknown; no agent-work label)."),
     target: str = typer.Option(..., "--target"),
     limitation: str = typer.Option(..., "--limitation"),
     capability: str = typer.Option(..., "--capability"),
@@ -744,6 +753,7 @@ def feature(
         memory_symbols=list(memory_symbol),
         memory_identifiers=list(memory_identifier),
         memory_anchors=list(memory_anchor),
+        human_first=human_first,
     )
     _create_or_preview(draft, repo=repo, apply=apply, as_json=as_json)
 

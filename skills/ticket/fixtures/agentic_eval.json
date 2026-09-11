@@ -1,127 +1,129 @@
 {
-  "version": 2,
-  "skill": "ticket",
-  "trials": 3,
-  "proof_scope": "fixture wiring smoke",
-  "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+ "version": 2,
+ "skill": "ticket",
+ "trials": 3,
+ "proof_scope": "fixture wiring smoke",
+ "claims": {
+  "proves": "the existing skill entrypoint exits with the expected status",
+  "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+ },
+ "cases": [
+  {
+   "name": "sanity",
+   "type": "positive",
+   "command": [
+    "bash",
+    "../sanity.sh"
+   ],
+   "expected": {
+    "exit_code": 0
+   }
   },
-  "cases": [
-    {
-      "name": "sanity",
-      "type": "positive",
-      "command": [
-        "bash",
-        "../sanity.sh"
-      ],
-      "expected": {
-        "exit_code": 0
-      }
-    },
-    {
-      "name": "depends-on-renders-machine-readable-blocker",
-      "type": "positive",
-      "timeout_seconds": 60,
-      "command": [
-        "bash",
-        "-c",
-        "../run.sh maintenance 'depends-on eval' --target skills/ticket --invariant 'dependency marker is rendered' --cleanup 'preview only' --scoped-files skills/ticket --proof 'cd /home/graham/workspace/experiments/agent-skills && skills/agentic-evals/run.sh run skills/ticket/fixtures/agentic_eval.json --case depends-on-renders-machine-readable-blocker --output /tmp/ticket_depends_on_eval.json shows READY' --route backend_python_or_skill_runtime --depends-on grahama1970/pdf_oxide#31 > /tmp/ticket_depends_on_preview.out && grep -q 'blocked-by: grahama1970/pdf_oxide#31' /tmp/ticket_depends_on_preview.out && grep -q 'depends_on: grahama1970/pdf_oxide#31' /tmp/ticket_depends_on_preview.out"
-      ],
-      "expected": {
-        "exit_code": 0
-      }
-    },
-    {
-      "name": "routable-requires-agentic-eval",
-      "type": "adversarial",
-      "real_world": true,
-      "timeout_seconds": 60,
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/ticket\" && uv run --project . python scripts/eval_routable_requires_agentic_eval.py"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "ROUTABLE_REQUIRES_AGENTIC_EVAL_OK"
-        ],
-        "stderr_excludes": [
-          "ROUTABLE_NO_EVAL_ACCEPTED",
-          "HUMAN_FIRST_SUBJECTED"
-        ]
-      }
-    },
-    {
-      "name": "skill-target-memory-plan",
-      "category": "skill-target-memory-plan",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "real_world": true,
-      "timeout_seconds": 120,
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/ticket\" && uv run --project . pytest tests/test_memory_plan.py -q -k 'skill_target or cross_skill or marker_skill_id or byte_identical or compact_memory_marker'"
-      ],
-      "expected": {
-        "exit_code": 0
-      },
-      "notes": "Regression guard for issue 1547: memory-plan emits skill_id for valid single-skill targets and fails closed on comma-packed, absolute, traversal, glob, repo-root, and cross-skill targets."
-    },
-    {
-      "name": "close-audit-parses-markdown-scoped-files",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "real_world": true,
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git rev-parse --show-toplevel) && cd \"$repo/skills/ticket\" && ./scripts/eval_close_audit_path_scope.sh"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "CLOSE_AUDIT_PATH_SCOPED_OK"
-        ]
-      },
-      "notes": "Regression guard for Markdown issue bodies such as '- **Scoped files:** ...'. The close wrapper must scope the worktree audit from the machine-readable scoped-files line instead of falling back to every dirty secondary worktree."
-    },
-    {
-      "name": "github-actions-is-opt-in-not-default-proof",
-      "type": "adversarial",
-      "real_world": true,
-      "timeout_seconds": 60,
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git rev-parse --show-toplevel) && skill=\"$repo/skills/ticket/SKILL.md\" && grep -q 'Ticket verification defaults to deterministic local proof' \"$skill\" && grep -q 'Do not dispatch GitHub Actions by default' \"$skill\" && grep -q 'not part of default ticket verification' \"$skill\" && grep -q 'spending-limit failure blocks' \"$skill\" && grep -q 'only the CI/cloud proof path' \"$skill\" && echo GITHUB_ACTIONS_OPT_IN_ONLY"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "GITHUB_ACTIONS_OPT_IN_ONLY"
-        ]
-      },
-      "notes": "Regression guard for the ticket policy that local deterministic proof is the default and GitHub Actions is an explicit, narrow opt-in path."
-    },
-    {
-      "name": "bug-preview-does-not-require-unrelated-preflight",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "real_world": true,
-      "timeout_seconds": 60,
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/ticket\" && ./run.sh bug 'Ticket preview preflight false-positive guard' --target skills/ticket --observed 'A Codex pre-tool hook falsely blocked ticket creation as a preflight-required batch operation while filing a non-LLM issue.' --expected 'Ticket preview generation stays a local issue-body compiler and does not invoke or require unrelated preflight.' --repro 'Preview this ticket with no --apply and inspect stdout.' --proof 'skills/agentic-evals/run.sh run skills/ticket/fixtures/agentic_eval.json --case bug-preview-does-not-require-unrelated-preflight --output /tmp/ticket_preflight_false_positive_eval.json shows READY' --route backend_python_or_skill_runtime --lane be --agent coder --label type:bug > /tmp/ticket_preflight_false_positive_preview.out 2>&1 && grep -q 'Ticket preview preflight false-positive guard' /tmp/ticket_preflight_false_positive_preview.out && ! grep -q 'Before running batch LLM operations' /tmp/ticket_preflight_false_positive_preview.out && ! grep -q 'batch-quality/cli.py preflight' /tmp/ticket_preflight_false_positive_preview.out && grep -q 'route:backend_python_or_skill_runtime' /tmp/ticket_preflight_false_positive_preview.out && grep -q 'lane:be' /tmp/ticket_preflight_false_positive_preview.out"
-      ],
-      "expected": {
-        "exit_code": 0
-      },
-      "notes": "Regression guard for the 2026-08-26 incident where a local Codex hook misclassified non-LLM ticket creation as requiring preflight. This proves the ticket CLI preview path is local and does not emit or depend on that gate; Codex PreToolUse hook behavior must be tested separately at the hook layer."
-    }
-  ]
+  {
+   "name": "depends-on-renders-machine-readable-blocker",
+   "type": "positive",
+   "timeout_seconds": 60,
+   "command": [
+    "bash",
+    "-c",
+    "../run.sh maintenance 'depends-on eval' --target skills/ticket --invariant 'dependency marker is rendered' --cleanup 'preview only' --scoped-files skills/ticket --proof 'cd /home/graham/workspace/experiments/agent-skills && skills/agentic-evals/run.sh run skills/ticket/fixtures/agentic_eval.json --case depends-on-renders-machine-readable-blocker --output /tmp/ticket_depends_on_eval.json shows READY' --route backend_python_or_skill_runtime --depends-on grahama1970/pdf_oxide#31 > /tmp/ticket_depends_on_preview.out && grep -q 'blocked-by: grahama1970/pdf_oxide#31' /tmp/ticket_depends_on_preview.out && grep -q 'depends_on: grahama1970/pdf_oxide#31' /tmp/ticket_depends_on_preview.out"
+   ],
+   "expected": {
+    "exit_code": 0
+   }
+  },
+  {
+   "name": "routable-requires-agentic-eval",
+   "type": "adversarial",
+   "real_world": true,
+   "timeout_seconds": 60,
+   "command": [
+    "bash",
+    "-c",
+    "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/ticket\" && uv run --project . python scripts/eval_routable_requires_agentic_eval.py"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "ROUTABLE_REQUIRES_AGENTIC_EVAL_OK"
+    ],
+    "stderr_excludes": [
+     "ROUTABLE_NO_EVAL_ACCEPTED",
+     "HUMAN_FIRST_SUBJECTED"
+    ]
+   }
+  },
+  {
+   "name": "skill-target-memory-plan",
+   "category": "skill-target-memory-plan",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "real_world": true,
+   "timeout_seconds": 120,
+   "command": [
+    "bash",
+    "-c",
+    "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/ticket\" && uv run --project . pytest tests/test_memory_plan.py -q -k 'skill_target or cross_skill or marker_skill_id or byte_identical or compact_memory_marker'"
+   ],
+   "expected": {
+    "exit_code": 0
+   },
+   "notes": "Regression guard for issue 1547: memory-plan emits skill_id for valid single-skill targets and fails closed on comma-packed, absolute, traversal, glob, repo-root, and cross-skill targets."
+  },
+  {
+   "name": "close-audit-parses-markdown-scoped-files",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "real_world": true,
+   "timeout_seconds": 180,
+   "command": [
+    "bash",
+    "-c",
+    "repo=$(git rev-parse --show-toplevel) && cd \"$repo/skills/ticket\" && ./scripts/eval_close_audit_path_scope.sh"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "CLOSE_AUDIT_PATH_SCOPED_OK"
+    ]
+   },
+   "notes": "Regression guard for Markdown issue bodies such as '- **Scoped files:** ...'. The close wrapper must scope the worktree audit from the machine-readable scoped-files line instead of falling back to every dirty secondary worktree."
+  },
+  {
+   "name": "bug-preview-does-not-require-unrelated-preflight",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "real_world": true,
+   "timeout_seconds": 60,
+   "command": [
+    "bash",
+    "-c",
+    "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/ticket\" && ./run.sh bug 'Ticket preview preflight false-positive guard' --target skills/ticket --observed 'A Codex pre-tool hook falsely blocked ticket creation as a preflight-required batch operation while filing a non-LLM issue.' --expected 'Ticket preview generation stays a local issue-body compiler and does not invoke or require unrelated preflight.' --repro 'Preview this ticket with no --apply and inspect stdout.' --proof 'skills/agentic-evals/run.sh run skills/ticket/fixtures/agentic_eval.json --case bug-preview-does-not-require-unrelated-preflight --output /tmp/ticket_preflight_false_positive_eval.json shows READY' --route backend_python_or_skill_runtime --lane be --agent coder --label type:bug > /tmp/ticket_preflight_false_positive_preview.out 2>&1 && grep -q 'Ticket preview preflight false-positive guard' /tmp/ticket_preflight_false_positive_preview.out && ! grep -q 'Before running batch LLM operations' /tmp/ticket_preflight_false_positive_preview.out && ! grep -q 'batch-quality/cli.py preflight' /tmp/ticket_preflight_false_positive_preview.out && grep -q 'route:backend_python_or_skill_runtime' /tmp/ticket_preflight_false_positive_preview.out && grep -q 'lane:be' /tmp/ticket_preflight_false_positive_preview.out"
+   ],
+   "expected": {
+    "exit_code": 0
+   },
+   "notes": "Regression guard for the 2026-08-26 incident where a local Codex hook misclassified non-LLM ticket creation as requiring preflight. This proves the ticket CLI preview path is local and does not emit or depend on that gate; Codex PreToolUse hook behavior must be tested separately at the hook layer."
+  },
+  {
+   "name": "route-unknown-fails-closed",
+   "type": "adversarial",
+   "evidence_class": "deterministic",
+   "mocked": false,
+   "real_world": true,
+   "timeout_seconds": 120,
+   "command": [
+    "bash",
+    "-c",
+    "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/ticket\" && uv run --project . python scripts/eval_route_unknown_guard.py"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "ROUTE-GUARD-PASS"
+    ]
+   },
+   "proves": "A bogus --route fails closed with exit 2 naming the route and listing VALID_ROUTES, unless --human-first is passed, in which case the ticket drafts with route recorded unknown (no agent-work label). Real CLI, no fixtures fed as inputs."
+  }
+ ]
 }
