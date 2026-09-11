@@ -17,6 +17,12 @@ run browser transport itself.
 Web* chat models are chosen deliberately for writing/reviewing prose from
 comprehensive context; coding subagents are not in the writing path.
 
+Role split matters: webgpt is strong at claim-grounded content from comprehensive
+context but weak at humanized prose, so its output is a GROUNDED SKELETON, never
+the shipped text. webkimi's rewrite is mandatory and is the human-facing output.
+The T0/T1 gates and the human handoff run on webkimi's rewrite -- no path ships
+webgpt's raw draft.
+
 ## Claim-bind gate
 
 Heuristic v1: numeric metrics/dates/counts in the draft must appear in the
