@@ -119,11 +119,18 @@ Three named vocabularies the agent selects by context (all human-verified by ear
   carries a `delivery_cover` — the instant filler that plays WHILE the real answer
   builds (best-practices-chatterbox-agent two-agent model):
   - **Agent A — Voice/Cover agent (fast lane).** Near-instant, low-reasoning; owns
-    the mouth. Runs the deterministic cover planner: `(stage, intensity, tags)` →
-    ordered cover (thinking sound → progress line → pause, or a mood-matched hum on
-    idle/long waits) in ~0ms, zero reasoning (like memory `/intent fast:true`).
-    Only a context tagged `ambiguous` escalates to a tiny model (glm-5.3-flash)
-    to break a tie; the default is deterministic and instant.
+    the mouth. Its macro selection is **primarily driven by `$memory` recall**:
+    `/intent fast:true` returns `delivery_context` (affect category, tone influence,
+    confidence) on the deterministic/classifier path, and `/recall persona_memory`
+    pulls the verified recipe/hum banks (`emotion:*` recipes, song hums by
+    mood/tempo, `use_when`/`avoid_when`) plus `/speaker/resolve` for who's listening.
+    `cover_plan.py` then COMPILES that recalled delivery signal into concrete macro
+    steps (thinking sound → progress line → pause, or a mood-matched hum) in ~0ms;
+    the deterministic `(stage, intensity, tags)` table is the instant FLOOR when
+    recall is empty or too slow to beat the speech deadline. Only a context tagged
+    `ambiguous` escalates to a tiny model (glm-5.3-flash) to break a tie.
+    Boundary: memory returns engine-neutral `delivery_context`/mood/tempo/tags,
+    NEVER renderer tags or macro markup — Agent A compiles those.
   - **Agent B — Solver agent (slow lane).** High-reasoning; does the real work —
     sets breakpoints via $debugger, finds/draws diagrams via $ops-excalidraw,
     gathers evidence, composes the answer.
