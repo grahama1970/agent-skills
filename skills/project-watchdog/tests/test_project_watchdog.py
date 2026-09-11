@@ -3049,3 +3049,25 @@ def test_transport_parking_classify_returns_canonical_code():
     from watchdog import transport_health as th
     assert th.classify_transport_failure("purchase more credits") == "codex_handler_quota_exhausted"
     assert th.classify_transport_failure("segfault") is None
+
+
+def test_seat_matrix_accepts_valid_pair_rejects_bad():
+    from watchdog import seat_matrix
+    assert seat_matrix.validate_pair("gpt-5.5-high", "zai-glm-high") is None
+    # opencode-go/oc- creator is not an authoring lane
+    assert seat_matrix.validate_pair("opencode-go/deepseek-v4-flash", "zai-glm-high") is not None
+    # same provider reviewer is not independent
+    assert seat_matrix.validate_pair("gpt-5.5-high", "gpt-5.5-low") is not None
+    # browser reviewer cannot run live proof
+    assert seat_matrix.validate_pair("gpt-5.5-high", "webgpt") is not None
+
+
+def test_seat_matrix_registry_reports_offending_project():
+    from watchdog import seat_matrix
+    projs = [
+        {"project_id": "ok", "repair_creator": "gpt-5.5-high", "repair_reviewer": "zai-glm-high"},
+        {"project_id": "bad", "repair_creator": "opencode-go/deepseek-v4-flash", "repair_reviewer": "zai-glm-high"},
+        {"project_id": "no-lane"},
+    ]
+    f = seat_matrix.validate_registry(projs)
+    assert [x["project_id"] for x in f] == ["bad"]

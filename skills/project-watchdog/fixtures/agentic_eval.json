@@ -1846,6 +1846,33 @@
     ]
    },
    "proves": "Creator-transport quota parking: a usage/rate-limit signal parks the lane with canonical code codex_handler_quota_exhausted, records a durable outage that auto-resumes at the parsed reset time, and yields one stable dedup key; a non-quota failure never parks or records an outage. Recovery/native-close never consult the outage. Fault-injected deterministic."
+  },
+  {
+   "name": "watchdog-seat-matrix",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": false,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "python",
+    "../evals/seat_matrix_eval.py",
+    "/tmp/watchdog-seat-matrix.json"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "artifacts": [
+     {
+      "path": "/tmp/watchdog-seat-matrix.json",
+      "json_pointer": "/passed",
+      "equals": true
+     }
+    ]
+   },
+   "proves": "Seat-matrix validator: the LIVE registry's every project repair seat pair is contract-valid; each violation class (non-authoring/oc- creator, same-provider reviewer, browser reviewer) is rejected before a lease; a fault-injected bad project is named. Validates the real registry file."
   }
  ]
 }
