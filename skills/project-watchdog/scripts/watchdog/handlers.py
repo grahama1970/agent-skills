@@ -1525,8 +1525,26 @@ def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[
                 ev = alerts[0].get("evidence") or {}
                 node_id = str(ev.get("node_id") or "")
                 verdict = extracted.get(node_id) or ev.get("receipt_verdict")
+                # Legibility (operator 2026-09-11 "logs still ambiguous"): a minted
+                # tau_unclassified_<hash> fingerprint names nothing. Surface the
+                # failing node's own failure_code/recovery reason from its node
+                # receipt so the log line is diagnosable without opening files
+                # (tonight's opaque f6d0a76c line was scillm_model_not_found).
+                node_detail = ""
+                try:
+                    nr = None
+                    for cand in sorted(ask_dir.glob(f"*/node-artifacts/{node_id}/node-receipt.json")):
+                        nr = json.loads(cand.read_text())
+                        break
+                    if nr is None:
+                        raise ValueError("node receipt not found")
+                    why = nr.get("failure_code") or (nr.get("provider_receipt") or {}).get("failure")
+                    if why:
+                        node_detail = f" failure={why}"
+                except (OSError, ValueError):
+                    pass
                 detail += (f": {alerts[0].get('code')} node={node_id}"
-                           f" seat_verdict={verdict}")
+                           f" seat_verdict={verdict}{node_detail}")
                 named = True
                 break
         if not named and extracted:
