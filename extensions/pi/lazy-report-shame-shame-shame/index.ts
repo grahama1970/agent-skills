@@ -641,13 +641,21 @@ function statusFailureJournalFields(status: any): Record<string, unknown> {
   };
 }
 
-function recoveryJournalCheckId(status: any, decision: Record<string, unknown>): string {
+function stableReasonCodesIdentity(reasonCodes: unknown): string | null {
+  if (!Array.isArray(reasonCodes)) return null;
+  const codes = [...new Set(reasonCodes.map(normalizeTriageCode).filter(Boolean) as string[])].sort();
+  return codes.length ? `check_reason_codes:${codes.join(",")}` : null;
+}
+
+function recoveryJournalCheckId(status: any, decision: Record<string, unknown>, check?: CheckResult): string {
   const statusFingerprint = statusFailureFingerprint(status);
   const pieces = [
     `recovery_action:${String(decision.action || "unknown")}`,
     `format_only:${decision.format_only === true ? "true" : "false"}`,
   ];
   if (statusFingerprint) pieces.push(`status_failure:${statusFingerprint}`);
+  const checkIdentity = stableReasonCodesIdentity(check?.reason_codes);
+  if (checkIdentity) pieces.push(checkIdentity);
   return pieces.join("\n");
 }
 
@@ -968,12 +976,13 @@ function suggestedRetryStatus(candidate: Candidate, check: CheckResult): Record<
 function writeSpiralTicketRequest(candidate: Candidate, check: CheckResult, reviewPacketPath: string, decision: Record<string, unknown>): string {
   const status = check.features?.status;
   const stableEpisode = statusFailureFingerprint(status) || candidate.turn_id;
+  const checkIdentity = stableReasonCodesIdentity(check.reason_codes);
   const fingerprint = sha256([
     candidate.session_id || candidate.session_file || "unknown-session",
     stableEpisode,
     `recovery_action:${String(decision.action || "unknown")}`,
     `format_only:${decision.format_only === true ? "true" : "false"}`,
-    ...check.reason_codes,
+    checkIdentity || "check_reason_codes:none",
   ].join("\n"));
   const id = fingerprint.slice(7, 23);
   mkdirSync(SPIRAL_TICKET_OUTBOX, { recursive: true });
@@ -1060,10 +1069,13 @@ function retryPrompt(candidate: Candidate, check: CheckResult, reviewPacketPath:
     suggested_status: suggestedRetryStatus(candidate, check),
     next: rejectionAction(decision),
   };
+  const missingStatus = check.reason_codes.includes("missing_agent_status_json");
   return `UNLAZY_FORCED_RETRY
-Tools are forbidden. Reply with exactly one fenced json block.
-Copy packet.suggested_status unless you can make a stricter pi.agent_status.v1 from already-cited proof.
-Never output lazy_report_shame.*; those are guard-internal receipts.
+This is a one-shot format correction, not a new question. Do not re-answer the task.
+Reply with exactly one fenced json block and nothing else${missingStatus ? ". Your previous reply had no pi.agent_status.v1 block; do not write a prose 'Status Report'" : ""}.
+Paste packet.suggested_status verbatim unless you can build a stricter pi.agent_status.v1 from proof already cited above.
+Only 'read' and 'bash: skills/shame/run.sh preflight' are permitted; any other tool terminates the turn.
+Never echo lazy_report_shame.* schemas; they are guard-internal receipts.
 \`\`\`json
 ${JSON.stringify(packet)}
 \`\`\``;
@@ -1502,7 +1514,7 @@ export default function lazyReportShameShameShame(pi: any) {
         catch (error) { recordFailure(ctx, { kind: "spiral_ticket_request_failed", error_excerpt: String(error).slice(0, 1000), reason_codes: check.reason_codes }); }
       }
       recordFailure(ctx, { kind: alreadyRetried ? "report_retry_exhausted" : "report_rejected", ...(status ? statusFailureJournalFields(status) : { goal: null }),
-        candidate_hash: lastCandidate.response_sha256, check_id: recoveryJournalCheckId(status, finalDecision),
+        candidate_hash: lastCandidate.response_sha256, check_id: recoveryJournalCheckId(status, finalDecision, check),
         reason_codes: check.reason_codes, checker_version: check.checker_version, review_packet: reviewPacketPath,
         excerpt: candidateExcerpt(lastCandidate), retry: { planned: !alreadyRetried, reason: pipelineClaim.reason }, spiral_ticket_request: spiralTicketRequestPath });
       const notice = rejectionNotice(lastCandidate, check, alreadyRetried, reviewPacketPath, finalDecision);

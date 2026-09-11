@@ -81,7 +81,10 @@ def main() -> None:
     assert "schema: \"lazy_report_shame.retry_request.v1\"" in index_text
     assert "schema: \"lazy_report_shame.follow_up.v1\"" in index_text
     assert "suggested_status: suggestedRetryStatus(candidate, check)" in index_text
-    assert "Copy packet.suggested_status" in index_text
+    assert "Paste packet.suggested_status verbatim" in index_text
+    assert "not a new question" in index_text
+    assert "Your previous reply had no pi.agent_status.v1 block" in index_text
+    assert "run.sh preflight' are permitted" in index_text
     notice = index_text[index_text.index("function rejectionNotice"):index_text.index("function retryEvidenceSnapshot")]
     assert "diagnostics_sha256" in notice
     assert "validation_result" not in notice
@@ -96,6 +99,8 @@ def main() -> None:
             "visible renderer knows run dir, receipts, artifacts, node status, blocked, and missing artifact lines",
             "visible rejection notice is compact and hashes raw diagnostics",
             "retry_request includes a copyable continuing suggested_status to avoid blind schema repair guesses",
+            "retry prompt says the turn is a format correction, not a new question, and names the missing_agent_status_json failure mode",
+            "retry prompt permits read and preflight tools matching the A3 tool gate",
             "retry_request and follow_up typed packet schemas remain present",
         ],
     }, indent=2))
