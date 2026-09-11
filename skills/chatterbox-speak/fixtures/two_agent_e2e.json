@@ -12,13 +12,18 @@
       "id": "chatterbox_speak.two_agent.cover_concurrency",
       "description": "Agent A keeps Embry audible with the delay macros while Agent B works; no dead air; handoff ordered; both lanes produce real wav artifacts.",
       "criticality": "critical",
-      "evidence_required": {"deterministic": true, "live_e2e": true}
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      }
     },
     {
       "id": "chatterbox_speak.two_agent.full_answer_generation",
       "description": "Agent B answers a complex multi-control question from real grounded memory evidence (sources cited, content verified), and the answer is spoken through the answer arc.",
       "criticality": "critical",
-      "evidence_required": {"live_e2e": true}
+      "evidence_required": {
+        "live_e2e": true
+      }
     }
   ],
   "cases": [
@@ -27,21 +32,61 @@
       "type": "positive",
       "real_world": true,
       "evidence_class": "live_e2e",
-      "supports_claims": ["chatterbox_speak.two_agent.cover_concurrency", "chatterbox_speak.two_agent.full_answer_generation"],
+      "supports_claims": [
+        "chatterbox_speak.two_agent.cover_concurrency",
+        "chatterbox_speak.two_agent.full_answer_generation"
+      ],
       "timeout_seconds": 300,
-      "command": ["bash", "-lc", "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && python3 scripts/two_agent_e2e.py --question 'How do controls SC-7, AC-2, and CM-6 interact to protect a satellite ground station boundary, and what evidence does the corpus give for each?' --output /mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e.json"],
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && python3 scripts/two_agent_e2e.py --question 'How do controls SC-7, AC-2, and CM-6 interact to protect a satellite ground station boundary, and what evidence does the corpus give for each?' --output /mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e.json"
+      ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["\"ok\": true"],
+        "stdout_contains": [
+          "\"ok\": true"
+        ],
         "artifacts": [
-          {"path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e.json", "json_pointer": "/agent_b/solver_source", "equals": "memory_answer"},
-          {"path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e.json", "json_pointer": "/agent_b/can_answer_count", "min": 2},
-          {"path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e.json", "json_pointer": "/concurrency_proven", "equals": true},
-          {"path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e.json", "json_pointer": "/handoff_ordered", "equals": true},
-          {"path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e.json", "json_pointer": "/no_dead_air", "equals": true},
-          {"path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e.json", "json_pointer": "/agent_a/pause_macro_compiled", "equals": true},
-          {"path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e.json", "json_pointer": "/agent_a/arc/phases", "min": 3},
-          {"path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e-full.wav", "min_bytes": 480000}
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e.json",
+            "json_pointer": "/agent_b/solver_source",
+            "equals": "memory_answer"
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e.json",
+            "json_pointer": "/agent_b/can_answer_count",
+            "min": 2
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e.json",
+            "json_pointer": "/concurrency_proven",
+            "equals": true
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e.json",
+            "json_pointer": "/handoff_ordered",
+            "equals": true
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e.json",
+            "json_pointer": "/no_dead_air",
+            "equals": true
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e.json",
+            "json_pointer": "/agent_a/pause_macro_compiled",
+            "equals": true
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e.json",
+            "json_pointer": "/agent_a/arc/phases",
+            "min": 3
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e-full.wav",
+            "min_bytes": 480000
+          }
         ]
       }
     },
@@ -50,25 +95,54 @@
       "type": "adversarial",
       "real_world": true,
       "evidence_class": "live_e2e",
-      "supports_claims": ["chatterbox_speak.two_agent.full_answer_generation"],
+      "supports_claims": [
+        "chatterbox_speak.two_agent.full_answer_generation"
+      ],
       "timeout_seconds": 60,
-      "command": ["bash", "-lc", "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && python3 -c \"import json; r=json.load(open('/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e.json')); t=r['agent_b']['answer_text']; import sys; sys.exit(0 if all(c in t for c in ('SC-7','AC-2','CM-6')) and len(r['agent_b']['sources'])>=2 else 1)\" && echo content_grounded"],
-      "expected": {"exit_code": 0, "stdout_contains": ["content_grounded"]}
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && python3 -c \"import json; r=json.load(open('/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e.json')); t=r['agent_b']['answer_text']; import sys; sys.exit(0 if all(c in t for c in ('SC-7','AC-2','CM-6')) and len(r['agent_b']['sources'])>=2 else 1)\" && echo content_grounded"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "content_grounded"
+        ]
+      }
     },
     {
       "name": "cover-floor-without-memory",
       "type": "adversarial",
       "real_world": true,
       "evidence_class": "fault_injected_deterministic",
-      "supports_claims": ["chatterbox_speak.two_agent.cover_concurrency"],
+      "supports_claims": [
+        "chatterbox_speak.two_agent.cover_concurrency"
+      ],
       "timeout_seconds": 300,
-      "command": ["bash", "-lc", "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && python3 scripts/two_agent_e2e.py --question 'How do controls SC-7, AC-2, and CM-6 interact to protect a satellite ground station boundary?' --output /mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e-nomem.json --no-memory"],
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && python3 scripts/two_agent_e2e.py --question 'How do controls SC-7, AC-2, and CM-6 interact to protect a satellite ground station boundary?' --output /mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e-nomem.json --no-memory"
+      ],
       "expected": {
         "exit_code": 0,
         "artifacts": [
-          {"path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e-nomem.json", "json_pointer": "/agent_a/delivery/recall_used", "equals": false},
-          {"path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e-nomem.json", "json_pointer": "/concurrency_proven", "equals": true},
-          {"path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e-nomem.json", "json_pointer": "/agent_b/solver_source", "equals": "memory_answer"}
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e-nomem.json",
+            "json_pointer": "/agent_a/delivery/recall_used",
+            "equals": false
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e-nomem.json",
+            "json_pointer": "/concurrency_proven",
+            "equals": true
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e-nomem.json",
+            "json_pointer": "/agent_b/solver_source",
+            "equals": "memory_answer"
+          }
         ]
       }
     },
@@ -76,9 +150,20 @@
       "name": "cover-planner-deterministic",
       "type": "positive",
       "evidence_class": "deterministic",
-      "supports_claims": ["chatterbox_speak.two_agent.cover_concurrency"],
-      "command": ["bash", "-c", "cd .. && python3 scripts/cover_plan.py"],
-      "expected": {"exit_code": 0, "stdout_contains": ["cover_plan.py self-check: PASS"]}
+      "supports_claims": [
+        "chatterbox_speak.two_agent.cover_concurrency"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && python3 scripts/cover_plan.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "cover_plan.py self-check: PASS"
+        ]
+      }
     }
   ]
 }

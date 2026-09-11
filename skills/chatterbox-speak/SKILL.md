@@ -103,11 +103,18 @@ Three named vocabularies the agent selects by context (all human-verified by ear
   writes `[pause:<name>]` (micro/beat/breath/hesitation/transition/considered/weight);
   `speak --planned-pauses` resolves it to `[pause:<ms>ms]` for the compiler, which
   generates real silence. Unknown name fails closed (never spoken).
-- **Thinking macros** (`fixtures/thinking_macros.json`): pre-computed ElevenLabs
-  filled-pause clips (mm/hmm/hum) inserted at a boundary BEFORE effortful answers
-  — grounded in filled-pause research (fillers cluster before hard content and aid
-  the listener; um>uh difficulty gradient). Band: light mm → longer hmm for weightier
-  problems. Pairs with a concise problem restatement (Polya step 1).
+- **Thinking macros** (`fixtures/thinking_macros.json`, `outputs/sfx-library/fused-hmm/`):
+  filled-pause openers before an effortful answer (grounded: fillers cluster before
+  hard content and aid the listener; um>uh difficulty gradient). **Human verdict
+  2026-09-11:** ISOLATED "hmm" clips sound inhuman in every synthesized form
+  (v3 speaking "Hmm", SFX wandering or steady pitch, bare mm, breath). WHAT WORKS:
+  fuse the hmmmm INTO a whole line in Embry's own v3 clone voice — "Hmmmm, let me
+  see." / high-intensity "Hmmmm... [sighs] let me dig into that." No separate clip,
+  no seam. Rules: ≤ 2 fused openers per conversation; 10 varied "let me see" tails
+  (no-repeat); band by complexity (≥3-part problem → high hmmmm+sigh). Cover speech
+  renders at `--pace slow` (~18% longer) to buy background solve time. SONG hums
+  gain-fit UNDER speech per use (`scripts/filler_gain.py`: −1.5..−5 dB from measured
+  speech RMS, varying, never louder than speech). Proven live: `two_agent_e2e.py`.
 - **Progress macros** (`fixtures/progress_macros.json`): Embry speaks *where she is*
   as each work stage begins — stages mirror the `$memory` pipeline
   (intent → recall → clarify/deflect/answer/draft) AND the heavy Lane-B work

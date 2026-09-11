@@ -25,6 +25,9 @@ import time
 import urllib.request
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from filler_gain import fit_filler, measure_db  # noqa: E402
+
 HERE = Path(__file__).resolve().parent
 RUN = HERE.parent / "run.sh"
 MEMORY = "http://127.0.0.1:8601"
@@ -32,6 +35,7 @@ TTS_HEALTH = "http://127.0.0.1:8018/health"
 OUT_ROOT = Path("/mnt") / "storage12tb" / "skills" / "chatterbox-speak" / "outputs"
 THINK = OUT_ROOT / "sfx-library" / "thinking"
 HUMS = OUT_ROOT / "sfx-library" / "song-hums"
+FUSED_HMM = OUT_ROOT / "sfx-library" / "fused-hmm"  # v3-clone hum fused into a whole line (human_confirmed 2026-09-11)
 PROGRESS = json.load(open(HERE.parent / "fixtures/progress_macros.json"))["stages"]
 CONTROLS = ["SC-7", "AC-2", "CM-6"]
 STARVE_S = 8.0
@@ -46,7 +50,8 @@ def _http_json(url: str, payload: dict | None = None, timeout: float = 60.0) -> 
         return json.loads(r.read().decode())
 
 
-def _speak(text: str, tone: str, planned: bool = False, arc: str | None = None) -> dict:
+def _speak(text: str, tone: str, planned: bool = False, arc: str | None = None,
+           pace: str | None = None) -> dict:
     """Real render through the production CLI; returns {wav, receipt, duration}."""
     cmd = ["bash", str(RUN), "speak", "--voice", "embry", "--tone", tone,
            "--context", "two-agent e2e v2", "--text", text]
@@ -54,6 +59,8 @@ def _speak(text: str, tone: str, planned: bool = False, arc: str | None = None) 
         cmd.append("--planned-pauses")
     if arc:
         cmd += ["--arc", arc]
+    if pace:
+        cmd += ["--pace", pace]
     r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
     if r.returncode != 0:
         raise RuntimeError(f"render_failed: {r.stderr[-200:]}")
@@ -127,6 +134,10 @@ def _agent_a(question: str, no_memory: bool, events: list, b_out: dict, rep: dic
 
     cover: list[dict] = []  # ordered cover items
     seen_stages: set[str] = set()
+    think_used = 0  # human rule: no more than 2 "hmm" fillers per conversation
+    THINK_CAP = 2
+    FUSED_POOL = json.load(open(FUSED_HMM / "manifest.json"))["entries"]
+    used_fused: set[str] = set()
     last_ts = t0
     done = False
     while not done:
@@ -137,10 +148,21 @@ def _agent_a(question: str, no_memory: bool, events: list, b_out: dict, rep: dic
             for e in fresh:
                 stage = e["stage"] if e["stage"] in PROGRESS else "working_long"
                 line = PROGRESS[stage]["pool"][int(now + e["ts"]) % len(PROGRESS[stage]["pool"])]
-                cover.append({"kind": "thinking", "ts": time.time(),
-                              "wav": str(THINK / "think-hmm.wav")})
-                cover.append({"kind": "progress", "ts": time.time(), "stage": stage,
-                              "text": f"{line} [pause:considered]", "planned": True})
+                if think_used < THINK_CAP:
+                    # human_confirmed: isolated "hmm" clips sound inhuman; a hmmmm
+                    # FUSED into a whole clone line reads natural. Band by complexity
+                    # (>=3 controls => high, hmmmm+sigh); no-repeat; <=2 per convo.
+                    band = "high" if len(CONTROLS) >= 3 else "low"
+                    opts = [e for e in FUSED_POOL if e["band"] == band and e["id"] not in used_fused] \
+                           or [e for e in FUSED_POOL if e["id"] not in used_fused]
+                    pick = opts[int(time.time()*7) % len(opts)]
+                    used_fused.add(pick["id"])
+                    cover.append({"kind": "thinking_fused", "ts": time.time(),
+                                  "wav": pick["wav"], "text": pick["text"], "band": pick["band"]})
+                    think_used += 1
+                else:
+                    cover.append({"kind": "progress", "ts": time.time(), "stage": stage,
+                                  "text": f"{line} [pause:considered]", "planned": True})
                 seen_stages.add(stage)
             last_ts = fresh[-1]["ts"]
         elif not done and now - last_ts > STARVE_S:
@@ -149,13 +171,29 @@ def _agent_a(question: str, no_memory: bool, events: list, b_out: dict, rep: dic
         else:
             time.sleep(0.5)
 
-    # materialize cover renders (after planning, so wavs exist in order)
-    cover_wavs: list[Path] = []
+    # materialize ALL speech renders first (establishes the measured speech
+    # reference), THEN gain-fit every filler under it — fillers never precede
+    # the reference. Per-use variation, always below speech.
+    import random as _r
+    rng = _r.Random(int(time.time()))
+    ref_db = None
     for item in cover:
         if item["kind"] == "progress":
-            d = _speak(item["text"], PROGRESS[item["stage"]]["tone"], planned=True)
+            # slow pace (~18% longer) deliberately stretches cover time,
+            # buying Agent B extra background solve time per cover item
+            d = _speak(item["text"], PROGRESS[item["stage"]]["tone"], planned=True, pace="slow")
             item["wav"] = d["wav"]
             item["receipt"] = d["receipt"]
+            if ref_db is None:
+                ref_db = measure_db(d["wav"])  # measured speech loudness reference
+    cover_wavs: list[Path] = []
+    for item in cover:
+        if item["kind"] == "hum":
+            if ref_db is None:
+                raise RuntimeError("no speech reference: render a progress line before fillers")
+            fitted = OUT_ROOT / f"fitted-{item['kind']}-{int(item['ts']*1000)}.wav"
+            item["wav"] = str(fit_filler(item["wav"], ref_db, out=fitted, rng=rng))
+            item["fitted_to_db"] = round(measure_db(item["wav"]), 1)
         cover_wavs.append(Path(item["wav"]))
     arc_started = time.time()
     a_arc = _speak(b_out["answer_text"], "neutral_warm", arc="answer")
@@ -167,7 +205,7 @@ def _agent_a(question: str, no_memory: bool, events: list, b_out: dict, rep: dic
             pause_ok = any((c.get("pause_after_ms") or 0) > 0
                            for c in rec.get("chatterbox_pause_plan") or [])
             break
-    full = _concat([Path(THINK / "think-hmm.wav")] + cover_wavs + [Path(w) for w in a_arc["wavs"]],
+    full = _concat(cover_wavs + [Path(w) for w in a_arc["wavs"]],
                    OUT_ROOT / "two-agent-e2e-full.wav") if cover_wavs else Path(a_arc["wavs"][-1])
 
     starts = [c["ts"] for c in cover]
@@ -177,7 +215,7 @@ def _agent_a(question: str, no_memory: bool, events: list, b_out: dict, rep: dic
             "distinct_stages": sorted(seen_stages), "max_cover_gap_s": round(max(gaps or [0]), 2),
             "arc": {"wav": a_arc["wav"], "wavs": a_arc["wavs"], "phases": len(a_arc["wavs"]),
                     "started_ts": arc_started},
-            "full_wav": str(full), "thinking_in_cover": any(c["kind"] == "thinking" for c in cover)}
+            "full_wav": str(full), "thinking_in_cover": any(c["kind"] == "thinking_fused" for c in cover)}
 
 
 def run(question: str, no_memory: bool) -> dict:
@@ -238,7 +276,7 @@ def main() -> int:
         fails.append("lt_2_stages")
     if not a["pause_macro_compiled"]:
         fails.append("pause_not_compiled")
-    if not a["thinking_in_cover"]:
+    if not a["thinking_in_cover"]:  # a fused clone opener present
         fails.append("no_thinking_clip")
     if not rep["concurrency_proven"]:
         fails.append("concurrency_unproven")
