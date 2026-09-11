@@ -66,12 +66,21 @@ are `$ask` (webgpt then webkimi); `run.sh build` emits the exact preflighted
 
 ## Correspondence memory
 
-Recruiter threads persist in the `recruiter_correspondence` Memory collection via
-`$memory` `/store` (never raw AQL, never inline vector arrays). One document per
+ALL correspondence with a recruiter or hiring contact — every channel, no
+exceptions — persists in the single `recruiter_correspondence` Memory collection
+via `$memory` `/store` (never raw AQL, never inline vector arrays). `source` is an
+OPEN vocabulary: known values below, but the store never rejects a new channel,
+so email, LinkedIn, call/interview transcripts, SMS, referral intros, ATS
+messages, and manual notes all land on the same thread. One document per
 message with deterministic `_key` (`<source>:<thread-id>:<message-id>`), fields:
-`direction` (`inbound`/`draft`/`sent`), `source` (`gmail`/`linkedin`/`manual`),
-`recruiter`, `company`, `role`, `body`, `role_ref`, `claim_keys[]`, `draft_ref`,
-`received_at`, `tags`. Recall with `$memory recall --collections recruiter_correspondence`.
+`direction` (`inbound`/`draft`/`sent`/`meeting`), `source`
+(`gmail`/`linkedin`/`manual`/`google-meet`/`live-evidence`), `recruiter`,
+`company`, `role`, `body`, `role_ref`, `claim_keys[]`, `draft_ref`,
+`received_at`, `tags`. A call/interview transcript is stored as
+`direction=meeting` on the same thread. Thread continuity fetches this thread
+exactly via Memory `/list` filters; cross-thread semantic `$memory recall`
+lights up once the memory repo registers `recruiter_correspondence` in
+`builtin_sources()` (memory-repo change; ops-recruiter must not wire views or AQL).
 
 ## Ingestion boundaries (read before wiring any source)
 
@@ -80,6 +89,12 @@ message with deterministic `_key` (`<source>:<thread-id>:<message-id>`), fields:
   `graham@grahama.co` inbox is reached only through the `/gmail` capability (the
   same one `mailbox-mining` delegates to). ops-recruiter consumes gmail messages
   that `/gmail` has already fetched; it does not talk to Gmail directly.
+- **Meeting/call transcripts → `$ops-google-meet` / `$live-evidence`.**
+  ops-recruiter does not record or transcribe. It consumes transcripts those
+  skills already produced (Google Meet prep/companion and the live interview
+  copilot) and stores them on the recruiter thread as `direction=meeting`,
+  `source=google-meet` or `live-evidence`, so a call becomes part of the same
+  thread history and future context.
 - **LinkedIn is read-only and human-driven.** `linkedin_automation` is
   `PERMANENTLY_FORBIDDEN` across monitor-opportunities and ops-linkedin. Do NOT
   use `$surf` to scrape LinkedIn messages. The only compliant path is a

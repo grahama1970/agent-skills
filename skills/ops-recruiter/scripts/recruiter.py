@@ -172,9 +172,9 @@ def store(message: Path = typer.Option(..., "--message", exists=True)):
         if req not in doc:
             _fail("ops_recruiter_message_missing_field", f"missing required field: {req}",
                   f"add '{req}' to the message doc and rerun store")
-    if doc["direction"] not in ("inbound", "draft", "sent"):
-        _fail("ops_recruiter_bad_direction", f"direction must be inbound|draft|sent, got {doc['direction']}",
-              "set direction to inbound|draft|sent")
+    if doc["direction"] not in ("inbound", "draft", "sent", "meeting"):
+        _fail("ops_recruiter_bad_direction", f"direction must be inbound|draft|sent|meeting, got {doc['direction']}",
+              "set direction to inbound|draft|sent|meeting (meeting = a call/interview transcript)")
     doc.setdefault("_key", f"{doc['source']}:{doc['thread_id']}:{doc['message_id']}")
     doc.setdefault("kind", "recruiter_correspondence")
     try:
