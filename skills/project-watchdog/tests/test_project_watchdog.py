@@ -532,7 +532,7 @@ def test_ticket_repair_serves_a_project_that_is_not_tau(tmp_path) -> None:
     project = {
         "project_id": "agent-skills",
         "repo": "grahama1970/agent-skills",
-        "worktree": str(_clean_worktree(tmp_path)),
+        "worktree": str(_clean_worktree(tmp_path, "grahama1970/agent-skills")),
         "runner_kind": "project-local",
     }
     issue = _issue(7, labels=["agent-work"])
@@ -554,7 +554,7 @@ def _fake_native_acquire(record, result, checkpoint) -> None:  # noqa: ANN001
     )
 
 
-def _clean_worktree(tmp_path: Path) -> Path:
+def _clean_worktree(tmp_path: Path, repo: str = TAU_REPO) -> Path:
     """A real git worktree on a clean ``main``.
 
     Dispatch fails closed on a worktree that is on a feature branch or whose
@@ -573,7 +573,14 @@ def _clean_worktree(tmp_path: Path) -> Path:
                        capture_output=True, env=env)
     origin = tmp_path.parent / f"{tmp_path.name}-origin.git"
     subprocess.run(["git", "init", "--bare", "-q", str(origin)], check=True, capture_output=True, env=env)
-    subprocess.run(["git", "-C", str(tmp_path), "remote", "add", "origin", str(origin)], check=True)
+    # The post-aef3adf837 dispatch contract asserts origin is the registered
+    # GitHub repo (assert_repository reads ``git remote get-url origin``). Give
+    # origin the github URL for the slug check, and rewrite it to the local bare
+    # via insteadOf so ls-remote/fetch/push still resolve locally.
+    gh_url = f"https://github.com/{repo}.git"
+    subprocess.run(["git", "-C", str(tmp_path), "remote", "add", "origin", gh_url], check=True)
+    subprocess.run(["git", "-C", str(tmp_path), "config", f"url.file://{origin}/.insteadOf", gh_url],
+                   check=True, capture_output=True, env=env)
     subprocess.run(["git", "-C", str(tmp_path), "push", "-q", "origin", "main"], check=True, capture_output=True, env=env)
     return tmp_path
 
@@ -582,7 +589,7 @@ def test_ticket_repair_dry_run_makes_no_github_call(tmp_path) -> None:
     project = {
         "project_id": "tau",
         "repo": TAU_REPO,
-        "worktree": str(_clean_worktree(tmp_path)),
+        "worktree": str(_clean_worktree(tmp_path, TAU_REPO)),
         "runner_kind": "tau-command-loop",
     }
     issue = _issue(8, labels=["agent-work"])
@@ -597,7 +604,7 @@ def test_ticket_repair_dispatches_through_ask_tau_dag(tmp_path) -> None:
     project = {
         "project_id": "tau",
         "repo": TAU_REPO,
-        "worktree": str(_clean_worktree(tmp_path)),
+        "worktree": str(_clean_worktree(tmp_path, TAU_REPO)),
         "runner_kind": "tau-command-loop",
         "repair_creator": "gpt-5.5-high",
         "repair_reviewer": "claude-fable-low",
@@ -677,7 +684,7 @@ def test_ticket_repair_uses_explicit_codex_workspace_for_gpt55_high_creator(tmp_
     project = {
         "project_id": "pdf_oxide",
         "repo": "grahama1970/pdf_oxide",
-        "worktree": str(_clean_worktree(tmp_path)),
+        "worktree": str(_clean_worktree(tmp_path, "grahama1970/pdf_oxide")),
         "repair_creator": "gpt-5.5-high",
         "repair_reviewer": "claude-fable-low",
     }
@@ -970,7 +977,7 @@ def test_a_dag_that_passed_but_proved_nothing_does_not_close_the_issue(tmp_path)
     the issue as completed.
     """
     project = {
-        "project_id": "p", "repo": TAU_REPO, "worktree": str(_clean_worktree(tmp_path)),
+        "project_id": "p", "repo": TAU_REPO, "worktree": str(_clean_worktree(tmp_path, TAU_REPO)),
         "repair_creator": "gpt-5.5-high", "repair_reviewer": "claude-fable-low",
         "auto_land_main": True,
     }
@@ -1024,7 +1031,7 @@ def test_failed_ticket_repair_blocks_the_issue(tmp_path) -> None:
     project = {
         "project_id": "tau",
         "repo": TAU_REPO,
-        "worktree": str(_clean_worktree(tmp_path)),
+        "worktree": str(_clean_worktree(tmp_path, TAU_REPO)),
         "runner_kind": "tau-command-loop",
     }
     issue = _issue(10, labels=["agent-work"])
@@ -1277,7 +1284,7 @@ def test_a_failed_lease_stops_the_dispatch(tmp_path) -> None:
     project = {
         "project_id": "agent-skills",
         "repo": "grahama1970/agent-skills",
-        "worktree": str(_clean_worktree(tmp_path)),
+        "worktree": str(_clean_worktree(tmp_path, "grahama1970/agent-skills")),
         "runner_kind": "project-local",
     }
     issue = _issue(21, labels=["agent-work"], body="type: bug\ntarget: skills/x\n")
@@ -1311,7 +1318,7 @@ def test_a_lease_that_takes_proceeds(tmp_path) -> None:
     project = {
         "project_id": "agent-skills",
         "repo": "grahama1970/agent-skills",
-        "worktree": str(_clean_worktree(tmp_path)),
+        "worktree": str(_clean_worktree(tmp_path, "grahama1970/agent-skills")),
         "runner_kind": "project-local",
     }
     issue = _issue(22, labels=["agent-work"], body="type: bug\ntarget: skills/x\n")
@@ -1396,7 +1403,7 @@ def test_identical_seats_are_refused_before_dispatch(tmp_path) -> None:
     project = {
         "project_id": "agent-skills",
         "repo": "grahama1970/agent-skills",
-        "worktree": str(_clean_worktree(tmp_path)),
+        "worktree": str(_clean_worktree(tmp_path, "grahama1970/agent-skills")),
         "repair_creator": "codex",
         "repair_reviewer": "codex",
     }
@@ -1413,7 +1420,7 @@ def test_oc_chat_creator_is_refused_before_ask_dispatch(tmp_path) -> None:
     project = {
         "project_id": "sparta",
         "repo": "grahama1970/sparta",
-        "worktree": str(_clean_worktree(tmp_path)),
+        "worktree": str(_clean_worktree(tmp_path, "grahama1970/sparta")),
         "repair_creator": "oc-deepseek",
         "repair_reviewer": "claude-opus-5-medium",
     }
@@ -1431,7 +1438,7 @@ def test_web_model_creator_is_refused_before_ask_dispatch(tmp_path) -> None:
     project = {
         "project_id": "memory",
         "repo": "grahama1970/graph-memory-operator",
-        "worktree": str(_clean_worktree(tmp_path)),
+        "worktree": str(_clean_worktree(tmp_path, "grahama1970/graph-memory-operator")),
         "repair_creator": "webgpt",
         "repair_reviewer": "claude-fable-low",
     }
@@ -1452,7 +1459,7 @@ def test_a_repair_that_moved_main_is_flagged_and_blocked(tmp_path) -> None:
     project = {
         "project_id": "agent-skills",
         "repo": "grahama1970/agent-skills",
-        "worktree": str(_clean_worktree(tmp_path)),
+        "worktree": str(_clean_worktree(tmp_path, "grahama1970/agent-skills")),
     }
     issue = _issue(41, labels=["agent-work"], body="type: bug\ntarget: skills/x\n")
     issue["watchdog_action"] = "ticket_repair"
@@ -1484,7 +1491,7 @@ def test_an_untouched_main_completes_normally(tmp_path) -> None:
     project = {
         "project_id": "agent-skills",
         "repo": "grahama1970/agent-skills",
-        "worktree": str(_clean_worktree(tmp_path)),
+        "worktree": str(_clean_worktree(tmp_path, "grahama1970/agent-skills")),
     }
     issue = _issue(42, labels=["agent-work"], body="type: bug\ntarget: skills/x\n")
     issue["watchdog_action"] = "ticket_repair"
@@ -1533,7 +1540,7 @@ def test_landed_repair_cleanup_invokes_ops_worktrees_archive(tmp_path, monkeypat
 def test_auto_landed_repair_archives_worktree_before_closing(tmp_path) -> None:
     _seed_passing_repair_evidence(tmp_path)
     project = {
-        "project_id": "p", "repo": TAU_REPO, "worktree": str(_clean_worktree(tmp_path)),
+        "project_id": "p", "repo": TAU_REPO, "worktree": str(_clean_worktree(tmp_path, TAU_REPO)),
         "auto_land_main": True,
     }
     issue = _issue(52, labels=["agent-work"], body="type: bug\ntarget: skills/x\n")
@@ -1577,7 +1584,7 @@ def test_auto_landed_repair_archives_worktree_before_closing(tmp_path) -> None:
 def test_auto_landed_repair_cleanup_failure_keeps_ticket_open(tmp_path) -> None:
     _seed_passing_repair_evidence(tmp_path)
     project = {
-        "project_id": "p", "repo": TAU_REPO, "worktree": str(_clean_worktree(tmp_path)),
+        "project_id": "p", "repo": TAU_REPO, "worktree": str(_clean_worktree(tmp_path, TAU_REPO)),
         "auto_land_main": True,
     }
     issue = _issue(53, labels=["agent-work"], body="type: bug\ntarget: skills/x\n")
@@ -2416,7 +2423,7 @@ def test_a_finished_repair_stops_being_routable() -> None:
 def test_a_completed_repair_marks_the_ticket_done(tmp_path) -> None:
     _seed_passing_repair_evidence(tmp_path)
     project = {
-        "project_id": "p", "repo": TAU_REPO, "worktree": str(_clean_worktree(tmp_path)),
+        "project_id": "p", "repo": TAU_REPO, "worktree": str(_clean_worktree(tmp_path, TAU_REPO)),
     }
     issue = _issue(51, labels=["agent-work"], body="type: bug\ntarget: skills/x\n")
     issue["watchdog_action"] = "ticket_repair"
@@ -3018,3 +3025,27 @@ def test_reconcile_drained_second_pass_is_empty():
              "owned_bytes": [{"issue": 5, "path": "r", "remote_identical": True}]}
     r = reconciler.reconcile(state)
     assert r["dispositions"] == [] and r["drained"] is True
+
+
+def test_quota_park_records_outage_and_names_code(tmp_path, monkeypatch):
+    from watchdog import transport_health as th, config
+    monkeypatch.setattr(config, "state_root", lambda: tmp_path)
+    monkeypatch.setattr(th.config, "state_root", lambda: tmp_path)
+    r = th.park_on_quota("codex", "You've hit your usage limit. try again at Sep 14th, 2026 9:36 PM")
+    assert r["parked"] is True and r["code"] == "codex_handler_quota_exhausted"
+    assert r["alert_dedup_key"] == "codex:codex_handler_quota_exhausted"
+    assert th.active_outage("codex") is not None  # durable park, auto-resume later
+
+
+def test_transport_parking_ignores_non_quota_failure(tmp_path, monkeypatch):
+    from watchdog import transport_health as th
+    monkeypatch.setattr(th.config, "state_root", lambda: tmp_path)
+    r = th.park_on_quota("codex", "connection reset by peer")
+    assert r["parked"] is False and r["code"] is None
+    assert th.active_outage("codex") is None
+
+
+def test_transport_parking_classify_returns_canonical_code():
+    from watchdog import transport_health as th
+    assert th.classify_transport_failure("purchase more credits") == "codex_handler_quota_exhausted"
+    assert th.classify_transport_failure("segfault") is None

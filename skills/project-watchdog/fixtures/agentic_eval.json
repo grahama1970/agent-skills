@@ -1819,6 +1819,33 @@
     ]
    },
    "proves": "Fleet reconciler maps every nonterminal object (runnable issue, unsettled/retryable journal, orphan lease, terminal tau awaiting proof/close, stranded owned bytes, human blocker) to exactly one of resume_machine_work/settle_native_lifecycle/wait_on_dependency/human_only_blocker with zero unclassified; the drained state reconciles to empty dispositions with drained=True (second pass idempotently empty). Fault-injected deterministic."
+  },
+  {
+   "name": "watchdog-creator-quota-parking",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "python",
+    "../evals/creator_quota_parking_eval.py",
+    "/tmp/watchdog-quota-park.json"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "artifacts": [
+     {
+      "path": "/tmp/watchdog-quota-park.json",
+      "json_pointer": "/passed",
+      "equals": true
+     }
+    ]
+   },
+   "proves": "Creator-transport quota parking: a usage/rate-limit signal parks the lane with canonical code codex_handler_quota_exhausted, records a durable outage that auto-resumes at the parsed reset time, and yields one stable dedup key; a non-quota failure never parks or records an outage. Recovery/native-close never consult the outage. Fault-injected deterministic."
   }
  ]
 }

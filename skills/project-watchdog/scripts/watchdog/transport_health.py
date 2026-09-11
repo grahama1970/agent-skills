@@ -99,6 +99,35 @@ def quota_signal(text: str) -> bool:
     return "usage limit" in lowered or "rate limit" in lowered or "purchase more credits" in lowered
 
 
+QUOTA_CODE = "codex_handler_quota_exhausted"
+
+
+def classify_transport_failure(text: str) -> str | None:
+    """Canonical failure code for a creator-transport failure, or None.
+
+    A quota/limit signal maps to the single catalog code so the log stops
+    minting *_unclassified for the same recurring condition.
+    """
+    return QUOTA_CODE if quota_signal(text) else None
+
+
+def park_on_quota(transport: str, failure_text: str) -> dict[str, Any]:
+    """Park the repair lane on a quota/limit signal.
+
+    Records a durable outage (auto-resume at the parsed reset time), returns the
+    canonical code so the caller emits ONE deduped named alert and burns no new
+    lease. Recovery and native close are unaffected -- they never consult this.
+    A non-quota failure is not parked.
+    """
+    if not quota_signal(failure_text):
+        return {"parked": False, "code": None}
+    resume_at = parse_reset_time(failure_text)
+    outage = record_outage(transport, resume_at=resume_at, evidence=failure_text[:200])
+    return {"parked": True, "code": QUOTA_CODE, "transport": transport,
+            "resume_at": outage.resume_at,
+            "alert_dedup_key": f"{transport}:{QUOTA_CODE}"}
+
+
 def substitute_dead_codex_seats(seats: list[str]) -> tuple[list[str], list[dict[str, Any]]]:
     """Swap non-authoring gpt-*/codex-* seats onto the fallback while codex is out."""
     if not active_outage("codex"):
