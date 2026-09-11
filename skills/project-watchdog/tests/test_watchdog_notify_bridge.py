@@ -158,3 +158,20 @@ def test_non_ticket_receipts_do_not_push_unknown_alerts():
     assert bridge.requires_agent_push(real) is True
     malformed = {"status": "NEEDS_ATTENTION", "repo": "UNKNOWN(repo:receipt_missing_repo)", "issue": "343"}
     assert bridge.requires_agent_push(malformed) is True
+
+
+def test_non_ticket_lifecycle_subject_is_human_readable():
+    import sys, pathlib
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "scripts"))
+    import watchdog_notify_bridge as b
+    install_ev = {"run_id": "project-watchdog-install-X", "status": "DRY_RUN",
+                  "repo": "UNKNOWN(repo:receipt_missing_repo)",
+                  "issue": "UNKNOWN(issue:receipt_missing_issue_number)"}
+    state_ev = {"run_id": "project-watchdog-state-Y", "status": "UPDATED",
+                "repo": "UNKNOWN(repo:receipt_missing_repo)",
+                "issue": "UNKNOWN(issue:receipt_missing_issue_number)"}
+    ticket_ev = {"run_id": "r", "status": "NEEDS_ATTENTION", "repo": "grahama1970/tau", "issue": "350"}
+    assert b._subject_target(install_ev) == "lifecycle:cron-install (no ticket)"
+    assert b._subject_target(state_ev) == "lifecycle:runtime-state-change (no ticket)"
+    assert "UNKNOWN(" not in b._subject_target(install_ev)
+    assert b._subject_target(ticket_ev) == "grahama1970/tau#350"

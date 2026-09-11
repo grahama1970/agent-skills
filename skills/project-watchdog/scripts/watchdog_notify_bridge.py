@@ -422,6 +422,26 @@ def _is_non_ticket_event(ev: dict) -> bool:
     return ("receipt_missing_repo" in repo and "receipt_missing_issue" in issue)
 
 
+def _subject_target(ev: dict) -> str:
+    """Human-readable subject target.
+
+    Ticket events render ``repo#issue``. Non-ticket lifecycle receipts (cron
+    install, runtime state change, fleet scan) have no repo/issue, so instead of
+    the cryptic ``UNKNOWN(repo:receipt_missing_repo)#UNKNOWN(...)`` sentinel we
+    render a plain lifecycle label derived from the run_id.
+    """
+    if not _is_non_ticket_event(ev):
+        return f"{ev.get('repo')}#{ev.get('issue')}"
+    run_id = str(ev.get("run_id") or "")
+    if "-install" in run_id:
+        kind = "cron-install"
+    elif "-state" in run_id:
+        kind = "runtime-state-change"
+    else:
+        kind = "fleet-scan"
+    return f"lifecycle:{kind} (no ticket)"
+
+
 def requires_agent_push(ev: dict) -> bool:
     """Project-agent visibility is broader than human paging."""
     if ev.get("status") in {"NOOP", "SKIPPED"}:
@@ -436,7 +456,7 @@ def requires_agent_push(ev: dict) -> bool:
 def push_webhook(ev: dict) -> dict[str, Any]:
     if not requires_human_push(ev):
         return {"status": "SKIPPED", "reason": "not_human_only_blocker"}
-    title = f"project-watchdog {ev.get('status')} — {ev.get('repo')}#{ev.get('issue')}"
+    title = f"project-watchdog {ev.get('status')} — {_subject_target(ev)}"
     try:
         p = subprocess.run(
             [
@@ -511,7 +531,7 @@ def switchboard_payload(ev: dict) -> dict[str, Any]:
         "to": PI_AGENT_INBOX,
         "type": "alert" if human else "info",
         "priority": "high" if human else "normal",
-        "subject": f"watchdog {ev.get('status')} {ev.get('repo')}#{ev.get('issue')}",
+        "subject": f"watchdog {ev.get('status')} {_subject_target(ev)}",
         "message": _fmt(ev),
         "event": ev,
         "owning_next_action": (ev.get("next_steps") or [None])[0],
