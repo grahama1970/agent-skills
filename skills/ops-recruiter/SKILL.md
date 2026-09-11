@@ -39,6 +39,10 @@ recruiter message + role text + approved resume/claims
   gate        claim-bind check: every factual assertion maps to an approved claim
   draft       $ask webgpt    -> comprehensive first draft
   humanize    $ask webkimi   -> clarity + humanized-prose edit of that draft
+  T0 gate     run.sh gate    -> deterministic token floor (fail-closed)
+  T1 review   PROJECT AGENT  -> semantic claim-bind verdict vs ledger
+                on FAIL: structured findings -> webgpt redraft -> webkimi -> T0 -> T1
+                (<=3 rounds, each carrying a specific correction; else fail closed to human)
   store        $memory /store -> recruiter_correspondence collection
   return       DRAFT to the human. No send. Ever.
 ```
@@ -64,6 +68,14 @@ are `$ask` (webgpt then webkimi); `run.sh build` emits the exact preflighted
     is the same boundary as everywhere else: a model seat's PASS is only
     evidence; the project agent verifies against local evidence before acceptance.
   A self-certifying model seat is not a substitute for the project-agent review.
+- **Bounded course-correction loop on T1 FAIL.** If the project-agent review
+  rejects a claim as unsupported, it does not stop and it does not blindly
+  retry. It emits a structured finding (offending sentence, the unsupported
+  claim, and what the ledger actually supports) and feeds that exact correction
+  back to webgpt (redraft) -> webkimi (rehumanize) -> T0 -> T1 again. A retry
+  that does not carry a specific correction is spray-and-pray and is forbidden.
+  Cap at 3 rounds; on exhaustion, fail closed and hand the draft plus surviving
+  findings to the human. Never send, never loop unbounded.
 - **Relationship-aware, never re-introduces.** `build` recalls prior
   `recruiter_correspondence` for the recruiter/thread and sets a relationship
   flag (`existing`/`new`/`unknown`). An existing thread must not be written as
