@@ -67,7 +67,12 @@ def _client() -> httpx.Client:
 def emit(
     entity_id: str = typer.Option(..., help="Stable entity id, e.g. agent-skills:ask or tau:project"),
     repo: str = typer.Option(..., help="Repository the skill lives in"),
-    event_type: EventType = typer.Option(...),
+    # Plain str, not EventType: typer<0.12 cannot map Literal options, and the
+    # Pydantic MaintenanceEvent model below already rejects values outside the
+    # closed set with typed errors. Keeps the CLI usable on any typer>=0.9.
+    event_type: str = typer.Option(
+        ..., help="One of: maintenance.completed, file.pruned, skill.renamed, decision.recorded, config.changed"
+    ),
     summary: str = typer.Option(..., help="One-line plain statement of what was done"),
     changed_path: list[str] = typer.Option(
         [], help="Repo-relative path touched (repeatable)"
