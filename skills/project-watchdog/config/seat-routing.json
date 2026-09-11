@@ -1,0 +1,38 @@
+{
+  "version": "project_watchdog.seat_routing.v1",
+  "note": "Capability-aware seat routing (WebGPT design, ask run ask-tau-design-question-where-should-a-s-c7125c30a43e). Routes carry CAPABILITIES, not naked model strings: a fallback is a list of route ids, and a route is eligible for a seat only when route.capabilities superset-covers seat.requires. The repair_creator deliberately has NO fallback (only the codex workspace transport can author) and parks on quota; reviewers/auditors are non-codex-first so review work never burns the scarce authoring transport. Seat-ROUTING selection lives here; transport mechanics (endpoints, retries, provider failover) stay internal to SciLLM/Tau; project intent stays in registry/projects.json.",
+  "routes": {
+    "codex_author": {
+      "executor": "codex_cli",
+      "model": "codex",
+      "capabilities": ["repo_workspace_author", "review", "chat"]
+    },
+    "glm_review": {
+      "executor": "scillm",
+      "model": "zai-glm-high",
+      "capabilities": ["review", "chat"]
+    },
+    "kimi_review": {
+      "executor": "scillm",
+      "model": "kimi-for-coding",
+      "capabilities": ["review", "chat"]
+    }
+  },
+  "seat_profiles": {
+    "repair_creator": {
+      "requires": ["repo_workspace_author"],
+      "routes": ["codex_author"],
+      "when_unavailable": "park_on_quota"
+    },
+    "repair_reviewer": {
+      "requires": ["review"],
+      "routes": ["glm_review", "kimi_review", "codex_author"],
+      "when_unavailable": "fail_closed"
+    },
+    "closure_auditor": {
+      "requires": ["review"],
+      "routes": ["glm_review", "kimi_review"],
+      "when_unavailable": "fail_closed"
+    }
+  }
+}

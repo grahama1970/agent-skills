@@ -3071,3 +3071,41 @@ def test_seat_matrix_registry_reports_offending_project():
     ]
     f = seat_matrix.validate_registry(projs)
     assert [x["project_id"] for x in f] == ["bad"]
+
+
+def test_seat_routing_live_config_resolves_as_designed():
+    from watchdog import seat_routing as sr
+    cfg = sr.load()  # raises if the shipped config violates the invariant
+    # creator: authoring-only, no fallback -> parks when codex is out
+    assert sr.resolve("repair_creator", cfg)["routes"] == ["codex_author"]
+    assert sr.resolve("repair_creator", cfg, codex_out=True)["action"] == "park"
+    # reviewers/auditors are non-codex-first so review never burns the author lane
+    assert sr.resolve("repair_reviewer", cfg)["routes"][0] == "glm_review"
+    assert "codex_author" not in sr.resolve("repair_reviewer", cfg, codex_out=True)["routes"]
+    assert sr.resolve("closure_auditor", cfg)["routes"] == ["glm_review", "kimi_review"]
+
+
+def test_seat_routing_rejects_capability_violating_fallback(tmp_path):
+    import json
+    from watchdog import seat_routing as sr
+    bad = {
+        "version": "project_watchdog.seat_routing.v1",
+        "routes": {
+            "codex_author": {"executor": "codex_cli", "model": "codex",
+                             "capabilities": ["repo_workspace_author", "review"]},
+            "glm_review": {"executor": "scillm", "model": "zai-glm-high",
+                           "capabilities": ["review"]},  # CANNOT author
+        },
+        "seat_profiles": {
+            # illegal: creator requires authoring but lists a review-only fallback
+            "repair_creator": {"requires": ["repo_workspace_author"],
+                               "routes": ["codex_author", "glm_review"],
+                               "when_unavailable": "park_on_quota"},
+        },
+    }
+    p = tmp_path / "bad.json"; p.write_text(json.dumps(bad))
+    try:
+        sr.load(p)
+        assert False, "expected SeatRoutingError for author fallback to a review-only route"
+    except sr.SeatRoutingError as exc:
+        assert "cannot do the seat's job" in str(exc) and "repo_workspace_author" in str(exc)

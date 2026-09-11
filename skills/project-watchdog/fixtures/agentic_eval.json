@@ -1900,6 +1900,33 @@
     ]
    },
    "proves": "Creator-round contract: the compiled repair task gives the CREATOR ROUND a propose-and-commit contract (no VERDICT, not expected to have run the proof) and confines the 'proof must have actually run' gate and the single VERDICT to the REVIEWER ROUND, so the non-codex local claude lane no longer fail-closes its own first round for lacking later-round proof. Seat-family agnostic. Fault-injected deterministic."
+  },
+  {
+   "name": "watchdog-seat-routing",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": false,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "python",
+    "../evals/seat_routing_eval.py",
+    "/tmp/watchdog-seat-routing.json"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "artifacts": [
+     {
+      "path": "/tmp/watchdog-seat-routing.json",
+      "json_pointer": "/passed",
+      "equals": true
+     }
+    ]
+   },
+   "proves": "Capability-aware seat routing: the LIVE shipped config passes the invariant (every fallback route superset-covers the seat's required capabilities); repair_creator has no fallback and parks on codex outage; reviewers/auditors are non-codex-first and drop the codex route when out; a config whose author seat falls back to a review-only route is rejected fail-closed. Validates the real config file."
   }
  ]
 }
