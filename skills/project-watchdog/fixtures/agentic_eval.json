@@ -1481,14 +1481,15 @@
    "command": [
     "bash",
     "-c",
-    "cd .. && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"from scripts.watchdog import alerts; r={'run_id':'e1','status':'BLOCKED','apply':False,'project':'memory','handled_issues':[{'issue_number':1,'status':'BLOCKED','summary':'x'}]}; alerts.maybe_alert(r); a=r['alert']; assert a['status'] in ('DRY_RUN','SENT','ALERT_DELIVERY_FAILED'), a; print('alert-status:'+a['status'])\""
+    "cd .. && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"from scripts.watchdog import alerts; r={'run_id':'e1','status':'BLOCKED','apply':False,'requires_human_input':True,'project':'memory','handled_issues':[{'issue_number':1,'status':'BLOCKED','summary':'x'}]}; alerts.maybe_alert(r); a=r['alert']; assert a['status'] in ('DRY_RUN','SENT','ALERT_DELIVERY_FAILED','OPS_DISCORD_MISSING'), a; print('alert-status:'+a['status'])\""
    ],
    "expected": {
     "exit_code": 0,
     "stdout_contains": [
      "alert-status:"
     ]
-   }
+   },
+   "proves": "A BLOCKED receipt with requires_human_input:true alerts the human via ops-discord (human-only policy 790fe812); maybe_alert always populates receipt['alert']."
   },
   {
    "name": "noop-receipt-never-alerts",
@@ -1497,14 +1498,15 @@
    "command": [
     "bash",
     "-c",
-    "cd .. && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"from scripts.watchdog import alerts; r={'status':'NOOP','apply':True}; alerts.maybe_alert(r); assert 'alert' not in r; print('noop-silent')\""
+    "cd .. && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"from scripts.watchdog import alerts; r={'status':'NOOP','apply':True}; alerts.maybe_alert(r); assert r['alert']['status']=='SUPPRESSED', r['alert']; print('noop-suppressed')\""
    ],
    "expected": {
     "exit_code": 0,
     "stdout_contains": [
      "noop-silent"
     ]
-   }
+   },
+   "proves": "A NOOP receipt never alerts the human; maybe_alert records SUPPRESSED (never SENT) and always populates receipt['alert']."
   },
   {
    "name": "alert-delivery-failure-never-fails-the-tick",
@@ -1513,7 +1515,7 @@
    "command": [
     "bash",
     "-c",
-    "cd .. && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"import pathlib; from scripts.watchdog import alerts; alerts.OPS_DISCORD_RUN_SH=pathlib.Path('/nonexistent/run.sh'); r={'status':'NEEDS_ATTENTION','apply':True,'run_id':'e3'}; alerts.maybe_alert(r); assert r['alert']['status']=='OPS_DISCORD_MISSING', r['alert']; print('soft-fail-ok')\""
+    "cd .. && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"import pathlib; from scripts.watchdog import alerts; alerts.OPS_DISCORD_RUN_SH=pathlib.Path('/nonexistent/run.sh'); r={'status':'NEEDS_ATTENTION','apply':True,'requires_human_input':True,'run_id':'e3'}; alerts.maybe_alert(r); assert r['alert']['status']=='OPS_DISCORD_MISSING', r['alert']; print('soft-fail-ok')\""
    ],
    "expected": {
     "exit_code": 0,
@@ -1545,7 +1547,7 @@
    "command": [
     "bash",
     "-c",
-    "cd .. && test -x ../ops-discord/run.sh && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"import os; os.environ.pop('OPS_DISCORD_WEBHOOK_WATCHDOG_URL',None); from scripts.watchdog import alerts; r={'run_id':'e5','status':'BLOCKED','apply':False,'project':'m','handled_issues':[]}; alerts.maybe_alert(r); a=r['alert']; nr=a.get('notify_receipt') or {}; assert nr.get('transport')=='discord_bot', (a.get('status'), nr); assert nr.get('status')!='NO_WEBHOOK', nr; assert a.get('delivered') is not True, a; print('bot-transport-selected:'+str(nr.get('status')))\""
+    "cd .. && test -x ../ops-discord/run.sh && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"import os; os.environ.pop('OPS_DISCORD_WEBHOOK_WATCHDOG_URL',None); from scripts.watchdog import alerts; r={'run_id':'e5','status':'BLOCKED','apply':False,'requires_human_input':True,'project':'m','handled_issues':[]}; alerts.maybe_alert(r); a=r['alert']; nr=a.get('notify_receipt') or {}; assert nr.get('transport')=='discord_bot', (a.get('status'), nr); assert nr.get('status')!='NO_WEBHOOK', nr; assert a.get('delivered') is not True, a; print('bot-transport-selected:'+str(nr.get('status')))\""
    ],
    "expected": {
     "exit_code": 0,
@@ -1927,6 +1929,25 @@
     ]
    },
    "proves": "Capability-aware seat routing: the LIVE shipped config passes the invariant (every fallback route superset-covers the seat's required capabilities); repair_creator has no fallback and parks on codex outage; reviewers/auditors are non-codex-first and drop the codex route when out; a config whose author seat falls back to a review-only route is rejected fail-closed. Validates the real config file."
+  },
+  {
+   "name": "machine-blocked-receipt-is-suppressed-not-keyerror",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 90,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"from scripts.watchdog import alerts; r={'run_id':'e2','status':'BLOCKED','apply':False,'requires_human_input':False,'handled_issues':[{'issue_number':1,'status':'BLOCKED','summary':'machine'}]}; alerts.maybe_alert(r); a=r['alert']; assert a['status']=='SUPPRESSED', a; print('suppressed-ok')\""
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "suppressed-ok"
+    ]
+   },
+   "proves": "maybe_alert always sets receipt['alert'] (SUPPRESSED) for a machine-actionable BLOCKED receipt under the human-only alert policy, so callers never KeyError on r['alert']. Regression guard for the KeyError the adversarial suite surfaced."
   }
  ]
 }

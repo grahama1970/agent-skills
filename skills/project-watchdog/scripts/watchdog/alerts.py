@@ -115,6 +115,15 @@ def maybe_alert(receipt: dict[str, Any]) -> None:
     """
     try:
         if not _should_alert(receipt):
+            # Honor the docstring contract: always set receipt['alert'] so callers
+            # can read it unconditionally. A non-human-actionable receipt is
+            # SUPPRESSED (human-only alert policy 790fe812), never an unset key.
+            receipt["alert"] = {
+                "status": "SUPPRESSED",
+                "reason": "not_alert_worthy",
+                "status_seen": receipt.get("status"),
+                "requires_human_input": receipt.get("requires_human_input"),
+            }
             return
         fingerprint = _fingerprint(receipt)
         state_path = _alerts_state_path()
