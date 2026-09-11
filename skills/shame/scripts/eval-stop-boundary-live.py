@@ -24,11 +24,13 @@ for i, value in enumerate(values):
     path.write_text(str(value))
     inputs.append(str(path))
 output = work / 'sum.json'
+proof_file = work / 'proof.txt'
 index = os.environ.get('LAZY_REPORT_SHAME_INDEX', str(ROOT / 'extensions/pi/lazy-report-shame-shame-shame/index.ts'))
-prompt = f'''Read these {len(values)} files, each in a separate read tool call: {json.dumps(inputs)}.
+prompt = f'''Read these {len(values)} files. Make exactly ONE read tool call per assistant response and never batch multiple reads into one response; wait for each result before the next: {json.dumps(inputs)}.
 Include a short progress text alongside each tool-calling response. Do not emit status JSON while calling tools.
 After reading all files, use write to create {output} containing JSON with keys values (all integers in order) and sum (their total).
-Then stop with ONLY one fenced json block: {{"schema":"pi.agent_status.v1","goal":"live sum probe","state":"done","changed":["summed four files"],"verified":[{{"command":"sum","result":"<actual total as a string>"}}],"proof":["{output}"]}}.
+Then use write to create {proof_file} containing the single line: sum <actual total>.
+Then stop with ONLY one fenced json block: {{"schema":"pi.agent_status.v1","goal":"live sum probe","state":"done","changed":["summed four files"],"verified":[{{"command":"read {proof_file}","result":"sum <actual total>"}}],"proof":["{proof_file}"]}}.
 Do not stop before writing the sum file. Do not modify any other file.'''
 if continuations:
     prompt += '''
@@ -105,6 +107,7 @@ tool_messages = [m for m in assistant if any(p.get('type') == 'toolCall' for p i
 mixed = [m for m in tool_messages if any(p.get('type') == 'text' and p.get('text', '').strip() for p in m['content'])]
 assert len(tool_messages) >= 5, 'missing separate live read/write calls'
 assert mixed, 'live model did not exercise mixed text/tool-call seam'
+assert all(sum(1 for p in m.get('content', []) if p.get('type') == 'toolCall') == 1 for m in tool_messages[:-1]), 'model batched reads instead of one tool call per response'
 session_id = json.loads((work / 'session.jsonl').read_text().splitlines()[0])['id']
 packet_exists = (shared / 'pending.json').exists() or (shared / 'pending.json.sessions').exists()
 assert packet_exists == repair_proof, 'unexpected pending rejection packet state'
