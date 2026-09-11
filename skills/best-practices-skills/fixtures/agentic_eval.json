@@ -80,7 +80,7 @@
       "command": [
         "bash",
         "-c",
-        "cd ../scripts && uv run --with httpx --with pydantic python maintenance_event.py emit --skill-id agent-skills:mnt-pilot --repo agent-skills --event-type decision.recorded --summary 'eval roundtrip marker event' --tag eval | grep -q '\"ok\": true' && echo PASS_MAINTENANCE_EVENT_ROUNDTRIP"
+        "cd ../scripts && uv run --with httpx --with pydantic python maintenance_event.py emit --entity-id agent-skills:mnt-pilot --repo agent-skills --event-type decision.recorded --summary 'eval roundtrip marker event' --tag eval | grep -q '\"ok\": true' && echo PASS_MAINTENANCE_EVENT_ROUNDTRIP"
       ],
       "expected": {
         "exit_code": 0,
@@ -101,7 +101,7 @@
       "command": [
         "bash",
         "-c",
-        "cd ../scripts && uv run --with httpx --with pydantic python maintenance_event.py emit --skill-id '' --repo x --event-type decision.recorded --summary y 2>/dev/null | grep -q 'string_too_short' && echo PASS_MAINTENANCE_EVENT_REJECTS_EMPTY"
+        "cd ../scripts && uv run --with httpx --with pydantic python maintenance_event.py emit --entity-id '' --repo x --event-type decision.recorded --summary y 2>/dev/null | grep -q 'string_too_short' && echo PASS_MAINTENANCE_EVENT_REJECTS_EMPTY"
       ],
       "expected": {
         "exit_code": 0,

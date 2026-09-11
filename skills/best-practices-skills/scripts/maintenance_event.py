@@ -3,7 +3,7 @@
 Implements the maintenance-log contract in references/maintenance_log_contract.md:
 - emit:  append a typed maintenance event to the shared `skill_maintenance_events`
          collection in the memory daemon (the ONLY sanctioned ArangoDB path).
-- query: exact-match retrieval by skill_id for foreign agents debugging a skill.
+- query: exact-match retrieval by entity_id for foreign agents debugging a skill or project.
 
 Policy (how often to maintain, what checks mean "maintained") lives in each
 skill's MAINTENANCE.md; this API owns the mutable event history only.
@@ -55,7 +55,7 @@ class MaintenanceEvent(pydantic.BaseModel):
 
     def deterministic_key(self) -> str:
         material = "|".join(
-            [self.repo, self.skill_id, self.event_type, self.observed_at, self.summary]
+            [self.repo, self.entity_id, self.event_type, self.observed_at, self.summary]
         )
         return "me_" + hashlib.sha256(material.encode()).hexdigest()[:32]
 
@@ -112,7 +112,8 @@ def emit(
     ok = any(r.get("_key") == doc["_key"] for r in rows)
     typer.echo(
         json.dumps({"ok": ok, "key": doc["_key"], "readback": len(rows), "collection": COLLECTION})
-    )    if not ok:
+    )
+    if not ok:
         raise typer.Exit(code=3)
 
 
