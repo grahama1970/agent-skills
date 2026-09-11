@@ -19,6 +19,12 @@
       "description": "Never sends; drafting is composed via $ask web* models, not a coding agent.",
       "criticality": "critical",
       "evidence_required": {"deterministic": true}
+    },
+    {
+      "id": "ops_recruiter.thread_context_e2e",
+      "description": "Stored recruiter correspondence is recalled so build marks an existing relationship and never writes first-contact for a known thread.",
+      "criticality": "critical",
+      "evidence_required": {"live_e2e": true}
     }
   ],
   "cases": [
@@ -35,6 +41,24 @@
         "cd .. && ./run.sh status --json | grep -q '\"email_send\": \"PERMANENTLY_FORBIDDEN\"' && ./run.sh status --json | grep -q COMPOSED_VIA_ASK && ./sanity.sh"
       ],
       "expected": {"exit_code": 0, "stdout_contains": ["SANITY: PASS"]}
+    },
+    {
+      "name": "e2e-real-recruiter-thread-context",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": ["ops_recruiter.thread_context_e2e"],
+      "timeout_seconds": 180,
+      "command": ["bash", "-c", "cd .. && bash scripts/e2e_recruiter.sh"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["E2E PASS: store -> recall(existing) -> gate(fail-closed)"],
+        "artifacts": [
+          {"path": "../artifacts/e2e-result.json", "json_pointer": "/relationship", "equals": "existing"},
+          {"path": "../artifacts/e2e-result.json", "json_pointer": "/gate_rejected", "equals": true},
+          {"path": "../artifacts/e2e-result.json", "json_pointer": "/research_seeded", "equals": true}
+        ]
+      }
     }
   ]
 }

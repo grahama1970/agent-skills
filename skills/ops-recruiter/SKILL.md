@@ -34,7 +34,7 @@ LLM routing, or mailbox access.
 ```
 recruiter message + role text + approved resume/claims
   recall      recruiter_correspondence memory -> prior thread + relationship flag
-  (optional)  $brave-search  -> company/role research seed (cited, degradable)
+  research    $brave-search  -> company/role AND recruiter (LinkedIn page + history) seed (cited, degradable)
   build       context packet (incl. prior thread) + claim ledger + browser-prompt preflight
   gate        claim-bind check: every factual assertion maps to an approved claim
   draft       $ask webgpt    -> comprehensive first draft
@@ -61,8 +61,10 @@ are `$ask` (webgpt then webkimi); `run.sh build` emits the exact preflighted
   rather than falsely claiming first contact.
 - **Human-transmitted only.** Draft-and-return. No email send, no LinkedIn
   action. Mirrors monitor-opportunities `who transmits = the human`.
-- **`$brave-search` is a seed, not authority.** Company/role context only, cited,
-  and honestly degradable to "no research" without failing the draft.
+- **`$brave-search` is a seed, not authority.** Covers both company/role context
+  and recruiter deep-research (their LinkedIn page and background/history) so the
+  reply is informed by who is actually reaching out. Cited, and honestly
+  degradable to "no research" without failing the draft.
 
 ## Correspondence memory
 

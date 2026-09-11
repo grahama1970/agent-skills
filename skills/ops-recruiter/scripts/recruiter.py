@@ -120,7 +120,11 @@ def build(
     )
     steps = []
     if research:
-        steps.append("skills/brave-search/run.sh web \"<company> <role> recruiter rate glassdoor\"  # seed only, cite, degradable")
+        steps.append("skills/brave-search/run.sh web \"<company> <role> recruiter rate glassdoor\"  # company/role seed, cite, degradable")
+        if recruiter:
+            steps.append(
+                f"skills/brave-search/run.sh web \"{recruiter} recruiter LinkedIn profile background history\"  "
+                "# recruiter deep-research: LinkedIn page + history; seed only, cited, degradable")
     steps.append(
         f"skills/ask/scripts/browser_prompt_preflight.py --prompt 'Draft recruiter reply from packet' {packet}")
     steps.append(
