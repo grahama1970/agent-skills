@@ -1,0 +1,13 @@
+{
+  "schema": "chatterbox_speak.pause_macros.v1",
+  "note": "Named pause/wait vocabulary. The agent writes [pause:<name>] in the answer text by CONTEXT; speak resolves it to [pause:<ms>ms] before the best-practices-chatterbox pause compiler renders exact silence. Durations are provisional and human-verified by ear (same authority as emotion macros). ms align with the compiler defaults (comma 250, sentence 600, ellipsis 900). Pause macros require --planned-pauses.",
+  "macros": {
+    "micro":       {"ms": 150,  "use_when": "A tiny catch inside a thought, before a key word, for light emphasis.", "avoid_when": "Between full sentences \u2014 too short to register as a boundary."},
+    "beat":        {"ms": 300,  "use_when": "A rhetorical or comedic beat between clauses; a held moment before a turn.", "avoid_when": "Heavy or grief content, where it reads as flip."},
+    "breath":      {"ms": 500,  "use_when": "A natural breath at a sentence boundary in ordinary conversation.", "avoid_when": "Mid-clause, where it fragments the phrase."},
+    "hesitation":  {"ms": 450,  "use_when": "Embry is uncertain, searching for the word, or softening a hedge.", "avoid_when": "Confident or celebratory lines, where hesitation undercuts the affect."},
+    "transition":  {"ms": 650,  "use_when": "Shifting topic or moving from acknowledgment to the substance.", "avoid_when": "Within a single continuous idea."},
+    "considered":  {"ms": 800,  "use_when": "A thinking pause before answering something weighty or being asked to reflect.", "avoid_when": "Quick factual replies, where it reads as stalling."},
+    "weight":      {"ms": 1100, "use_when": "Let hard news, an apology, or an emotional landing sit before continuing.", "avoid_when": "Upbeat or transactional turns, where the silence feels ominous."}
+  }
+}

@@ -95,6 +95,31 @@ instant. The lexicon is seeded from the existing control/definition collections
 and extended as renders prove entries; the receipt records `original_text` vs
 `spoken_text`. `python3 scripts/pronounce.py` runs the self-check.
 
+## Pause, thinking, and song-hum macros
+
+Three named vocabularies the agent selects by context (all human-verified by ear):
+
+- **Pause macros** (`fixtures/pause_macros.json`, `scripts/pauses.py`): the agent
+  writes `[pause:<name>]` (micro/beat/breath/hesitation/transition/considered/weight);
+  `speak --planned-pauses` resolves it to `[pause:<ms>ms]` for the compiler, which
+  generates real silence. Unknown name fails closed (never spoken).
+- **Thinking macros** (`fixtures/thinking_macros.json`): pre-computed ElevenLabs
+  filled-pause clips (mm/hmm/hum) inserted at a boundary BEFORE effortful answers
+  — grounded in filled-pause research (fillers cluster before hard content and aid
+  the listener; um>uh difficulty gradient). Band: light mm → longer hmm for weightier
+  problems. Pairs with a concise problem restatement (Polya step 1).
+- **Song-hum macros** (`fixtures/song_hum_macros.json`): public-domain Hawaiian /
+  hapa-haole tunes Embry hums. ALL picks are compositions published 1930 or earlier
+  (US PD as of 2026, Duke CSPD). The 1930s film-era hits (Sweet Leilani 1937,
+  My Little Grass Shack 1933) are NOT yet PD and are excluded. Hawaiian War Chant:
+  hum the original 1860s Leleiohōku melody, never the copyrighted 1936 arrangement.
+  Clips render on the 12TB drive; taste facts + tempo/category/ElevenLabs metadata
+  live in `$memory` `persona_memory` (`kind: persona_music_preference`,
+  `tags: persona:embry`) for semantic recall by mood/tempo/category via the text_mm
+  embedder. Note: the multimodal embedder is text+image, NOT audio — recall matches
+  the DESCRIPTION, not the waveform; ElevenLabs SFX humming evokes the style, not a
+  note-accurate (or copyright-touching) rendition.
+
 ## Usage
 
 ```bash

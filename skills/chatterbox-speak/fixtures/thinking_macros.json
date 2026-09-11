@@ -1,0 +1,36 @@
+{
+  "schema": "chatterbox_speak.thinking_macros.v1",
+  "note": "Filled-pause / thinking vocalizations (grounded: filled pauses cluster BEFORE the hard content and aid listener comprehension \u2014 Frontiers Psychol 2026, Fox Tree; Polya restatement pairs with them). Pre-computed ElevenLabs clips inserted at a clause/sentence boundary BEFORE the effortful answer, same boundary rule as emotion SFX \u2014 never mid-clause, never overlaid. Band mirrors the um>uh difficulty gradient: light mm for a small hitch, longer hmm for a genuinely weighty problem. Contented non-melodic hum is idle-only. Durations/quality human-verified by ear. Song-melody humming is NOT here: recognizable copyrighted melodies are an infringement risk (see SKILL.md) \u2014 only public-domain/original tunes, generated separately.",
+  "clips": [
+    {
+      "id": "think-mm-light", "intensity": 2, "channel": "v3_whole_sentence",
+      "gen": {"engine": "eleven_v3_tts", "text": "Mm."},
+      "use_when": "A small hitch before a minor answer; light acknowledgment that a question landed.",
+      "avoid_when": "Quick factual replies where any hesitation reads as stalling."
+    },
+    {
+      "id": "think-hmm", "intensity": 5, "channel": "v3_whole_sentence",
+      "gen": {"engine": "eleven_v3_tts", "text": "Hmm."},
+      "use_when": "Genuinely considering a moderately hard question before answering; buys real planning/compute time.",
+      "avoid_when": "Celebratory or upbeat turns, where deliberation dampens the affect."
+    },
+    {
+      "id": "think-hmm-long", "intensity": 8, "channel": "v3_whole_sentence",
+      "gen": {"engine": "eleven_v3_tts", "text": "Hmmm... [exhales]"},
+      "use_when": "A weighty or ambiguous problem that deserves visible deliberation; pairs with a concise restatement (Polya step 1).",
+      "avoid_when": "Simple lookups, where long deliberation feels performative."
+    },
+    {
+      "id": "think-mm-agree", "intensity": 3, "channel": "v3_whole_sentence",
+      "gen": {"engine": "eleven_v3_tts", "text": "Mm-hm."},
+      "use_when": "Backchannel acknowledgment while the user is still talking or to confirm you followed.",
+      "avoid_when": "As a stand-in for an actual answer the user is waiting on."
+    },
+    {
+      "id": "think-hum-contented", "intensity": 2, "channel": "eleven_sfx",
+      "gen": {"engine": "eleven_sfx", "text": "Soft short contented human hum from a woman, gentle, non-melodic, no recognizable tune, natural.", "duration_s": 1.6},
+      "use_when": "Idle/companionable moments \u2014 relaxed presence, not thinking through a task.",
+      "avoid_when": "Mid-task or while the user awaits an answer; and never reproduce a recognizable copyrighted melody."
+    }
+  ]
+}

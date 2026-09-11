@@ -28,6 +28,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from pronounce import normalize_pronunciation, load_lexicon  # noqa: E402
+from pauses import resolve_pause_macros, load_macros  # noqa: E402
 
 app = typer.Typer(add_completion=False)
 
@@ -39,6 +40,7 @@ HOST_OUT = Path.home() / "workspace/experiments/chatterbox/logs"
 
 ANALYZER = Path.home() / ".pi/agent/skills/analyze-chatterbox-emotions/run.sh"
 LEXICON_PATH = Path(__file__).resolve().parents[1] / "fixtures/pronunciation_lexicon.json"
+PAUSE_MACROS_PATH = Path(__file__).resolve().parents[1] / "fixtures/pause_macros.json"
 
 VOICES = {
     "embry": "/data/embry_ref.wav",
@@ -444,6 +446,10 @@ def speak(
     plan = None
     if planned_pauses:
         compiler = Path(__file__).resolve().parents[2] / "best-practices-chatterbox/run.sh"
+        try:
+            text = resolve_pause_macros(text, load_macros(PAUSE_MACROS_PATH))
+        except ValueError as exc:
+            _fail(str(exc))  # unknown [pause:<name>] macro fails closed, never spoken
         proc = subprocess.run([str(compiler), "plan-silence", "--text", text,
                                "--tone", tone or "neutral_warm"], capture_output=True, text=True, timeout=30)
         if proc.returncode:
