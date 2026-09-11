@@ -553,6 +553,76 @@ try:
     else:
         print("EMBRY_NARRATION_SKIPPED service down")
 
+    # 9. Diagrams Explorer interactions (criterion #14): expand,
+    #    filter, select, proposal-safe note.
+    surf(
+        "click",
+        '[data-qid="left-pane:diagrams:expand"]',
+        tab=tab_id,
+    )
+    time.sleep(1)
+    pane = dom_probe(
+        tab_id,
+        'JSON.stringify({items:document.querySelectorAll("[data-qid^=\'left-pane:diagrams:item:\']").length})',
+    )
+    assert int(pane.get("items") or 0) >= 1, pane
+
+    set_filter = (
+        '(()=>{const i=document.querySelector('
+        '"[data-qid=\'left-pane:diagrams:filter\']");'
+        'const set=Object.getOwnPropertyDescriptor('
+        'window.HTMLInputElement.prototype,"value").set;'
+        'set.call(i,%s);'
+        'i.dispatchEvent(new Event("input",{bubbles:true}));'
+        'return "ok"})()'
+    )
+    surf_retry("js", "--no-activate", set_filter % '"publish"', tab=tab_id)
+    time.sleep(0.5)
+    pane = dom_probe(
+        tab_id,
+        'JSON.stringify({items:document.querySelectorAll("[data-qid^=\'left-pane:diagrams:item:\']").length})',
+    )
+    assert int(pane.get("items") or 0) >= 1, pane
+    surf_retry("js", "--no-activate", set_filter % '"zzz-no-match"', tab=tab_id)
+    time.sleep(0.5)
+    pane = dom_probe(
+        tab_id,
+        'JSON.stringify({items:document.querySelectorAll("[data-qid^=\'left-pane:diagrams:item:\']").length,empty:document.body.textContent.includes("No matching")})',
+    )
+    assert int(pane.get("items") or 0) == 0 and pane.get(
+        "empty"
+    ), pane
+    surf_retry("js", "--no-activate", set_filter % '""', tab=tab_id)
+    time.sleep(0.5)
+
+    rev_before = int(
+        dom_probe(tab_id, PROBE_JS)["rev"]
+    )
+    surf(
+        "click",
+        '[data-qid^="left-pane:diagrams:item:"]',
+        tab=tab_id,
+    )
+    time.sleep(2)
+    rev_after = int(
+        dom_probe(tab_id, PROBE_JS)["rev"]
+    )
+    assert rev_after > rev_before, (rev_before, rev_after)
+
+    surf(
+        "click",
+        '[data-qid="left-pane:diagrams:propose"]',
+        tab=tab_id,
+    )
+    time.sleep(0.5)
+    note = dom_probe(
+        tab_id,
+        'JSON.stringify({note:document.body.textContent'
+        '.includes("ops-excalidraw-owned")})',
+    )
+    assert note.get("note"), note
+    print("DIAGRAMS_EXPLORER_OK filter/select/propose")
+
     print("LIVE_COCKPIT_WALKTHROUGH_OK")
 finally:
     if board_tab_id is not None:

@@ -481,12 +481,13 @@
           "HOTKEY_STEP_OK",
           "EMBRY_NARRATION_OK",
           "LIVE_COCKPIT_WALKTHROUGH_OK",
-          "TAB_RESTORED_OK"
+          "TAB_RESTORED_OK",
+          "DIAGRAMS_EXPLORER_OK"
         ]
       },
       "readback": true,
       "evidence_class": "live_e2e",
-      "notes": "Real first interviewer question through the live-evidence intake boundary drives the REAL cockpit UI in the single persistent Chrome tab (LIVEUI_TAB_ID, default 837436340; navigated and restored, never new/closed). Per step: 1-2 sentence source context + >=2 scannable bullets asserted in the live DOM. At each breakpoint step: ops-excalidraw whiteboard opened in ONE dedicated tab (title verified, closed after), REAL headless $debugger break at the step's stop line (dynamic from the API state), canonical debugger.proof.v1, adapter receipt posted, and the live UI flips to PROOF_RECEIVED. J hotkey advances with revision fence. Embry narration render receipt. No mic, no playback, no Excalidraw mutation, no VS Code GUI control."
+      "notes": "Real first interviewer question through the live-evidence intake boundary drives the REAL cockpit UI in the single persistent Chrome tab (LIVEUI_TAB_ID, default 837436340; navigated and restored, never new/closed). Per step: 1-2 sentence source context + >=2 scannable bullets asserted in the live DOM. At each breakpoint step: ops-excalidraw whiteboard opened in ONE dedicated tab (title verified, closed after), REAL headless $debugger break at the step's stop line (dynamic from the API state), canonical debugger.proof.v1, adapter receipt posted, and the live UI flips to PROOF_RECEIVED. J hotkey advances with revision fence. Embry narration render receipt. Diagram Explorer interactions verified live: expand, filter (native-setter input), no-match empty state, diagram select via explainer.select (revision bump), proposal-safe note. js probes are single-expression only (the surf js wrapper rejects statement sequences) and React inputs use the native value setter. No mic, no playback, no Excalidraw mutation, no VS Code GUI control."
     },
     {
       "name": "docstring-link-proposal",
