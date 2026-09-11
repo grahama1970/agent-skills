@@ -2979,3 +2979,20 @@ def test_fleet_slo_coverage_gap_is_red():
     from watchdog import fleet_slo
     r = fleet_slo.compute([{"run_id": "x"}])  # no status
     assert r["health"] == "red" and any("missing_status" in i for i in r["coverage"]["incomplete"])
+
+
+def test_cross_ticket_unblock_releases_on_actual_bytes(tmp_path):
+    from watchdog import cross_ticket_unblock as ctu
+    jp = tmp_path / "we.json"
+    ctu.record_wait_edge(jp, waiting=1617, blocking=1618, path_shas={"p": "X"})
+    assert ctu.releasable(jp, {"p": "B"}) == []          # unlanded serializes
+    r = ctu.releasable(jp, {"p": "X"})                    # B landed A's bytes
+    assert [e["waiting"] for e in r] == [1617]
+
+
+def test_cross_ticket_unblock_never_trusts_closed_label(tmp_path):
+    from watchdog import cross_ticket_unblock as ctu
+    jp = tmp_path / "we.json"
+    ctu.record_wait_edge(jp, waiting=1620, blocking=1619, path_shas={"p": "X", "q": "Y"})
+    # partial + label-only closure must not release
+    assert ctu.releasable(jp, {"p": "X", "q": "B"}) == []

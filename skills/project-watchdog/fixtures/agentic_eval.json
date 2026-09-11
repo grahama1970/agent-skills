@@ -1765,6 +1765,33 @@
     ]
    },
    "proves": "Fleet SLO report derived from receipts: unattended success rate, p50/p95 dispatch-to-close latency, organic needs_human ratio (canaries excluded), seat_verdict=None frequency + recovery rate, serialization wait, capability failures, reconciliation debt, alert volume, unresolved machine-actionable age. Shuffled-order rerun yields byte-equivalent normalized output; a coverage gap flips health red. Fault-injected deterministic."
+  },
+  {
+   "name": "watchdog-cross-ticket-unblock",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "python",
+    "../evals/cross_ticket_unblock_eval.py",
+    "/tmp/watchdog-cross-ticket-unblock.json"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "artifacts": [
+     {
+      "path": "/tmp/watchdog-cross-ticket-unblock.json",
+      "json_pointer": "/passed",
+      "equals": true
+     }
+    ]
+   },
+   "proves": "Same-cycle cross-ticket unblock: a wait edge (A behind B) serializes while B's bytes are unlanded and on partial matches; when B lands on primary main the waiting A becomes releasable within the same scan on ACTUAL main bytes (never a CLOSED label), one release per waiting issue per scan; cleared edges no longer release. Fault-injected deterministic."
   }
  ]
 }
