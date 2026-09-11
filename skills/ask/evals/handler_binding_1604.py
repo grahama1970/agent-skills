@@ -24,10 +24,15 @@ def main() -> None:
     checks = []
     if args.mode == "schema":
         valid = {"handler": "claude-fable-low", "transport": "scillm.chat", "model": "claude-fable-5"}
+        oc_valid = {"handler": "oc-author", "transport": "opencode.serve", "model": None, "workspace": str(SKILL)}
+        HandlerExecutionBinding.model_validate(oc_valid)  # tau#355: second authoring transport accepts a workspace
         for bad in [dict(valid, workspace=str(SKILL)), dict(valid, surprise=True),
                     {k: v for k, v in valid.items() if k != "model"},
                     dict(valid, transport="invented"), dict(valid, model=123),
-                    {"handler": "codex", "transport": "codex.exec", "model": "claude-fable-5", "workspace": str(SKILL)}]:
+                    {"handler": "codex", "transport": "codex.exec", "model": "claude-fable-5", "workspace": str(SKILL)},
+                    {k: v for k, v in oc_valid.items() if k != "workspace"},
+                    dict(oc_valid, handler="oc-chat"),
+                    dict(oc_valid, handler="claude-fable-low", model="claude-fable-5")]:
             try:
                 HandlerExecutionBinding.model_validate(bad)
             except ValidationError as exc:

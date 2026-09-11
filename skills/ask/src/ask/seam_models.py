@@ -44,7 +44,7 @@ class HandlerExecutionBinding(BaseModel):
     transport: Literal[
         "codex.exec", "subagent-runner.codex_exec", "scillm.chat",
         "webgpt.submit", "claude.submit", "kimi.submit", "gemini.submit",
-        "grok.submit", "deepseek.submit",
+        "grok.submit", "deepseek.submit", "opencode.serve",
     ]
     model: str | None = Field(min_length=1)
     workspace: str | None = None
@@ -60,11 +60,23 @@ class HandlerExecutionBinding(BaseModel):
             )
         if self.transport == "scillm.chat" and not self.model:
             raise PydanticCustomError("handler_model_required", "SciLLM requires a model", {})
-        if self.workspace and (self.transport != "codex.exec" or self.handler != "codex"):
+        # tau#355: opencode.serve is the second named workspace-capable
+        # authoring transport (beside codex.exec). It requires the explicit
+        # oc-author handler and a workspace; oc-*/opencode-go/* chat seats
+        # keep their prohibition because they ride scillm.chat, which stays
+        # workspace-less. A named route, not a flag flip on chat seats.
+        if self.transport == "opencode.serve" and (self.handler != "oc-author" or not self.workspace):
+            raise PydanticCustomError(
+                "handler_workspace_required", "The opencode.serve authoring transport requires handler=oc-author and a workspace", {},
+            )
+        if self.workspace and (
+            (self.transport != "codex.exec" or self.handler != "codex")
+            and (self.transport != "opencode.serve" or self.handler != "oc-author")
+        ):
             raise PydanticCustomError(
                 "handler_workspace_transport_mismatch",
                 "Workspace binding for {handler} cannot use declared transport {transport}; "
-                "local authoring requires the explicit codex handler, while API models stay on SciLLM",
+                "local authoring requires the explicit codex or oc-author handler, while API models stay on SciLLM",
                 {"handler": self.handler, "transport": self.transport},
             )
         if self.transport == "codex.exec" and (self.handler != "codex" or not self.workspace):
