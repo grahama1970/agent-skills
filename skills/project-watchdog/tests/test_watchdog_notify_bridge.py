@@ -235,3 +235,18 @@ def test_heartbeat_skips_terminal_runs_and_latches_nothing_forever(tmp_path, mon
                                "latest_event": {}, "elapsed_seconds": 1}))
     os_utime(mon, (old, old))
     assert b._heartbeat_payload()["state"] == "STALE_PROGRESS"
+
+
+def test_closed_issue_rewrites_stale_alert_to_show_closure(monkeypatch):
+    import sys, pathlib
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "scripts"))
+    import watchdog_notify_bridge as b
+    ev = {"repo": "grahama1970/agent-skills", "issue": "1500", "status": "NEEDS_ATTENTION",
+          "summary": "old receipt failure", "requires_human_input": False}
+    monkeypatch.setattr(b, "_issue_closed_on_github", lambda e: True)
+    out = b.apply_live_issue_state(ev)
+    assert out["status"] == "CLOSED_ON_GITHUB" and out["receipt_status"] == "NEEDS_ATTENTION"
+    assert "verified CLOSED" in out["summary"] and out["requires_human_input"] is False
+    # open issue / gh unreachable: receipt status stands (fail-open)
+    monkeypatch.setattr(b, "_issue_closed_on_github", lambda e: False)
+    assert b.apply_live_issue_state(ev)["status"] == "NEEDS_ATTENTION"

@@ -442,6 +442,47 @@ def _subject_target(ev: dict) -> str:
     return f"lifecycle:{kind} (no ticket)"
 
 
+_ISSUE_STATE_CACHE: dict[tuple[str, str], str] = {}
+
+
+def _issue_closed_on_github(ev: dict) -> bool:
+    """Live GitHub state for the event's issue (cached per process).
+
+    Replay alerts carry stale receipt status: a ticket closed after a
+    NEEDS_ATTENTION receipt kept re-alerting as open work (2026-09-11 #1500).
+    The log must show closure, so alerts for CLOSED issues are rewritten to a
+    closure status before delivery. Fail-open: if gh cannot answer, the
+    receipt's own status stands.
+    """
+    repo, issue = str(ev.get("repo") or ""), str(ev.get("issue") or "")
+    if not repo or not issue or "receipt_missing" in repo or "receipt_missing" in issue:
+        return False
+    key = (repo, issue)
+    if key not in _ISSUE_STATE_CACHE:
+        try:
+            proc = subprocess.run(
+                ["gh", "issue", "view", issue, "--repo", repo, "--json", "state"],
+                capture_output=True, text=True, timeout=15, check=False)
+            state = (json.loads(proc.stdout).get("state") or "").upper() if proc.returncode == 0 else ""
+        except (OSError, ValueError):
+            state = ""
+        _ISSUE_STATE_CACHE[key] = state
+    return _ISSUE_STATE_CACHE[key] == "CLOSED"
+
+
+def apply_live_issue_state(ev: dict) -> dict:
+    """Rewrite a stale failure alert whose issue is actually closed on GitHub."""
+    if ev.get("status") in {"NEEDS_ATTENTION", "BLOCKED"} and _issue_closed_on_github(ev):
+        ev = dict(ev)
+        ev["receipt_status"] = ev.get("status")
+        ev["status"] = "CLOSED_ON_GITHUB"
+        ev["summary"] = (f"issue verified CLOSED on GitHub (stale receipt said "
+                         f"{ev.get('receipt_status')}): {(ev.get('summary') or '')[:160]}")
+        ev["closed_live_check"] = True
+        ev["requires_human_input"] = False  # a closed issue pages no one
+    return ev
+
+
 def requires_agent_push(ev: dict) -> bool:
     """Project-agent visibility is broader than human paging."""
     if ev.get("status") in {"NOOP", "SKIPPED"}:
@@ -655,6 +696,7 @@ def _event_complete(checkpoint: BridgeCheckpoint, ev: dict[str, Any]) -> bool:
 
 
 def deliver(ev: dict[str, Any], checkpoint: BridgeCheckpoint, *, fresh: bool) -> dict[str, Any]:
+    ev = apply_live_issue_state(ev)  # log shows closure: closed issues never alert as open failures
     event_id = ev["event_id"]
     result: dict[str, Any] = {"event_id": event_id, "dir": ev["dir"], "status": ev.get("status")}
     if not _delivered(checkpoint, "terminal", event_id):
