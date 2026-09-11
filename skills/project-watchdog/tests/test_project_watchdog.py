@@ -3189,3 +3189,20 @@ def test_emit_tick_event_idempotent_and_never_raises(monkeypatch):
     import urllib.error
     monkeypatch.setattr(ml, "_post_json", lambda p, q: (_ for _ in ()).throw(urllib.error.URLError("down")))
     assert ml.emit_tick_event(**kw)["status"] == "SKIPPED"
+
+
+def test_capability_gate_self_refreshes_stale_receipt(tmp_path, monkeypatch):
+    from watchdog import capability_preflight as cp
+    monkeypatch.setattr(cp.config, "state_root", lambda: tmp_path)
+    probes = {n: (lambda: (True, "ok")) for n in ("gh", "triage_runner", "memory", "ask")}
+    monkeypatch.setattr(cp, "PROBES", probes)
+    cp.run()
+    import time as _t
+    _real = _t.time
+    monkeypatch.setattr(_t, "time", lambda: _real() + cp.DEFAULT_MAX_AGE_SECONDS + 10)
+    ok1, why1 = cp.dispatch_allowed()
+    assert ok1 is False and why1["reason"] == "capability_receipt_stale"
+    # simulate the handlers refresh: run() rewrites; allowed again
+    cp.run()
+    ok2, _ = cp.dispatch_allowed()
+    assert ok2 is True

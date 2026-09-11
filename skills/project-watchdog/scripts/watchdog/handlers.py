@@ -1323,6 +1323,18 @@ def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[
     # gated here.
     from . import capability_preflight
     cap_ok, cap_why = capability_preflight.dispatch_allowed()
+    if apply and not cap_ok and cap_why.get("reason") in {
+            "no_capability_receipt", "capability_receipt_stale"}:
+        # Self-refresh (#1644): the cron path is the only steady writer of the
+        # capability receipt. A stale/missing receipt is refreshed here once
+        # per tick and re-checked, so the hourly preflight runs through the
+        # cron wrapper itself instead of degrading every tick to
+        # NEEDS_ATTENTION capability_preflight_not_ready after the first hour.
+        try:
+            capability_preflight.run()
+        except OSError:
+            pass
+        cap_ok, cap_why = capability_preflight.dispatch_allowed()
     if apply and not cap_ok:
         result.update(ok=True, status="SKIPPED", stop_reason="capability_preflight_not_ready",
                       capability=cap_why,
