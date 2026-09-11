@@ -231,6 +231,23 @@ Chunked streaming is valid when the product needs low-latency playback, but it b
 
 ## Pace and tone arc for instructional narration (operator 2026-09-10)
 
+### Conversation arc macros (2026-09-11)
+
+`chatterbox-speak --arc <name>` phases one answer across delivery
+waypoints — like emotion macros, but governing tone+pace per phase
+instead of affect per tag. Named arcs (data, extendable):
+
+- `answer`: careful_concerned/slow -> calm_precise/slow -> memory_confident/brisk
+  (slightly concerned and slower when starting, confident and brisk at the close)
+- `reassure`: careful_concerned/slow -> neutral_warm/slow -> relieved/neutral
+
+Rules: phases split at sentence boundaries only (never mid-clause); each
+phase renders as its own receipt-bearing chunk; the arc receipt
+(`chatterbox_speak.arc.v1`) records per-phase tone/pace/wav/duration;
+`--arc` overrides --tone/--pace per phase. Authors pick the arc from
+context the same way they pick emotion macros.
+
+
 Embry's spoken explanations must be concise, instructive, and plain spoken,
 and SLOW ENOUGH TO FOLLOW. Two controls own this:
 

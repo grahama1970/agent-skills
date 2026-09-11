@@ -12,6 +12,7 @@ JSON receipt to /mnt/storage12tb/skills/chatterbox-speak/outputs/.
 import json
 import shutil
 import subprocess
+import sys
 import time
 import wave
 from uuid import uuid4
@@ -157,6 +158,45 @@ def voices() -> None:
     print(json.dumps({"voices": VOICES, "tones": tones}, indent=2))
 
 
+
+# Conversation arc macros: progress -> (tone, pace). Like emotion macros,
+# but each waypoint governs one PHASE of the answer's delivery.
+ARCS: dict[str, list[dict[str, str]]] = {
+    "answer": [
+        {"tone": "careful_concerned", "pace": "slow"},
+        {"tone": "calm_precise", "pace": "slow"},
+        {"tone": "memory_confident", "pace": "brisk"},
+    ],
+    "reassure": [
+        {"tone": "careful_concerned", "pace": "slow"},
+        {"tone": "neutral_warm", "pace": "slow"},
+        {"tone": "relieved", "pace": "neutral"},
+    ],
+}
+
+_SENTENCE_SPLIT = __import__("re").compile(r"(?<=[.!?])\s+")
+
+
+def _arc_phases(text: str, waypoints: list[dict[str, str]]):
+    sentences = [s for s in _SENTENCE_SPLIT.split(text.strip()) if s]
+    if not sentences:
+        raise SystemExit("--arc needs at least one sentence")
+    n = len(waypoints)
+    # distribute sentences evenly across phases; every phase non-empty
+    # when there are >= n sentences, else clamp to sentence count.
+    phases: list[tuple[str, dict[str, str]]] = []
+    per = max(1, round(len(sentences) / n))
+    idx = 0
+    for w in waypoints:
+        chunk = sentences[idx:idx + per] if idx < len(sentences) else []
+        if chunk:
+            phases.append((" ".join(chunk), w))
+        idx += per
+    if not phases:
+        phases = [(text, waypoints[0])]
+    return phases
+
+
 @app.command()
 def speak(
     text: str = typer.Option(..., help="Text to speak; may contain native tags like [sigh]"),
@@ -172,8 +212,50 @@ def speak(
     analyze: bool = typer.Option(False, help="Run /analyze-chatterbox-emotions on the WAV and embed the result in the receipt"),
     planned_pauses: bool = typer.Option(False, help="Compile spaced ellipses/[pause:*] via best-practices-chatterbox and render exact chunk silence"),
     pace: str | None = typer.Option(None, help="Speaking pace via service time-stretch: slow|neutral|brisk|fast (slow ~= 0.85 tempo, ~18% longer); recorded in the receipt pace_effect"),
+    arc: str | None = typer.Option(None, help=f"Conversation arc macro: phases the answer across tone+pace waypoints ({sorted(ARCS)}); overrides --tone/--pace per phase"),
 ) -> None:
     """Render one line and write WAV + receipt."""
+    if arc is not None:
+        if arc not in ARCS:
+            _fail(f"unknown arc '{arc}'; known: {sorted(ARCS)}")
+        phases = _arc_phases(text, ARCS[arc])
+        arc_receipt = {
+            "schema": "chatterbox_speak.arc.v1",
+            "arc": arc,
+            "phases": [],
+        }
+        for i, (phase_text, waypoint) in enumerate(phases, 1):
+            phase_ctx = f"{context or 'arc'} [arc {arc} phase {i}/{len(phases)}]"
+            runner = Path(__file__).resolve().parent.parent / "run.sh"
+            rc = subprocess.run(
+                ["bash", str(runner), "speak",
+                 "--text", phase_text, "--voice", voice,
+                 "--tone", waypoint["tone"],
+                 "--pace", waypoint["pace"],
+                 "--context", phase_ctx]
+                + (["--play"] if play else [])
+                + (["--analyze"] if analyze else []),
+                capture_output=True, text=True, timeout=600,
+            )
+            if rc.returncode != 0:
+                _fail(f"arc phase {i} failed: {rc.stderr[-300:]}")
+            marker = '"receipt": "'
+            idx2 = rc.stdout.find(marker)
+            rpath = rc.stdout[idx2 + len(marker):].split('"', 1)[0]
+            r = json.loads(Path(rpath).read_text())
+            arc_receipt["phases"].append({
+                "phase": i,
+                "text": phase_text,
+                "tone": waypoint["tone"],
+                "pace": waypoint["pace"],
+                "wav": r.get("wav"),
+                "duration_seconds": r.get("duration_seconds"),
+            })
+        out_path = OUT_DIR / f"arc-{int(time.time())}-{arc}" / "arc.json"
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(json.dumps(arc_receipt, indent=2) + "\n")
+        print(json.dumps(arc_receipt, indent=2))
+        return
     ref = ref_audio or VOICES.get(voice)
     if not ref:
         _fail(f"unknown voice '{voice}'; known: {sorted(VOICES)} (or pass --ref-audio)")
