@@ -1,0 +1,920 @@
+{
+  "schema": "chatterbox_speak.joke_corpus.v1",
+  "note": "SAFE local joke corpus harvested from JokeAPI (safe-mode + all offensive flags blacklisted). Searchable offline for de-escalation. Every joke is safe:true and re-checked here; humans may prune. GATE: for an ABUSIVE-flagged conversation, search for a GENTLE, on-topic, self-deprecating or neutral joke to de-escalate; NEVER a joke at the user's expense (mockery escalates - Mandt/CPI/Starr). Humor sparingly; if the user is genuinely distressed, do NOT joke.",
+  "source": "v2.jokeapi.dev safe-mode",
+  "count": 56,
+  "jokes": [
+    {
+      "joke": "Java and C were telling jokes. It was C's turn, so he writes something on the wall, points to it and says \"Do you get the reference?\" But Java didn't.",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "didn",
+        "java",
+        "jokes",
+        "points",
+        "reference",
+        "says",
+        "something",
+        "telling",
+        "turn",
+        "wall",
+        "were",
+        "writes"
+      ]
+    },
+    {
+      "joke": "A guy walks into a bar and asks for 1.4 root beers.\nThe bartender says \"I'll have to charge you extra, that's a root beer float\".\nThe guy says \"In that case, better make it a double.\"",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "asks",
+        "bartender",
+        "beer",
+        "beers",
+        "better",
+        "case",
+        "charge",
+        "double",
+        "extra",
+        "float",
+        "have",
+        "into",
+        "make",
+        "root",
+        "says",
+        "that",
+        "walks"
+      ]
+    },
+    {
+      "joke": "If Bill Gates had a dime for every time Windows crashed ... Oh wait, he does.",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "bill",
+        "crashed",
+        "dime",
+        "does",
+        "every",
+        "gates",
+        "time",
+        "wait",
+        "windows"
+      ]
+    },
+    {
+      "joke": "Knock knock.\nWho's there?\nRecursion.\nRecursion who?\nKnock knock.",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "knock",
+        "recursion",
+        "there"
+      ]
+    },
+    {
+      "joke": "I've got a really good UDP joke to tell you but I don\u2019t know if you'll get it.",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "good",
+        "joke",
+        "know",
+        "really",
+        "tell"
+      ]
+    },
+    {
+      "joke": "// This line doesn't actually do anything, but the code stops working when I delete it.",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "actually",
+        "anything",
+        "code",
+        "delete",
+        "doesn",
+        "line",
+        "stops",
+        "this",
+        "when",
+        "working"
+      ]
+    },
+    {
+      "joke": "A programmer puts two glasses on his bedside table before going to sleep.\nA full one, in case he gets thirsty, and an empty one, in case he doesn't.",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "bedside",
+        "before",
+        "case",
+        "doesn",
+        "empty",
+        "full",
+        "gets",
+        "glasses",
+        "going",
+        "programmer",
+        "puts",
+        "sleep",
+        "table",
+        "thirsty"
+      ]
+    },
+    {
+      "joke": "UDP is better in the COVID era since it avoids unnecessary handshakes.",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "avoids",
+        "better",
+        "covid",
+        "handshakes",
+        "since",
+        "unnecessary"
+      ]
+    },
+    {
+      "joke": "I'd tell you a joke about NAT but I would have to translate.",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "about",
+        "have",
+        "joke",
+        "tell",
+        "translate",
+        "would"
+      ]
+    },
+    {
+      "joke": "Have a great weekend!\nI hope your code behaves the same on Monday as it did on Friday.",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "behaves",
+        "code",
+        "friday",
+        "great",
+        "have",
+        "hope",
+        "monday",
+        "same",
+        "weekend",
+        "your"
+      ]
+    },
+    {
+      "joke": "The glass is neither half-full nor half-empty, the glass is twice as big as it needs to be.",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "empty",
+        "full",
+        "glass",
+        "half",
+        "needs",
+        "neither",
+        "twice"
+      ]
+    },
+    {
+      "joke": "Judge: \"I sentence you to the maximum punishment...\"\nMe (thinking): \"Please be death, please be death...\"\nJudge: \"Learn Java!\"\nMe: \"Damn.\"",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "damn",
+        "death",
+        "java",
+        "judge",
+        "learn",
+        "maximum",
+        "please",
+        "punishment",
+        "sentence",
+        "thinking"
+      ]
+    },
+    {
+      "joke": "ASCII silly question, get a silly ANSI.",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "ansi",
+        "ascii",
+        "question",
+        "silly"
+      ]
+    },
+    {
+      "joke": "Hey Girl,\nRoses are #ff0000,\nViolets are #0000ff,\nI use hex codes,\nBut I'd use RGB for you.",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "codes",
+        "girl",
+        "roses",
+        "violets"
+      ]
+    },
+    {
+      "joke": "\"Knock, knock.\"\n\"Who's there?\"\n\n[very long pause]\n\n\"Java.\"",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "java",
+        "knock",
+        "long",
+        "pause",
+        "there",
+        "very"
+      ]
+    },
+    {
+      "joke": "Today I learned that changing random stuff until your program works is \"hacky\" and a \"bad coding practice\" but if you do it fast enough it's \"Machine Learning\" and pays 4x your current salary.",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "changing",
+        "coding",
+        "current",
+        "enough",
+        "fast",
+        "hacky",
+        "learned",
+        "learning",
+        "machine",
+        "pays",
+        "practice",
+        "program",
+        "random",
+        "salary",
+        "stuff",
+        "that",
+        "today",
+        "until",
+        "works",
+        "your"
+      ]
+    },
+    {
+      "joke": "\"Can I tell you a TCP joke?\"\n\"Please tell me a TCP joke.\"\n\"OK, I'll tell you a TCP joke.\"",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "joke",
+        "please",
+        "tell"
+      ]
+    },
+    {
+      "joke": "A SQL statement walks into a bar and sees two tables.\nIt approaches, and asks \"may I join you?\"",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "approaches",
+        "asks",
+        "into",
+        "join",
+        "sees",
+        "statement",
+        "tables",
+        "walks"
+      ]
+    },
+    {
+      "joke": "Two SQL tables sit at the bar. A query approaches and asks \"Can I join you?\"",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "approaches",
+        "asks",
+        "join",
+        "query",
+        "tables"
+      ]
+    },
+    {
+      "joke": "A man is smoking a cigarette and blowing smoke rings into the air. His girlfriend becomes irritated with the smoke and says \"Can't you see the warning on the cigarette pack? Smoking is hazardous to your health!\" to which the man replies, \"I am a programmer.  We don't worry about warnings; we only worry about errors.\"",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "about",
+        "becomes",
+        "blowing",
+        "cigarette",
+        "errors",
+        "girlfriend",
+        "hazardous",
+        "health",
+        "into",
+        "irritated",
+        "only",
+        "pack",
+        "programmer",
+        "replies",
+        "rings",
+        "says",
+        "smoke",
+        "smoking",
+        "warning",
+        "warnings",
+        "which",
+        "with",
+        "worry",
+        "your"
+      ]
+    },
+    {
+      "joke": "How do you tell HTML from HTML5?\n- Try it out in Internet Explorer\n- Did it work?\n- No?\n- It's HTML5.",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "explorer",
+        "from",
+        "html",
+        "internet",
+        "tell",
+        "work"
+      ]
+    },
+    {
+      "joke": "The generation of random numbers is too important to be left to chance.",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "chance",
+        "generation",
+        "important",
+        "left",
+        "numbers",
+        "random"
+      ]
+    },
+    {
+      "joke": "Four engineers get into a car. The car won't start.\nThe Mechanical engineer says \"It's a broken starter\".\nThe Electrical engineer says \"Dead battery\".\nThe Chemical engineer says \"Impurities in the gasoline\".\nThe IT engineer says \"Hey guys, I have an idea: How about we all get out of the car and get back in\".",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "about",
+        "back",
+        "battery",
+        "broken",
+        "chemical",
+        "dead",
+        "electrical",
+        "engineer",
+        "engineers",
+        "four",
+        "gasoline",
+        "guys",
+        "have",
+        "idea",
+        "impurities",
+        "into",
+        "mechanical",
+        "says",
+        "start",
+        "starter"
+      ]
+    },
+    {
+      "joke": "There are only 10 kinds of people in this world: those who know binary and those who don't.",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "binary",
+        "kinds",
+        "know",
+        "only",
+        "people",
+        "there",
+        "this",
+        "those",
+        "world"
+      ]
+    },
+    {
+      "joke": "Debugging: Removing the needles from the haystack.",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "debugging",
+        "from",
+        "haystack",
+        "needles",
+        "removing"
+      ]
+    },
+    {
+      "joke": "Eight bytes walk into a bar.\nThe bartender asks, \"Can I get you anything?\"\n\"Yeah,\" reply the bytes.\n\"Make us a double.\"",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "anything",
+        "asks",
+        "bartender",
+        "bytes",
+        "double",
+        "eight",
+        "into",
+        "make",
+        "reply",
+        "walk",
+        "yeah"
+      ]
+    },
+    {
+      "joke": "\"Honey, go to the store and buy some eggs.\"\n\"OK.\"\n\"Oh and while you're there, get some milk.\"\nHe never returned.",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "eggs",
+        "honey",
+        "milk",
+        "never",
+        "returned",
+        "some",
+        "store",
+        "there",
+        "while"
+      ]
+    },
+    {
+      "joke": "Algorithm: A word used by programmers when they don't want to explain how their code works.",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "algorithm",
+        "code",
+        "explain",
+        "programmers",
+        "their",
+        "they",
+        "used",
+        "want",
+        "when",
+        "word",
+        "works"
+      ]
+    },
+    {
+      "joke": "Debugging is like being the detective in a crime movie where you're also the murderer at the same time.",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "also",
+        "being",
+        "crime",
+        "debugging",
+        "detective",
+        "like",
+        "movie",
+        "murderer",
+        "same",
+        "time",
+        "where"
+      ]
+    },
+    {
+      "joke": "\"We messed up the keming again guys.\"",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "again",
+        "guys",
+        "keming",
+        "messed"
+      ]
+    },
+    {
+      "joke": "Programming is 10% science, 20% ingenuity, and 70% getting the ingenuity to work with the science.",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "getting",
+        "ingenuity",
+        "programming",
+        "science",
+        "with",
+        "work"
+      ]
+    },
+    {
+      "joke": "The six stages of debugging:\n1. That can't happen.\n2. That doesn't happen on my machine.\n3. That shouldn't happen.\n4. Why does that happen?\n5. Oh, I see.\n6. How did that ever work?",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "debugging",
+        "does",
+        "doesn",
+        "ever",
+        "happen",
+        "machine",
+        "shouldn",
+        "stages",
+        "that",
+        "work"
+      ]
+    },
+    {
+      "joke": "A byte walks into a bar looking miserable.\nThe bartender asks it: \"What's wrong buddy?\"\n\"Parity error.\" it replies. \n\"Ah that makes sense, I thought you looked a bit off.\"",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "asks",
+        "bartender",
+        "buddy",
+        "byte",
+        "error",
+        "into",
+        "looked",
+        "looking",
+        "makes",
+        "miserable",
+        "parity",
+        "replies",
+        "sense",
+        "that",
+        "thought",
+        "walks",
+        "what",
+        "wrong"
+      ]
+    },
+    {
+      "joke": "I have a joke about Stack Overflow, but you would say it's a duplicate.",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "about",
+        "duplicate",
+        "have",
+        "joke",
+        "overflow",
+        "stack",
+        "would"
+      ]
+    },
+    {
+      "joke": "Two C strings walk into a bar.\nThe bartender asks \"What can I get ya?\"\nThe first string says \"I'll have a gin and tonic.\"\nThe second string thinks for a minute, then says \"I'll take a tequila sunriseJF()#$JF(#)$(@J#()$@#())!*FNIN!OBN134ufh1ui34hf9813f8h8384h981h3984h5F!##@\"\nThe first string apologizes, \"You'll have to excuse my friend, he's not null-terminated.\"",
+      "category": "Programming",
+      "safe": true,
+      "keywords": [
+        "apologizes",
+        "asks",
+        "bartender",
+        "excuse",
+        "first",
+        "fnin",
+        "friend",
+        "have",
+        "into",
+        "minute",
+        "null",
+        "says",
+        "second",
+        "string",
+        "strings",
+        "sunrisejf",
+        "take",
+        "tequila",
+        "terminated",
+        "then",
+        "thinks",
+        "tonic",
+        "walk",
+        "what"
+      ]
+    },
+    {
+      "joke": "Schr\u00f6dinger's cat walks into a bar and doesn't.",
+      "category": "Misc",
+      "safe": true,
+      "keywords": [
+        "dinger",
+        "doesn",
+        "into",
+        "schr",
+        "walks"
+      ]
+    },
+    {
+      "joke": "Yo mama is so old, she knew Burger King while he was still a prince.",
+      "category": "Misc",
+      "safe": true,
+      "keywords": [
+        "burger",
+        "king",
+        "knew",
+        "mama",
+        "prince",
+        "still",
+        "while"
+      ]
+    },
+    {
+      "joke": "My wife is really mad at the fact that I have no sense of direction.\nSo I packed up my stuff and right.",
+      "category": "Misc",
+      "safe": true,
+      "keywords": [
+        "direction",
+        "fact",
+        "have",
+        "packed",
+        "really",
+        "right",
+        "sense",
+        "stuff",
+        "that",
+        "wife"
+      ]
+    },
+    {
+      "joke": "Relationship Status: just tried to reach for my dog's paw and he pulled it away so I pretended I was reaching for the remote.",
+      "category": "Misc",
+      "safe": true,
+      "keywords": [
+        "away",
+        "just",
+        "pretended",
+        "pulled",
+        "reach",
+        "reaching",
+        "relationship",
+        "remote",
+        "status",
+        "tried"
+      ]
+    },
+    {
+      "joke": "A perfectionist walked into a bar... apparently, the bar was not set high enough.",
+      "category": "Misc",
+      "safe": true,
+      "keywords": [
+        "apparently",
+        "enough",
+        "high",
+        "into",
+        "perfectionist",
+        "walked"
+      ]
+    },
+    {
+      "joke": "My parents raised me as an only child, which really annoyed my younger brother.",
+      "category": "Misc",
+      "safe": true,
+      "keywords": [
+        "annoyed",
+        "brother",
+        "child",
+        "only",
+        "parents",
+        "raised",
+        "really",
+        "which",
+        "younger"
+      ]
+    },
+    {
+      "joke": "My wife and I have reached the difficult decision that we do not want children.\nIf anybody does, please just send me your contact details and we can drop them off tomorrow.",
+      "category": "Misc",
+      "safe": true,
+      "keywords": [
+        "anybody",
+        "children",
+        "contact",
+        "decision",
+        "details",
+        "difficult",
+        "does",
+        "drop",
+        "have",
+        "just",
+        "please",
+        "reached",
+        "send",
+        "that",
+        "them",
+        "tomorrow",
+        "want",
+        "wife",
+        "your"
+      ]
+    },
+    {
+      "joke": "If you're here for the yodeling lesson, please form an orderly orderly orderly queue.",
+      "category": "Misc",
+      "safe": true,
+      "keywords": [
+        "form",
+        "here",
+        "lesson",
+        "orderly",
+        "please",
+        "queue",
+        "yodeling"
+      ]
+    },
+    {
+      "joke": "My husband and I were happy for 20 years. And then we met.",
+      "category": "Misc",
+      "safe": true,
+      "keywords": [
+        "happy",
+        "husband",
+        "then",
+        "were",
+        "years"
+      ]
+    },
+    {
+      "joke": "Never date a baker. They're too kneady.",
+      "category": "Misc",
+      "safe": true,
+      "keywords": [
+        "baker",
+        "date",
+        "kneady",
+        "never",
+        "they"
+      ]
+    },
+    {
+      "joke": "A neutron walks into a bar and asks for a price on a drink.\nThe barkeeper says: \"For you... no charge!\"",
+      "category": "Misc",
+      "safe": true,
+      "keywords": [
+        "asks",
+        "barkeeper",
+        "charge",
+        "drink",
+        "into",
+        "neutron",
+        "price",
+        "says",
+        "walks"
+      ]
+    },
+    {
+      "joke": "I visited my friend at his new house. He told me to make myself at home. So I threw him out. I hate having visitors.",
+      "category": "Misc",
+      "safe": true,
+      "keywords": [
+        "friend",
+        "hate",
+        "having",
+        "home",
+        "house",
+        "make",
+        "myself",
+        "threw",
+        "told",
+        "visited",
+        "visitors"
+      ]
+    },
+    {
+      "joke": "A horse walks into a bar.\n\"Hey\", the Bartender says.\n\"Sure\", the horse replies.",
+      "category": "Pun",
+      "safe": true,
+      "keywords": [
+        "bartender",
+        "horse",
+        "into",
+        "replies",
+        "says",
+        "sure",
+        "walks"
+      ]
+    },
+    {
+      "joke": "Oysters hate to give away their pearls because they are shellfish.",
+      "category": "Pun",
+      "safe": true,
+      "keywords": [
+        "away",
+        "because",
+        "give",
+        "hate",
+        "oysters",
+        "pearls",
+        "shellfish",
+        "their",
+        "they"
+      ]
+    },
+    {
+      "joke": "I'm reading a book about anti-gravity. It's impossible to put down!",
+      "category": "Pun",
+      "safe": true,
+      "keywords": [
+        "about",
+        "anti",
+        "book",
+        "down",
+        "gravity",
+        "impossible",
+        "reading"
+      ]
+    },
+    {
+      "joke": "Two fish in a tank. One turns to the other and says, \"Do you know how to drive this thing?\"",
+      "category": "Pun",
+      "safe": true,
+      "keywords": [
+        "drive",
+        "fish",
+        "know",
+        "other",
+        "says",
+        "tank",
+        "thing",
+        "this",
+        "turns"
+      ]
+    },
+    {
+      "joke": "To whoever stole my copy of Microsoft Office, I will find you. You have my Word!",
+      "category": "Pun",
+      "safe": true,
+      "keywords": [
+        "copy",
+        "find",
+        "have",
+        "microsoft",
+        "office",
+        "stole",
+        "whoever",
+        "will",
+        "word"
+      ]
+    },
+    {
+      "joke": "Today, my son asked \"Can I have a book mark?\" and I burst into tears.\n11 years old and he still doesn't know my name is Brian.",
+      "category": "Pun",
+      "safe": true,
+      "keywords": [
+        "asked",
+        "book",
+        "brian",
+        "burst",
+        "doesn",
+        "have",
+        "into",
+        "know",
+        "mark",
+        "name",
+        "still",
+        "tears",
+        "today",
+        "years"
+      ]
+    },
+    {
+      "joke": "I was struggling to figure out how lightning works, but then it struck me.",
+      "category": "Pun",
+      "safe": true,
+      "keywords": [
+        "figure",
+        "lightning",
+        "struck",
+        "struggling",
+        "then",
+        "works"
+      ]
+    },
+    {
+      "joke": "I was reading a great book about an immortal dog the other day. It was impossible to put down.",
+      "category": "Pun",
+      "safe": true,
+      "keywords": [
+        "about",
+        "book",
+        "down",
+        "great",
+        "immortal",
+        "impossible",
+        "other",
+        "reading"
+      ]
+    },
+    {
+      "joke": "I have a joke about trickle down economics, but 99% of you will never get it.",
+      "category": "Pun",
+      "safe": true,
+      "keywords": [
+        "about",
+        "down",
+        "economics",
+        "have",
+        "joke",
+        "never",
+        "trickle",
+        "will"
+      ]
+    }
+  ]
+}

@@ -53,6 +53,25 @@ emotion: ~5 per band, deepest in medium where most conversation lives.
 | medium | 4-7 | Turbo native: `[happy]` line tag + at most one `[laugh]`/`[chuckle]` + `...` pause, tone playful_light | <1s |
 | low | 1-3 | Plain Turbo tone (neutral_warm) or a cached v3 interjection clip at sentence boundaries | ~0s added |
 
+**Tag vocabulary gotcha (human-caught):** Turbo accepts only SINGULAR event tags
+(`[chuckle] [laugh] [sigh] [gasp] [surprised] [angry] [sarcastic]` — service
+`accepted_tags`); the PLURAL forms (`[chuckles] [laughs] [sighs]`) are ElevenLabs
+v3-clone only. A plural tag on Turbo hits `unknown_tag_behavior: synthesized_as_literal_text`
+— it SPEAKS the word "chuckles". Use singular for `turbo_native` entries, plural
+only for `v3_whole_sentence`.
+
+**Confirmed emotions (2026-09-11, human 'these are good'):** happy, celebration,
+crying (v3 splice), sadness, surprised, angry (controlled/firm, not shouting).
+**Sarcastic** inverts the ladder — mockery risk rises with intensity, so it tops
+out ~7; HIGH intensity pivots to a warm self-deprecating JOKE. Sarcasm/joke gate
+to BENIGN `/deflect` only (OFF_TOPIC/NO_MATCH), never safety/confusion.
+
+**De-escalation joke search** (`scripts/joke_search.py`, `fixtures/joke_corpus.json`):
+for an ABUSIVE-flagged conversation, search a GENTLE on-topic safe joke to defuse
+(never at the user's expense — mockery escalates; not if genuinely distressed).
+Works offline against a JokeAPI safe-mode corpus; auto-upgrades to dynamic Humor
+API keyword search (50k+ jokes, offensive tags excluded) when `HUMOR_API_KEY` is set.
+
 Hard rules (each earned by a human-rejected render):
 - Never splice clips mid-clause; prosody breaks and it sounds robotic. Whole
   sentences only; SFX/clips at boundaries.
