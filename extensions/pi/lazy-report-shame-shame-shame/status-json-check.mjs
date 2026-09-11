@@ -11,7 +11,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { findJsonControlFrames, selectTerminalStatusFrame } from './terminal-status-frame.mjs';
 
-const CHECKER_VERSION = '2026-09-09.status-json-typed-context.v14';
+const CHECKER_VERSION = '2026-09-10.status-json-typed-context.v15';
 const TRUTHY_FLAG_VALUES = new Set(['1', 'true', 'yes']);
 const FALSY_FLAG_VALUES = new Set(['0', 'false', 'no']);
 const flagEnabled = (value) => TRUTHY_FLAG_VALUES.has(String(value || '').trim().toLowerCase());
@@ -157,6 +157,40 @@ const CONTEXT_TEXT_KEYS = [
   'value',
 ];
 
+const AUTHORITATIVE_OUTCOME_KEYS = [
+  'authoritative_task_outcome',
+  'authoritativeTaskOutcome',
+  'authoritative_disposition',
+  'authoritativeDisposition',
+  'validated_disposition',
+  'validatedDisposition',
+  'task_outcome',
+  'taskOutcome',
+  'task_result',
+  'taskResult',
+  'runner_outcome',
+  'runnerOutcome',
+  'runner_result',
+  'runnerResult',
+  'immutable_goal_state',
+  'immutableGoalState',
+  'global_goal_state',
+  'globalGoalState',
+  'goal_state',
+  'goalState',
+  'outcome',
+  'state',
+  'disposition',
+  'status',
+  'result',
+  'completion_state',
+  'completionState',
+  'goal_completion',
+  'goalCompletion',
+  'mode',
+  'value',
+];
+
 const CONTEXT_BOOLEAN_OUTCOMES = [
   ['accepted', 'complete'],
   ['completed', 'complete'],
@@ -177,6 +211,22 @@ function contextText(paths, envNames = []) {
   const value = firstTypedValue(paths, envNames);
   if (value && typeof value === 'object') {
     for (const key of CONTEXT_TEXT_KEYS) {
+      if (value[key] !== undefined && value[key] !== null && String(value[key]).trim() !== '') {
+        return String(value[key]).trim();
+      }
+    }
+    for (const [key, token] of CONTEXT_BOOLEAN_OUTCOMES) {
+      if (value[key] === true) return token;
+    }
+    return '';
+  }
+  return String(value || '').trim();
+}
+
+function contextOutcome(paths, envNames = []) {
+  const value = firstTypedValue(paths, envNames);
+  if (value && typeof value === 'object') {
+    for (const key of AUTHORITATIVE_OUTCOME_KEYS) {
       if (value[key] !== undefined && value[key] !== null && String(value[key]).trim() !== '') {
         return String(value[key]).trim();
       }
@@ -243,28 +293,33 @@ const immutableGoalContext = contextFlag(
   ['LRSSS_IMMUTABLE_GOAL_CONTEXT', 'LRSSS_IMMUTABLE_GOAL_TURN', 'LRSSS_IMMUTABLE_GOAL', 'LRSSS_TYPED_IMMUTABLE_GOAL_CONTEXT'],
   { nonBooleanStringTruthy: true },
 );
-const authoritativeTaskOutcome = contextText(
+const authoritativeTaskOutcome = contextOutcome(
   [
     ['authoritative_task_outcome'],
     ['authoritativeTaskOutcome'],
     ['authoritative_disposition'],
     ['authoritativeDisposition'],
+    ['validated_disposition'],
+    ['validatedDisposition'],
     ['task_outcome'],
     ['taskOutcome'],
+    ['task_result'],
+    ['taskResult'],
     ['runner_outcome'],
     ['runnerOutcome'],
-    ['outcome'],
-    ['status'],
-    ['result'],
-    ['completion_state'],
-    ['completionState'],
-    ['goal_completion'],
-    ['goalCompletion'],
+    ['runner_result'],
+    ['runnerResult'],
     ['task', 'outcome'],
     ['task', 'status'],
     ['task', 'result'],
+    ['task', 'state'],
+    ['task', 'disposition'],
     ['task', 'authoritative_disposition'],
     ['task', 'authoritativeDisposition'],
+    ['task', 'validated_disposition'],
+    ['task', 'validatedDisposition'],
+    ['task', 'authoritative_task_outcome'],
+    ['task', 'authoritativeTaskOutcome'],
     ['task', 'immutable_goal_state'],
     ['task', 'immutableGoalState'],
     ['task', 'global_goal_state'],
@@ -276,8 +331,14 @@ const authoritativeTaskOutcome = contextText(
     ['runner', 'outcome'],
     ['runner', 'status'],
     ['runner', 'result'],
+    ['runner', 'state'],
+    ['runner', 'disposition'],
     ['runner', 'authoritative_disposition'],
     ['runner', 'authoritativeDisposition'],
+    ['runner', 'validated_disposition'],
+    ['runner', 'validatedDisposition'],
+    ['runner', 'authoritative_task_outcome'],
+    ['runner', 'authoritativeTaskOutcome'],
     ['runner', 'immutable_goal_state'],
     ['runner', 'immutableGoalState'],
     ['runner', 'global_goal_state'],
@@ -290,20 +351,38 @@ const authoritativeTaskOutcome = contextText(
     ['typedTurnContext', 'authoritativeTaskOutcome'],
     ['typed_turn_context', 'authoritative_disposition'],
     ['typedTurnContext', 'authoritativeDisposition'],
+    ['typed_turn_context', 'validated_disposition'],
+    ['typedTurnContext', 'validatedDisposition'],
     ['typed_turn_context', 'task_outcome'],
     ['typedTurnContext', 'taskOutcome'],
+    ['typed_turn_context', 'task_result'],
+    ['typedTurnContext', 'taskResult'],
     ['typed_turn_context', 'runner_outcome'],
     ['typedTurnContext', 'runnerOutcome'],
-    ['typed_turn_context', 'outcome'],
-    ['typedTurnContext', 'outcome'],
+    ['typed_turn_context', 'runner_result'],
+    ['typedTurnContext', 'runnerResult'],
+    ['typed_turn_context', 'task'],
+    ['typedTurnContext', 'task'],
+    ['typed_turn_context', 'runner'],
+    ['typedTurnContext', 'runner'],
     ['typed_turn_context', 'immutable_goal_state'],
     ['typedTurnContext', 'immutableGoalState'],
     ['typed_turn_context', 'global_goal_state'],
     ['typedTurnContext', 'globalGoalState'],
     ['typed_turn_context', 'goal_state'],
     ['typedTurnContext', 'goalState'],
+    ['typed_turn_context', 'immutable_goal'],
+    ['typedTurnContext', 'immutableGoal'],
+    ['typed_turn_context', 'immutable_goal_context'],
+    ['typedTurnContext', 'immutableGoalContext'],
     ['immutable_goal', 'outcome'],
     ['immutableGoal', 'outcome'],
+    ['immutable_goal', 'state'],
+    ['immutableGoal', 'state'],
+    ['immutable_goal', 'disposition'],
+    ['immutableGoal', 'disposition'],
+    ['immutable_goal', 'validated_disposition'],
+    ['immutableGoal', 'validatedDisposition'],
     ['immutable_goal', 'immutable_goal_state'],
     ['immutableGoal', 'immutableGoalState'],
     ['immutable_goal', 'global_goal_state'],
@@ -322,6 +401,12 @@ const authoritativeTaskOutcome = contextText(
     ['immutableGoal', 'authoritativeDisposition'],
     ['immutable_goal_context', 'outcome'],
     ['immutableGoalContext', 'outcome'],
+    ['immutable_goal_context', 'state'],
+    ['immutableGoalContext', 'state'],
+    ['immutable_goal_context', 'disposition'],
+    ['immutableGoalContext', 'disposition'],
+    ['immutable_goal_context', 'validated_disposition'],
+    ['immutableGoalContext', 'validatedDisposition'],
     ['immutable_goal_context', 'immutable_goal_state'],
     ['immutableGoalContext', 'immutableGoalState'],
     ['immutable_goal_context', 'global_goal_state'],
@@ -342,11 +427,22 @@ const authoritativeTaskOutcome = contextText(
     ['turn', 'authoritativeTaskOutcome'],
     ['turn', 'authoritative_disposition'],
     ['turn', 'authoritativeDisposition'],
+    ['turn', 'validated_disposition'],
+    ['turn', 'validatedDisposition'],
     ['turn', 'task_outcome'],
     ['turn', 'taskOutcome'],
-    ['turn', 'outcome'],
-    ['turn', 'status'],
-    ['turn', 'result'],
+    ['turn', 'task_result'],
+    ['turn', 'taskResult'],
+    ['turn', 'runner_outcome'],
+    ['turn', 'runnerOutcome'],
+    ['turn', 'runner_result'],
+    ['turn', 'runnerResult'],
+    ['turn', 'task'],
+    ['turn', 'runner'],
+    ['turn', 'immutable_goal'],
+    ['turn', 'immutableGoal'],
+    ['turn', 'immutable_goal_context'],
+    ['turn', 'immutableGoalContext'],
     ['turn', 'immutable_goal_state'],
     ['turn', 'immutableGoalState'],
     ['turn', 'global_goal_state'],
@@ -398,6 +494,27 @@ const jsonFences = findJsonControlFrames(text);
 const terminalStatus = selectTerminalStatusFrame(text);
 const extractedStatus = terminalStatus.statusFrame;
 const statusJson = extractedStatus?.body || null;
+
+if (typedContextFailures.length) {
+  emit('reject', ['invalid_typed_turn_context'], {
+    typed_context_failures: typedContextFailures,
+    validation_result: {
+      schema: 'pi.agent_status.validation_result.v1',
+      valid: false,
+      errors: typedContextFailures.map((failure) => ({
+        type: failure.type,
+        loc: [failure.name],
+        msg: 'typed turn context must be a JSON object',
+        ctx: { env: failure.name },
+      })),
+      steering: typedContextFailures.map((failure) => ({
+        code: failure.type,
+        loc: [failure.name],
+        action: 'emit_valid_typed_turn_context_json',
+      })),
+    },
+  });
+}
 
 if (FORMAT_ONLY_RETRY) {
   const finalJson = jsonFences.length ? jsonFences[jsonFences.length - 1] : null;
@@ -469,27 +586,6 @@ if (!statusJson) {
     });
   }
   emit('pass', ['no_status_required_non_mutating_turn']);
-}
-
-if (typedContextFailures.length) {
-  emit('reject', ['invalid_typed_turn_context'], {
-    typed_context_failures: typedContextFailures,
-    validation_result: {
-      schema: 'pi.agent_status.validation_result.v1',
-      valid: false,
-      errors: typedContextFailures.map((failure) => ({
-        type: failure.type,
-        loc: [failure.name],
-        msg: 'typed turn context must be a JSON object',
-        ctx: { env: failure.name },
-      })),
-      steering: typedContextFailures.map((failure) => ({
-        code: failure.type,
-        loc: [failure.name],
-        action: 'emit_valid_typed_turn_context_json',
-      })),
-    },
-  });
 }
 
 const trailingContent = text.slice(extractedStatus.end).trim();
@@ -609,7 +705,6 @@ if ((MUTATING_TURN || FORCE_STATUS || STRICT_STATUS) && operationalAnchorCount(p
     },
   });
 }
-const originalAnswer = String(parsedStatus.answer || '').trim();
 let immutableGoal = null;
 if (immutableGoalContext === true && terminalStates.has(String(verdict.state || ''))) {
   immutableGoal = applyImmutableGoalHeadline(parsedStatus, verdict.state, authoritativeTaskOutcome);
