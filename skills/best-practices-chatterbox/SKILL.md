@@ -228,3 +228,24 @@ Chunked streaming is valid when the product needs low-latency playback, but it b
 - chunk boundaries come from the same `render_chunks` plan used for non-streamed output;
 - programmatic silence is emitted as audio samples, not as a comment in metadata;
 - the final receipt still records the complete `answer_text`, chunk list, reference ID, and analyzer result.
+
+## Pace and tone arc for instructional narration (operator 2026-09-10)
+
+Embry's spoken explanations must be concise, instructive, and plain spoken,
+and SLOW ENOUGH TO FOLLOW. Two controls own this:
+
+- **Pace**: request `voice_delivery.pace` (`--pace` in chatterbox-speak).
+  Technical narration defaults to `slow` (0.85 tempo, ~18% longer via the
+  service's phase-vocoder stretch; duration_seconds scales by 1/tempo).
+  `fast`/`brisk` are for excitement beats, never instruction. The render
+  receipt records the requested pace in `voice_delivery`.
+- **Tone arc across a multi-part answer**: narrate in `calm_precise`,
+  think aloud in `curious_searching`, and close the answer in
+  `memory_confident` — the closer Embry gets to finishing her response to
+  the question, the more confident the tone. Openings may use
+  `neutral_warm`. Emotion tags stay restrained in technical narration
+  (at most one low-arousal tag; never comedy beats in an explanation).
+
+Glance-optimized teleprompter fragments are NOT spoken text: compose or
+author spoken-form prose (direct answer first, source second, one point at
+a time, honest proof boundary) before rendering.

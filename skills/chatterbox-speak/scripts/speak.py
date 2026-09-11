@@ -171,6 +171,7 @@ def speak(
     play: bool = typer.Option(False, help="Play locally via pw-play"),
     analyze: bool = typer.Option(False, help="Run /analyze-chatterbox-emotions on the WAV and embed the result in the receipt"),
     planned_pauses: bool = typer.Option(False, help="Compile spaced ellipses/[pause:*] via best-practices-chatterbox and render exact chunk silence"),
+    pace: str | None = typer.Option(None, help="Speaking pace via service time-stretch: slow|neutral|brisk|fast (slow ~= 0.85 tempo, ~18% longer); recorded in the receipt pace_effect"),
 ) -> None:
     """Render one line and write WAV + receipt."""
     ref = ref_audio or VOICES.get(voice)
@@ -198,6 +199,8 @@ def speak(
     delivery = None
     if effective is not None:
         delivery = {"intensity": round(effective, 3), "emotion_realization": "audible"}
+    if pace is not None:
+        delivery = {**(delivery or {}), "pace": pace}
 
     try:
         req = SpeakRequest(text=text, ref_audio=ref, tone=tone, voice_delivery=delivery,
@@ -269,6 +272,7 @@ def speak(
         "speaking_to": (state.speaker if state else to),
         "session": state.model_dump() if state else None,
         "memory_context": memory_context,
+        "voice_delivery": {"tone": tone or "neutral_warm", **(delivery or {})},
         "request": payload,
         "chatterbox_pause_plan": [c.model_dump() for c in plan.render_chunks] if plan else [],
         "wav": str(wav_copy),

@@ -531,6 +531,7 @@ try:
                 "--context",
                 "live cockpit walkthrough: first question",
                 "--tone", "calm_precise",
+                "--pace", "slow",
             ],
             capture_output=True,
             text=True,

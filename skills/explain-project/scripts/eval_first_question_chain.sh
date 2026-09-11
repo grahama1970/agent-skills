@@ -348,6 +348,7 @@ try:
             "--context",
             "first-question rehearsal: spoken breakpoint walkthrough",
             "--tone", "calm_precise",
+                "--pace", "slow",
         ], cwd=SPEAK.parent)
         if sp.returncode == 0:
             marker = '"receipt": "'
