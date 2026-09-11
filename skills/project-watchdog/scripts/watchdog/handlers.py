@@ -247,8 +247,11 @@ def repair_execution_handlers(creator: str, reviewer: str) -> tuple[str, str]:
     does not need filesystem access.
     """
     lowered = creator.strip().lower()
-    creator_handler = "codex" if lowered.startswith(("gpt-", "codex-", "claude-")) else creator
-    return creator_handler, reviewer
+    if lowered.startswith(("gpt-", "codex-", "claude-")):
+        return "codex", reviewer
+    if lowered == "oc-author":
+        return "opencode.serve", reviewer  # tau#355 named authoring lane
+    return creator, reviewer
 
 
 def repair_immutable_goal(repo: str, issue_number: int) -> str:
@@ -1292,11 +1295,27 @@ def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[
     creator_seat, reviewer_seat = config.repair_seats(project)
     probe_creator, _ = repair_execution_handlers(creator_seat, reviewer_seat)
     if probe_creator == "codex" and (outage := transport_health.active_outage("codex")):
-        resume_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(outage.resume_at))
-        result.update(ok=True, status="SKIPPED", stop_reason="creator_transport_outage",
-                      summary=(f"codex authoring transport outage until {resume_iso}; "
-                               "dispatch skipped without burning a lease or DAG run"))
-        return result
+        # Capability-aware fallback (tau#355): consult seat-routing for an
+        # alternate AUTHORING route. A dispatchable non-codex authoring lane
+        # (opencode.serve oc-author) substitutes the creator so repair can
+        # proceed through the outage; with no eligible route the lane still
+        # parks quietly without burning a lease or DAG run.
+        from . import seat_routing
+        try:
+            alt = seat_routing.resolve("repair_creator", codex_out=True)
+        except seat_routing.SeatRoutingError:
+            alt = {"action": "park"}
+        if alt.get("action") == "dispatch" and alt.get("model"):
+            result["creator_substitution"] = {"from": creator_seat, "to": alt["model"],
+                                              "reason": "codex_transport_outage",
+                                              "route": alt.get("routes", [None])[0]}
+            creator_seat = str(alt["model"])
+        else:
+            resume_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(outage.resume_at))
+            result.update(ok=True, status="SKIPPED", stop_reason="creator_transport_outage",
+                          summary=(f"codex authoring transport outage until {resume_iso}; "
+                                   "dispatch skipped without burning a lease or DAG run"))
+            return result
     # Cron capability preflight (#1644): a missing/stale/failed capability
     # receipt pauses NEW leases quietly (no lease, no DAG, no ops-discord while
     # retryable) and auto-resumes when the next preflight rewrites the receipt.
@@ -1368,7 +1387,7 @@ def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[
     if content.remote_entries(root, current_pin, targets) != content.remote_entries(root, pin, targets):
         raise primary.Refusal("remote target changed while acquiring native lease")
     content.require_unchanged(before, content.snapshot(root, targets, current_pin))
-    creator, reviewer = config.repair_seats(project)
+    creator, reviewer = creator_seat, reviewer_seat  # reuse the outage-resolved seats (substitution intact)
     creator_handler, reviewer_handler = repair_execution_handlers(creator, reviewer)
     result["seats"] = {
         "creator": creator,
@@ -2504,7 +2523,7 @@ def finish_primary_operation(record) -> dict[str, Any]:
         monitor = _json_from_file(receipt_dir / "tau-stream-monitor.json") or {}
         if monitor.get("timed_out") or monitor.get("process_exit_code") not in {None, 0}:
             raise primary.Refusal("retained Ask invocation failed/timed out; no automatic closure")
-    creator, reviewer = config.repair_seats(project)
+    creator, reviewer = creator_seat, reviewer_seat  # reuse the outage-resolved seats (substitution intact)
     creator_handler, reviewer_handler = repair_execution_handlers(creator, reviewer)
     tau_authority = repair_tau_authority(Path(record.ask_run_dir), creator_handler, reviewer_handler)
     if not tau_authority["ok"]:

@@ -236,8 +236,16 @@ def seat_can_run_code(seat: str) -> bool:
 
 
 def seat_can_author_repair(seat: str) -> bool:
-    """A creator must be able to author through the Tau repair workspace route."""
+    """A creator must be able to author through the Tau repair workspace route.
+
+    `oc-author` is the named OpenCode serve authoring lane (tau#355): the ask
+    seam binds transport=opencode.serve + handler=oc-author + workspace with a
+    real worktree lease/admission/release lifecycle, advertising
+    repo_workspace_author. It is a NAMED lane, not a roster-selectable oc-* seat.
+    """
     s = seat.strip().lower()
+    if s == "oc-author":
+        return True
     if s.startswith("gpt-") or s.startswith("codex-"):
         return True
     if s == "claude" or s.startswith("claude-"):

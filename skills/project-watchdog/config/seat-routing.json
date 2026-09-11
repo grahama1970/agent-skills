@@ -5,33 +5,68 @@
     "codex_author": {
       "executor": "codex_cli",
       "model": "codex",
-      "capabilities": ["repo_workspace_author", "review", "chat"]
+      "capabilities": [
+        "repo_workspace_author",
+        "review",
+        "chat"
+      ]
     },
     "glm_review": {
       "executor": "scillm",
       "model": "zai-glm-high",
-      "capabilities": ["review", "chat"]
+      "capabilities": [
+        "review",
+        "chat"
+      ]
     },
     "kimi_review": {
       "executor": "scillm",
       "model": "kimi-for-coding",
-      "capabilities": ["review", "chat"]
+      "capabilities": [
+        "review",
+        "chat"
+      ]
+    },
+    "opencode_author": {
+      "executor": "opencode.serve",
+      "model": "oc-author",
+      "capabilities": [
+        "repo_workspace_author",
+        "review",
+        "chat"
+      ]
     }
   },
   "seat_profiles": {
     "repair_creator": {
-      "requires": ["repo_workspace_author"],
-      "routes": ["codex_author"],
+      "requires": [
+        "repo_workspace_author"
+      ],
+      "routes": [
+        "codex_author",
+        "opencode_author"
+      ],
       "when_unavailable": "park_on_quota"
     },
     "repair_reviewer": {
-      "requires": ["review"],
-      "routes": ["glm_review", "kimi_review", "codex_author"],
+      "requires": [
+        "review"
+      ],
+      "routes": [
+        "glm_review",
+        "kimi_review",
+        "codex_author"
+      ],
       "when_unavailable": "fail_closed"
     },
     "closure_auditor": {
-      "requires": ["review"],
-      "routes": ["glm_review", "kimi_review"],
+      "requires": [
+        "review"
+      ],
+      "routes": [
+        "glm_review",
+        "kimi_review"
+      ],
       "when_unavailable": "fail_closed"
     }
   }

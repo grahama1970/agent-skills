@@ -32,8 +32,9 @@ def main() -> int:
 
     cfg = sr.load()  # live shipped config; raises if invariant violated
     check("live_config_loads", cfg.get("version"), "project_watchdog.seat_routing.v1")
-    check("creator_single_author_route", sr.resolve("repair_creator", cfg)["routes"], ["codex_author"])
-    check("creator_parks_on_codex_out", sr.resolve("repair_creator", cfg, codex_out=True)["action"], "park")
+    check("creator_routes_codex_first", sr.resolve("repair_creator", cfg)["routes"], ["codex_author", "opencode_author"])
+    alt = sr.resolve("repair_creator", cfg, codex_out=True)
+    check("creator_falls_back_to_opencode_when_codex_out", [alt["action"], alt.get("model")], ["dispatch", "oc-author"])
     check("reviewer_non_codex_first", sr.resolve("repair_reviewer", cfg)["routes"][0], "glm_review")
     check("reviewer_drops_codex_when_out",
           "codex_author" in sr.resolve("repair_reviewer", cfg, codex_out=True)["routes"], False)

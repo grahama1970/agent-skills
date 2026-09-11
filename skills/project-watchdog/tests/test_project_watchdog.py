@@ -3076,9 +3076,11 @@ def test_seat_matrix_registry_reports_offending_project():
 def test_seat_routing_live_config_resolves_as_designed():
     from watchdog import seat_routing as sr
     cfg = sr.load()  # raises if the shipped config violates the invariant
-    # creator: authoring-only, no fallback -> parks when codex is out
-    assert sr.resolve("repair_creator", cfg)["routes"] == ["codex_author"]
-    assert sr.resolve("repair_creator", cfg, codex_out=True)["action"] == "park"
+    # creator: codex first; under a codex outage falls back to the opencode.serve
+    # authoring lane (tau#355) instead of parking
+    assert sr.resolve("repair_creator", cfg)["routes"] == ["codex_author", "opencode_author"]
+    alt = sr.resolve("repair_creator", cfg, codex_out=True)
+    assert alt["action"] == "dispatch" and alt["routes"] == ["opencode_author"] and alt["model"] == "oc-author"
     # reviewers/auditors are non-codex-first so review never burns the author lane
     assert sr.resolve("repair_reviewer", cfg)["routes"][0] == "glm_review"
     assert "codex_author" not in sr.resolve("repair_reviewer", cfg, codex_out=True)["routes"]
