@@ -958,6 +958,21 @@ function retryEvidenceSnapshot(candidate: Candidate, check: CheckResult): Array<
   });
 }
 
+function guardContinuingStatus(userText: string): Record<string, unknown> {
+  const firstLine = String(userText || "").split("\n").map((l) => l.trim()).find((l) => l.length > 0) || "";
+  const goal = firstLine.slice(0, 120) || "continue the original task";
+  return {
+    schema: "pi.agent_status.v1",
+    goal,
+    state: "continuing",
+    changed: ["no change: guard-substituted continuing status after prose-only stop"],
+    not_done: [{
+      item: "finish the original task with verified proof, then preflight the final status",
+      next_command: "write the final answer to /tmp/candidate.md and run skills/shame/run.sh preflight /tmp/candidate.md",
+    }],
+  };
+}
+
 function suggestedRetryStatus(candidate: Candidate, check: CheckResult): Record<string, unknown> {
   const status: any = statusFromCandidate(candidate, check) || {};
   const goal = String(status.goal || "continue the original task").trim();
@@ -1052,10 +1067,17 @@ function writeSpiralTicketRequest(candidate: Candidate, check: CheckResult, revi
 }
 
 function retryPrompt(candidate: Candidate, check: CheckResult, reviewPacketPath: string, decision: Record<string, unknown>, taskBudget?: object): string {
+  // Rich packet retained for /shame show + telemetry; it is NOT inlined into
+  // the model-visible retry prompt (single-target contract below).
   const packet = {
     schema: "lazy_report_shame.retry_request.v1",
     format_only: true,
-    allowed_tools: [],
+    // A5 consistency (2026-09-11): the tool_call gate ALLOWS read + preflight
+    // during format repair (A3). Advertising [] here told models tools were
+    // fully blocked, so they composed the retry from memory and failed on
+    // schema details preflight would have caught. Keep this in lockstep with
+    // the formatRepairTurn gate in the tool_call handler.
+    allowed_tools: ["read", "bash: skills/shame/run.sh preflight"],
     max_corrections: 1,
     ...(taskBudget ? { task_budget: taskBudget } : {}),
     candidate_hash: candidate.response_sha256,
@@ -1069,15 +1091,18 @@ function retryPrompt(candidate: Candidate, check: CheckResult, reviewPacketPath:
     suggested_status: suggestedRetryStatus(candidate, check),
     next: rejectionAction(decision),
   };
-  const missingStatus = check.reason_codes.includes("missing_agent_status_json");
+  try {
+    writeFileSync(join(dirname(reviewPacketPath), "retry-packet.json"), JSON.stringify(packet, null, 2) + "\n");
+  } catch { /* best-effort telemetry */ }
+  // Single-target retry (WebGPT rank 4): the correction context must contain
+  // exactly ONE JSON object. Rejection-notice parroting came from competing
+  // JSON attractors; the rich packet stays in the review/telemetry file only.
+  const target = suggestedRetryStatus(candidate, check);
   return `UNLAZY_FORCED_RETRY
-This is a one-shot format correction, not a new question. Do not re-answer the task.
-Reply with exactly one fenced json block and nothing else${missingStatus ? ". Your previous reply had no pi.agent_status.v1 block; do not write a prose 'Status Report'" : ""}.
-Paste packet.suggested_status verbatim unless you can build a stricter pi.agent_status.v1 from proof already cited above.
-Only 'read' and 'bash: skills/shame/run.sh preflight' are permitted; any other tool terminates the turn.
-Never echo lazy_report_shame.* schemas; they are guard-internal receipts.
+One-shot format correction. Do not re-answer the task. Do not call tools.
+Your entire reply must be exactly this fenced json block, byte for byte:
 \`\`\`json
-${JSON.stringify(packet)}
+${JSON.stringify(target, null, 2)}
 \`\`\``;
 }
 
@@ -1459,12 +1484,10 @@ export default function lazyReportShameShameShame(pi: any) {
         let displayReturn: any = undefined;
         if (status && typeof statusState === "string") {
           resetGuardRepairBudget();
-          // Human directive (2026-08-31): agent output is not polluted with JSON.
-          // Validate, act, persist, then strip the model JSON and render status
-          // from the pydantic-validated object.
-          const strippedContent = stripStatusJson(event.message.content);
-          const line = renderStatusLine(status);
-          displayReturn = { message: { ...event.message, content: appendText(strippedContent, line) } };
+          // Representation conditioning (WebGPT review 2026-09-11): the model's
+          // own reply already contains the canonical fenced status JSON. Keep it
+          // in model-visible history verbatim; a prose "Status Report" rewrite
+          // taught imitating models the wrong terminal shape (20/24 failures).
           lastReportState = statusState;
           try { syncBadge(ctx); } catch { /* optional UI */ }
           const compiled = compileStatusCommand(status);
@@ -1483,6 +1506,43 @@ export default function lazyReportShameShameShame(pi: any) {
           return displayReturn;
         }
         return displayReturn;
+      }
+
+      // Guard-owned deterministic repair (WebGPT rank 2): a prose-only stop is
+      // the 20/24 failure class. Instead of burning the model's one retry on
+      // re-authoring what the guard already knows, substitute a safe
+      // `continuing` status built from session state, revalidate it through the
+      // real checker, and keep the canonical fence in history. `done` is never
+      // synthesized; this substitution is the episode's one correction.
+      if (check.decision === "reject"
+        && check.reason_codes.length === 1
+        && check.reason_codes[0] === "missing_agent_status_json"
+        && !budget.current) {
+        const substituted = guardContinuingStatus(currentUserText);
+        const canonicalFence = "```json\n" + JSON.stringify(substituted, null, 2) + "\n```";
+        const recheck = checkReport(`${text}\n\n${canonicalFence}`, forceStatus, mutatingTurn, strictStatus, currentUserText, false);
+        if (recheck.decision === "pass") {
+          recordFailure(ctx, { kind: "guard_substituted_status", goal: substituted.goal,
+            reason_codes: ["missing_agent_status_json"], checker_version: check.checker_version,
+            candidate_hash: sha256(text) });
+          resetGuardRepairBudget();
+          lastReportState = "continuing";
+          try { syncBadge(ctx); } catch { /* optional UI */ }
+          const compiled = compileStatusCommand(substituted);
+          if (compiled?.command) {
+            const claim = claimGuardFollowUp({
+              guard: "shame-status-compiler",
+              messageId: String(event.message.id || event.id || "unknown"),
+              assistantText: text,
+              userText: currentUserText,
+              reason: compiled.reason || "agent_status_continuing",
+              continuation: true,
+              message: event.message,
+            });
+            if (claim.ok) pendingFollowUp = continuationPrompt("continuing", compiled);
+          }
+          return { message: { ...event.message, content: appendText(event.message.content, canonicalFence) } };
+        }
       }
 
       const turnId = lastCandidate.turn_id;
