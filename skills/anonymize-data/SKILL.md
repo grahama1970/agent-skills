@@ -133,3 +133,50 @@ JSON/SQL scalar is passed through unchanged, stringify it canonically
 stringified form. Fixtures must include every PII class in every JSON
 scalar type. A phone number stored as an integer is the same phone
 number. See $best-practices-skills "Value representation matrix".
+
+## Hardening lessons (do not relearn these the hard way)
+
+The trial was disqualified because a phone stored as a JSON/SQLite integer
+passed the string-only matcher. The root cause was a process error: the
+acceptance check was authored from what the code did, not derived from the
+delivered spec. These rules exist so that class of miss cannot recur.
+
+1. **Derive the check from the spec, not the code.** `policy.json` lists the
+   exact sensitive values. The correct acceptance check is "none of those
+   values appears in the decoded output, in any representation" — read the
+   values from the policy file, never a hand-authored list. Prove the check
+   depends on the spec with a dependency probe (flip a policy value → the
+   result must flip). Reference implementation: the project's
+   `scripts/spec_derived_check.py` wired into `scripts/verify.sh`.
+
+2. **The independent verifier must share no assumption with the transform.**
+   The original verifier had the same string-only blind spot as the producer,
+   so nothing failed closed. The verification oracle must be
+   representation-aware and independent: parse JSON (decode `\uXXXX`), expand
+   numeric scalars to integer/decimal forms, NFC/NFD-normalize both sides,
+   scan SQLite table+view cells AND `sqlite_master` DDL AND every header
+   integer, and scan the whole released boundary including `report.json` — not
+   just `corpus/`.
+
+3. **The full representation class is a checklist, not a single bug.** Each of
+   these can carry a sensitive value past a naive matcher; the project fixes
+   and retains a guard for every one: typed numeric scalars (int/float,
+   scientific notation), SQLite BLOB (fail-closed), Unicode NFC/NFD, view
+   reconstruction, freelist residue, hostile-DB schema (expression/partial
+   indexes, non-deterministic views, computed DEFAULTs), schema-DDL literals,
+   and persistent header integers. See the project's
+   `docs/SECURITY_REMEDIATION.md` for the full table.
+
+4. **Prove it through the real Docker path, deterministically.** Verification
+   must be a committed script that builds the image, runs the brief's exact
+   commands, and reads back the released bytes with hard PASS/FAIL exits — not
+   agent prose. Reference: `security/docker_brief_contract.py` (build + both
+   brief commands + representation-aware leak scan + input precondition) and
+   `security/docker_hardening_matrix.py` (adversarial holes through
+   `docker run`). Record the git commit and built image id.
+
+5. **Scope honestly.** Deterministic public-namespace pseudonyms disclose
+   equality/frequency and offer no external-linkage resistance; the run report
+   states this in `key_mode` and `does_not_establish`. A policy value equal to
+   a mandatory SQLite format constant is a degenerate input, not real PII; the
+   pipeline fails closed on it and that residue is documented as scoped.
