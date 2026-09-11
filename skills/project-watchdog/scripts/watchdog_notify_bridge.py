@@ -698,10 +698,14 @@ def _heartbeat_payload() -> dict[str, Any]:
         model = _node_models(run_dir).get(node, "?")
         issue = _dispatched_issue(run_dir)
         monitor_age_s = time.time() - monitor_path.stat().st_mtime
-        if monitor_age_s > 900:
-            state = "STALE_PROGRESS"
-        elif m.get("process_running"):
-            state = "LIVE"
+        # STALE_PROGRESS means a run that CLAIMS to be running has not progressed
+        # in 15 min -- a genuine stall. A finished/dead run (process_running=False)
+        # whose monitor file is merely old is NOT stalled progress; it reports its
+        # terminal status. Without this ordering a dead BLOCKED run re-emitted
+        # STALE_PROGRESS every bridge cycle forever while the fleet was parked
+        # (e.g. #1500 after the codex outage killed its run).
+        if m.get("process_running"):
+            state = "STALE_PROGRESS" if monitor_age_s > 900 else "LIVE"
         else:
             state = m.get("current_status") or "NO_ACTIVE_PROCESS"
         return {

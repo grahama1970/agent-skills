@@ -175,3 +175,25 @@ def test_non_ticket_lifecycle_subject_is_human_readable():
     assert b._subject_target(state_ev) == "lifecycle:runtime-state-change (no ticket)"
     assert "UNKNOWN(" not in b._subject_target(install_ev)
     assert b._subject_target(ticket_ev) == "grahama1970/tau#350"
+
+
+def test_dead_run_reports_terminal_status_not_stale_progress(tmp_path, monkeypatch):
+    """A finished run (process_running=False) with an old monitor must report its
+    terminal status, not STALE_PROGRESS forever (the #1500 post-outage flood)."""
+    import json, time, sys, pathlib
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "scripts"))
+    import watchdog_notify_bridge as b
+    run = tmp_path / "project-watchdog-X"; run.mkdir()
+    mon = run / "tau-stream-monitor.json"
+    mon.write_text(json.dumps({"process_running": False, "current_status": "BLOCKED",
+                               "latest_event": {}, "elapsed_seconds": 1}))
+    old = time.time() - 4000
+    os_utime = __import__("os").utime; os_utime(mon, (old, old))  # make it stale
+    monkeypatch.setattr(b, "RECEIPTS", tmp_path)
+    hb = b._heartbeat_payload()
+    assert hb["state"] == "BLOCKED", hb
+    # a live-but-stalled run still flags STALE_PROGRESS
+    mon.write_text(json.dumps({"process_running": True, "current_status": "RUNNING",
+                               "latest_event": {}, "elapsed_seconds": 1}))
+    os_utime(mon, (old, old))
+    assert b._heartbeat_payload()["state"] == "STALE_PROGRESS"
