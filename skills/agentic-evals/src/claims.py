@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from domain_profiles import validate_claim_semantics
 from evidence import (
     DETERMINISTIC,
     EVIDENCE_CLASSES,
@@ -79,6 +80,7 @@ def validate_claims(manifest: dict[str, Any]) -> list[str]:
                 f"claim {cid!r} declares no required evidence classes; a claim that "
                 "requires nothing cannot gate anything"
             )
+    problems.extend(validate_claim_semantics(manifest))
     return problems
 
 
