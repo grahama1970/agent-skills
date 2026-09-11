@@ -3109,3 +3109,11 @@ def test_seat_routing_rejects_capability_violating_fallback(tmp_path):
         assert False, "expected SeatRoutingError for author fallback to a review-only route"
     except sr.SeatRoutingError as exc:
         assert "cannot do the seat's job" in str(exc) and "repo_workspace_author" in str(exc)
+
+
+def test_substitute_fallback_derives_from_seat_routing_config(monkeypatch):
+    """The non-authoring fallback target comes from the seat-routing config's
+    non-codex-first review route, not a hardcoded constant, when no env override."""
+    from watchdog import transport_health as th
+    monkeypatch.delenv("PROJECT_WATCHDOG_CODEX_SEAT_FALLBACK", raising=False)
+    assert th._config_review_fallback() == "zai-glm-high"  # glm_review, the first non-codex route

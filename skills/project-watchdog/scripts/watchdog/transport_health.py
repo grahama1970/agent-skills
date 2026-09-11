@@ -128,17 +128,38 @@ def park_on_quota(transport: str, failure_text: str) -> dict[str, Any]:
             "alert_dedup_key": f"{transport}:{QUOTA_CODE}"}
 
 
+def _config_review_fallback() -> str:
+    """Non-codex-first review route model from seat-routing config; env override wins.
+
+    Single source of truth: the substitution target is the first eligible
+    (non-codex) route of the repair_reviewer profile, so review work never falls
+    back onto the scarce authoring transport. Falls back to the env constant if
+    the config is unavailable.
+    """
+    if os.environ.get("PROJECT_WATCHDOG_CODEX_SEAT_FALLBACK"):
+        return CODEX_SEAT_FALLBACK
+    try:
+        from . import seat_routing
+        resolved = seat_routing.resolve("repair_reviewer", codex_out=True)
+        if resolved.get("action") == "dispatch" and resolved.get("model"):
+            return str(resolved["model"])
+    except Exception:  # noqa: BLE001 - config problems fall back to the constant
+        pass
+    return CODEX_SEAT_FALLBACK
+
+
 def substitute_dead_codex_seats(seats: list[str]) -> tuple[list[str], list[dict[str, Any]]]:
     """Swap non-authoring gpt-*/codex-* seats onto the fallback while codex is out."""
     if not active_outage("codex"):
         return seats, []
+    fallback = _config_review_fallback()
     substitutions: list[dict[str, Any]] = []
     replaced: list[str] = []
     for seat in seats:
         s = seat.strip().lower()
         if s.startswith(("gpt-", "codex-")):
-            replaced.append(CODEX_SEAT_FALLBACK)
-            substitutions.append({"from": seat, "to": CODEX_SEAT_FALLBACK, "reason": "codex_transport_outage"})
+            replaced.append(fallback)
+            substitutions.append({"from": seat, "to": fallback, "reason": "codex_transport_outage"})
         else:
             replaced.append(seat)
     # Two identical seats after substitution would break panel independence.
