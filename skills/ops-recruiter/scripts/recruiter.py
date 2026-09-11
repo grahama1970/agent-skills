@@ -115,7 +115,7 @@ def build(
     out.mkdir(parents=True, exist_ok=True)
     relationship, prior_md, recall_note = _recall_thread(recruiter, thread_id)
     tone = {
-        "existing": "You are continuing an EXISTING relationship. Do NOT reintroduce Graham or write first-contact framing. Reference the prior thread; be collaborative.",
+        "existing": "You are continuing an EXISTING relationship; Graham has ALREADY connected with this recruiter. Do NOT reintroduce Graham, write first-contact framing, or offer/agree to connect (no 'glad to connect', 'open to connecting', etc.). Reference the prior thread and move the conversation forward; be collaborative.",
         "new": "No prior correspondence found; first-contact framing is appropriate.",
         "unknown": "Prior-correspondence lookup was unavailable. Do NOT assert this is a first contact; keep the opening relationship-neutral.",
     }[relationship]
@@ -142,22 +142,44 @@ def build(
         "cd skills/ask && ./run.sh webkimi --browser-tab-lifecycle fresh-keep --attach-file <webgpt-draft> "
         "'Humanize this draft for clarity and non-templated prose. Do not add any new factual claim.'")
     steps.append(
-        f"./run.sh gate --draft <webkimi-final> --claims {resume}   # fail-closed claim-bind check before use")
+        f"./run.sh gate --draft <webkimi-final> --claims {resume} --relationship {relationship}   # fail-closed claim-bind + stale-connect-offer check before use")
     print(json.dumps({"schema": "ops_recruiter.build.v1", "packet": str(packet),
                       "relationship": relationship, "recall_note": recall_note, "ask_chain": steps}, indent=2))
 
 
+# Connection-offer phrases: fine on a first contact, wrong on an EXISTING thread
+# (Graham already connected). Kept minimal and case-insensitive.
+CONNECT_OFFER_PHRASES = [
+    "glad to connect", "happy to connect", "open to connecting", "let's connect",
+    "lets connect", "like to connect", "love to connect", "we connect",
+    "connect and learn more", "nice to connect", "great to connect",
+]
+
+
 @app.command()
 def gate(draft: Path = typer.Option(..., "--draft", exists=True),
-         claims: Path = typer.Option(..., "--claims", exists=True)):
+         claims: Path = typer.Option(..., "--claims", exists=True),
+         relationship: str = typer.Option("unknown", "--relationship",
+             help="existing|new|unknown; 'existing' forbids re-offering to connect")):
     """Fail-closed claim-bind check: numbers/credentials in the draft must be backed by the ledger.
 
     Heuristic v1: flags numeric metrics and configured fact-keywords present in the
     draft but absent from the ledger. Not LLM claim-binding proof.
     ponytail: heuristic token gate; add LLM claim-binding if false positives/negatives bite.
+
+    With --relationship existing, also fail closed on connection-offer language: on an
+    already-connected thread a draft must not re-offer to connect (the fuckery agentic-evals
+    exists to catch).
     """
     ledger = claims.read_text().lower()
     text = draft.read_text()
+    if relationship == "existing":
+        low = text.lower()
+        offered = [p for p in CONNECT_OFFER_PHRASES if p in low]
+        if offered:
+            _fail("ops_recruiter_stale_connect_offer",
+                  f"existing thread but draft re-offers to connect: {offered}",
+                  "rewrite the opening to continue the existing thread (no connect offer), then rerun gate")
     unbacked = []
     # Numbers (metrics, dates, counts) are the top overclaim risk.
     for tok in set(re.findall(r"\b\d[\d,\.]*[kKmM%+]?\b", text)):

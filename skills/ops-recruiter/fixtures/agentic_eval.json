@@ -1,92 +1,194 @@
 {
-  "version": 2,
-  "skill": "ops-recruiter",
-  "trials": 2,
-  "proof_scope": "The claim-bind gate is fail-closed: it PASSES a draft whose numeric facts are all present in the approved claim ledger, and REJECTS (non-zero, with an ops_recruiter_claim_unbacked triage-shaped failure) a draft asserting a numeric metric absent from the ledger. The status contract exposes email_send and linkedin_automation as PERMANENTLY_FORBIDDEN and routes drafting/humanizing through $ask (COMPOSED_VIA_ASK), not a coding agent. Run via the real skill entrypoint.",
-  "claims": {
-    "proves": "ops-recruiter gate rejects an unbacked fabricated metric and accepts a ledger-backed draft; status declares no-send and web*-composed writing boundaries",
-    "does_not_prove": "live webgpt/webkimi draft quality, live /gmail or ops-linkedin ingestion, or Memory /store against a running daemon"
+ "version": 2,
+ "skill": "ops-recruiter",
+ "trials": 2,
+ "proof_scope": "The claim-bind gate is fail-closed: it PASSES a draft whose numeric facts are all present in the approved claim ledger, and REJECTS (non-zero, with an ops_recruiter_claim_unbacked triage-shaped failure) a draft asserting a numeric metric absent from the ledger. The status contract exposes email_send and linkedin_automation as PERMANENTLY_FORBIDDEN and routes drafting/humanizing through $ask (COMPOSED_VIA_ASK), not a coding agent. Run via the real skill entrypoint.",
+ "claims": {
+  "proves": "ops-recruiter gate rejects an unbacked fabricated metric and accepts a ledger-backed draft; status declares no-send and web*-composed writing boundaries",
+  "does_not_prove": "live webgpt/webkimi draft quality, live /gmail or ops-linkedin ingestion, or Memory /store against a running daemon"
+ },
+ "capability_claims": [
+  {
+   "id": "ops_recruiter.claim_bind_gate",
+   "description": "Fail-closed claim-bind check refuses draft facts absent from the approved ledger.",
+   "criticality": "critical",
+   "evidence_required": {
+    "deterministic": true
+   },
+   "claim_semantics": "protocol"
   },
-  "capability_claims": [
-    {
-      "id": "ops_recruiter.claim_bind_gate",
-      "description": "Fail-closed claim-bind check refuses draft facts absent from the approved ledger.",
-      "criticality": "critical",
-      "evidence_required": {"deterministic": true}
-    },
-    {
-      "id": "ops_recruiter.no_send_boundary",
-      "description": "Never sends; drafting is composed via $ask web* models, not a coding agent.",
-      "criticality": "critical",
-      "evidence_required": {"deterministic": true}
-    },
-    {
-      "id": "ops_recruiter.thread_context_e2e",
-      "description": "Stored recruiter correspondence is recalled so build marks an existing relationship and never writes first-contact for a known thread.",
-      "criticality": "critical",
-      "evidence_required": {"live_e2e": true}
-    },
-    {
-      "id": "ops_recruiter.response_produced_e2e",
-      "description": "The John reply is actually produced through the live webgpt->webkimi chain and the produced draft passes the claim-bind gate (capability, not wiring).",
-      "criticality": "critical",
-      "evidence_required": {"live_e2e": true}
-    }
-  ],
-  "cases": [
-    {
-      "name": "gate-rejects-unbacked-and-status-boundaries",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": ["ops_recruiter.claim_bind_gate", "ops_recruiter.no_send_boundary"],
-      "timeout_seconds": 120,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && ./run.sh status --json | grep -q '\"email_send\": \"PERMANENTLY_FORBIDDEN\"' && ./run.sh status --json | grep -q COMPOSED_VIA_ASK && ./sanity.sh"
-      ],
-      "expected": {"exit_code": 0, "stdout_contains": ["SANITY: PASS"]}
-    },
-    {
-      "name": "e2e-real-recruiter-thread-context",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "live_e2e",
-      "supports_claims": ["ops_recruiter.thread_context_e2e"],
-      "timeout_seconds": 180,
-      "command": ["bash", "-c", "cd .. && bash scripts/e2e_recruiter.sh"],
-      "blocked_when_stdout_contains": ["BLOCKED_EXTERNAL"],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": ["E2E PASS: John response pipeline"],
-        "artifacts": [
-          {"path": "../artifacts/e2e-result.json", "json_pointer": "/relationship", "equals": "existing"},
-          {"path": "../artifacts/e2e-result.json", "json_pointer": "/gate_rejected", "equals": true},
-          {"path": "../artifacts/e2e-result.json", "json_pointer": "/research_seeded", "equals": true},
-          {"path": "../artifacts/e2e-result.json", "json_pointer": "/response_chain_wired", "equals": true},
-          {"path": "../artifacts/e2e-result.json", "json_pointer": "/thread_id", "equals": "john-davis-teksystems-amex"}
-        ]
-      }
-    },
-    {
-      "name": "e2e-produce-john-reply-live",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "live_e2e",
-      "supports_claims": ["ops_recruiter.response_produced_e2e"],
-      "timeout_seconds": 1500,
-      "command": ["bash", "-c", "cd .. && bash scripts/e2e_response_live.sh"],
-      "blocked_when_stdout_contains": ["BLOCKED_EXTERNAL"],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": ["E2E PASS: produced John reply via webgpt->webkimi and gate PASSED"],
-        "artifacts": [
-          {"path": "../artifacts/e2e-live-result.json", "json_pointer": "/gate_pass", "equals": true},
-          {"path": "../artifacts/e2e-live-result.json", "json_pointer": "/webkimi_produced", "equals": true},
-          {"path": "../artifacts/e2e-live-result.json", "json_pointer": "/thread_id", "equals": "john-davis-teksystems-amex"}
-        ]
-      }
-    }
-  ]
+  {
+   "id": "ops_recruiter.no_send_boundary",
+   "description": "Never sends; drafting is composed via $ask web* models, not a coding agent.",
+   "criticality": "critical",
+   "evidence_required": {
+    "deterministic": true
+   },
+   "claim_semantics": "protocol"
+  },
+  {
+   "id": "ops_recruiter.thread_context_e2e",
+   "description": "Stored recruiter correspondence is recalled so build marks an existing relationship and never writes first-contact for a known thread.",
+   "criticality": "critical",
+   "evidence_required": {
+    "live_e2e": true
+   },
+   "claim_semantics": "control_flow"
+  },
+  {
+   "id": "ops_recruiter.response_produced_e2e",
+   "description": "The John reply is actually produced through the live webgpt->webkimi chain and the produced draft passes the claim-bind gate (capability, not wiring).",
+   "criticality": "critical",
+   "evidence_required": {
+    "live_e2e": true
+   },
+   "claim_semantics": "protocol"
+  },
+  {
+   "id": "ops_recruiter.existing_thread_no_reconnect",
+   "description": "On an existing (already-connected) thread, gate fails closed on connection-offer language so no reply re-offers to connect.",
+   "criticality": "critical",
+   "claim_semantics": "protocol",
+   "evidence_required": {
+    "deterministic": true
+   }
+  }
+ ],
+ "cases": [
+  {
+   "name": "gate-rejects-unbacked-and-status-boundaries",
+   "type": "adversarial",
+   "real_world": true,
+   "evidence_class": "deterministic",
+   "supports_claims": [
+    "ops_recruiter.claim_bind_gate",
+    "ops_recruiter.no_send_boundary"
+   ],
+   "timeout_seconds": 120,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && ./run.sh status --json | grep -q '\"email_send\": \"PERMANENTLY_FORBIDDEN\"' && ./run.sh status --json | grep -q COMPOSED_VIA_ASK && ./sanity.sh"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "SANITY: PASS"
+    ]
+   }
+  },
+  {
+   "name": "e2e-real-recruiter-thread-context",
+   "type": "positive",
+   "real_world": true,
+   "evidence_class": "live_e2e",
+   "supports_claims": [
+    "ops_recruiter.thread_context_e2e"
+   ],
+   "timeout_seconds": 180,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && bash scripts/e2e_recruiter.sh"
+   ],
+   "blocked_when_stdout_contains": [
+    "BLOCKED_EXTERNAL"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "E2E PASS: John response pipeline"
+    ],
+    "artifacts": [
+     {
+      "path": "../artifacts/e2e-result.json",
+      "json_pointer": "/relationship",
+      "equals": "existing"
+     },
+     {
+      "path": "../artifacts/e2e-result.json",
+      "json_pointer": "/gate_rejected",
+      "equals": true
+     },
+     {
+      "path": "../artifacts/e2e-result.json",
+      "json_pointer": "/research_seeded",
+      "equals": true
+     },
+     {
+      "path": "../artifacts/e2e-result.json",
+      "json_pointer": "/response_chain_wired",
+      "equals": true
+     },
+     {
+      "path": "../artifacts/e2e-result.json",
+      "json_pointer": "/thread_id",
+      "equals": "john-davis-teksystems-amex"
+     }
+    ]
+   }
+  },
+  {
+   "name": "e2e-produce-john-reply-live",
+   "type": "positive",
+   "real_world": true,
+   "evidence_class": "live_e2e",
+   "supports_claims": [
+    "ops_recruiter.response_produced_e2e"
+   ],
+   "timeout_seconds": 1500,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && bash scripts/e2e_response_live.sh"
+   ],
+   "blocked_when_stdout_contains": [
+    "BLOCKED_EXTERNAL"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "E2E PASS: produced John reply via webgpt->webkimi and gate PASSED"
+    ],
+    "artifacts": [
+     {
+      "path": "../artifacts/e2e-live-result.json",
+      "json_pointer": "/gate_pass",
+      "equals": true
+     },
+     {
+      "path": "../artifacts/e2e-live-result.json",
+      "json_pointer": "/webkimi_produced",
+      "equals": true
+     },
+     {
+      "path": "../artifacts/e2e-live-result.json",
+      "json_pointer": "/thread_id",
+      "equals": "john-davis-teksystems-amex"
+     }
+    ]
+   }
+  },
+  {
+   "name": "gate-existing-thread-rejects-stale-connect-offer",
+   "type": "adversarial",
+   "real_world": true,
+   "evidence_class": "deterministic",
+   "supports_claims": [
+    "ops_recruiter.existing_thread_no_reconnect"
+   ],
+   "timeout_seconds": 120,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && printf 'production agent systems, LLM infrastructure, regulated AI environments' > /tmp/opsrec_ledger.txt && printf 'Hi John \u2014 thanks for following up. I would be glad to connect and learn more about the role.' > /tmp/opsrec_stale.md && ! ./run.sh gate --draft /tmp/opsrec_stale.md --claims /tmp/opsrec_ledger.txt --relationship existing"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "ops_recruiter_stale_connect_offer"
+    ]
+   }
+  }
+ ]
 }
