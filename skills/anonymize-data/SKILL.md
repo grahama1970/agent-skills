@@ -124,3 +124,12 @@ release, anonymity guarantee, confidence probability, or human authorization.
 `./sanity.sh` runs real positive, negative and adversarial CLI checks. The retained
 `fixtures/agentic_eval.json` repeats them and requires artifact readback. Prior
 trial qualification does not automatically qualify these post-trial extensions.
+
+## Representation rule (operator 2026-09-11)
+
+PII must be matched against the **value**, not the string: before any
+JSON/SQL scalar is passed through unchanged, stringify it canonically
+(phone-shaped numbers in E.164 form) and run the policy match on the
+stringified form. Fixtures must include every PII class in every JSON
+scalar type. A phone number stored as an integer is the same phone
+number. See $best-practices-skills "Value representation matrix".

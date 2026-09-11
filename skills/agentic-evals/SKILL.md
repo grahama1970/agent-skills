@@ -108,6 +108,43 @@ an unmet required `live_e2e` slot cannot reach `READY`. A live case supporting
 more than one claim must carry independent per-claim artifacts, else it counts
 for none of them. `report["capability_readiness"]` holds the per-claim breakdown.
 
+
+## Invariant-derived claims (never stub an answer) — operator 2026-09-11
+
+The oai-trial was lost to one omission: the requirement "no PII reaches
+the output" was silently narrowed to "no PII *strings* reach the output."
+Every eval, verifier, and qualification run proved the narrowed claim
+green while integer-typed phone numbers passed through untouched. The
+client read the invariant at domain scope; we proved it at mechanism
+scope. RULES:
+
+1. **Claims are derived from the domain invariant, not from what the code
+   already does.** Before declaring `capability_claims`, write the
+   invariant in the client's words ("no X reaches the output in ANY
+   representation"), then declare that — verbatim — as the critical
+   claim. A claim that describes current behavior is a stub.
+2. **Representation matrix is mandatory for value-bearing claims.** Any
+   claim about data values (PII, money, identifiers, secrets) must
+   enumerate the representations the input format admits — JSON
+   string/int/float/scientific notation, CSV quoting, SQL types — and
+   carry at least one adversarial case per representation, each capable
+   of failing. A value-claim without a representation matrix cannot be
+   PROVEN.
+3. **A coverage seam named `value-representation` (criticality: critical)
+   is required for any pipeline that transforms, filters, or redacts
+   data values.** The audit must show a capable guard at that seam.
+4. **Independent checkers must not share the producer's data generator.**
+   The verifier's fixtures must include representations the transform's
+   own fixtures do not, or the independence is nominal.
+5. When a representation gap ships, record it in `fixtures/regressions.json`
+   (incident → retained guard) and in the `value-representation` seam —
+   the same class of miss must be detectable forever after.
+
+The anti-slop contract rejects self-serving *plumbing*; these rules
+reject self-serving *assumptions* — the suite that is honest, adversarial,
+multi-trial, and still blind because every fixture shares one invisible
+precondition about the shape of the data.
+
 ## Real end-to-end evidence contract (#1446)
 
 `evidence_class` is not inferred from a command containing `run.sh` or `curl`.

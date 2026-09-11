@@ -1270,3 +1270,23 @@ fi
 | memory | **Implemented** | `~/.pi/skills/memory/scripts/assess_usage.py` |
 | fetcher | Planned | — |
 | embedding | Planned | — |
+
+## Value representation matrix (operator 2026-09-11)
+
+Any skill that transforms, filters, matches, or redacts **data values**
+(PII, money, identifiers, secrets) MUST, before its evals are declared
+READY:
+
+1. Enumerate every representation the input format admits for those
+   values (JSON: string, int, float, scientific notation, bool-shaped
+   numbers; CSV: quoted/unquoted; SQL: TEXT/INTEGER/REAL).
+2. Carry at least one adversarial fixture per representation per PII
+   class, asserting the value does not reach the output in that
+   representation.
+3. Ask the derivation question at spec review: "what shapes can this
+   value take in the client's actual data?" — not "what shapes does our
+   code handle?"
+
+Lesson origin: the oai-trial client stored phone numbers as JSON
+integers; the matcher was string-typed end to end; every layer of
+evidence shared the string assumption. The submission was disqualified.
