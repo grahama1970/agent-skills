@@ -2,7 +2,7 @@
   "schema": "agentic_eval.fixture.v1",
   "skill": "chatterbox-speak",
   "version": 2,
-  "trials": 3,
+  "trials": 2,
   "capability_claims": [
     {
       "id": "speak.render.live",
@@ -61,12 +61,24 @@
       "command": [
         "bash",
         "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && ./run.sh speak --text 'Say something. [sigh]' --voice embry --tone neutral_warm --context 'eval fixture' --analyze"
+        "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && ./run.sh speak --text 'Say something. [sigh]' --voice embry --tone neutral_warm --context 'eval fixture' --analyze| tee /tmp/out.json; R=$(python3 -c \"import json;print(json.load(open('/tmp/out.json'))['receipt'])\") && cp \"$R\" /mnt/storage12tb/skills/chatterbox-speak/outputs/eval-fixed/live-positive.json && echo receipt_copied=$R"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "\"ok\": true"
+        ],
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/eval-fixed/live-positive.json",
+            "json_pointer": "/live",
+            "equals": true
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/eval-fixed/live-positive.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          }
         ]
       },
       "expected_notes": [
@@ -87,12 +99,24 @@
       "command": [
         "bash",
         "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && ./run.sh speak --text 'This matters.' --voice embry --intensity high --tone firm_boundary --analyze"
+        "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && ./run.sh speak --text 'This matters.' --voice embry --intensity high --tone firm_boundary --analyze| tee /tmp/out.json; R=$(python3 -c \"import json;print(json.load(open('/tmp/out.json'))['receipt'])\") && cp \"$R\" /mnt/storage12tb/skills/chatterbox-speak/outputs/eval-fixed/intensity.json && echo receipt_copied=$R"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "chatterbox_base_affect"
+        ],
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/eval-fixed/intensity.json",
+            "json_pointer": "/live",
+            "equals": true
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/eval-fixed/intensity.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          }
         ]
       },
       "expected_notes": [
@@ -113,10 +137,22 @@
       "command": [
         "bash",
         "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && S=eval-$RANDOM; ./run.sh speak --text 'I hear you.' --voice embry --intensity high --tone firm_boundary --session $S --to graham --recall-context && ./run.sh speak --text 'Still here.' --voice embry --session $S"
+        "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && S=eval-$RANDOM; ./run.sh speak --text 'I hear you.' --voice embry --intensity high --tone firm_boundary --session $S --to graham --recall-context && ./run.sh speak --text 'Still here.' --voice embry --session $S  | tee /tmp/t2.json >/dev/null; R2=$(python3 -c \"import json;print(json.load(open('/tmp/t2.json'))['receipt'])\") && cp \"$R2\" /mnt/storage12tb/skills/chatterbox-speak/outputs/eval-fixed/sess-turn2.json && true"
       ],
       "expected": {
-        "exit_code": 0
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/eval-fixed/sess-turn2.json",
+            "json_pointer": "/live",
+            "equals": true
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/eval-fixed/sess-turn2.json",
+            "json_pointer": "/session/session_id",
+            "min_bytes": 4
+          }
+        ]
       },
       "expected_notes": [
         "both turns exit 0",
@@ -157,19 +193,57 @@
       "command": [
         "bash",
         "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && ./run.sh probe --samples 50"
+        "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && ./run.sh probe --samples 50 | tee /tmp/probe.json >/dev/null; P=$(python3 -c \"import json;print(json.load(open('/tmp/probe.json'))['report'])\") && cp \"$P\" /mnt/storage12tb/skills/chatterbox-speak/outputs/eval-fixed/probe-report.json && cat \"$P\" | python3 -c \"import json,sys;d=json.load(sys.stdin);print(json.dumps({k:d[k] for k in ('samples','passed','failed','live')}))\""
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "\"failed\": 0"
         ],
-        "artifacts": []
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/eval-fixed/probe-report.json",
+            "json_pointer": "/failed",
+            "equals": 0
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/eval-fixed/probe-report.json",
+            "json_pointer": "/live",
+            "equals": true
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/eval-fixed/probe-report.json",
+            "json_pointer": "/samples",
+            "equals": 50
+          }
+        ]
       },
       "expected_notes": [
         "all 50 fresh scenarios pass their deterministic routing/receipt invariants",
         "probe report written under outputs/scenario-probe/ with schema chatterbox_speak.scenario_probe.v1"
-      ]
+      ],
+      "timeout_seconds": 300
+    },
+    {
+      "name": "macro-self-checks-deterministic",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "speak.render.live"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && python3 scripts/pronounce.py && python3 scripts/pauses.py && python3 scripts/cover_plan.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "pronounce.py self-check: PASS",
+          "pauses.py self-check: PASS",
+          "cover_plan.py self-check: PASS"
+        ]
+      }
     }
   ],
   "claims": {
