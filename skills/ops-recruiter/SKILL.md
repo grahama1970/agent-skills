@@ -49,11 +49,21 @@ are `$ask` (webgpt then webkimi); `run.sh build` emits the exact preflighted
 
 ## Load-bearing contract (this is the skill, not the two model calls)
 
-- **Claim-bound, never fact-minting.** The fact ledger is the approved
-  `career_profile` claim snapshot or `RESUME.md`. webgpt/webkimi may reword,
-  order, tighten, and choose emphasis; they may not invent employers, titles,
-  dates, metrics, clearances, or a capability claim the ledger does not back.
-  `gate` fails closed if the draft asserts a fact absent from the ledger.
+- **Claim-bound, never fact-minting — two-tier, independently reviewed.** The
+  fact ledger is the approved `career_profile` claim snapshot or `RESUME.md`.
+  webgpt/webkimi may reword, order, tighten, and choose emphasis; they may not
+  invent employers, titles, dates, metrics, clearances, or a capability claim the
+  ledger does not back. Two gates, in order:
+  - **T0 deterministic (`run.sh gate`)** — numeric/fact-token floor; fails closed
+    on any metric/date absent from the ledger. Cheap, automated, in the e2e.
+  - **T1 semantic claim-bind — the PROJECT AGENT is the reviewer of record.** The
+    creator (webgpt) and humanizer (webkimi) never certify their own draft. The
+    project agent reads the produced draft against the ledger and issues a
+    per-claim verdict (each factual sentence traces to a claim, or the draft is
+    rejected), fail-closed, before the draft is handed to the human to send. This
+    is the same boundary as everywhere else: a model seat's PASS is only
+    evidence; the project agent verifies against local evidence before acceptance.
+  A self-certifying model seat is not a substitute for the project-agent review.
 - **Relationship-aware, never re-introduces.** `build` recalls prior
   `recruiter_correspondence` for the recruiter/thread and sets a relationship
   flag (`existing`/`new`/`unknown`). An existing thread must not be written as
