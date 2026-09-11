@@ -95,7 +95,7 @@ Read `references/linkedin-policy.md` before proposing any expansion of this boun
 | `explore` | Manual search query and review plan | Run the search and inspect results |
 | `publish` | Text post or image-post caption and attachment checklist | Create, preview, and publish the post |
 | `interact` | Comment, connection note, or one-to-one message draft | Confirm context and submit one action |
-| `lead-gen` | Public-web research plan, individually reviewed prospect criteria, and authorized read-only contact graph capture plan | Inspect selected profiles and decide on outreach |
+| `lead-gen` | Public-web research plan, individually reviewed prospect criteria, authorized read-only contact graph capture plan, and authorized read-only recruiter/company-page research (a `$surf` headed tab in the user's own session reading one recruiter profile + their company page for `$ops-recruiter` threads) | Inspect selected profiles and decide on outreach |
 | `content-ops` | Analysis of user-provided/exported posts and metrics | Make any edits or follow-up actions |
 
 The upstream `linkedin-skills` project inspired these lanes, but its browser bridge and
