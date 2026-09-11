@@ -695,9 +695,47 @@ def _event_complete(checkpoint: BridgeCheckpoint, ev: dict[str, Any]) -> bool:
     return all(_delivered(checkpoint, dest, event_id) for dest in required)
 
 
+def _push_all_clear(ev: dict, prior_fp: str) -> dict[str, Any]:
+    """One-time CLEARED message for a previously-alerted condition (operator
+    2026-09-11: the log's job includes the all-clear, not just the alarm --
+    silence after an alert is indistinguishable from broken). Best effort."""
+    cleared = dict(ev)
+    cleared["status"] = "CLEARED"
+    cleared["summary"] = (f"all-clear: previously alerted condition for "
+                          f"{ev.get('repo')}#{ev.get('issue')} is now resolved "
+                          f"(current status {ev.get('status')}); no further pushes for it")
+    cleared["cleared_fingerprint"] = prior_fp
+    cleared["requires_human_input"] = False
+    return push_switchboard(cleared)
+
+
+def _all_clear_fingerprint(ev: dict) -> str | None:
+    """The alert fingerprint this resolving event clears, if any.
+
+    A COMPLETED / CLOSED_ON_GITHUB ticket event clears every previously-alerted
+    fingerprint for that (repo, issue) -- the condition family (ownership
+    conflict, seat verdict, unsettled run) is moot once the ticket is done.
+    """
+    if ev.get("status") not in {"COMPLETED", "CLOSED_ON_GITHUB"}:
+        return None
+    repo, issue = str(ev.get("repo") or ""), str(ev.get("issue") or "")
+    if not repo or not issue or "receipt_missing" in repo or "receipt_missing" in issue:
+        return None
+    state = _load_dedup_state()
+    for key in state:
+        try:
+            k_repo, k_issue = json.loads(key)[0], json.loads(key)[1]
+        except (ValueError, IndexError):
+            continue
+        if k_repo == repo and k_issue == issue and time.time() - state[key] < _renotify_seconds():
+            return key
+    return None
+
+
 def deliver(ev: dict[str, Any], checkpoint: BridgeCheckpoint, *, fresh: bool) -> dict[str, Any]:
     ev = apply_live_issue_state(ev)  # log shows closure: closed issues never alert as open failures
     event_id = ev["event_id"]
+    all_clear_fp = _all_clear_fingerprint(ev)
     result: dict[str, Any] = {"event_id": event_id, "dir": ev["dir"], "status": ev.get("status")}
     if not _delivered(checkpoint, "terminal", event_id):
         receipt = write_stream_event(ev)
@@ -727,6 +765,13 @@ def deliver(ev: dict[str, Any], checkpoint: BridgeCheckpoint, *, fresh: bool) ->
                 _mark_delivered(checkpoint, "pi_agent", event_id, receipt)
     else:
         result["switchboard"] = {"status": "DEDUPED"}
+    if all_clear_fp:
+        receipt = _push_all_clear(ev, all_clear_fp)
+        result["all_clear"] = receipt
+        if receipt.get("status") == "SENT":
+            state = _load_dedup_state()
+            state.pop(all_clear_fp, None)
+            _write_text_durable(SWITCHBOARD_DEDUP, json.dumps(state, sort_keys=True) + "\n")
     if not requires_human_push(ev):
         result["ops_discord"] = {"status": "SKIPPED", "reason": "not_human_only_blocker"}
     elif not _delivered(checkpoint, "ops_discord", event_id):

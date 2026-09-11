@@ -250,3 +250,27 @@ def test_closed_issue_rewrites_stale_alert_to_show_closure(monkeypatch):
     # open issue / gh unreachable: receipt status stands (fail-open)
     monkeypatch.setattr(b, "_issue_closed_on_github", lambda e: False)
     assert b.apply_live_issue_state(ev)["status"] == "NEEDS_ATTENTION"
+
+
+def test_all_clear_fires_once_for_previously_alerted_issue(tmp_path, monkeypatch):
+    """A COMPLETED event for an issue with a live alert fingerprint pushes one
+    CLEARED message and retires the fingerprint (operator 2026-09-11 all-clear)."""
+    import json, sys, time, pathlib
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "scripts"))
+    import watchdog_notify_bridge as b
+    state = {json.dumps(["grahama1970/agent-skills", "1620", "NEEDS_ATTENTION",
+                         "project_watchdog_target_ownership_conflict"]): time.time()}
+    monkeypatch.setattr(b, "SWITCHBOARD_DEDUP", tmp_path / "dedup.json")
+    b._write_text_durable(b.SWITCHBOARD_DEDUP, json.dumps(state))
+    ev = {"repo": "grahama1970/agent-skills", "issue": "1620", "status": "COMPLETED",
+          "summary": "native ticket verification and completed closure read back"}
+    fp = b._all_clear_fingerprint(ev)
+    assert fp is not None, "live fingerprint for this issue must be found"
+    pushed = {}
+    monkeypatch.setattr(b, "push_switchboard", lambda cleared: pushed.update(cleared) or {"status": "SENT"})
+    out = b._push_all_clear(ev, fp)
+    assert out["status"] == "SENT" and pushed.get("status") == "CLEARED"
+    assert "all-clear" in pushed["summary"]
+    # an event for an issue with NO live fingerprint clears nothing
+    ev2 = {"repo": "grahama1970/agent-skills", "issue": "9999", "status": "COMPLETED"}
+    assert b._all_clear_fingerprint(ev2) is None
