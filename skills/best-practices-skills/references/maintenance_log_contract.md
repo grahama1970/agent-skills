@@ -6,12 +6,12 @@ status is derived — never hand-written.**
 | Information | Canonical owner |
 |---|---|
 | Maintenance policy (cadence, triggers, required checks) | `skills/<skill>/MAINTENANCE.md` — optional; repo defaults apply when absent |
-| Event history (every prune/rename/repair/decision) | `skill_maintenance_events` collection in the memory daemon |
+| Event history (every prune/rename/repair/decision) | `maintenance_events` collection in the memory daemon |
 | Current status (due/blocked/healthy, last maintained) | Derived from policy + events; rebuild-only |
 
-## Stable skill identity
+## Stable entity identity
 
-- `skill_id` = `<repo>:<skill-directory-name>` (e.g. `agent-skills:ops-workstation`).
+- `entity_id` = `<repo>:<skill-directory-name>` (e.g. `agent-skills:ops-workstation`).
 - Project-level work not owned by one skill uses `<repo>:project` (e.g. `tau:project`)
   — same collection, same schema; `changed_paths` carries the files.
 - If a skill directory is renamed, its `MAINTENANCE.md` frontmatter keeps the
@@ -43,7 +43,7 @@ helper `skills/best-practices-skills/scripts/maintenance_event.py emit ...`,
 which validates with pydantic (`extra="forbid"`), computes a deterministic
 `_key` (idempotent retries), and proves the write by read-back.
 
-Fields: `skill_id`, `repo`, `event_type`
+Fields: `entity_id`, `repo`, `event_type`
 (`maintenance.completed | file.pruned | skill.renamed | decision.recorded |
 config.changed`), `summary` (one plain line), `changed_paths[]`,
 `proof_receipt` (local artifact backing the claim), `actor`, `tags[]`,
@@ -56,7 +56,7 @@ state:
 
 ```bash
 uv run python skills/best-practices-skills/scripts/maintenance_event.py query \
-  --skill-id agent-skills:ops-workstation
+  --entity-id agent-skills:ops-workstation
 ```
 
 Semantic `/recall` may still find *analogous* repairs across skills; it must

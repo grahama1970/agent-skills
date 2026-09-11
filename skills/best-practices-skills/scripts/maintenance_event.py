@@ -22,7 +22,7 @@ import pydantic
 import typer
 
 MEMORY_BASE = "http://127.0.0.1:8601"
-COLLECTION = "skill_maintenance_events"
+COLLECTION = "maintenance_events"
 
 EventType = Literal[
     "maintenance.completed",
@@ -41,7 +41,7 @@ class MaintenanceEvent(pydantic.BaseModel):
     schema_: str = pydantic.Field(
         default="agent-skills.skill_maintenance_event.v1", alias="schema"
     )
-    skill_id: str = pydantic.Field(min_length=3, pattern=r"^[a-z0-9_.-]+:[a-z0-9_.-]+$")  # stable id, e.g. "agent-skills:ops-workstation"
+    entity_id: str = pydantic.Field(min_length=3, pattern=r"^[a-z0-9_.-]+:[a-z0-9_.-]+$")  # stable id, e.g. "agent-skills:ops-workstation" or "tau:project"
     repo: str = pydantic.Field(min_length=1)
     event_type: EventType
     summary: str = pydantic.Field(min_length=8)
@@ -65,7 +65,7 @@ def _client() -> httpx.Client:
 
 
 def emit(
-    skill_id: str = typer.Option(..., help="Stable skill id, e.g. agent-skills:ask"),
+    entity_id: str = typer.Option(..., help="Stable entity id, e.g. agent-skills:ask or tau:project"),
     repo: str = typer.Option(..., help="Repository the skill lives in"),
     event_type: EventType = typer.Option(...),
     summary: str = typer.Option(..., help="One-line plain statement of what was done"),
@@ -81,7 +81,7 @@ def emit(
     """Append one maintenance event; verify by immediate read-back."""
     try:
         event = MaintenanceEvent(
-            skill_id=skill_id,
+            entity_id=entity_id,
             repo=repo,
             event_type=event_type,
             summary=summary,
@@ -112,25 +112,24 @@ def emit(
     ok = any(r.get("_key") == doc["_key"] for r in rows)
     typer.echo(
         json.dumps({"ok": ok, "key": doc["_key"], "readback": len(rows), "collection": COLLECTION})
-    )
-    if not ok:
+    )    if not ok:
         raise typer.Exit(code=3)
 
 
 def query(
-    skill_id: str = typer.Option(..., help="Stable skill id to inspect"),
+    entity_id: str = typer.Option(..., help="Stable entity id to inspect"),
     limit: int = typer.Option(20),
 ) -> None:
-    """Exact-match event history for one skill (for foreign debugging agents)."""
+    """Exact-match event history for one skill or project (for foreign debugging agents)."""
     with _client() as client:
         resp = client.post(
             "/list",
-            json={"collection": COLLECTION, "filters": {"skill_id": skill_id}, "limit": limit},
+            json={"collection": COLLECTION, "filters": {"entity_id": entity_id}, "limit": limit},
         )
         resp.raise_for_status()
         rows = resp.json().get("documents") or resp.json().get("items") or []
     rows.sort(key=lambda r: r.get("observed_at", ""), reverse=True)
-    typer.echo(json.dumps({"skill_id": skill_id, "count": len(rows), "events": rows}, indent=2))
+    typer.echo(json.dumps({"entity_id": entity_id, "count": len(rows), "events": rows}, indent=2))
 
 
 app = typer.Typer(help=__doc__)

@@ -655,12 +655,12 @@ rationale for fixture depth, but that is not an exemption from composing
 ## Maintenance Log (policy in files, history in memory)
 
 Skills record maintenance and pruning decisions ONCE, in the shared
-`skill_maintenance_events` collection via the memory daemon — never in a
+`maintenance_events` collection via the memory daemon — never in a
 per-skill log file. Policy (cadence/checks) lives in an OPTIONAL per-skill
 `MAINTENANCE.md` (typed frontmatter); status is always derived, never stored.
 Write/query helper: `scripts/maintenance_event.py`. Full contract:
 `references/maintenance_log_contract.md`. Foreign agents debug a skill by
-querying its events by exact `skill_id` — not by scanning folders.
+querying its events by exact `entity_id` — not by scanning folders.
 
 ## Checklist (creation/review)
 
