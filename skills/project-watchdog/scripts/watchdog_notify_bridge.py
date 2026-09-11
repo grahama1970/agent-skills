@@ -702,15 +702,37 @@ def deliver(ev: dict[str, Any], checkpoint: BridgeCheckpoint, *, fresh: bool) ->
     return result
 
 
+_TERMINAL_RUN_STATUSES = {"PASS", "FAIL", "BLOCKED", "NEEDS_ATTENTION", "CANCELLED", "SKIPPED"}
+
+
 def _heartbeat_payload() -> dict[str, Any]:
     import glob as _glob
 
-    mons = sorted(_glob.glob(str(RECEIPTS / "*/tau-stream-monitor.json")), key=os.path.getmtime)
+    mons = sorted(_glob.glob(str(RECEIPTS / "*/tau-stream-monitor.json")), key=os.path.getmtime,
+                  reverse=True)
     if not mons:
         return {"state": "observer_fresh_no_active_run"}
+    # The heartbeat is a LIVE progress signal. A monitor whose run already
+    # reached a terminal status (process gone) is settled history, not active
+    # progress -- reporting it forever made a dead #1500 BLOCKED run re-emit
+    # "BLOCKED #1500" every bridge cycle long after the ticket closed
+    # (2026-09-11). Walk newest->oldest and use the first monitor that still
+    # describes an in-flight (or unknown-state) run.
+    monitor_path = None
+    m = None
+    for candidate in mons:
+        try:
+            doc = json.loads(Path(candidate).read_text())
+        except (OSError, ValueError):
+            continue
+        status = str(doc.get("current_status") or "").upper()
+        if doc.get("process_running") or status not in _TERMINAL_RUN_STATUSES:
+            monitor_path = Path(candidate)
+            m = doc
+            break
+    if m is None or monitor_path is None:
+        return {"state": "observer_fresh_no_active_run"}
     try:
-        monitor_path = Path(mons[-1])
-        m = json.loads(monitor_path.read_text())
         ev = m.get("latest_event") or {}
         run_dir = monitor_path.parent
         node = ev.get("node_id") or m.get("current_node") or "-"

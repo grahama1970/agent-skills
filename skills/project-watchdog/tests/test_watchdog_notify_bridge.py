@@ -207,8 +207,30 @@ def test_dead_run_reports_terminal_status_not_stale_progress(tmp_path, monkeypat
     os_utime = __import__("os").utime; os_utime(mon, (old, old))  # make it stale
     monkeypatch.setattr(b, "RECEIPTS", tmp_path)
     hb = b._heartbeat_payload()
-    assert hb["state"] == "BLOCKED", hb
+    # Superseded contract (2026-09-11): a terminal dead run does not drive the
+    # fleet heartbeat AT ALL (not STALE_PROGRESS, not a forever-BLOCKED latch).
+    assert hb["state"] == "observer_fresh_no_active_run", hb
     # a live-but-stalled run still flags STALE_PROGRESS
+    mon.write_text(json.dumps({"process_running": True, "current_status": "RUNNING",
+                               "latest_event": {}, "elapsed_seconds": 1}))
+    os_utime(mon, (old, old))
+    assert b._heartbeat_payload()["state"] == "STALE_PROGRESS"
+
+
+def test_heartbeat_skips_terminal_runs_and_latches_nothing_forever(tmp_path, monkeypatch):
+    """A terminal (dead) monitor must not be the fleet heartbeat forever; only
+    in-flight runs qualify, else observer_fresh_no_active_run (the #1500 case)."""
+    import json, time, sys, pathlib
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "scripts"))
+    import watchdog_notify_bridge as b
+    run = tmp_path / "watchdog-run"; run.mkdir()
+    mon = run / "tau-stream-monitor.json"
+    mon.write_text(json.dumps({"process_running": False, "current_status": "BLOCKED",
+                               "latest_event": {}, "elapsed_seconds": 1}))
+    old = time.time() - 4000; os_utime = __import__("os").utime; os_utime(mon, (old, old))
+    monkeypatch.setattr(b, "RECEIPTS", tmp_path)
+    assert b._heartbeat_payload()["state"] == "observer_fresh_no_active_run"
+    # an in-flight stale run still flags STALE_PROGRESS
     mon.write_text(json.dumps({"process_running": True, "current_status": "RUNNING",
                                "latest_event": {}, "elapsed_seconds": 1}))
     os_utime(mon, (old, old))
