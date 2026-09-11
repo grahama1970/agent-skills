@@ -1,0 +1,130 @@
+{
+  "version": 2,
+  "skill": "chatterbox-speak",
+  "trials": 2,
+  "proof_scope": "two concurrent agents (A cover + B solver) answer a complex question end-to-end",
+  "claims": {
+    "proves": "Agent A selects a memory-recall-driven cover and speaks it (real Turbo render) WHILE Agent B works, then Embry speaks B's answer; concurrency and handoff ordering are proven by timestamps on real artifacts",
+    "does_not_prove": "full high-reasoning answer generation (Agent B's real solver is owned by embry-voice-control and stubbed here), or perceived voice quality"
+  },
+  "capability_claims": [
+    {
+      "id": "chatterbox_speak.two_agent.cover_concurrency",
+      "description": "Agent A speaks a recall-driven cover concurrently while Agent B works; barge-in handoff order is correct; both lanes produce real wav artifacts.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "chatterbox_speak.two_agent.full_answer_generation",
+      "description": "Agent B produces the real high-reasoning answer to a complex question.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      },
+      "exemptions": [
+        {
+          "evidence_class": "live_e2e",
+          "reason_code": "owned_by_other_skill",
+          "justification": "Agent B's real solver runtime lives in embry-voice-control and is not built yet; this harness uses a declared boundary_stub. Do not report full answer generation as proven here.",
+          "owner": "embry-voice-control",
+          "expires": "2026-12-31"
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "two-agent-e2e-live",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "chatterbox_speak.two_agent.cover_concurrency"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && python3 scripts/two_agent_e2e.py --question 'Why does the SC-7 control fail when CUI data crosses the boundary, and how should we harden it?' --output /mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e.json --solver-delay 5 && cat /mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"concurrency_proven\": true",
+          "\"handoff_ordered\": true",
+          "boundary_stub"
+        ],
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e.json",
+            "json_pointer": "/concurrency_proven",
+            "equals": true
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e.json",
+            "json_pointer": "/handoff_ordered",
+            "equals": true
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e.json",
+            "json_pointer": "/agent_b/solver_source",
+            "equals": "boundary_stub"
+          }
+        ]
+      }
+    },
+    {
+      "name": "cover-floor-without-memory",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "chatterbox_speak.two_agent.cover_concurrency"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && python3 scripts/two_agent_e2e.py --question 'complex question with memory unavailable' --output /mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e-nomem.json --no-memory --solver-delay 4 && cat /mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e-nomem.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"concurrency_proven\": true"
+        ],
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e-nomem.json",
+            "json_pointer": "/agent_a/delivery/recall_used",
+            "equals": false
+          },
+          {
+            "path": "/mnt/storage12tb/skills/chatterbox-speak/outputs/two-agent-e2e-nomem.json",
+            "json_pointer": "/concurrency_proven",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "cover-planner-deterministic",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "chatterbox_speak.two_agent.cover_concurrency"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && python3 scripts/cover_plan.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "cover_plan.py self-check: PASS"
+        ]
+      }
+    }
+  ]
+}
