@@ -1792,6 +1792,33 @@
     ]
    },
    "proves": "Same-cycle cross-ticket unblock: a wait edge (A behind B) serializes while B's bytes are unlanded and on partial matches; when B lands on primary main the waiting A becomes releasable within the same scan on ACTUAL main bytes (never a CLOSED label), one release per waiting issue per scan; cleared edges no longer release. Fault-injected deterministic."
+  },
+  {
+   "name": "watchdog-fleet-reconciler",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "python",
+    "../evals/fleet_reconciler_eval.py",
+    "/tmp/watchdog-fleet-reconciler.json"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "artifacts": [
+     {
+      "path": "/tmp/watchdog-fleet-reconciler.json",
+      "json_pointer": "/passed",
+      "equals": true
+     }
+    ]
+   },
+   "proves": "Fleet reconciler maps every nonterminal object (runnable issue, unsettled/retryable journal, orphan lease, terminal tau awaiting proof/close, stranded owned bytes, human blocker) to exactly one of resume_machine_work/settle_native_lifecycle/wait_on_dependency/human_only_blocker with zero unclassified; the drained state reconciles to empty dispositions with drained=True (second pass idempotently empty). Fault-injected deterministic."
   }
  ]
 }

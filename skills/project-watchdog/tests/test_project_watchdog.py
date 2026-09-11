@@ -2996,3 +2996,25 @@ def test_cross_ticket_unblock_never_trusts_closed_label(tmp_path):
     ctu.record_wait_edge(jp, waiting=1620, blocking=1619, path_shas={"p": "X", "q": "Y"})
     # partial + label-only closure must not release
     assert ctu.releasable(jp, {"p": "X", "q": "B"}) == []
+
+
+def test_reconcile_maps_every_object_to_one_disposition():
+    from watchdog import reconciler
+    state = {"issues": [{"number": 1, "runnable": True}],
+             "journals": [{"id": "j", "settled": False, "retryable": True, "lease_released": True}],
+             "leases": [{"issue": 9, "orphan": True}],
+             "tau_runs": [{"id": "t", "terminal": True, "awaiting_close": True}],
+             "owned_bytes": [{"issue": 3, "path": "p", "remote_identical": False, "has_wait_edge": True}]}
+    r = reconciler.reconcile(state)
+    assert r["unclassified"] == 0
+    assert all(x["disposition"] in reconciler.DISPOSITIONS for x in r["dispositions"])
+    assert r["drained"] is False
+
+
+def test_reconcile_drained_second_pass_is_empty():
+    from watchdog import reconciler
+    state = {"issues": [],
+             "journals": [{"id": "j", "settled": True}], "leases": [], "tau_runs": [],
+             "owned_bytes": [{"issue": 5, "path": "r", "remote_identical": True}]}
+    r = reconciler.reconcile(state)
+    assert r["dispositions"] == [] and r["drained"] is True
