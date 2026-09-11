@@ -14,7 +14,8 @@
    "criticality": "critical",
    "evidence_required": {
     "live_e2e": true
-   }
+   },
+   "claim_semantics": "control_flow"
   },
   {
    "id": "shame.single_format_correction",
@@ -22,7 +23,8 @@
    "criticality": "critical",
    "evidence_required": {
     "adversarial_live_e2e": true
-   }
+   },
+   "claim_semantics": "protocol"
   },
   {
    "id": "shame.work_continues_to_artifact",
@@ -30,7 +32,8 @@
    "criticality": "critical",
    "evidence_required": {
     "live_e2e": true
-   }
+   },
+   "claim_semantics": "control_flow"
   },
   {
    "id": "shame.invalid_proof_recovery",
@@ -38,6 +41,12 @@
    "criticality": "critical",
    "evidence_required": {
     "adversarial_live_e2e": true
+   },
+   "claim_semantics": "value_bearing",
+   "domain_profile": "json-scalar-v1",
+   "derived_from": {
+    "source": "skills/shame/SKILL.md#Retained-validation",
+    "requirement": "For state=done, a plain-text proof file backs ONLY verified items shaped {\"command\": \"read <proof-file>\", \"result\": \"<substring of that file>\"}; each verified pair must be backed by one proof record; unrelated text matches across files do not authorize completion."
    }
   },
   {
@@ -46,7 +55,8 @@
    "criticality": "critical",
    "evidence_required": {
     "adversarial_live_e2e": true
-   }
+   },
+   "claim_semantics": "protocol"
   },
   {
    "id": "shame.missing_verification_recovery",
@@ -54,7 +64,8 @@
    "criticality": "critical",
    "evidence_required": {
     "adversarial_live_e2e": true
-   }
+   },
+   "claim_semantics": "protocol"
   },
   {
    "id": "shame.data_not_prose_decides",
@@ -62,7 +73,8 @@
    "criticality": "critical",
    "evidence_required": {
     "adversarial_live_e2e": true
-   }
+   },
+   "claim_semantics": "protocol"
   },
   {
    "id": "shame.question_turn_answer",
@@ -70,7 +82,8 @@
    "criticality": "critical",
    "evidence_required": {
     "adversarial_live_e2e": true
-   }
+   },
+   "claim_semantics": "human_perceptual"
   },
   {
    "id": "shame.immutable_goal_headline",
@@ -78,7 +91,8 @@
    "criticality": "critical",
    "evidence_required": {
     "adversarial_live_e2e": true
-   }
+   },
+   "claim_semantics": "human_perceptual"
   },
   {
    "id": "shame.collab_peer_acceptance",
@@ -86,7 +100,8 @@
    "criticality": "critical",
    "evidence_required": {
     "deterministic": true
-   }
+   },
+   "claim_semantics": "protocol"
   },
   {
    "id": "shame.task_scope_and_acceptance",
@@ -94,7 +109,8 @@
    "criticality": "critical",
    "evidence_required": {
     "adversarial_live_e2e": true
-   }
+   },
+   "claim_semantics": "control_flow"
   },
   {
    "id": "shame.feedback_and_session_isolation",
@@ -102,7 +118,8 @@
    "criticality": "critical",
    "evidence_required": {
     "adversarial_live_e2e": true
-   }
+   },
+   "claim_semantics": "other"
   },
   {
    "id": "shame.audio_install_preserves_reference",
@@ -110,6 +127,12 @@
    "criticality": "critical",
    "evidence_required": {
     "adversarial_live_e2e": true
+   },
+   "claim_semantics": "value_bearing",
+   "domain_profile": "json-scalar-v1",
+   "derived_from": {
+    "source": "skills/shame/SKILL.md#Failure-history-versus-human-labels",
+    "requirement": "Audio policy: one short Chatterbox word, no bell or loop; installer bounds are 0.9-2.5 seconds and at least 0.45 seconds active speech."
    }
   },
   {
@@ -119,7 +142,8 @@
    "evidence_required": {
     "deterministic": true,
     "live_e2e": true
-   }
+   },
+   "claim_semantics": "protocol"
   },
   {
    "id": "shame.done_receipt_binding",
@@ -127,6 +151,12 @@
    "criticality": "critical",
    "evidence_required": {
     "deterministic": true
+   },
+   "claim_semantics": "value_bearing",
+   "domain_profile": "json-scalar-v1",
+   "derived_from": {
+    "source": "skills/shame/SKILL.md#pi.agent_status.v1",
+    "requirement": "For done, proofs must be non-empty local files; JSON proofs must declare a supported receipt schema and pass that schema's checks, including ticket.closure_receipt.v1 for ticket closure."
    }
   },
   {
@@ -135,7 +165,8 @@
    "criticality": "critical",
    "evidence_required": {
     "deterministic": true
-   }
+   },
+   "claim_semantics": "protocol"
   },
   {
    "id": "shame.typed_recovery_routing",
@@ -143,7 +174,8 @@
    "criticality": "critical",
    "evidence_required": {
     "deterministic": true
-   }
+   },
+   "claim_semantics": "control_flow"
   },
   {
    "id": "shame.self_contained_proof_repair",
@@ -151,7 +183,8 @@
    "criticality": "critical",
    "evidence_required": {
     "deterministic": true
-   }
+   },
+   "claim_semantics": "protocol"
   },
   {
    "id": "shame.ticket_close_final_zero_retry",
@@ -159,6 +192,12 @@
    "criticality": "critical",
    "evidence_required": {
     "deterministic": true
+   },
+   "claim_semantics": "value_bearing",
+   "domain_profile": "json-scalar-v1",
+   "derived_from": {
+    "source": "skills/shame/SKILL.md#Stop-boundary-behavior",
+    "requirement": "A failed correction cannot queue another; retry exhaustion records report_retry_exhausted and writes a spiral ticket request instead of another retry."
    }
   },
   {
@@ -168,7 +207,8 @@
    "evidence_required": {
     "deterministic": true,
     "live_e2e": true
-   }
+   },
+   "claim_semantics": "protocol"
   },
   {
    "id": "shame.spiral_ticket_request",
@@ -176,7 +216,8 @@
    "criticality": "critical",
    "evidence_required": {
     "deterministic": true
-   }
+   },
+   "claim_semantics": "control_flow"
   },
   {
    "id": "shame.concrete_status_visibility",
@@ -184,7 +225,8 @@
    "criticality": "critical",
    "evidence_required": {
     "deterministic": true
-   }
+   },
+   "claim_semantics": "human_perceptual"
   }
  ],
  "cases": [
@@ -233,7 +275,8 @@
    "expected": {
     "exit_code": 0,
     "stdout_contains": [
-     "\"report_retries\": 1",
+     "\"report_retries\": 0",
+     "\"guard_substitutions\": 1",
      "\"sum_readback_correct\": true",
      "\"failure_history_verified\": true"
     ],
@@ -1015,6 +1058,33 @@
     ]
    },
    "proves": "NeedsAgent is runtime-bound: the trusted runtime project-agent family (env-supplied, never agent-authored) selects exactly one first-ask handler (openai->claude-fable-low, claude->gpt-5.5-high); wrong/same-family handlers, mismatched payload family, unsupported runtime family, missing runtime supply, and missing handler availability all produce typed operational failures without silent substitution."
+  },
+  {
+   "name": "status-report-renderer-round-trips-through-checker",
+   "type": "positive",
+   "evidence_class": "deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--with",
+    "pydantic",
+    "python3",
+    "../evals/status_report_renderer_case.py",
+    "/tmp/shame-renderer-case.json"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "artifacts": [
+     {
+      "path": "/tmp/shame-renderer-case.json",
+      "json_pointer": "/passed",
+      "equals": true
+     }
+    ]
+   },
+   "proves": "The Status Report is deterministically rendered from validated pi.agent_status.v1 JSON (never hand-authored prose): render -> re-extract fenced json -> re-validate preserves state/goal/not_done.next_command anchors."
   }
  ]
 }
