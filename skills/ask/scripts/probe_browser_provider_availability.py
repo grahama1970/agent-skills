@@ -36,7 +36,7 @@ PROVIDERS: dict[str, ProviderProbe] = {
         limited_pattern=r"claude is at capacity|rate limit(?:ed)?|too many requests|you'?ve reached.*limit",
     ),
     "webkimi": ProviderProbe(
-        hosts=("kimi.ai",),
+        hosts=("kimi.ai", "kimi.com"),
         limited_pattern=r"system is currently busy|capacity is busy|too many requests",
     ),
     "webgemini": ProviderProbe(
@@ -322,6 +322,18 @@ def throttle_match(text: str, pattern: str) -> dict[str, Any]:
     }
 
 
+def _is_stale_attach_error(summary: dict[str, Any]) -> bool:
+    """True when a surf js call failed because a debugger is already attached.
+
+    Reads both the raw stderr/stdout and the ``*_tail`` fields _proc_summary
+    actually emits, so the classifier matches the real probe payload.
+    """
+    parts = (summary.get("stderr"), summary.get("stdout"),
+             summary.get("stderr_tail"), summary.get("stdout_tail"))
+    blob = "\n".join(str(p) for p in parts if p).lower()
+    return "already attached" in blob or "failed to attach debugger" in blob
+
+
 def _check_tab(*, surf_run: Path, tab_id: str, pattern: str) -> dict[str, Any]:
     js = (
         "const main = document.querySelector('main') || document.querySelector('[role=\"main\"]');"
@@ -339,7 +351,22 @@ def _check_tab(*, surf_run: Path, tab_id: str, pattern: str) -> dict[str, Any]:
         "});"
     )
     proc = _run([str(surf_run), "js", js, "--tab-id", tab_id, "--no-activate"], timeout=20)
-    payload: dict[str, Any] = {"tab_id": tab_id, **_proc_summary(proc)}
+    # Self-heal a stale debugger attachment (#1653): a tab left with a debugger
+    # attached fails every js call with "Another debugger is already attached".
+    # Rebind the tab via surf tab.maintenance and retry the probe once; a clean
+    # retry means the provider is healthy again rather than degraded forever.
+    if proc.returncode != 0 and _is_stale_attach_error(_proc_summary(proc)):
+        heal = _run([str(surf_run), "tab.maintenance", "--repair", "--trigger",
+                     "recovery_state_failed"], timeout=45)
+        retry = _run([str(surf_run), "js", js, "--tab-id", tab_id, "--no-activate"], timeout=20)
+        payload: dict[str, Any] = {"tab_id": tab_id, **_proc_summary(retry),
+                                   "stale_attach_recovered": retry.returncode == 0,
+                                   "stale_attach_repair_rc": heal.returncode}
+        if retry.returncode != 0:
+            return payload
+        proc = retry
+    else:
+        payload = {"tab_id": tab_id, **_proc_summary(proc)}
     if proc.returncode != 0:
         return payload
     decoded = _decode_surf_js_stdout(proc.stdout)
