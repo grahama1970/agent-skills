@@ -489,6 +489,30 @@ def finish(
         receipt_path = receipt_dir / "receipt.json"
         receipt["receipt_path"] = str(receipt_path)
         write_json(receipt_path, receipt)
+        # Shared maintenance log (devops integration, 2026-09-11): one
+        # best-effort event per EVENTFUL persisted receipt, entity
+        # <repo-short>:project, proof_receipt = this receipt path. The log
+        # becomes the cross-project index into watchdog receipts. Like the
+        # ops-discord alert boundary, this never raises and never blocks the
+        # tick; the outcome is only logged.
+        try:
+            from . import maintenance_log as _ml
+            _repo = receipt.get("repo") or next(
+                (h.get("repo") for h in receipt.get("handled_issues") or []
+                 if isinstance(h, dict)), None)
+            if _repo:
+                _issue = next((h.get("issue_number") for h in receipt.get("handled_issues") or []
+                               if isinstance(h, dict) and h.get("issue_number")), None)
+                _ev = _ml.emit_tick_event(
+                    repo=str(_repo), run_id=run_id,
+                    summary=(f"watchdog tick {receipt.get('status')}: run {run_id}"
+                             + (f" issue #{_issue}" if _issue else "")),
+                    proof_receipt=str(receipt_path),
+                    tags=["project-watchdog", str(receipt.get("status"))])
+                log_event(run_id, "maintenance_event", status=_ev.get("status"),
+                          key=_ev.get("key"))
+        except Exception:  # noqa: BLE001 - the log boundary never blocks a tick
+            pass
     else:
         receipt["receipt_path"] = None
         receipt["receipt_persisted"] = False

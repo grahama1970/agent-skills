@@ -1948,6 +1948,33 @@
     ]
    },
    "proves": "maybe_alert always sets receipt['alert'] (SUPPRESSED) for a machine-actionable BLOCKED receipt under the human-only alert policy, so callers never KeyError on r['alert']. Regression guard for the KeyError the adversarial suite surfaced."
+  },
+  {
+   "name": "watchdog-maintenance-provenance",
+   "type": "adversarial",
+   "evidence_class": "fault_injected_deterministic",
+   "mocked": true,
+   "timeout_seconds": 120,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "python",
+    "../evals/maintenance_provenance_eval.py",
+    "/tmp/watchdog-maintenance-provenance.json"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "artifacts": [
+     {
+      "path": "/tmp/watchdog-maintenance-provenance.json",
+      "json_pointer": "/passed",
+      "equals": true
+     }
+    ]
+   },
+   "proves": "Maintenance-log provenance: the target-ownership gate adopts a path only on an exact-match maintenance event (repo match, verbatim changed_paths, non-empty proof_receipt, <=30d); stale/proofless/wrong-repo and daemon-outage all leave the refusal standing; tick emit is idempotent per run and never raises; the handler gate relabels covered paths verified_maintenance_provenance. Fault-injected deterministic."
   }
  ]
 }

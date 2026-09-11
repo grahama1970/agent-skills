@@ -3117,3 +3117,73 @@ def test_substitute_fallback_derives_from_seat_routing_config(monkeypatch):
     from watchdog import transport_health as th
     monkeypatch.delenv("PROJECT_WATCHDOG_CODEX_SEAT_FALLBACK", raising=False)
     assert th._config_review_fallback() == "zai-glm-high"  # glm_review, the first non-codex route
+
+
+def _mevent(key="me_t1", repo="grahama1970/agent-skills", paths=("skills/x/y.py",),
+            proof="/tmp/receipt.json", age_days=1.0, entity="agent-skills:project"):
+    from datetime import datetime, timedelta, timezone
+    return {"_key": key, "entity_id": entity, "repo": repo,
+            "changed_paths": list(paths), "proof_receipt": proof,
+            "observed_at": (datetime.now(timezone.utc) - timedelta(days=age_days)).isoformat(),
+            "summary": "maintenance touched it", "event_type": "decision.recorded"}
+
+
+def test_maintenance_log_adopts_exact_match_and_entity_candidates(monkeypatch):
+    from watchdog import maintenance_log as ml
+    seen = []
+    def fake_post(path, payload):
+        seen.append(payload["filters"]["entity_id"])
+        return {"documents": [_mevent()] if "agent-skills:project" == payload["filters"]["entity_id"] else []}
+    monkeypatch.setattr(ml, "_post_json", fake_post)
+    covered = ml.covering_events("grahama1970/agent-skills",
+                                 ["skills/x/y.py", "skills/unrelated/z.py"])
+    assert set(covered) == {"skills/x/y.py"} and covered["skills/x/y.py"]["_key"] == "me_t1"
+    assert "skills/unrelated/z.py" not in covered
+    # a skills/<name>/ path also consults the per-skill entity
+    monkeypatch.setattr(ml, "_post_json", lambda p, q: {"documents": []})
+    ml.entity_candidates("grahama1970/agent-skills", ["skills/project-watchdog/a.py"])
+    assert "agent-skills:project-watchdog" in ml.entity_candidates(
+        "grahama1970/agent-skills", ["skills/project-watchdog/a.py"])
+
+
+def test_maintenance_log_rejects_stale_proofless_repo_mismatch(monkeypatch):
+    from watchdog import maintenance_log as ml
+    rows = {"documents": [
+        _mevent(key="stale", age_days=40.0),
+        _mevent(key="noproof", paths=("skills/x/y.py",), proof=None),
+        _mevent(key="wrongrepo", paths=("skills/x/y.py",), repo="grahama1970/other"),
+    ]}
+    monkeypatch.setattr(ml, "_post_json", lambda p, q: rows)
+    assert ml.covering_events("grahama1970/agent-skills", ["skills/x/y.py"]) == {}
+
+
+def test_maintenance_log_daemon_down_returns_empty(monkeypatch):
+    from watchdog import maintenance_log as ml
+    import urllib.error
+    def boom(path, payload):
+        raise urllib.error.URLError("daemon down")
+    monkeypatch.setattr(ml, "_post_json", boom)
+    assert ml.covering_events("grahama1970/agent-skills", ["skills/x/y.py"]) == {}
+
+
+def test_emit_tick_event_idempotent_and_never_raises(monkeypatch):
+    from watchdog import maintenance_log as ml
+    stored = []
+    def fake_post(path, payload):
+        if path == "/store":
+            stored.append(payload["document"])
+            return {"ok": True}
+        return {"documents": [dict(stored[-1])] if stored else []}
+    monkeypatch.setattr(ml, "_post_json", fake_post)
+    kw = dict(repo="grahama1970/agent-skills", run_id="run-1",
+              summary="watchdog tick NEEDS_ATTENTION: run run-1 issue #5",
+              proof_receipt="/tmp/r/receipt.json")
+    a = ml.emit_tick_event(**kw)
+    b = ml.emit_tick_event(**kw)  # retried tick: same deterministic key
+    assert a["status"] == "EMITTED" and b["status"] == "EMITTED"
+    assert len(stored) == 2 and stored[0]["_key"] == stored[1]["_key"]
+    assert stored[0]["entity_id"] == "agent-skills:project"
+    assert stored[0]["proof_receipt"] == "/tmp/r/receipt.json"
+    import urllib.error
+    monkeypatch.setattr(ml, "_post_json", lambda p, q: (_ for _ in ()).throw(urllib.error.URLError("down")))
+    assert ml.emit_tick_event(**kw)["status"] == "SKIPPED"

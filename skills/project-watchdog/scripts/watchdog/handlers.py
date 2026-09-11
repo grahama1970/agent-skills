@@ -1337,6 +1337,25 @@ def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[
                  if why not in {"verified_remote_identical", "verified_current_task_owned",
                                 "verified_prior_task_owned"}}
     if conflicts:
+        # Shared maintenance-log provenance (devops integration, 2026-09-11):
+        # before refusing unowned target bytes, consult the maintenance_events
+        # log (exact-match, best-effort). An event whose repo matches, whose
+        # changed_paths covers the path verbatim, with a proof_receipt inside
+        # the 30-day window is durable provenance -- adopt the path instead of
+        # refusing. This is the provenance consult the ownership-conflict
+        # alert storm (tau #343/#347/#348/#350, agent-skills #1616-#1641)
+        # lacked. Daemon unreachable => no coverage => refusal unchanged.
+        from . import maintenance_log
+        covered = maintenance_log.covering_events(repo, sorted(conflicts))
+        if covered:
+            for path in covered:
+                classification[path] = "verified_maintenance_provenance"
+            result["maintenance_adopted"] = {p: e.get("_key") for p, e in covered.items()}
+            conflicts = {p: why for p, why in classification.items()
+                         if why not in {"verified_remote_identical", "verified_current_task_owned",
+                                        "verified_prior_task_owned",
+                                        "verified_maintenance_provenance"}}
+    if conflicts:
         raise primary.Refusal(f"target ownership conflict (not checkout dirtiness): {conflicts}")
     legacy = primary.legacy_inventory(root, number)
     write_json(receipt_dir / "legacy-repair.json", legacy)
