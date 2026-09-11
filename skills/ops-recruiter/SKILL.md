@@ -100,7 +100,13 @@ message with deterministic `_key` (`<source>:<thread-id>:<message-id>`), fields:
 `direction` (`inbound`/`draft`/`sent`/`meeting`), `source`
 (`gmail`/`linkedin`/`manual`/`google-meet`/`live-evidence`), `recruiter`,
 `company`, `role`, `body`, `role_ref`, `claim_keys[]`, `draft_ref`,
-`received_at`, `tags`. A call/interview transcript is stored as
+`received_at`, `tags`, `schema` (`ops_recruiter.correspondence.v1`). Optional but
+VALIDATED `signals` block with closed enums (fail-closed): `disposition`
+(`PURSUE|DEFER|DECLINE_LOW_RATE|DECLINE_PUSHY|DECLINE_OFF_MANDATE|NEEDS_HUMAN`),
+`rate` (`ABOVE_FLOOR|AT_FLOOR|BELOW_FLOOR|RATE_UNKNOWN`), `tone`
+(`NORMAL|PERSISTENT|PUSHY|UNKNOWN`) — so recall can filter
+`/list {"filters":{"signals.disposition":"PURSUE"}}` and mine threads without
+parsing prose. A call/interview transcript is stored as
 `direction=meeting` on the same thread. Thread continuity fetches this thread
 exactly via Memory `/list` filters; cross-thread semantic `$memory recall`
 lights up once the memory repo registers `recruiter_correspondence` in

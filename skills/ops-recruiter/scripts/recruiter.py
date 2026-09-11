@@ -189,6 +189,20 @@ def store(message: Path = typer.Option(..., "--message", exists=True)):
               "set direction to inbound|draft|sent|meeting (meeting = a call/interview transcript)")
     doc.setdefault("_key", f"{doc['source']}:{doc['thread_id']}:{doc['message_id']}")
     doc.setdefault("kind", "recruiter_correspondence")
+    doc.setdefault("schema", "ops_recruiter.correspondence.v1")
+    # Typed signals: optional but VALIDATED when present, so stored docs are
+    # uniformly minable via /list filters and /recall tags. Closed enums, fail-closed.
+    sig = doc.get("signals") or {}
+    if "disposition" in sig and sig["disposition"] not in DISPOSITIONS:
+        _fail("ops_recruiter_bad_signal_disposition",
+              f"signals.disposition must be one of {DISPOSITIONS}", "fix the disposition enum value")
+    if "rate" in sig and sig["rate"] not in RATE_SIGNALS:
+        _fail("ops_recruiter_bad_signal_rate",
+              f"signals.rate must be one of {RATE_SIGNALS}", "fix the rate enum value")
+    if "tone" in sig and sig["tone"] not in TONE_SIGNALS:
+        _fail("ops_recruiter_bad_signal_tone",
+              f"signals.tone must be one of {TONE_SIGNALS}", "fix the tone enum value")
+    doc["signals"] = sig
     try:
         import httpx
         r = httpx.Client(base_url=MEMORY_URL, timeout=httpx.Timeout(10.0, connect=2.0)).post(
