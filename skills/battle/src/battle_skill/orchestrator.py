@@ -4,6 +4,7 @@ Main game loop orchestrator with concurrent Red/Blue team execution.
 """
 from __future__ import annotations
 
+import sys
 import concurrent.futures as cf
 import json
 import os
@@ -590,12 +591,51 @@ class BattleOrchestrator:
             self.state.save()
             self.digital_twin.cleanup()
             return self.state
-        self.state.status = "completed"
         self.state.completed_at = datetime.now().isoformat()
         metrics = Scorer.calculate_metrics(self.state)
         self.state.tdsr = metrics["tdsr"]
         self.state.fdsr = metrics["fdsr"]
         self.state.asc = metrics["asc"]
+        verified_patches = len([p for p in self.state.all_patches if p.verified])
+        # A battle is a VALID verdict only if a Judge-scored outcome actually
+        # occurred: a scoring finding or a verified patch. A 0-0 run with no
+        # verified patch means the adversarial machinery did nothing (commonly
+        # because Red/Blue $hack/anvil/Tau delegation was unavailable, which
+        # logs "requires Tau/$hack delegation"). Reporting that as a green
+        # "Winner" is a misleading pass; fail closed into a DEGRADED verdict so
+        # it can never be read as a security result.
+        had_verdict = (
+            self.state.red_total_score > 0
+            or self.state.blue_total_score > 0
+            or verified_patches > 0
+        )
+        if not had_verdict:
+            self.state.status = "degraded"
+            self.state.save()
+            # Plain ASCII, no rich markup: the honest DEGRADED verdict must print
+            # even when the environment's rich renderer is broken (observed:
+            # ModuleNotFoundError rich._unicode_data on an em-dash), and it must
+            # never crash the run into a state that hides the verdict.
+            banner = (
+                "\n==================== Battle DEGRADED ====================\n"
+                "NO VALID VERDICT: this run produced no Judge-scored finding "
+                "and no verified patch.\n"
+                "Common cause: Red/Blue hack/anvil/Tau delegation was "
+                "unavailable, so no real attack or patch executed "
+                "(see 'requires Tau/$hack delegation' in the log).\n"
+                f"Findings logged (UNVALIDATED): {len(self.state.all_findings)}\n"
+                f"Verified patches: {verified_patches}\n"
+                f"Rounds: {self.state.current_round}\n"
+                "Do NOT read this as a security pass.\n"
+                "========================================================\n"
+            )
+            try:
+                print(banner, flush=True)
+            except Exception:
+                sys.stdout.write(banner)
+            self.digital_twin.cleanup()
+            return self.state
+        self.state.status = "completed"
         self.state.save()
         winner = "Red Team" if self.state.red_total_score > self.state.blue_total_score else "Blue Team"
         margin = abs(self.state.red_total_score - self.state.blue_total_score)
@@ -603,7 +643,7 @@ class BattleOrchestrator:
                             f"[red]Red Total: {self.state.red_total_score:.1f}[/red]\n"
                             f"[blue]Blue Total: {self.state.blue_total_score:.1f}[/blue]\n\n"
                             f"TDSR: {self.state.tdsr:.1%}\nFindings: {len(self.state.all_findings)}\n"
-                            f"Verified Patches: {len([p for p in self.state.all_patches if p.verified])}\n"
+                            f"Verified Patches: {verified_patches}\n"
                             f"Rounds: {self.state.current_round}", title="Battle Complete"))
         self.digital_twin.cleanup()
         return self.state
