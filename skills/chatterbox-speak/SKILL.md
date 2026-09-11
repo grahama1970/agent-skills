@@ -108,6 +108,13 @@ Three named vocabularies the agent selects by context (all human-verified by ear
   — grounded in filled-pause research (fillers cluster before hard content and aid
   the listener; um>uh difficulty gradient). Band: light mm → longer hmm for weightier
   problems. Pairs with a concise problem restatement (Polya step 1).
+- **Progress macros** (`fixtures/progress_macros.json`): Embry speaks *where she is*
+  as each work stage begins — stage keys mirror the `$memory` pipeline
+  (intent → recall → clarify/deflect/answer/draft) plus a `working_long` heartbeat,
+  so a long wait is never silent. Short lexical lines rendered LIVE on Turbo (<1s),
+  weighted-random per stage with session no-repeat; the caller (embry-voice-control)
+  fires the matching pool as the real pipeline stage starts. Composes with
+  thinking/pause/hum macros (e.g. `[mm]` → "Let me pull that up." → answer).
 - **Song-hum macros** (`fixtures/song_hum_macros.json`): public-domain Hawaiian /
   hapa-haole tunes Embry hums. ALL picks are compositions published 1930 or earlier
   (US PD as of 2026, Duke CSPD). The 1930s film-era hits (Sweet Leilani 1937,

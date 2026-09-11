@@ -1,0 +1,18 @@
+{
+  "schema": "chatterbox_speak.progress_macros.v1",
+  "note": "Spoken progress markers: Embry says what part of the answer she is working on as each stage begins, mirroring the $memory pipeline (intent -> clarify/deflect/answer/draft) so the listener hears WHERE she is instead of dead air. Stage keys map to the memory routing product the caller already emits; the router speaks a weighted-random phrase from the matching pool (session no-repeat) as that stage starts. These are short LEXICAL lines rendered LIVE on Chatterbox Turbo (<1s, tone neutral_warm/playful_light), not pre-computed clips \u2014 they can cache but do not need to. They compose with pause/thinking/hum macros: a thinking [mm], then a progress line, then the answer. Keep them short and warm; never robotic status codes.",
+  "stages": {
+    "intent":  {"maps_to": "memory /intent", "tone": "neutral_warm", "use_when": "As she parses what was asked, before retrieval.",
+                "pool": ["Okay, let me make sure I've got what you're asking.", "Right \u2014 so here's what I think you mean.", "Let me get this straight first."]},
+    "recall":  {"maps_to": "memory /recall", "tone": "neutral_warm", "use_when": "While she looks something up or gathers evidence.",
+                "pool": ["Let me pull that up.", "One sec \u2014 checking what I've got on that.", "Hang on, finding it."]},
+    "clarify": {"maps_to": "memory /clarify", "tone": "careful", "use_when": "Spoken preface right before an actual clarifying question.",
+                "pool": ["Quick thing before I answer \u2014", "Hang on, I want to get one detail right first.", "Let me check one thing with you \u2014"]},
+    "answer":  {"maps_to": "memory /answer", "tone": "warm", "use_when": "As she starts delivering the grounded answer.",
+                "pool": ["Okay, here's what I'm seeing.", "Alright, putting it together.", "So \u2014 here's the picture."]},
+    "draft":   {"maps_to": "memory /draft", "tone": "careful", "use_when": "While she verifies before committing to a drafted answer.",
+                "pool": ["Let me double-check that before I say it.", "Want to make sure this is right \u2014", "Give me a beat to confirm this."]},
+    "working_long": {"maps_to": "any long stage", "tone": "warm", "use_when": "Heartbeat when a stage runs long, so the wait never goes silent.",
+                "pool": ["Still with you \u2014 almost there.", "Bear with me a moment.", "Nearly there."]}
+  }
+}
