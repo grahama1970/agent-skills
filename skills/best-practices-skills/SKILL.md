@@ -652,6 +652,16 @@ Simple one-shot skills may still document an explicit `eval_not_required`
 rationale for fixture depth, but that is not an exemption from composing
 `agentic-evals`. Absence of an eval fixture is not an opt-out.
 
+## Maintenance Log (policy in files, history in memory)
+
+Skills record maintenance and pruning decisions ONCE, in the shared
+`skill_maintenance_events` collection via the memory daemon — never in a
+per-skill log file. Policy (cadence/checks) lives in an OPTIONAL per-skill
+`MAINTENANCE.md` (typed frontmatter); status is always derived, never stored.
+Write/query helper: `scripts/maintenance_event.py`. Full contract:
+`references/maintenance_log_contract.md`. Foreign agents debug a skill by
+querying its events by exact `skill_id` — not by scanning folders.
+
 ## Checklist (creation/review)
 
 - Frontmatter is valid YAML (no markdown fences).

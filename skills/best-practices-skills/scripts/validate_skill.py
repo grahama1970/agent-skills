@@ -237,6 +237,19 @@ def validate_skill(skill_dir: Path, skills_root: Path | None = None) -> list[dic
             "Skill must list 'agentic-evals' in composes:",
         )
 
+    # --- Maintenance policy file check (MNT001) ---
+    maintenance_md = skill_dir / "MAINTENANCE.md"
+    if maintenance_md.exists():
+        mfm = _extract_frontmatter(maintenance_md)
+        if mfm is None:
+            _add("MNT001", "error", "MAINTENANCE.md has no valid YAML frontmatter (see references/maintenance_log_contract.md)")
+        elif mfm.get("schema") != "agent-skills.maintenance_policy.v1":
+            _add("MNT001", "error", "MAINTENANCE.md frontmatter must declare schema: agent-skills.maintenance_policy.v1")
+        else:
+            legacy = mfm.get("legacy_id")
+            if legacy is not None and (not isinstance(legacy, str) or ":" not in legacy):
+                _add("MNT001", "warning", "MAINTENANCE.md legacy_id must be null or '<repo>:<name>'")
+
     # --- Storage checks ---
     for d in [".venv", "node_modules", "models", "outputs", "logs", "data",
               "weights", "checkpoints", "artifacts", "datasets"]:

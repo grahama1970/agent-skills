@@ -15,6 +15,14 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "best_practices_skills.maintenance_log_contract",
+      "description": "Maintenance events round-trip through the memory daemon with typed validation and deterministic keys; malformed events fail closed; policy files validate against agent-skills.maintenance_policy.v1.",
+      "criticality": "important",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "seams": [],
@@ -57,6 +65,48 @@
         "exit_code": 0,
         "stdout_contains": [
           "PASS_NEGATIVE_REJECTED"
+        ]
+      }
+    },
+    {
+      "name": "maintenance-event-roundtrip",
+      "type": "positive",
+      "real_world": true,
+      "required": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "best_practices_skills.maintenance_log_contract"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd ../scripts && uv run --with httpx --with pydantic python maintenance_event.py emit --skill-id agent-skills:mnt-pilot --repo agent-skills --event-type decision.recorded --summary 'eval roundtrip marker event' --tag eval | grep -q '\"ok\": true' && echo PASS_MAINTENANCE_EVENT_ROUNDTRIP"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_MAINTENANCE_EVENT_ROUNDTRIP"
+        ]
+      }
+    },
+    {
+      "name": "maintenance-event-rejects-empty-fields",
+      "type": "adversarial",
+      "real_world": true,
+      "required": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "best_practices_skills.maintenance_log_contract"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd ../scripts && uv run --with httpx --with pydantic python maintenance_event.py emit --skill-id '' --repo x --event-type decision.recorded --summary y 2>/dev/null | grep -q 'string_too_short' && echo PASS_MAINTENANCE_EVENT_REJECTS_EMPTY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_MAINTENANCE_EVENT_REJECTS_EMPTY"
         ]
       }
     }
