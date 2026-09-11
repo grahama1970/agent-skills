@@ -26,11 +26,15 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 CORPUS = HERE.parent / "fixtures" / "joke_corpus.json"
+_BIG = Path("/mnt/storage12tb/skills/chatterbox-speak/joke_corpus_dadjokes.json")
 EXCLUDE = ["nsfw", "racist", "sexist", "religious", "political", "explicit"]
 
 
 def _load_corpus() -> list[dict]:
-    return json.load(open(CORPUS)).get("jokes", [])
+    # prefer the large wholesome dadjokes corpus (HF shuttie/dadjokes) on 12TB;
+    # fall back to the small committed JokeAPI seed when it is absent.
+    src = _BIG if _BIG.is_file() else CORPUS
+    return json.load(open(src)).get("jokes", [])
 
 
 def _search_local(term: str, limit: int = 5) -> list[dict]:

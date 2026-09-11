@@ -69,8 +69,12 @@ to BENIGN `/deflect` only (OFF_TOPIC/NO_MATCH), never safety/confusion.
 **De-escalation joke search** (`scripts/joke_search.py`, `fixtures/joke_corpus.json`):
 for an ABUSIVE-flagged conversation, search a GENTLE on-topic safe joke to defuse
 (never at the user's expense — mockery escalates; not if genuinely distressed).
-Works offline against a JokeAPI safe-mode corpus; auto-upgrades to dynamic Humor
-API keyword search (50k+ jokes, offensive tags excluded) when `HUMOR_API_KEY` is set.
+Primary corpus is HuggingFace `shuttie/dadjokes` — 49,400 wholesome jokes
+(offensive-word scrubbed) at `/mnt/storage12tb/skills/chatterbox-speak/joke_corpus_dadjokes.json`,
+keyword-searchable OFFLINE with no key, safest for a tense moment. Falls back to
+the small committed JokeAPI seed if absent; auto-upgrades to dynamic Humor API
+(`HUMOR_API_KEY`) only if a live 50k+ search is ever wanted. Weave the searched
+joke into a warm Embry line with the SINGULAR `[chuckle]` (Turbo), never plural.
 
 Hard rules (each earned by a human-rejected render):
 - Never splice clips mid-clause; prosody breaks and it sounds robotic. Whole
