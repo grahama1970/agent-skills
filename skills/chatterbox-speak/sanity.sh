@@ -18,6 +18,7 @@ EOF
 
 python3 scripts/pronounce.py && echo "pronounce OK"
 python3 scripts/pauses.py && echo "pauses OK"
+python3 scripts/cover_plan.py && echo "cover_plan OK"
 
 # negative control: unknown voice must exit non-zero without touching the service
 if ./run.sh speak --text hi --voice nosuchvoice 2>/dev/null; then

@@ -109,12 +109,24 @@ Three named vocabularies the agent selects by context (all human-verified by ear
   the listener; um>uh difficulty gradient). Band: light mm → longer hmm for weightier
   problems. Pairs with a concise problem restatement (Polya step 1).
 - **Progress macros** (`fixtures/progress_macros.json`): Embry speaks *where she is*
-  as each work stage begins — stage keys mirror the `$memory` pipeline
-  (intent → recall → clarify/deflect/answer/draft) plus a `working_long` heartbeat,
-  so a long wait is never silent. Short lexical lines rendered LIVE on Turbo (<1s),
-  weighted-random per stage with session no-repeat; the caller (embry-voice-control)
-  fires the matching pool as the real pipeline stage starts. Composes with
-  thinking/pause/hum macros (e.g. `[mm]` → "Let me pull that up." → answer).
+  as each work stage begins — stages mirror the `$memory` pipeline
+  (intent → recall → clarify/deflect/answer/draft) AND the heavy Lane-B work
+  activities: `debugging` ($debugger breakpoints), `diagramming` ($ops-excalidraw
+  diagram search/create), `searching` (research), plus a `working_long` heartbeat.
+  Short lexical lines rendered LIVE on Turbo (<1s), weighted-random per stage with
+  session no-repeat.
+- **Delivery cover = the fast lane** (`scripts/cover_plan.py`): every macro carries
+  a `delivery_cover` — the instant filler that plays WHILE the slow answer builds.
+  Two-lane model (best-practices-chatterbox-agent): **Lane A** = the deterministic
+  cover planner maps `(stage, intensity, tags)` → ordered cover (thinking sound →
+  progress line → pause, or a mood-matched hum on idle/long waits) in ~0ms, zero
+  reasoning (like memory `/intent fast:true`); Embry speaks it immediately.
+  **Lane B** = the high-reasoning agent does the real work (sets breakpoints via
+  $debugger, finds/draws diagrams via $ops-excalidraw, gathers evidence). When B is
+  ready, barge-in hands off. The concurrent two-lane runtime is owned by
+  `embry-voice-control`; chatterbox-speak owns the vocabulary + the deterministic
+  planner. Only a context tagged `ambiguous` escalates to a tiny model
+  (glm-5.3-flash) to break a tie — the default is deterministic and instant.
 - **Song-hum macros** (`fixtures/song_hum_macros.json`): public-domain Hawaiian /
   hapa-haole tunes Embry hums. ALL picks are compositions published 1930 or earlier
   (US PD as of 2026, Duke CSPD). The 1930s film-era hits (Sweet Leilani 1937,

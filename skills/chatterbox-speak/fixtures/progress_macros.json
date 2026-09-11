@@ -13,6 +13,12 @@
     "draft":   {"maps_to": "memory /draft", "tone": "careful", "use_when": "While she verifies before committing to a drafted answer.",
                 "pool": ["Let me double-check that before I say it.", "Want to make sure this is right \u2014", "Give me a beat to confirm this."]},
     "working_long": {"maps_to": "any long stage", "tone": "warm", "use_when": "Heartbeat when a stage runs long, so the wait never goes silent.",
-                "pool": ["Still with you \u2014 almost there.", "Bear with me a moment.", "Nearly there."]}
+                "pool": ["Still with you \u2014 almost there.", "Bear with me a moment.", "Nearly there."]},
+    "debugging": {"maps_to": "$debugger breakpoints (Lane B)", "tone": "neutral_warm", "use_when": "While the working agent sets a breakpoint and inspects live state.",
+                "pool": ["Let me set a breakpoint and watch what actually happens.", "I'm stepping through it to see where it breaks.", "Catching it in the act \u2014 one sec."]},
+    "diagramming": {"maps_to": "$ops-excalidraw diagram search/create (Lane B)", "tone": "warm", "use_when": "While the working agent finds or draws a relevant diagram.",
+                "pool": ["I'm sketching this out so it's clearer.", "Let me draw the diagram for this.", "Pulling up a picture of how this fits together."]},
+    "searching": {"maps_to": "research / evidence gathering (Lane B)", "tone": "neutral_warm", "use_when": "While the working agent searches or gathers evidence.",
+                "pool": ["Let me go find the source on that.", "Digging up what backs this.", "Checking a couple of references \u2014 hang tight."]}
   }
 }
