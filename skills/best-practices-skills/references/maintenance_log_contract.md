@@ -12,6 +12,8 @@ status is derived — never hand-written.**
 ## Stable skill identity
 
 - `skill_id` = `<repo>:<skill-directory-name>` (e.g. `agent-skills:ops-workstation`).
+- Project-level work not owned by one skill uses `<repo>:project` (e.g. `tau:project`)
+  — same collection, same schema; `changed_paths` carries the files.
 - If a skill directory is renamed, its `MAINTENANCE.md` frontmatter keeps the
   OLD id in `legacy_id:` and adopts the new one; events continue under the new
   id, and queries should follow `legacy_id` chains. Renames must not fork history.
