@@ -3,29 +3,86 @@
   "emotion": "surprised",
   "source": "hand-authored from verified levers (Turbo native [surprised]/[gasp] per service accepted_tags; v3 clone [gasps] for high band). Pending one-at-a-time human ear-verdict.",
   "variations": [
-    {"id": "sur-v3-whoa-really", "kind": "clip", "intensity": 9, "channel": "v3_whole_sentence",
-     "gen": {"engine": "eleven_v3_tts", "text": "[gasps] Oh! Wait\u2014really? I did not see that coming."},
-     "use_when": "A genuinely unexpected, big reveal the user is excited about.",
-     "avoid_when": "Bad-news surprises or when calm is better."},
-    {"id": "sur-v3-no-way", "kind": "clip", "intensity": 9, "channel": "v3_whole_sentence",
-     "gen": {"engine": "eleven_v3_tts", "text": "[gasps] No way\u2014 [laughs] you're kidding me!"},
-     "use_when": "A delightful shock the user is thrilled about; relationship allows playfulness.",
-     "avoid_when": "Serious or somber reveals."},
-    {"id": "sur-turbo-oh-kidding", "kind": "clip", "intensity": 6, "channel": "turbo_native",
-     "gen": {"engine": "chatterbox_turbo", "render_text": "[surprised] Oh! You're kidding... that's not what I expected.", "tone": "curious_searching"},
-     "use_when": "A moderate surprise mid-conversation; keep it quick and live.",
-     "avoid_when": "When the news is grave."},
-    {"id": "sur-turbo-gasp-wait", "kind": "clip", "intensity": 6, "channel": "turbo_native",
-     "gen": {"engine": "chatterbox_turbo", "render_text": "[gasp] Wait, hold on... say that again?", "tone": "curious_searching"},
-     "use_when": "A surprising claim the user wants acknowledged before continuing.",
-     "avoid_when": "When you already expected it."},
-    {"id": "sur-plain-didnt-expect", "kind": "clip", "intensity": 3, "channel": "turbo_native",
-     "gen": {"engine": "chatterbox_turbo", "render_text": "Oh. I honestly didn't expect that.", "tone": "neutral_warm"},
-     "use_when": "A mild, understated surprise; restrained acknowledgment.",
-     "avoid_when": "When the moment genuinely warrants a big reaction."},
-    {"id": "sur-plain-huh", "kind": "clip", "intensity": 2, "channel": "turbo_native",
-     "gen": {"engine": "chatterbox_turbo", "render_text": "Huh. That's unexpected.", "tone": "neutral_warm"},
-     "use_when": "A small quiet surprise; a brief beat.",
-     "avoid_when": "Big reveals that deserve more."}
-  ]
+    {
+      "id": "sur-v3-whoa-really",
+      "kind": "clip",
+      "intensity": 9,
+      "channel": "v3_whole_sentence",
+      "gen": {
+        "engine": "eleven_v3_tts",
+        "text": "[gasps] Oh! Wait\u2014really? I did not see that coming."
+      },
+      "use_when": "A genuinely unexpected, big reveal the user is excited about.",
+      "avoid_when": "Bad-news surprises or when calm is better.",
+      "human_confirmed": true
+    },
+    {
+      "id": "sur-v3-no-way",
+      "kind": "clip",
+      "intensity": 9,
+      "channel": "v3_whole_sentence",
+      "gen": {
+        "engine": "eleven_v3_tts",
+        "text": "[gasps] No way\u2014 [laughs] you're kidding me!"
+      },
+      "use_when": "A delightful shock the user is thrilled about; relationship allows playfulness.",
+      "avoid_when": "Serious or somber reveals."
+    },
+    {
+      "id": "sur-turbo-oh-kidding",
+      "kind": "clip",
+      "intensity": 6,
+      "channel": "turbo_native",
+      "gen": {
+        "engine": "chatterbox_turbo",
+        "render_text": "[surprised] Oh! You're kidding... that's not what I expected.",
+        "tone": "curious_searching"
+      },
+      "use_when": "A moderate surprise mid-conversation; keep it quick and live.",
+      "avoid_when": "When the news is grave.",
+      "human_confirmed": true
+    },
+    {
+      "id": "sur-turbo-gasp-wait",
+      "kind": "clip",
+      "intensity": 6,
+      "channel": "turbo_native",
+      "gen": {
+        "engine": "chatterbox_turbo",
+        "render_text": "[gasp] Wait, hold on... say that again?",
+        "tone": "curious_searching"
+      },
+      "use_when": "A surprising claim the user wants acknowledged before continuing.",
+      "avoid_when": "When you already expected it."
+    },
+    {
+      "id": "sur-plain-didnt-expect",
+      "kind": "clip",
+      "intensity": 3,
+      "channel": "turbo_native",
+      "gen": {
+        "engine": "chatterbox_turbo",
+        "render_text": "Oh. I honestly didn't expect that.",
+        "tone": "neutral_warm"
+      },
+      "use_when": "A mild, understated surprise; restrained acknowledgment.",
+      "avoid_when": "When the moment genuinely warrants a big reaction."
+    },
+    {
+      "id": "sur-plain-huh",
+      "kind": "clip",
+      "intensity": 2,
+      "channel": "turbo_native",
+      "gen": {
+        "engine": "chatterbox_turbo",
+        "render_text": "Huh. That's unexpected.",
+        "tone": "neutral_warm"
+      },
+      "use_when": "A small quiet surprise; a brief beat.",
+      "avoid_when": "Big reveals that deserve more.",
+      "human_confirmed": true
+    }
+  ],
+  "status": "human_confirmed_final",
+  "human_verdict_2026-09-11": "Graham: these are good \u2014 v3 [gasps] high, Turbo [surprised]/[gasp] mid, plain low all confirmed"
 }

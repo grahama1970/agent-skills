@@ -1,0 +1,93 @@
+{
+  "schema": "chatterbox_speak.sfx_variation_bank.v1",
+  "emotion": "sarcastic",
+  "source": "hand-authored from verified levers (Turbo native [sarcastic] per accepted_tags; v3 clone dry delivery for high band). Sarcasm lives in the WORDING + dry delivery; keep it affectionate, not cruel. Pending one-at-a-time human ear-verdict.",
+  "variations": [
+    {
+      "id": "sar-v3-oh-great",
+      "kind": "clip",
+      "intensity": 7,
+      "channel": "v3_whole_sentence",
+      "gen": {
+        "engine": "eleven_v3_tts",
+        "text": "Oh, [chuckles] great. Because that always works out so well."
+      },
+      "use_when": "Playful dry sarcasm between friends about a predictable mishap.",
+      "avoid_when": "When the user is genuinely upset; never cruel."
+    },
+    {
+      "id": "sar-v3-sure-jan",
+      "kind": "clip",
+      "intensity": 7,
+      "channel": "v3_whole_sentence",
+      "gen": {
+        "engine": "eleven_v3_tts",
+        "text": "Riiight. [sighs] Sure, that'll definitely go to plan."
+      },
+      "use_when": "Gently ribbing an over-optimistic claim.",
+      "avoid_when": "Serious commitments; sensitive people."
+    },
+    {
+      "id": "sar-turbo-shocking",
+      "kind": "clip",
+      "intensity": 5,
+      "channel": "turbo_native",
+      "gen": {
+        "engine": "chatterbox_turbo",
+        "render_text": "[sarcastic] Oh, shocking... who could have possibly seen that coming.",
+        "tone": "playful_light"
+      },
+      "use_when": "A dry deadpan reaction to an obvious outcome.",
+      "avoid_when": "When sincerity is needed."
+    },
+    {
+      "id": "sar-turbo-love-that",
+      "kind": "clip",
+      "intensity": 5,
+      "channel": "turbo_native",
+      "gen": {
+        "engine": "chatterbox_turbo",
+        "render_text": "[sarcastic] Oh, I just love when that happens.",
+        "tone": "playful_light"
+      },
+      "use_when": "Light mock-enthusiasm at a small annoyance.",
+      "avoid_when": "Real frustration; keep it warm."
+    },
+    {
+      "id": "sar-plain-cool",
+      "kind": "clip",
+      "intensity": 3,
+      "channel": "turbo_native",
+      "gen": {
+        "engine": "chatterbox_turbo",
+        "render_text": "Cool. Cool cool cool. Totally fine.",
+        "tone": "playful_light"
+      },
+      "use_when": "Deadpan understatement carried by wording alone.",
+      "avoid_when": "When it could read as passive-aggressive."
+    },
+    {
+      "id": "sar-plain-noticed",
+      "kind": "clip",
+      "intensity": 2,
+      "channel": "turbo_native",
+      "gen": {
+        "engine": "chatterbox_turbo",
+        "render_text": "Wow. I never would have guessed.",
+        "tone": "neutral_warm"
+      },
+      "use_when": "The driest, most restrained wink.",
+      "avoid_when": "When plainness reads as flat rather than dry."
+    }
+  ],
+  "deflect_linkage": "Sarcastic delivery is a chatterbox render option for BENIGN /deflect (deflection_type OFF_TOPIC or NO_MATCH) when context allows playfulness. NEVER on unsafe/content-safety deflect or genuine confusion (use deescalating/calm). sarcastic is NOT a memory tone; memory /deflect returns clean text + a frozen-vocab tone, and chatterbox chooses the sarcastic render gated by deflection_type + relationship.",
+  "intensity_band_policy": "Sarcasm INVERTS the usual ladder: risk of reading as mockery/passive-aggression RISES with intensity (RJ Starr; Psychology Today 2024). Low(1-3)/mid(4-7) dry sarcasm is fine; the bank TOPS OUT at ~7. HIGH intensity (8-10) must NOT escalate the sarcasm (cruelty cliff) -> PIVOT to a warm self-deprecating JOKE from the deflect-quip pool (self-deprecating humor raises warmth/approachability, Konig 2024). Use jokes sparingly; gate to benign deflect + established relationship; never on safety/confusion/genuine upset (humor-as-avoidance is the failure mode, Humor Health Project).",
+  "high_intensity_routes_to": "deflect-quip pool (self-deprecating joke), not harder sarcasm",
+  "research": [
+    "RJ Starr psychology of sarcasm",
+    "Psychology Today 2024 sarcasm perceived rude",
+    "Konig et al 2024 self-deprecating humor warmth",
+    "Lime/Twyla chatbot humor sparingly",
+    "Humor Health Project humor-as-avoidance"
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "schema": "chatterbox_speak.sfx_variation_bank.v1",
+  "emotion": "angry",
+  "source": "hand-authored from verified levers (Turbo native [angry] per accepted_tags; v3 clone for controlled high band). Anger is CONTROLLED/firm here, not shouting (huge arousal reads aggressive per hard rules). Pending one-at-a-time human ear-verdict.",
+  "variations": [
+    {
+      "id": "ang-v3-not-okay",
+      "kind": "clip",
+      "intensity": 8,
+      "channel": "v3_whole_sentence",
+      "gen": {
+        "engine": "eleven_v3_tts",
+        "text": "No. [exhales] That is not okay, and I'm not going to pretend it is."
+      },
+      "use_when": "A firm principled boundary; cold controlled anger, not a shout.",
+      "avoid_when": "Minor friction; when de-escalation is better.",
+      "human_confirmed": true
+    },
+    {
+      "id": "ang-v3-enough",
+      "kind": "clip",
+      "intensity": 8,
+      "channel": "v3_whole_sentence",
+      "gen": {
+        "engine": "eleven_v3_tts",
+        "text": "[sighs] Enough. I've said this twice now, and I mean it."
+      },
+      "use_when": "Repeated boundary violation; weary firm anger.",
+      "avoid_when": "First-time issues; playful contexts."
+    },
+    {
+      "id": "ang-turbo-frustrated",
+      "kind": "clip",
+      "intensity": 6,
+      "channel": "turbo_native",
+      "gen": {
+        "engine": "chatterbox_turbo",
+        "render_text": "[angry] Okay, that's frustrating... this keeps happening.",
+        "tone": "firm_boundary"
+      },
+      "use_when": "Audible frustration mid-conversation; controlled.",
+      "avoid_when": "When calm problem-solving is better.",
+      "human_confirmed": true
+    },
+    {
+      "id": "ang-turbo-not-right",
+      "kind": "clip",
+      "intensity": 6,
+      "channel": "turbo_native",
+      "gen": {
+        "engine": "chatterbox_turbo",
+        "render_text": "[angry] No, that's not right, and it's not fair.",
+        "tone": "firm_boundary"
+      },
+      "use_when": "Naming an injustice firmly.",
+      "avoid_when": "When the facts are still unclear."
+    },
+    {
+      "id": "ang-plain-firm",
+      "kind": "clip",
+      "intensity": 3,
+      "channel": "turbo_native",
+      "gen": {
+        "engine": "chatterbox_turbo",
+        "render_text": "I need to be direct: that doesn't work for me.",
+        "tone": "firm_boundary"
+      },
+      "use_when": "A calm firm boundary; restrained displeasure.",
+      "avoid_when": "When warmth is more appropriate.",
+      "human_confirmed": true
+    },
+    {
+      "id": "ang-plain-disappointed",
+      "kind": "clip",
+      "intensity": 2,
+      "channel": "turbo_native",
+      "gen": {
+        "engine": "chatterbox_turbo",
+        "render_text": "Honestly, I'm a little frustrated by that.",
+        "tone": "careful_concerned"
+      },
+      "use_when": "Mild displeasure; naming the feeling quietly.",
+      "avoid_when": "Serious violations that need firmness."
+    }
+  ],
+  "status": "human_confirmed_final",
+  "human_verdict_2026-09-11": "Graham: these are good \u2014 controlled v3 high, Turbo [angry] mid, plain firm low all confirmed"
+}
