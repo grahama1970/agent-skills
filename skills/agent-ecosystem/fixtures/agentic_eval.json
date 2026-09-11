@@ -1,259 +1,265 @@
 {
-  "version": 2,
-  "skill": "agent-ecosystem",
-  "trials": 2,
-  "proof_scope": "pi.receipt_envelope.v1 boundary envelope: live pydantic validation against the live triage-error catalog, typed parent_refs, and the mermaid ecosystem graph. real_world: every case executes the live validator and reads the live SKILL.md.",
-  "claims": {
-    "proves": "The boundary envelope validates strictly (triage codes from the live catalog, sha256 shapes, no extra fields, typed parent refs) and the ecosystem graph is retrievable."
+ "version": 2,
+ "skill": "agent-ecosystem",
+ "trials": 2,
+ "proof_scope": "pi.receipt_envelope.v1 boundary envelope: live pydantic validation against the live triage-error catalog, typed parent_refs, and the mermaid ecosystem graph. real_world: every case executes the live validator and reads the live SKILL.md.",
+ "claims": {
+  "proves": "The boundary envelope validates strictly (triage codes from the live catalog, sha256 shapes, no extra fields, typed parent refs) and the ecosystem graph is retrievable."
+ },
+ "capability_claims": [
+  {
+   "id": "ecosystem.envelope_valid_passes",
+   "description": "valid envelope with parent refs and catalog triage code passes",
+   "criticality": "critical",
+   "evidence_required": {
+    "deterministic": true
+   },
+   "claim_semantics": "protocol"
   },
-  "capability_claims": [
-    {
-      "id": "ecosystem.envelope_valid_passes",
-      "description": "valid envelope with parent refs and catalog triage code passes",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "ecosystem.ambiguous_triage_code_rejects",
-      "description": "ambiguous triage code is unrepresentable",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "ecosystem.extra_fields_reject",
-      "description": "extra fields are rejected (extra=forbid)",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "ecosystem.graph_retrievable",
-      "description": "the mermaid ecosystem graph is emitted by run.sh graph",
-      "criticality": "important",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "agent_ecosystem.shame_immutable_goal_contract",
-      "description": "agent-ecosystem names the shame immutable goal and each ecosystem component boundary obligation.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "agent_ecosystem.membership_cli_contract",
-      "description": "run.sh exposes the documented membership validate/table contract for members.json.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    }
-  ],
-  "seams": [
-    {
-      "seam_id": "envelope-validator",
-      "seam_type": "cli",
-      "criticality": "critical",
-      "required_evidence": [
-        "live_e2e"
-      ]
-    },
-    {
-      "seam_id": "ecosystem-graph",
-      "seam_type": "cli",
-      "criticality": "important",
-      "required_evidence": [
-        "live_e2e"
-      ]
-    },
-    {
-      "seam_id": "membership-cli",
-      "seam_type": "cli",
-      "criticality": "critical",
-      "required_evidence": [
-        "live_e2e"
-      ]
-    }
-  ],
-  "cases": [
-    {
-      "name": "shame-immutable-goal-mentioned-with-all-components",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "agent_ecosystem.shame_immutable_goal_contract"
-      ],
-      "seams": [
-        "agent-ecosystem-skill-doc",
-        "shame-immutable-goal"
-      ],
-      "timeout_seconds": 30,
-      "command": [
-        "bash",
-        "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills && python3 - <<'PY2'\nfrom pathlib import Path\ntext=Path('skills/agent-ecosystem/SKILL.md').read_text()\nrequired=['shame-deterministic-instruction-obedience-v1','skills/shame/immutable_goal.json','project agents','triage-error','shame','lazy-report-shame-shame-shame extension','status-json-check.mjs','agent_status_schema.py','compile-status-command.mjs','agentic-evals','ask','tau','project-watchdog','ops-herdr','ponytail','Memory','agent-ecosystem','goal-helper']\nmissing=[item for item in required if item not in text]\nif missing:\n    raise SystemExit('missing '+repr(missing))\nprint('SHAME_IMMUTABLE_GOAL_ECOSYSTEM_OK')\nPY2"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "SHAME_IMMUTABLE_GOAL_ECOSYSTEM_OK"
-        ]
-      }
-    },
-    {
-      "name": "membership-cli-validates-members-json",
-      "type": "positive",
-      "evidence_class": "deterministic",
-      "real_world": true,
-      "supports_claims": [
-        "agent_ecosystem.membership_cli_contract"
-      ],
-      "seams": [
-        "membership-cli"
-      ],
-      "timeout_seconds": 30,
-      "command": [
-        "bash",
-        "-lc",
-        "/home/graham/workspace/experiments/agent-skills/skills/agent-ecosystem/run.sh membership validate | grep -q '\"valid\": true'"
-      ],
-      "expected": {
-        "exit_code": 0
-      }
-    },
-    {
-      "name": "valid-envelope-passes",
-      "type": "positive",
-      "evidence_class": "deterministic",
-      "real_world": true,
-      "supports_claims": [
-        "ecosystem.envelope_valid_passes"
-      ],
-      "seams": [
-        "envelope-validator"
-      ],
-      "timeout_seconds": 30,
-      "command": [
-        "bash",
-        "-lc",
-        "printf '{\"schema\":\"pi.receipt_envelope.v1\",\"receipt_id\":\"r1\",\"payload_schema\":\"pi.agent_status.v1\",\"producer\":\"shame\",\"emitted_at\":\"2026-09-01T13:00:00Z\",\"goal_hash\":\"%s\",\"parent_refs\":[{\"receipt_id\":\"r0\",\"expected_schema\":\"brave_search.result.v1\",\"expected_producer\":\"brave-search\"}],\"triage_code\":\"herdr_pane_unaddressable\",\"payload\":{\"schema\":\"pi.agent_status.v1\"}}' 'sha256:cd0aa9856147b6c5b4ff2b7dfee5da20aa38253099ef1b4a64aced233c9afe29' | /home/graham/workspace/experiments/agent-skills/skills/agent-ecosystem/run.sh validate - | grep -q '\"valid\": true'"
-      ],
-      "expected": {
-        "exit_code": 0
-      }
-    },
-    {
-      "name": "ambiguous-triage-code-rejects",
-      "type": "negative",
-      "evidence_class": "deterministic",
-      "real_world": true,
-      "supports_claims": [
-        "ecosystem.ambiguous_triage_code_rejects"
-      ],
-      "seams": [
-        "envelope-validator"
-      ],
-      "timeout_seconds": 30,
-      "command": [
-        "bash",
-        "-lc",
-        "printf '{\"schema\":\"pi.receipt_envelope.v1\",\"receipt_id\":\"r2\",\"payload_schema\":\"s\",\"producer\":\"p\",\"emitted_at\":\"t\",\"triage_code\":\"stuff broke\",\"payload\":{\"schema\":\"pi.agent_status.v1\"}}' | /home/graham/workspace/experiments/agent-skills/skills/agent-ecosystem/run.sh validate - | grep -q 'ambiguous triage_code'"
-      ],
-      "expected": {
-        "exit_code": 0
-      }
-    },
-    {
-      "name": "extra-fields-reject",
-      "type": "negative",
-      "evidence_class": "deterministic",
-      "real_world": true,
-      "supports_claims": [
-        "ecosystem.extra_fields_reject"
-      ],
-      "seams": [
-        "envelope-validator"
-      ],
-      "timeout_seconds": 30,
-      "command": [
-        "bash",
-        "-lc",
-        "printf '{\"schema\":\"pi.receipt_envelope.v1\",\"receipt_id\":\"r3\",\"payload_schema\":\"s\",\"producer\":\"p\",\"emitted_at\":\"t\",\"payload\":{\"schema\":\"pi.agent_status.v1\"},\"extra\":1}' | /home/graham/workspace/experiments/agent-skills/skills/agent-ecosystem/run.sh validate - | grep -q 'Extra inputs are not permitted'"
-      ],
-      "expected": {
-        "exit_code": 0
-      }
-    },
-    {
-      "name": "graph-retrievable",
-      "type": "positive",
-      "evidence_class": "deterministic",
-      "real_world": true,
-      "supports_claims": [
-        "ecosystem.graph_retrievable"
-      ],
-      "seams": [
-        "ecosystem-graph"
-      ],
-      "timeout_seconds": 30,
-      "command": [
-        "bash",
-        "-lc",
-        "/home/graham/workspace/experiments/agent-skills/skills/agent-ecosystem/run.sh graph | grep -q 'flowchart TB'"
-      ],
-      "expected": {
-        "exit_code": 0
-      }
-    },
-    {
-      "name": "parent-refs-without-goal-hash-reject",
-      "type": "negative",
-      "evidence_class": "deterministic",
-      "real_world": true,
-      "supports_claims": [
-        "ecosystem.envelope_valid_passes"
-      ],
-      "seams": [
-        "envelope-validator"
-      ],
-      "timeout_seconds": 30,
-      "command": [
-        "bash",
-        "-lc",
-        "printf '{\"schema\":\"pi.receipt_envelope.v1\",\"receipt_id\":\"r\",\"payload_schema\":\"s\",\"producer\":\"p\",\"emitted_at\":\"t\",\"parent_refs\":[{\"receipt_id\":\"r0\",\"expected_schema\":\"s0\",\"expected_producer\":\"p0\"}],\"payload\":{\"schema\":\"s\"}}' | /home/graham/workspace/experiments/agent-skills/skills/agent-ecosystem/run.sh validate - | grep -q 'untrusted'"
-      ],
-      "expected": {
-        "exit_code": 0
-      }
-    },
-    {
-      "name": "payload-schema-mismatch-rejects",
-      "type": "negative",
-      "evidence_class": "deterministic",
-      "real_world": true,
-      "supports_claims": [
-        "ecosystem.envelope_valid_passes"
-      ],
-      "seams": [
-        "envelope-validator"
-      ],
-      "timeout_seconds": 30,
-      "command": [
-        "bash",
-        "-lc",
-        "printf '{\"schema\":\"pi.receipt_envelope.v1\",\"receipt_id\":\"r\",\"payload_schema\":\"pi.agent_status.v1\",\"producer\":\"p\",\"emitted_at\":\"t\",\"payload\":{\"schema\":\"something.else.v1\"}}' | /home/graham/workspace/experiments/agent-skills/skills/agent-ecosystem/run.sh validate - | grep -q 'may not misdescribe'"
-      ],
-      "expected": {
-        "exit_code": 0
-      }
-    }
-  ]
+  {
+   "id": "ecosystem.ambiguous_triage_code_rejects",
+   "description": "ambiguous triage code is unrepresentable",
+   "criticality": "critical",
+   "evidence_required": {
+    "deterministic": true
+   },
+   "claim_semantics": "control_flow"
+  },
+  {
+   "id": "ecosystem.extra_fields_reject",
+   "description": "extra fields are rejected (extra=forbid)",
+   "criticality": "critical",
+   "evidence_required": {
+    "deterministic": true
+   },
+   "claim_semantics": "protocol"
+  },
+  {
+   "id": "ecosystem.graph_retrievable",
+   "description": "the mermaid ecosystem graph is emitted by run.sh graph",
+   "criticality": "important",
+   "evidence_required": {
+    "deterministic": true
+   },
+   "claim_semantics": "other"
+  },
+  {
+   "id": "agent_ecosystem.shame_immutable_goal_contract",
+   "description": "agent-ecosystem names the shame immutable goal and each ecosystem component boundary obligation.",
+   "criticality": "critical",
+   "evidence_required": {
+    "deterministic": true
+   },
+   "claim_semantics": "other"
+  },
+  {
+   "id": "agent_ecosystem.membership_cli_contract",
+   "description": "run.sh exposes the documented membership validate/table contract for members.json.",
+   "criticality": "critical",
+   "evidence_required": {
+    "deterministic": true
+   },
+   "claim_semantics": "other"
+  }
+ ],
+ "seams": [
+  {
+   "seam_id": "envelope-validator",
+   "seam_type": "cli",
+   "criticality": "critical",
+   "required_evidence": [
+    "live_e2e"
+   ]
+  },
+  {
+   "seam_id": "ecosystem-graph",
+   "seam_type": "cli",
+   "criticality": "important",
+   "required_evidence": [
+    "live_e2e"
+   ]
+  },
+  {
+   "seam_id": "membership-cli",
+   "seam_type": "cli",
+   "criticality": "critical",
+   "required_evidence": [
+    "live_e2e"
+   ]
+  }
+ ],
+ "cases": [
+  {
+   "name": "shame-immutable-goal-mentioned-with-all-components",
+   "type": "adversarial",
+   "real_world": true,
+   "evidence_class": "deterministic",
+   "supports_claims": [
+    "agent_ecosystem.shame_immutable_goal_contract"
+   ],
+   "seams": [
+    "agent-ecosystem-skill-doc",
+    "shame-immutable-goal"
+   ],
+   "timeout_seconds": 30,
+   "command": [
+    "bash",
+    "-lc",
+    "cd /home/graham/workspace/experiments/agent-skills && python3 - <<'PY2'\nfrom pathlib import Path\ntext=Path('skills/agent-ecosystem/SKILL.md').read_text()\nrequired=['shame-deterministic-instruction-obedience-v1','skills/shame/immutable_goal.json','project agents','triage-error','shame','lazy-report-shame-shame-shame extension','status-json-check.mjs','agent_status_schema.py','compile-status-command.mjs','agentic-evals','ask','tau','project-watchdog','ops-herdr','ponytail','Memory','agent-ecosystem','goal-helper']\nmissing=[item for item in required if item not in text]\nif missing:\n    raise SystemExit('missing '+repr(missing))\nprint('SHAME_IMMUTABLE_GOAL_ECOSYSTEM_OK')\nPY2"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "SHAME_IMMUTABLE_GOAL_ECOSYSTEM_OK"
+    ]
+   }
+  },
+  {
+   "name": "membership-cli-validates-members-json",
+   "type": "positive",
+   "evidence_class": "deterministic",
+   "real_world": true,
+   "supports_claims": [
+    "agent_ecosystem.membership_cli_contract"
+   ],
+   "seams": [
+    "membership-cli"
+   ],
+   "timeout_seconds": 30,
+   "command": [
+    "bash",
+    "-lc",
+    "/home/graham/workspace/experiments/agent-skills/skills/agent-ecosystem/run.sh membership validate | grep -q '\"valid\": true'"
+   ],
+   "expected": {
+    "exit_code": 0
+   }
+  },
+  {
+   "name": "valid-envelope-passes",
+   "type": "positive",
+   "evidence_class": "deterministic",
+   "real_world": true,
+   "supports_claims": [
+    "ecosystem.envelope_valid_passes"
+   ],
+   "seams": [
+    "envelope-validator"
+   ],
+   "timeout_seconds": 30,
+   "command": [
+    "bash",
+    "-lc",
+    "printf '{\"schema\":\"pi.receipt_envelope.v1\",\"receipt_id\":\"r1\",\"payload_schema\":\"pi.agent_status.v1\",\"producer\":\"shame\",\"emitted_at\":\"2026-09-01T13:00:00Z\",\"goal_hash\":\"%s\",\"parent_refs\":[{\"receipt_id\":\"r0\",\"expected_schema\":\"brave_search.result.v1\",\"expected_producer\":\"brave-search\"}],\"triage_code\":\"herdr_pane_unaddressable\",\"payload\":{\"schema\":\"pi.agent_status.v1\"}}' 'sha256:cd0aa9856147b6c5b4ff2b7dfee5da20aa38253099ef1b4a64aced233c9afe29' | /home/graham/workspace/experiments/agent-skills/skills/agent-ecosystem/run.sh validate - | grep -q '\"valid\": true'"
+   ],
+   "expected": {
+    "exit_code": 0
+   }
+  },
+  {
+   "name": "ambiguous-triage-code-rejects",
+   "type": "negative",
+   "evidence_class": "deterministic",
+   "real_world": true,
+   "supports_claims": [
+    "ecosystem.ambiguous_triage_code_rejects"
+   ],
+   "seams": [
+    "envelope-validator"
+   ],
+   "timeout_seconds": 30,
+   "command": [
+    "bash",
+    "-lc",
+    "printf '{\"schema\":\"pi.receipt_envelope.v1\",\"receipt_id\":\"r2\",\"payload_schema\":\"s\",\"producer\":\"p\",\"emitted_at\":\"t\",\"triage_code\":\"stuff broke\",\"payload\":{\"schema\":\"pi.agent_status.v1\"}}' | /home/graham/workspace/experiments/agent-skills/skills/agent-ecosystem/run.sh validate - | grep -q 'ambiguous triage_code'"
+   ],
+   "expected": {
+    "exit_code": 0
+   }
+  },
+  {
+   "name": "extra-fields-reject",
+   "type": "negative",
+   "evidence_class": "deterministic",
+   "real_world": true,
+   "supports_claims": [
+    "ecosystem.extra_fields_reject"
+   ],
+   "seams": [
+    "envelope-validator"
+   ],
+   "timeout_seconds": 30,
+   "command": [
+    "bash",
+    "-lc",
+    "printf '{\"schema\":\"pi.receipt_envelope.v1\",\"receipt_id\":\"r3\",\"payload_schema\":\"s\",\"producer\":\"p\",\"emitted_at\":\"t\",\"payload\":{\"schema\":\"pi.agent_status.v1\"},\"extra\":1}' | /home/graham/workspace/experiments/agent-skills/skills/agent-ecosystem/run.sh validate - | grep -q 'Extra inputs are not permitted'"
+   ],
+   "expected": {
+    "exit_code": 0
+   }
+  },
+  {
+   "name": "graph-retrievable",
+   "type": "positive",
+   "evidence_class": "deterministic",
+   "real_world": true,
+   "supports_claims": [
+    "ecosystem.graph_retrievable"
+   ],
+   "seams": [
+    "ecosystem-graph"
+   ],
+   "timeout_seconds": 30,
+   "command": [
+    "bash",
+    "-lc",
+    "/home/graham/workspace/experiments/agent-skills/skills/agent-ecosystem/run.sh graph | grep -q 'flowchart TB'"
+   ],
+   "expected": {
+    "exit_code": 0
+   }
+  },
+  {
+   "name": "parent-refs-without-goal-hash-reject",
+   "type": "negative",
+   "evidence_class": "deterministic",
+   "real_world": true,
+   "supports_claims": [
+    "ecosystem.envelope_valid_passes"
+   ],
+   "seams": [
+    "envelope-validator"
+   ],
+   "timeout_seconds": 30,
+   "command": [
+    "bash",
+    "-lc",
+    "printf '{\"schema\":\"pi.receipt_envelope.v1\",\"receipt_id\":\"r\",\"payload_schema\":\"s\",\"producer\":\"p\",\"emitted_at\":\"t\",\"parent_refs\":[{\"receipt_id\":\"r0\",\"expected_schema\":\"s0\",\"expected_producer\":\"p0\"}],\"payload\":{\"schema\":\"s\"}}' | /home/graham/workspace/experiments/agent-skills/skills/agent-ecosystem/run.sh validate - | grep -q 'untrusted'"
+   ],
+   "expected": {
+    "exit_code": 0
+   }
+  },
+  {
+   "name": "payload-schema-mismatch-rejects",
+   "type": "negative",
+   "evidence_class": "deterministic",
+   "real_world": true,
+   "supports_claims": [
+    "ecosystem.envelope_valid_passes"
+   ],
+   "seams": [
+    "envelope-validator"
+   ],
+   "timeout_seconds": 30,
+   "command": [
+    "bash",
+    "-lc",
+    "printf '{\"schema\":\"pi.receipt_envelope.v1\",\"receipt_id\":\"r\",\"payload_schema\":\"pi.agent_status.v1\",\"producer\":\"p\",\"emitted_at\":\"t\",\"payload\":{\"schema\":\"something.else.v1\"}}' | /home/graham/workspace/experiments/agent-skills/skills/agent-ecosystem/run.sh validate - | grep -q 'may not misdescribe'"
+   ],
+   "expected": {
+    "exit_code": 0
+   }
+  }
+ ]
 }

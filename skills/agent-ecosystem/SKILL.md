@@ -47,7 +47,7 @@ boundary.
 
 Rendered with $create-svg (`scene.yml` is the source; regenerate with
 `skills/create-svg/run.sh render skills/agent-ecosystem/scene.yml skills/agent-ecosystem/ecosystem.svg`).
-Until the machine-readable membership manifest from issue 1584 exists and
+The machine-readable membership manifest is `members.json` (validated by `scripts/membership.py validate`; retained eval keeps it current).
 generates them, the SVG above and the mermaid block below are NON-NORMATIVE
 illustrations; the ownership table and member `## Ecosystem` sections are the
 normative topology.
