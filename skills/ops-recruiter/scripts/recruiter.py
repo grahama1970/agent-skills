@@ -25,6 +25,14 @@ RATE_SIGNALS = ["ABOVE_FLOOR", "AT_FLOOR", "BELOW_FLOOR", "RATE_UNKNOWN"]
 TONE_SIGNALS = ["NORMAL", "PERSISTENT", "PUSHY", "UNKNOWN"]
 
 
+def _sanitize_for_browser(text: str) -> str:
+    """Make packet text surf-submittable: `~<digits>` tokens make surf reject the
+    submit (browser_submit_not_accepted). Rewrite `~137K` -> `about 137K`.
+    ponytail: only the tilde-digit case bites today; widen if surf rejects more.
+    """
+    return re.sub(r"~(\d)", r"about \1", text)
+
+
 def _fail(code: str, cause: str, next_command: str) -> None:
     """Emit one unambiguous triage-shaped failure and exit non-zero.
 
@@ -112,12 +120,12 @@ def build(
         "unknown": "Prior-correspondence lookup was unavailable. Do NOT assert this is a first contact; keep the opening relationship-neutral.",
     }[relationship]
     packet = out / "context-packet.md"
-    packet.write_text(
+    packet.write_text(_sanitize_for_browser(
         f"# Recruiter reply context\n\n## Relationship: {relationship}\n{tone}\nrecall_note: {recall_note}\n\n"
         f"## Prior correspondence (from recruiter_correspondence memory)\n{prior_md or '(none)'}\n\n"
         f"## Recruiter message\n{recruiter_message.read_text()}\n\n"
         f"## Role\n{role.read_text()}\n\n## Approved resume / claim ledger (fact authority)\n{resume.read_text()}\n"
-    )
+    ))
     steps = []
     if research:
         steps.append("skills/brave-search/run.sh web \"<company> <role> recruiter rate glassdoor\"  # company/role seed, cite, degradable")
