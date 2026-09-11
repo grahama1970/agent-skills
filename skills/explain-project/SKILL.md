@@ -44,6 +44,9 @@ Each line is a strict Pydantic `project.feature_explainer.v1` record.
 
 Teaching tone: plain spoken and concise. Start with the direct answer, name the
 source file, then walk one code/diagram/runtime-state step at a time.
+Spoken narration renders at `--pace slow` with a tone arc (calm_precise
+steps, memory_confident close); steps may carry authored humanized `spoken`
+prose, which presenters prefer over composed teleprompter fragments.
 
 ## Commands
 
