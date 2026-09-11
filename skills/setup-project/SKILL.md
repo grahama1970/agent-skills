@@ -41,6 +41,18 @@ Use this skill to make a skills-first repo explainable and repeatable.
 It does not replace the owning skills. It writes a typed plan/audit over the
 same handoff points the project should already use:
 
+0. **Brief/requirements are a first-class input.** If the project has a brief or
+   requirements (a `brief` file plus machine-readable `spec_inputs` such as
+   `policy.json`), declare them in `requirements_spec`. The audit then FAILS
+   unless the brief file exists AND `immutable_goal.json` carries `spec_inputs`
+   naming those spec files AND carries the requirements (`requirements` or
+   `completion_criteria`). This is the load-bearing rule: the acceptance check
+   must be DERIVED FROM the delivered spec (the brief + the spec files it
+   consumes), never authored from what the code already does. The oai-trial
+   disqualification came from an acceptance check written to the code's
+   string-only behavior while `policy.json` — which lists the exact values that
+   must be gone — sat unread. The dependency-probe corollary: flipping a value
+   in a declared spec input must flip the check result.
 1. `$curate-client` owns the interview/client brief and live-evidence prep pack.
 2. `$best-practices-readme` owns the human-facing README map and non-claims.
 3. `immutable_goal.json` owns the project scope and proof boundary.

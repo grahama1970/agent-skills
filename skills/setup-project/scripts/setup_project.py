@@ -12,6 +12,16 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field
 
 
+class RequirementsSpec(BaseModel):
+    """A project's delivered brief and the machine-readable spec files its
+    acceptance check must consume (e.g. policy.json)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    brief: Path
+    spec_inputs: list[str] = Field(min_length=1)
+
+
 class Config(BaseModel):
     """setup-project YAML contract."""
 
@@ -27,6 +37,12 @@ class Config(BaseModel):
     required_files: list[str] = Field(min_length=1)
     readme_must_contain: list[str] = Field(default_factory=list)
     proof_commands: list[str] = Field(default_factory=list)
+    # When a project has a brief / requirements, they are a first-class input.
+    # The brief file must exist and the immutable goal must CARRY the
+    # requirements and the machine-readable spec inputs the acceptance check
+    # consumes (e.g. policy.json) - so the check is derived from the delivered
+    # spec, not authored from the code (operator 2026-09-11).
+    requirements_spec: RequirementsSpec | None = None
 
 
 def load_config(path: Path) -> Config:
@@ -120,6 +136,7 @@ def audit(config: Config) -> dict:
     readme = (root / "README.md").read_text(errors="ignore") if (root / "README.md").exists() else ""
     missing_readme = [text for text in config.readme_must_contain if text not in readme]
     goal_ok = False
+    goal: dict = {}
     goal_path = root / "immutable_goal.json"
     if goal_path.exists():
         try:
@@ -127,6 +144,19 @@ def audit(config: Config) -> dict:
             goal_ok = bool(goal.get("classification") and goal.get("schema") == "openai_interview.immutable_goal.v1")
         except json.JSONDecodeError:
             goal_ok = False
+    # Brief/requirements provenance: the brief must exist and the immutable goal
+    # must carry its requirements + the spec inputs the check consumes.
+    requirements_problems: list[dict] = []
+    if config.requirements_spec:
+        spec = config.requirements_spec
+        if not (root / spec.brief).exists():
+            requirements_problems.append({"code": "requirements_brief_missing", "path": str(root / spec.brief)})
+        goal_spec_inputs = goal.get("spec_inputs") or []
+        for name in spec.spec_inputs:
+            if name not in goal_spec_inputs:
+                requirements_problems.append({"code": "immutable_goal_missing_spec_input", "item": name})
+        if not (goal.get("requirements") or goal.get("completion_criteria")):
+            requirements_problems.append({"code": "immutable_goal_missing_requirements"})
     curate = curate_plan(config)
     curate_check = curate_verify(config)
     problems = []
@@ -140,6 +170,7 @@ def audit(config: Config) -> dict:
         problems.append({"code": "curate_client_plan_failed", "detail": curate})
     if curate_check and curate_check.get("status") != "PASS":
         problems.append({"code": "curate_client_verify_failed", "detail": curate_check})
+    problems.extend(requirements_problems)
     return {
         "schema": "setup_project.audit_receipt.v1",
         "status": "PASS" if not problems else "FAIL",
