@@ -52,11 +52,13 @@
       "command": ["bash", "-c", "cd .. && bash scripts/e2e_recruiter.sh"],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["E2E PASS: store -> recall(existing) -> gate(fail-closed)"],
+        "stdout_contains": ["E2E PASS: John response pipeline"],
         "artifacts": [
           {"path": "../artifacts/e2e-result.json", "json_pointer": "/relationship", "equals": "existing"},
           {"path": "../artifacts/e2e-result.json", "json_pointer": "/gate_rejected", "equals": true},
-          {"path": "../artifacts/e2e-result.json", "json_pointer": "/research_seeded", "equals": true}
+          {"path": "../artifacts/e2e-result.json", "json_pointer": "/research_seeded", "equals": true},
+          {"path": "../artifacts/e2e-result.json", "json_pointer": "/response_chain_wired", "equals": true},
+          {"path": "../artifacts/e2e-result.json", "json_pointer": "/thread_id", "equals": "john-davis-teksystems-amex"}
         ]
       }
     }
