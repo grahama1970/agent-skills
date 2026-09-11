@@ -25,6 +25,12 @@
       "description": "Stored recruiter correspondence is recalled so build marks an existing relationship and never writes first-contact for a known thread.",
       "criticality": "critical",
       "evidence_required": {"live_e2e": true}
+    },
+    {
+      "id": "ops_recruiter.response_produced_e2e",
+      "description": "The John reply is actually produced through the live webgpt->webkimi chain and the produced draft passes the claim-bind gate (capability, not wiring).",
+      "criticality": "critical",
+      "evidence_required": {"live_e2e": true}
     }
   ],
   "cases": [
@@ -50,6 +56,7 @@
       "supports_claims": ["ops_recruiter.thread_context_e2e"],
       "timeout_seconds": 180,
       "command": ["bash", "-c", "cd .. && bash scripts/e2e_recruiter.sh"],
+      "blocked_when_stdout_contains": ["BLOCKED_EXTERNAL"],
       "expected": {
         "exit_code": 0,
         "stdout_contains": ["E2E PASS: John response pipeline"],
@@ -59,6 +66,25 @@
           {"path": "../artifacts/e2e-result.json", "json_pointer": "/research_seeded", "equals": true},
           {"path": "../artifacts/e2e-result.json", "json_pointer": "/response_chain_wired", "equals": true},
           {"path": "../artifacts/e2e-result.json", "json_pointer": "/thread_id", "equals": "john-davis-teksystems-amex"}
+        ]
+      }
+    },
+    {
+      "name": "e2e-produce-john-reply-live",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": ["ops_recruiter.response_produced_e2e"],
+      "timeout_seconds": 1500,
+      "command": ["bash", "-c", "cd .. && bash scripts/e2e_response_live.sh"],
+      "blocked_when_stdout_contains": ["BLOCKED_EXTERNAL"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["E2E PASS: produced John reply via webgpt->webkimi and gate PASSED"],
+        "artifacts": [
+          {"path": "../artifacts/e2e-live-result.json", "json_pointer": "/gate_pass", "equals": true},
+          {"path": "../artifacts/e2e-live-result.json", "json_pointer": "/webkimi_produced", "equals": true},
+          {"path": "../artifacts/e2e-live-result.json", "json_pointer": "/thread_id", "equals": "john-davis-teksystems-amex"}
         ]
       }
     }
