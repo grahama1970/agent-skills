@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "skill": "ops-recruiter",
+  "trials": 2,
+  "proof_scope": "The claim-bind gate is fail-closed: it PASSES a draft whose numeric facts are all present in the approved claim ledger, and REJECTS (non-zero, with an ops_recruiter_claim_unbacked triage-shaped failure) a draft asserting a numeric metric absent from the ledger. The status contract exposes email_send and linkedin_automation as PERMANENTLY_FORBIDDEN and routes drafting/humanizing through $ask (COMPOSED_VIA_ASK), not a coding agent. Run via the real skill entrypoint.",
+  "claims": {
+    "proves": "ops-recruiter gate rejects an unbacked fabricated metric and accepts a ledger-backed draft; status declares no-send and web*-composed writing boundaries",
+    "does_not_prove": "live webgpt/webkimi draft quality, live /gmail or ops-linkedin ingestion, or Memory /store against a running daemon"
+  },
+  "capability_claims": [
+    {
+      "id": "ops_recruiter.claim_bind_gate",
+      "description": "Fail-closed claim-bind check refuses draft facts absent from the approved ledger.",
+      "criticality": "critical",
+      "evidence_required": {"deterministic": true}
+    },
+    {
+      "id": "ops_recruiter.no_send_boundary",
+      "description": "Never sends; drafting is composed via $ask web* models, not a coding agent.",
+      "criticality": "critical",
+      "evidence_required": {"deterministic": true}
+    }
+  ],
+  "cases": [
+    {
+      "name": "gate-rejects-unbacked-and-status-boundaries",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["ops_recruiter.claim_bind_gate", "ops_recruiter.no_send_boundary"],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh status --json | grep -q '\"email_send\": \"PERMANENTLY_FORBIDDEN\"' && ./run.sh status --json | grep -q COMPOSED_VIA_ASK && ./sanity.sh"
+      ],
+      "expected": {"exit_code": 0, "stdout_contains": ["SANITY: PASS"]}
+    }
+  ]
+}
