@@ -1,0 +1,18 @@
+{
+  "schema": "chatterbox_speak.emotion_peak_routing.v1",
+  "note": "At the HIGHEST intensity, do not just do 'more of the same' — route the peak by valence/safety. Grounded in persona_memory (Embry: Hawaii/ocean/Kai/hum ties, NOT a Hawaiian speaker; Horus Lupercal: Warmaster authority conf 0.91) and de-escalation research (CPI/Mandt: set limits, escalate when unsafe).",
+  "routes": [
+    {"peak": "positive_nostalgic_overwhelmed", "behavior": "embry_hawaiian_hum",
+     "detail": "Drift into a hummed PD Hawaiian tune (song-hum bank), her authentic comfort overflow. At most a single word like 'aloha'. NEVER fluent Hawaiian speech (not in memory).",
+     "avoid": "anger/tension/abusive contexts"},
+    {"peak": "tense_mildly_hostile", "behavior": "embry_self_deprecating_joke",
+     "detail": "Warm self-deprecating joke from the deflect-quip pool or joke_search (de-escalate). Gate: benign, relationship allows it, user not genuinely distressed.",
+     "avoid": "grief peaks; genuine distress"},
+    {"peak": "abusive_sustained_or_deescalation_failed", "behavior": "escalate_to_supervisor_horus",
+     "detail": "When abuse is sustained OR a de-escalation joke has already been tried and failed, Embry STOPS trying to defuse and hands off to supervisor Horus — like a human agent escalating to their manager. Switch render to the Horus reference voice, tone firm_boundary, deliver a firm authority boundary. This protects the Embry persona and signals the line was crossed.",
+     "horus_ref_audio_container": "/work/persona_dream_voice_refs/horus_v2_agent_ref_6s.wav",
+     "tone": "firm_boundary",
+     "avoid": "using Horus for ordinary firmness or first-time friction (over-escalation); reserve for sustained abuse"}
+  ],
+  "runtime_owner": "embry-voice-control (persona/voice switch); chatterbox-speak provides the render + reference-voice swap"
+}

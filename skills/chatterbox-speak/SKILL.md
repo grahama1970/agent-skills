@@ -66,6 +66,16 @@ crying (v3 splice), sadness, surprised, angry (controlled/firm, not shouting).
 out ~7; HIGH intensity pivots to a warm self-deprecating JOKE. Sarcasm/joke gate
 to BENIGN `/deflect` only (OFF_TOPIC/NO_MATCH), never safety/confusion.
 
+**Highest-intensity peak routing** (`fixtures/emotion_peak_routing.json`): at the
+peak, route by valence/safety, not "more of the same": positive/nostalgic → Embry
+Hawaiian *hum* (comfort tell; she is not a Hawaiian speaker, so never fluent
+speech); tense/mildly-hostile → self-deprecating joke (de-escalate); ABUSIVE +
+sustained OR after a failed de-escalation joke → hand off to **supervisor Horus**
+(switch render to the Horus reference voice `/work/persona_dream_voice_refs/horus_v2_agent_ref_6s.wav`,
+tone firm_boundary, one firm authority boundary), like a human agent escalating
+to a manager. Reserve Horus for sustained abuse only (never first-time friction);
+runtime persona/voice switch is owned by embry-voice-control.
+
 **De-escalation joke search** (`scripts/joke_search.py`, `fixtures/joke_corpus.json`):
 for an ABUSIVE-flagged conversation, search a GENTLE on-topic safe joke to defuse
 (never at the user's expense — mockery escalates; not if genuinely distressed).
