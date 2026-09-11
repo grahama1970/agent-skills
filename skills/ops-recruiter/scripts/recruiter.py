@@ -64,19 +64,58 @@ def status(json_out: bool = typer.Option(False, "--json")):
     print(json.dumps(payload, indent=2) if json_out else payload["immutable_goal"])
 
 
+def _recall_thread(recruiter: str, thread_id: str):
+    """Recall prior recruiter_correspondence for this recruiter/thread from Memory.
+
+    Returns (relationship, prior_markdown, note). Fail-open: if Memory is down we
+    degrade to new-contact framing and SAY SO, rather than falsely claiming first contact.
+    ponytail: BM25 recall by recruiter+thread; add strict thread_id filter if noise bites.
+    """
+    if not recruiter and not thread_id:
+        return "new", "", "no recruiter/thread key supplied"
+    # Exact thread lookup uses /list filters, not /recall: a fresh custom collection
+    # is not in Memory's semantic search view, so /recall returns nothing (verified).
+    filters = {"thread_id": thread_id} if thread_id else {"recruiter": recruiter}
+    try:
+        import httpx
+        r = httpx.Client(base_url=MEMORY_URL, timeout=httpx.Timeout(10.0, connect=2.0)).post(
+            "/list", json={"collection": COLLECTION, "limit": 50, "filters": filters})
+        r.raise_for_status()
+        items = [i for i in r.json().get("documents", [])
+                 if (not thread_id or i.get("thread_id") == thread_id)
+                 and (not recruiter or i.get("recruiter") == recruiter)]
+    except Exception as e:
+        return "unknown", "", f"memory list unavailable ({type(e).__name__}); treat as possibly-existing, do not claim first contact"
+    if not items:
+        return "new", "", "no prior correspondence found in memory"
+    items.sort(key=lambda i: i.get("received_at", ""))
+    md = "\n".join(f"- [{i.get('direction','?')} {i.get('received_at','?')}] {i.get('body','')[:500]}" for i in items)
+    return "existing", md, f"{len(items)} prior message(s) recalled"
+
+
 @app.command()
 def build(
     recruiter_message: Path = typer.Option(..., "--recruiter-message", exists=True),
     role: Path = typer.Option(..., "--role", exists=True),
     resume: Path = typer.Option(..., "--resume", exists=True),
+    recruiter: str = typer.Option("", "--recruiter", help="Recruiter identity for thread recall"),
+    thread_id: str = typer.Option("", "--thread-id", help="Thread id for prior-correspondence recall"),
     research: bool = typer.Option(False, "--research", help="Emit a $brave-search seed step"),
     out: Path = typer.Option(Path("/tmp/ops-recruiter"), "--out"),
 ):
-    """Assemble the context packet and print the exact preflighted $ask chain."""
+    """Assemble the context packet (with prior-thread recall) and print the $ask chain."""
     out.mkdir(parents=True, exist_ok=True)
+    relationship, prior_md, recall_note = _recall_thread(recruiter, thread_id)
+    tone = {
+        "existing": "You are continuing an EXISTING relationship. Do NOT reintroduce Graham or write first-contact framing. Reference the prior thread; be collaborative.",
+        "new": "No prior correspondence found; first-contact framing is appropriate.",
+        "unknown": "Prior-correspondence lookup was unavailable. Do NOT assert this is a first contact; keep the opening relationship-neutral.",
+    }[relationship]
     packet = out / "context-packet.md"
     packet.write_text(
-        f"# Recruiter reply context\n\n## Recruiter message\n{recruiter_message.read_text()}\n\n"
+        f"# Recruiter reply context\n\n## Relationship: {relationship}\n{tone}\nrecall_note: {recall_note}\n\n"
+        f"## Prior correspondence (from recruiter_correspondence memory)\n{prior_md or '(none)'}\n\n"
+        f"## Recruiter message\n{recruiter_message.read_text()}\n\n"
         f"## Role\n{role.read_text()}\n\n## Approved resume / claim ledger (fact authority)\n{resume.read_text()}\n"
     )
     steps = []
@@ -92,7 +131,8 @@ def build(
         "'Humanize this draft for clarity and non-templated prose. Do not add any new factual claim.'")
     steps.append(
         f"./run.sh gate --draft <webkimi-final> --claims {resume}   # fail-closed claim-bind check before use")
-    print(json.dumps({"schema": "ops_recruiter.build.v1", "packet": str(packet), "ask_chain": steps}, indent=2))
+    print(json.dumps({"schema": "ops_recruiter.build.v1", "packet": str(packet),
+                      "relationship": relationship, "recall_note": recall_note, "ask_chain": steps}, indent=2))
 
 
 @app.command()

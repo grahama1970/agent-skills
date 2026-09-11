@@ -33,8 +33,9 @@ LLM routing, or mailbox access.
 
 ```
 recruiter message + role text + approved resume/claims
+  recall      recruiter_correspondence memory -> prior thread + relationship flag
   (optional)  $brave-search  -> company/role research seed (cited, degradable)
-  build       context packet + claim ledger + browser-prompt preflight
+  build       context packet (incl. prior thread) + claim ledger + browser-prompt preflight
   gate        claim-bind check: every factual assertion maps to an approved claim
   draft       $ask webgpt    -> comprehensive first draft
   humanize    $ask webkimi   -> clarity + humanized-prose edit of that draft
@@ -53,6 +54,11 @@ are `$ask` (webgpt then webkimi); `run.sh build` emits the exact preflighted
   order, tighten, and choose emphasis; they may not invent employers, titles,
   dates, metrics, clearances, or a capability claim the ledger does not back.
   `gate` fails closed if the draft asserts a fact absent from the ledger.
+- **Relationship-aware, never re-introduces.** `build` recalls prior
+  `recruiter_correspondence` for the recruiter/thread and sets a relationship
+  flag (`existing`/`new`/`unknown`). An existing thread must not be written as
+  first contact; if recall is unavailable the opening stays relationship-neutral
+  rather than falsely claiming first contact.
 - **Human-transmitted only.** Draft-and-return. No email send, no LinkedIn
   action. Mirrors monitor-opportunities `who transmits = the human`.
 - **`$brave-search` is a seed, not authority.** Company/role context only, cited,
@@ -86,8 +92,8 @@ message with deterministic `_key` (`<source>:<thread-id>:<message-id>`), fields:
 
 ```bash
 ./run.sh status --json
-./run.sh build --recruiter-message MSG.md --role ROLE.md \
-  --resume RESUME.md [--research] [--out DIR]      # packet + claim ledger + $ask commands
+./run.sh build --recruiter-message MSG.md --role ROLE.md --resume RESUME.md \
+  [--recruiter R --thread-id T] [--research] [--out DIR]  # recalls prior thread; packet + $ask commands
 ./run.sh gate --draft DRAFT.md --claims CLAIMS.json # fail-closed claim-bind check
 ./run.sh store --message MSG.json                   # write one correspondence doc to Memory
 ./sanity.sh

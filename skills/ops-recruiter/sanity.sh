@@ -26,5 +26,12 @@ else
   echo "  ok: unbacked metric rejected"
 fi
 
+echo "[4] build emits a relationship flag (no false first-contact)"
+printf 'hi again\n' > "$tmp/msg.md"; printf 'role\n' > "$tmp/role.md"; printf 'ARCOS lead.\n' > "$tmp/res.md"
+./run.sh build --recruiter-message "$tmp/msg.md" --role "$tmp/role.md" --resume "$tmp/res.md" \
+  --recruiter jane --thread-id t1 --out "$tmp/o" 2>/dev/null | grep -qE '"relationship": "(existing|new|unknown)"' \
+  || { echo "  FAIL: no relationship flag in build output"; fail=1; }
+grep -q '## Relationship:' "$tmp/o/context-packet.md" || { echo "  FAIL: packet missing relationship section"; fail=1; }
+
 rm -rf "$tmp"
 [ "$fail" -eq 0 ] && echo "SANITY: PASS" || { echo "SANITY: FAIL"; exit 1; }
