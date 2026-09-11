@@ -22,6 +22,8 @@ from typing import Literal
 import httpx
 import typer
 from loguru import logger
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 app = typer.Typer(add_completion=False)
@@ -178,6 +180,86 @@ ARCS: dict[str, list[dict[str, str]]] = {
 _SENTENCE_SPLIT = __import__("re").compile(r"(?<=[.!?])\s+")
 
 
+class ArcPhaseInput(BaseModel):
+    """Model-authored phase: text + delivery + complexity rating.
+
+    The complexity judgment comes from the authoring model (the
+    condense call of the compose-then-condense pattern), not from
+    this skill. Pydantic-validated; this IS the contract.
+    """
+
+    text: str = Field(min_length=1)
+    tone: str | None = None
+    pace: str | None = None
+    complexity: Literal["simple", "moderate", "complex"] | None = None
+
+
+class ArcInput(BaseModel):
+    schema_: str = Field(
+        default="chatterbox_speak.arc_input.v1", alias="schema"
+    )
+    arc: str
+    phases: list[ArcPhaseInput] = Field(min_length=1)
+
+
+class ArcPhaseReceipt(BaseModel):
+    phase: int
+    text: str
+    tone: str
+    pace: str
+    complexity: Literal["simple", "moderate", "complex"]
+    complexity_source: Literal["model", "heuristic"]
+    effective_pace: str
+    wav: str | None
+    duration_seconds: float | None
+
+
+class ArcReceipt(BaseModel):
+    schema_: str = Field(default="chatterbox_speak.arc.v3", alias="schema")
+    arc: str
+    phases: list[ArcPhaseReceipt]
+
+
+_COMPLEX_TOKEN = __import__("re").compile(
+    r"[a-z_]+\.[a-z_]+|_[a-z]+_|\b\d{2,}\b|underscore|line \d+"
+)
+
+_SPEED_RANK = {"slow": 0, "neutral": 1, "brisk": 2, "fast": 3}
+_COMPLEXITY_FLOOR = {
+    "complex": "slow",
+    "moderate": "neutral",
+    "simple": "neutral",
+}
+
+
+def _complexity(text: str) -> str:
+    """Deterministic chunk complexity: technical-token density."""
+    words = text.split()
+    if not words:
+        return "simple"
+    hits = len(_COMPLEX_TOKEN.findall(text.lower()))
+    long_sentences = sum(
+        1 for s in _SENTENCE_SPLIT.split(text)
+        if len(s.split()) >= 18
+    )
+    score = hits / max(1, len(words)) * 10 + long_sentences
+    if score >= 1.2:
+        return "complex"
+    if score >= 0.4:
+        return "moderate"
+    return "simple"
+
+
+def _effective_pace(waypoint_pace: str, complexity: str) -> str:
+    """More complex chunks speak more slowly: the slower of the arc
+    waypoint pace and the complexity floor wins."""
+    floor = _COMPLEXITY_FLOOR[complexity]
+    slower = min(
+        (waypoint_pace, floor), key=lambda p: _SPEED_RANK.get(p, 1)
+    )
+    return slower
+
+
 def _arc_phases(text: str, waypoints: list[dict[str, str]]):
     sentences = [s for s in _SENTENCE_SPLIT.split(text.strip()) if s]
     if not sentences:
@@ -200,7 +282,7 @@ def _arc_phases(text: str, waypoints: list[dict[str, str]]):
 
 @app.command()
 def speak(
-    text: str = typer.Option(..., help="Text to speak; may contain native tags like [sigh]"),
+    text: str = typer.Option("", help="Text to speak; may contain native tags like [sigh]; optional when --arc-input supplies the phases"),
     voice: str = typer.Option("embry", help=f"Named voice: {sorted(VOICES)}"),
     ref_audio: str | None = typer.Option(None, help="Container path to reference WAV (overrides --voice)"),
     tone: str | None = typer.Option(None, help="Calibrated tone, e.g. neutral_warm, firm_boundary"),
@@ -214,25 +296,63 @@ def speak(
     planned_pauses: bool = typer.Option(False, help="Compile spaced ellipses/[pause:*] via best-practices-chatterbox and render exact chunk silence"),
     pace: str | None = typer.Option(None, help="Speaking pace via service time-stretch: slow|neutral|brisk|fast (slow ~= 0.85 tempo, ~18% longer); recorded in the receipt pace_effect"),
     arc: str | None = typer.Option(None, help=f"Conversation arc macro: phases the answer across tone+pace waypoints ({sorted(ARCS)}); overrides --tone/--pace per phase"),
+    arc_input: Path | None = typer.Option(None, help="Model-authored arc input (chatterbox_speak.arc_input.v1 JSON): per-phase text/tone/pace/complexity; complexity_source=model in the receipt; waypoints fill any gaps"),
 ) -> None:
     """Render one line and write WAV + receipt."""
-    if arc is not None:
-        if arc not in ARCS:
-            _fail(f"unknown arc '{arc}'; known: {sorted(ARCS)}")
-        phases = _arc_phases(text, ARCS[arc])
-        arc_receipt = {
-            "schema": "chatterbox_speak.arc.v1",
-            "arc": arc,
-            "phases": [],
-        }
-        for i, (phase_text, waypoint) in enumerate(phases, 1):
-            phase_ctx = f"{context or 'arc'} [arc {arc} phase {i}/{len(phases)}]"
+    _LAUGH_TAGS = ("[laugh]", "[giggles]", "[giggles]", "[chuckle]", "[chuckles]")
+    lowered = text.lower()
+    if "interview" in (context or "").lower() and any(
+        tag in lowered for tag in _LAUGH_TAGS
+    ):
+        _fail(
+            "laugh tags are forbidden in interview contexts; "
+            "remove [laugh]/[giggles]/[chuckle] or change --context"
+        )
+    if arc_input is not None or arc is not None:
+        if arc_input is not None:
+            try:
+                supplied = ArcInput.model_validate(
+                    json.loads(Path(arc_input).read_text())
+                )
+            except Exception as exc:
+                _fail(f"invalid arc input: {exc}")
+            arc = supplied.arc
+            if arc not in ARCS:
+                _fail(f"unknown arc '{arc}'; known: {sorted(ARCS)}")
+            wps = ARCS[arc]
+            phases = [
+                (
+                    ph.text,
+                    {
+                        "tone": ph.tone or wps[min(i, len(wps) - 1)]["tone"],
+                        "pace": ph.pace or wps[min(i, len(wps) - 1)]["pace"],
+                    },
+                    ph.complexity,
+                )
+                for i, ph in enumerate(supplied.phases)
+            ]
+        else:
+            if arc not in ARCS:
+                _fail(f"unknown arc '{arc}'; known: {sorted(ARCS)}")
+            phases = [
+                (txt, wp, None)
+                for txt, wp in _arc_phases(text, ARCS[arc])
+            ]
+        arc_phases: list[ArcPhaseReceipt] = []
+        for i, (phase_text, waypoint, model_complexity) in enumerate(
+            phases, 1
+        ):
+            comp = model_complexity or _complexity(phase_text)
+            phase_ctx = (
+                f"{context or 'arc'} "
+                f"[arc {arc} phase {i}/{len(phases)}]"
+            )
             runner = Path(__file__).resolve().parent.parent / "run.sh"
             rc = subprocess.run(
                 ["bash", str(runner), "speak",
                  "--text", phase_text, "--voice", voice,
                  "--tone", waypoint["tone"],
-                 "--pace", waypoint["pace"],
+                 "--pace", _effective_pace(waypoint["pace"], comp),
                  "--context", phase_ctx]
                 + (["--play"] if play else [])
                 + (["--analyze"] if analyze else []),
@@ -244,18 +364,38 @@ def speak(
             idx2 = rc.stdout.find(marker)
             rpath = rc.stdout[idx2 + len(marker):].split('"', 1)[0]
             r = json.loads(Path(rpath).read_text())
-            arc_receipt["phases"].append({
-                "phase": i,
-                "text": phase_text,
-                "tone": waypoint["tone"],
-                "pace": waypoint["pace"],
-                "wav": r.get("wav"),
-                "duration_seconds": r.get("duration_seconds"),
-            })
-        out_path = OUT_DIR / f"arc-{int(time.time())}-{arc}" / "arc.json"
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_text(json.dumps(arc_receipt, indent=2) + "\n")
-        print(json.dumps(arc_receipt, indent=2))
+            arc_phases.append(ArcPhaseReceipt(
+                phase=i,
+                text=phase_text,
+                tone=waypoint["tone"],
+                pace=waypoint["pace"],
+                complexity=comp,
+                complexity_source=(
+                    "model" if model_complexity else "heuristic"
+                ),
+                effective_pace=_effective_pace(waypoint["pace"], comp),
+                wav=r.get("wav"),
+                duration_seconds=r.get("duration_seconds"),
+            ))
+        receipt_obj = ArcReceipt(arc=arc, phases=arc_phases)
+        out_dir = OUT_DIR / f"arc-{int(time.time())}-{arc}"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        (out_dir / "arc.json").write_text(
+            receipt_obj.model_dump_json(indent=2, by_alias=True) + "\n"
+        )
+        chart = out_dir / "arc.svg"
+        try:
+            subprocess.run(
+                ["python3",
+                 str(Path(__file__).parent / "arc_chart.py"),
+                 str(out_dir / "arc.json"), str(chart)],
+                capture_output=True, text=True, timeout=30,
+            )
+        except Exception:
+            pass
+        print(receipt_obj.model_dump_json(indent=2, by_alias=True))
+        if chart.is_file():
+            print(json.dumps({"arc_chart": str(chart)}))
         return
     ref = ref_audio or VOICES.get(voice)
     if not ref:

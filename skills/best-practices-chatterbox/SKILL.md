@@ -231,6 +231,31 @@ Chunked streaming is valid when the product needs low-latency playback, but it b
 
 ## Pace and tone arc for instructional narration (operator 2026-09-10)
 
+### Complexity rating and the arc input contract (2026-09-11)
+
+Every spoken chunk carries a Pydantic-validated complexity rating
+(`simple | moderate | complex`), and MORE COMPLEX CHUNKS SPEAK MORE
+SLOWLY: the effective pace is the slower of the arc waypoint pace and the
+complexity floor (complex→slow, moderate→neutral, simple keeps the
+waypoint).
+
+The MODEL determines complexity — not the renderer. The authoring side
+(compose-then-condense, or a background authoring subagent) emits
+`chatterbox_speak.arc_input.v1` JSON: per-phase `text`, optional
+`tone`/`pace`, and the model's `complexity` judgment. chatterbox-speak
+validates it, renders each phase, and the receipt
+(`chatterbox_speak.arc.v3`) records per phase: tone, waypoint pace,
+effective pace, complexity, and `complexity_source: model | heuristic`
+(heuristic = regex fallback when no input was supplied — always labeled).
+Each arc run also emits `arc.svg`, a deterministic three-lane chart of
+the conversation arc (tone energy, pace tempo, complexity over phases).
+
+Interview rule (hard, enforced): laugh-family tags ([laugh]/[giggles]/
+[chuckle]) fail closed when --context mentions an interview. A confident
+happy close comes from tone (playful_light/relieved) — never from
+laughing at the interviewer.
+
+
 ### Conversation arc macros (2026-09-11)
 
 `chatterbox-speak --arc <name>` phases one answer across delivery
