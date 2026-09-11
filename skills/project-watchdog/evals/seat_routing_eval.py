@@ -32,9 +32,12 @@ def main() -> int:
 
     cfg = sr.load()  # live shipped config; raises if invariant violated
     check("live_config_loads", cfg.get("version"), "project_watchdog.seat_routing.v1")
-    check("creator_routes_codex_first", sr.resolve("repair_creator", cfg)["routes"], ["codex_author", "opencode_author"])
+    check("creator_routes_codex_first", sr.resolve("repair_creator", cfg)["routes"], ["codex_author"])
     alt = sr.resolve("repair_creator", cfg, codex_out=True)
-    check("creator_falls_back_to_opencode_when_codex_out", [alt["action"], alt.get("model")], ["dispatch", "oc-author"])
+    # Operator directive 2026-09-11: OpenCode is DECOMMISSIONED. The opencode_author
+    # route was removed; with no eligible non-codex authoring transport the creator
+    # parks quietly (no lease burn) rather than dispatching through a dead rail.
+    check("creator_parks_when_codex_out_no_opencode", alt["action"], "park")
     check("reviewer_non_codex_first", sr.resolve("repair_reviewer", cfg)["routes"][0], "glm_review")
     check("reviewer_drops_codex_when_out",
           "codex_author" in sr.resolve("repair_reviewer", cfg, codex_out=True)["routes"], False)

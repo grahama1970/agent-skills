@@ -1,6 +1,6 @@
 {
   "version": "project_watchdog.seat_routing.v1",
-  "note": "Capability-aware seat routing (WebGPT design, ask run ask-tau-design-question-where-should-a-s-c7125c30a43e). Routes carry CAPABILITIES, not naked model strings: a fallback is a list of route ids, and a route is eligible for a seat only when route.capabilities superset-covers seat.requires. The repair_creator deliberately has NO fallback (only the codex workspace transport can author) and parks on quota; reviewers/auditors are non-codex-first so review work never burns the scarce authoring transport. Seat-ROUTING selection lives here; transport mechanics (endpoints, retries, provider failover) stay internal to SciLLM/Tau; project intent stays in registry/projects.json.",
+  "note": "Capability-aware seat routing (WebGPT design, ask run ask-tau-design-question-where-should-a-s-c7125c30a43e). Routes carry CAPABILITIES, not naked model strings: a fallback is a list of route ids, and a route is eligible for a seat only when route.capabilities superset-covers seat.requires. The repair_creator deliberately has NO fallback (only the codex workspace transport can author) and parks on quota; reviewers/auditors are non-codex-first so review work never burns the scarce authoring transport. Seat-ROUTING selection lives here; transport mechanics (endpoints, retries, provider failover) stay internal to SciLLM/Tau; project intent stays in registry/projects.json. UPDATE 2026-09-11: opencode_author removed per operator directive \u2014 OpenCode is decommissioned and must not be dispatched. The capability seam remains; a future non-codex authoring transport can be added as a new route in one line.",
   "routes": {
     "codex_author": {
       "executor": "codex_cli",
@@ -43,8 +43,7 @@
         "repo_workspace_author"
       ],
       "routes": [
-        "codex_author",
-        "opencode_author"
+        "codex_author"
       ],
       "when_unavailable": "park_on_quota"
     },
