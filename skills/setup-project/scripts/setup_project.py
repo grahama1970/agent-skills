@@ -37,6 +37,7 @@ class Config(BaseModel):
     required_files: list[str] = Field(min_length=1)
     readme_must_contain: list[str] = Field(default_factory=list)
     proof_commands: list[str] = Field(default_factory=list)
+    immutable_goal_schema: str = "openai_interview.immutable_goal.v1"
     # When a project has a brief / requirements, they are a first-class input.
     # The brief file must exist and the immutable goal must CARRY the
     # requirements and the machine-readable spec inputs the acceptance check
@@ -141,7 +142,7 @@ def audit(config: Config) -> dict:
     if goal_path.exists():
         try:
             goal = json.loads(goal_path.read_text())
-            goal_ok = bool(goal.get("classification") and goal.get("schema") == "openai_interview.immutable_goal.v1")
+            goal_ok = bool(goal.get("classification") and goal.get("schema") == config.immutable_goal_schema)
         except json.JSONDecodeError:
             goal_ok = False
     # Brief/requirements provenance: the brief must exist and the immutable goal

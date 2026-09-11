@@ -1,0 +1,24 @@
+schema: setup_project.config.v1
+classification: internal
+project: oai-trial
+project_root: /home/graham/workspace/experiments/oai-trial
+purpose: Cloud data anonymization trial; prove the acceptance check is derived from the delivered spec (brief + policy.json), not the code.
+immutable_goal_schema: oai_trial.immutable_goal.v1
+required_skills:
+  - agentic-evals
+required_files:
+  - README.md
+  - immutable_goal.json
+  - TRIAL_BRIEF.md
+  - examples/policy.json
+  - scripts/spec_derived_check.py
+  - scripts/verify.sh
+  - fixtures/agentic_eval.json
+  - Dockerfile
+requirements_spec:
+  brief: TRIAL_BRIEF.md
+  spec_inputs:
+    - TRIAL_BRIEF.md
+    - examples/policy.json
+proof_commands:
+  - bash scripts/verify.sh
