@@ -166,6 +166,7 @@ ARCS: dict[str, list[dict[str, str]]] = {
         {"tone": "careful_concerned", "pace": "slow"},
         {"tone": "calm_precise", "pace": "slow"},
         {"tone": "memory_confident", "pace": "brisk"},
+        {"tone": "playful_light", "pace": "brisk"},
     ],
     "reassure": [
         {"tone": "careful_concerned", "pace": "slow"},
