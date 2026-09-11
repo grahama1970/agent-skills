@@ -48,6 +48,22 @@ def test_machine_actionable_switchboard_push_is_not_high_alert():
     assert payload["owning_next_action"] == "recover --apply"
 
 
+def test_switchboard_routes_to_the_events_own_project_inbox():
+    bridge = load_bridge()
+    # Each project's alert lands in that project's inbox, not a shared one.
+    assert bridge.pi_inbox_for({"repo": "grahama1970/tau"}) == "tau"
+    assert bridge.pi_inbox_for({"repo": "grahama1970/chatgpt-lab"}) == "chatgpt-lab"
+    assert bridge.pi_inbox_for({"repo": "grahama1970/agent-skills"}) == "agent-skills"
+    # A tau alert never addresses the agent-skills inbox that monitor-opp drains.
+    assert bridge.switchboard_payload({
+        "status": "NEEDS_ATTENTION", "repo": "grahama1970/tau", "issue": "343",
+        "dir": "receipt-dir",
+    })["to"] == "tau"
+    # Unknown/malformed repo falls back to the operator inbox, never dropped.
+    assert bridge.pi_inbox_for({"repo": "UNKNOWN(repo:receipt_missing_repo)"}) == bridge.PI_AGENT_INBOX
+    assert bridge.pi_inbox_for({}) == bridge.PI_AGENT_INBOX
+
+
 def test_human_needed_pages_but_completed_receipts_do_not_page():
     bridge = load_bridge()
     assert bridge.requires_human_push({"status": "NEEDS_ATTENTION", "requires_human_input": True}) is True

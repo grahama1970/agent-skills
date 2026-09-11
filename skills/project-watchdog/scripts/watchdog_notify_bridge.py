@@ -524,11 +524,30 @@ def switchboard_delivery_decision(ev: dict, *, fresh: bool) -> str | None:
     return None
 
 
+def pi_inbox_for(ev: dict) -> str:
+    """Route each event to the inbox for its OWN project.
+
+    pi-intercom keys a session's inbox off its cwd repo basename, so a fixed
+    ``to=agent-skills`` fan-outs every project's alerts (tau, chatgpt-lab,
+    memory, ...) onto every pane rooted in the agent-skills repo -- spamming
+    unrelated panes like monitor-opportunities/shame/oai-trial. Deriving the
+    inbox from the event's ``owner/name`` repo means a pane only sees watchdog
+    alerts for the repo it actually works in. Unknown/malformed repo falls back
+    to the operator inbox so nothing is silently dropped.
+    """
+    repo = ev.get("repo")
+    if isinstance(repo, str) and "/" in repo:
+        name = repo.rsplit("/", 1)[-1].strip()
+        if name and not name.startswith(UNKNOWN):
+            return name
+    return PI_AGENT_INBOX
+
+
 def switchboard_payload(ev: dict) -> dict[str, Any]:
     human = requires_human_push(ev)
     return {
         "from": "project-watchdog-bridge",
-        "to": PI_AGENT_INBOX,
+        "to": pi_inbox_for(ev),
         "type": "alert" if human else "info",
         "priority": "high" if human else "normal",
         "subject": f"watchdog {ev.get('status')} {_subject_target(ev)}",
