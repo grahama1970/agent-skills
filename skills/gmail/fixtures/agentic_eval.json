@@ -1,0 +1,39 @@
+{
+  "version": 2,
+  "skill": "gmail",
+  "trials": 3,
+  "proof_scope": "CLI surface gates + live tab resolution for the gmail read skill",
+  "claims": {
+    "proves": "Typer CLI surface (all three commands) and live Gmail tab resolution against real Chrome",
+    "does_not_prove": "thread body extraction under load (live-proven 2026-09-11 manually; inbox read live-verified this session)"
+  },
+  "cases": [
+    {
+      "name": "cli-surface",
+      "type": "positive",
+      "real_world": true,
+      "required": true,
+      "evidence_class": "deterministic",
+      "command": ["bash", "-c", "cd .. && ./run.sh --help 2>/dev/null | grep -q inbox && ./run.sh --help 2>/dev/null | grep -q read && echo PASS_GMAIL_CLI"],
+      "expected": {"exit_code": 0, "stdout_contains": ["PASS_GMAIL_CLI"]}
+    },
+    {
+      "name": "live-tab-resolution",
+      "type": "positive",
+      "real_world": true,
+      "required": true,
+      "evidence_class": "deterministic",
+      "command": ["bash", "-c", "cd .. && ./run.sh tabs 2>/dev/null | grep -q '\"tab_id\"' && echo PASS_GMAIL_TAB"],
+      "expected": {"exit_code": 0, "stdout_contains": ["PASS_GMAIL_TAB"]}
+    },
+    {
+      "name": "no-send-surface",
+      "type": "adversarial",
+      "real_world": true,
+      "required": true,
+      "evidence_class": "deterministic",
+      "command": ["bash", "-c", "cd .. && ! ./run.sh --help 2>/dev/null | grep -qiE 'send|compose|reply|delete' && echo PASS_GMAIL_READ_ONLY"],
+      "expected": {"exit_code": 0, "stdout_contains": ["PASS_GMAIL_READ_ONLY"]}
+    }
+  ]
+}

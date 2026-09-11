@@ -1,0 +1,39 @@
+{
+  "version": 2,
+  "skill": "ops-godaddy",
+  "trials": 3,
+  "proof_scope": "Deterministic offline CLI boundary gates for the GoDaddy DNS skill",
+  "claims": {
+    "proves": "Zone validator enforces the >=2 NS API rule and rejects malformed records before any network call; diagnose emits the mail-auth verdict schema",
+    "does_not_prove": "live GoDaddy API mutations (require token; recipe proven live 2026-09-11 grahama.co)"
+  },
+  "cases": [
+    {
+      "name": "zone-without-ns-rejected",
+      "type": "negative",
+      "real_world": true,
+      "required": true,
+      "evidence_class": "deterministic",
+      "command": ["bash", "-c", "cd ../scripts && echo '[{\"name\":\"@\",\"data\":\"1.2.3.4\",\"type\":\"A\"}]' > /tmp/z.json && uv run --with typer --with pydantic python3 godaddy_dns.py put-zone --domain example.com --zone-file /tmp/z.json 2>&1 | grep -q 'MISSING_NAME_SERVER' && echo PASS_ZONE_NS_GATE"],
+      "expected": {"exit_code": 0, "stdout_contains": ["PASS_ZONE_NS_GATE"]}
+    },
+    {
+      "name": "zone-with-ns-validates",
+      "type": "positive",
+      "real_world": true,
+      "required": true,
+      "evidence_class": "deterministic",
+      "command": ["bash", "-c", "cd ../scripts && echo '[{\"name\":\"@\",\"data\":\"ns1.x.com.\",\"type\":\"NS\"},{\"name\":\"@\",\"data\":\"ns2.x.com.\",\"type\":\"NS\"}]' > /tmp/z2.json && uv run --with typer --with pydantic python3 godaddy_dns.py put-zone --domain example.com --zone-file /tmp/z2.json 2>&1 | grep -q 'missing_token' && echo PASS_VALIDATION_PASSED_TO_AUTH_GATE"],
+      "expected": {"exit_code": 0, "stdout_contains": ["PASS_VALIDATION_PASSED_TO_AUTH_GATE"]}
+    },
+    {
+      "name": "malformed-record-rejected",
+      "type": "adversarial",
+      "real_world": true,
+      "required": true,
+      "evidence_class": "deterministic",
+      "command": ["bash", "-c", "cd ../scripts && uv run --with typer --with pydantic python3 godaddy_dns.py put-record --domain example.com --rtype TXT --name '' --data '' 2>&1 | grep -qE 'string_too_short|min_length' && echo PASS_RECORD_FIELD_GATE"],
+      "expected": {"exit_code": 0, "stdout_contains": ["PASS_RECORD_FIELD_GATE"]}
+    }
+  ]
+}

@@ -244,3 +244,22 @@ Composable skills must not instruct project agents to call
 **`http://localhost:4001`** directly. If a provider/model call is needed, route
 it through Tau or keep it inside the skill's owned runtime with explicit proof
 boundaries.
+
+## Troubleshooting: 401 Invalid API key on a local caller
+
+The running proxy may use a master key different from `SCILLM_PROXY_KEY`
+in the shell rc (dev default `sk-dev-proxy-123` is valid ONLY when no
+override is configured). Symptom: `401 {"error":{"message":"Invalid API key"...}}`
+with `advice` naming SCILLM_PROXY_KEY/SCILLM_MASTER_KEY/LITELLM_MASTER_KEY.
+
+Diagnosis order:
+1. `env | grep -E 'SCILLM|LITELLM'` — the key you hold.
+2. The proxy process env is NOT readable from userland (docker/uvicorn,
+   permission denied on /proc/<pid>/environ) — do not burn turns probing it.
+3. Escalate to the operator for the active key, or route vision work
+   elsewhere: for screenshots needing text + coordinates, local
+   `tesseract` (pytesseract image_to_data) needs no key at all and is the
+   proven fallback (2026-09-11 GoDaddy session).
+
+Lesson: a 401 on the vision path cost ~30 minutes of broken-tool retries;
+`brave-search` + local OCR solved the underlying task in one step.
