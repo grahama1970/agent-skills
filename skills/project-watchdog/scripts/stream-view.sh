@@ -9,7 +9,7 @@ exec tail -n "${LINES_BACK:-25}" -F "$LOG" | jq -r --unbuffered '
   if .kind == "heartbeat" then
     C("2") + "\(.ts) 💓 \(.state) #\(.issue // "-") 🤖 \(.agent // "-") 🧠 \(.model // "-") ⏱ \(.elapsed_s // 0)s" + R
   else
-    (if (.status // "") | test("COMPLETED|UPDATED") then C("32;1") + "✅"
+    (if (.status // "") | test("COMPLETED|UPDATED|CLEARED|CLOSED_ON_GITHUB") then C("32;1") + "✅"
      elif (.status // "") | test("BLOCKED|FAILED") then C("31;1") + "❌"
      elif (.status // "") | test("DRY_RUN") then C("36;1") + "🧪"
      else C("33;1") + "⚠️" end) as $c
