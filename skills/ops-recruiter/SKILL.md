@@ -97,13 +97,17 @@ lights up once the memory repo registers `recruiter_correspondence` in
   copilot) and stores them on the recruiter thread as `direction=meeting`,
   `source=google-meet` or `live-evidence`, so a call becomes part of the same
   thread history and future context.
-- **LinkedIn is read-only and human-driven.** `linkedin_automation` is
-  `PERMANENTLY_FORBIDDEN` across monitor-opportunities and ops-linkedin. Do NOT
-  use `$surf` to scrape LinkedIn messages. The only compliant path is a
-  read-only capture of Graham's own session, human-initiated, after explicit
-  account-risk acknowledgement, via `$ops-linkedin` — pasted/exported/screenshot
-  correspondence is ingested as local evidence, then the workflow leaves the
-  platform. No connecting, messaging, posting, or bulk capture.
+- **LinkedIn is read-only and human-driven — Premium changes nothing.**
+  `linkedin_automation` is `PERMANENTLY_FORBIDDEN` across monitor-opportunities
+  and ops-linkedin. Do NOT use `$surf` to scrape LinkedIn, and a LinkedIn Premium
+  account does not authorize automated scraping of the recruiter, their company
+  page, InMail history, or who-viewed data. Automatable recruiter/company
+  deep-research goes through `$brave-search`. Anything that requires being logged
+  into LinkedIn Premium enters ONLY as a read-only, human-initiated
+  `$ops-linkedin` capture of Graham's own session (after explicit account-risk
+  acknowledgement) — pasted/exported/screenshot evidence ingested locally, then
+  the workflow leaves the platform. No connecting, messaging, posting, or bulk
+  capture.
 
 ## Commands
 
