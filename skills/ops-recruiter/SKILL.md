@@ -100,7 +100,11 @@ message with deterministic `_key` (`<source>:<thread-id>:<message-id>`), fields:
 `direction` (`inbound`/`draft`/`sent`/`meeting`), `source`
 (`gmail`/`linkedin`/`manual`/`google-meet`/`live-evidence`), `recruiter`,
 `company`, `role`, `body`, `role_ref`, `claim_keys[]`, `draft_ref`,
-`received_at`, `tags`, `schema` (`ops_recruiter.correspondence.v1`). Optional but
+`received_at`, `tags`, `schema` (`ops_recruiter.correspondence.v1`). Optional
+(webgpt-reviewed, graph-enabling): `reply_to_message_id` (exact predecessor —
+enables causal `message_replies_to` edges; never inferred from timestamps),
+`occurred_at` (canonical event time for draft/sent/meeting), `recruiting_company`
++ `employer_company` (normalized; preferred over parsing `company`). Optional but
 VALIDATED `signals` block with closed enums (fail-closed): `disposition`
 (`PURSUE|DEFER|DECLINE_LOW_RATE|DECLINE_PUSHY|DECLINE_OFF_MANDATE|NEEDS_HUMAN`),
 `rate` (`ABOVE_FLOOR|AT_FLOOR|BELOW_FLOOR|RATE_UNKNOWN`), `tone`
