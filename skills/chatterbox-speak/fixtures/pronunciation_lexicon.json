@@ -1,0 +1,16 @@
+{
+  "schema": "chatterbox_speak.pronunciation_lexicon.v1",
+  "note": "UPPER_TERM -> spoken form. Only IRREGULAR cases live here; the rule (pronounce.py) spells out all-caps acronyms letter-by-letter and control ids digit-by-digit for free. Add a term only when the default is wrong (said as a word, or you want it expanded). Human-verified by ear. Seed generated from control collections + common tokens; extend as renders prove entries.",
+  "terms": {
+    "NIST": "nist",
+    "STIG": "stig",
+    "SPARTA": "sparta",
+    "CUI": "C U I",
+    "CMMC": "C M M C",
+    "OK": "okay",
+    "OT": "O T",
+    "ITAR": "eye-tar",
+    "FISMA": "fizz-ma",
+    "SBOM": "S-bomb"
+  }
+}

@@ -74,6 +74,27 @@ verified recipes first: `compare-memory recall '<situation>'` — the banks
 teach what works; the project agent selects by context metadata (use_when /
 avoid_when, emotion metatags like `emotion:celebratory` + `avoid:aggressive`).
 
+## Pronunciation normalization (control ids and acronyms)
+
+Chatterbox has no SSML, say-as, or lexicon feature; it mispronounces acronyms
+and alphanumeric ids (resemble-ai/chatterbox#400 confirms — the maintainers'
+workaround is spacing acronym letters). `scripts/pronounce.py` is the standard
+fix used by on-device-TTS teams: a deterministic rule-based preprocessing pass
+run before render (`speak` applies it by default; `--no-normalize` to skip).
+
+- Control ids spelled digit-by-digit, letters spaced: `SC-7` -> "S C seven",
+  `111-A` -> "one one one A", `AC-2(3)` -> "A C two three".
+- Bare acronyms spaced to be read as letters: `CUI` -> "C U I", `HTML` -> "H T M L".
+- Only IRREGULAR terms need `fixtures/pronunciation_lexicon.json` (said as a word
+  or expanded): `NIST` -> "nist", `ITAR` -> "eye-tar". The rule covers the rest
+  for free, so the lexicon stays small and human-verified by ear.
+- Native `[tags]` and prose numbers/years (`2026`) are left untouched.
+
+No LLM and no per-utterance `$memory` recall: substitution must be exact and
+instant. The lexicon is seeded from the existing control/definition collections
+and extended as renders prove entries; the receipt records `original_text` vs
+`spoken_text`. `python3 scripts/pronounce.py` runs the self-check.
+
 ## Usage
 
 ```bash

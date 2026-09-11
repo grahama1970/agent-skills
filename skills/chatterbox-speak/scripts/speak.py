@@ -26,6 +26,9 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from pronounce import normalize_pronunciation, load_lexicon  # noqa: E402
+
 app = typer.Typer(add_completion=False)
 
 BASE_URL = "http://127.0.0.1:8018"
@@ -35,6 +38,7 @@ CONTAINER_OUT = "/out"
 HOST_OUT = Path.home() / "workspace/experiments/chatterbox/logs"
 
 ANALYZER = Path.home() / ".pi/agent/skills/analyze-chatterbox-emotions/run.sh"
+LEXICON_PATH = Path(__file__).resolve().parents[1] / "fixtures/pronunciation_lexicon.json"
 
 VOICES = {
     "embry": "/data/embry_ref.wav",
@@ -297,6 +301,7 @@ def speak(
     pace: str | None = typer.Option(None, help="Speaking pace via service time-stretch: slow|neutral|brisk|fast (slow ~= 0.85 tempo, ~18% longer); recorded in the receipt pace_effect"),
     arc: str | None = typer.Option(None, help=f"Conversation arc macro: phases the answer across tone+pace waypoints ({sorted(ARCS)}); overrides --tone/--pace per phase"),
     arc_input: Path | None = typer.Option(None, help="Model-authored arc input (chatterbox_speak.arc_input.v1 JSON): per-phase text/tone/pace/complexity; complexity_source=model in the receipt; waypoints fill any gaps"),
+    normalize: bool = typer.Option(True, help="Rule-based pronunciation normalization before render: spell control ids (SC-7 -> S C seven), space acronyms (CUI -> C U I), apply the irregular-term lexicon. Deterministic; native [tags] untouched"),
 ) -> None:
     """Render one line and write WAV + receipt."""
     _LAUGH_TAGS = ("[laugh]", "[giggles]", "[giggles]", "[chuckle]", "[chuckles]")
@@ -308,6 +313,9 @@ def speak(
             "laugh tags are forbidden in interview contexts; "
             "remove [laugh]/[giggles]/[chuckle] or change --context"
         )
+    original_text = text
+    if normalize and text:
+        text = normalize_pronunciation(text, load_lexicon(LEXICON_PATH))
     if arc_input is not None or arc is not None:
         if arc_input is not None:
             try:
@@ -353,7 +361,7 @@ def speak(
                  "--text", phase_text, "--voice", voice,
                  "--tone", waypoint["tone"],
                  "--pace", _effective_pace(waypoint["pace"], comp),
-                 "--context", phase_ctx]
+                 "--context", phase_ctx, "--no-normalize"]
                 + (["--play"] if play else [])
                 + (["--analyze"] if analyze else []),
                 capture_output=True, text=True, timeout=600,
@@ -491,6 +499,9 @@ def speak(
         "schema": "chatterbox_speak.receipt.v1",
         "voice": voice,
         "context": context,
+        "original_text": original_text,
+        "spoken_text": text,
+        "pronunciation_normalized": bool(normalize),
         "requested_intensity": intensity,
         "speaking_to": (state.speaker if state else to),
         "session": state.model_dump() if state else None,
