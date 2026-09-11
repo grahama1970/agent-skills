@@ -297,6 +297,19 @@ def build_repair_task(
     The whole ticket body goes in: it carries the orientation block, required
     context files and proof command that a cron-dispatched agent with no prior
     session needs.
+
+    Per-seat-family round expectations (#1655). The split below is seat-family
+    agnostic and holds for BOTH authoring lanes:
+      - non-codex local lane (bare ``claude`` / ``handler-claude-*``): the
+        CREATOR ROUND proposes a scoped fix and records a checkpoint commit; it
+        does NOT answer VERDICT and is NOT expected to have run the proof. This
+        is the fix for the claude lane fail-closing its own first round for
+        lacking proof that belongs to later rounds.
+      - codex workspace lane (``gpt-*``/``codex-*`` via codex.exec): same
+        creator contract; proof gating and the single VERDICT live only in the
+        REVIEWER ROUND.
+    The reviewer round, for every seat family, owns the "proof must have
+    actually run" rule and is the only emitter of VERDICT.
     """
     return (
         f"Repair {repo}#{issue_number}: {issue_title}\n\n"
