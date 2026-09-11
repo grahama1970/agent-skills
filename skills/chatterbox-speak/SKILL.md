@@ -139,6 +139,33 @@ Three named vocabularies the agent selects by context (all human-verified by ear
     answer is ready, barge-in hands off and Embry speaks B's content.
   The concurrent two-agent runtime is owned by `embry-voice-control`;
   chatterbox-speak owns the renderer + macro vocabulary + the deterministic planner.
+### Recall-first: reuse or build a macro (Agent A loop)
+
+Memory-first. Before speaking any cover/macro, Agent A **recalls**; it builds a new
+macro only when nothing fits, and **stores** what it builds so the next turn recalls
+it instead of rebuilding.
+
+1. **Recall.** Query the situation against the recipe/hum banks:
+   `POST /recall {q: "<situation in natural language>", collections: ["persona_memory", "lessons_v2"], tags: ["persona:embry", "emotion:<x>" | "song_hum"], k: 8}`.
+   Use an item when `found` + confidence high + `should_scan` false, and its
+   `use_when` matches while `avoid_when` does not.
+2. **Reuse.** Play that macro's steps; respect the band pool + session no-repeat.
+3. **Build (only if no fit).** Compose from **verified levers ONLY** — the bank
+   primitives: emotion channel by band (v3 whole-sentence high / Turbo native mid /
+   plain-or-clip low), a thinking clip, a progress stage, a pause macro, a
+   mood-matched hum. Never invent tags or patterns the banks do not already verify;
+   the hard rules above still apply.
+4. **Store back.** Write the new macro so future recall finds it:
+   `POST /store` (or `/upsert`) to `persona_memory`/`lessons_v2` with `retrieval_text`
+   (the situation + why), `use_when`, `avoid_when`, the composed steps referenced by
+   macro-id/params (engine-neutral — NO renderer `[tags]` in canonical text), status
+   `provisional_agent_recommendation`, and tags. Independent `/recall` readback confirms.
+5. **Verify by ear.** A human keep/cut flips status to `human_confirmed_*` or removes
+   it. One preference is not a universal rule.
+
+Boundary: canonical Memory text carries the plan by macro-id/params + engine-neutral
+fields, never `[tags]`; Agent A compiles to renderer tags at playback.
+
 - **Song-hum macros** (`fixtures/song_hum_macros.json`): public-domain Hawaiian /
   hapa-haole tunes Embry hums. ALL picks are compositions published 1930 or earlier
   (US PD as of 2026, Duke CSPD). The 1930s film-era hits (Sweet Leilani 1937,
