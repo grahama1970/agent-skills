@@ -9,10 +9,11 @@ contract floor is required and which bundle digest is approved.
 from __future__ import annotations
 
 import hashlib
-import json
 import shutil
 from pathlib import Path
 from typing import Any
+
+from .strict_json import finite_json_values, load_path
 
 FLOOR_SCHEMA = "battle.acceptance_floor_receipt.v1"
 BUNDLE_SCHEMA = "acceptance_contract.bundle.v1"
@@ -21,7 +22,10 @@ ENROLLMENT_SCHEMA = "battle.project_contract_enrollment.v1"
 
 
 def _load_json(path: Path) -> dict[str, Any]:
-    return json.loads(path.read_text(encoding="utf-8"))
+    data = load_path(path)
+    if not isinstance(data, dict):
+        raise ValueError("JSON document must be an object")
+    return data
 
 
 def _sha256_file(path: Path) -> str:
@@ -51,10 +55,15 @@ def validate_project_contract_enrollment(
     path = Path(enrollment_path)
     try:
         enrollment = _load_json(path)
-    except (OSError, json.JSONDecodeError) as exc:
+    except (OSError, ValueError) as exc:
         return _blocked_enrollment(path, [f"project-enrollment-unreadable:{exc}"])
 
     problems: list[str] = []
+    extra = sorted(set(enrollment) - {"schema", "target_identity", "acceptance_contract"})
+    if extra:
+        problems.append(f"project-enrollment-extra-fields:{','.join(extra)}")
+    if not finite_json_values(enrollment):
+        problems.append("project-enrollment-non-finite-number")
     if enrollment.get("schema") != ENROLLMENT_SCHEMA:
         problems.append(f"project-enrollment-schema:{enrollment.get('schema')!r}")
     if enrollment.get("target_identity") != expected_target:
@@ -64,6 +73,9 @@ def validate_project_contract_enrollment(
     if not isinstance(contract, dict):
         problems.append("acceptance-contract-enrollment-missing")
         contract = {}
+    contract_extra = sorted(set(contract) - {"required", "bundle_path", "sha256"})
+    if contract_extra:
+        problems.append(f"acceptance-contract-enrollment-extra-fields:{','.join(contract_extra)}")
     required = contract.get("required")
     if required not in {True, False}:
         problems.append("acceptance-contract-required-not-boolean")
@@ -152,7 +164,7 @@ def validate_acceptance_floor(
     bundle_path = Path(bundle_path)
     try:
         bundle = _load_json(bundle_path)
-    except (OSError, json.JSONDecodeError) as exc:
+    except (OSError, ValueError) as exc:
         return {
             "schema": FLOOR_SCHEMA,
             "status": "BLOCKED",
@@ -170,16 +182,28 @@ def validate_acceptance_floor(
     bundle_sha256 = _sha256_file(bundle_path)
     if approved_bundle_sha256 and bundle_sha256 != approved_bundle_sha256:
         problems.append("bundle-digest-not-approved")
+    bundle_allowed = {"schema", "project_name", "source", "requirements", "acceptance_cases", "open_questions", "immutable_goal", "non_claims"}
+    bundle_extra = sorted(set(bundle) - bundle_allowed)
+    if bundle_extra:
+        problems.append(f"bundle-extra-fields:{','.join(bundle_extra)}")
+    if not finite_json_values(bundle):
+        problems.append("bundle-non-finite-number")
     if bundle.get("schema") != BUNDLE_SCHEMA:
         problems.append(f"bundle-schema:{bundle.get('schema')!r}")
     if campaign_profile.get("schema") != PROFILE_SCHEMA:
         problems.append(f"profile-schema:{campaign_profile.get('schema')!r}")
 
     open_questions = bundle.get("open_questions") or []
-    if open_questions:
+    if not isinstance(open_questions, list):
+        problems.append("bundle-open-questions-not-list")
+        open_questions = []
+    elif open_questions:
         problems.append("bundle-open-questions")
 
     acceptance_cases = bundle.get("acceptance_cases") or []
+    if not isinstance(acceptance_cases, list):
+        problems.append("acceptance-cases-not-list")
+        acceptance_cases = []
     if not acceptance_cases:
         problems.append("bundle-has-no-acceptance-cases")
 
@@ -190,13 +214,27 @@ def validate_acceptance_floor(
     else:
         case_map = case_map or {}
     covered: dict[str, list[str]] = {}
+    seen_acceptance_ids: set[str] = set()
     for case in acceptance_cases:
+        if not isinstance(case, dict):
+            problems.append("acceptance-case-not-object")
+            continue
+        ac_extra = sorted(set(case) - {"id", "requirement_id", "kind", "predicate", "deterministic_check", "proof_artifacts", "source_path", "source_line", "evidence_text"})
+        if ac_extra:
+            problems.append(f"acceptance-case-extra-fields:{case.get('id')}:{','.join(ac_extra)}")
         ac_id = case.get("id")
-        mapped = case_map.get(ac_id) if isinstance(ac_id, str) else None
+        if not isinstance(ac_id, str) or not ac_id.strip():
+            problems.append("acceptance-case-id-invalid")
+            continue
+        if ac_id in seen_acceptance_ids:
+            problems.append(f"acceptance-case-duplicate:{ac_id}")
+            continue
+        seen_acceptance_ids.add(ac_id)
+        mapped = case_map.get(ac_id)
         if not mapped:
             problems.append(f"acceptance-case-unmapped:{ac_id}")
             continue
-        if not isinstance(mapped, list) or not all(isinstance(item, str) for item in mapped):
+        if not isinstance(mapped, list) or not mapped or not all(isinstance(item, str) and item.strip() for item in mapped) or len(set(mapped)) != len(mapped):
             problems.append(f"acceptance-case-map-invalid:{ac_id}")
             continue
         missing = [case_id for case_id in mapped if case_id not in required_case_ids]

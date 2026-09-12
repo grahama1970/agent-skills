@@ -1176,6 +1176,15 @@ def probe_pytest_contracts(summary_path: Path, *, suite: str, tests: list[str]) 
     )
 
 
+def probe_b05_strict_campaign_acceptance_envelopes(summary_path: Path) -> int:
+    return probe_pytest_contracts(
+        summary_path,
+        suite="battle-b05-strictly-validate-campaign-and-acceptance-envelopes",
+        tests=["test_campaign_envelope_validation.py"],
+    )
+
+
+
 def probe_b04_bind_authorization_to_executable_target(summary_path: Path) -> int:
     proc = _run(
         [
@@ -4559,6 +4568,8 @@ def main() -> int:
             return probe_review_cli_authorization_target_binding(args.summary)
         if args.suite == "battle-b04-bind-authorization-to-the-actual-executable-target":
             return probe_b04_bind_authorization_to_executable_target(args.summary)
+        if args.suite == "battle-b05-strictly-validate-campaign-and-acceptance-envelopes":
+            return probe_b05_strict_campaign_acceptance_envelopes(args.summary)
         if args.suite == "review-receipt-hash-finalization":
             return probe_review_receipt_hash_finalization(args.summary)
         if args.suite == "review-judge-authority":

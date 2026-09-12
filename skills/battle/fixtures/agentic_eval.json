@@ -40,6 +40,15 @@
       "claim_semantics": "control_flow"
     },
     {
+      "id": "battle.campaign_acceptance.strict_envelopes",
+      "description": "Battle campaign, profile, project-enrollment, and acceptance-floor envelopes reject duplicate keys, unknown fields, non-finite numbers, duplicate or empty IDs, invalid case maps, and unknown expectations before execution.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "control_flow"
+    },
+    {
       "id": "battle.local_docker.reactive_round",
       "description": "A clean local Battle repair round runs through the isolated Docker target and emits complete Red/Judge/Blue/scorekeeper receipts",
       "criticality": "critical",
@@ -574,6 +583,20 @@
         "production adapter authorizes target A while executing Docker image B",
         "effective Docker runtime scope is not checked by the authorization validator",
         "lower-level Docker campaign execution runs without a bound authorization receipt"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "campaign_acceptance.strict_envelopes",
+      "claim_id": "battle.campaign_acceptance.strict_envelopes",
+      "seam_type": "schema/receipt-validation",
+      "criticality": "critical",
+      "failure_modes": [
+        "duplicate JSON keys are silently collapsed before validation",
+        "extra fields or non-finite numeric values enter campaign envelopes",
+        "duplicate or empty case IDs and invalid case maps reach target execution"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -1212,6 +1235,39 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/battle-b04-bind-authorization-to-the-actual-executable-target.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-b05-strictly-validate-campaign-and-acceptance-envelopes",
+      "category": "battle-b05-strictly-validate-campaign-and-acceptance-envelopes",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.campaign_acceptance.strict_envelopes"
+      ],
+      "seams": [
+        "campaign_acceptance.strict_envelopes"
+      ],
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b05-strictly-validate-campaign-and-acceptance-envelopes --summary /tmp/battle-agentic-evals/battle-b05-strictly-validate-campaign-and-acceptance-envelopes.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b05-strictly-validate-campaign-and-acceptance-envelopes"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-b05-strictly-validate-campaign-and-acceptance-envelopes.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800

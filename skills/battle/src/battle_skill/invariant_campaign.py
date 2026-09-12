@@ -33,6 +33,7 @@ from pathlib import Path
 from typing import Any, Iterator
 
 from .invariant_judge import run_judge
+from .strict_json import finite_json_values, load_path
 
 PROFILE_SCHEMA = "battle.campaign_profile.v1"
 
@@ -45,20 +46,33 @@ def load_profile(path: str) -> dict[str, Any]:
     inventory, and binds the spec it derives from. It may never downgrade a
     generator-declared MUST_ACCEPT/MUST_REJECT (the spec floor).
     """
-    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    data = load_path(path)
+    if not isinstance(data, dict):
+        raise ValueError("profile must be a JSON object")
+    allowed = {"schema", "profile_id", "required_judges", "expectation_overrides", "required_case_ids"}
+    extra = sorted(set(data) - allowed)
+    if extra:
+        raise ValueError(f"profile contains unknown fields: {extra}")
+    if not finite_json_values(data):
+        raise ValueError("profile contains non-finite numeric value")
     if data.get("schema") != PROFILE_SCHEMA:
         raise ValueError(f"profile schema must be {PROFILE_SCHEMA}")
-    if not data.get("profile_id"):
-        raise ValueError("profile must declare profile_id")
+    if not isinstance(data.get("profile_id"), str) or not data["profile_id"].strip():
+        raise ValueError("profile must declare non-empty profile_id")
+    judges = data.get("required_judges") or []
+    if not isinstance(judges, list) or any(not isinstance(item, str) or not item.strip() for item in judges) or len(set(judges)) != len(judges):
+        raise ValueError("required_judges must be a duplicate-free list of non-empty strings")
     overrides = data.get("expectation_overrides") or {}
     if not isinstance(overrides, dict):
         raise ValueError("expectation_overrides must be an object")
     for case_id, value in overrides.items():
-        if str(value).upper() not in ("MUST_ACCEPT", "MUST_REJECT"):
+        if not isinstance(case_id, str) or not case_id.strip():
+            raise ValueError("expectation override IDs must be non-empty strings")
+        if not isinstance(value, str) or value.upper() not in ("MUST_ACCEPT", "MUST_REJECT"):
             raise ValueError(f"override for {case_id!r} must be MUST_ACCEPT or MUST_REJECT, got {value!r}")
     required = data.get("required_case_ids") or []
-    if not isinstance(required, list) or len(set(required)) != len(required):
-        raise ValueError("required_case_ids must be a duplicate-free list")
+    if not isinstance(required, list) or any(not isinstance(item, str) or not item.strip() for item in required) or len(set(required)) != len(required):
+        raise ValueError("required_case_ids must be a duplicate-free list of non-empty strings")
     return data
 
 

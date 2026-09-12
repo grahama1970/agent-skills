@@ -29,6 +29,7 @@ from typing import Any
 from .docker_runtime import extract_docker_run_image
 from .invariant_campaign import load_profile, run_campaign
 from .invariant_judge import run_judge
+from .strict_json import finite_json_values, load_path
 
 REQUEST_SCHEMA = "battle.campaign_request.v1"
 RECEIPT_SCHEMA = "battle.campaign_contract_receipt.v1"
@@ -69,12 +70,36 @@ def _validate_execution_authorization(request: dict[str, Any]) -> None:
 
 
 def validate_request(request: dict[str, Any]) -> None:
+    _require(isinstance(request, dict), "request must be a JSON object")
+    allowed = {
+        "schema",
+        "profile_path",
+        "lock_path",
+        "generator",
+        "judge",
+        "functional_judge",
+        "target_run_cmd",
+        "work_root",
+        "gen_params",
+        "judge_params",
+        "output_subdir",
+        "lineage",
+        "authorization_receipt",
+    }
+    extra = sorted(set(request) - allowed)
+    _require(not extra, f"request contains unknown fields: {extra}")
+    _require(finite_json_values(request), "request contains non-finite numeric value")
     _require(request.get("schema") == REQUEST_SCHEMA,
              f"request schema must be {REQUEST_SCHEMA}")
     for key in ("profile_path", "lock_path", "generator", "judge", "functional_judge",
                 "target_run_cmd", "work_root"):
-        _require(bool(request.get(key)), f"request missing {key}")
+        _require(isinstance(request.get(key), str) and request[key].strip(), f"request missing {key}")
     _require(isinstance(request.get("gen_params", {}), dict), "gen_params must be an object")
+    _require(isinstance(request.get("judge_params", {}), dict), "judge_params must be an object")
+    if "output_subdir" in request:
+        _require(isinstance(request["output_subdir"], str) and request["output_subdir"].strip(), "output_subdir must be a non-empty string")
+    if "lineage" in request:
+        _require(isinstance(request["lineage"], dict), "lineage must be an object")
     _validate_execution_authorization(request)
 
 
@@ -274,7 +299,7 @@ def _cli(argv: list[str]) -> int:
     ver_p.add_argument("--evaluator-root", default=None)
     args = ap.parse_args(argv)
     if args.command == "run":
-        request = json.loads(Path(args.request).read_text(encoding="utf-8"))
+        request = load_path(args.request)
         receipt = run_contract_campaign(request)
         print(json.dumps({"status": receipt["verdict"], "receipt": str(Path(args.request).parent / "receipt.json")}))
         return 0 if receipt["verdict"] == "PASS" else 1
