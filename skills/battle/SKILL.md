@@ -153,9 +153,12 @@ PROJECT_STATE_ROOT=/path/to/target ../project-state/run.sh report --json --outpu
 
 `invariant-report` writes `create_report.report.v1`, validates it through
 `skills/create-report/run.sh validate`, renders Markdown through
-`skills/create-report/run.sh render`, and appends `## Exploits Table`. A Battle
-closure without that report is missing the decision surface even if campaign
-receipts pass.
+`skills/create-report/run.sh render`, and appends `## Exploits Table`. The table
+must be plain-spoken and scannable: one row per attack case, with a `Scope`
+column that separates `contractual` acceptance-floor cases from
+`beyond-contract` probes, and a `Result` column where `RED_WIN` blocks release.
+A Battle closure without that report is missing the decision surface even if
+campaign receipts pass.
 
 ## Purpose Boundary
 

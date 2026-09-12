@@ -49,17 +49,38 @@ def _campaign_summary(path: Path, campaign: dict[str, Any]) -> str:
     )
 
 
-def _exploit_rows(campaigns: list[tuple[Path, dict[str, Any]]]) -> list[dict[str, str]]:
+def _scope(path: Path) -> str:
+    name = path.name.lower()
+    if "beyond" in name:
+        return "beyond-contract"
+    if "brief" in name or "fuzz" in name or "contract" in name:
+        return "contractual"
+    return "campaign"
+
+
+def _row_result(item: dict[str, Any]) -> str:
+    if item.get("passed") is not True:
+        return "RED_WIN"
+    execution = item.get("execution") if isinstance(item.get("execution"), dict) else {}
+    if execution.get("exit_code") == 0:
+        return "ACCEPTED_CLEAN"
+    return "BLOCKED_FAIL_CLOSED"
+
+
+def _attack_rows(campaigns: list[tuple[Path, dict[str, Any]]]) -> list[dict[str, str]]:
     rows: list[dict[str, str]] = []
     for path, campaign in campaigns:
-        for failure in campaign.get("failures") or []:
-            case = failure.get("case") or "campaign-level"
+        cases = campaign.get("case_log") or campaign.get("failures") or []
+        for item in cases:
+            case = item.get("case") or "campaign-level"
+            violations = item.get("violations") or []
             rows.append({
+                "scope": _scope(path),
                 "campaign": path.name,
                 "case": str(case),
-                "expectation": str(failure.get("expectation") or "unknown"),
-                "outcome": "RED_WIN",
-                "evidence": "; ".join(str(v) for v in failure.get("violations") or []) or "failure recorded",
+                "expectation": str(item.get("expectation") or "unknown"),
+                "result": _row_result(item),
+                "evidence": "; ".join(str(v) for v in violations) or "Judge passed; no policy value survived.",
             })
     return rows
 
@@ -68,15 +89,17 @@ def _markdown_table(rows: list[dict[str, str]]) -> str:
     lines = [
         "## Exploits Table",
         "",
-        "| Campaign | Case | Expectation | Outcome | Judge evidence |",
-        "|---|---|---|---|---|",
+        "Plain-English scan: contractual rows are the frozen acceptance-contract floor; beyond-contract rows are adversarial probes for missing obligations. `RED_WIN` blocks release.",
+        "",
+        "| Scope | Campaign | Case | Expectation | Result | Judge evidence |",
+        "|---|---|---|---|---|---|",
     ]
     if not rows:
-        lines.append("| all campaigns | none | n/a | NO_JUDGE_CONFIRMED_EXPLOIT | No campaign failure rows. |")
+        lines.append("| all | all campaigns | none | n/a | NO_CASES_RECORDED | Campaign had no case_log rows. |")
     else:
         for row in rows:
             lines.append(
-                f"| {row['campaign']} | {row['case']} | {row['expectation']} | {row['outcome']} | {row['evidence'].replace('|', '/')} |"
+                f"| {row['scope']} | {row['campaign']} | {row['case']} | {row['expectation']} | {row['result']} | {row['evidence'].replace('|', '/')} |"
             )
     return "\n".join(lines) + "\n"
 
@@ -84,7 +107,8 @@ def _markdown_table(rows: list[dict[str, str]]) -> str:
 def build_report(*, campaigns: list[Path], project_state: Path, target: str) -> tuple[dict[str, Any], str]:
     loaded = [(path, _load_campaign(path)) for path in campaigns]
     current_state, goals = _load_project_state(project_state)
-    exploit_rows = _exploit_rows(loaded)
+    attack_rows = _attack_rows(loaded)
+    red_win_rows = [row for row in attack_rows if row["result"] == "RED_WIN"]
     all_passed = all(campaign.get("passed") is True for _, campaign in loaded)
     evidence = [_campaign_summary(path, campaign) for path, campaign in loaded]
     report = {
@@ -95,8 +119,8 @@ def build_report(*, campaigns: list[Path], project_state: Path, target: str) -> 
         "primary_object": target,
         "decision_supported": "decide whether the invariant campaign found exploitable release-boundary leaks",
         "overall_finding": "Ready" if all_passed else "Needs Changes",
-        "core_conclusion": "No Judge-confirmed exploits survived the supplied campaigns." if all_passed else "One or more Judge-confirmed exploits require repair and replay.",
-        "evidence_basis": "Battle campaign receipts plus project-state artifact; Markdown appends the exploits table derived from campaign failure rows.",
+        "core_conclusion": f"No Judge-confirmed exploits survived {len(attack_rows)} attempted attack cases." if all_passed else f"{len(red_win_rows)} Judge-confirmed exploit rows require repair and replay.",
+        "evidence_basis": "Battle campaign receipts plus project-state artifact; Markdown appends the exploits table derived from every campaign case_log row, including contractual and beyond-contract cases.",
         "highest_risk_issues": [] if all_passed else ["F-001 Judge-confirmed Battle exploits remain"],
         "immediate_next_steps": [] if all_passed else ["A-001 Patch each Red win and rerun Battle replay"],
         "scope": {
@@ -121,7 +145,7 @@ def build_report(*, campaigns: list[Path], project_state: Path, target: str) -> 
                 "id": "F-001",
                 "title": "Battle invariant campaign exploit status",
                 "status": "Verified" if all_passed else "Needs Changes",
-                "evidence": evidence + [f"exploits_table_rows={len(exploit_rows)}"],
+                "evidence": evidence + [f"exploits_table_rows={len(attack_rows)}", f"red_win_rows={len(red_win_rows)}"],
                 "rationale": "The independent Judge, not team self-report, scored each generated version.",
                 "impact": "Determines whether release-boundary PII leaks require another Blue repair cycle.",
                 "owner": "Battle scorekeeper",
@@ -135,7 +159,7 @@ def build_report(*, campaigns: list[Path], project_state: Path, target: str) -> 
             "finished": evidence if all_passed else [],
             "pending": [],
             "outstanding": [] if all_passed else ["Patch and replay Judge-confirmed Red wins"],
-            "broken": [] if all_passed else [row["case"] for row in exploit_rows],
+            "broken": [] if all_passed else [row["case"] for row in red_win_rows],
             "blocked": [],
             "unproven": ["unbounded exploit search", "human approval"],
         },
@@ -168,7 +192,7 @@ def build_report(*, campaigns: list[Path], project_state: Path, target: str) -> 
         },
         "non_claims": ["This report does not prove all possible PII representations or unbounded adversarial search."],
     }
-    return report, _markdown_table(exploit_rows)
+    return report, _markdown_table(attack_rows)
 
 
 def main() -> int:

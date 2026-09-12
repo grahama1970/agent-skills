@@ -87,7 +87,7 @@
     },
     {
       "id": "battle.invariant_report.create_report_project_state_exploits_table",
-      "description": "Battle invariant closure emits a create_report.report.v1 JSON report validated/rendered through create-report, includes a project-state artifact in source_of_truth_inventory, and appends an explicit exploits table derived from Judge-confirmed campaign failure rows.",
+      "description": "Battle invariant closure emits a plain-spoken create_report.report.v1 JSON report validated/rendered through create-report, includes a project-state artifact in source_of_truth_inventory, and appends a scannable exploits table with one row per attack case, including contractual acceptance-floor cases and beyond-contract probes.",
       "criticality": "critical",
       "evidence_required": {
         "deterministic": true
