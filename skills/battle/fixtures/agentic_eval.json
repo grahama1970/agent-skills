@@ -58,6 +58,15 @@
       "claim_semantics": "control_flow"
     },
     {
+      "id": "battle.artifact_snapshot.confinement",
+      "description": "Battle rejects unsafe case IDs, traversal, escaping symlinks, special files, and externally mutable case paths before target launch, then executes only controller-owned snapshots.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "control_flow"
+    },
+    {
       "id": "battle.local_docker.reactive_round",
       "description": "A clean local Battle repair round runs through the isolated Docker target and emits complete Red/Judge/Blue/scorekeeper receipts",
       "criticality": "critical",
@@ -620,6 +629,20 @@
         "changed imported helper remains trusted because only top-level Judge file was hashed",
         "worker replaces both evaluator path and claimed expected digest in the request",
         "lock mismatch reaches target launch"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "artifact_snapshot.confinement",
+      "claim_id": "battle.artifact_snapshot.confinement",
+      "seam_type": "filesystem/materialization",
+      "criticality": "critical",
+      "failure_modes": [
+        "case ID traversal writes output outside the work root",
+        "generator symlink imports host files into retained evidence",
+        "external mutation changes evidence after plan resolution"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -1324,6 +1347,39 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/battle-b06-verify-evaluator-locks-before-loading-executable-components.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-b07-confine-all-materialized-artifacts-to-owned-snapshots",
+      "category": "battle-b07-confine-all-materialized-artifacts-to-owned-snapshots",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.artifact_snapshot.confinement"
+      ],
+      "seams": [
+        "artifact_snapshot.confinement"
+      ],
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b07-confine-all-materialized-artifacts-to-owned-snapshots --summary /tmp/battle-agentic-evals/battle-b07-confine-all-materialized-artifacts-to-owned-snapshots.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b07-confine-all-materialized-artifacts-to-owned-snapshots"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-b07-confine-all-materialized-artifacts-to-owned-snapshots.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800

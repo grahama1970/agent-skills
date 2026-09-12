@@ -24,7 +24,10 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import re
 import shlex
+import shutil
+import stat
 import subprocess
 import tempfile
 import time
@@ -115,6 +118,54 @@ def _load_generator(path: str):
 
 
 VALID_EXPECTATIONS = {"MUST_ACCEPT", "MUST_REJECT", "MAY_REJECT"}
+_SAFE_CASE_ID = re.compile(r"[A-Za-z0-9_.-]{1,128}\Z")
+
+
+def _safe_case_id(raw: Any) -> str:
+    name = str(raw)
+    if not _SAFE_CASE_ID.fullmatch(name) or name in {".", ".."}:
+        raise ValueError(f"unsafe case id: {name!r}")
+    return name
+
+
+def _require_under(path: Path, root: Path, label: str) -> Path:
+    resolved = path.resolve()
+    try:
+        resolved.relative_to(root.resolve())
+    except ValueError as exc:
+        raise ValueError(f"{label} escapes owned root: {path}") from exc
+    return resolved
+
+
+def _regular_files(root: Path) -> list[Path]:
+    if not root.exists():
+        return []
+    if root.is_symlink() or not root.is_dir():
+        raise ValueError(f"artifact root is not a real directory: {root}")
+    files: list[Path] = []
+    for path in sorted(root.rglob("*")):
+        mode = path.lstat().st_mode
+        if stat.S_ISLNK(mode):
+            raise ValueError(f"artifact path is a symlink: {path}")
+        if stat.S_ISDIR(mode):
+            continue
+        if not stat.S_ISREG(mode):
+            raise ValueError(f"artifact path is not a regular file: {path}")
+        files.append(path)
+    return files
+
+
+def _materialize_case_snapshot(name: str, source: Path, owned_root: Path, dest_root: Path) -> Path:
+    case_id = _safe_case_id(name)
+    src = _require_under(source, owned_root, "case input")
+    dest = dest_root / case_id
+    shutil.rmtree(dest, ignore_errors=True)
+    for file_path in _regular_files(src):
+        rel = file_path.resolve().relative_to(src)
+        target = dest / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(file_path.read_bytes())
+    return dest
 
 
 def _sha256_bytes(data: bytes) -> str:
@@ -126,7 +177,7 @@ def _tree_manifest(root: Path) -> list[dict[str, Any]]:
         return []
     return [
         {"path": str(path.relative_to(root)), "sha256": _sha256_bytes(path.read_bytes()), "bytes": path.stat().st_size}
-        for path in sorted(root.rglob("*")) if path.is_file()
+        for path in _regular_files(root)
     ]
 
 
@@ -244,6 +295,7 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
         work.mkdir(parents=True, exist_ok=True)
     else:
         work = Path(tempfile.mkdtemp(prefix="invariant-campaign-"))
+    gen_root = work / "gen"
     # The approved contract determines the required judge set: omitting a
     # required judge must fail BEFORE any target execution (WebGPT review).
     if "functional" in required_judges and not functional_judge:
@@ -254,7 +306,7 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
         return result
     try:
         if frozen_cases is None:
-            gen: Iterator[tuple] = _load_generator(generator)(str(work / "gen"), gen_params)
+            gen: Iterator[tuple] = _load_generator(generator)(str(gen_root), gen_params)
         else:
             def _frozen_iter() -> Iterator[tuple]:
                 for item in frozen_cases:
@@ -283,6 +335,7 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
                 else:
                     expectation = resolved
                     expectation_source = "profile"
+            name = _safe_case_id(name)
             seen_cases.add(name)
             if expectation == "MUST_ACCEPT":
                 result.must_accept_count += 1
@@ -291,6 +344,11 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
             else:
                 result.may_reject_count += 1
             input_path = Path(input_dir)
+            if frozen_cases is None:
+                input_path = _materialize_case_snapshot(name, input_path, gen_root, work / "snapshots")
+            else:
+                _require_under(input_path, work, "frozen case input")
+                _regular_files(input_path)
             out_dir = work / "out" / name
             out_dir.mkdir(parents=True, exist_ok=True)
             jp = dict(judge_params)

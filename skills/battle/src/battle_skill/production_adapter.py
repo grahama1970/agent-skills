@@ -166,7 +166,17 @@ def run_production_round(adapter_request: dict[str, Any]) -> dict[str, Any]:
                     "retained_acceptance_bundle": retained_bundle,
                     "acceptance_floor": floor_receipt,
                     "target_launches": 0}
-    campaign = run_contract_campaign(request)
+    try:
+        campaign = run_contract_campaign(request)
+    except ValueError as exc:
+        return {"schema": "battle.production_adapter_round.v1",
+                "status": "BLOCKED",
+                "failure_code": "campaign-artifact-confinement-invalid",
+                "authorization_receipt": receipt,
+                "docker_boundary": docker_receipt,
+                "project_contract_enrollment": enrollment_receipt,
+                "problems": [str(exc)],
+                "target_launches": 0}
     phase_plan = None
     if floor_receipt is not None and campaign["verdict"] == "PASS":
         from .contract_variation_plan import build_plan

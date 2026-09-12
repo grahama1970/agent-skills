@@ -1184,6 +1184,14 @@ def probe_b06_verify_evaluator_locks(summary_path: Path) -> int:
     )
 
 
+def probe_b07_confine_materialized_artifacts(summary_path: Path) -> int:
+    return probe_pytest_contracts(
+        summary_path,
+        suite="battle-b07-confine-all-materialized-artifacts-to-owned-snapshots",
+        tests=["test_artifact_snapshot_confinement.py"],
+    )
+
+
 
 def probe_b05_strict_campaign_acceptance_envelopes(summary_path: Path) -> int:
     return probe_pytest_contracts(
@@ -4581,6 +4589,8 @@ def main() -> int:
             return probe_b05_strict_campaign_acceptance_envelopes(args.summary)
         if args.suite == "battle-b06-verify-evaluator-locks-before-loading-executable-components":
             return probe_b06_verify_evaluator_locks(args.summary)
+        if args.suite == "battle-b07-confine-all-materialized-artifacts-to-owned-snapshots":
+            return probe_b07_confine_materialized_artifacts(args.summary)
         if args.suite == "review-receipt-hash-finalization":
             return probe_review_receipt_hash_finalization(args.summary)
         if args.suite == "review-judge-authority":

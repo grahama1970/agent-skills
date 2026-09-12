@@ -28,7 +28,7 @@ from typing import Any
 
 from .docker_runtime import extract_docker_run_image
 from .evaluator_lock import verify_evaluator_lock
-from .invariant_campaign import load_profile, run_campaign
+from .invariant_campaign import _materialize_case_snapshot, _regular_files, load_profile, run_campaign
 from .invariant_judge import run_judge
 from .strict_json import finite_json_values, load_path
 
@@ -46,10 +46,9 @@ def _sha256_file(path: Path) -> str:
 
 def _manifest_tree(root: Path) -> list[dict[str, Any]]:
     entries = []
-    for f in sorted(root.rglob("*")):
-        if f.is_file():
-            entries.append({"path": str(f.relative_to(root)), "sha256": _sha256_file(f),
-                            "bytes": f.stat().st_size})
+    for f in _regular_files(root):
+        entries.append({"path": str(f.relative_to(root)), "sha256": _sha256_file(f),
+                        "bytes": f.stat().st_size})
     return entries
 
 
@@ -117,7 +116,9 @@ def resolve_plan(request: dict[str, Any]) -> dict[str, Any]:
     """
     work = Path(request["work_root"])
     gen_root = work / "plan-gen"
+    case_root = work / "plan-cases"
     shutil.rmtree(gen_root, ignore_errors=True)
+    shutil.rmtree(case_root, ignore_errors=True)
     gen_root.mkdir(parents=True, exist_ok=True)
     import importlib.util
     gen_path = Path(request["generator"]).resolve()
@@ -128,8 +129,9 @@ def resolve_plan(request: dict[str, Any]) -> dict[str, Any]:
     cases = []
     for case in mod.generate(str(gen_root), request.get("gen_params") or {}):
         name, input_dir = case[0], case[1]
+        snap = _materialize_case_snapshot(name, Path(input_dir), gen_root, case_root)
         declared = case[2].upper() if len(case) == 3 else "MAY_REJECT"
-        cases.append({"id": name, "input_dir": str(input_dir), "declared_expectation": declared})
+        cases.append({"id": name, "input_dir": str(snap), "declared_expectation": declared})
     profile = load_profile(request["profile_path"])
     overrides = profile.get("expectation_overrides") or {}
     for c in cases:
