@@ -734,6 +734,15 @@ def _all_clear_fingerprint(ev: dict) -> str | None:
 
 def deliver(ev: dict[str, Any], checkpoint: BridgeCheckpoint, *, fresh: bool) -> dict[str, Any]:
     ev = apply_live_issue_state(ev)  # log shows closure: closed issues never alert as open failures
+    # Deliberate parks are quiet in the LOG too (operator 2026-09-12): a
+    # SKIPPED creator_transport_outage tick every 5 minutes wrote the same
+    # outage line into the stream forever, even though the park was already
+    # recorded once by the UPDATED state event and ops-discord stays quiet.
+    # SKIPPED receipts are printed to cron.log; the stream records state
+    # changes, not repetition. DRY_RUN previews stay visible for operators.
+    if ev.get("status") == "SKIPPED" and ev.get("stop_reason") == "creator_transport_outage":
+        return {"event_id": ev.get("event_id"), "dir": ev.get("dir"),
+                "status": "SKIPPED", "quiet_park": True}
     event_id = ev["event_id"]
     all_clear_fp = _all_clear_fingerprint(ev)
     result: dict[str, Any] = {"event_id": event_id, "dir": ev["dir"], "status": ev.get("status")}
