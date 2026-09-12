@@ -101,9 +101,13 @@ def script(scenario_id: str | None) -> int:
     for sid in ids:
         s = scen[sid]
         p = plan_of(s)
-        print(f"\n=== {sid} [{s['tier']}] REQUEST: {s['user_request']!r}")
-        print(f"    inputs: latency {s['predicted_latency_ms']}ms | emotion {s['emotion']} | "
-              f"intensity {s['intensity']} | complexity {s['complexity']}  ->  arc={p['answer_arc']} band={p['band']}")
+        print(f"\n=== {sid} [{s['tier']}]")
+        print(f"  CONTEXT : {s.get('context', '(none)')}")
+        print(f"  LISTENER: {s.get('listener', '(unknown)')}")
+        print(f"  REQUEST : {s['user_request']!r}")
+        print(f"  DERIVED : emotion={s['emotion']} intensity={s['intensity']}/10 complexity={s['complexity']} "
+              f"(from context via /intent + /speaker/resolve)  ->  arc={p['answer_arc']} band={p['band']} "
+              f"covers {s['predicted_latency_ms']}ms in {p['planned_total_ms']}ms")
         hdr = f"  {'#':>2}  {'time':>6}  {'element':<9} {'voice/tone':<18} payload (text incl. [tags] / delay / sfx+gain)"
         print(hdr)
         print("  " + "-" * (len(hdr) - 2))
