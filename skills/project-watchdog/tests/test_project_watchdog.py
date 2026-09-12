@@ -3206,3 +3206,20 @@ def test_capability_gate_self_refreshes_stale_receipt(tmp_path, monkeypatch):
     cp.run()
     ok2, _ = cp.dispatch_allowed()
     assert ok2 is True
+
+
+def test_queue_drained_all_clear_pushes_once_via_dedup(monkeypatch):
+    """Zero-routable tick pushes one green CLEARED queue-drained event; the
+    bridge fingerprint dedup suppresses the repeat (operator 2026-09-12)."""
+    import sys, pathlib
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "scripts"))
+    import watchdog_notify_bridge as b
+    pushed = []
+    monkeypatch.setattr(b, "push_switchboard",
+                        lambda ev: pushed.append(ev) or {"status": "SENT"})
+    ev = {"repo": "UNKNOWN(repo:receipt_missing_repo)",
+          "issue": "UNKNOWN(issue:receipt_missing_issue_number)",
+          "status": "CLEARED", "summary": "queue drained: zero open routable"}
+    b.push_switchboard(ev)
+    assert pushed and pushed[0]["status"] == "CLEARED"
+    assert "queue drained" in pushed[0]["summary"]

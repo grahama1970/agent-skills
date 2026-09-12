@@ -834,6 +834,30 @@ def _tick_locked(
                       consecutive_ticks=streak.consecutive_ticks)
         log_event(run_id, "no_routable_issues", skipped=skipped,
                   fleet_stall=receipt["fleet_stall"])
+        # Queue-drained all-clear (operator 2026-09-12): when the fleet scan
+        # finds ZERO open routable agent-work tickets, the log's last message
+        # should be a green queue-drained notice, not silence -- silence after
+        # work is indistinguishable from a broken scan until idle escalation
+        # fires 24h later. Pushed through the notify bridge as a non-ticket
+        # lifecycle event (renders green CLEARED; fingerprint dedup makes it
+        # once per 24h while drained holds; any new ticket naturally
+        # re-alerts). Skipped/parked dispatches (codex outage) are NOT drained:
+        # drained means no open routable work at all.
+        if receipt["ok"] and not skipped:
+            try:
+                from . import watchdog_notify_bridge as _bridge
+                _bridge.push_switchboard({
+                    "schema": "project_watchdog.delivery_event.v1",
+                    "kind": "tick", "run_id": run_id,
+                    "repo": "UNKNOWN(repo:receipt_missing_repo)",
+                    "issue": "UNKNOWN(issue:receipt_missing_issue_number)",
+                    "status": "CLEARED",
+                    "summary": ("queue drained: zero open routable agent-work "
+                                "tickets across the fleet; ticks continue and "
+                                "any new ticket re-alerts"),
+                    "requires_human_input": False})
+            except Exception:  # noqa: BLE001 - all-clear never blocks a tick
+                pass
         return finish(run_id, receipt_dir, receipt, 0 if receipt["ok"] else 1,
                       persist=streak.should_persist_receipt or not receipt["ok"])
 
