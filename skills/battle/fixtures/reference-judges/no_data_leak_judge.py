@@ -143,17 +143,14 @@ def _decode_tokens(text: str, profile: dict) -> list[str]:
 
 
 def _read_text_stream(f: Path, raw: bytes) -> list[str]:
-    texts = []
+    texts = [raw.decode("utf-8", errors="replace")]
     for enc in ("utf-8-sig", "utf-16", "utf-16-le", "utf-16-be"):
         try:
             text = raw.decode(enc)
         except UnicodeDecodeError:
             continue
-        texts.append(text)
-        if "\x00" not in text:
-            break
-    if not texts:
-        texts.append(raw.decode("utf-8", errors="replace"))
+        if text not in texts:
+            texts.append(text)
     return texts
 
 

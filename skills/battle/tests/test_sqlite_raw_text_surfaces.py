@@ -40,15 +40,39 @@ def test_sqlite_blob_cell_raw_text_fails(tmp_path: Path) -> None:
     assert result["violations"] == [f"policy value survives in output: '{secret}'"]
 
 
-def test_sqlite_released_tail_bytes_fail_even_when_cells_are_clean(tmp_path: Path) -> None:
-    secret = "B17-TAIL-secret"
+def test_sqlite_freelist_raw_text_fails_when_visible_cells_are_clean(tmp_path: Path) -> None:
+    secret = "B17-FREELIST-secret"
     db = _db(tmp_path)
     con = sqlite3.connect(db)
-    con.execute("CREATE TABLE clean(value TEXT)")
-    con.execute("INSERT INTO clean VALUES ('redacted')")
+    con.execute("PRAGMA page_size=512")
+    con.execute("PRAGMA secure_delete=OFF")
+    con.execute("PRAGMA auto_vacuum=NONE")
+    con.execute("VACUUM")
+    con.execute("CREATE TABLE clean(value BLOB)")
+    con.execute("INSERT INTO clean VALUES (?)", ((secret + "X" * 200).encode(),))
+    con.commit()
+    con.execute("DELETE FROM clean")
     con.commit(); con.close()
-    with db.open("ab") as f:
-        f.write(b"\0" + secret.encode() + b"\0")
+
+    result = _judge(tmp_path, secret)
+
+    assert not result["passed"]
+
+
+def test_sqlite_unused_page_space_raw_text_fails_when_visible_cells_are_clean(tmp_path: Path) -> None:
+    secret = "B17-UNUSED-secret"
+    db = _db(tmp_path)
+    con = sqlite3.connect(db)
+    con.execute("PRAGMA page_size=1024")
+    con.execute("PRAGMA secure_delete=OFF")
+    con.execute("VACUUM")
+    con.execute("CREATE TABLE clean(value BLOB)")
+    for i in range(4):
+        value = (secret + "X" * 100).encode() if i == 2 else ("public" + str(i) + "Y" * 100).encode()
+        con.execute("INSERT INTO clean VALUES (?)", (value,))
+    con.commit()
+    con.execute("DELETE FROM clean WHERE rowid = 3")
+    con.commit(); con.close()
 
     result = _judge(tmp_path, secret)
 
