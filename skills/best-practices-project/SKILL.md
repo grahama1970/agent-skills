@@ -5,7 +5,8 @@ description: >
   Use when creating, auditing, or declaring a project ready; when deciding which
   best-practices-* packs apply; when a repo needs setup-project provenance,
   PROJECT_KNOWLEDGE, explain-project records, cleanup evidence, or retained
-  agentic evals before it can be called developer-ready.
+  agentic evals, acceptance-contract gates, Battle evidence, and release reports
+  before it can be called developer-ready.
 triggers:
   - best practices project
   - project readiness
@@ -35,6 +36,9 @@ composes:
   - best-practices-prompt
   - best-practices-github-ticket
   - best-practices-delivery-proof
+  - acceptance-contract
+  - battle
+  - create-report
 complies:
   - best-practices-skills
   - setup-project
@@ -66,7 +70,8 @@ an agent calls a project or substantial skill ready.
 
 A project is not ready because code exists. It is ready only when the goal,
 setup provenance, human map, explainability records, eval proof, cleanup state,
-and relevant implementation standards all have current evidence.
+relevant implementation standards, and any client-contract release gates all have
+current evidence.
 
 ## Required project baseline
 
@@ -90,6 +95,11 @@ For a repo, demo app, interview project, or substantial skill, require:
    project files before readiness is claimed.
 8. **Domain standards** — apply every relevant `best-practices-*` pack listed
    below.
+9. **Client-contract gate** — if readiness depends on a client brief, RFP,
+   zip bundle, privacy/security promise, release boundary, or high-stakes
+   evaluator, freeze the source with `$acceptance-contract`, attack it with
+   `$battle`, prove reusable wrapper paths, and publish a `$create-report`
+   release artifact before saying `READY`.
 
 Missing evidence means `NOT_ESTABLISHED` or `USABLE_WITH_GAPS`, not `READY`.
 
@@ -116,6 +126,40 @@ Always apply the smallest relevant set:
 
 Do not add a new standard when an existing pack owns the surface.
 
+## Client-contract release gate
+
+For client briefs, evaluation trials, privacy/security tools, data
+transformers, or any project where a missed requirement can disqualify the
+work, project readiness requires this composition:
+
+```text
+source brief / zip / policy files
+-> $acceptance-contract bundle (frozen, source-hashed requirements and cases)
+-> implementation proof against that bundle
+-> $battle contractual campaign (known floor)
+-> $battle beyond-contract campaign (release/log/schema/path/encoding surfaces)
+-> reusable wrapper proof when a skill wraps the project
+-> $create-report release artifact with exploit rows and non-claims
+```
+
+Rules:
+
+- The repo root is not the contract source. Stage the actual brief, zip, policy,
+  schema, or spec directory and hash those inputs.
+- Tests must derive from the frozen bundle, not from current implementation
+  behavior.
+- `$battle` must include an independent Judge and typed receipts for each case;
+  agent summaries are not release evidence.
+- Safe rejection is not enough for privacy/security: stdout, stderr, reports,
+  filenames, schemas, logs, and partial output boundaries are still judged.
+- `MUST_ACCEPT` cases cannot pass by rejection, empty output, or dropped records.
+- The final report must show both contractual and beyond-contract attacks, their
+  rationale, adaptive lineage when present, result, and Judge evidence.
+
+Lesson origin: oai-trial was disqualified after string-only tests missed policy
+values stored as typed JSON/SQLite scalars. The reusable fix is not a stronger
+memory rule; it is this executable contract-and-battle gate.
+
 ## Substantial skills count as projects
 
 A substantial skill must carry the project subset:
@@ -132,7 +176,9 @@ A substantial skill must carry the project subset:
 When using this skill, report:
 
 - **Readiness:** `READY`, `USABLE_WITH_GAPS`, `NOT_READY`, or `NOT_ESTABLISHED`.
-- **Evidence:** exact commands and artifact paths.
+- **Evidence:** exact commands and artifact paths, including acceptance bundle,
+  Battle case/campaign receipts, wrapper proof, and report artifact when a
+  client-contract gate applies.
 - **Domain packs applied:** list each relevant `best-practices-*` pack.
 - **Non-claims:** what the evidence does not prove.
 - **Next legal move:** one command, ticket, or decision.

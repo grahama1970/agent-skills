@@ -4,7 +4,7 @@
   "trials": 3,
   "proof_scope": "deterministic documentation-policy guard only; not a whole-catalog skills-ci audit",
   "claims": {
-    "proves": "best-practices-skills requires typed/Pydantic boundary validation before prose or regex checks and names regex/prose PASS/BLOCKED decisions as violations",
+    "proves": "best-practices-skills requires typed/Pydantic boundary validation, maintenance-event recording, value-representation fixtures, and client-contract composition through acceptance-contract, Battle, and create-report.",
     "does_not_prove": "all skills comply with the policy"
   },
   "capability_claims": [
@@ -14,7 +14,8 @@
       "criticality": "critical",
       "evidence_required": {
         "deterministic": true
-      }
+      },
+      "claim_semantics": "protocol"
     },
     {
       "id": "best_practices_skills.maintenance_log_contract",
@@ -23,6 +24,15 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "best_practices_skills.client_contract_composition",
+      "description": "Skills that implement client briefs or privacy/security evaluator requirements must compose acceptance-contract, Battle, and create-report instead of relying on prose or implementation-shaped tests.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "protocol"
     }
   ],
   "seams": [],
@@ -107,6 +117,27 @@
         "exit_code": 0,
         "stdout_contains": [
           "PASS_MAINTENANCE_EVENT_REJECTS_EMPTY"
+        ]
+      }
+    },
+    {
+      "name": "client-contract-composition-policy-retained",
+      "type": "positive",
+      "real_world": true,
+      "required": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "best_practices_skills.client_contract_composition"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "python3 - <<'PY'\nfrom pathlib import Path\ntext = Path('../SKILL.md').read_text()\nfor needle in ['- acceptance-contract', '- battle', '- create-report', 'Client-contract skill composition', '$acceptance-contract -> implementation -> $battle -> $create-report', 'typed per-case receipts']:\n    if needle not in text:\n        raise SystemExit(f'missing {needle}')\nprint('PASS_CLIENT_CONTRACT_COMPOSITION_POLICY_RETAINED')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_CLIENT_CONTRACT_COMPOSITION_POLICY_RETAINED"
         ]
       }
     }

@@ -2,10 +2,10 @@
   "version": 2,
   "skill": "best-practices-project",
   "trials": 3,
-  "proof_scope": "Project-readiness policy contract for skills-first repos and substantial skills.",
+  "proof_scope": "Project-readiness policy contract for skills-first repos, substantial skills, and client-contract release gates.",
   "claims": {
-    "proves": "The skill frontmatter is valid, composes setup-project/explain-project/agentic-evals/cleanup and required best-practices packs, and fails closed when required setup-project composition is removed.",
-    "does_not_prove": "Any individual project is ready, setup-project audit has passed for a repo, live React/Python code quality, or rendered diagram approval."
+    "proves": "The skill frontmatter is valid, composes setup-project/explain-project/agentic-evals/cleanup plus acceptance-contract/battle/create-report for client-contract gates, and fails closed when required setup-project composition is removed.",
+    "does_not_prove": "Any individual project is ready, setup-project audit has passed for a repo, live React/Python code quality, rendered diagram approval, or that a fresh Battle campaign has passed for a target repo."
   },
   "capability_claims": [
     {
@@ -14,7 +14,8 @@
       "criticality": "critical",
       "evidence_required": {
         "deterministic": true
-      }
+      },
+      "claim_semantics": "protocol"
     },
     {
       "id": "best_practices_project.fail_closed",
@@ -23,6 +24,15 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "best_practices_project.client_contract_gate",
+      "description": "Project readiness for client briefs and high-stakes evaluator work requires acceptance-contract, Battle, wrapper proof, and create-report release evidence.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "protocol"
     }
   ],
   "seams": [
@@ -40,6 +50,15 @@
       "seam_type": "filesystem/process",
       "criticality": "important",
       "claim_id": "best_practices_project.fail_closed",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "best_practices_project.client_contract_composition",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "claim_id": "best_practices_project.client_contract_gate",
       "required_evidence": [
         "deterministic"
       ]
@@ -71,20 +90,22 @@
       "timeout_seconds": 120
     },
     {
-      "name": "frontmatter-contains-setup-python-react",
+      "name": "frontmatter-contains-project-and-contract-composition",
       "type": "adversarial",
       "evidence_class": "deterministic",
       "real_world": true,
       "supports_claims": [
-        "best_practices_project.contract"
+        "best_practices_project.contract",
+        "best_practices_project.client_contract_gate"
       ],
       "seams": [
-        "best_practices_project.required_composition"
+        "best_practices_project.required_composition",
+        "best_practices_project.client_contract_composition"
       ],
       "command": [
         "bash",
         "-c",
-        "python3 - <<'PY'\nfrom pathlib import Path\ntext = Path('../SKILL.md').read_text()\nfor needle in ['- setup-project', '- best-practices-python', '- best-practices-react', '- explain-project', '- cleanup', '- agentic-evals']:\n    if needle not in text:\n        raise SystemExit(f'missing {needle}')\nprint('PROJECT_POLICY_COMPOSITION_OK')\nPY"
+        "python3 - <<'PY'\nfrom pathlib import Path\ntext = Path('../SKILL.md').read_text()\nfor needle in ['- setup-project', '- best-practices-python', '- best-practices-react', '- explain-project', '- cleanup', '- agentic-evals', '- acceptance-contract', '- battle', '- create-report', '$acceptance-contract', '$battle', '$create-report', 'Client-contract release gate']:\n    if needle not in text:\n        raise SystemExit(f'missing {needle}')\nprint('PROJECT_POLICY_COMPOSITION_OK')\nPY"
       ],
       "expected": {
         "exit_code": 0,
@@ -114,6 +135,30 @@
         "exit_code": 0,
         "stdout_contains": [
           "SETUP_PROJECT_COMPOSITION_REMOVAL_DETECTED"
+        ]
+      },
+      "timeout_seconds": 60
+    },
+    {
+      "name": "missing-battle-composition-fails-client-contract-gate",
+      "type": "negative",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": [
+        "best_practices_project.client_contract_gate"
+      ],
+      "seams": [
+        "best_practices_project.client_contract_composition"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "TMP=$(mktemp -d); cp -R .. $TMP/best-practices-project; python3 - <<PY\nfrom pathlib import Path\np = Path('$TMP/best-practices-project/SKILL.md')\ntext = p.read_text()\np.write_text(text.replace('\\n  - battle', ''))\nmutated = p.read_text()\nfrontmatter = mutated.split('---', 2)[1]\nif '- battle' in frontmatter:\n    raise SystemExit('mutation failed')\nif '$battle' not in mutated or 'Client-contract release gate' not in mutated:\n    raise SystemExit('body battle requirement disappeared')\nprint('BATTLE_COMPOSITION_REMOVAL_DETECTED')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_COMPOSITION_REMOVAL_DETECTED"
         ]
       },
       "timeout_seconds": 60

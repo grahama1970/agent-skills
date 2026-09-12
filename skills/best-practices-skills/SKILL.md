@@ -23,6 +23,9 @@ composes:
   - monitor-misuse
   - memory
   - agentic-evals
+  - acceptance-contract
+  - battle
+  - create-report
 complies:
   - best-practices-skills
   - best-practices-python
@@ -1290,3 +1293,31 @@ READY:
 Lesson origin: the oai-trial client stored phone numbers as JSON
 integers; the matcher was string-typed end to end; every layer of
 evidence shared the string assumption. The submission was disqualified.
+
+## Client-contract skill composition (operator 2026-09-12)
+
+A skill that turns a client brief, policy, zip bundle, privacy/security promise,
+or evaluator requirement into code MUST NOT rely on prose instructions or
+implementation-shaped tests as the contract. Compose the owning skills:
+
+```text
+$acceptance-contract -> implementation -> $battle -> $create-report
+```
+
+Required behavior:
+
+- `$acceptance-contract` freezes the source files and produces the acceptance
+  cases before implementation starts.
+- `$battle` consumes that bundle as the contractual floor and adds adversarial
+  beyond-contract probes for release/log/schema/path/encoding surfaces.
+- Wrapper skills must run the same campaign through the wrapper path, not only
+  the underlying repo command.
+- Campaign PASS must come from typed per-case receipts and an aggregate gate;
+  Red wins, vacuous acceptance, and unjudged skipped release checks block
+  readiness.
+- `$create-report` turns receipts into a human-scannable release table with
+  exploit, contractual status, rationale, adaptive lineage, expectation, result,
+  and Judge evidence.
+
+This is the durable oai-trial recovery pattern: learn by making the missed class
+mechanically unskippable.
