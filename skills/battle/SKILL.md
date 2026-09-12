@@ -135,6 +135,28 @@ lineage receipt instead of summarizing in prose:
 A `battle.invariant_adaptive_lineage.v1` PASS proves Red found contract edge
 cases, Blue removed those Red wins, and the independent Judge replay passed.
 
+Then Battle must produce a `$create-report`-validated report with `$project-state`
+context and an explicit exploits table. The report is the human-readable decision
+artifact; receipts remain the authority. Generate fresh project state first,
+then render the report:
+
+```bash
+PROJECT_STATE_ROOT=/path/to/target ../project-state/run.sh report --json --output /tmp/project-state.json
+./run.sh invariant-report \
+  --campaign /tmp/battle-brief-fuzz.json \
+  --campaign /tmp/battle-beyond-brief.json \
+  --project-state /tmp/project-state.json \
+  --target oai-trial \
+  --out-json /tmp/battle-report.json \
+  --out-md /tmp/battle-report.md
+```
+
+`invariant-report` writes `create_report.report.v1`, validates it through
+`skills/create-report/run.sh validate`, renders Markdown through
+`skills/create-report/run.sh render`, and appends `## Exploits Table`. A Battle
+closure without that report is missing the decision surface even if campaign
+receipts pass.
+
 ## Purpose Boundary
 
 Battle's purpose is the Red/Blue security competition backend: authorized target

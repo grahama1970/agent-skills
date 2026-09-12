@@ -4,7 +4,7 @@
   "trials": 2,
   "eval_tier": "compliance",
   "live": true,
-  "proof_scope": "Battle feature regression coverage through existing Battle entrypoints, local Docker proof receipts, local transport receipts, receipt-backed Pixi replay browser proof, focused contract suites, an explicit fail-closed adaptive-lineage exact-chain receipt gate, and explicit uncovered seams for Battle features that still need agentic evals",
+  "proof_scope": "Battle feature regression coverage through existing Battle entrypoints, local Docker proof receipts, create-report/project-state invariant reports, local transport receipts, receipt-backed Pixi replay browser proof, focused contract suites, an explicit fail-closed adaptive-lineage exact-chain receipt gate, and explicit uncovered seams for Battle features that still need agentic evals",
   "claims": {
     "proves": "Battle's authorization gate, isolated local Docker reactive Judge round, Red/Judge/Blue visibility boundary, scorekeeper authority, terminal semantics fail-closed validation, adaptive-lineage contract guards, durable adaptive-lineage exact-chain proof, browser-visible receipt-backed Pixi replay, immutable-goal close-gate readiness, Pydantic arena/Red/Blue/play-by-play event receipts, commentary causality, memory-lineage contract guards, same-run transport, pause/resume transport safety, and staging fail-closed behavior are covered by agentic eval seams with artifact readback",
     "does_not_prove": "arbitrary target exploitability, a real 1000-round overnight campaign, QEMU boot execution, production WebSocket TLS/auth/fanout against a real public endpoint, or full visual design acceptance"
@@ -84,6 +84,15 @@
         "docker": true
       },
       "claim_semantics": "control_flow"
+    },
+    {
+      "id": "battle.invariant_report.create_report_project_state_exploits_table",
+      "description": "Battle invariant closure emits a create_report.report.v1 JSON report validated/rendered through create-report, includes a project-state artifact in source_of_truth_inventory, and appends an explicit exploits table derived from Judge-confirmed campaign failure rows.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "protocol"
     },
     {
       "id": "battle.adaptive_lineage.contracts",
