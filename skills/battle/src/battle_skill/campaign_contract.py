@@ -28,7 +28,7 @@ from typing import Any
 
 from .docker_runtime import extract_docker_run_image
 from .evaluator_lock import verify_evaluator_lock
-from .invariant_campaign import _aggregate, _materialize_case_snapshot, _regular_files, load_profile, run_campaign
+from .invariant_campaign import _aggregate, _materialize_case_snapshot, _regular_files, load_profile, run_campaign, verify_execution_attestation
 from .invariant_judge import run_judge
 from .strict_json import finite_json_values, load_path
 
@@ -184,6 +184,10 @@ def run_contract_campaign(request: dict[str, Any]) -> dict[str, Any]:
         functional_judge=request["functional_judge"],
         work_root=work,
         frozen_cases=plan["cases"],
+        attestation_context={
+            "authorization_manifest_sha256": (request.get("authorization_receipt") or {}).get("manifest_sha256"),
+            "resolved_image": extract_docker_run_image(request["target_run_cmd"]),
+        },
     )
     out_root = work / "out"
     receipt = {
@@ -271,6 +275,7 @@ def verify_campaign_receipt(receipt_path: Path, evaluator_root: Path | None = No
         "artifact_integrity": "PASS",
         "semantic_replay": "PASS",
         "execution_provenance": "NOT_VERIFIED",
+        "runner_trust_assumption": "controller HMAC key is stored outside target input/output mounts",
         "problems": [],
     }
 
@@ -347,6 +352,29 @@ def verify_campaign_receipt(receipt_path: Path, evaluator_root: Path | None = No
     for key, value in recomputed_aggregate.items():
         if receipt.get("aggregation", {}).get(key) != value:
             problem("semantic_replay", f"aggregate mismatch {key}: {receipt.get('aggregation', {}).get(key)!r} != {value!r}")
+
+    attestation_key = work / ".battle-runner" / "attestation.key"
+    attestations = [case.get("execution_attestation") for case in final_cases]
+    if attestations and all(isinstance(item, dict) for item in attestations) and attestation_key.is_file():
+        def attestation_matches_case(case: dict[str, Any]) -> bool:
+            attestation = case.get("execution_attestation")
+            payload = attestation.get("payload") if isinstance(attestation, dict) else None
+            case_id = case.get("case_id") or case.get("case")
+            input_dir = case_input_dirs.get(case_id, work / "gen" / str(case_id))
+            case_dir = out_root / str(case_id)
+            return (verify_execution_attestation(attestation, attestation_key)
+                    and isinstance(payload, dict)
+                    and payload.get("case_id") == case_id
+                    and payload.get("execution") == case.get("execution")
+                    and payload.get("input_manifest_sha256") == _sha256_bytes(json.dumps(_manifest_tree(input_dir), sort_keys=True).encode())
+                    and payload.get("output_manifest_sha256") == _sha256_bytes(json.dumps(_manifest_tree(case_dir), sort_keys=True).encode()))
+
+        bad = [case.get("case_id") or case.get("case") for case in final_cases
+               if not attestation_matches_case(case)]
+        if bad:
+            problem("semantic_replay", f"runner attestation invalid: {bad}")
+        else:
+            report["execution_provenance"] = "RUNNER_ATTESTED"
 
     # 3. judge identity: digests must match the supplied evaluator tree
     if evaluator_root is not None:

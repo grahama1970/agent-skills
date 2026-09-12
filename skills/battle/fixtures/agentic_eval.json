@@ -103,6 +103,15 @@
       "claim_semantics": "protocol"
     },
     {
+      "id": "battle.execution_provenance.runner_attested",
+      "description": "Battle runner attestations bind authorization, resolved image, input/output digests, case identity, and execution observations with a controller-held HMAC key; tampered unsigned manifests cannot forge RUNNER_ATTESTED provenance and missing attestations remain NOT_VERIFIED.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
       "id": "battle.local_docker.reactive_round",
       "description": "A clean local Battle repair round runs through the isolated Docker target and emits complete Red/Judge/Blue/scorekeeper receipts",
       "criticality": "critical",
@@ -735,6 +744,20 @@
         "offline verification reads the original absolute work_root after export",
         "moved replay package cannot run because evaluator paths are absolute",
         "missing packaged evidence is silently recovered from the old workspace"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "execution_provenance.runner_attested",
+      "claim_id": "battle.execution_provenance.runner_attested",
+      "seam_type": "runner/provenance-attestation",
+      "criticality": "critical",
+      "failure_modes": [
+        "internally consistent receipt is fabricated without target execution",
+        "case execution fields are rewritten without invalidating provenance",
+        "missing runner attestation is reported as verified execution provenance"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -1604,6 +1627,39 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/battle-b11-make-offline-replay-independent-of-original-filesystem-path.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-b12-add-runner-attested-execution-provenance",
+      "category": "battle-b12-add-runner-attested-execution-provenance",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.execution_provenance.runner_attested"
+      ],
+      "seams": [
+        "execution_provenance.runner_attested"
+      ],
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b12-add-runner-attested-execution-provenance --summary /tmp/battle-agentic-evals/battle-b12-add-runner-attested-execution-provenance.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b12-add-runner-attested-execution-provenance"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-b12-add-runner-attested-execution-provenance.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800

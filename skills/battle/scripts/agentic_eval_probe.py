@@ -1224,6 +1224,14 @@ def probe_b11_portable_offline_replay(summary_path: Path) -> int:
     )
 
 
+def probe_b12_execution_attestation(summary_path: Path) -> int:
+    return probe_pytest_contracts(
+        summary_path,
+        suite="battle-b12-add-runner-attested-execution-provenance",
+        tests=["test_execution_attestation.py"],
+    )
+
+
 
 def probe_b05_strict_campaign_acceptance_envelopes(summary_path: Path) -> int:
     return probe_pytest_contracts(
@@ -4631,6 +4639,8 @@ def main() -> int:
             return probe_b10_receipt_inventory_closure(args.summary)
         if args.suite == "battle-b11-make-offline-replay-independent-of-original-filesystem-path":
             return probe_b11_portable_offline_replay(args.summary)
+        if args.suite == "battle-b12-add-runner-attested-execution-provenance":
+            return probe_b12_execution_attestation(args.summary)
         if args.suite == "review-receipt-hash-finalization":
             return probe_review_receipt_hash_finalization(args.summary)
         if args.suite == "review-judge-authority":

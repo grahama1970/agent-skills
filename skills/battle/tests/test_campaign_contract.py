@@ -79,7 +79,7 @@ def test_contract_roundtrip_verify_passes(tmp_path: Path):
     assert (work / "receipt.json").is_file()
     report = verify_campaign_receipt(work / "receipt.json")
     assert report["passed"] is True, report["problems"]
-    assert report["execution_provenance"] == "NOT_VERIFIED"
+    assert report["execution_provenance"] == "RUNNER_ATTESTED"
     assert report["artifact_integrity"] == "PASS" and report["semantic_replay"] == "PASS"
 
 

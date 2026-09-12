@@ -22,8 +22,10 @@ version is a Red win (invariant violated) and is reported with a repro.
 from __future__ import annotations
 
 import hashlib
+import hmac
 import importlib.util
 import json
+import os
 import re
 import shlex
 import shutil
@@ -186,6 +188,38 @@ def _manifest_sha256(root: Path) -> str:
     return _sha256_bytes(payload)
 
 
+def _attestation_key(work: Path) -> Path:
+    root = work / ".battle-runner"
+    root.mkdir(parents=True, exist_ok=True)
+    key = root / "attestation.key"
+    if not key.exists():
+        key.write_bytes(os.urandom(32))
+        key.chmod(0o600)
+    return key
+
+
+def _sign_attestation(key: Path, payload: dict[str, Any]) -> dict[str, Any]:
+    data = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    return {
+        "schema": "battle.runner_execution_attestation.v1",
+        "status": "PASS",
+        "runner_trust_assumption": "controller HMAC key is stored outside target input/output mounts",
+        "payload": payload,
+        "payload_sha256": _sha256_bytes(data),
+        "signature": "hmac-sha256:" + hmac.new(key.read_bytes(), data, hashlib.sha256).hexdigest(),
+    }
+
+
+def verify_execution_attestation(attestation: dict[str, Any], key_path: Path) -> bool:
+    if not isinstance(attestation, dict) or attestation.get("schema") != "battle.runner_execution_attestation.v1":
+        return False
+    payload = attestation.get("payload")
+    if not isinstance(payload, dict) or not key_path.is_file():
+        return False
+    expected = _sign_attestation(key_path, payload)
+    return hmac.compare_digest(str(attestation.get("payload_sha256")), expected["payload_sha256"]) and hmac.compare_digest(str(attestation.get("signature")), expected["signature"])
+
+
 def _policy_path(input_dir: Path) -> Path | None:
     policy = input_dir / "policy.json"
     return policy if policy.exists() else None
@@ -298,7 +332,8 @@ def _rejection_code(run: subprocess.CompletedProcess[str], produced: bool) -> st
 def _case_receipt(name: str, input_dir: Path, expectation: str, expectation_source: str,
                   fixture_precheck: dict[str, Any], execution: dict[str, Any] | None,
                   produced: bool, verdict: dict[str, Any], security: dict[str, Any] | None,
-                  functional: dict[str, Any] | None, run: subprocess.CompletedProcess[str] | None) -> dict[str, Any]:
+                  functional: dict[str, Any] | None, run: subprocess.CompletedProcess[str] | None,
+                  execution_attestation: dict[str, Any] | None = None) -> dict[str, Any]:
     passed = bool(verdict.get("passed")) and fixture_precheck.get("status") == "PASS"
     kind = (execution or {}).get("kind")
     default_kind = "INVALID_CASE" if fixture_precheck.get("status") == "INVALID_CASE" else "NOT_RUN"
@@ -322,6 +357,7 @@ def _case_receipt(name: str, input_dir: Path, expectation: str, expectation_sour
         "functional_judge": functional or {"status": "NOT_APPLICABLE", "violations": []},
         "violations": list(verdict.get("violations") or []) + list(fixture_precheck.get("violations") or []),
         "verdict": "PASS" if passed else "FAIL",
+        "execution_attestation": execution_attestation,
     }
 
 
@@ -357,7 +393,8 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
                  profile: dict[str, Any] | None = None,
                  functional_judge: str | None = None,
                  work_root: Path | None = None,
-                 frozen_cases: list[dict[str, Any]] | None = None) -> CampaignResult:
+                 frozen_cases: list[dict[str, Any]] | None = None,
+                 attestation_context: dict[str, Any] | None = None) -> CampaignResult:
     gen_params = gen_params or {}
     judge_params = dict(judge_params or {})
     result = CampaignResult()
@@ -375,6 +412,7 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
     else:
         work = Path(tempfile.mkdtemp(prefix="invariant-campaign-"))
     gen_root = work / "gen"
+    runner_key = _attestation_key(work) if attestation_context is not None else None
     # The approved contract determines the required judge set: omitting a
     # required judge must fail BEFORE any target execution (WebGPT review).
     if "functional" in required_judges and not functional_judge:
@@ -470,6 +508,16 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
             execution_dir.mkdir(parents=True, exist_ok=True)
             (execution_dir / "stdout.txt").write_text(run.stdout, encoding="utf-8", errors="replace")
             (execution_dir / "stderr.txt").write_text(run.stderr, encoding="utf-8", errors="replace")
+            execution_attestation = None
+            if runner_key is not None:
+                execution_attestation = _sign_attestation(runner_key, {
+                    "case_id": name,
+                    "authorization_manifest_sha256": (attestation_context or {}).get("authorization_manifest_sha256"),
+                    "resolved_image": (attestation_context or {}).get("resolved_image"),
+                    "input_manifest_sha256": _manifest_sha256(input_path),
+                    "output_manifest_sha256": _manifest_sha256(out_dir),
+                    "execution": execution_observation,
+                })
             # A fail-closed target that produces no output is not a leak; the
             # invariant holds for MAY_REJECT/MUST_REJECT only after the Judge
             # also scans stdout/stderr. MUST_ACCEPT rejection is a release gate
@@ -496,7 +544,7 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
                     result.failures.append(verdict)
                 result.case_receipts.append(_case_receipt(name, input_path, expectation, expectation_source,
                                                           fixture_precheck, execution_observation, produced,
-                                                          verdict, security, None, run))
+                                                          verdict, security, None, run, execution_attestation))
             else:
                 result.accepted_count += 1
                 jr = run_judge(judge, str(out_dir), jp)
@@ -517,7 +565,7 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
                     result.failures.append(verdict)
                 result.case_receipts.append(_case_receipt(name, input_path, expectation, expectation_source,
                                                           fixture_precheck, execution_observation, produced,
-                                                          verdict, security, functional, run))
+                                                          verdict, security, functional, run, execution_attestation))
             result.cases_total += 1
             result.case_log.append(verdict)
         for case_id in profile_overrides:
