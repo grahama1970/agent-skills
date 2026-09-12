@@ -4172,6 +4172,72 @@ def probe_battle_profile_contract(summary_path: Path) -> int:
     )
 
 
+def probe_battle_functional_judge(summary_path: Path) -> int:
+    suite = "battle-functional-judge"
+    out_root = summary_path.parent / suite
+    if out_root.exists():
+        shutil.rmtree(out_root)
+    out_root.mkdir(parents=True)
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "functional_judge", str(BATTLE_DIR / "fixtures" / "reference-judges" / "functional_anonymize_judge.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    def run_case(name: str, files: dict, out_files: dict) -> dict:
+        case_dir = out_root / name
+        inp, out = case_dir / "in" / "corpus", case_dir / "out" / "corpus"
+        inp.mkdir(parents=True)
+        out.mkdir(parents=True)
+        (case_dir / "policy.json").write_text(json.dumps(
+            {"sensitive_values": [{"rule_id": "r", "subject_id": "s", "type": "name", "value": "Mara Ellison"}]}))
+        for rel, content in files.items():
+            (inp / rel).write_text(content)
+        for rel, content in (out_files or {}).items():
+            (out / rel).write_text(content)
+        return mod.judge(str(case_dir / "out"),
+                         {"policy": str(case_dir / "policy.json"),
+                          "output_subdir": "corpus", "input_dir": str(case_dir / "in")})
+
+    checks: list[dict[str, Any]] = []
+
+    r = run_case("golden", {"a.txt": "note: Mara Ellison ok\n"}, {"a.txt": "note: Person-A ok\n"})
+    checks.append({"name": "golden_pass", "status": "PASS" if r["passed"] else "FAIL", "detail": r["violations"][:2]})
+
+    r = run_case("empty-out", {"a.txt": "note: Mara Ellison\n"}, {})
+    checks.append({"name": "destroyed_inventory_fails", "status": "PASS" if not r["passed"] and any("inventory-mismatch" in v for v in r["violations"]) else "FAIL", "detail": r["violations"][:2]})
+
+    r = run_case("blanked", {"a.txt": "note: Mara Ellison ok\n"}, {"a.txt": "\n"})
+    checks.append({"name": "blanked_content_fails", "status": "PASS" if not r["passed"] else "FAIL", "detail": r["violations"][:2]})
+
+    r = run_case("literal-damage", {"a.txt": "note: Mara Ellison ok\n"}, {"a.txt": "CHANGED: Person-A ok\n"})
+    checks.append({"name": "modified_literal_fails", "status": "PASS" if not r["passed"] and any("literal" in v for v in r["violations"]) else "FAIL", "detail": r["violations"][:2]})
+
+    r = run_case("value-kept", {"a.txt": "x Mara Ellison y\n"}, {"a.txt": "x Mara Ellison y\n"})
+    checks.append({"name": "unreplaced_value_fails_functionally", "status": "PASS" if not r["passed"] and any("replacement still contains" in v for v in r["violations"]) else "FAIL", "detail": r["violations"][:2]})
+
+    failed = [c for c in checks if c["status"] != "PASS"]
+    if failed:
+        raise AssertionError(f"functional judge checks failed: {failed}")
+    return _emit(
+        summary_path,
+        _summary(
+            suite=suite,
+            live="local_deterministic_functional_judge_probe",
+            checks=checks,
+            artifacts={"probe_root": str(out_root)},
+            claims_proves=[
+                "The functional judge passes a correct anonymized output and fails destroyed, blanked, modified-literal, and unreplaced-value outputs.",
+                "Accepted campaign cases can be required to pass both security and functional judges.",
+            ],
+            claims_does_not_prove=[
+                "provider-driven Red quality",
+                "arbitrary-schema functional equivalence",
+            ],
+        ),
+    )
+
+
 def probe_battle_terminal_semantics(summary_path: Path) -> int:
     suite = "battle-terminal-semantics"
     out_root = summary_path.parent / suite
@@ -4491,6 +4557,8 @@ def main() -> int:
             return probe_battle_proof_rung_separation(args.summary)
         if args.suite == "battle-profile-contract":
             return probe_battle_profile_contract(args.summary)
+        if args.suite == "battle-functional-judge":
+            return probe_battle_functional_judge(args.summary)
         if args.suite == "battle-commentary-causality":
             return probe_battle_commentary_causality(args.summary)
         if args.suite == "battle-adaptive-improvement":

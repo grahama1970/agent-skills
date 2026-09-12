@@ -381,6 +381,15 @@
         "adversarial_live_e2e": true
       },
       "claim_semantics": "control_flow"
+    },
+    {
+      "id": "battle.campaign.functional_judge",
+      "claim_semantics": "control_flow",
+      "description": "The functional judge catches accept-and-destroy: destroyed inventories, blanked content, modified literals, and unreplaced values all fail; correct anonymized output passes.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
     }
   ],
   "seams": [
@@ -940,6 +949,20 @@
         "a profile silently downgrades a spec-floor MUST_ACCEPT",
         "unknown override targets or missing required cases pass silently",
         "malformed profiles are ignored instead of failing closed"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "campaign.functional_judge",
+      "claim_id": "battle.campaign.functional_judge",
+      "seam_type": "functional-equivalence boundary",
+      "criticality": "critical",
+      "failure_modes": [
+        "a target accepts required cases while emitting destroyed or blanked output",
+        "non-slot content is modified silently",
+        "a policy value passes through unreplaced and only the leak judge notices structure loss"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -2180,6 +2203,39 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/battle-profile-contract.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 400
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-functional-judge",
+      "category": "battle-functional-judge",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.campaign.functional_judge"
+      ],
+      "seams": [
+        "campaign.functional_judge"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-functional-judge --summary /tmp/battle-agentic-evals/battle-functional-judge.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-functional-judge"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-functional-judge.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 400

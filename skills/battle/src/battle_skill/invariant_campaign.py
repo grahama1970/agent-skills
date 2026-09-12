@@ -103,7 +103,8 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
                  gen_params: dict[str, Any] | None = None,
                  judge_params: dict[str, Any] | None = None,
                  output_subdir: str = "corpus",
-                 profile: dict[str, Any] | None = None) -> CampaignResult:
+                 profile: dict[str, Any] | None = None,
+                 functional_judge: str | None = None) -> CampaignResult:
     gen_params = gen_params or {}
     judge_params = dict(judge_params or {})
     result = CampaignResult()
@@ -168,10 +169,16 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
                 policy_sentinel = Path(input_dir) / "policy.json"
                 if policy_sentinel.exists() and "policy" not in jp:
                     jp["policy"] = str(policy_sentinel)
+                jp.setdefault("input_dir", str(input_dir))
                 jr = run_judge(judge, str(out_dir), jp)
                 verdict = {"case": name, "expectation": expectation, "expectation_source": expectation_source, "judged": True, "passed": jr.passed,
                            "violations": jr.violations}
-                if jr.passed:
+                functional = {"status": "PASS", "violations": []}  # no functional gate configured
+                if functional_judge is not None:
+                    fr = run_judge(functional_judge, str(out_dir), jp)
+                    functional = {"status": "PASS" if fr.passed else "FAIL", "violations": fr.violations}
+                    verdict["functional"] = functional
+                if jr.passed and functional["status"] == "PASS":
                     result.cases_passed += 1
                     if expectation == "MUST_REJECT":
                         verdict["passed"] = False
@@ -216,11 +223,13 @@ def _cli(argv: list[str]) -> int:
     ap.add_argument("--output-subdir", default="corpus")
     ap.add_argument("--profile", default=None,
                     help="Path to a battle.campaign_profile.v1 consumer contract (expectation overrides + required-case inventory).")
+    ap.add_argument("--functional-judge", default=None,
+                    help="Optional second judge run on every accepted case; an accepted case must pass BOTH judges (accept-and-destroy guard).")
     args = ap.parse_args(argv)
     profile = load_profile(args.profile) if args.profile else None
     r = run_campaign(args.generator, args.target_run_cmd, args.judge,
                      json.loads(args.gen_params), json.loads(args.judge_params), args.output_subdir,
-                     profile=profile)
+                     profile=profile, functional_judge=args.functional_judge)
     print(json.dumps(r.to_dict(), indent=2))
     print(f"\nCAMPAIGN: {'PASS' if r.passed else 'FAIL'} "
           f"({r.cases_passed}/{r.cases_total} versions clean)")
