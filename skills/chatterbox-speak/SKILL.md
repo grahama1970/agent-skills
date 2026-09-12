@@ -155,7 +155,9 @@ The fast voice agent is a low-reasoning model (e.g. `zai/glm-5.3-flash`) that
 generates Embry's cover in real time — a natural thinking opener, a restate in
 simple steps for multi-part turns, progress narration, hum calls on long waits,
 and barge-in — while reading Agent B's JSON event stream (`solver_event.v1`:
-`{stage, eta_ms, answer_text?, steps?, done}`). Its system prompt/contract is
+`{stage, eta_ms, answer_text?, steps?, done}`). Transport is dead simple: B
+appends those JSON lines to a shared **log file** and A tails it (file-watch);
+that is exactly what `conversation_arc.py stream --events <log.jsonl>` consumes. Its system prompt/contract is
 `fixtures/fast_agent_prompt.md`. The `conversation_arc.v1` map is the SHARED
 blackboard for the turn: A maps/updates it (plan, emotional frame, barge point),
 B reads it (cover budget, barge-on-answer_ready) and streams `solver_event.v1`

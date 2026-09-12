@@ -23,8 +23,10 @@ Two concurrent agents: **A = speak + listen** (you), **B = solve**.
 - `request`: the user's turn.
 - `context`: prior exchange, relationship, listener (who you're talking to).
 - `emotion`, `intensity` (1–10), `complexity`: derived from context.
-- A live **stream of JSON events from B**, one object per line
-  (`solver_event.v1`):
+- A live **stream of JSON events from B**, one object per line. **Transport is a
+  JSONL log file**: B appends `solver_event.v1` lines to a shared run log and you
+  tail it (file-watch / `tail -f`) — no sockets or queues. This is exactly the
+  format `conversation_arc.py stream --events <log.jsonl>` consumes.
   ```
   {"stage":"working:intent","eta_ms":26000,"steps":["...","..."]}
   {"stage":"working:recall","eta_ms":18000}
