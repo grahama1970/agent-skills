@@ -70,6 +70,11 @@ if [[ "${1:-}" == "campaign-contract" ]]; then
   exec uv run --project "$SCRIPT_DIR" python -m battle_skill.campaign_contract "$@"
 fi
 
+if [[ "${1:-}" == "production-adapter" ]]; then
+  shift
+  exec uv run --project "$SCRIPT_DIR" python -m battle_skill.production_adapter "$@"
+fi
+
 if [[ "${1:-}" == "release-candidate-baseline" ]]; then
   shift
   exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/release_candidate_baseline.py" "$@"

@@ -2365,6 +2365,7 @@
     },
     {
       "name": "acceptance-floor-production-adapter",
+      "category": "battle-b03-make-contract-enrollment-impossible-to-opt-out-of",
       "type": "adversarial",
       "real_world": true,
       "evidence_class": "adversarial_live_e2e",
@@ -2378,7 +2379,7 @@
       "command": [
         "bash",
         "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python ../scripts/agentic_eval_probe.py acceptance-floor-production-adapter --summary /tmp/battle-agentic-evals/acceptance-floor-production-adapter.json"
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py acceptance-floor-production-adapter --summary /tmp/battle-agentic-evals/acceptance-floor-production-adapter.json"
       ],
       "expected": {
         "exit_code": 0,

@@ -4580,7 +4580,7 @@ def main() -> int:
             return probe_pytest_contracts(
                 args.summary,
                 suite=args.suite,
-                tests=["test_production_adapter.py"],
+                tests=["test_contract_floor_required.py", "test_production_adapter.py"],
             )
         if args.suite == "battle-functional-judge":
             return probe_battle_functional_judge(args.summary)

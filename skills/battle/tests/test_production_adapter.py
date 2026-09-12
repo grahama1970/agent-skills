@@ -1,6 +1,7 @@
 """Production adapter tests: authorization-first, zero launches on failure."""
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -13,6 +14,23 @@ from test_campaign_contract import (  # noqa: E402
 )
 
 AUTH = str(HERE.parent / "fixtures" / "reactive-judge" / "authorization.json")
+TARGET = "battle-reactive-judge-fixture@sha256:reactive-judge-v1"
+
+
+def _sha256(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _enrollment(path: Path, *, bundle: Path | None = None, required: bool = False) -> Path:
+    doc = {
+        "schema": "battle.project_contract_enrollment.v1",
+        "target_identity": TARGET,
+        "acceptance_contract": {"required": required},
+    }
+    if required:
+        doc["acceptance_contract"].update({"bundle_path": str(bundle), "sha256": _sha256(bundle)})
+    path.write_text(json.dumps(doc), encoding="utf-8")
+    return path
 
 
 def test_invalid_authorization_means_zero_launches(tmp_path: Path):
@@ -21,6 +39,7 @@ def test_invalid_authorization_means_zero_launches(tmp_path: Path):
     adapter = {"schema": "battle.production_adapter_request.v1",
                "authorization_manifest": AUTH,
                "expected_target": "some-other-target-id",
+               "project_contract_enrollment": str(_enrollment(tmp_path / "enrollment.json")),
                "base_request": base}
     result = run_production_round(adapter)
     assert result["status"] == "BLOCKED"
@@ -43,7 +62,8 @@ def test_valid_authorization_delegates_to_the_same_evaluator(tmp_path: Path):
     base = _request(tmp_path, _clean_target(tmp_path))
     adapter = {"schema": "battle.production_adapter_request.v1",
                "authorization_manifest": AUTH,
-               "expected_target": "battle-reactive-judge-fixture@sha256:reactive-judge-v1",
+               "expected_target": TARGET,
+               "project_contract_enrollment": str(_enrollment(tmp_path / "enrollment.json")),
                "base_request": base}
     result = run_production_round(adapter)
     assert result["status"] == "PASS", result.get("campaign", {}).get("aggregation")
@@ -86,10 +106,14 @@ def test_acceptance_contract_floor_is_required_before_launch(tmp_path: Path):
     base = _request(tmp_path, _clean_target(tmp_path))
     adapter = {"schema": "battle.production_adapter_request.v1",
                "authorization_manifest": AUTH,
-               "expected_target": "battle-reactive-judge-fixture@sha256:reactive-judge-v1",
+               "expected_target": TARGET,
+               "project_contract_enrollment": str(_enrollment(
+                   tmp_path / "enrollment.json",
+                   bundle=_acceptance_bundle(tmp_path / "acceptance_bundle.json"),
+                   required=True,
+               )),
                "base_request": base,
                "acceptance_floor": {
-                   "bundle_path": str(_acceptance_bundle(tmp_path / "acceptance_bundle.json")),
                    "case_map": {"AC-001": ["case-str", "case-int"]},
                }}
     result = run_production_round(adapter)
@@ -109,10 +133,14 @@ def test_acceptance_contract_floor_blocks_unmapped_cases_before_launch(tmp_path:
     base = _request(tmp_path, _clean_target(tmp_path))
     adapter = {"schema": "battle.production_adapter_request.v1",
                "authorization_manifest": AUTH,
-               "expected_target": "battle-reactive-judge-fixture@sha256:reactive-judge-v1",
+               "expected_target": TARGET,
+               "project_contract_enrollment": str(_enrollment(
+                   tmp_path / "enrollment.json",
+                   bundle=_acceptance_bundle(tmp_path / "acceptance_bundle.json"),
+                   required=True,
+               )),
                "base_request": base,
                "acceptance_floor": {
-                   "bundle_path": str(_acceptance_bundle(tmp_path / "acceptance_bundle.json")),
                    "case_map": {},
                }}
     result = run_production_round(adapter)
@@ -127,10 +155,14 @@ def test_acceptance_contract_floor_blocks_cases_not_in_required_profile(tmp_path
     base = _request(tmp_path, _clean_target(tmp_path))
     adapter = {"schema": "battle.production_adapter_request.v1",
                "authorization_manifest": AUTH,
-               "expected_target": "battle-reactive-judge-fixture@sha256:reactive-judge-v1",
+               "expected_target": TARGET,
+               "project_contract_enrollment": str(_enrollment(
+                   tmp_path / "enrollment.json",
+                   bundle=_acceptance_bundle(tmp_path / "acceptance_bundle.json"),
+                   required=True,
+               )),
                "base_request": base,
                "acceptance_floor": {
-                   "bundle_path": str(_acceptance_bundle(tmp_path / "acceptance_bundle.json")),
                    "case_map": {"AC-001": ["case-str", "bonus-fuzz"]},
                }}
     result = run_production_round(adapter)
@@ -144,10 +176,14 @@ def test_acceptance_contract_floor_blocks_open_questions_before_launch(tmp_path:
     base = _request(tmp_path, _clean_target(tmp_path))
     adapter = {"schema": "battle.production_adapter_request.v1",
                "authorization_manifest": AUTH,
-               "expected_target": "battle-reactive-judge-fixture@sha256:reactive-judge-v1",
+               "expected_target": TARGET,
+               "project_contract_enrollment": str(_enrollment(
+                   tmp_path / "enrollment.json",
+                   bundle=_acceptance_bundle(tmp_path / "acceptance_bundle.json", open_questions=True),
+                   required=True,
+               )),
                "base_request": base,
                "acceptance_floor": {
-                   "bundle_path": str(_acceptance_bundle(tmp_path / "acceptance_bundle.json", open_questions=True)),
                    "case_map": {"AC-001": ["case-str", "case-int"]},
                }}
     result = run_production_round(adapter)
@@ -162,7 +198,8 @@ def test_docker_boundary_blocks_host_commands_before_launch(tmp_path: Path):
     base["target_run_cmd"] = "python3 -c 'print(1)'"
     adapter = {"schema": "battle.production_adapter_request.v1",
                "authorization_manifest": AUTH,
-               "expected_target": "battle-reactive-judge-fixture@sha256:reactive-judge-v1",
+               "expected_target": TARGET,
+               "project_contract_enrollment": str(_enrollment(tmp_path / "enrollment.json")),
                "base_request": base,
                "enforce_docker_boundary": True}
     result = run_production_round(adapter)

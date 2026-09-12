@@ -18,7 +18,11 @@ import time
 from pathlib import Path
 from typing import Any
 
-from .acceptance_floor import validate_acceptance_floor
+from .acceptance_floor import (
+    retain_approved_bundle,
+    validate_acceptance_floor,
+    validate_project_contract_enrollment,
+)
 from .campaign_contract import run_contract_campaign, validate_request
 from .docker_runtime import validate_docker_run_command
 from .invariant_campaign import load_profile
@@ -40,8 +44,11 @@ def build_contract_request(adapter_request: dict[str, Any]) -> dict[str, Any]:
       authorization_manifest: path (required)
       expected_target: canonical target id the authorization must cover (required)
       base_request: the mandatory campaign contract request (required)
-      acceptance_floor: optional {bundle_path, case_map} from acceptance-contract;
-                        every acceptance case must map to required campaign cases
+      project_contract_enrollment: trusted project-enrollment record (required);
+                        decides whether an acceptance contract is required and
+                        identifies the approved bundle digest
+      acceptance_floor: optional {case_map}; bundle_path is ignored because the
+                        trusted enrollment record selects the exact bundle bytes
       candidate_cases: optional list of extra retained case dirs (advisory adds;
                        they appear in lineage only — case admission is plan-level)
       post_acceptance_research: optional Phase 2 knobs. After Phase 1 passes,
@@ -87,26 +94,55 @@ def run_production_round(adapter_request: dict[str, Any]) -> dict[str, Any]:
                     "authorization_receipt": receipt,
                     "docker_boundary": docker_receipt,
                     "target_launches": 0}
+    enrollment_receipt = validate_project_contract_enrollment(
+        adapter_request.get("project_contract_enrollment"),
+        expected_target=expected_target,
+    )
+    if enrollment_receipt["status"] != "PASS":
+        return {"schema": "battle.production_adapter_round.v1",
+                "status": "BLOCKED",
+                "failure_code": "project-contract-enrollment-invalid",
+                "authorization_receipt": receipt,
+                "project_contract_enrollment": enrollment_receipt,
+                "target_launches": 0}
+
     floor_request = adapter_request.get("acceptance_floor")
     floor_receipt = None
-    if floor_request is not None:
+    retained_bundle = None
+    if enrollment_receipt["acceptance_contract_required"] is True:
         if not isinstance(floor_request, dict):
             return {"schema": "battle.production_adapter_round.v1",
                     "status": "BLOCKED",
                     "failure_code": "acceptance-floor-invalid",
                     "authorization_receipt": receipt,
+                    "project_contract_enrollment": enrollment_receipt,
                     "target_launches": 0}
         profile = load_profile(request["profile_path"])
+        retained_bundle = retain_approved_bundle(
+            enrollment_receipt=enrollment_receipt,
+            retained_path=Path(request["work_root"]) / "approved-acceptance-bundle.json",
+        )
+        if retained_bundle["status"] != "PASS":
+            return {"schema": "battle.production_adapter_round.v1",
+                    "status": "BLOCKED",
+                    "failure_code": "acceptance-floor-incomplete",
+                    "authorization_receipt": receipt,
+                    "project_contract_enrollment": enrollment_receipt,
+                    "retained_acceptance_bundle": retained_bundle,
+                    "target_launches": 0}
         floor_receipt = validate_acceptance_floor(
-            bundle_path=floor_request.get("bundle_path"),
+            bundle_path=retained_bundle["path"],
             campaign_profile=profile,
             case_map=floor_request.get("case_map"),
+            approved_bundle_sha256=enrollment_receipt["approved_bundle_sha256"],
         )
         if floor_receipt["status"] != "PASS":
             return {"schema": "battle.production_adapter_round.v1",
                     "status": "BLOCKED",
                     "failure_code": "acceptance-floor-incomplete",
                     "authorization_receipt": receipt,
+                    "project_contract_enrollment": enrollment_receipt,
+                    "retained_acceptance_bundle": retained_bundle,
                     "acceptance_floor": floor_receipt,
                     "target_launches": 0}
     campaign = run_contract_campaign(request)
@@ -120,7 +156,7 @@ def run_production_round(adapter_request: dict[str, Any]) -> dict[str, Any]:
         if campaign_receipt.is_file():
             receipt_paths.append(campaign_receipt)
         phase_plan = build_plan(
-            Path(floor_request["bundle_path"]),
+            Path(retained_bundle["path"]),
             execute_dogpile=bool(phase_options.get("execute_dogpile", False)),
             dogpile_limit=int(phase_options.get("dogpile_limit", 0) or 0),
             dogpile_sources=phase_options.get("dogpile_sources"),
@@ -131,8 +167,30 @@ def run_production_round(adapter_request: dict[str, Any]) -> dict[str, Any]:
     return {"schema": "battle.production_adapter_round.v1",
             "status": campaign["verdict"],
             "authorization_receipt": receipt,
+            "project_contract_enrollment": enrollment_receipt,
+            "retained_acceptance_bundle": retained_bundle,
             "acceptance_floor": floor_receipt,
             "post_acceptance_phase_plan": phase_plan,
             "target_launches": campaign["aggregation"]["cases_total"],
             "campaign": campaign,
             "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+
+
+def _cli(argv: list[str]) -> int:
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Run a Battle production adapter request")
+    parser.add_argument("--request", required=True, help="battle.production_adapter_request.v1 JSON")
+    parser.add_argument("--out", required=True, help="Where to write battle.production_adapter_round.v1 JSON")
+    args = parser.parse_args(argv)
+    request = json.loads(Path(args.request).read_text(encoding="utf-8"))
+    receipt = run_production_round(request)
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(json.dumps(receipt, indent=2, sort_keys=True))
+    return 0 if receipt.get("status") == "PASS" else 2
+
+
+if __name__ == "__main__":  # pragma: no cover
+    raise SystemExit(_cli(sys.argv[1:]))
