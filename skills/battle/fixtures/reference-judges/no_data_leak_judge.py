@@ -56,13 +56,24 @@ def _gather(root: Path):
     for f in sorted(root.rglob("*")):
         if not f.is_file():
             continue
+        texts.append(str(f.relative_to(root)))  # file names are released data too
         if f.suffix == ".json":
             try:
                 walk(json.loads(f.read_text(encoding="utf-8-sig")))
             except Exception:
                 texts.append(f.read_text(encoding="utf-8", errors="replace"))
         elif f.suffix in (".csv", ".txt"):
-            texts.append(f.read_text(encoding="utf-8", errors="replace"))
+            raw = f.read_bytes()
+            try:
+                texts.append(raw.decode("utf-8"))
+            except UnicodeDecodeError:
+                for enc in ("utf-16", "utf-16-le", "utf-16-be"):
+                    try:
+                        texts.append(raw.decode(enc))
+                        break
+                    except UnicodeDecodeError:
+                        continue
+                texts.append(raw.decode("utf-8", errors="replace"))
         elif f.suffix == ".sqlite":
             con = sqlite3.connect(f"file:{f}?mode=ro", uri=True)
             for row in con.execute("SELECT type,name,tbl_name,sql FROM sqlite_master"):

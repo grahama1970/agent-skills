@@ -29,3 +29,45 @@ def test_campaign_passes_when_value_removed() -> None:
         "mkdir -p {output}/corpus && for f in {input}/corpus/*; do sed 's/5551234567/REDACTED/g' \"$f\" > {output}/corpus/$(basename \"$f\"); done && echo '{{}}' > {output}/report.json",
         JUDGE, output_subdir="corpus")
     assert r.passed is True and not r.failures
+
+
+def test_beyond_brief_generator_yields_complete_bundles() -> None:
+    import importlib.util
+    import tempfile
+
+    spec = importlib.util.spec_from_file_location(
+        "beyond_brief_gen", str(HERE.parent / "fixtures/reference-generators/anon_beyond_brief_matrix.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    with tempfile.TemporaryDirectory() as td:
+        cases = list(mod.generate(td, {}))
+        names = [n for n, _ in cases]
+        assert len(cases) == 12
+        for name, input_dir in cases:
+            assert (Path(input_dir) / "policy.json").is_file(), name
+            assert any((Path(input_dir) / "corpus").iterdir()), name
+        assert "bb-json-object-key" in names and "bb-filename-value" in names
+
+
+def test_beyond_brief_judge_catches_filename_and_utf16_leaks() -> None:
+    import importlib.util
+    import json
+    import tempfile
+
+    spec = importlib.util.spec_from_file_location("no_data_leak_judge", JUDGE)
+    judge_mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(judge_mod)
+    value = "Mara Ellison"
+    with tempfile.TemporaryDirectory() as td:
+        out = Path(td) / "out"
+        (out / "corpus").mkdir(parents=True)
+        (out / "policy.json").write_text(json.dumps({
+            "sensitive_values": [{"value": value}]}))
+        # leak 1: value carried in the FILE NAME, contents clean
+        (out / "corpus" / f"{value}.txt").write_text("clean\n")
+        # leak 2: value inside a UTF-16LE text file (invisible to plain utf-8 scan)
+        (out / "corpus" / "u.txt").write_bytes(
+            b"\xff\xfe" + f"note: {value}\n".encode("utf-16-le"))
+        r = judge_mod.judge(str(out), {"policy": str(out / "policy.json"),
+                                       "output_subdir": "corpus"})
+    assert r["passed"] is False and len(r["violations"]) == 1
