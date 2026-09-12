@@ -234,8 +234,9 @@ Three named vocabularies the agent selects by context (all human-verified by ear
 - **Delivery cover = TWO concurrent agents** (`scripts/cover_plan.py`): every macro
   carries a `delivery_cover` — the instant filler that plays WHILE the real answer
   builds (best-practices-chatterbox-agent two-agent model):
-  - **Agent A — Voice/Cover agent (fast lane).** Near-instant, low-reasoning; owns
-    the mouth. Its macro selection is **primarily driven by `$memory` recall**:
+  - **Agent A — Voice/Cover + Listener agent (fast lane).** Near-instant,
+    low-reasoning; owns the **mouth and the ears** — it speaks, listens for the
+    user barging in, and monitors B's stream concurrently. Its macro selection is **primarily driven by `$memory` recall**:
     `/intent fast:true` returns `delivery_context` (affect category, tone influence,
     confidence) on the deterministic/classifier path, and `/recall persona_memory`
     pulls the verified recipe/hum banks (`emotion:*` recipes, song hums by
@@ -247,9 +248,10 @@ Three named vocabularies the agent selects by context (all human-verified by ear
     `ambiguous` escalates to a tiny model (glm-5.3-flash) to break a tie.
     Boundary: memory returns engine-neutral `delivery_context`/mood/tempo/tags,
     NEVER renderer tags or macro markup — Agent A compiles those.
-  - **Agent B — Solver agent (slow lane).** High-reasoning; does the real work —
-    sets breakpoints via $debugger, finds/draws diagrams via $ops-excalidraw,
-    gathers evidence, composes the answer.
+  - **Agent B — Solver agent (slow lane).** High-reasoning; its one job is to
+    SOLVE — sets breakpoints via $debugger, finds/draws diagrams via
+    $ops-excalidraw, gathers evidence, composes the answer, and streams progress
+    (`solver_event.v1`) to A. Two concurrent agents: A speaks+listens, B solves.
   - **Channel:** B emits stage events (`debugging`/`diagramming`/`searching`/
     `answer`…); A maps each to the matching progress pool and voices it. When B's
     answer is ready, barge-in hands off and Embry speaks B's content.
