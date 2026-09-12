@@ -150,6 +150,11 @@ python3 scripts/conversation_arc.py plan --latency-ms 30000 --emotion grief \
 $phart-dag-chart chart out/arc.dag.json   # terminal-visible arc
 ```
 
+Inputs are SOURCED, not guessed: `--latency-ms` from `$memory POST /execution-stats`
+(`recommended_timeout_ms`), `--emotion`/`--intensity` from `$memory POST /intent`
+`delivery_context` (+ `/speaker/resolve`), `--complexity` = parts in the request.
+The numbered step-by-step recipe is in `references/conversation-arc.md`.
+
 Latency budget: `opener(~2.5s) + Σ progress(~1.4s + ~0.6s pause) ≥ predicted_latency_ms`.
 Walk `intent -> recall -> searching`; after each line, a **remaining gap > 7s**
 gets a **hum bed** (bone-dry, mood-matched, gain-fit under speech), else a short

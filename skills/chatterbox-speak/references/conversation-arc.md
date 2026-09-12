@@ -11,6 +11,39 @@ Tool: `scripts/conversation_arc.py` (deterministic, ~0ms, stdlib self-check).
 It composes ONLY elements the banks already verify — it invents no new render
 tricks.
 
+## How the project agent composes an arc — step by step
+
+This is the unambiguous recipe. Every input has a named source; do not guess.
+
+1. **Predicted Agent-B latency** (`--latency-ms`): ask `$memory` for the ETA of
+   the route B will run —
+   `POST /execution-stats {executor_type, executor_name, intent_action, ...}` →
+   use `recommended_timeout_ms` (or `percentiles.p90`). This is the window the
+   arc must cover. No sample yet → use a route baseline and record the real
+   duration afterward via `POST /execution-runs`.
+2. **Emotion + intensity** (`--emotion`, `--intensity`): from
+   `$memory POST /intent {q, fast:true}` `delivery_context` (affect category,
+   tone influence) and `/speaker/resolve` for who is listening. Intensity 1-10
+   from that context.
+3. **Complexity** (`--complexity`): the number of distinct parts/controls in the
+   request (≥3 → high band, deeper opener).
+4. **Plan the arc** (deterministic, ~0ms):
+   ```bash
+   python3 scripts/conversation_arc.py plan \
+     --latency-ms <recommended_timeout_ms> --emotion <cat> --intensity <n> \
+     --complexity <n> --situation '<the user turn>' --answer-text '<B answer>' \
+     --json out/arc.json --descriptive-dag --dag out/arc.dag.json --svg out/arc.svg
+   ```
+5. **Execute the `elements` in order** (Agent A owns the mouth): play each
+   element at its `start_ms`; when B's real answer arrives early, barge-in and
+   speak it (concurrent runtime + barge-in live in `embry-voice-control`).
+6. **See it / hear it**: `$phart-dag-chart chart out/arc.dag.json` (terminal),
+   `out/arc.svg` (browser), or `arc_scenarios.py render --id <id> --play` for a
+   full assembled+played arc.
+
+The planner encodes steps 4's rules below so you never hand-assemble; supply the
+four sourced inputs and it emits the ordered, latency-covering, emotion-shaped arc.
+
 ## Mental model: two agents, one mouth
 
 ```
