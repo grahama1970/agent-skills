@@ -49,3 +49,103 @@ def test_valid_authorization_delegates_to_the_same_evaluator(tmp_path: Path):
     assert result["status"] == "PASS", result.get("campaign", {}).get("aggregation")
     assert result["target_launches"] == 2
     assert result["campaign"]["schema"] == "battle.campaign_contract_receipt.v1"
+
+
+def _acceptance_bundle(path: Path, *, open_questions: bool = False) -> Path:
+    bundle = {
+        "schema": "acceptance_contract.bundle.v1",
+        "project_name": "demo",
+        "source": {"kind": "file", "path": "brief.md", "sha256": "0" * 64, "files": []},
+        "requirements": [{
+            "id": "REQ-001",
+            "kind": "acceptance",
+            "statement": "The arena must replay the client floor cases.",
+            "source_path": "brief.md",
+            "source_line": 1,
+            "evidence_text": "The arena must replay the client floor cases.",
+        }],
+        "acceptance_cases": [{
+            "id": "AC-001",
+            "requirement_id": "REQ-001",
+            "kind": "MUST_VERIFY",
+            "predicate": "client floor replay passes",
+            "deterministic_check": "battle campaign required case replay",
+            "proof_artifacts": ["receipt.json"],
+        }],
+        "open_questions": ([{"id": "Q-001", "question": "missing?", "source_path": "brief.md", "source_line": 2}]
+                           if open_questions else []),
+        "immutable_goal": None,
+        "non_claims": ["fixture"],
+    }
+    path.write_text(json.dumps(bundle), encoding="utf-8")
+    return path
+
+
+def test_acceptance_contract_floor_is_required_before_launch(tmp_path: Path):
+    _profile()
+    base = _request(tmp_path, _clean_target(tmp_path))
+    adapter = {"schema": "battle.production_adapter_request.v1",
+               "authorization_manifest": AUTH,
+               "expected_target": "battle-reactive-judge-fixture@sha256:reactive-judge-v1",
+               "base_request": base,
+               "acceptance_floor": {
+                   "bundle_path": str(_acceptance_bundle(tmp_path / "acceptance_bundle.json")),
+                   "case_map": {"AC-001": ["case-str", "case-int"]},
+               }}
+    result = run_production_round(adapter)
+    assert result["status"] == "PASS", result.get("acceptance_floor")
+    assert result["acceptance_floor"]["status"] == "PASS"
+    assert result["acceptance_floor"]["case_map"] == {"AC-001": ["case-str", "case-int"]}
+    assert result["target_launches"] == 2
+
+
+def test_acceptance_contract_floor_blocks_unmapped_cases_before_launch(tmp_path: Path):
+    _profile()
+    base = _request(tmp_path, _clean_target(tmp_path))
+    adapter = {"schema": "battle.production_adapter_request.v1",
+               "authorization_manifest": AUTH,
+               "expected_target": "battle-reactive-judge-fixture@sha256:reactive-judge-v1",
+               "base_request": base,
+               "acceptance_floor": {
+                   "bundle_path": str(_acceptance_bundle(tmp_path / "acceptance_bundle.json")),
+                   "case_map": {},
+               }}
+    result = run_production_round(adapter)
+    assert result["status"] == "BLOCKED"
+    assert result["failure_code"] == "acceptance-floor-incomplete"
+    assert result["target_launches"] == 0
+    assert "acceptance-case-unmapped:AC-001" in result["acceptance_floor"]["problems"]
+
+
+def test_acceptance_contract_floor_blocks_cases_not_in_required_profile(tmp_path: Path):
+    _profile()
+    base = _request(tmp_path, _clean_target(tmp_path))
+    adapter = {"schema": "battle.production_adapter_request.v1",
+               "authorization_manifest": AUTH,
+               "expected_target": "battle-reactive-judge-fixture@sha256:reactive-judge-v1",
+               "base_request": base,
+               "acceptance_floor": {
+                   "bundle_path": str(_acceptance_bundle(tmp_path / "acceptance_bundle.json")),
+                   "case_map": {"AC-001": ["case-str", "bonus-fuzz"]},
+               }}
+    result = run_production_round(adapter)
+    assert result["status"] == "BLOCKED"
+    assert result["target_launches"] == 0
+    assert "acceptance-case-not-required:AC-001:bonus-fuzz" in result["acceptance_floor"]["problems"]
+
+
+def test_acceptance_contract_floor_blocks_open_questions_before_launch(tmp_path: Path):
+    _profile()
+    base = _request(tmp_path, _clean_target(tmp_path))
+    adapter = {"schema": "battle.production_adapter_request.v1",
+               "authorization_manifest": AUTH,
+               "expected_target": "battle-reactive-judge-fixture@sha256:reactive-judge-v1",
+               "base_request": base,
+               "acceptance_floor": {
+                   "bundle_path": str(_acceptance_bundle(tmp_path / "acceptance_bundle.json", open_questions=True)),
+                   "case_map": {"AC-001": ["case-str", "case-int"]},
+               }}
+    result = run_production_round(adapter)
+    assert result["status"] == "BLOCKED"
+    assert result["target_launches"] == 0
+    assert "bundle-open-questions" in result["acceptance_floor"]["problems"]

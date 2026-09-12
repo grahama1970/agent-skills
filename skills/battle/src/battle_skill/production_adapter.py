@@ -18,7 +18,9 @@ import time
 from pathlib import Path
 from typing import Any
 
+from .acceptance_floor import validate_acceptance_floor
 from .campaign_contract import run_contract_campaign, validate_request
+from .invariant_campaign import load_profile
 
 _ADAPTER_PATH = Path(__file__).resolve()
 for _candidate in (_ADAPTER_PATH.parents[3] / "skills",):
@@ -37,6 +39,8 @@ def build_contract_request(adapter_request: dict[str, Any]) -> dict[str, Any]:
       authorization_manifest: path (required)
       expected_target: canonical target id the authorization must cover (required)
       base_request: the mandatory campaign contract request (required)
+      acceptance_floor: optional {bundle_path, case_map} from acceptance-contract;
+                        every acceptance case must map to required campaign cases
       candidate_cases: optional list of extra retained case dirs (advisory adds;
                        they appear in lineage only — case admission is plan-level)
     """
@@ -69,10 +73,33 @@ def run_production_round(adapter_request: dict[str, Any]) -> dict[str, Any]:
                 "authorization_receipt": receipt,
                 "target_launches": 0}
     request = build_contract_request(adapter_request)
+    floor_request = adapter_request.get("acceptance_floor")
+    floor_receipt = None
+    if floor_request is not None:
+        if not isinstance(floor_request, dict):
+            return {"schema": "battle.production_adapter_round.v1",
+                    "status": "BLOCKED",
+                    "failure_code": "acceptance-floor-invalid",
+                    "authorization_receipt": receipt,
+                    "target_launches": 0}
+        profile = load_profile(request["profile_path"])
+        floor_receipt = validate_acceptance_floor(
+            bundle_path=floor_request.get("bundle_path"),
+            campaign_profile=profile,
+            case_map=floor_request.get("case_map"),
+        )
+        if floor_receipt["status"] != "PASS":
+            return {"schema": "battle.production_adapter_round.v1",
+                    "status": "BLOCKED",
+                    "failure_code": "acceptance-floor-incomplete",
+                    "authorization_receipt": receipt,
+                    "acceptance_floor": floor_receipt,
+                    "target_launches": 0}
     campaign = run_contract_campaign(request)
     return {"schema": "battle.production_adapter_round.v1",
             "status": campaign["verdict"],
             "authorization_receipt": receipt,
+            "acceptance_floor": floor_receipt,
             "target_launches": campaign["aggregation"]["cases_total"],
             "campaign": campaign,
             "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}

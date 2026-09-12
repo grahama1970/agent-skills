@@ -75,10 +75,11 @@ python3 -m battle_skill.invariant_judge \
 `fixtures/reference-judges/no_data_leak_judge.py` is the anonymizer
 confidentiality invariant as a Judge: it independently scans released output
 (JSON scalars incl decoded escapes, numeric expansion, SQLite cells + schema
-DDL + header integers, text/CSV) for any policy value in any representation.
+DDL + header integers, text/CSV, report.json, and captured stdout/stderr) for
+any policy value in any representation.
 
 
-## Invariant campaigns (test all versions in the spec, and more)
+## Invariant campaigns (test the contract floor, then attack beyond it)
 
 An invariant *battle* judges one output. An invariant *campaign* has Red generate
 the whole MATRIX of input "versions" the target's spec names -- every format x
@@ -86,6 +87,19 @@ every representation x the documented edge cases -- PLUS random fuzz, runs the
 real target on each, and the Judge scores every output. A campaign PASSES only if
 every version's Judge passed; one failing version is a concrete, reproducible
 Red win.
+
+For anonymization/privacy targets, the acceptance contract is only the floor.
+When an `acceptance_contract.bundle.v1` exists, the arena build may pass it as
+`acceptance_floor` to the production adapter. Battle then fails closed unless
+every `acceptance_cases[]` id maps to at least one campaign generator case in the
+profile's `required_case_ids`; those are the bare-minimum adversarial versions
+that MUST pass before any extra fuzz or beyond-contract cases matter. Battle must
+also run a beyond-contract campaign that attacks surfaces a client brief often
+omits: JSON keys and duplicate keys, CSV headers/dialects/multiline cells,
+SQLite identifiers/defaults/generated values/partial indexes/triggers,
+filenames, report.json, stdout/stderr, alternate encodings, and same-identity
+representation traps. A clean brief-matrix replay alone is a smoke proof, not a
+comprehensive Battle proof.
 
 ```bash
 python3 -m battle_skill.invariant_campaign \
@@ -100,7 +114,10 @@ brief's versions: the four formats, JSON string/int/float/scientific, SQLite
 TEXT/INTEGER/REAL, Unicode NFC/NFD, BOM, JSON \u-escape, SQLite CHECK-literal,
 plus fuzz. It also carries the oai-trial roundtable edge cases: formatted policy
 phone values stored as digit-only JSON/SQLite numerics, the same identity seeded
-across every in-scope format, and lossy leading-zero / large-float traps. A
+across every in-scope format, and lossy leading-zero / large-float traps.
+`fixtures/reference-generators/anon_beyond_brief_matrix.py` is the required next
+rung for privacy/anonymization proof: it tries non-obvious schema/path/encoding/
+log/release-boundary surfaces that go beyond the literal acceptance contract. A
 generator + target-run-cmd + judge is a pluggable trio: point it at any project's
 spec matrix and invariant.
 

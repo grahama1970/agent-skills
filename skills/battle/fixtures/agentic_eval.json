@@ -9,7 +9,7 @@
     "proves": "Battle's authorization gate, isolated local Docker reactive Judge round, Red/Judge/Blue visibility boundary, scorekeeper authority, terminal semantics fail-closed validation, adaptive-lineage contract guards, durable adaptive-lineage exact-chain proof, browser-visible receipt-backed Pixi replay, immutable-goal close-gate readiness, Pydantic arena/Red/Blue/play-by-play event receipts, commentary causality, memory-lineage contract guards, same-run transport, pause/resume transport safety, and staging fail-closed behavior are covered by agentic eval seams with artifact readback",
     "does_not_prove": "arbitrary target exploitability, a real 1000-round overnight campaign, QEMU boot execution, production WebSocket TLS/auth/fanout against a real public endpoint, or full visual design acceptance"
   },
-  "what_was_exercised": "uv-run Battle probe script invocations that call Battle run.sh commands, local Docker proof generation, current-status terminal-semantics receipt readback, focused pytest contract suites, independent JSON receipt readback, and a built spectator bundle served over local HTTP for Playwright Pixi replay proof",
+  "what_was_exercised": "uv-run Battle probe script invocations that call Battle run.sh commands, local Docker proof generation, current-status terminal-semantics receipt readback, focused pytest contract suites, independent JSON receipt readback, and a built spectator bundle served over local HTTP for Playwright Pixi replay proof, plus the production adapter acceptance-floor gate that blocks unmapped/open-question acceptance-contract bundles before target launch",
   "what_remains_unverified": "external staging authority bundle (#1149), production WebSocket TLS/auth/fanout against a real public endpoint, a real 1000-round overnight campaign, QEMU boot execution, arbitrary target exploitability, and full visual design acceptance",
   "capability_claims": [
     {
@@ -72,6 +72,16 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
+      },
+      "claim_semantics": "control_flow"
+    },
+    {
+      "id": "battle.anonymization.comprehensive_contract_and_beyond_contract_campaign",
+      "description": "Anonymization invariant campaigns must test the acceptance-contract floor and a beyond-contract adversarial matrix covering non-JSON schema, path, encoding, report, and execution-log surfaces; clean brief-only replay is not sufficient proof.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true,
+        "docker": true
       },
       "claim_semantics": "control_flow"
     },
@@ -963,6 +973,20 @@
         "a target accepts required cases while emitting destroyed or blanked output",
         "non-slot content is modified silently",
         "a policy value passes through unreplaced and only the leak judge notices structure loss"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "acceptance_floor.production_adapter",
+      "claim_id": "battle.anonymization.comprehensive_contract_and_beyond_contract_campaign",
+      "seam_type": "contract/admission-control",
+      "criticality": "critical",
+      "failure_modes": [
+        "acceptance-contract cases are not mapped into required campaign cases",
+        "open acceptance-contract questions reach target execution",
+        "beyond-contract fuzz receives credit while the contract floor is incomplete"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -2239,6 +2263,38 @@
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 400
+          }
+        ]
+      }
+    },
+    {
+      "name": "acceptance-floor-production-adapter",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.anonymization.comprehensive_contract_and_beyond_contract_campaign"
+      ],
+      "seams": [
+        "acceptance_floor.production_adapter"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python ../scripts/agentic_eval_probe.py acceptance-floor-production-adapter --summary /tmp/battle-agentic-evals/acceptance-floor-production-adapter.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=acceptance-floor-production-adapter"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/acceptance-floor-production-adapter.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 500
           }
         ]
       }

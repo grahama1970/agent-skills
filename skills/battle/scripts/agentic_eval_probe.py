@@ -3820,7 +3820,7 @@ def _assert_current_status_claimed_true(status: dict[str, Any], claim: str) -> d
     return mutated
 
 
-def _run_current_status_check(status_path: Path, *, out_root: Path, name: str) -> tuple[subprocess.CompletedProcess[str], dict[str, Any]]:
+def _run_current_status_claim_check(status_path: Path, *, out_root: Path, name: str) -> tuple[subprocess.CompletedProcess[str], dict[str, Any]]:
     receipt_path = out_root / f"{name}-terminal-semantics.json"
     proc = _run_in(
         [str(RUN_SH), "current-status", "check", "--path", str(status_path)],
@@ -3852,7 +3852,7 @@ def probe_battle_current_status_claim_gates(summary_path: Path) -> int:
         raise AssertionError("current-status generate failed: " + generate.stdout + generate.stderr)
     generated = _read_json(generated_status_path)
 
-    pass_proc, pass_output = _run_current_status_check(generated_status_path, out_root=out_root, name="generated-pass")
+    pass_proc, pass_output = _run_current_status_claim_check(generated_status_path, out_root=out_root, name="generated-pass")
     if pass_proc.returncode != 0 or pass_output.get("status") != "PASS" or pass_output.get("errors"):
         raise AssertionError(f"generated status did not check PASS: {pass_output}")
 
@@ -3868,7 +3868,7 @@ def probe_battle_current_status_claim_gates(summary_path: Path) -> int:
     for claim, required_schema in CURRENT_STATUS_UNSUPPORTED_CLAIMS.items():
         mutated_path = out_root / f"{claim}.asserted-true.json"
         _write_json(mutated_path, _assert_current_status_claimed_true(generated, claim))
-        proc, output = _run_current_status_check(mutated_path, out_root=out_root, name=claim)
+        proc, output = _run_current_status_claim_check(mutated_path, out_root=out_root, name=claim)
         expected = f"unsupported_claim_promoted_without_receipt:{claim}:requires:{required_schema}"
         matched = any(str(error).startswith(expected) for error in output.get("errors") or [])
         if proc.returncode == 0 or output.get("status") != "FAIL" or not matched:
@@ -4558,6 +4558,12 @@ def main() -> int:
             return probe_battle_proof_rung_separation(args.summary)
         if args.suite == "battle-profile-contract":
             return probe_battle_profile_contract(args.summary)
+        if args.suite == "acceptance-floor-production-adapter":
+            return probe_pytest_contracts(
+                args.summary,
+                suite=args.suite,
+                tests=["test_production_adapter.py"],
+            )
         if args.suite == "battle-functional-judge":
             return probe_battle_functional_judge(args.summary)
         if args.suite == "battle-commentary-causality":

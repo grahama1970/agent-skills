@@ -113,5 +113,8 @@ ambiguous. Ambiguity becomes `open_questions[]` and a Needs Changes report.
 It refuses repo roots by default because oai-trial failed when code-shaped checks
 stood in for the delivered brief.
 
-For Battle, pass the resulting bundle/profile into `$battle`; do not make Battle
-invent the requirements.
+For Battle, pass the resulting `acceptance_bundle.json` as the arena
+`acceptance_floor` and map each `acceptance_cases[].id` to one or more generator
+case ids in the Battle campaign profile's `required_case_ids`. Those mapped cases
+are the contract floor that must pass before fuzz or beyond-contract attacks can
+be credited. Do not make Battle invent the requirements.
