@@ -4195,6 +4195,7 @@ def probe_battle_functional_judge(summary_path: Path) -> int:
             (inp / rel).write_text(content)
         for rel, content in (out_files or {}).items():
             (out / rel).write_text(content)
+        (case_dir / "out" / "report.json").write_text(json.dumps({"status": "ready"}))
         return mod.judge(str(case_dir / "out"),
                          {"policy": str(case_dir / "policy.json"),
                           "output_subdir": "corpus", "input_dir": str(case_dir / "in")})
