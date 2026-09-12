@@ -21,6 +21,7 @@ Based on research into:
 
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 from typing import Optional
@@ -112,6 +113,24 @@ def battle(
         "--expected-manifest-sha256",
         help="Expected authorization manifest SHA-256.",
     ),
+    invariant_judge: Optional[str] = typer.Option(
+        None,
+        "--invariant-judge",
+        help="Path to a pluggable invariant Judge module (judge(target_dir, params) "
+             "-> {passed, violations, evidence}). The Judge, not agent self-report, "
+             "decides the verdict.",
+    ),
+    judge_target: Optional[str] = typer.Option(
+        None,
+        "--judge-target",
+        help="Directory the invariant Judge inspects (e.g. released output). "
+             "Defaults to the battle target.",
+    ),
+    judge_params: Optional[str] = typer.Option(
+        "{}",
+        "--judge-params",
+        help="JSON params passed to the invariant Judge.",
+    ),
 ):
     """
     Start a Red vs Blue team battle.
@@ -201,6 +220,9 @@ def battle(
         chaos=chaos,
         profile=profile,
         model=model,
+        invariant_judge=invariant_judge,
+        judge_target=judge_target,
+        judge_params=json.loads(judge_params or "{}"),
     )
     state = orchestrator.run(checkpoint_interval)
 

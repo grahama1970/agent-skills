@@ -93,13 +93,22 @@ class BattleOrchestrator:
                  twin_mode: TwinMode | None = None, qemu_machine: str | None = None,
                  docker_image: str | None = None, chaos: bool = False,
                  profile: str = "hobbyist", model: str = "gpt-5.2-codex",
-                 judge_boundary: JudgeBoundary | None = None):
+                 judge_boundary: JudgeBoundary | None = None,
+                 invariant_judge: str | None = None, judge_target: str | None = None,
+                 judge_params: dict | None = None):
         self.battle_id = f"battle_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         self.target_path = str(Path(target_path).resolve())
         self.max_rounds = max_rounds
         self.concurrent = concurrent
         self.chaos = chaos
         self.model = model
+        # Pluggable invariant Judge = the independent scorekeeper authority
+        # (matches $hack's proof boundary: only an independent validator, not the
+        # executor's self-report, can CONFIRM). When set, the Judge decides the
+        # verdict instead of self-certified exploitation scores.
+        self.invariant_judge = invariant_judge
+        self.judge_target = judge_target
+        self.judge_params = judge_params or {}
         self.state = BattleState(
             battle_id=self.battle_id,
             target_path=self.target_path,
@@ -597,6 +606,29 @@ class BattleOrchestrator:
         self.state.fdsr = metrics["fdsr"]
         self.state.asc = metrics["asc"]
         verified_patches = len([p for p in self.state.all_patches if p.verified])
+        # Independent invariant Judge is the scorekeeper authority when supplied:
+        # it, not the agents' self-reports, decides whether the invariant holds.
+        judge_verdict = None
+        if self.invariant_judge:
+            from .invariant_judge import run_judge
+            target = self.judge_target or self.target_path
+            jr = run_judge(self.invariant_judge, target, self.judge_params)
+            judge_verdict = jr.to_dict()
+            if jr.passed:
+                # Invariant holds under independent judgement -> a real Blue-held verdict.
+                self.state.blue_total_score = max(self.state.blue_total_score, 1.0)
+            else:
+                # Independent Judge CONFIRMS a violation -> a real Red-scored verdict.
+                self.state.red_total_score = max(self.state.red_total_score, 1.0)
+            print(
+                "\n==================== Invariant Judge ====================\n"
+                f"judge: {self.invariant_judge}\n"
+                f"target: {target}\n"
+                f"PASSED: {jr.passed}\n"
+                + ("violations:\n  - " + "\n  - ".join(jr.violations) + "\n" if jr.violations else "")
+                + "========================================================\n",
+                flush=True,
+            )
         # A battle is a VALID verdict only if a Judge-scored outcome actually
         # occurred: a scoring finding or a verified patch. A 0-0 run with no
         # verified patch means the adversarial machinery did nothing (commonly
