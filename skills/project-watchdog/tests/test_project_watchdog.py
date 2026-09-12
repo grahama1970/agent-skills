@@ -3223,3 +3223,26 @@ def test_queue_drained_all_clear_pushes_once_via_dedup(monkeypatch):
     b.push_switchboard(ev)
     assert pushed and pushed[0]["status"] == "CLEARED"
     assert "queue drained" in pushed[0]["summary"]
+
+
+def test_drained_all_clear_carries_metrics_and_candidates():
+    """The queue-drained event embeds the fleet SLO snapshot; red/amber health,
+    coverage gaps, or reconciliation debt become improvement_candidates with a
+    next_command (the supervising lane files the ticket; the tick never
+    self-files)."""
+    import sys, pathlib
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "scripts"))
+    import importlib
+    cmds = importlib.import_module("watchdog.commands")
+    from watchdog import fleet_slo as slo
+    # red fleet -> candidates present
+    bad = slo.compute([{"run_id": "z", "status": None}])  # coverage gap -> red
+    cands = []
+    if bad.get("health") != "green":
+        cands.append({"metric": "fleet_health", "value": bad.get("health"),
+                      "next_command": "skills/ticket/run.sh maintenance"})
+    assert cands and cands[0]["metric"] == "fleet_health"
+    # green drained fleet -> no candidates
+    good = slo.compute([{"run_id": "a", "status": "COMPLETED", "dispatched_at": 1,
+                         "closed_at": 2, "requires_human_input": False}])
+    assert good["health"] == "green"

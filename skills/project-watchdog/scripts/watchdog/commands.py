@@ -844,6 +844,37 @@ def _tick_locked(
         # re-alerts). Skipped/parked dispatches (codex outage) are NOT drained:
         # drained means no open routable work at all.
         if receipt["ok"] and not skipped:
+            # Self-improvement payload (operator 2026-09-12): the drained
+            # all-clear carries the fleet SLO snapshot (#1645) so the log's
+            # last message is also the self-update signal. Breaching metrics
+            # become machine-readable improvement_candidates (metric, value,
+            # next_command to file a $ticket) for the supervising lane; the
+            # tick itself never files tickets about itself to avoid loops.
+            metrics = {}
+            try:
+                import json as _json
+                from . import fleet_slo as _slo
+                rows = []
+                for _d in sorted(config.receipt_root().glob(
+                        "project-watchdog-2*/receipt.json"), reverse=True)[:200]:
+                    try:
+                        rows.append(_json.loads(_d.read_text()))
+                    except (OSError, ValueError):
+                        continue
+                metrics = _slo.compute(rows)
+            except Exception:  # noqa: BLE001 - metrics never block the tick
+                metrics = {}
+            candidates = []
+            if metrics.get("health") != "green":
+                candidates.append({"metric": "fleet_health", "value": metrics.get("health"),
+                                   "next_command": "skills/ticket/run.sh maintenance"})
+            if metrics.get("coverage", {}).get("incomplete"):
+                candidates.append({"metric": "receipt_coverage", "value": metrics["coverage"]["incomplete"][:3],
+                                   "next_command": "skills/ticket/run.sh maintenance"})
+            if (metrics.get("reconciliation_debt") or 0) > 0:
+                candidates.append({"metric": "reconciliation_debt",
+                                   "value": metrics.get("reconciliation_debt"),
+                                   "next_command": "skills/ticket/run.sh maintenance"})
             try:
                 from . import watchdog_notify_bridge as _bridge
                 _bridge.push_switchboard({
@@ -852,9 +883,15 @@ def _tick_locked(
                     "repo": "UNKNOWN(repo:receipt_missing_repo)",
                     "issue": "UNKNOWN(issue:receipt_missing_issue_number)",
                     "status": "CLEARED",
-                    "summary": ("queue drained: zero open routable agent-work "
-                                "tickets across the fleet; ticks continue and "
-                                "any new ticket re-alerts"),
+                    "summary": ("queue drained: zero open routable agent-work tickets; "
+                                f"health={metrics.get('health')} "
+                                f"success={metrics.get('unattended_success_rate')} "
+                                f"p50={metrics.get('dispatch_to_close_latency_p50')}s "
+                                f"p95={metrics.get('dispatch_to_close_latency_p95')}s "
+                                f"needs_human={metrics.get('organic_needs_human_ratio')} "
+                                f"recon_debt={metrics.get('reconciliation_debt')}"),
+                    "metrics": metrics,
+                    "improvement_candidates": candidates,
                     "requires_human_input": False})
             except Exception:  # noqa: BLE001 - all-clear never blocks a tick
                 pass
