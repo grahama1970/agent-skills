@@ -213,7 +213,17 @@ Boundary: canonical Memory text carries the plan by macro-id/params + engine-neu
 fields, never `[tags]`; Agent A compiles to renderer tags at playback.
 
 - **Song-hum macros** (`fixtures/song_hum_macros.json`): public-domain Hawaiian /
-  hapa-haole tunes Embry hums. ALL picks are compositions published 1930 or earlier
+  hapa-haole tunes Embry hums. `scripts/hum_render.py` is the ONE reproducible
+  pipeline (no per-turn bespoking): `render` (ElevenLabs SFX -> ffmpeg bone-dry
+  44.1k stereo + compressor + `-1.5 dBTP` limit into a steady under-speech bed),
+  `register` (upsert enriched persona_memory docs with style/year/tempo_bpm/
+  emotion_category/connected_memory_keys + `hum_evokes_memory` edges via /upsert),
+  `all`, `self-check`. Hums must be BONE DRY (no reverb, no era cues) and
+  loudness-consistent (~-20 LUFS) so none plays louder than the others.
+  `/upsert` auto-embeds `retrieval_text` via the jina embedder into Qdrant
+  (verified `semantic_sync_state: synced`, `scores.dense` > 0), so recall matches
+  by mood/style/tempo. Multi-hop RANKING of the new edges needs the memory
+  project's `persona-graph-materialize` (skills never hand-roll traversal AQL). ALL picks are compositions published 1930 or earlier
   (US PD as of 2026, Duke CSPD). The 1930s film-era hits (Sweet Leilani 1937,
   My Little Grass Shack 1933) are NOT yet PD and are excluded. Hawaiian War Chant:
   hum the original 1860s Leleiohōku melody, never the copyrighted 1936 arrangement.
