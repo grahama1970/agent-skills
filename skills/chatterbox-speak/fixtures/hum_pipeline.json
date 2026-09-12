@@ -1,0 +1,55 @@
+{
+  "version": 2,
+  "skill": "chatterbox-speak",
+  "trials": 2,
+  "proof_scope": "hum pipeline: deterministic doc/edge shape + live recall through $memory (jina/Qdrant)",
+  "claims": {
+    "proves": "hum_render self-check holds the dry/compress/limit + doc/edge contract, invalid commands fail closed, and a registered hum recalls with a semantic (dense) score and clean canonical text",
+    "does_not_prove": "human-perceived hum quality, multi-hop edge RANKING (needs memory-repo persona-graph-materialize), or copyright/PD status"
+  },
+  "capability_claims": [
+    {
+      "id": "chatterbox.hum.reproducible_pipeline",
+      "description": "hum_render.py deterministically enforces bone-dry/compressed/limited render bed and the persona_memory doc + hum_evokes_memory edge shape from the bank",
+      "criticality": "critical",
+      "claim_semantics": "control_flow",
+      "evidence_required": {"deterministic": true}
+    },
+    {
+      "id": "chatterbox.hum.memory_recall",
+      "description": "a registered hum is recallable through $memory by mood/style with a semantic (jina/Qdrant dense) score and carries no renderer tags in canonical text",
+      "criticality": "critical",
+      "claim_semantics": "protocol",
+      "evidence_required": {"live_e2e": true}
+    }
+  ],
+  "cases": [
+    {
+      "name": "hum-render-self-check",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["chatterbox.hum.reproducible_pipeline"],
+      "command": ["python3", "../scripts/hum_render.py", "self-check"],
+      "expected": {"exit_code": 0, "stdout_contains": ["self-check PASS", "acompressor", "loudnorm"]}
+    },
+    {
+      "name": "hum-render-invalid-command-fails-closed",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["chatterbox.hum.reproducible_pipeline"],
+      "command": ["python3", "../scripts/hum_render.py", "bogus-subcommand"],
+      "expected": {"exit_code": 2}
+    },
+    {
+      "name": "hum-recall-live-dense-and-clean-text",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": ["chatterbox.hum.memory_recall"],
+      "command": ["python3", "../scripts/hum_eval_probe.py"],
+      "expected": {"exit_code": 0, "stdout_contains": ["PASS", "dense="], "stdout_excludes": ["FAIL"]}
+    }
+  ]
+}

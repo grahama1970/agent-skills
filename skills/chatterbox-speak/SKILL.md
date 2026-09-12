@@ -223,7 +223,10 @@ fields, never `[tags]`; Agent A compiles to renderer tags at playback.
   `/upsert` auto-embeds `retrieval_text` via the jina embedder into Qdrant
   (verified `semantic_sync_state: synced`, `scores.dense` > 0), so recall matches
   by mood/style/tempo. Multi-hop RANKING of the new edges needs the memory
-  project's `persona-graph-materialize` (skills never hand-roll traversal AQL). ALL picks are compositions published 1930 or earlier
+  project's `persona-graph-materialize` (skills never hand-roll traversal AQL). Retained `$agentic-evals`
+  proof: `fixtures/hum_pipeline.json` (self-check contract, fail-closed on bad
+  command, and a live `hum_eval_probe.py` asserting a hum recalls with dense>0 and
+  clean canonical text) — READY, both claims PROVEN. ALL picks are compositions published 1930 or earlier
   (US PD as of 2026, Duke CSPD). The 1930s film-era hits (Sweet Leilani 1937,
   My Little Grass Shack 1933) are NOT yet PD and are excluded. Hawaiian War Chant:
   hum the original 1860s Leleiohōku melody, never the copyrighted 1936 arrangement.
