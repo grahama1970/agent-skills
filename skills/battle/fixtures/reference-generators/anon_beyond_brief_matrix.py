@@ -65,7 +65,7 @@ def generate(work_dir, params):
                   "MUST_ACCEPT")
     yield _bundle(root, "bb-jsonl-lines", NAME,
                   lambda c: (c / "d.json").write_text('{"a":1}\n{"b":' + json.dumps(NAME) + '}\n{"c":3}\n'),
-                  "MAY_REJECT")
+                  "MUST_REJECT")
 
     # -- SQLite schema positions --
     yield _bundle(root, "bb-sqlite-table-identifier", PHONE,

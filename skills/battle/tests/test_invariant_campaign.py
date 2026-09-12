@@ -51,8 +51,58 @@ def test_beyond_brief_generator_yields_complete_bundles() -> None:
         assert "bb-json-object-key" in names and "bb-filename-value" in names
         assert "bb-utf16le-bomless-text" in names
         assert expectations.count("MUST_ACCEPT") == 4
-        assert expectations.count("MUST_REJECT") == 2
-        assert expectations.count("MAY_REJECT") == 7
+        assert expectations.count("MUST_REJECT") == 3
+        assert expectations.count("MAY_REJECT") == 6
+
+
+def _profile(tmp_dir: Path, **data) -> str:
+    import json
+    p = tmp_dir / "profile.json"
+    base = {"schema": "battle.campaign_profile.v1", "profile_id": "test-profile.v1",
+            "required_case_ids": []}
+    base.update(data)
+    p.write_text(json.dumps(base))
+    return str(p)
+
+
+def test_profile_resolves_may_reject_and_enforces_it() -> None:
+    # Overlay may-reject-case -> MUST_ACCEPT; the reject-everything target must
+    # then FAIL the campaign through the profile-resolved expectation.
+    import tempfile
+    from battle_skill.invariant_campaign import load_profile
+    with tempfile.TemporaryDirectory() as td:
+        profile = _profile(Path(td), expectation_overrides={"may-reject-case": "MUST_ACCEPT"})
+        prof = load_profile(profile)
+    r = run_campaign(GEN_EXP, "exit 1", JUDGE, output_subdir="corpus", profile=prof)
+    assert r.passed is False
+    assert r.profile_id == "test-profile.v1"
+    assert any("required-accept-case-rejected" in v for f in r.failures for v in f["violations"])
+    resolved = [c for c in r.case_log if c["case"] == "may-reject-case"]
+    assert resolved and resolved[0]["expectation_source"] == "profile"
+
+
+def test_profile_cannot_downgrade_spec_floor() -> None:
+    import tempfile
+    from battle_skill.invariant_campaign import load_profile
+    with tempfile.TemporaryDirectory() as td:
+        profile = _profile(Path(td), expectation_overrides={"must-accept-case": "MUST_REJECT"})
+        prof = load_profile(profile)
+    r = run_campaign(GEN_EXP, "exit 1", JUDGE, output_subdir="corpus", profile=prof)
+    assert r.passed is False
+    assert any("profile-illegal-expectation-override" in v for f in r.failures for v in f["violations"])
+
+
+def test_profile_rejects_unknown_case_and_missing_required_case() -> None:
+    import tempfile
+    from battle_skill.invariant_campaign import load_profile
+    with tempfile.TemporaryDirectory() as td:
+        prof = load_profile(_profile(Path(td),
+                                     expectation_overrides={"no-such-case": "MUST_REJECT"},
+                                     required_case_ids=["must-accept-case", "never-generated-case"]))
+    r = run_campaign(GEN_EXP, "exit 1", JUDGE, output_subdir="corpus", profile=prof)
+    assert r.passed is False
+    assert any("profile-unknown-case-override" in v for f in r.failures for v in f["violations"])
+    assert any("profile-required-case-missing:never-generated-case" in v for f in r.failures for v in f["violations"])
 
 
 def test_campaign_fails_when_target_rejects_everything() -> None:

@@ -32,6 +32,33 @@ from typing import Any, Iterator
 
 from .invariant_judge import run_judge
 
+PROFILE_SCHEMA = "battle.campaign_profile.v1"
+
+
+def load_profile(path: str) -> dict[str, Any]:
+    """Load and shape-validate a campaign profile (battle.campaign_profile.v1).
+
+    A profile is the consumer-owned acceptance contract: it resolves permitted
+    (MAY_REJECT) choices to a definite expectation, freezes the required-case
+    inventory, and binds the spec it derives from. It may never downgrade a
+    generator-declared MUST_ACCEPT/MUST_REJECT (the spec floor).
+    """
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    if data.get("schema") != PROFILE_SCHEMA:
+        raise ValueError(f"profile schema must be {PROFILE_SCHEMA}")
+    if not data.get("profile_id"):
+        raise ValueError("profile must declare profile_id")
+    overrides = data.get("expectation_overrides") or {}
+    if not isinstance(overrides, dict):
+        raise ValueError("expectation_overrides must be an object")
+    for case_id, value in overrides.items():
+        if str(value).upper() not in ("MUST_ACCEPT", "MUST_REJECT"):
+            raise ValueError(f"override for {case_id!r} must be MUST_ACCEPT or MUST_REJECT, got {value!r}")
+    required = data.get("required_case_ids") or []
+    if not isinstance(required, list) or len(set(required)) != len(required):
+        raise ValueError("required_case_ids must be a duplicate-free list")
+    return data
+
 
 @dataclass
 class CampaignResult:
@@ -51,6 +78,7 @@ class CampaignResult:
     may_reject_count: int = 0
     accepted_count: int = 0
     rejected_count: int = 0
+    profile_id: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -74,10 +102,17 @@ VALID_EXPECTATIONS = {"MUST_ACCEPT", "MUST_REJECT", "MAY_REJECT"}
 def run_campaign(generator: str, target_run_cmd: str, judge: str,
                  gen_params: dict[str, Any] | None = None,
                  judge_params: dict[str, Any] | None = None,
-                 output_subdir: str = "corpus") -> CampaignResult:
+                 output_subdir: str = "corpus",
+                 profile: dict[str, Any] | None = None) -> CampaignResult:
     gen_params = gen_params or {}
     judge_params = dict(judge_params or {})
     result = CampaignResult()
+    if profile is not None:
+        result.profile_id = profile.get("profile_id")
+        result.declares_expectations = True
+    profile_overrides = (profile or {}).get("expectation_overrides") or {}
+    required_case_ids = (profile or {}).get("required_case_ids") or []
+    seen_cases: set[str] = set()
     work = Path(tempfile.mkdtemp(prefix="invariant-campaign-"))
     try:
         gen: Iterator[tuple] = _load_generator(generator)(str(work / "gen"), gen_params)
@@ -91,6 +126,16 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
             else:
                 name, input_dir = case
                 expectation = "MAY_REJECT"
+            expectation_source = "generator"
+            if name in profile_overrides:
+                resolved = str(profile_overrides[name]).upper()
+                if expectation != "MAY_REJECT":
+                    result.failures.append({"case": name, "judged": False, "passed": False,
+                                            "violations": [f"profile-illegal-expectation-override:{name}:generator declared {expectation}; a profile may only resolve MAY_REJECT choices"]})
+                else:
+                    expectation = resolved
+                    expectation_source = "profile"
+            seen_cases.add(name)
             if expectation == "MUST_ACCEPT":
                 result.must_accept_count += 1
             elif expectation == "MUST_REJECT":
@@ -106,7 +151,7 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
             # invariant holds vacuously for that version -- unless the case was
             # declared MUST_ACCEPT, where safe rejection is a coverage failure.
             produced = (out_dir / output_subdir).exists() and any((out_dir / output_subdir).rglob("*"))
-            verdict = {"case": name, "expectation": expectation, "judged": False, "passed": True,
+            verdict = {"case": name, "expectation": expectation, "expectation_source": expectation_source, "judged": False, "passed": True,
                        "note": "target fail-closed (no released output)"}
             if run.returncode != 0 or not produced:
                 result.rejected_count += 1
@@ -124,7 +169,7 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
                 if policy_sentinel.exists() and "policy" not in jp:
                     jp["policy"] = str(policy_sentinel)
                 jr = run_judge(judge, str(out_dir), jp)
-                verdict = {"case": name, "expectation": expectation, "judged": True, "passed": jr.passed,
+                verdict = {"case": name, "expectation": expectation, "expectation_source": expectation_source, "judged": True, "passed": jr.passed,
                            "violations": jr.violations}
                 if jr.passed:
                     result.cases_passed += 1
@@ -140,6 +185,14 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
                                                 "violations": ["required-reject-case-accepted (out-of-domain input was not safely rejected)"]})
             result.cases_total += 1
             result.case_log.append(verdict)
+        for case_id in profile_overrides:
+            if case_id not in seen_cases:
+                result.failures.append({"case": case_id, "judged": False, "passed": False,
+                                        "violations": [f"profile-unknown-case-override:{case_id}:not yielded by this generator"]})
+        for case_id in required_case_ids:
+            if case_id not in seen_cases:
+                result.failures.append({"case": case_id, "judged": False, "passed": False,
+                                        "violations": [f"profile-required-case-missing:{case_id}"]})
         if result.declares_expectations and result.must_accept_count == 0:
             result.failures.append({"case": None, "judged": False, "passed": False,
                                     "violations": ["vacuous_campaign_no_required_accept_cases"]})
@@ -161,9 +214,13 @@ def _cli(argv: list[str]) -> int:
     ap.add_argument("--gen-params", default="{}")
     ap.add_argument("--judge-params", default="{}")
     ap.add_argument("--output-subdir", default="corpus")
+    ap.add_argument("--profile", default=None,
+                    help="Path to a battle.campaign_profile.v1 consumer contract (expectation overrides + required-case inventory).")
     args = ap.parse_args(argv)
+    profile = load_profile(args.profile) if args.profile else None
     r = run_campaign(args.generator, args.target_run_cmd, args.judge,
-                     json.loads(args.gen_params), json.loads(args.judge_params), args.output_subdir)
+                     json.loads(args.gen_params), json.loads(args.judge_params), args.output_subdir,
+                     profile=profile)
     print(json.dumps(r.to_dict(), indent=2))
     print(f"\nCAMPAIGN: {'PASS' if r.passed else 'FAIL'} "
           f"({r.cases_passed}/{r.cases_total} versions clean)")

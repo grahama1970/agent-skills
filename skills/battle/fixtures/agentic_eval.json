@@ -18,7 +18,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.authorization.cli_target_binding",
@@ -26,7 +27,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.local_docker.reactive_round",
@@ -34,7 +36,8 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.red_judge_blue.visibility",
@@ -42,7 +45,8 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.blue.functionality_tri_state",
@@ -50,7 +54,8 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.scorekeeper.judge_authority",
@@ -58,7 +63,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.adaptive_lineage.judge_authority",
@@ -66,7 +72,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.adaptive_lineage.contracts",
@@ -74,7 +81,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.adaptive_lineage.live_exact_chain",
@@ -82,7 +90,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.adaptive_lineage.provider_tau_seeded_spawn",
@@ -90,7 +99,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.receipts.hash_finalization",
@@ -98,7 +108,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.adaptive_lineage.broadcast_required_evidence",
@@ -106,7 +117,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.adaptive_lineage.selection_reporting",
@@ -114,7 +126,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.adaptive_lineage.commentary_provenance",
@@ -122,7 +135,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.adaptive_lineage.commentary_causality",
@@ -130,7 +144,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.memory.provider_tau_promotion",
@@ -138,7 +153,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.memory.admission_binding",
@@ -146,7 +162,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.current_status.adaptive_lineage_receipt",
@@ -154,7 +171,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.current_status.proof_chain_revalidation",
@@ -162,7 +180,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.current_status.terminal_semantics",
@@ -170,7 +189,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.current_status.unsupported_claim_gates",
@@ -178,7 +198,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.adaptive_lineage.adaptive_improvement",
@@ -186,7 +207,8 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.immutable_goal.adaptive_lineage_pixi",
@@ -195,7 +217,8 @@
       "evidence_required": {
         "adversarial_live_e2e": true,
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.memory.lineage_contracts",
@@ -203,7 +226,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.transport.same_run_pixi",
@@ -211,7 +235,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.receipt_pixi.replay",
@@ -219,7 +244,8 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.pause_resume.fail_closed",
@@ -227,7 +253,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.staging.readiness_boundary",
@@ -235,7 +262,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.orchestrator.overnight_resume_report",
@@ -243,7 +271,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.digital_twin.non_docker_modes",
@@ -251,7 +280,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.tau_subagent.provider_handoff",
@@ -259,7 +289,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.memory.team_learning",
@@ -267,7 +298,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.research.host_only_ingress",
@@ -275,7 +307,8 @@
       "criticality": "important",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.adaptive_lineage.same_run_backend",
@@ -283,7 +316,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.swarm.throughput_envelope",
@@ -291,7 +325,8 @@
       "criticality": "important",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.monitor.human_interjection",
@@ -299,7 +334,8 @@
       "criticality": "important",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.pixi.gameplay_video_acceptance",
@@ -307,7 +343,8 @@
       "criticality": "important",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.production.positive_readiness",
@@ -315,7 +352,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.production.small_medium_local",
@@ -323,7 +361,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "battle.proof_rungs.fast_sanity_live_separation",
@@ -331,7 +370,17 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
+    },
+    {
+      "id": "battle.campaign.profile_contract",
+      "description": "Consumer-owned campaign profiles resolve MAY_REJECT choices, never downgrade the spec floor, and fail closed on unknown overrides, missing required cases, and malformed profiles.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "control_flow"
     }
   ],
   "seams": [
@@ -877,6 +926,20 @@
         "battle.tiered_fast_sanity_gate.v1 is accepted by a live qualification gate",
         "live qualification passes without an explicit live receipt schema",
         "same-run live qualification accepts an offline deterministic fixture receipt"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "campaign.profile_contract",
+      "claim_id": "battle.campaign.profile_contract",
+      "seam_type": "acceptance-contract boundary",
+      "criticality": "critical",
+      "failure_modes": [
+        "a profile silently downgrades a spec-floor MUST_ACCEPT",
+        "unknown override targets or missing required cases pass silently",
+        "malformed profiles are ignored instead of failing closed"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -2087,6 +2150,39 @@
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-profile-contract",
+      "category": "battle-profile-contract",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.campaign.profile_contract"
+      ],
+      "seams": [
+        "campaign.profile_contract"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-profile-contract --summary /tmp/battle-agentic-evals/battle-profile-contract.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-profile-contract"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-profile-contract.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 400
           }
         ]
       }

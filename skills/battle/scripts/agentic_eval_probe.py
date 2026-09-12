@@ -4090,6 +4090,88 @@ def probe_battle_proof_rung_separation(summary_path: Path) -> int:
     )
 
 
+def probe_battle_profile_contract(summary_path: Path) -> int:
+    suite = "battle-profile-contract"
+    out_root = summary_path.parent / suite
+    if out_root.exists():
+        shutil.rmtree(out_root)
+    out_root.mkdir(parents=True)
+    import tempfile
+    sys.path.insert(0, str(BATTLE_DIR / "src"))
+    from battle_skill.invariant_campaign import run_campaign, load_profile
+
+    GEN_EXP = str(BATTLE_DIR / "tests" / "fixtures" / "mini_expectation_generator.py")
+
+    def profile_file(name: str, **data) -> str:
+        path = out_root / name
+        payload = {"schema": "battle.campaign_profile.v1", "profile_id": f"probe-{name}",
+                   "required_case_ids": []}
+        payload.update(data)
+        path.write_text(json.dumps(payload))
+        return str(path)
+
+    checks: list[dict[str, Any]] = []
+
+    # 1. A profile-resolved MAY_REJECT -> MUST_ACCEPT is enforced: a
+    #    reject-everything target FAILS through the profile path.
+    prof = load_profile(profile_file("resolve.json", expectation_overrides={"may-reject-case": "MUST_ACCEPT"}))
+    r1 = run_campaign(GEN_EXP, "exit 1", str(BATTLE_DIR / "fixtures/reference-judges/no_data_leak_judge.py"),
+                      output_subdir="corpus", profile=prof)
+    ok1 = r1.passed is False and any("required-accept-case-rejected" in v for f in r1.failures for v in f["violations"])
+    checks.append({"name": "profile_resolved_expectation_enforced", "status": "PASS" if ok1 else "FAIL",
+                   "detail": {"passed": r1.passed, "failures": r1.failures[:2]}})
+
+    # 2. A profile cannot downgrade a generator-declared spec-floor expectation.
+    prof2 = load_profile(profile_file("downgrade.json", expectation_overrides={"must-accept-case": "MUST_REJECT"}))
+    r2 = run_campaign(GEN_EXP, "exit 1", str(BATTLE_DIR / "fixtures/reference-judges/no_data_leak_judge.py"),
+                      output_subdir="corpus", profile=prof2)
+    ok2 = any("profile-illegal-expectation-override" in v for f in r2.failures for v in f["violations"])
+    checks.append({"name": "profile_cannot_downgrade_spec_floor", "status": "PASS" if ok2 else "FAIL",
+                   "detail": {"failures": r2.failures[:2]}})
+
+    # 3. Unknown override targets and missing required cases are hard failures.
+    prof3 = load_profile(profile_file("unknown.json", expectation_overrides={"no-such-case": "MUST_REJECT"},
+                                      required_case_ids=["never-generated-case"]))
+    r3 = run_campaign(GEN_EXP, "exit 1", str(BATTLE_DIR / "fixtures/reference-judges/no_data_leak_judge.py"),
+                      output_subdir="corpus", profile=prof3)
+    ok3 = (any("profile-unknown-case-override" in v for f in r3.failures for v in f["violations"])
+           and any("profile-required-case-missing" in v for f in r3.failures for v in f["violations"]))
+    checks.append({"name": "unknown_override_and_missing_required_fail", "status": "PASS" if ok3 else "FAIL",
+                   "detail": {"failures": r3.failures[:3]}})
+
+    # 4. Malformed profiles fail shape validation (fail-closed, never silent).
+    bad = out_root / "bad.json"
+    bad.write_text(json.dumps({"schema": "wrong.schema"}))
+    try:
+        load_profile(str(bad))
+        ok4 = False
+    except ValueError:
+        ok4 = True
+    checks.append({"name": "malformed_profile_rejected", "status": "PASS" if ok4 else "FAIL"})
+
+    failed = [c for c in checks if c["status"] != "PASS"]
+    if failed:
+        raise AssertionError(f"profile contract checks failed: {failed}")
+    return _emit(
+        summary_path,
+        _summary(
+            suite=suite,
+            live="local_deterministic_profile_contract_probe",
+            checks=checks,
+            artifacts={"probe_root": str(out_root)},
+            claims_proves=[
+                "A consumer profile resolves MAY_REJECT choices and the campaign enforces the resolved expectation.",
+                "A profile cannot downgrade a generator-declared MUST_ACCEPT/MUST_REJECT spec floor.",
+                "Unknown override targets, missing required cases, and malformed profiles fail closed.",
+            ],
+            claims_does_not_prove=[
+                "any specific project profile correctness",
+                "docker target behavior",
+            ],
+        ),
+    )
+
+
 def probe_battle_terminal_semantics(summary_path: Path) -> int:
     suite = "battle-terminal-semantics"
     out_root = summary_path.parent / suite
@@ -4407,6 +4489,8 @@ def main() -> int:
             return probe_battle_current_status_claim_gates(args.summary)
         if args.suite == "battle-proof-rung-separation":
             return probe_battle_proof_rung_separation(args.summary)
+        if args.suite == "battle-profile-contract":
+            return probe_battle_profile_contract(args.summary)
         if args.suite == "battle-commentary-causality":
             return probe_battle_commentary_causality(args.summary)
         if args.suite == "battle-adaptive-improvement":
