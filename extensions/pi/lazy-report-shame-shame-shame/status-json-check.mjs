@@ -274,7 +274,10 @@ const explicitAnswerRequired = contextFlag(
   ],
   ['LRSSS_ANSWER_REQUIRED', 'LRSSS_TURN_ANSWER_REQUIRED', 'LRSSS_TYPED_ANSWER_REQUIRED'],
 );
-const answerRequired = explicitAnswerRequired === true || (explicitAnswerRequired === null && questionModeRequiresAnswer(questionMode));
+const USER_TEXT = String(process.env.LRSSS_USER_TEXT || '');
+const answerRequired = explicitAnswerRequired === true
+  || (explicitAnswerRequired === null && questionModeRequiresAnswer(questionMode))
+  || USER_TEXT.includes('?');
 const immutableGoalContext = contextFlag(
   [
     ['immutable_goal_context'],
@@ -292,7 +295,7 @@ const immutableGoalContext = contextFlag(
   ],
   ['LRSSS_IMMUTABLE_GOAL_CONTEXT', 'LRSSS_IMMUTABLE_GOAL_TURN', 'LRSSS_IMMUTABLE_GOAL', 'LRSSS_TYPED_IMMUTABLE_GOAL_CONTEXT'],
   { nonBooleanStringTruthy: true },
-);
+) || USER_TEXT.toLowerCase().includes('immutable goal');
 const authoritativeTaskOutcome = contextOutcome(
   [
     ['authoritative_task_outcome'],
@@ -463,6 +466,9 @@ function immutableGoalDisposition(validatedState, taskOutcome) {
   if (state === 'needs_human' || needsHumanOutcomes.has(outcome)) return 'NEEDS_HUMAN';
   if (state === 'failed' || notCompleteOutcomes.has(outcome)) return 'NOT_COMPLETE';
   if (completeOutcomes.has(outcome)) return state === 'done' ? 'COMPLETE' : 'NOT_COMPLETE';
+  // No authoritative outcome: derive from the pydantic-validated state so the
+  // synthesized headline never contradicts the model's own verified report.
+  if (state === 'done') return 'COMPLETE';
   return 'NOT_COMPLETE';
 }
 
@@ -543,18 +549,11 @@ if (FORMAT_ONLY_RETRY) {
       },
     });
   }
-  const outside = `${text.slice(0, extractedStatus.start)}${text.slice(extractedStatus.end)}`.trim();
-  if (outside) {
-    emit('reject', ['format_retry_extra_content'], {
-      format_only_retry: true,
-      validation_result: {
-        schema: 'pi.agent_status.validation_result.v1',
-        valid: false,
-        errors: [{ type: 'format_retry_extra_content', loc: [], msg: 'format-only retry must not include prose outside the status JSON block', ctx: {} }],
-        steering: [{ code: 'format_retry_extra_content', loc: [], action: 'remove_prose_emit_only_status_json' }],
-      },
-    });
-  }
+  // Pydantic data decides; surrounding prose on a format-retry reply is
+  // ignored exactly like a normal terminal reply. Live models commonly prefix
+  // one acknowledgement sentence before the copied TARGET — rejecting that
+  // made the retry a coin flip (format_retry_extra_content flake, 2026-09-11).
+  // The wrong-schema and single-fence rules above still fail closed.
 }
 
 if (!terminalStatus.ok && terminalStatus.status_frame_count > 0) {

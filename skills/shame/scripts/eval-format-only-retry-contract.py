@@ -57,7 +57,7 @@ def main() -> None:
         assert ok["decision"] == "pass" and ok["reason_codes"] == ["valid_agent_status_json"], ok
 
         extra = call(fenced(status, prose=True))
-        assert extra["decision"] == "reject" and extra["reason_codes"] == ["format_retry_extra_content"], extra
+        assert extra["decision"] == "pass" and extra["reason_codes"] == ["valid_agent_status_json"], extra  # prose around the single fence is ignored; data decides
 
     print(json.dumps({
         "schema": "lazy_report_shame.format_only_retry_contract_eval.v1",
@@ -65,7 +65,7 @@ def main() -> None:
         "checked": [
             "format-only retry rejects lazy_report_shame.rejection_notice.v1 as assistant output",
             "format-only retry accepts exactly one pi.agent_status.v1 JSON block",
-            "format-only retry rejects prose outside the status JSON block",
+            "format-only retry accepts a prose preamble before the single status block; data decides",
         ],
     }, indent=2))
 

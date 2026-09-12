@@ -1543,10 +1543,26 @@ export default function lazyReportShameShameShame(pi: any) {
         const canonicalFence = "```json\n" + JSON.stringify(substituted, null, 2) + "\n```";
         const recheck = checkReport(`${text}\n\n${canonicalFence}`, forceStatus, mutatingTurn, strictStatus, currentUserText, false);
         if (recheck.decision === "pass") {
+        // Substitution consumes the episode's single correction budget — an
+        // unbounded chain of substituted continuations loops forever when the
+        // model cannot run the compiled next_command (e.g. read-only tools).
+        // Claimed only after the recheck passed so a failed recheck still
+        // leaves the retry budget intact.
+        const subClaim = claimGuardFollowUp({
+          guard: "shame-guard-substitution",
+          messageId: String(event.message.id || event.id || "unknown"),
+          assistantText: text,
+          userText: currentUserText,
+          reason: "prose_stop_substituted",
+          maxRetries: 1,
+        });
+        if (subClaim.ok) {
           recordFailure(ctx, { kind: "guard_substituted_status", goal: substituted.goal,
             reason_codes: ["missing_agent_status_json"], checker_version: check.checker_version,
             candidate_hash: sha256(text) });
-          resetGuardRepairBudget();
+          // NOTE: no resetGuardRepairBudget() here — the substitution IS the
+          // episode's correction; resetting would re-arm the retry and break
+          // the one-correction budget.
           lastReportState = "continuing";
           try { syncBadge(ctx); } catch { /* optional UI */ }
           const compiled = compileStatusCommand(substituted);
@@ -1563,6 +1579,7 @@ export default function lazyReportShameShameShame(pi: any) {
             if (claim.ok) pendingFollowUp = continuationPrompt("continuing", compiled);
           }
           return { message: { ...event.message, content: appendText(event.message.content, canonicalFence) } };
+        }
         }
       }
 

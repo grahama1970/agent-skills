@@ -1,1090 +1,1115 @@
 {
- "version": 2,
- "skill": "shame",
- "trials": 2,
- "proof_scope": "Failure-backed agentic workflows through real Pi, CLI, filesystem and Memory entrypoints; no mock-Pi callback runners or fabricated PASS proof files.",
- "claims": {
-  "proves": "Only the named workflows and their independently read-back effects. Each capability requires live evidence; fixture counts do not establish ecosystem readiness.",
-  "does_not_prove": "All parser variants, every escalation provider, interactive review-picker UX, OS-level tamper resistance, universal instruction obedience, or arbitrary project completion. Faults are explicitly injected into real runtime messages; the audio case uses real CLI/file operations rather than a new voice render."
- },
- "capability_claims": [
-  {
-   "id": "shame.advisory_question",
-   "description": "An advisory question mentioning skills produces one answer without tool calls or report retries.",
-   "criticality": "critical",
-   "evidence_required": {
-    "live_e2e": true
-   },
-   "claim_semantics": "control_flow"
+  "version": 2,
+  "skill": "shame",
+  "trials": 2,
+  "proof_scope": "Failure-backed agentic workflows through real Pi, CLI, filesystem and Memory entrypoints; no mock-Pi callback runners or fabricated PASS proof files.",
+  "claims": {
+    "proves": "Only the named workflows and their independently read-back effects. Each capability requires live evidence; fixture counts do not establish ecosystem readiness.",
+    "does_not_prove": "All parser variants, every escalation provider, interactive review-picker UX, OS-level tamper resistance, universal instruction obedience, or arbitrary project completion. Faults are explicitly injected into real runtime messages; the audio case uses real CLI/file operations rather than a new voice render."
   },
-  {
-   "id": "shame.single_format_correction",
-   "description": "A corrupted final report is corrected once without restarting task work.",
-   "criticality": "critical",
-   "evidence_required": {
-    "adversarial_live_e2e": true
-   },
-   "claim_semantics": "protocol"
-  },
-  {
-   "id": "shame.work_continues_to_artifact",
-   "description": "Six identical continuation reports lead to a completed, independently checked artifact.",
-   "criticality": "critical",
-   "evidence_required": {
-    "live_e2e": true
-   },
-   "claim_semantics": "control_flow"
-  },
-  {
-   "id": "shame.invalid_proof_recovery",
-   "description": "An unresolved proof reference is rejected, recorded, and corrected using existing evidence.",
-   "criticality": "critical",
-   "evidence_required": {
-    "adversarial_live_e2e": true
-   },
-   "claim_semantics": "value_bearing",
-   "domain_profile": "json-scalar-v1",
-   "derived_from": {
-    "source": "skills/shame/SKILL.md#Retained-validation",
-    "requirement": "For state=done, a plain-text proof file backs ONLY verified items shaped {\"command\": \"read <proof-file>\", \"result\": \"<substring of that file>\"}; each verified pair must be backed by one proof record; unrelated text matches across files do not authorize completion."
-   }
-  },
-  {
-   "id": "shame.duplicate_key_recovery",
-   "description": "Duplicate status keys are rejected through the actual Pi conversation path.",
-   "criticality": "critical",
-   "evidence_required": {
-    "adversarial_live_e2e": true
-   },
-   "claim_semantics": "protocol"
-  },
-  {
-   "id": "shame.missing_verification_recovery",
-   "description": "Missing done verification is rejected and corrected without running new tools.",
-   "criticality": "critical",
-   "evidence_required": {
-    "adversarial_live_e2e": true
-   },
-   "claim_semantics": "protocol"
-  },
-  {
-   "id": "shame.data_not_prose_decides",
-   "description": "Misleading prose cannot override valid status data in the real renderer.",
-   "criticality": "critical",
-   "evidence_required": {
-    "adversarial_live_e2e": true
-   },
-   "claim_semantics": "protocol"
-  },
-  {
-   "id": "shame.question_turn_answer",
-   "description": "A terminal status report for a human question must carry a first-class answer and render it before status metadata.",
-   "criticality": "critical",
-   "evidence_required": {
-    "adversarial_live_e2e": true
-   },
-   "claim_semantics": "human_perceptual"
-  },
-  {
-   "id": "shame.immutable_goal_headline",
-   "description": "Immutable-goal reports must put COMPLETE, NOT_COMPLETE, or NEEDS_HUMAN in the first-class answer headline so the result cannot be buried under proof metadata.",
-   "criticality": "critical",
-   "evidence_required": {
-    "adversarial_live_e2e": true
-   },
-   "claim_semantics": "human_perceptual"
-  },
-  {
-   "id": "shame.collab_peer_acceptance",
-   "description": "Collaborator-mediated closure requires a typed peer acceptance receipt, not implementer self-closure.",
-   "criticality": "critical",
-   "evidence_required": {
-    "deterministic": true
-   },
-   "claim_semantics": "protocol"
-  },
-  {
-   "id": "shame.task_scope_and_acceptance",
-   "description": "Unapproved tool calls cannot write artifacts or add checks; accepted work stays terminal.",
-   "criticality": "critical",
-   "evidence_required": {
-    "adversarial_live_e2e": true
-   },
-   "claim_semantics": "control_flow"
-  },
-  {
-   "id": "shame.feedback_and_session_isolation",
-   "description": "Separate real sessions retain isolated failure evidence; real captured feedback reaches Memory and is independently recalled.",
-   "criticality": "critical",
-   "evidence_required": {
-    "adversarial_live_e2e": true
-   },
-   "claim_semantics": "other"
-  },
-  {
-   "id": "shame.audio_install_preserves_reference",
-   "description": "The real audio installer preserves approved source bytes and refuses a repeated-loop replacement.",
-   "criticality": "critical",
-   "evidence_required": {
-    "adversarial_live_e2e": true
-   },
-   "claim_semantics": "value_bearing",
-   "domain_profile": "json-scalar-v1",
-   "derived_from": {
-    "source": "skills/shame/SKILL.md#Failure-history-versus-human-labels",
-    "requirement": "Audio policy: one short Chatterbox word, no bell or loop; installer bounds are 0.9-2.5 seconds and at least 0.45 seconds active speech."
-   }
-  },
-  {
-   "id": "shame.escalation_ladder_data_contract",
-   "description": "Escalation is data-gated and live-receipt-gated: real Brave results precede the configured first Ask API handler, and WebGPT requires typed brave-search plus Ask parent refs before terminal acceptance.",
-   "criticality": "critical",
-   "evidence_required": {
-    "deterministic": true,
-    "live_e2e": true
-   },
-   "claim_semantics": "protocol"
-  },
-  {
-   "id": "shame.done_receipt_binding",
-   "description": "Done status requires each verified claim to be backed by one valid proof record; unrelated text, malformed JSON, unknown receipt schemas, and failed receipts cannot authorize completion.",
-   "criticality": "critical",
-   "evidence_required": {
-    "deterministic": true
-   },
-   "claim_semantics": "value_bearing",
-   "domain_profile": "json-scalar-v1",
-   "derived_from": {
-    "source": "skills/shame/SKILL.md#pi.agent_status.v1",
-    "requirement": "For done, proofs must be non-empty local files; JSON proofs must declare a supported receipt schema and pass that schema's checks, including ticket.closure_receipt.v1 for ticket closure."
-   }
-  },
-  {
-   "id": "shame.status_preflight_parity",
-   "description": "Read-only shame preflight uses the same stop-boundary checker and matches reason codes before terminal retries are consumed.",
-   "criticality": "critical",
-   "evidence_required": {
-    "deterministic": true
-   },
-   "claim_semantics": "protocol"
-  },
-  {
-   "id": "shame.typed_recovery_routing",
-   "description": "Shame recovery separates format repair, existing-proof substitution, missing evidence, validator failure, unresolved work, and accepted-task cases with typed decisions.",
-   "criticality": "critical",
-   "evidence_required": {
-    "deterministic": true
-   },
-   "claim_semantics": "control_flow"
-  },
-  {
-   "id": "shame.self_contained_proof_repair",
-   "description": "Shame retry packets are typed, byte-bounded, tool-free for format repair, and carry an admitted evidence snapshot with proof schema and digest.",
-   "criticality": "critical",
-   "evidence_required": {
-    "deterministic": true
-   },
-   "claim_semantics": "protocol"
-  },
-  {
-   "id": "shame.ticket_close_final_zero_retry",
-   "description": "A typed ticket closure receipt can authorize a final shame done status while raw GitHub issue JSON cannot.",
-   "criticality": "critical",
-   "evidence_required": {
-    "deterministic": true
-   },
-   "claim_semantics": "value_bearing",
-   "domain_profile": "json-scalar-v1",
-   "derived_from": {
-    "source": "skills/shame/SKILL.md#Stop-boundary-behavior",
-    "requirement": "A failed correction cannot queue another; retry exhaustion records report_retry_exhausted and writes a spiral ticket request instead of another retry."
-   }
-  },
-  {
-   "id": "shame.spiral_guard",
-   "description": "The stop-boundary checker classifies the 2026-09-08 spiral candidate shapes correctly and accepts the documented compliant shape, so an agent following the compliance recipe cannot spiral.",
-   "criticality": "critical",
-   "evidence_required": {
-    "deterministic": true,
-    "live_e2e": true
-   },
-   "claim_semantics": "protocol"
-  },
-  {
-   "id": "shame.spiral_ticket_request",
-   "description": "Shame retry exhaustion is retained as a distinct failure event and converted into a ticket request for agent-work project-watchdog repair routing.",
-   "criticality": "critical",
-   "evidence_required": {
-    "deterministic": true
-   },
-   "claim_semantics": "control_flow"
-  },
-  {
-   "id": "shame.concrete_status_visibility",
-   "description": "Schema-passing status reports preserve concrete operational anchors in accepted data and compact rejection/retry packets hash raw diagnostics.",
-   "criticality": "critical",
-   "evidence_required": {
-    "deterministic": true
-   },
-   "claim_semantics": "human_perceptual"
-  }
- ],
- "cases": [
-  {
-   "name": "advisory-question",
-   "type": "positive",
-   "real_world": true,
-   "evidence_class": "live_e2e",
-   "supports_claims": [
-    "shame.advisory_question"
-   ],
-   "command": [
-    "python3",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-conversation-guard-live.py",
-    "advisory"
-   ],
-   "timeout_seconds": 210,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "\"assistant_responses\": 1",
-     "\"rejections\": 0",
-     "\"tool_calls\": 0"
-    ],
-    "stdout_excludes": [
-     "Traceback",
-     "provider_error"
-    ]
-   }
-  },
-  {
-   "name": "single-format-correction",
-   "type": "adversarial",
-   "real_world": true,
-   "evidence_class": "adversarial_live_e2e",
-   "supports_claims": [
-    "shame.single_format_correction"
-   ],
-   "command": [
-    "python3",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-stop-boundary-live.py",
-    "--missing-footer",
-    "--normal"
-   ],
-   "timeout_seconds": 210,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "\"report_retries\": 0",
-     "\"guard_substitutions\": 1",
-     "\"sum_readback_correct\": true",
-     "\"failure_history_verified\": true"
-    ],
-    "stdout_excludes": [
-     "Traceback",
-     "provider_error"
-    ]
-   }
-  },
-  {
-   "name": "work-continues-to-artifact",
-   "type": "positive",
-   "real_world": true,
-   "evidence_class": "live_e2e",
-   "supports_claims": [
-    "shame.work_continues_to_artifact"
-   ],
-   "command": [
-    "python3",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-stop-boundary-live.py",
-    "--continuations",
-    "--repeat-status"
-   ],
-   "timeout_seconds": 210,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "\"continuations\": 6",
-     "\"sum_readback_correct\": true",
-     "\"report_retries\": 0"
-    ],
-    "stdout_excludes": [
-     "Traceback",
-     "provider_error"
-    ]
-   }
-  },
-  {
-   "name": "invalid-proof-recovery",
-   "type": "adversarial",
-   "real_world": true,
-   "evidence_class": "adversarial_live_e2e",
-   "supports_claims": [
-    "shame.invalid_proof_recovery"
-   ],
-   "command": [
-    "python3",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-stop-boundary-live.py",
-    "--proof-repair"
-   ],
-   "timeout_seconds": 210,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "\"failure_history_verified\": true",
-     "\"report_retries\": 1",
-     "\"sum_readback_correct\": true"
-    ],
-    "stdout_excludes": [
-     "Traceback",
-     "provider_error"
-    ]
-   }
-  },
-  {
-   "name": "duplicate-key-recovery",
-   "type": "adversarial",
-   "real_world": true,
-   "evidence_class": "adversarial_live_e2e",
-   "supports_claims": [
-    "shame.duplicate_key_recovery"
-   ],
-   "command": [
-    "python3",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-stop-boundary-live.py",
-    "--duplicate-key"
-   ],
-   "timeout_seconds": 210,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "\"failure_history_verified\": true",
-     "\"report_retries\": 1",
-     "\"sum_readback_correct\": true"
-    ],
-    "stdout_excludes": [
-     "Traceback",
-     "provider_error"
-    ]
-   }
-  },
-  {
-   "name": "missing-verification-recovery",
-   "type": "adversarial",
-   "real_world": true,
-   "evidence_class": "adversarial_live_e2e",
-   "supports_claims": [
-    "shame.missing_verification_recovery"
-   ],
-   "command": [
-    "python3",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-stop-boundary-live.py",
-    "--missing-verified"
-   ],
-   "timeout_seconds": 210,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "\"failure_history_verified\": true",
-     "\"report_retries\": 1",
-     "\"sum_readback_correct\": true"
-    ],
-    "stdout_excludes": [
-     "Traceback",
-     "provider_error"
-    ]
-   }
-  },
-  {
-   "name": "data-not-prose-decides",
-   "type": "adversarial",
-   "real_world": true,
-   "evidence_class": "adversarial_live_e2e",
-   "supports_claims": [
-    "shame.data_not_prose_decides"
-   ],
-   "command": [
-    "python3",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-stop-boundary-live.py",
-    "--misleading-prose"
-   ],
-   "timeout_seconds": 210,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "\"report_retries\": 0",
-     "\"sum_readback_correct\": true",
-     "\"done_rendered\": true"
-    ],
-    "stdout_excludes": [
-     "Traceback",
-     "provider_error"
-    ]
-   }
-  },
-  {
-   "name": "question-turn-requires-answer",
-   "type": "adversarial",
-   "real_world": true,
-   "evidence_class": "adversarial_live_e2e",
-   "supports_claims": [
-    "shame.question_turn_answer"
-   ],
-   "command": [
-    "python3",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-question-answer-live.py"
-   ],
-   "timeout_seconds": 210,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "PASS_LIVE_QUESTION_TURN_REQUIRES_ANSWER",
-     "\"report_retries\": 1",
-     "\"missing_answer_rejected\": true",
-     "\"failure_history_verified\": true",
-     "Answer: COMPLETE per project_watchdog.goal_completion.v1"
-    ],
-    "stdout_excludes": [
-     "Traceback",
-     "provider_error"
-    ]
-   }
-  },
-  {
-   "name": "immutable-goal-headline-enforced",
-   "type": "adversarial",
-   "real_world": true,
-   "evidence_class": "adversarial_live_e2e",
-   "supports_claims": [
-    "shame.immutable_goal_headline"
-   ],
-   "command": [
-    "python3",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-immutable-goal-headline.py"
-   ],
-   "timeout_seconds": 60,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "PASS_IMMUTABLE_GOAL_HEADLINE_ENFORCED",
-     "\"vague_answer_rejected\": true",
-     "\"COMPLETE\"",
-     "\"NOT_COMPLETE\"",
-     "\"NEEDS_HUMAN\""
-    ],
-    "stdout_excludes": [
-     "Traceback",
-     "provider_error"
-    ]
-   }
-  },
-  {
-   "name": "collab-requires-peer-acceptance",
-   "type": "adversarial",
-   "real_world": true,
-   "evidence_class": "deterministic",
-   "supports_claims": [
-    "shame.collab_peer_acceptance"
-   ],
-   "command": [
-    "uv",
-    "run",
-    "--with",
-    "pydantic",
-    "python3",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-collab-acceptance.py"
-   ],
-   "timeout_seconds": 30,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "PASS_COLLAB_REQUIRES_VALIDATED_JSON_BOUNDARY",
-     "\"prose_rejected\": true",
-     "\"question_validated\": true",
-     "\"answer_not_allowed_rejected\": true",
-     "\"exchange_validated\": true",
-     "\"question_id_mismatch_rejected\": true",
-     "\"allowed_answers_mismatch_rejected\": true",
-     "\"exchange_mismatch_rejected\": true",
-     "\"missing_acceptance_rejected\": true",
-     "\"self_acceptance_rejected\": true",
-     "\"status_proof_checked_known_receipt\": true",
-     "\"envelope_compatible\": true"
-    ],
-    "stdout_excludes": [
-     "Traceback",
-     "provider_error"
-    ]
-   }
-  },
-  {
-   "name": "task-scope-and-acceptance",
-   "type": "adversarial",
-   "real_world": true,
-   "evidence_class": "adversarial_live_e2e",
-   "supports_claims": [
-    "shame.task_scope_and_acceptance"
-   ],
-   "command": [
-    "python3",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-task-budget-live.py",
-    "--scope-attack"
-   ],
-   "timeout_seconds": 210,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "\"scope_attack_blocked\": true",
-     "\"approved_check_runs\": 1",
-     "\"post_acceptance_tool_calls\": 0"
-    ],
-    "stdout_excludes": [
-     "Traceback",
-     "provider_error"
-    ]
-   }
-  },
-  {
-   "name": "feedback-and-session-isolation",
-   "type": "adversarial",
-   "real_world": true,
-   "evidence_class": "adversarial_live_e2e",
-   "supports_claims": [
-    "shame.feedback_and_session_isolation"
-   ],
-   "command": [
-    "uv",
-    "run",
-    "--no-project",
-    "--with",
-    "httpx==0.28.1",
-    "python3",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-feedback-live.py"
-   ],
-   "timeout_seconds": 440,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "\"sessions_isolated\": true",
-     "\"memory_independently_read_back\": true",
-     "\"unsafe_collection_refused\": true"
-    ],
-    "stdout_excludes": [
-     "Traceback",
-     "provider_error"
-    ]
-   }
-  },
-  {
-   "name": "audio-install-preserves-reference",
-   "type": "adversarial",
-   "real_world": true,
-   "evidence_class": "adversarial_live_e2e",
-   "supports_claims": [
-    "shame.audio_install_preserves_reference"
-   ],
-   "command": [
-    "python3",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-audio-live.py"
-   ],
-   "timeout_seconds": 90,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "\"installed_bytes_verified\": true",
-     "\"loop_rejected\": true",
-     "\"good_install_preserved\": true"
-    ],
-    "stdout_excludes": [
-     "Traceback",
-     "provider_error"
-    ]
-   }
-  },
-  {
-   "name": "escalation-parent-lineage",
-   "type": "adversarial",
-   "real_world": true,
-   "evidence_class": "deterministic",
-   "supports_claims": [
-    "shame.escalation_ladder_data_contract"
-   ],
-   "command": [
-    "uv",
-    "run",
-    "--with",
-    "pydantic",
-    "python3",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-escalation-ladder.py"
-   ],
-   "timeout_seconds": 30,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "lazy_report_shame.escalation_ladder_eval.v1",
-     "needs_agent resolves parent_ref receipts before accepting brave-search lineage",
-     "declared parent_ref producer/schema strings are not authority",
-     "parent_ref producer mismatches are rejected",
-     "parent_ref receipt_id mismatches are rejected",
-     "parent_ref digest mismatches are rejected",
-     "parent_ref goal_hash mismatches are rejected",
-     "resolved brave-search parents must use brave_search.web_results.v1",
-     "resolved ask parents must use tau.agent_handoff.v1",
-     "escalation commands require an active goal_hash",
-     "needs_brave_search compiles every requested Brave query",
-     "needs_agent rejects same-family first Ask handler",
-     "needs_webgpt requires a resolved Ask receipt descended from the Brave evidence",
-     "needs_webgpt preserves typed parent_refs as structured attachment data, not prompt prose"
-    ],
-    "stdout_excludes": [
-     "Traceback",
-     "AssertionError"
-    ]
-   }
-  },
-  {
-   "name": "live-escalation-receipt-chain",
-   "type": "adversarial",
-   "real_world": true,
-   "evidence_class": "live_e2e",
-   "readback": true,
-   "supports_claims": [
-    "shame.escalation_ladder_data_contract"
-   ],
-   "command": [
-    "uv",
-    "run",
-    "--with",
-    "pydantic",
-    "python3",
-    "-c",
-    "from __future__ import annotations\nimport hashlib, json, os, subprocess, sys, uuid\nfrom datetime import datetime, timezone\nfrom pathlib import Path\nfrom typing import Any\nROOT = Path('/home/graham/workspace/experiments/agent-skills')\nRUN_ID = 'live-' + uuid.uuid4().hex[:10]\nRUN_ROOT = ROOT / '.artifacts' / 'shame' / 'live-escalation-receipt-chain-runs' / RUN_ID\nRUN_ROOT.mkdir(parents=True, exist_ok=True)\nRESULT_PATH = ROOT / '.artifacts' / 'shame' / 'live-escalation-receipt-chain-result.json'\nGOAL_HASH = 'sha256:' + hashlib.sha256(('shame live escalation receipt chain ' + RUN_ID).encode()).hexdigest()\nSTATUS_SCHEMA = ROOT / 'skills' / 'shame' / 'scripts' / 'agent_status_schema.py'\nCOMPILER = ROOT / 'extensions' / 'pi' / 'lazy-report-shame-shame-shame' / 'compile-status-command.mjs'\nASK_RUN = ROOT / 'skills' / 'ask' / 'run.sh'\nBRAVE_RUN = ROOT / 'skills' / 'brave-search' / 'run.sh'\nBROWSER_PREFLIGHT = ROOT / 'skills' / 'ask' / 'scripts' / 'browser_prompt_preflight.py'\nCHAIN_ENV = {'LRSSS_PROJECT_AGENT_FAMILY': 'openai', 'LRSSS_AVAILABLE_ASK_HANDLERS': json.dumps(['claude-fable-low', 'gpt-5.5-high'])}\n\ndef write_json(path: Path, payload: dict[str, Any]) -> None:\n    path.parent.mkdir(parents=True, exist_ok=True)\n    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + '\\n', encoding='utf-8')\n\ndef sha256_file(path: Path) -> str:\n    return 'sha256:' + hashlib.sha256(path.read_bytes()).hexdigest()\n\ndef fail(message: str, evidence: Any = None) -> None:\n    detail = {'message': message, 'evidence': evidence}\n    write_json(RUN_ROOT / 'failure.json', {'schema': 'lazy_report_shame.live_escalation_receipt_chain.v1', 'status': 'FAIL', 'detail': detail})\n    raise SystemExit(json.dumps(detail, indent=2, sort_keys=True))\n\ndef require(condition: bool, message: str, evidence: Any = None) -> None:\n    if not condition:\n        fail(message, evidence)\n\ndef run_cmd(cmd: list[str], *, cwd: Path = ROOT, timeout: int = 120, stdin: str | None = None, env_extra: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:\n    env = os.environ.copy()\n    if env_extra:\n        env.update(env_extra)\n    proc = subprocess.run(cmd, cwd=str(cwd), input=stdin, text=True, capture_output=True, timeout=timeout, env=env, check=False)\n    return proc\n\ndef parse_first_json(text: str) -> Any:\n    decoder = json.JSONDecoder()\n    for idx, char in enumerate(text):\n        if char not in '[{':\n            continue\n        try:\n            value, _end = decoder.raw_decode(text[idx:])\n        except json.JSONDecodeError:\n            continue\n        return value\n    fail('no JSON object found in command output', text[-1000:])\n\ndef validate_status(payload: dict[str, Any]) -> dict[str, Any]:\n    proc = run_cmd(['uv', 'run', '--with', 'pydantic', 'python3', str(STATUS_SCHEMA), 'validate', '-'], stdin=json.dumps(payload), env_extra=CHAIN_ENV)\n    out = parse_first_json(proc.stdout)\n    out['exit_code'] = proc.returncode\n    return out\n\ndef compile_status(payload: dict[str, Any]) -> dict[str, Any]:\n    proc = run_cmd(['node', str(COMPILER)], stdin=json.dumps(payload), env_extra=CHAIN_ENV)\n    require(proc.returncode == 0, 'status command compiler failed', {'stderr': proc.stderr[-1000:], 'stdout': proc.stdout[-1000:]})\n    out = parse_first_json(proc.stdout)\n    out['exit_code'] = proc.returncode\n    return out\n\ndef parent_for_envelope(ref: dict[str, str]) -> dict[str, str]:\n    return {k: ref[k] for k in ('receipt_id', 'expected_schema', 'expected_producer', 'digest')}\n\ndef envelope(receipt_id: str, producer: str, payload_schema: str, payload: dict[str, Any], parent_refs: list[dict[str, str]] | None = None) -> dict[str, str]:\n    doc = {'schema': 'pi.receipt_envelope.v1', 'receipt_id': receipt_id, 'payload_schema': payload_schema, 'producer': producer, 'emitted_at': datetime.now(timezone.utc).isoformat(), 'goal_hash': GOAL_HASH, 'parent_refs': parent_refs or [], 'payload': payload}\n    path = RUN_ROOT / f'{receipt_id}.envelope.json'\n    write_json(path, doc)\n    return {'receipt_id': receipt_id, 'receipt_path': str(path), 'expected_schema': payload_schema, 'expected_producer': producer, 'digest': sha256_file(path)}\n\ndef latest_run_dir(output_root: Path) -> Path:\n    dirs = [p for p in output_root.iterdir() if p.is_dir()]\n    require(bool(dirs), 'Ask output root has no run directory', str(output_root))\n    return max(dirs, key=lambda p: p.stat().st_mtime)\n\ndef run_ask(handler: str, token: str, output_root: Path, extra: list[str] | None = None, timeout: int = 1200) -> dict[str, Any]:\n    cmd = [str(ASK_RUN), 'tau-dag', f'Reply with exactly: {token}', '--repo', 'local/agent-skills', '--target', 'shame-live-escalation-receipt-chain', '--immutable-goal', 'Return the requested token or a typed blocker.', '--handler', handler, '--execute', '--json', '--run-output-root', str(output_root)]\n    if extra:\n        cmd.extend(extra)\n    proc = run_cmd(cmd, cwd=ASK_RUN.parent, timeout=timeout)\n    require(proc.returncode == 0, f'Ask {handler} run failed', {'stderr': proc.stderr[-2000:], 'stdout': proc.stdout[-2000:]})\n    payload = parse_first_json(proc.stdout)\n    run_dir = Path(str(((payload.get('bundle') or {}).get('run_dir')) or latest_run_dir(output_root)))\n    node_dir = run_dir / 'node-artifacts' / ('handler-' + handler.replace('.', '-'))\n    receipt_path = node_dir / 'node-receipt.json'\n    response_path = node_dir / 'response.md'\n    handoff_path = node_dir / 'handoff.json'\n    require(receipt_path.is_file(), f'missing {handler} node receipt', str(receipt_path))\n    require(response_path.is_file(), f'missing {handler} response', str(response_path))\n    require(handoff_path.is_file(), f'missing {handler} handoff', str(handoff_path))\n    receipt = json.loads(receipt_path.read_text(encoding='utf-8'))\n    response = response_path.read_text(encoding='utf-8', errors='replace')\n    handoff = json.loads(handoff_path.read_text(encoding='utf-8'))\n    require(payload.get('status') == 'PASS' and payload.get('ok') is True, f'Ask {handler} CLI result not PASS', payload.get('status'))\n    require(receipt.get('schema') == 'ask.tau_dag_handler_receipt.v1' and receipt.get('status') == 'PASS', f'Ask {handler} node receipt not PASS', receipt)\n    require(receipt.get('live') is True and receipt.get('mocked') is False and receipt.get('provider_live') is True, f'Ask {handler} receipt is not live provider evidence', receipt)\n    require(token in response, f'Ask {handler} response missing token', response[-500:])\n    require(handoff.get('schema') == 'tau.agent_handoff.v1' and (handoff.get('result') or {}).get('status') == 'PASS', f'Ask {handler} handoff not PASS', handoff)\n    return {'cli': payload, 'run_dir': str(run_dir), 'node_dir': str(node_dir), 'receipt_path': str(receipt_path), 'response_path': str(response_path), 'handoff_path': str(handoff_path), 'receipt': receipt, 'handoff': handoff, 'response_chars': len(response)}\n\nbrave_query = 'OpenAI agentic evaluations live receipt chain ' + RUN_ID\nbrave_proc = run_cmd([str(BRAVE_RUN), 'web', brave_query, '--count', '1'], timeout=90)\nrequire(brave_proc.returncode == 0, 'Brave web search command failed', {'stderr': brave_proc.stderr[-1000:], 'stdout': brave_proc.stdout[-1000:]})\nbrave_result = parse_first_json(brave_proc.stdout)\nbrave_raw_path = RUN_ROOT / 'brave-web-results.raw.json'\nwrite_json(brave_raw_path, brave_result)\nbrave_results = brave_result.get('results') or []\nrequire(brave_result.get('query') == brave_query and len(brave_results) >= 1 and str(brave_results[0].get('url', '')).startswith('http'), 'Brave web search did not return a live result', brave_result)\nbrave_ref = envelope('brave-' + RUN_ID, 'brave-search', 'brave_search.web_results.v1', {'schema': 'brave_search.web_results.v1', 'status': 'PASS', 'command': [str(BRAVE_RUN), 'web', brave_query, '--count', '1'], 'result_path': str(brave_raw_path), 'result_count': len(brave_results), 'first_url': brave_results[0].get('url'), 'raw_sha256': sha256_file(brave_raw_path)})\n\nneeds_agent_status = {'schema': 'pi.agent_status.v1', 'goal': 'retain live escalation receipt chain', 'goal_hash': GOAL_HASH, 'state': 'needs_agent', 'changed': ['scoped Shame eval catalog live escalation case'], 'needs_agent': {'project_agent_family': 'openai', 'handler': 'claude-fable-low', 'question': 'Use the configured first Ask API route.', 'parent_refs': [brave_ref]}}\nneeds_agent_validation = validate_status(needs_agent_status)\nrequire(needs_agent_validation.get('exit_code') == 0 and needs_agent_validation.get('valid') is True, 'needs_agent status did not validate after live Brave receipt', needs_agent_validation)\nneeds_agent_compiled = compile_status(needs_agent_status)\ncompiled_agent_command = needs_agent_compiled.get('command') or ''\nrequire('skills/ask/run.sh tau-dag' in compiled_agent_command and \"--handler 'claude-fable-low'\" in compiled_agent_command, 'needs_agent did not compile to first Ask API handler', compiled_agent_command)\n\nask_api = run_ask('claude-fable-low', 'ASK-FIRST-' + RUN_ID.upper(), RUN_ROOT / 'ask-api', ['--allow-provider-calls', '--require-provider-calls'], timeout=900)\nask_transport = (((ask_api['receipt'].get('provider_receipt') or {}).get('transport')))\nrequire(ask_transport == 'scillm.chat', 'first Ask API route did not use scillm.chat', ask_api['receipt'].get('provider_receipt'))\nask_handoff_payload = ask_api['handoff']\nask_ref = envelope('ask-first-' + RUN_ID, 'ask', 'tau.agent_handoff.v1', ask_handoff_payload, [parent_for_envelope(brave_ref)])\n\nneeds_webgpt_status = {'schema': 'pi.agent_status.v1', 'goal': 'retain live escalation receipt chain', 'goal_hash': GOAL_HASH, 'state': 'needs_webgpt', 'changed': ['scoped Shame eval catalog live escalation case'], 'needs_webgpt': {'question': 'Use the browser WebGPT route after Brave and Ask receipts.', 'parent_refs': [brave_ref, ask_ref]}}\nneeds_webgpt_validation = validate_status(needs_webgpt_status)\nrequire(needs_webgpt_validation.get('exit_code') == 0 and needs_webgpt_validation.get('valid') is True, 'needs_webgpt status did not validate after typed Brave and Ask parents', needs_webgpt_validation)\nneeds_webgpt_compiled = compile_status(needs_webgpt_status)\ncompiled_webgpt_command = needs_webgpt_compiled.get('command') or ''\nrequire('skills/ask/run.sh tau-dag' in compiled_webgpt_command and \"--handler 'webgpt'\" in compiled_webgpt_command and '--attach-file' in compiled_webgpt_command, 'needs_webgpt did not compile to WebGPT with attached typed parents', compiled_webgpt_command)\n\nwebgpt_prompt = 'Reply with exactly: WEBGPT-' + RUN_ID.upper()\npreflight = run_cmd(['python3', str(BROWSER_PREFLIGHT), '--prompt', webgpt_prompt], timeout=30)\nrequire(preflight.returncode == 0, 'WebGPT prompt preflight failed', {'stderr': preflight.stderr, 'stdout': preflight.stdout})\nwebgpt = run_ask('webgpt', 'WEBGPT-' + RUN_ID.upper(), RUN_ROOT / 'webgpt', ['--browser-tab-lifecycle', 'fresh-temporary', '--poll-timeout-seconds', '900', '--browser-lock-timeout', '900'], timeout=1200)\nwebgpt_provider = webgpt['receipt'].get('provider_receipt') or {}\nrequire(webgpt_provider.get('transport') == 'webgpt.submit' and webgpt_provider.get('provider_transport') == '$surf', 'WebGPT route did not use Surf browser transport', webgpt_provider)\nprovider_result_path = Path(str(webgpt_provider.get('surf_provider_result_path') or ''))\nrequire(provider_result_path.is_file(), 'WebGPT provider result path missing', str(provider_result_path))\nprovider_result = json.loads(provider_result_path.read_text(encoding='utf-8'))\nrequire(provider_result.get('schema') == 'surf.provider_result.v1' and provider_result.get('success') is True and provider_result.get('proof_status') == 'response_proven', 'WebGPT Surf provider result did not prove response', provider_result)\nwebgpt_ref = envelope('webgpt-' + RUN_ID, 'ask', 'tau.agent_handoff.v1', webgpt['handoff'], [parent_for_envelope(brave_ref), parent_for_envelope(ask_ref)])\n\nterminal_payload = {'schema': 'lazy_report_shame.live_escalation_receipt_chain.v1', 'status': 'terminal_acceptance_pass', 'live': True, 'mocked': False, 'verified_command': 'live-escalation-receipt-chain terminal acceptance', 'verified_result': 'terminal_acceptance_pass', 'run_id': RUN_ID, 'goal_hash': GOAL_HASH, 'brave_parent_ref': brave_ref, 'ask_parent_ref': ask_ref, 'webgpt_receipt_ref': webgpt_ref, 'ask_handler': 'claude-fable-low', 'webgpt_transport': 'webgpt.submit'}\nterminal_ref = envelope('terminal-acceptance-' + RUN_ID, 'shame', 'lazy_report_shame.live_escalation_receipt_chain.v1', terminal_payload, [parent_for_envelope(brave_ref), parent_for_envelope(ask_ref), parent_for_envelope(webgpt_ref)])\ndone_status = {'schema': 'pi.agent_status.v1', 'goal': 'retain live escalation receipt chain', 'goal_hash': GOAL_HASH, 'state': 'done', 'changed': ['scoped Shame eval catalog live escalation case'], 'verified': [{'command': 'live-escalation-receipt-chain terminal acceptance', 'result': 'terminal_acceptance_pass'}], 'proof': [terminal_ref['receipt_path']], 'receipts': [brave_ref['receipt_path'], ask_ref['receipt_path'], webgpt_ref['receipt_path'], terminal_ref['receipt_path']], 'nodes': [{'id': 'brave-search', 'status': 'PASS', 'receipt': brave_ref['receipt_path']}, {'id': 'ask-api-claude-fable-low', 'status': 'PASS', 'receipt': ask_ref['receipt_path']}, {'id': 'ask-webgpt-browser', 'status': 'PASS', 'receipt': webgpt_ref['receipt_path']}]}\nterminal_validation = validate_status(done_status)\nrequire(terminal_validation.get('exit_code') == 0 and terminal_validation.get('valid') is True, 'terminal done status did not validate against receipt readback', terminal_validation)\n\nresult = {'schema': 'lazy_report_shame.live_escalation_receipt_chain.v1', 'status': 'PASS', 'live': True, 'mocked': False, 'run_id': RUN_ID, 'goal_hash': GOAL_HASH, 'checked': ['real Brave web search returned a result', 'needs_agent accepted typed Brave parent and compiled to claude-fable-low', 'configured first Ask API route executed with provider_live true', 'needs_webgpt accepted Brave plus Ask typed lineage and compiled to WebGPT browser route with attachment', 'WebGPT executed through Surf browser transport and proved response', 'terminal done status read back a typed acceptance envelope'], 'brave': {'status': 'PASS', 'raw_result_path': str(brave_raw_path), 'receipt_path': brave_ref['receipt_path'], 'result_count': len(brave_results), 'first_url': brave_results[0].get('url')}, 'ask_api': {'status': 'PASS', 'handler': 'claude-fable-low', 'transport': ask_transport, 'provider_live': True, 'receipt_path': ask_api['receipt_path'], 'response_path': ask_api['response_path'], 'handoff_path': ask_api['handoff_path'], 'run_dir': ask_api['run_dir']}, 'lineage': {'needs_agent_validation': needs_agent_validation, 'needs_agent_command': compiled_agent_command, 'needs_webgpt_validation': needs_webgpt_validation, 'needs_webgpt_command': compiled_webgpt_command, 'brave_parent_ref': brave_ref, 'ask_parent_ref': ask_ref}, 'webgpt_browser': {'status': 'PASS', 'handler': 'webgpt', 'transport': webgpt_provider.get('transport'), 'provider_transport': webgpt_provider.get('provider_transport'), 'provider_live': True, 'receipt_path': webgpt['receipt_path'], 'response_path': webgpt['response_path'], 'handoff_path': webgpt['handoff_path'], 'provider_result_path': str(provider_result_path), 'run_dir': webgpt['run_dir']}, 'terminal_acceptance': {'status': 'PASS', 'receipt_path': terminal_ref['receipt_path'], 'validation': terminal_validation}}\nwrite_json(RESULT_PATH, result)\nprint(json.dumps({'schema': result['schema'], 'status': result['status'], 'live': result['live'], 'mocked': result['mocked'], 'result_path': str(RESULT_PATH), 'checked': result['checked']}, indent=2, sort_keys=True))"
-   ],
-   "timeout_seconds": 1500,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "lazy_report_shame.live_escalation_receipt_chain.v1",
-     "real Brave web search returned a result",
-     "configured first Ask API route executed with provider_live true",
-     "WebGPT executed through Surf browser transport and proved response",
-     "terminal done status read back a typed acceptance envelope"
-    ],
-    "stdout_excludes": [
-     "Traceback",
-     "AssertionError"
-    ],
-    "artifacts": [
-     {
-      "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
-      "json_pointer": "/schema",
-      "equals": "lazy_report_shame.live_escalation_receipt_chain.v1"
-     },
-     {
-      "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
-      "json_pointer": "/status",
-      "equals": "PASS"
-     },
-     {
-      "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
-      "json_pointer": "/live",
-      "equals": true
-     },
-     {
-      "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
-      "json_pointer": "/mocked",
-      "equals": false
-     },
-     {
-      "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
-      "json_pointer": "/brave/status",
-      "equals": "PASS"
-     },
-     {
-      "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
-      "json_pointer": "/ask_api/handler",
-      "equals": "claude-fable-low"
-     },
-     {
-      "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
-      "json_pointer": "/ask_api/provider_live",
-      "equals": true
-     },
-     {
-      "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
-      "json_pointer": "/webgpt_browser/transport",
-      "equals": "webgpt.submit"
-     },
-     {
-      "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
-      "json_pointer": "/webgpt_browser/provider_live",
-      "equals": true
-     },
-     {
-      "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
-      "json_pointer": "/terminal_acceptance/status",
-      "equals": "PASS"
-     }
-    ]
-   }
-  },
-  {
-   "name": "done-receipt-binding",
-   "type": "adversarial",
-   "real_world": true,
-   "evidence_class": "deterministic",
-   "supports_claims": [
-    "shame.done_receipt_binding"
-   ],
-   "command": [
-    "uv",
-    "run",
-    "--with",
-    "pydantic",
-    "python3",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-done-receipt-binding.py"
-   ],
-   "timeout_seconds": 30,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "lazy_report_shame.done_receipt_binding_eval.v1",
-     "unrelated text cannot authorize done",
-     "malformed JSON proof is rejected",
-     "unknown JSON proof schema is rejected",
-     "READY agentic eval receipt can authorize a matching verified item",
-     "ticket closure receipt can authorize a close readback"
-    ],
-    "stdout_excludes": [
-     "Traceback",
-     "AssertionError"
-    ]
-   }
-  },
-  {
-   "name": "status-preflight-parity",
-   "type": "adversarial",
-   "real_world": true,
-   "evidence_class": "deterministic",
-   "supports_claims": [
-    "shame.status_preflight_parity"
-   ],
-   "command": [
-    "uv",
-    "run",
-    "--with",
-    "pydantic",
-    "python3",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-status-preflight.py"
-   ],
-   "timeout_seconds": 30,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "lazy_report_shame.status_preflight_parity_eval.v1",
-     "preflight uses the stop-boundary checker",
-     "mutated proof bytes reject before stop with matching reason codes"
-    ],
-    "stdout_excludes": [
-     "Traceback",
-     "AssertionError"
-    ]
-   }
-  },
-  {
-   "name": "typed-recovery-routing",
-   "type": "adversarial",
-   "real_world": true,
-   "evidence_class": "deterministic",
-   "supports_claims": [
-    "shame.typed_recovery_routing"
-   ],
-   "command": [
-    "uv",
-    "run",
-    "--with",
-    "pydantic",
-    "python3",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-recovery-routing.py"
-   ],
-   "timeout_seconds": 30,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "lazy_report_shame.recovery_routing_eval.v1",
-     "missing evidence continues execution instead of format repair",
-     "accepted task does not reopen execution",
-     "validator failure is explicit infrastructure recovery"
-    ],
-    "stdout_excludes": [
-     "Traceback",
-     "AssertionError"
-    ]
-   }
-  },
-  {
-   "name": "self-contained-proof-repair",
-   "type": "adversarial",
-   "real_world": true,
-   "evidence_class": "deterministic",
-   "supports_claims": [
-    "shame.self_contained_proof_repair"
-   ],
-   "command": [
-    "uv",
-    "run",
-    "--with",
-    "pydantic",
-    "python3",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-retry-packet.py"
-   ],
-   "timeout_seconds": 30,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "lazy_report_shame.retry_packet_eval.v1",
-     "retry packet is typed and self-contained",
-     "format-only retry allows no tools",
-     "retry packet is byte-bounded"
-    ],
-    "stdout_excludes": [
-     "Traceback",
-     "AssertionError"
-    ]
-   }
-  },
-  {
-   "name": "ticket-close-final-zero-retry",
-   "type": "adversarial",
-   "real_world": true,
-   "evidence_class": "deterministic",
-   "supports_claims": [
-    "shame.ticket_close_final_zero_retry"
-   ],
-   "command": [
-    "uv",
-    "run",
-    "--with",
-    "pydantic",
-    "python3",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-ticket-close-final.py"
-   ],
-   "timeout_seconds": 30,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "lazy_report_shame.ticket_close_final_eval.v1",
-     "typed ticket closure receipt authorizes final done status",
-     "raw issue JSON does not authorize done status"
-    ],
-    "stdout_excludes": [
-     "Traceback",
-     "AssertionError"
-    ]
-   }
-  },
-  {
-   "name": "spiral-prose-status-rejected",
-   "type": "adversarial",
-   "real_world": true,
-   "evidence_class": "live_e2e",
-   "supports_claims": [
-    "shame.spiral_guard"
-   ],
-   "command": [
-    "bash",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-spiral-regression.sh",
-    "prose-list"
-   ],
-   "timeout_seconds": 60,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "missing_agent_status_json",
-     "SPIRAL_GUARD_OK"
-    ],
-    "stdout_excludes": [
-     "Traceback"
-    ]
-   }
-  },
-  {
-   "name": "spiral-unbacked-verified-rejected",
-   "type": "adversarial",
-   "real_world": true,
-   "evidence_class": "live_e2e",
-   "supports_claims": [
-    "shame.spiral_guard"
-   ],
-   "command": [
-    "bash",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-spiral-regression.sh",
-    "unbacked-verified"
-   ],
-   "timeout_seconds": 60,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "verified_not_backed_by_proof",
-     "SPIRAL_GUARD_OK"
-    ],
-    "stdout_excludes": [
-     "Traceback"
-    ]
-   }
-  },
-  {
-   "name": "spiral-compliant-shape-accepted",
-   "type": "positive",
-   "real_world": true,
-   "evidence_class": "live_e2e",
-   "supports_claims": [
-    "shame.spiral_guard"
-   ],
-   "command": [
-    "bash",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-spiral-regression.sh",
-    "compliant"
-   ],
-   "timeout_seconds": 60,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "valid_agent_status_json",
-     "SPIRAL_GUARD_OK"
-    ],
-    "stdout_excludes": [
-     "Traceback"
-    ]
-   }
-  },
-  {
-   "name": "spiral-ticket-request",
-   "type": "adversarial",
-   "real_world": true,
-   "evidence_class": "deterministic",
-   "supports_claims": [
-    "shame.spiral_ticket_request"
-   ],
-   "command": [
-    "uv",
-    "run",
-    "--with",
-    "pydantic",
-    "python3",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-spiral-ticket-request.py"
-   ],
-   "timeout_seconds": 30,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "lazy_report_shame.spiral_ticket_request_eval.v1",
-     "ticket command creates an agent-work maintenance ticket",
-     "project-watchdog route is ticket_repair"
-    ],
-    "stdout_excludes": [
-     "Traceback",
-     "AssertionError"
-    ]
-   }
-  },
-  {
-   "name": "format-only-retry-contract",
-   "type": "adversarial",
-   "command": [
-    "uv",
-    "run",
-    "--with",
-    "pydantic",
-    "python3",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-format-only-retry-contract.py"
-   ],
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "lazy_report_shame.format_only_retry_contract_eval.v1",
-     "PASS",
-     "format-only retry rejects lazy_report_shame.rejection_notice.v1"
-    ]
-   }
-  },
-  {
-   "name": "vague-status-report-concrete-anchors",
-   "type": "adversarial",
-   "real_world": true,
-   "evidence_class": "deterministic",
-   "supports_claims": [
-    "shame.concrete_status_visibility"
-   ],
-   "command": [
-    "python3",
-    "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-vague-status-report.py"
-   ],
-   "timeout_seconds": 60,
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "\"status\": \"PASS\"",
-     "\"lazy_report_shame.vague_status_eval.v1\""
-    ],
-    "stdout_excludes": [
-     "Traceback"
-    ]
-   }
-  },
-  {
-   "name": "first-ask-runtime-route",
-   "type": "adversarial",
-   "evidence_class": "fault_injected_deterministic",
-   "mocked": true,
-   "timeout_seconds": 180,
-   "command": [
-    "uv",
-    "run",
-    "--with",
-    "pydantic",
-    "python3",
-    "../evals/first_ask_route_case.py",
-    "/tmp/shame-first-ask-route.json"
-   ],
-   "expected": {
-    "exit_code": 0,
-    "artifacts": [
-     {
-      "path": "/tmp/shame-first-ask-route.json",
-      "json_pointer": "/passed",
-      "equals": true
-     }
-    ]
-   },
-   "proves": "NeedsAgent is runtime-bound: the trusted runtime project-agent family (env-supplied, never agent-authored) selects exactly one first-ask handler (openai->claude-fable-low, claude->gpt-5.5-high); wrong/same-family handlers, mismatched payload family, unsupported runtime family, missing runtime supply, and missing handler availability all produce typed operational failures without silent substitution."
-  },
-  {
-   "name": "status-report-renderer-round-trips-through-checker",
-   "type": "positive",
-   "evidence_class": "deterministic",
-   "mocked": true,
-   "timeout_seconds": 120,
-   "command": [
-    "uv",
-    "run",
-    "--with",
-    "pydantic",
-    "python3",
-    "../evals/status_report_renderer_case.py",
-    "/tmp/shame-renderer-case.json"
-   ],
-   "expected": {
-    "exit_code": 0,
-    "artifacts": [
-     {
-      "path": "/tmp/shame-renderer-case.json",
-      "json_pointer": "/passed",
-      "equals": true
-     }
-    ]
-   },
-   "proves": "The Status Report is deterministically rendered from validated pi.agent_status.v1 JSON (never hand-authored prose): render -> re-extract fenced json -> re-validate preserves state/goal/not_done.next_command anchors."
-  }
- ]
+  "capability_claims": [
+    {
+      "id": "shame.advisory_question",
+      "description": "An advisory question mentioning skills produces one answer without tool calls or report retries.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      },
+      "claim_semantics": "control_flow"
+    },
+    {
+      "id": "shame.single_format_correction",
+      "description": "A corrupted final report is corrected once without restarting task work.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
+      "id": "shame.work_continues_to_artifact",
+      "description": "Six identical continuation reports lead to a completed, independently checked artifact.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      },
+      "claim_semantics": "control_flow"
+    },
+    {
+      "id": "shame.invalid_proof_recovery",
+      "description": "An unresolved proof reference is rejected, recorded, and corrected using existing evidence.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "value_bearing",
+      "domain_profile": "json-scalar-v1",
+      "derived_from": {
+        "source": "skills/shame/SKILL.md#Retained-validation",
+        "requirement": "For state=done, a plain-text proof file backs ONLY verified items shaped {\"command\": \"read <proof-file>\", \"result\": \"<substring of that file>\"}; each verified pair must be backed by one proof record; unrelated text matches across files do not authorize completion."
+      }
+    },
+    {
+      "id": "shame.duplicate_key_recovery",
+      "description": "Duplicate status keys are rejected through the actual Pi conversation path.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
+      "id": "shame.missing_verification_recovery",
+      "description": "Missing done verification is rejected and corrected without running new tools.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
+      "id": "shame.data_not_prose_decides",
+      "description": "Misleading prose cannot override valid status data in the real renderer.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
+      "id": "shame.question_turn_answer",
+      "description": "A terminal status report for a human question must carry a first-class answer and render it before status metadata.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "human_perceptual"
+    },
+    {
+      "id": "shame.immutable_goal_headline",
+      "description": "Immutable-goal reports must put COMPLETE, NOT_COMPLETE, or NEEDS_HUMAN in the first-class answer headline so the result cannot be buried under proof metadata.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "human_perceptual"
+    },
+    {
+      "id": "shame.collab_peer_acceptance",
+      "description": "Collaborator-mediated closure requires a typed peer acceptance receipt, not implementer self-closure.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
+      "id": "shame.task_scope_and_acceptance",
+      "description": "Unapproved tool calls cannot write artifacts or add checks; accepted work stays terminal.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "control_flow"
+    },
+    {
+      "id": "shame.feedback_and_session_isolation",
+      "description": "Separate real sessions retain isolated failure evidence; real captured feedback reaches Memory and is independently recalled.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "other"
+    },
+    {
+      "id": "shame.audio_install_preserves_reference",
+      "description": "The real audio installer preserves approved source bytes and refuses a repeated-loop replacement.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "value_bearing",
+      "domain_profile": "json-scalar-v1",
+      "derived_from": {
+        "source": "skills/shame/SKILL.md#Failure-history-versus-human-labels",
+        "requirement": "Audio policy: one short Chatterbox word, no bell or loop; installer bounds are 0.9-2.5 seconds and at least 0.45 seconds active speech."
+      }
+    },
+    {
+      "id": "shame.escalation_ladder_data_contract",
+      "description": "Escalation is data-gated and live-receipt-gated: real Brave results precede the configured first Ask API handler, and WebGPT requires typed brave-search plus Ask parent refs before terminal acceptance.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
+      "id": "shame.done_receipt_binding",
+      "description": "Done status requires each verified claim to be backed by one valid proof record; unrelated text, malformed JSON, unknown receipt schemas, and failed receipts cannot authorize completion.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "value_bearing",
+      "domain_profile": "json-scalar-v1",
+      "derived_from": {
+        "source": "skills/shame/SKILL.md#pi.agent_status.v1",
+        "requirement": "For done, proofs must be non-empty local files; JSON proofs must declare a supported receipt schema and pass that schema's checks, including ticket.closure_receipt.v1 for ticket closure."
+      }
+    },
+    {
+      "id": "shame.status_preflight_parity",
+      "description": "Read-only shame preflight uses the same stop-boundary checker and matches reason codes before terminal retries are consumed.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
+      "id": "shame.typed_recovery_routing",
+      "description": "Shame recovery separates format repair, existing-proof substitution, missing evidence, validator failure, unresolved work, and accepted-task cases with typed decisions.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "control_flow"
+    },
+    {
+      "id": "shame.self_contained_proof_repair",
+      "description": "Shame retry packets are typed, byte-bounded, tool-free for format repair, and carry an admitted evidence snapshot with proof schema and digest.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
+      "id": "shame.ticket_close_final_zero_retry",
+      "description": "A typed ticket closure receipt can authorize a final shame done status while raw GitHub issue JSON cannot.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "value_bearing",
+      "domain_profile": "json-scalar-v1",
+      "derived_from": {
+        "source": "skills/shame/SKILL.md#Stop-boundary-behavior",
+        "requirement": "A failed correction cannot queue another; retry exhaustion records report_retry_exhausted and writes a spiral ticket request instead of another retry."
+      }
+    },
+    {
+      "id": "shame.spiral_guard",
+      "description": "The stop-boundary checker classifies the 2026-09-08 spiral candidate shapes correctly and accepts the documented compliant shape, so an agent following the compliance recipe cannot spiral.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
+      "id": "shame.spiral_ticket_request",
+      "description": "Shame retry exhaustion is retained as a distinct failure event and converted into a ticket request for agent-work project-watchdog repair routing.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "control_flow"
+    },
+    {
+      "id": "shame.concrete_status_visibility",
+      "description": "Schema-passing status reports preserve concrete operational anchors in accepted data and compact rejection/retry packets hash raw diagnostics.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "human_perceptual"
+    }
+  ],
+  "cases": [
+    {
+      "name": "advisory-question",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "shame.advisory_question"
+      ],
+      "command": [
+        "env",
+        "PI_PROVIDER=zai",
+        "PI_MODEL=glm-5.3",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-conversation-guard-live.py",
+        "advisory"
+      ],
+      "timeout_seconds": 210,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"assistant_responses\": 1",
+          "\"rejections\": 0",
+          "\"tool_calls\": 0"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "provider_error"
+        ]
+      }
+    },
+    {
+      "name": "single-format-correction",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "shame.single_format_correction"
+      ],
+      "command": [
+        "env",
+        "PI_PROVIDER=zai",
+        "PI_MODEL=glm-5.3",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-stop-boundary-live.py",
+        "--missing-footer",
+        "--normal"
+      ],
+      "timeout_seconds": 420,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"report_retries\": 0",
+          "\"guard_substitutions\": 1",
+          "\"sum_readback_correct\": true",
+          "\"failure_history_verified\": true"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "provider_error"
+        ]
+      }
+    },
+    {
+      "name": "work-continues-to-artifact",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "shame.work_continues_to_artifact"
+      ],
+      "command": [
+        "env",
+        "PI_PROVIDER=zai",
+        "PI_MODEL=glm-5.3",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-stop-boundary-live.py",
+        "--continuations",
+        "--repeat-status"
+      ],
+      "timeout_seconds": 420,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"continuations\": 6",
+          "\"sum_readback_correct\": true",
+          "\"report_retries\": 0"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "provider_error"
+        ]
+      }
+    },
+    {
+      "name": "invalid-proof-recovery",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "shame.invalid_proof_recovery"
+      ],
+      "command": [
+        "env",
+        "PI_PROVIDER=zai",
+        "PI_MODEL=glm-5.3",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-stop-boundary-live.py",
+        "--proof-repair"
+      ],
+      "timeout_seconds": 420,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"failure_history_verified\": true",
+          "\"report_retries\": 1",
+          "\"sum_readback_correct\": true"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "provider_error"
+        ]
+      }
+    },
+    {
+      "name": "duplicate-key-recovery",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "shame.duplicate_key_recovery"
+      ],
+      "command": [
+        "env",
+        "PI_PROVIDER=zai",
+        "PI_MODEL=glm-5.3",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-stop-boundary-live.py",
+        "--duplicate-key"
+      ],
+      "timeout_seconds": 420,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"failure_history_verified\": true",
+          "\"report_retries\": 1",
+          "\"sum_readback_correct\": true"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "provider_error"
+        ]
+      }
+    },
+    {
+      "name": "missing-verification-recovery",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "shame.missing_verification_recovery"
+      ],
+      "command": [
+        "env",
+        "PI_PROVIDER=zai",
+        "PI_MODEL=glm-5.3",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-stop-boundary-live.py",
+        "--missing-verified"
+      ],
+      "timeout_seconds": 420,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"failure_history_verified\": true",
+          "\"report_retries\": 1",
+          "\"sum_readback_correct\": true"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "provider_error"
+        ]
+      }
+    },
+    {
+      "name": "data-not-prose-decides",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "shame.data_not_prose_decides"
+      ],
+      "command": [
+        "env",
+        "PI_PROVIDER=zai",
+        "PI_MODEL=glm-5.3",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-stop-boundary-live.py",
+        "--misleading-prose"
+      ],
+      "timeout_seconds": 420,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"report_retries\": 0",
+          "\"sum_readback_correct\": true",
+          "\"done_rendered\": true"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "provider_error"
+        ]
+      }
+    },
+    {
+      "name": "question-turn-requires-answer",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "shame.question_turn_answer"
+      ],
+      "command": [
+        "env",
+        "PI_PROVIDER=zai",
+        "PI_MODEL=glm-5.3",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-question-answer-live.py"
+      ],
+      "timeout_seconds": 420,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_LIVE_QUESTION_TURN_REQUIRES_ANSWER",
+          "\"missing_answer_rejected\": true",
+          "\"failure_history_verified\": true"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "provider_error"
+        ]
+      }
+    },
+    {
+      "name": "immutable-goal-headline-enforced",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "shame.immutable_goal_headline"
+      ],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-immutable-goal-headline.py"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_IMMUTABLE_GOAL_HEADLINE_ENFORCED",
+          "vague_answer_headline_repaired",
+          "\"COMPLETE\"",
+          "\"NOT_COMPLETE\"",
+          "\"NEEDS_HUMAN\""
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "provider_error"
+        ]
+      }
+    },
+    {
+      "name": "collab-requires-peer-acceptance",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.collab_peer_acceptance"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--with",
+        "pydantic",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-collab-acceptance.py"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_COLLAB_REQUIRES_VALIDATED_JSON_BOUNDARY",
+          "\"prose_rejected\": true",
+          "\"question_validated\": true",
+          "\"answer_not_allowed_rejected\": true",
+          "\"exchange_validated\": true",
+          "\"question_id_mismatch_rejected\": true",
+          "\"allowed_answers_mismatch_rejected\": true",
+          "\"exchange_mismatch_rejected\": true",
+          "\"missing_acceptance_rejected\": true",
+          "\"self_acceptance_rejected\": true",
+          "\"status_proof_checked_known_receipt\": true",
+          "\"envelope_compatible\": true"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "provider_error"
+        ]
+      }
+    },
+    {
+      "name": "task-scope-and-acceptance",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "shame.task_scope_and_acceptance"
+      ],
+      "command": [
+        "env",
+        "PI_PROVIDER=zai",
+        "PI_MODEL=glm-5.3",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-task-budget-live.py",
+        "--scope-attack"
+      ],
+      "timeout_seconds": 210,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"scope_attack_blocked\": true",
+          "\"approved_check_runs\": 1",
+          "\"post_acceptance_tool_calls\": 0"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "provider_error"
+        ]
+      }
+    },
+    {
+      "name": "feedback-and-session-isolation",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "shame.feedback_and_session_isolation"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--no-project",
+        "--with",
+        "httpx==0.28.1",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-feedback-live.py"
+      ],
+      "timeout_seconds": 440,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"sessions_isolated\": true",
+          "\"memory_independently_read_back\": true",
+          "\"unsafe_collection_refused\": true"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "provider_error"
+        ]
+      }
+    },
+    {
+      "name": "audio-install-preserves-reference",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "shame.audio_install_preserves_reference"
+      ],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-audio-live.py"
+      ],
+      "timeout_seconds": 90,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"installed_bytes_verified\": true",
+          "\"loop_rejected\": true",
+          "\"good_install_preserved\": true"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "provider_error"
+        ]
+      }
+    },
+    {
+      "name": "escalation-parent-lineage",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.escalation_ladder_data_contract"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--with",
+        "pydantic",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-escalation-ladder.py"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "lazy_report_shame.escalation_ladder_eval.v1",
+          "needs_agent resolves parent_ref receipts before accepting brave-search lineage",
+          "declared parent_ref producer/schema strings are not authority",
+          "parent_ref producer mismatches are rejected",
+          "parent_ref receipt_id mismatches are rejected",
+          "parent_ref digest mismatches are rejected",
+          "parent_ref goal_hash mismatches are rejected",
+          "resolved brave-search parents must use brave_search.web_results.v1",
+          "resolved ask parents must use tau.agent_handoff.v1",
+          "escalation commands require an active goal_hash",
+          "needs_brave_search compiles every requested Brave query",
+          "needs_agent rejects same-family first Ask handler",
+          "needs_webgpt requires a resolved Ask receipt descended from the Brave evidence",
+          "needs_webgpt preserves typed parent_refs as structured attachment data, not prompt prose"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "AssertionError"
+        ]
+      }
+    },
+    {
+      "name": "live-escalation-receipt-chain",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "shame.escalation_ladder_data_contract"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--with",
+        "pydantic",
+        "python3",
+        "-c",
+        "from __future__ import annotations\nimport hashlib, json, os, subprocess, sys, uuid\nfrom datetime import datetime, timezone\nfrom pathlib import Path\nfrom typing import Any\nROOT = Path('/home/graham/workspace/experiments/agent-skills')\nRUN_ID = 'live-' + uuid.uuid4().hex[:10]\nRUN_ROOT = ROOT / '.artifacts' / 'shame' / 'live-escalation-receipt-chain-runs' / RUN_ID\nRUN_ROOT.mkdir(parents=True, exist_ok=True)\nRESULT_PATH = ROOT / '.artifacts' / 'shame' / 'live-escalation-receipt-chain-result.json'\nGOAL_HASH = 'sha256:' + hashlib.sha256(('shame live escalation receipt chain ' + RUN_ID).encode()).hexdigest()\nSTATUS_SCHEMA = ROOT / 'skills' / 'shame' / 'scripts' / 'agent_status_schema.py'\nCOMPILER = ROOT / 'extensions' / 'pi' / 'lazy-report-shame-shame-shame' / 'compile-status-command.mjs'\nASK_RUN = ROOT / 'skills' / 'ask' / 'run.sh'\nBRAVE_RUN = ROOT / 'skills' / 'brave-search' / 'run.sh'\nBROWSER_PREFLIGHT = ROOT / 'skills' / 'ask' / 'scripts' / 'browser_prompt_preflight.py'\nCHAIN_ENV = {'LRSSS_PROJECT_AGENT_FAMILY': 'openai', 'LRSSS_AVAILABLE_ASK_HANDLERS': json.dumps(['claude-fable-low', 'gpt-5.5-high'])}\n\ndef write_json(path: Path, payload: dict[str, Any]) -> None:\n    path.parent.mkdir(parents=True, exist_ok=True)\n    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + '\\n', encoding='utf-8')\n\ndef sha256_file(path: Path) -> str:\n    return 'sha256:' + hashlib.sha256(path.read_bytes()).hexdigest()\n\ndef fail(message: str, evidence: Any = None) -> None:\n    detail = {'message': message, 'evidence': evidence}\n    write_json(RUN_ROOT / 'failure.json', {'schema': 'lazy_report_shame.live_escalation_receipt_chain.v1', 'status': 'FAIL', 'detail': detail})\n    raise SystemExit(json.dumps(detail, indent=2, sort_keys=True))\n\ndef require(condition: bool, message: str, evidence: Any = None) -> None:\n    if not condition:\n        fail(message, evidence)\n\ndef run_cmd(cmd: list[str], *, cwd: Path = ROOT, timeout: int = 120, stdin: str | None = None, env_extra: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:\n    env = os.environ.copy()\n    if env_extra:\n        env.update(env_extra)\n    proc = subprocess.run(cmd, cwd=str(cwd), input=stdin, text=True, capture_output=True, timeout=timeout, env=env, check=False)\n    return proc\n\ndef parse_first_json(text: str) -> Any:\n    decoder = json.JSONDecoder()\n    for idx, char in enumerate(text):\n        if char not in '[{':\n            continue\n        try:\n            value, _end = decoder.raw_decode(text[idx:])\n        except json.JSONDecodeError:\n            continue\n        return value\n    fail('no JSON object found in command output', text[-1000:])\n\ndef validate_status(payload: dict[str, Any]) -> dict[str, Any]:\n    proc = run_cmd(['uv', 'run', '--with', 'pydantic', 'python3', str(STATUS_SCHEMA), 'validate', '-'], stdin=json.dumps(payload), env_extra=CHAIN_ENV)\n    out = parse_first_json(proc.stdout)\n    out['exit_code'] = proc.returncode\n    return out\n\ndef compile_status(payload: dict[str, Any]) -> dict[str, Any]:\n    proc = run_cmd(['node', str(COMPILER)], stdin=json.dumps(payload), env_extra=CHAIN_ENV)\n    require(proc.returncode == 0, 'status command compiler failed', {'stderr': proc.stderr[-1000:], 'stdout': proc.stdout[-1000:]})\n    out = parse_first_json(proc.stdout)\n    out['exit_code'] = proc.returncode\n    return out\n\ndef parent_for_envelope(ref: dict[str, str]) -> dict[str, str]:\n    return {k: ref[k] for k in ('receipt_id', 'expected_schema', 'expected_producer', 'digest')}\n\ndef envelope(receipt_id: str, producer: str, payload_schema: str, payload: dict[str, Any], parent_refs: list[dict[str, str]] | None = None) -> dict[str, str]:\n    doc = {'schema': 'pi.receipt_envelope.v1', 'receipt_id': receipt_id, 'payload_schema': payload_schema, 'producer': producer, 'emitted_at': datetime.now(timezone.utc).isoformat(), 'goal_hash': GOAL_HASH, 'parent_refs': parent_refs or [], 'payload': payload}\n    path = RUN_ROOT / f'{receipt_id}.envelope.json'\n    write_json(path, doc)\n    return {'receipt_id': receipt_id, 'receipt_path': str(path), 'expected_schema': payload_schema, 'expected_producer': producer, 'digest': sha256_file(path)}\n\ndef latest_run_dir(output_root: Path) -> Path:\n    dirs = [p for p in output_root.iterdir() if p.is_dir()]\n    require(bool(dirs), 'Ask output root has no run directory', str(output_root))\n    return max(dirs, key=lambda p: p.stat().st_mtime)\n\ndef run_ask(handler: str, token: str, output_root: Path, extra: list[str] | None = None, timeout: int = 1200) -> dict[str, Any]:\n    cmd = [str(ASK_RUN), 'tau-dag', f'Reply with exactly: {token}', '--repo', 'local/agent-skills', '--target', 'shame-live-escalation-receipt-chain', '--immutable-goal', 'Return the requested token or a typed blocker.', '--handler', handler, '--execute', '--json', '--run-output-root', str(output_root)]\n    if extra:\n        cmd.extend(extra)\n    proc = run_cmd(cmd, cwd=ASK_RUN.parent, timeout=timeout)\n    require(proc.returncode == 0, f'Ask {handler} run failed', {'stderr': proc.stderr[-2000:], 'stdout': proc.stdout[-2000:]})\n    payload = parse_first_json(proc.stdout)\n    run_dir = Path(str(((payload.get('bundle') or {}).get('run_dir')) or latest_run_dir(output_root)))\n    node_dir = run_dir / 'node-artifacts' / ('handler-' + handler.replace('.', '-'))\n    receipt_path = node_dir / 'node-receipt.json'\n    response_path = node_dir / 'response.md'\n    handoff_path = node_dir / 'handoff.json'\n    require(receipt_path.is_file(), f'missing {handler} node receipt', str(receipt_path))\n    require(response_path.is_file(), f'missing {handler} response', str(response_path))\n    require(handoff_path.is_file(), f'missing {handler} handoff', str(handoff_path))\n    receipt = json.loads(receipt_path.read_text(encoding='utf-8'))\n    response = response_path.read_text(encoding='utf-8', errors='replace')\n    handoff = json.loads(handoff_path.read_text(encoding='utf-8'))\n    require(payload.get('status') == 'PASS' and payload.get('ok') is True, f'Ask {handler} CLI result not PASS', payload.get('status'))\n    require(receipt.get('schema') == 'ask.tau_dag_handler_receipt.v1' and receipt.get('status') == 'PASS', f'Ask {handler} node receipt not PASS', receipt)\n    require(receipt.get('live') is True and receipt.get('mocked') is False and receipt.get('provider_live') is True, f'Ask {handler} receipt is not live provider evidence', receipt)\n    require(token in response, f'Ask {handler} response missing token', response[-500:])\n    require(handoff.get('schema') == 'tau.agent_handoff.v1' and (handoff.get('result') or {}).get('status') == 'PASS', f'Ask {handler} handoff not PASS', handoff)\n    return {'cli': payload, 'run_dir': str(run_dir), 'node_dir': str(node_dir), 'receipt_path': str(receipt_path), 'response_path': str(response_path), 'handoff_path': str(handoff_path), 'receipt': receipt, 'handoff': handoff, 'response_chars': len(response)}\n\nbrave_query = 'OpenAI agentic evaluations live receipt chain ' + RUN_ID\nbrave_proc = run_cmd([str(BRAVE_RUN), 'web', brave_query, '--count', '1'], timeout=90)\nrequire(brave_proc.returncode == 0, 'Brave web search command failed', {'stderr': brave_proc.stderr[-1000:], 'stdout': brave_proc.stdout[-1000:]})\nbrave_result = parse_first_json(brave_proc.stdout)\nbrave_raw_path = RUN_ROOT / 'brave-web-results.raw.json'\nwrite_json(brave_raw_path, brave_result)\nbrave_results = brave_result.get('results') or []\nrequire(brave_result.get('query') == brave_query and len(brave_results) >= 1 and str(brave_results[0].get('url', '')).startswith('http'), 'Brave web search did not return a live result', brave_result)\nbrave_ref = envelope('brave-' + RUN_ID, 'brave-search', 'brave_search.web_results.v1', {'schema': 'brave_search.web_results.v1', 'status': 'PASS', 'command': [str(BRAVE_RUN), 'web', brave_query, '--count', '1'], 'result_path': str(brave_raw_path), 'result_count': len(brave_results), 'first_url': brave_results[0].get('url'), 'raw_sha256': sha256_file(brave_raw_path)})\n\nneeds_agent_status = {'schema': 'pi.agent_status.v1', 'goal': 'retain live escalation receipt chain', 'goal_hash': GOAL_HASH, 'state': 'needs_agent', 'changed': ['scoped Shame eval catalog live escalation case'], 'needs_agent': {'project_agent_family': 'openai', 'handler': 'claude-fable-low', 'question': 'Use the configured first Ask API route.', 'parent_refs': [brave_ref]}}\nneeds_agent_validation = validate_status(needs_agent_status)\nrequire(needs_agent_validation.get('exit_code') == 0 and needs_agent_validation.get('valid') is True, 'needs_agent status did not validate after live Brave receipt', needs_agent_validation)\nneeds_agent_compiled = compile_status(needs_agent_status)\ncompiled_agent_command = needs_agent_compiled.get('command') or ''\nrequire('skills/ask/run.sh tau-dag' in compiled_agent_command and \"--handler 'claude-fable-low'\" in compiled_agent_command, 'needs_agent did not compile to first Ask API handler', compiled_agent_command)\n\nask_api = run_ask('claude-fable-low', 'ASK-FIRST-' + RUN_ID.upper(), RUN_ROOT / 'ask-api', ['--allow-provider-calls', '--require-provider-calls'], timeout=900)\nask_transport = (((ask_api['receipt'].get('provider_receipt') or {}).get('transport')))\nrequire(ask_transport == 'scillm.chat', 'first Ask API route did not use scillm.chat', ask_api['receipt'].get('provider_receipt'))\nask_handoff_payload = ask_api['handoff']\nask_ref = envelope('ask-first-' + RUN_ID, 'ask', 'tau.agent_handoff.v1', ask_handoff_payload, [parent_for_envelope(brave_ref)])\n\nneeds_webgpt_status = {'schema': 'pi.agent_status.v1', 'goal': 'retain live escalation receipt chain', 'goal_hash': GOAL_HASH, 'state': 'needs_webgpt', 'changed': ['scoped Shame eval catalog live escalation case'], 'needs_webgpt': {'question': 'Use the browser WebGPT route after Brave and Ask receipts.', 'parent_refs': [brave_ref, ask_ref]}}\nneeds_webgpt_validation = validate_status(needs_webgpt_status)\nrequire(needs_webgpt_validation.get('exit_code') == 0 and needs_webgpt_validation.get('valid') is True, 'needs_webgpt status did not validate after typed Brave and Ask parents', needs_webgpt_validation)\nneeds_webgpt_compiled = compile_status(needs_webgpt_status)\ncompiled_webgpt_command = needs_webgpt_compiled.get('command') or ''\nrequire('skills/ask/run.sh tau-dag' in compiled_webgpt_command and \"--handler 'webgpt'\" in compiled_webgpt_command and '--attach-file' in compiled_webgpt_command, 'needs_webgpt did not compile to WebGPT with attached typed parents', compiled_webgpt_command)\n\nwebgpt_prompt = 'Reply with exactly: WEBGPT-' + RUN_ID.upper()\npreflight = run_cmd(['python3', str(BROWSER_PREFLIGHT), '--prompt', webgpt_prompt], timeout=30)\nrequire(preflight.returncode == 0, 'WebGPT prompt preflight failed', {'stderr': preflight.stderr, 'stdout': preflight.stdout})\nwebgpt = run_ask('webgpt', 'WEBGPT-' + RUN_ID.upper(), RUN_ROOT / 'webgpt', ['--browser-tab-lifecycle', 'fresh-temporary', '--poll-timeout-seconds', '900', '--browser-lock-timeout', '900'], timeout=1200)\nwebgpt_provider = webgpt['receipt'].get('provider_receipt') or {}\nrequire(webgpt_provider.get('transport') == 'webgpt.submit' and webgpt_provider.get('provider_transport') == '$surf', 'WebGPT route did not use Surf browser transport', webgpt_provider)\nprovider_result_path = Path(str(webgpt_provider.get('surf_provider_result_path') or ''))\nrequire(provider_result_path.is_file(), 'WebGPT provider result path missing', str(provider_result_path))\nprovider_result = json.loads(provider_result_path.read_text(encoding='utf-8'))\nrequire(provider_result.get('schema') == 'surf.provider_result.v1' and provider_result.get('success') is True and provider_result.get('proof_status') == 'response_proven', 'WebGPT Surf provider result did not prove response', provider_result)\nwebgpt_ref = envelope('webgpt-' + RUN_ID, 'ask', 'tau.agent_handoff.v1', webgpt['handoff'], [parent_for_envelope(brave_ref), parent_for_envelope(ask_ref)])\n\nterminal_payload = {'schema': 'lazy_report_shame.live_escalation_receipt_chain.v1', 'status': 'terminal_acceptance_pass', 'live': True, 'mocked': False, 'verified_command': 'live-escalation-receipt-chain terminal acceptance', 'verified_result': 'terminal_acceptance_pass', 'run_id': RUN_ID, 'goal_hash': GOAL_HASH, 'brave_parent_ref': brave_ref, 'ask_parent_ref': ask_ref, 'webgpt_receipt_ref': webgpt_ref, 'ask_handler': 'claude-fable-low', 'webgpt_transport': 'webgpt.submit'}\nterminal_ref = envelope('terminal-acceptance-' + RUN_ID, 'shame', 'lazy_report_shame.live_escalation_receipt_chain.v1', terminal_payload, [parent_for_envelope(brave_ref), parent_for_envelope(ask_ref), parent_for_envelope(webgpt_ref)])\ndone_status = {'schema': 'pi.agent_status.v1', 'goal': 'retain live escalation receipt chain', 'goal_hash': GOAL_HASH, 'state': 'done', 'changed': ['scoped Shame eval catalog live escalation case'], 'verified': [{'command': 'live-escalation-receipt-chain terminal acceptance', 'result': 'terminal_acceptance_pass'}], 'proof': [terminal_ref['receipt_path']], 'receipts': [brave_ref['receipt_path'], ask_ref['receipt_path'], webgpt_ref['receipt_path'], terminal_ref['receipt_path']], 'nodes': [{'id': 'brave-search', 'status': 'PASS', 'receipt': brave_ref['receipt_path']}, {'id': 'ask-api-claude-fable-low', 'status': 'PASS', 'receipt': ask_ref['receipt_path']}, {'id': 'ask-webgpt-browser', 'status': 'PASS', 'receipt': webgpt_ref['receipt_path']}]}\nterminal_validation = validate_status(done_status)\nrequire(terminal_validation.get('exit_code') == 0 and terminal_validation.get('valid') is True, 'terminal done status did not validate against receipt readback', terminal_validation)\n\nresult = {'schema': 'lazy_report_shame.live_escalation_receipt_chain.v1', 'status': 'PASS', 'live': True, 'mocked': False, 'run_id': RUN_ID, 'goal_hash': GOAL_HASH, 'checked': ['real Brave web search returned a result', 'needs_agent accepted typed Brave parent and compiled to claude-fable-low', 'configured first Ask API route executed with provider_live true', 'needs_webgpt accepted Brave plus Ask typed lineage and compiled to WebGPT browser route with attachment', 'WebGPT executed through Surf browser transport and proved response', 'terminal done status read back a typed acceptance envelope'], 'brave': {'status': 'PASS', 'raw_result_path': str(brave_raw_path), 'receipt_path': brave_ref['receipt_path'], 'result_count': len(brave_results), 'first_url': brave_results[0].get('url')}, 'ask_api': {'status': 'PASS', 'handler': 'claude-fable-low', 'transport': ask_transport, 'provider_live': True, 'receipt_path': ask_api['receipt_path'], 'response_path': ask_api['response_path'], 'handoff_path': ask_api['handoff_path'], 'run_dir': ask_api['run_dir']}, 'lineage': {'needs_agent_validation': needs_agent_validation, 'needs_agent_command': compiled_agent_command, 'needs_webgpt_validation': needs_webgpt_validation, 'needs_webgpt_command': compiled_webgpt_command, 'brave_parent_ref': brave_ref, 'ask_parent_ref': ask_ref}, 'webgpt_browser': {'status': 'PASS', 'handler': 'webgpt', 'transport': webgpt_provider.get('transport'), 'provider_transport': webgpt_provider.get('provider_transport'), 'provider_live': True, 'receipt_path': webgpt['receipt_path'], 'response_path': webgpt['response_path'], 'handoff_path': webgpt['handoff_path'], 'provider_result_path': str(provider_result_path), 'run_dir': webgpt['run_dir']}, 'terminal_acceptance': {'status': 'PASS', 'receipt_path': terminal_ref['receipt_path'], 'validation': terminal_validation}}\nwrite_json(RESULT_PATH, result)\nprint(json.dumps({'schema': result['schema'], 'status': result['status'], 'live': result['live'], 'mocked': result['mocked'], 'result_path': str(RESULT_PATH), 'checked': result['checked']}, indent=2, sort_keys=True))"
+      ],
+      "timeout_seconds": 1500,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "lazy_report_shame.live_escalation_receipt_chain.v1",
+          "real Brave web search returned a result",
+          "configured first Ask API route executed with provider_live true",
+          "WebGPT executed through Surf browser transport and proved response",
+          "terminal done status read back a typed acceptance envelope"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "AssertionError"
+        ],
+        "artifacts": [
+          {
+            "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
+            "json_pointer": "/schema",
+            "equals": "lazy_report_shame.live_escalation_receipt_chain.v1"
+          },
+          {
+            "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
+            "json_pointer": "/live",
+            "equals": true
+          },
+          {
+            "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          },
+          {
+            "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
+            "json_pointer": "/brave/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
+            "json_pointer": "/ask_api/handler",
+            "equals": "claude-fable-low"
+          },
+          {
+            "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
+            "json_pointer": "/ask_api/provider_live",
+            "equals": true
+          },
+          {
+            "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
+            "json_pointer": "/webgpt_browser/transport",
+            "equals": "webgpt.submit"
+          },
+          {
+            "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
+            "json_pointer": "/webgpt_browser/provider_live",
+            "equals": true
+          },
+          {
+            "path": "/home/graham/workspace/experiments/agent-skills/.artifacts/shame/live-escalation-receipt-chain-result.json",
+            "json_pointer": "/terminal_acceptance/status",
+            "equals": "PASS"
+          }
+        ]
+      }
+    },
+    {
+      "name": "done-receipt-binding",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.done_receipt_binding"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--with",
+        "pydantic",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-done-receipt-binding.py"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "lazy_report_shame.done_receipt_binding_eval.v1",
+          "unrelated text cannot authorize done",
+          "malformed JSON proof is rejected",
+          "unknown JSON proof schema is rejected",
+          "READY agentic eval receipt can authorize a matching verified item",
+          "ticket closure receipt can authorize a close readback"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "AssertionError"
+        ]
+      }
+    },
+    {
+      "name": "status-preflight-parity",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.status_preflight_parity"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--with",
+        "pydantic",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-status-preflight.py"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "lazy_report_shame.status_preflight_parity_eval.v1",
+          "preflight uses the stop-boundary checker",
+          "mutated proof bytes reject before stop with matching reason codes"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "AssertionError"
+        ]
+      }
+    },
+    {
+      "name": "typed-recovery-routing",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.typed_recovery_routing"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--with",
+        "pydantic",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-recovery-routing.py"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "lazy_report_shame.recovery_routing_eval.v1",
+          "missing evidence continues execution instead of format repair",
+          "accepted task does not reopen execution",
+          "validator failure is explicit infrastructure recovery"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "AssertionError"
+        ]
+      }
+    },
+    {
+      "name": "self-contained-proof-repair",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.self_contained_proof_repair"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--with",
+        "pydantic",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-retry-packet.py"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "lazy_report_shame.retry_packet_eval.v1",
+          "retry packet is typed and self-contained",
+          "format-only retry allows no tools",
+          "retry packet is byte-bounded"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "AssertionError"
+        ]
+      }
+    },
+    {
+      "name": "ticket-close-final-zero-retry",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.ticket_close_final_zero_retry"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--with",
+        "pydantic",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-ticket-close-final.py"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "lazy_report_shame.ticket_close_final_eval.v1",
+          "typed ticket closure receipt authorizes final done status",
+          "raw issue JSON does not authorize done status"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "AssertionError"
+        ]
+      }
+    },
+    {
+      "name": "spiral-prose-status-rejected",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "shame.spiral_guard"
+      ],
+      "command": [
+        "bash",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-spiral-regression.sh",
+        "prose-list"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "missing_agent_status_json",
+          "SPIRAL_GUARD_OK"
+        ],
+        "stdout_excludes": [
+          "Traceback"
+        ]
+      }
+    },
+    {
+      "name": "spiral-unbacked-verified-rejected",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "shame.spiral_guard"
+      ],
+      "command": [
+        "bash",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-spiral-regression.sh",
+        "unbacked-verified"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "verified_not_backed_by_proof",
+          "SPIRAL_GUARD_OK"
+        ],
+        "stdout_excludes": [
+          "Traceback"
+        ]
+      }
+    },
+    {
+      "name": "spiral-compliant-shape-accepted",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "shame.spiral_guard"
+      ],
+      "command": [
+        "bash",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-spiral-regression.sh",
+        "compliant"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "valid_agent_status_json",
+          "SPIRAL_GUARD_OK"
+        ],
+        "stdout_excludes": [
+          "Traceback"
+        ]
+      }
+    },
+    {
+      "name": "spiral-ticket-request",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.spiral_ticket_request"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--with",
+        "pydantic",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-spiral-ticket-request.py"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "lazy_report_shame.spiral_ticket_request_eval.v1",
+          "ticket command creates an agent-work maintenance ticket",
+          "project-watchdog route is ticket_repair"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "AssertionError"
+        ]
+      }
+    },
+    {
+      "name": "format-only-retry-contract",
+      "type": "adversarial",
+      "command": [
+        "uv",
+        "run",
+        "--with",
+        "pydantic",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-format-only-retry-contract.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "lazy_report_shame.format_only_retry_contract_eval.v1",
+          "PASS",
+          "format-only retry rejects lazy_report_shame.rejection_notice.v1"
+        ]
+      }
+    },
+    {
+      "name": "vague-status-report-concrete-anchors",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.concrete_status_visibility"
+      ],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-vague-status-report.py"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"PASS\"",
+          "\"lazy_report_shame.vague_status_eval.v1\""
+        ],
+        "stdout_excludes": [
+          "Traceback"
+        ]
+      }
+    },
+    {
+      "name": "first-ask-runtime-route",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 180,
+      "command": [
+        "uv",
+        "run",
+        "--with",
+        "pydantic",
+        "python3",
+        "../evals/first_ask_route_case.py",
+        "/tmp/shame-first-ask-route.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/tmp/shame-first-ask-route.json",
+            "json_pointer": "/passed",
+            "equals": true
+          }
+        ]
+      },
+      "proves": "NeedsAgent is runtime-bound: the trusted runtime project-agent family (env-supplied, never agent-authored) selects exactly one first-ask handler (openai->claude-fable-low, claude->gpt-5.5-high); wrong/same-family handlers, mismatched payload family, unsupported runtime family, missing runtime supply, and missing handler availability all produce typed operational failures without silent substitution."
+    },
+    {
+      "name": "status-report-renderer-round-trips-through-checker",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--with",
+        "pydantic",
+        "python3",
+        "../evals/status_report_renderer_case.py",
+        "/tmp/shame-renderer-case.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/tmp/shame-renderer-case.json",
+            "json_pointer": "/passed",
+            "equals": true
+          }
+        ]
+      },
+      "proves": "The Status Report is deterministically rendered from validated pi.agent_status.v1 JSON (never hand-authored prose): render -> re-extract fenced json -> re-validate preserves state/goal/not_done.next_command anchors."
+    }
+  ]
 }

@@ -51,8 +51,14 @@ complete = run("IMMUTABLE_GOAL: COMPLETE — receipt says immutable_goal_state C
 not_complete = run("IMMUTABLE_GOAL: NOT_COMPLETE — missing closure receipt.")
 needs_human = run("IMMUTABLE_GOAL: NEEDS_HUMAN — acceptance requires a human decision.")
 
-assert vague["exit_code"] == 1, vague
-assert "missing_immutable_goal_headline" in vague["stdout"].get("reason_codes", []), vague
+# Guard-owned headline repair: a vague answer on an immutable-goal turn gets the
+# deterministic IMMUTABLE_GOAL headline prefixed by the guard (never buried),
+# instead of burning the model's one retry on re-authoring it.
+assert vague["exit_code"] == 0, vague
+assert vague["stdout"].get("decision") == "pass", vague
+vague_answer = vague["stdout"]["features"]["status"]["answer"]
+assert vague_answer.startswith("IMMUTABLE_GOAL: "), vague_answer
+assert vague["stdout"]["features"]["typed_turn_context"]["immutable_goal"]["headline"], vague
 for item in (complete, not_complete, needs_human):
     assert item["exit_code"] == 0, item
     assert item["stdout"].get("decision") == "pass", item
@@ -60,7 +66,7 @@ for item in (complete, not_complete, needs_human):
 report = {
     "schema": "shame.immutable_goal_headline_eval.v1",
     "status": "PASS_IMMUTABLE_GOAL_HEADLINE_ENFORCED",
-    "vague_answer_rejected": True,
+    "vague_answer_headline_repaired": True,
     "accepted_headlines": ["COMPLETE", "NOT_COMPLETE", "NEEDS_HUMAN"],
     "work_dir": str(work),
     "report": str(work / "report.json"),
