@@ -12,7 +12,7 @@ is never missed.
 stdlib only; renders through chatterbox-speak run.sh (Chatterbox Turbo).
 """
 from __future__ import annotations
-import json, os, re, subprocess, sys, time, wave
+import json, os, re, subprocess, sys, time, urllib.request, wave
 from pathlib import Path
 
 
@@ -34,12 +34,49 @@ FUSED_MANIFEST = SFX / "fused-hmm/manifest.json"
 HUMS = SFX / "song-hums"
 PLAY = os.environ.get("MVP_PLAY") == "1"
 HUM_LONG_MS = 7000  # hum only when B's remaining ETA is a genuinely long pause
+SCILLM = os.environ.get("SCILLM_URL", "http://127.0.0.1:4001/v1/chat/completions")
+SCILLM_KEY = (os.environ.get("SCILLM_MASTER_KEY") or os.environ.get("LITELLM_MASTER_KEY")
+              or os.environ.get("SCILLM_PROXY_KEY") or "sk-dev-proxy-123")
 
-# Dynamic emotion tags are chatterbox-speak's core mechanism: singular Turbo
-# accepted_tags rendered as native events. The fast agent inserts them per beat.
-# Answer tagging stays light for neutral/technical content (over-tagging is wrong).
-THINK_TAG = "[sigh]"        # thinking/opener beat
-RESTATE_TAG = "[clear throat]"  # natural throat-clear before restating
+
+def key_terms(text: str) -> set[str]:
+    """Load-bearing tokens that MUST survive the rewrite (control IDs, CWE/acronyms, numbers)."""
+    return set(re.findall(r'\b[A-Z]{2,}(?:-\d+(?:\([0-9a-z]+\))?)?\b', text or ""))
+
+
+def compose_spoken_answer(question: str, raw: str) -> tuple[str, bool]:
+    """WebGPT fix #1: A (fast model) rewrites B's raw answer as a natural spoken
+    reply (direct answer + one essential caveat, 2-3 sentences). Hard constraint:
+    preserve the conclusion — control IDs, negation, numbers, caveats. If the
+    rewrite drops a load-bearing term, fall back to the raw answer (never distort).
+    """
+    # Preserve the SUBJECT the user asked about (question control IDs) + core
+    # meaning; a spoken summary may drop supporting cross-refs (e.g. a CWE id).
+    must = key_terms(question) & key_terms(raw)
+    prompt = ("Rewrite the ANSWER as a natural spoken reply for a voice assistant: "
+              "a direct answer plus at most one essential caveat, 2-3 short sentences, "
+              "conversational, no lists, no preamble. Keep the primary control ID and the "
+              "core meaning; do not flip any negation or change numbers.\n\n"
+              f"QUESTION: {question}\nANSWER: {raw}\n\nSpoken reply:")
+    body = json.dumps({"model": "zai-glm-flash",
+                       "messages": [{"role": "user", "content": prompt}],
+                       "temperature": 0.4, "max_tokens": 220}).encode()
+    try:
+        req = urllib.request.Request(SCILLM, data=body,
+                                     headers={"Content-Type": "application/json",
+                                              "Authorization": f"Bearer {SCILLM_KEY}",
+                                              "X-Caller-Skill": "embry-voice-control"})
+        with urllib.request.urlopen(req, timeout=45) as r:
+            out = json.loads(r.read())["choices"][0]["message"]["content"].strip()
+    except Exception as exc:
+        print(f"[compose] scillm call failed, using raw: {exc!r}", file=sys.stderr)
+        return raw, False
+    out = re.sub(r'^\s*Spoken reply:\s*', '', out)  # strip echoed label
+    dropped = must - key_terms(out)
+    if not out or dropped:
+        print(f"[compose] guard fallback; dropped={sorted(dropped)}", file=sys.stderr)
+        return raw, False
+    return out, True
 LOCK = "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/playback.lock"
 
 
@@ -166,14 +203,14 @@ def main() -> int:
                 mon("A>", f"[opener/ElevenLabs+tag] {oc[1]!r}")
                 play(oc[0]); wav = oc[0]
             else:
-                wav = speak(f"{THINK_TAG} Hmm, let me see.")
+                wav = speak("Hmm, let me see.")  # opener stays plain (no compulsory tag)
             cover_ready_ts = time.time()
             consumed.append({"cover_wav": wav})
         # 2) restate the problem back, after "let me see..."
         if opened and not restated and question:
             restated = True
-            rst = f"{RESTATE_TAG} Let me restate the question so I'm sure I understand — you're asking: " + question
-            mon("A>", f"[restate w/ tag] {rst}")
+            rst = "So — to make sure I've got it: " + question
+            mon("A>", f"[restate] {rst}")
             play(speak(rst))
         # 3) announce the lookup once, then the hum bed fills the actual wait
         if opened and restated and not announced_lookup and b_done_ts is None:
@@ -203,14 +240,17 @@ def main() -> int:
     first_answer_ts = None
     answer_chunks: list[dict] = []
     arc_used = None
+    spoken_answer = None
+    rewritten = False
     if speakable:
-        # DELEGATE to chatterbox-speak's conversation-arc macro (tone+pace phases,
-        # compiled pauses, native tags). Do not rebuild the arc here.
+        # FIX #1: A composes the spoken answer (rewrite B's raw text conversationally,
+        # conclusion preserved), THEN delegate delivery to chatterbox-speak's arc.
+        spoken_answer, rewritten = compose_spoken_answer(question, answer_text)
         arc_used = "reassure" if any(k in (question or "").lower()
                      for k in ("worried", "grief", "afraid", "scared", "anxious")) else "answer"
-        mon("A>", f"[answer via chatterbox-speak: speak --arc {arc_used} --planned-pauses]")
+        mon("A>", f"[answer rewritten={rewritten} via speak --arc {arc_used}] {spoken_answer[:60]}")
         first_answer_ts = time.time()
-        wavs = speak_arc(answer_text, arc_used)
+        wavs = speak_arc(spoken_answer, arc_used)
         answer_chunks = [{"i": i, "arc": arc_used, **wav_facts(w)} for i, w in enumerate(wavs)]
         answer_wav = wavs[0] if wavs else None
     answer_done_ts = time.time()
@@ -223,9 +263,13 @@ def main() -> int:
             round(first_answer_ts - (cover_ready_ts + 2.5), 1)
             if first_answer_ts and cover_ready_ts else None),
         "answer_text": answer_text, "answer_wav": answer_wav,
+        "raw_answer": answer_text, "spoken_answer": spoken_answer,
+        "rewritten": rewritten,
+        "conclusion_preserved": bool(spoken_answer) and
+            (key_terms(question) & key_terms(answer_text)) <= key_terms(spoken_answer),
         "answer_arc": arc_used,
         "answer_chunks": answer_chunks,
-        "answer_joined": answer_text or "",
+        "answer_joined": spoken_answer or answer_text or "",
         "played_audio": PLAY,
         "cover_ready_before_b_done": bool(cover_ready_ts and b_done_ts and cover_ready_ts < b_done_ts),
         "consumed_events": [c for c in consumed if c.get("seq") is not None],

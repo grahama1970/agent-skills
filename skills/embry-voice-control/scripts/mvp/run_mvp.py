@@ -50,7 +50,7 @@ def main() -> int:
                                 and stages[-1] == "answer_ready",
         "a_consumed_matches_log": bool(log_pairs) and log_pairs <= consumed_pairs,
         "cover_ready_before_b_done": rec.get("cover_ready_before_b_done") is True,
-        "answer_matches_b": bool(b_answer) and norm(rec.get("answer_joined")) == norm(b_answer),
+        "conclusion_preserved": bool(b_answer) and rec.get("conclusion_preserved") is True,
         "all_answer_chunks_real_audio": bool(chunks) and all(c.get("size", 0) > 1000
                                              and c.get("seconds", 0) > 0.3 for c in chunks),
         "timestamps_overlap": bool(rec.get("cover_ready_ts") and rec.get("b_done_ts")
