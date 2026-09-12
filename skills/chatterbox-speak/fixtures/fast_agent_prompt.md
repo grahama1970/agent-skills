@@ -46,6 +46,25 @@ not handed a complexity number — you decide it:
 shape). The deterministic band/complexity in `conversation_arc` is only the
 fallback default if you don't label it.
 
+## Then: map the arc as context (before streaming beats)
+
+Once you've classified the level, **map out the arc** as a lightweight plan and
+keep it as your working context so your beats stay coherent. Emit it in the
+`chatterbox_speak.conversation_arc.v1` shape (the same object `conversation_arc.py`
+produces), so it renders through the existing table / phart-chart / SVG for human
+verification:
+
+```json
+{"schema":"chatterbox_speak.conversation_arc.v1","level":"complex",
+ "emotion":"grief","answer_arc":"reassure",
+ "planned_beats":[{"kind":"fused_hmm"},{"kind":"restate"},{"kind":"hum"},
+                  {"kind":"progress"},{"kind":"answer"}]}
+```
+
+This map is **context, not a frozen timeline** — revise it as B's stream changes
+the picture (longer ETA → add a hum beat; `answer_ready` → jump to the answer).
+The map keeps you consistent; B's live events keep you honest.
+
 ## What to generate, beat by beat
 
 Emit one short spoken beat at a time, as the stream arrives:
