@@ -113,8 +113,16 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
         result.declares_expectations = True
     profile_overrides = (profile or {}).get("expectation_overrides") or {}
     required_case_ids = (profile or {}).get("required_case_ids") or []
+    required_judges = (profile or {}).get("required_judges") or []
     seen_cases: set[str] = set()
     work = Path(tempfile.mkdtemp(prefix="invariant-campaign-"))
+    # The approved contract determines the required judge set: omitting a
+    # required judge must fail BEFORE any target execution (WebGPT review).
+    if "functional" in required_judges and not functional_judge:
+        result.failures.append({"case": None, "judged": False, "passed": False,
+                                "violations": ["required-judge-missing:functional:contract requires it and no --functional-judge was supplied"]})
+        result.passed = False
+        return result
     try:
         gen: Iterator[tuple] = _load_generator(generator)(str(work / "gen"), gen_params)
         for case in gen:

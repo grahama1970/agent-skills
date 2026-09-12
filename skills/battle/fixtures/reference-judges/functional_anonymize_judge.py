@@ -52,15 +52,16 @@ def _is_slot(scalar, value: str) -> bool:
 
 
 class _Comparator:
-    def __init__(self, values: list[str], types: list[str]):
+    def __init__(self, values: list[str], types: list[str], subjects: list[str]):
         self.values = sorted(values, key=len, reverse=True)
         self.types = types
+        self.subjects = subjects  # identity group per value (subject_id); aliases may converge
         self.bindings: dict[str, str] = {}
         self.violations: list[str] = []
 
     def bind(self, value: str, replacement, where: str) -> None:
-        if not isinstance(replacement, str) or not replacement:
-            self.violations.append(f"functional:{where}: empty or non-string replacement for a policy occurrence")
+        if not isinstance(replacement, str) or not replacement.strip():
+            self.violations.append(f"functional:{where}: empty, blank, or non-string replacement for a policy occurrence")
             return
         if value in replacement:
             self.violations.append(f"functional:{where}: replacement still contains the policy value")
@@ -72,12 +73,19 @@ class _Comparator:
         self.bindings[value] = replacement
 
     def check_coherence(self) -> None:
-        by_rep: dict[str, str] = {}
+        # Identity-group rule (brief: aliases of one identity may intentionally
+        # converge; distinct identity groups must not share a replacement).
+        by_rep: dict[str, tuple[str, str]] = {}  # replacement -> (value, subject)
         for value, rep in self.bindings.items():
+            idx = self.values.index(value)
+            raw_subject = self.subjects[idx] if idx < len(self.subjects) else ""
+            # Rules sharing a subject group may converge; rules with no identity
+            # info are distinct groups (fail-closed, per the brief).
+            subject = raw_subject or f"\x00distinct-{idx}"
             other = by_rep.get(rep)
-            if other is not None and other != value:
-                self.violations.append(f"functional:collapsed-identities: {other!r} and {value!r} share replacement {rep!r}")
-            by_rep[rep] = value
+            if other is not None and other[1] != subject:
+                self.violations.append(f"functional:collapsed-identities: {other[0]!r} (subject {other[1]!r}) and {value!r} (subject {subject!r}) share replacement {rep!r}")
+            by_rep[rep] = (value, subject)
 
     # -- text skeleton: literals preserved in order, gaps bound as slots.
     # Comparison is NFC-folded: the trial brief permits normalization, so a
@@ -245,7 +253,8 @@ def judge(target_dir, params):
     entries = policy.get("sensitive_values", [])
     values = [str(e["value"]) for e in entries]
     types = [str(e.get("type", "")) for e in entries]
-    cmp_ = _Comparator(values, types)
+    subjects = [str(e.get("subject_id", e.get("rule_id", ""))) for e in entries]
+    cmp_ = _Comparator(values, types, subjects)
 
     in_files = sorted(str(p.relative_to(inp)) for p in inp.rglob("*") if p.is_file())
     out_files = sorted(str(p.relative_to(out)) for p in out.rglob("*") if p.is_file())
@@ -273,6 +282,19 @@ def judge(target_dir, params):
         except Exception as exc:  # fail-closed: unreadable structure is a failure
             cmp_.violations.append(f"functional:{rel}: unreadable structure ({type(exc).__name__}: {exc})")
     cmp_.check_coherence()
+    # Minimal report contract: a successful release must ship a parseable
+    # report.json whose status is compatible with the observed run.
+    report = Path(target_dir) / "report.json"
+    if not report.is_file():
+        cmp_.violations.append("functional:report-missing: successful release has no report.json")
+    else:
+        try:
+            rp = json.loads(report.read_text(encoding="utf-8"))
+            status = str(rp.get("status", ""))
+            if status not in ("ready", "pass", "PASS", "ok"):
+                cmp_.violations.append(f"functional:report-status-incompatible: {status!r}")
+        except Exception as exc:
+            cmp_.violations.append(f"functional:report-malformed: {type(exc).__name__}: {exc}")
     return {"passed": not cmp_.violations,
             "violations": cmp_.violations,
             "evidence": {"files_compared": len(in_files),
