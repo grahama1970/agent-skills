@@ -122,30 +122,13 @@ Return strict JSON: {{"question": "...", "tone": "<one tone from the list>"}}"""
 
 def speak_horus(sr, text: str, tone: str, run_dir: Path, label: str) -> dict[str, Any]:
     tts_render_text = text[:700]
-    request = {
-        "answer_text": tts_render_text, "label": label,
-        "use_blessed_qra_cache": False, "asr_verify": False,
-        "voice_delivery": {"tone": tone, "pace": "measured", "pause_after_ms": 0},
-        "ref_audio": HORUS_REF,
-    }
-    req = urllib.request.Request(
-        f"{CHATTERBOX}/synthesize-batch", data=json.dumps(request).encode(),
-        headers={"Content-Type": "application/json"}, method="POST")
-    with urllib.request.urlopen(req, timeout=300) as resp:
-        response = json.loads(resp.read())
-    gate = sys.modules.get("pydantic_step_gate") or _load("pydantic_step_gate")
-    try:
-        response = gate.validate_http_json("chatterbox_synthesize", response)
-    except ValueError as exc:
-        raise SystemExit(f"BLOCKED_HORUS_NOT_SPOKEN: {exc}") from exc
-    source = sr.resolve_host_audio(str(response.get("finished_response_audio") or ""))
-    if source is None:
-        raise SystemExit(
-            f"BLOCKED_HORUS_NOT_SPOKEN: audio_not_on_host "
-            f"{response.get('finished_response_audio')} gates={response.get('failed_gates')}")
-    dest = run_dir / f"{label}.wav"
-    import shutil
-    shutil.copyfile(source, dest)
+    engine = _load("render_via_chatterbox_speak")
+    dest, response = engine.render_via_chatterbox_speak(
+        answer_text=tts_render_text,
+        render_chunks=[{"text": tts_render_text, "tone": tone, "pause_after_ms": 0,
+                        "role": "persona_affect_beat", "interruptible": True}],
+        tone=tone, run_dir=run_dir, label=label, ref_audio=HORUS_REF,
+        context=f"persona-dream conversation horus turn {label}")
     return {
         "audio_path": dest,
         "tts_render_text": tts_render_text,
@@ -154,6 +137,9 @@ def speak_horus(sr, text: str, tone: str, run_dir: Path, label: str) -> dict[str
             "affect_effect": response.get("affect_effect"),
             "pace_effect": response.get("pace_effect"),
             "tag_handling": response.get("tag_handling"),
+            "render_path": response.get("render_path"),
+            "render_temperature": response.get("render_temperature"),
+            "pronunciation_normalized": response.get("pronunciation_normalized"),
         },
     }
 

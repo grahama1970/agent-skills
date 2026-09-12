@@ -194,6 +194,20 @@ Do not own:
   asserts an identity verdict of its own.
 - Unreceipted memory writes.
 
+### Speaking-engine ownership (operator, 2026-09-12)
+
+Persona-dream must not bespoke its own speaking engine for the conversation.
+All conversation/reply speech renders route through `$chatterbox-speak`
+(`scripts/render_via_chatterbox_speak.py` -> `chatterbox-speak/run.sh speak`
+with caller-owned render chunks, `--temperature`, and its pronunciation
+lexicon). The renderer contract — what is actually audible, how it is
+normalized, and how it fails closed — lives in exactly one skill; when
+persona-dream hand-rolled `/synthesize-batch` requests, delivery fixes landed
+in chatterbox-speak and never reached the conversation (observed: tone-only
+renders that carried no audible affect, and unnormalized canon names). The
+journal lane applies the same pronunciation + temperature contract on its
+ASR-verified direct service call until its full CLI reroute lands.
+
 ### External ownership
 
 | Owner | Owns | Persona Dream's role |

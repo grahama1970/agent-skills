@@ -227,6 +227,28 @@
           "CANON_ENTITY_GATE_OK"
         ]
       }
+    },
+    {
+      "name": "conversation-renders-through-chatterbox-speak",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "real_world": true,
+      "required": true,
+      "supports_claims": [
+        "persona_dream.agentic_pipeline_driver"
+      ],
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "grep -q 'synthesize-batch' ../scripts/dynamic_conversation.py && { echo 'FAIL direct service call remains in dynamic_conversation.py'; exit 1; }; grep -q 'synthesize-batch' ../scripts/speak_reply.py && { echo 'FAIL direct service call remains in speak_reply.py'; exit 1; }; grep -q 'render_via_chatterbox_speak' ../scripts/dynamic_conversation.py && grep -q 'render_via_chatterbox_speak' ../scripts/speak_reply.py || { echo 'FAIL engine composition missing'; exit 1; }; D=$(mktemp -d); uv run --project .. python - \"$D\" <<'EOF'\nimport sys, json\nfrom pathlib import Path\nsys.path.insert(0, '../scripts')\nimport dynamic_conversation as dc\nout = dc.speak_horus(None, 'You said the Eye of Tzeentch watched. Was the calm real?', 'curious_searching', Path(sys.argv[1]), 'pd_horus_engine_test')\nre_ = out['render_effects']\nassert re_.get('render_path') == 'chatterbox-speak', re_\nassert re_.get('render_temperature') == 0.85, re_\nassert re_.get('pronunciation_normalized') is True, re_\nassert out['audio_path'].stat().st_size > 10000, out\nimport speak_reply as srep\ndest, resp = srep.speak('The grief sat quietly ... and the Eye of Tzeentch kept watching.', {'tone': 'grief_safe'}, Path(sys.argv[1]), 'pd_embry_engine_test')\nassert resp.get('render_path') == 'chatterbox-speak', resp.get('render_path')\nassert resp.get('render_temperature') == 0.85, resp.get('render_temperature')\nassert dest.stat().st_size > 10000, dest\nplan = json.loads((Path(sys.argv[1]) / 'pd_embry_engine_test.render_chunks.json').read_text())['render_chunks']\nassert plan[-1].get('sfx_after', '').startswith('cry-'), 'crying SFX routing must compose through the engine'\nprint('CONVERSATION_ENGINE_COMPOSITION_OK')\nEOF"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CONVERSATION_ENGINE_COMPOSITION_OK"
+        ]
+      }
     }
   ]
 }

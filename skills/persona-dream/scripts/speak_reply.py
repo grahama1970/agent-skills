@@ -250,33 +250,16 @@ def inject_emotional_utterance(text: str, tone: str) -> tuple[str, list[str]]:
 
 def speak(text: str, voice_delivery: dict[str, Any], run_dir: Path,
           label: str) -> tuple[Path | None, dict[str, Any]]:
-    """Render through Chatterbox. Returns (audio_path, response)."""
+    """Render through $chatterbox-speak (the one speaking engine). Returns (audio_path, service_receipt)."""
     utterances = _load("chatterbox_utterances")
-    render_chunks = utterances.compile_render_chunks(text[:MAX_REPLY_CHARS], voice_delivery.get("tone") or "neutral_warm")
-    pause_request_fields = utterances.exact_pause_request_fields()
-    request = {
-        "answer_text": text[:MAX_REPLY_CHARS],
-        "render_chunks": render_chunks,
-        "label": label,
-        "use_blessed_qra_cache": False,
-        "asr_verify": False,
-        "voice_delivery": voice_delivery,
-        **pause_request_fields,
-    }
-    req = urllib.request.Request(
-        f"{CHATTERBOX}/synthesize-batch",
-        data=json.dumps(request).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    with urllib.request.urlopen(req, timeout=300) as resp:
-        response = json.loads(resp.read().decode("utf-8"))
-
-    source = resolve_host_audio(str(response.get("finished_response_audio") or ""))
-    if source is None:
-        return None, response
-    dest = run_dir / f"{label}.wav"
-    shutil.copyfile(source, dest)
+    engine = _load("render_via_chatterbox_speak")
+    tone = voice_delivery.get("tone") or "neutral_warm"
+    render_chunks = utterances.compile_render_chunks(text[:MAX_REPLY_CHARS], tone)
+    dest, response = engine.render_via_chatterbox_speak(
+        answer_text=text[:MAX_REPLY_CHARS], render_chunks=render_chunks,
+        tone=tone, run_dir=run_dir, label=label,
+        ref_audio=voice_delivery.get("ref_audio"),
+        context=f"persona-dream conversation embry reply {label}")
     return dest, response
 
 

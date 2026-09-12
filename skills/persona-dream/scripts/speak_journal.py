@@ -25,6 +25,7 @@ import json
 import os
 import shutil
 import re
+import sys
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -451,9 +452,21 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         failed.append("chatterbox_utterance_markdown_not_read_back")
 
     label = args.label or f"pd_journal_{run_dir.name}"
+    # Operator rule 2026-09-12: pronunciation + temperature follow the
+    # chatterbox-speak engine contract even on the journal lane's direct
+    # service call (ASR-verified render; full CLI reroute is separate work).
+    _cs_scripts = Path(__file__).resolve().parents[2] / "chatterbox-speak" / "scripts"
+    sys.path.insert(0, str(_cs_scripts))
+    from pronounce import normalize_pronunciation, load_lexicon  # noqa: E402
+    _lex = load_lexicon(_cs_scripts.parent / "fixtures" / "pronunciation_lexicon.json")
+    chatterbox_utterance_text = normalize_pronunciation(chatterbox_utterance_text, _lex)
+    for _chunk in render_chunks:
+        if isinstance(_chunk, dict) and isinstance(_chunk.get("text"), str):
+            _chunk["text"] = normalize_pronunciation(_chunk["text"], _lex)
     request = {
         "answer_text": chatterbox_utterance_text,
         "render_chunks": render_chunks,
+        "temperature": 0.85,
         "label": label,
         "use_blessed_qra_cache": False,
         "asr_verify": bool(args.asr_verify),

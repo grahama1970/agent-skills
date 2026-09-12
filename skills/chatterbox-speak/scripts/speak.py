@@ -304,6 +304,8 @@ def speak(
     arc: str | None = typer.Option(None, help=f"Conversation arc macro: phases the answer across tone+pace waypoints ({sorted(ARCS)}); overrides --tone/--pace per phase"),
     arc_input: Path | None = typer.Option(None, help="Model-authored arc input (chatterbox_speak.arc_input.v1 JSON): per-phase text/tone/pace/complexity; complexity_source=model in the receipt; waypoints fill any gaps"),
     normalize: bool = typer.Option(True, help="Rule-based pronunciation normalization before render: spell control ids (SC-7 -> S C seven), space acronyms (CUI -> C U I), apply the irregular-term lexicon. Deterministic; native [tags] untouched"),
+    temperature: float | None = typer.Option(None, help="Turbo expressiveness knob, 0.05-1.5 (service-validated). Tone is request-only on Turbo; temperature is the audible affect knob"),
+    render_chunks_plan: Path | None = typer.Option(None, help="Caller-owned render-chunk plan JSON {answer_text, render_chunks:[{text, tone?, pause_after_ms, ...}]}; bypasses pause compilation, pronunciation normalization still applied per chunk; extra chunk fields (e.g. sfx_after) pass through to the service")
 ) -> None:
     """Render one line and write WAV + receipt."""
     _LAUGH_TAGS = ("[laugh]", "[giggles]", "[giggles]", "[chuckle]", "[chuckles]")
@@ -316,6 +318,22 @@ def speak(
             "remove [laugh]/[giggles]/[chuckle] or change --context"
         )
     original_text = text
+    caller_plan: dict | None = None
+    if render_chunks_plan is not None:
+        try:
+            caller_plan = json.loads(Path(render_chunks_plan).read_text())
+        except Exception as exc:
+            _fail(f"invalid --render-chunks file: {exc}")
+        chunks_in = caller_plan.get("render_chunks")
+        if not isinstance(chunks_in, list) or not chunks_in:
+            _fail("--render-chunks requires a non-empty render_chunks list")
+        if normalize:
+            lex = load_lexicon(LEXICON_PATH)
+            for chunk in chunks_in:
+                if isinstance(chunk, dict) and isinstance(chunk.get("text"), str):
+                    chunk["text"] = normalize_pronunciation(chunk["text"], lex)
+            if isinstance(caller_plan.get("answer_text"), str):
+                caller_plan["answer_text"] = normalize_pronunciation(caller_plan["answer_text"], lex)
     if normalize and text:
         text = normalize_pronunciation(text, load_lexicon(LEXICON_PATH))
     if arc_input is not None or arc is not None:
@@ -444,7 +462,14 @@ def speak(
     payload = req.model_dump(exclude_none=True)
     endpoint = "synthesize"
     plan = None
-    if planned_pauses:
+    if caller_plan is not None:
+        endpoint = "synthesize-batch"
+        payload = {"answer_text": caller_plan.get("answer_text") or text,
+                   "render_chunks": caller_plan["render_chunks"],
+                   "label": req.label, "ref_audio": ref, "crossfade_ms": 0,
+                   "use_blessed_qra_cache": False, "asr_verify": False,
+                   "voice_delivery": {"tone": tone or "neutral_warm", **(delivery or {})}}
+    elif planned_pauses:
         compiler = Path(__file__).resolve().parents[2] / "best-practices-chatterbox/run.sh"
         try:
             text = resolve_pause_macros(text, load_macros(PAUSE_MACROS_PATH))
@@ -461,6 +486,8 @@ def speak(
                    "label": req.label, "ref_audio": ref, "crossfade_ms": 0,
                    "use_blessed_qra_cache": False, "asr_verify": False,
                    "voice_delivery": {"tone": tone or "neutral_warm", **(delivery or {})}}
+    if temperature is not None:
+        payload["temperature"] = temperature
     try:
         resp = httpx.post(f"{BASE_URL}/{endpoint}", json=payload, timeout=300)
         resp.raise_for_status()
@@ -469,7 +496,7 @@ def speak(
         _fail(f"chatterbox service call failed: {exc} {detail[:500]}")
 
     try:
-        if planned_pauses:
+        if endpoint == "synthesize-batch":
             batch = BatchReceipt.model_validate(resp.json())
             host_audio = HOST_OUT / Path(batch.finished_response_audio).relative_to(CONTAINER_OUT)
             with wave.open(str(host_audio), "rb") as audio:
@@ -514,7 +541,9 @@ def speak(
         "memory_context": memory_context,
         "voice_delivery": {"tone": tone or "neutral_warm", **(delivery or {})},
         "request": payload,
-        "chatterbox_pause_plan": [c.model_dump() for c in plan.render_chunks] if plan else [],
+        "chatterbox_pause_plan": ([c.model_dump() for c in plan.render_chunks] if plan else (caller_plan or {}).get("render_chunks")),
+        "render_source": ("caller_plan" if caller_plan is not None else ("compiled" if plan else "single")),
+        "temperature": temperature,
         "wav": str(wav_copy),
         "duration_seconds": receipt.duration_seconds,
         "mocked": receipt.mocked,
