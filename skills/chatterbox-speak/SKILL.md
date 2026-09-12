@@ -150,14 +150,19 @@ python3 scripts/conversation_arc.py plan --latency-ms 30000 --emotion grief \
 $phart-dag-chart chart out/arc.dag.json   # terminal-visible arc
 ```
 
-**Runtime is streamed, not a frozen guess.** The fast agent speaks a quick initial
-arc (opener, instantly; restate if complexity>=2) then consumes Agent B's JSON
-event stream (`solver_event.v1`: `{stage, eta_ms, answer_text?, done}`) and adapts
-each beat via `conversation_arc.py next_element(state)` — wide remaining ETA -> hum
-bed, narrow -> pause, `answer_ready`/`done` -> barge to the answer. B slow -> keep
-covering (never dry); B fast -> barge early. `conversation_arc.py stream --events
-solver.jsonl` demos it; `plan_arc` is the same policy simulated against the
-predicted latency (instant floor + preview only). Runtime + barge-in owned by
+**Runtime: a fast model GENERATES the arc while reading the solver's JSON stream.**
+The fast voice agent is a low-reasoning model (e.g. `zai/glm-5.3-flash`) that
+generates Embry's cover in real time — a natural thinking opener, a restate in
+simple steps for multi-part turns, progress narration, hum calls on long waits,
+and barge-in — while reading Agent B's JSON event stream (`solver_event.v1`:
+`{stage, eta_ms, answer_text?, steps?, done}`). Its system prompt/contract is
+`fixtures/fast_agent_prompt.md`. The deterministic `conversation_arc.py` is NOT
+the generator: it is the model's **constraint palette** (verified hums, singular
+Turbo tags, pause macros, emotion->arc) and the **instant fallback** —
+`next_element(state)` speaks a pooled line so there is no dead air when the model
+can't beat the speech deadline; the generated line replaces it when it arrives.
+`stream --events solver.jsonl` demos the fallback policy; `plan_arc` simulates it
+against a predicted latency for preview/test only. Runtime + barge-in owned by
 `embry-voice-control`.
 
 Inputs are SOURCED, not guessed: `--latency-ms` from `$memory POST /execution-stats`

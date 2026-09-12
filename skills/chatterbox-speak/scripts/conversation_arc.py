@@ -115,8 +115,16 @@ def next_element(state: dict) -> dict | None:
     # 2. restate only for multi-part problems
     if complexity >= 2 and state.get("request") and not state.get("restated"):
         state["restated"] = True
-        return mk("restate", source="restate", tone="neutral_warm",
-                  text=f"Let me make sure I've got it — you said: {state['request']}", tags=["restate"])
+        # The fast agent GENERATES this line (natural restate in simple steps) with
+        # its low-reasoning model from the request + B's streamed decomposition.
+        # The template is only the instant FALLBACK when the model can't beat the
+        # speech deadline. Structure is deterministic; wording is not.
+        fallback = state.get("restate_text") or f"Okay, so — you're asking: {state['request']}"
+        return mk("restate", source="restate", tone="neutral_warm", text=fallback, tags=["restate"],
+                  gen={"role": "restate", "model": "zai/glm-5.3-flash",
+                       "context": {"request": state.get("request"), "steps": state.get("restate_steps")},
+                       "instruction": "Restate the request warmly in simple steps, <=25 words, no tags.",
+                       "fallback": fallback})
     # 3. B is done -> deliver the answer once, then end
     if state.get("b_stage") == "answer_ready":
         if state.get("answered"):
@@ -142,7 +150,12 @@ def next_element(state: dict) -> dict | None:
         return mk("pause", source="pause:beat", dur_ms=PAUSE_MS, tags=["hold"])
     line = _pick(prog[stage]["pool"], seed + stage + str(len(spoken)))
     spoken.append(line)
-    return mk("progress", source=f"progress:{stage}", text=line, tone=prog[stage].get("tone"), tags=[stage])
+    # Cover line is likewise model-generated at runtime (natural, stage-aware);
+    # the pooled line is the deterministic fallback floor.
+    return mk("progress", source=f"progress:{stage}", text=line, tone=prog[stage].get("tone"), tags=[stage],
+              gen={"role": "cover", "model": "zai/glm-5.3-flash", "stage": stage,
+                   "instruction": f"One short natural line for the '{stage}' work stage, <=12 words, no tags.",
+                   "fallback": line})
 
 
 def plan_arc(latency_ms: int, emotion: str, intensity: int = 5, complexity: int = 1,
@@ -240,16 +253,8 @@ def stream(events: list[dict], base: dict) -> list[dict]:
     st.setdefault("b_stage", "working:recall")
     out: list[dict] = []
 
-    def drain_prework():  # opener + restate flow out before the first cover beat
-        while True:
-            el = next_element(st)
-            if el is None:
-                return None
-            out.append(el)
-            if el["kind"] not in ("fused_hmm", "restate"):
-                return el
-
-    drain_prework()
+    # Quick initial arc: just the opener, instantly, before any solver event.
+    out.append(next_element(st))
     for ev in events:
         if ev.get("stage"):
             st["b_stage"] = ev["stage"]
@@ -257,6 +262,14 @@ def stream(events: list[dict], base: dict) -> list[dict]:
             st["b_eta_ms"] = ev["eta_ms"]
         if ev.get("answer_text"):
             st["answer_text"] = ev["answer_text"]
+        # B's early parse: a simple-steps decomposition A voices as the restate.
+        if ev.get("restate"):
+            st["restate_text"] = ev["restate"]
+        elif ev.get("steps"):
+            steps = ev["steps"]
+            st["restate_steps"] = steps  # passed to the fast model as generation context
+            joined = ", then ".join(steps)
+            st["restate_text"] = f"Okay, so — first {joined}." if steps else None  # fallback only
         if ev.get("done") or ev.get("stage") == "answer_ready":
             st["b_stage"] = "answer_ready"
         el = next_element(st)
