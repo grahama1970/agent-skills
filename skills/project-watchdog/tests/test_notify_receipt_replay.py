@@ -49,3 +49,20 @@ def test_replayed_event_is_byte_identical_derivation():
           "triage": "t", "run_id": "r1", "requires_human_input": False}
     s1, s2 = b._subject_target(ev), b._subject_target(ev)
     assert s1 == s2 == "acme/api#42"  # duplicate replay derives identical subject
+
+
+def test_wip_isolation_skips_busy_project_without_blocking_fleet():
+    """WebGPT next-step 14: a non-active/busy project is skipped for dispatch
+    while an active sibling candidate still proceeds in the same scan."""
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+    from watchdog import commands as m
+    state = {"projects": {"busy-lane": {"state": "paused"}, "ready-lane": {"state": "active"}}}
+    busy = {"project_id": "busy-lane"}
+    ready = {"project_id": "ready-lane"}
+    assert m._project_runtime_state(busy, state) != "active"
+    assert m._project_runtime_state(ready, state) == "active"
+    skipped = [p for p in (busy, ready) if m._project_runtime_state(p, state) != "active"]
+    progressed = [p for p in (busy, ready) if m._project_runtime_state(p, state) == "active"]
+    assert [p["project_id"] for p in skipped] == ["busy-lane"]
+    assert [p["project_id"] for p in progressed] == ["ready-lane"]
