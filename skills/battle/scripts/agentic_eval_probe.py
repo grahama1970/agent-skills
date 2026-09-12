@@ -1200,6 +1200,14 @@ def probe_b08_separate_safe_rejection(summary_path: Path) -> int:
     )
 
 
+def probe_b09_fixture_witness_contract(summary_path: Path) -> int:
+    return probe_pytest_contracts(
+        summary_path,
+        suite="battle-b09-require-a-typed-fixture-witness-rather-than-any-judge-failu",
+        tests=["test_fixture_witness_contract.py"],
+    )
+
+
 
 def probe_b05_strict_campaign_acceptance_envelopes(summary_path: Path) -> int:
     return probe_pytest_contracts(
@@ -4601,6 +4609,8 @@ def main() -> int:
             return probe_b07_confine_materialized_artifacts(args.summary)
         if args.suite == "battle-b08-separate-safe-rejection-from-execution-failure":
             return probe_b08_separate_safe_rejection(args.summary)
+        if args.suite == "battle-b09-require-a-typed-fixture-witness-rather-than-any-judge-failu":
+            return probe_b09_fixture_witness_contract(args.summary)
         if args.suite == "review-receipt-hash-finalization":
             return probe_review_receipt_hash_finalization(args.summary)
         if args.suite == "review-judge-authority":

@@ -24,7 +24,14 @@ def generate(work_dir, params):
 
     yield bundle("must-accept-case", "MUST_ACCEPT",
                  lambda c: (c / "d.txt").write_text("v 5551234567\n"))
-    yield bundle("must-reject-case", "MUST_REJECT",
-                 lambda c: (c / "d.txt").write_bytes(b"\xff\xfe not utf8"))
+    def invalid_utf8(c):
+        (c / "d.txt").write_bytes(b"\xff\xfe not utf8")
+        (c.parent / "invalid_input.json").write_text(json.dumps({
+            "schema": "battle.invalid_input_predicate.v1",
+            "approved": True,
+            "predicate": "fixture contains invalid UTF-8 bytes and must fail closed",
+        }))
+
+    yield bundle("must-reject-case", "MUST_REJECT", invalid_utf8)
     yield bundle("may-reject-case", "MAY_REJECT",
                  lambda c: (c / "d.txt").write_text("ok 5551234567\n"))

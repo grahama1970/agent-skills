@@ -234,6 +234,7 @@ def test_rejected_campaign_case_fails_if_execution_log_leaks_policy_value() -> N
             "    d = Path(work_dir) / 'case'; (d / 'corpus').mkdir(parents=True)\n"
             "    (d / 'policy.json').write_text(json.dumps({'sensitive_values': [{'value': 'Alice'}]}))\n"
             "    (d / 'corpus' / 'd.txt').write_text('clean')\n"
+            "    (d / 'invalid_input.json').write_text(json.dumps({'schema': 'battle.invalid_input_predicate.v1', 'approved': True, 'predicate': 'invalid rejection fixture'}))\n"
             "    yield 'reject-log-leak', str(d), 'MUST_REJECT'\n"
         )
         r = run_campaign(str(gen), "echo Alice >&2; exit 1", JUDGE, output_subdir="corpus")

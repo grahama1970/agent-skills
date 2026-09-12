@@ -76,6 +76,15 @@
       "claim_semantics": "control_flow"
     },
     {
+      "id": "battle.fixture_witness.typed",
+      "description": "Battle fixture prechecks require typed policy-value witnesses or approved invalid-input predicates; unrelated Judge failures and malformed fixtures become INVALID_CASE without target launch or floor coverage.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "control_flow"
+    },
+    {
       "id": "battle.local_docker.reactive_round",
       "description": "A clean local Battle repair round runs through the isolated Docker target and emits complete Red/Judge/Blue/scorekeeper receipts",
       "criticality": "critical",
@@ -666,6 +675,20 @@
         "Docker launch error is recorded as safe rejection",
         "crash or incomplete capture satisfies MUST_REJECT",
         "target_launches is copied from planned case count instead of observed starts"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "fixture_witness.typed",
+      "claim_id": "battle.fixture_witness.typed",
+      "seam_type": "fixture/precheck",
+      "criticality": "critical",
+      "failure_modes": [
+        "any Judge failure is accepted as proof that the intended sensitive value exists",
+        "MUST_REJECT fixtures bypass an approved invalid-input predicate",
+        "invalid fixture is counted as a Red win or successful floor case"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -1436,6 +1459,39 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/battle-b08-separate-safe-rejection-from-execution-failure.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-b09-require-a-typed-fixture-witness-rather-than-any-judge-failu",
+      "category": "battle-b09-require-a-typed-fixture-witness-rather-than-any-judge-failu",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.fixture_witness.typed"
+      ],
+      "seams": [
+        "fixture_witness.typed"
+      ],
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b09-require-a-typed-fixture-witness-rather-than-any-judge-failu --summary /tmp/battle-agentic-evals/battle-b09-require-a-typed-fixture-witness-rather-than-any-judge-failu.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b09-require-a-typed-fixture-witness-rather-than-any-judge-failu"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-b09-require-a-typed-fixture-witness-rather-than-any-judge-failu.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800

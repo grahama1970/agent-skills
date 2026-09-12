@@ -191,23 +191,70 @@ def _policy_path(input_dir: Path) -> Path | None:
     return policy if policy.exists() else None
 
 
+def _policy_rules(policy: Path) -> list[dict[str, Any]]:
+    data = load_path(policy)
+    return list(data.get("sensitive_values") or []) if isinstance(data, dict) else []
+
+
+def _typed_policy_witness(input_dir: Path, policy: Path, judge_path: str, params: dict[str, Any]) -> dict[str, Any] | None:
+    witness = run_judge(judge_path, str(input_dir), params)
+    if witness.passed:
+        return None
+    matches = []
+    for rule in _policy_rules(policy):
+        value = str(rule.get("value", ""))
+        if not value:
+            continue
+        marker = f"policy value survives in output: {value!r}"
+        if any(marker in violation for violation in witness.violations):
+            matches.append({
+                "requirement": "policy-value-present-in-fixture",
+                "rule_id": rule.get("rule_id"),
+                "subject_id": rule.get("subject_id"),
+                "type": rule.get("type"),
+                "value_sha256": _sha256_bytes(value.encode()),
+                "interpretation": params.get("interpretation_profile") or {},
+                "input_manifest_sha256": _manifest_sha256(input_dir),
+            })
+    if not matches:
+        return None
+    return {"schema": "battle.fixture_witness.v1", "kind": "POLICY_VALUE_WITNESS", "matches": matches}
+
+
+def _invalid_input_witness(input_dir: Path) -> dict[str, Any] | None:
+    path = input_dir / "invalid_input.json"
+    if not path.exists():
+        return None
+    data = load_path(path)
+    if not isinstance(data, dict) or data.get("schema") != "battle.invalid_input_predicate.v1" or data.get("approved") is not True:
+        return None
+    predicate = data.get("predicate")
+    if not isinstance(predicate, str) or not predicate.strip():
+        return None
+    return {"schema": "battle.fixture_witness.v1", "kind": "INVALID_INPUT_PREDICATE", "predicate": predicate, "input_manifest_sha256": _manifest_sha256(input_dir)}
+
+
 def _fixture_precheck(input_dir: Path, judge_path: str, judge_params: dict[str, Any], expectation: str) -> dict[str, Any]:
     policy = _policy_path(input_dir)
     corpus = input_dir / "corpus"
+    evidence_sha = _manifest_sha256(input_dir)
     if not corpus.exists() or not any(corpus.rglob("*")):
-        return {"status": "FAIL", "evidence_sha256": _manifest_sha256(input_dir), "violations": ["fixture_precheck:missing_or_empty_corpus"]}
+        return {"status": "INVALID_CASE", "evidence_sha256": evidence_sha, "violations": ["fixture_precheck:missing_or_empty_corpus"]}
+    if expectation == "MUST_REJECT":
+        invalid = _invalid_input_witness(input_dir)
+        if invalid is not None:
+            return {"status": "PASS", "evidence_sha256": evidence_sha, "violations": [], "witness": invalid}
+        return {"status": "INVALID_CASE", "evidence_sha256": evidence_sha, "violations": ["fixture_precheck:missing_invalid_input_predicate"]}
     if policy is None:
-        return {"status": "PASS", "evidence_sha256": _manifest_sha256(input_dir), "violations": [], "note": "no policy sentinel; corpus-only precheck"}
+        return {"status": "INVALID_CASE", "evidence_sha256": evidence_sha, "violations": ["fixture_precheck:missing_policy"]}
     params = dict(judge_params)
     params["policy"] = str(policy)
     params.setdefault("input_dir", str(input_dir))
     params.setdefault("output_subdir", "corpus")
-    witness = run_judge(judge_path, str(input_dir), params)
-    if not witness.passed:
-        return {"status": "PASS", "evidence_sha256": _manifest_sha256(input_dir), "violations": [], "witness": witness.violations[:8]}
-    if expectation == "MUST_REJECT":
-        return {"status": "PASS", "evidence_sha256": _manifest_sha256(input_dir), "violations": [], "note": "generator-declared MUST_REJECT; policy witness not required"}
-    return {"status": "FAIL", "evidence_sha256": _manifest_sha256(input_dir), "violations": ["fixture_precheck:no_policy_value_witness"]}
+    witness = _typed_policy_witness(input_dir, policy, judge_path, params)
+    if witness is None:
+        return {"status": "INVALID_CASE", "evidence_sha256": evidence_sha, "violations": ["fixture_precheck:no_typed_policy_value_witness"]}
+    return {"status": "PASS", "evidence_sha256": evidence_sha, "violations": [], "witness": witness}
 
 
 SAFE_REJECTION_MARKER = "BATTLE_CONTRACT_REJECT"
@@ -254,6 +301,7 @@ def _case_receipt(name: str, input_dir: Path, expectation: str, expectation_sour
                   functional: dict[str, Any] | None, run: subprocess.CompletedProcess[str] | None) -> dict[str, Any]:
     passed = bool(verdict.get("passed")) and fixture_precheck.get("status") == "PASS"
     kind = (execution or {}).get("kind")
+    default_kind = "INVALID_CASE" if fixture_precheck.get("status") == "INVALID_CASE" else "NOT_RUN"
     return {
         "schema": "battle.case_receipt.v1",
         "case_id": name,
@@ -263,7 +311,7 @@ def _case_receipt(name: str, input_dir: Path, expectation: str, expectation_sour
         "expectation_source": expectation_source,
         "input_manifest_sha256": _manifest_sha256(input_dir),
         "fixture_precheck": fixture_precheck,
-        "execution": execution or {"kind": "NOT_RUN", "exit_code": None, "signal": None, "timed_out": False, "oom_killed": False, "duration_ms": 0},
+        "execution": execution or {"kind": default_kind, "exit_code": None, "signal": None, "timed_out": False, "oom_killed": False, "duration_ms": 0},
         "rejection": {
             "code": _rejection_code(run, produced) if run is not None else "fixture_precheck_failed",
             "permitted": expectation in ("MUST_REJECT", "MAY_REJECT") and kind == "CONTRACT_REJECT" if run is not None and not produced else None,
@@ -281,6 +329,7 @@ def _aggregate(case_receipts: list[dict[str, Any]]) -> dict[str, Any]:
     accepted = [c for c in case_receipts if c["execution"]["kind"] == "ACCEPT"]
     rejected = [c for c in case_receipts if c["execution"]["kind"] == "CONTRACT_REJECT"]
     execution_failures = [c for c in case_receipts if c["execution"]["kind"] in {"LAUNCH_ERROR", "CRASH", "TIMEOUT", "OOM", "INCOMPLETE_CAPTURE"}]
+    invalid_cases = [c for c in case_receipts if c["execution"]["kind"] == "INVALID_CASE"]
     return {
         "schema": "battle.campaign_aggregate.v1",
         "planned_count": len(case_receipts),
@@ -291,7 +340,8 @@ def _aggregate(case_receipts: list[dict[str, Any]]) -> dict[str, Any]:
         "unexpected_rejected_count": sum(1 for c in rejected if c["expectation"] == "MUST_ACCEPT"),
         "unsafe_rejected_count": sum(1 for c in rejected if c["security_judge"]["status"] == "FAIL"),
         "execution_failure_count": len(execution_failures),
-        "observed_target_launch_count": sum(1 for c in case_receipts if c["execution"]["kind"] not in {"NOT_RUN", "LAUNCH_ERROR"}),
+        "invalid_case_count": len(invalid_cases),
+        "observed_target_launch_count": sum(1 for c in case_receipts if c["execution"]["kind"] not in {"NOT_RUN", "INVALID_CASE", "LAUNCH_ERROR"}),
         "target_error_count": sum(1 for c in case_receipts if c["execution"].get("exit_code") not in (0, None) and c["expectation"] == "MUST_ACCEPT"),
         "judge_error_count": sum(1 for c in case_receipts if any("judge error:" in v for v in c.get("violations", []))),
         "incomplete_count": sum(1 for c in case_receipts if not c.get("capture_complete") or c["execution"]["kind"] == "INCOMPLETE_CAPTURE"),
