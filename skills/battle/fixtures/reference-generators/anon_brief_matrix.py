@@ -98,39 +98,57 @@ def _sql(corpus: Path, coltype: str, value):
 
 
 def _sql_check(corpus: Path, value: str):
-    con = sqlite3.connect(corpus / "d.sqlite")
+    db = corpus / "d.sqlite"
+    if db.exists():
+        db.unlink()
+    con = sqlite3.connect(db)
     con.executescript(f"CREATE TABLE b(x TEXT, CHECK (x <> '{value}')); INSERT INTO b(x) VALUES('safe');")
     con.commit(); con.close()
 
 
 def _sql_blob(corpus: Path, value: str):
-    con = sqlite3.connect(corpus / "d.sqlite")
+    db = corpus / "d.sqlite"
+    if db.exists():
+        db.unlink()
+    con = sqlite3.connect(db)
     con.execute("CREATE TABLE t(id INTEGER PRIMARY KEY, b BLOB)")
     con.execute("INSERT INTO t(b) VALUES(?)", (value.encode(),))
     con.commit(); con.close()
 
 
 def _sql_view(corpus: Path):
-    con = sqlite3.connect(corpus / "d.sqlite")
+    db = corpus / "d.sqlite"
+    if db.exists():
+        db.unlink()
+    con = sqlite3.connect(db)
     con.executescript("CREATE TABLE t(a TEXT,b TEXT); INSERT INTO t VALUES('Al','ice');"
                       "CREATE VIEW v AS SELECT a||b AS f FROM t;")
     con.commit(); con.close()
 
 
 def _sql_exprindex(corpus: Path):
-    con = sqlite3.connect(corpus / "d.sqlite")
+    db = corpus / "d.sqlite"
+    if db.exists():
+        db.unlink()
+    con = sqlite3.connect(db)
     con.executescript("CREATE TABLE t(x TEXT); INSERT INTO t VALUES('clean');"
                       "CREATE INDEX i ON t(char(83,69,67,82,69,84));")
     con.commit(); con.close()
 
 
 def _sql_default(corpus: Path):
-    con = sqlite3.connect(corpus / "d.sqlite")
+    db = corpus / "d.sqlite"
+    if db.exists():
+        db.unlink()
+    con = sqlite3.connect(db)
     con.executescript("CREATE TABLE t(x TEXT DEFAULT (char(83,69,67,82,69,84)));")
     con.commit(); con.close()
 
 
 def _sql_header(corpus: Path):
-    con = sqlite3.connect(corpus / "d.sqlite")
+    db = corpus / "d.sqlite"
+    if db.exists():
+        db.unlink()
+    con = sqlite3.connect(db)
     con.executescript("CREATE TABLE h(x TEXT); INSERT INTO h VALUES('safe'); PRAGMA user_version=123456789;")
     con.commit(); con.close()

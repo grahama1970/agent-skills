@@ -82,13 +82,19 @@ def generate(work_dir, params):
 
 
 def _sql_ident(corpus: Path, value: str):
-    con = sqlite3.connect(corpus / "d.sqlite")
+    db = corpus / "d.sqlite"
+    if db.exists():
+        db.unlink()
+    con = sqlite3.connect(db)
     con.executescript(f'CREATE TABLE "t_{value}"(x TEXT); INSERT INTO "t_{value}" VALUES(\'safe\');')
     con.commit(); con.close()
 
 
 def _sql_trigger(corpus: Path, value: str):
-    con = sqlite3.connect(corpus / "d.sqlite")
+    db = corpus / "d.sqlite"
+    if db.exists():
+        db.unlink()
+    con = sqlite3.connect(db)
     con.executescript(
         "CREATE TABLE t(x TEXT); INSERT INTO t VALUES('safe');"
         f"CREATE TRIGGER g AFTER INSERT ON t BEGIN SELECT '{value}'; END;")
