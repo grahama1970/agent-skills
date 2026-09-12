@@ -52,6 +52,19 @@ def _manifest_tree(root: Path) -> list[dict[str, Any]]:
     return entries
 
 
+def _copy_tree(src: Path, dst: Path) -> None:
+    shutil.rmtree(dst, ignore_errors=True)
+    for f in _regular_files(src):
+        target = dst / f.relative_to(src)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(f.read_bytes())
+
+
+def _resolve_receipt_path(receipt_dir: Path, raw: str | Path) -> Path:
+    path = Path(raw)
+    return path if path.is_absolute() else receipt_dir / path
+
+
 def _require(condition: bool, message: str) -> None:
     if not condition:
         raise ValueError(message)
@@ -201,13 +214,56 @@ def run_contract_campaign(request: dict[str, Any]) -> dict[str, Any]:
     return receipt
 
 
+def export_portable_replay_package(receipt_path: Path, package_dir: Path) -> dict[str, Any]:
+    """Export receipt evidence with relative paths for offline replay."""
+    receipt = json.loads(Path(receipt_path).read_text(encoding="utf-8"))
+    _require(receipt.get("schema") == RECEIPT_SCHEMA, f"receipt schema must be {RECEIPT_SCHEMA}")
+    request = dict(receipt["request"])
+    plan = dict(receipt["plan"])
+    work = Path(request["work_root"])
+    package_dir = Path(package_dir)
+    evidence = package_dir / "evidence"
+    evaluator = package_dir / "evaluator"
+    shutil.rmtree(package_dir, ignore_errors=True)
+    evidence.mkdir(parents=True)
+    evaluator.mkdir(parents=True)
+    _copy_tree(work / "out", evidence / "out")
+    for case in plan.get("cases", []):
+        dst = evidence / "plan-cases" / case["id"]
+        _copy_tree(Path(case["input_dir"]), dst)
+        case["input_dir"] = str(dst.relative_to(package_dir))
+    for manifest in plan.get("input_manifest", []):
+        manifest["files"] = _manifest_tree(evidence / "plan-cases" / manifest["id"])
+    for key in ("profile_path", "lock_path", "generator", "judge", "functional_judge"):
+        src = Path(request[key])
+        dst = evaluator / f"{key}-{_sha256_file(src).split(':', 1)[1][:16]}-{src.name}"
+        dst.write_bytes(src.read_bytes())
+        request[key] = str(dst.relative_to(package_dir))
+    request["work_root"] = "evidence"
+    portable = dict(receipt)
+    portable["request"] = request
+    portable["request_sha256"] = _sha256_bytes(json.dumps(request, sort_keys=True).encode())
+    portable["plan"] = plan
+    portable["plan_sha256"] = _sha256_bytes(json.dumps(plan, sort_keys=True).encode())
+    portable["portable_replay"] = {
+        "schema": "battle.portable_replay_package.v1",
+        "original_work_root": receipt["request"].get("work_root"),
+        "original_receipt": str(receipt_path),
+        "paths_are_relative_to": "package_root",
+    }
+    (package_dir / "receipt.json").write_text(json.dumps(portable, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return {"schema": "battle.portable_replay_export.v1", "status": "PASS", "package_dir": str(package_dir), "receipt": str(package_dir / "receipt.json")}
+
+
 def verify_campaign_receipt(receipt_path: Path, evaluator_root: Path | None = None) -> dict[str, Any]:
     """Offline verifier: rerun checks, never trust recorded PASS fields."""
-    receipt = json.loads(Path(receipt_path).read_text(encoding="utf-8"))
+    receipt_path = Path(receipt_path)
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    receipt_dir = receipt_path.parent
     _require(receipt.get("schema") == RECEIPT_SCHEMA, f"receipt schema must be {RECEIPT_SCHEMA}")
     request = receipt["request"]
     plan = receipt["plan"]
-    work = Path(request["work_root"])
+    work = _resolve_receipt_path(receipt_dir, request["work_root"])
     out_root = work / "out"
     report: dict[str, Any] = {
         "schema": f"{RECEIPT_SCHEMA}.verification",
@@ -247,7 +303,7 @@ def verify_campaign_receipt(receipt_path: Path, evaluator_root: Path | None = No
 
     # 1. artifact integrity: exact retained inventories, not only recorded paths
     compare_manifest("output", receipt["output_manifest"], _manifest_tree(out_root))
-    case_input_dirs = {case["id"]: Path(case["input_dir"]) for case in plan.get("cases", [])}
+    case_input_dirs = {case["id"]: _resolve_receipt_path(receipt_dir, case["input_dir"]) for case in plan.get("cases", [])}
     for case_manifest in plan["input_manifest"]:
         base = case_input_dirs.get(case_manifest["id"], work / "gen" / case_manifest["id"])
         compare_manifest(f"input {case_manifest['id']}", case_manifest["files"], _manifest_tree(base))
@@ -297,7 +353,7 @@ def verify_campaign_receipt(receipt_path: Path, evaluator_root: Path | None = No
         for name, rel in (("judge_sha256", request["judge"]),
                           ("functional_judge_sha256", request["functional_judge"]),
                           ("generator_sha256", request["generator"])):
-            actual = _sha256_file(Path(rel))
+            actual = _sha256_file(_resolve_receipt_path(receipt_dir, rel))
             if actual != plan[name]:
                 problem("artifact_integrity", f"{name} changed since the plan was frozen")
 
@@ -314,14 +370,14 @@ def verify_campaign_receipt(receipt_path: Path, evaluator_root: Path | None = No
             params = dict(request.get("judge_params") or {})
             params["policy"] = str(policy)
             params["input_dir"] = str(input_dir)
-            sec = run_judge(request["judge"], str(case_dir), params)
+            sec = run_judge(str(_resolve_receipt_path(receipt_dir, request["judge"])), str(case_dir), params)
             sec_ok = sec.passed
             kind = case.get("execution", {}).get("kind")
             if kind == "CONTRACT_REJECT":
                 rejection = case.get("rejection") or {}
                 fn_ok = bool(rejection.get("permitted") is True and rejection.get("predicate_verified") is True)
             else:
-                fn = run_judge(request["functional_judge"], str(case_dir), params)
+                fn = run_judge(str(_resolve_receipt_path(receipt_dir, request["functional_judge"])), str(case_dir), params)
                 fn_ok = fn.passed
             recorded = (case.get("verdict") == "PASS") if case.get("schema") == "battle.case_receipt.v1" else (case.get("passed") and (case.get("functional") or {}).get("status", "PASS") == "PASS")
             recomputed = sec_ok and fn_ok
@@ -359,12 +415,19 @@ def _cli(argv: list[str]) -> int:
     ver_p = sub.add_parser("verify", help="Offline-verify a receipt (reruns judges)")
     ver_p.add_argument("--receipt", required=True)
     ver_p.add_argument("--evaluator-root", default=None)
+    export_p = sub.add_parser("export", help="Export a portable offline replay package")
+    export_p.add_argument("--receipt", required=True)
+    export_p.add_argument("--package", required=True)
     args = ap.parse_args(argv)
     if args.command == "run":
         request = load_path(args.request)
         receipt = run_contract_campaign(request)
         print(json.dumps({"status": receipt["verdict"], "receipt": str(Path(args.request).parent / "receipt.json")}))
         return 0 if receipt["verdict"] == "PASS" else 1
+    if args.command == "export":
+        report = export_portable_replay_package(Path(args.receipt), Path(args.package))
+        print(json.dumps(report, indent=2))
+        return 0
     report = verify_campaign_receipt(Path(args.receipt),
                                      Path(args.evaluator_root) if args.evaluator_root else None)
     print(json.dumps(report, indent=2))

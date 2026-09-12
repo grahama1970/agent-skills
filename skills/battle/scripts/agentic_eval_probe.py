@@ -1216,6 +1216,14 @@ def probe_b10_receipt_inventory_closure(summary_path: Path) -> int:
     )
 
 
+def probe_b11_portable_offline_replay(summary_path: Path) -> int:
+    return probe_pytest_contracts(
+        summary_path,
+        suite="battle-b11-make-offline-replay-independent-of-original-filesystem-path",
+        tests=["test_portable_offline_replay.py"],
+    )
+
+
 
 def probe_b05_strict_campaign_acceptance_envelopes(summary_path: Path) -> int:
     return probe_pytest_contracts(
@@ -4621,6 +4629,8 @@ def main() -> int:
             return probe_b09_fixture_witness_contract(args.summary)
         if args.suite == "battle-b10-verify-complete-evidence-inventories-and-case-rosters":
             return probe_b10_receipt_inventory_closure(args.summary)
+        if args.suite == "battle-b11-make-offline-replay-independent-of-original-filesystem-path":
+            return probe_b11_portable_offline_replay(args.summary)
         if args.suite == "review-receipt-hash-finalization":
             return probe_review_receipt_hash_finalization(args.summary)
         if args.suite == "review-judge-authority":

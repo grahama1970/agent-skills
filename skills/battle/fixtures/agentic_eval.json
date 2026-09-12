@@ -94,6 +94,15 @@
       "claim_semantics": "protocol"
     },
     {
+      "id": "battle.offline_replay.portable_package",
+      "description": "Battle exports self-contained replay packages with relative evidence and evaluator paths so offline verification succeeds after moving the package and deleting the original workspace, and missing packaged evidence cannot be recovered from old paths.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
       "id": "battle.local_docker.reactive_round",
       "description": "A clean local Battle repair round runs through the isolated Docker target and emits complete Red/Judge/Blue/scorekeeper receipts",
       "criticality": "critical",
@@ -712,6 +721,20 @@
         "unrecorded retained artifact is ignored by verification",
         "duplicated or reassigned case receipt preserves recorded PASS verdict",
         "request digest, plan digest, or aggregate counter tampering is trusted"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "offline_replay.portable_package",
+      "claim_id": "battle.offline_replay.portable_package",
+      "seam_type": "receipt/portable-replay",
+      "criticality": "critical",
+      "failure_modes": [
+        "offline verification reads the original absolute work_root after export",
+        "moved replay package cannot run because evaluator paths are absolute",
+        "missing packaged evidence is silently recovered from the old workspace"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -1548,6 +1571,39 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/battle-b10-verify-complete-evidence-inventories-and-case-rosters.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-b11-make-offline-replay-independent-of-original-filesystem-path",
+      "category": "battle-b11-make-offline-replay-independent-of-original-filesystem-path",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.offline_replay.portable_package"
+      ],
+      "seams": [
+        "offline_replay.portable_package"
+      ],
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b11-make-offline-replay-independent-of-original-filesystem-path --summary /tmp/battle-agentic-evals/battle-b11-make-offline-replay-independent-of-original-filesystem-path.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b11-make-offline-replay-independent-of-original-filesystem-path"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-b11-make-offline-replay-independent-of-original-filesystem-path.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800
