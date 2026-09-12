@@ -14,6 +14,7 @@ const verdict = await runs.run({ key: 'judge', agent: 'reviewer', model: 'anthro
 return { candidates, verdict };""",
 }
 AGENT_FOR = {"reviewer": "reviewer", "general-purpose": "general-purpose"}
+WEB_ALLOWED = {"webgpt", "webclaude", "webkimi", "webgemini", "webgrok", "webperplexity", "cursor-browser"}
 
 def main():
     p = argparse.ArgumentParser()
@@ -36,6 +37,8 @@ def main():
         if not model: agent, model = "reviewer", rest
         if agent not in AGENT_FOR: sys.exit("unknown agent " + agent)
         seats.append({"key": key, "agent": agent, "model": model})
+    for b in a.web:
+        if b not in WEB_ALLOWED: sys.exit("unknown web backend " + b + "; allowed: " + " ".join(sorted(WEB_ALLOWED)))
     if not seats and not a.web and not a.web_research:
         sys.exit("fail-closed: no seats (need --seat, --web, or --web-research)")
     t = pathlib.Path(__file__).parent.parent / "templates" / "workflow.template.js"

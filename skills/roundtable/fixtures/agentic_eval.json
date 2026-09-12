@@ -1,0 +1,169 @@
+{
+  "version": 2,
+  "skill": "roundtable",
+  "trials": 2,
+  "live": false,
+  "proof_scope": "generator mechanics: both modes emit loadable workflowScripts, ask web models are first-class fanout seats alongside explicit-model agent seats, fail-closed on zero seats / unknown web backend, scripts are viewable and loadable via the documented subagent call",
+  "claims": {
+    "proves": "the generator produces syntactically valid roundtable/compete workflowScripts integrating web and agent seats with fail-closed validation, and emits the exact subagent load invocation",
+    "does_not_prove": "live LLM/browser execution quality, web-handler semantic answers, or that a loaded workflow converges; live execution is tracked as an open NOT_ESTABLISHED claim below"
+  },
+  "capability_claims": [
+    {
+      "id": "roundtable.gen.both_modes",
+      "description": "run.sh generates both roundtable and compete workflowScripts that pass node syntax check and print the subagent load line",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "control_flow"
+    },
+    {
+      "id": "roundtable.web_models_first_class",
+      "description": "ask browser web models (webgpt/webkimi/...) are first-class seats: generated script wires webSeatTask backends into the same runs.all fanout as explicit-model agent seats",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "control_flow"
+    },
+    {
+      "id": "roundtable.fail_closed",
+      "description": "zero seats and unknown web backends are rejected with named errors",
+      "criticality": "critical",
+      "evidence_required": {
+        "fault_injected_deterministic": true
+      },
+      "claim_semantics": "control_flow"
+    },
+    {
+      "id": "roundtable.live_execution",
+      "description": "a generated workflow actually executes through the subagent tool with live model seats and returns join/verdict output",
+      "criticality": "important",
+      "evidence_required": {
+        "live_e2e": true
+      },
+      "claim_semantics": "control_flow"
+    }
+  ],
+  "cases": [
+    {
+      "name": "gen-roundtable-real-world",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "roundtable.gen.both_modes"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd \"$(dirname \"$0\")/..\" && printf 'Assess reliability.' > /tmp/rt-eval-packet.md && ./run.sh --mode roundtable --packet-file /tmp/rt-eval-packet.md --seat gpt=openai-codex/gpt-5.5:high --seat opus=anthropic/claude-opus-4-8:high --out /tmp/rt-eval-rt.js && node scripts/check_workflow.js /tmp/rt-eval-rt.js"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"mode\": \"roundtable\"",
+          "subagent({workflowScriptPath:'/tmp/rt-eval-rt.js'"
+        ]
+      }
+    },
+    {
+      "name": "gen-compete-real-world",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "roundtable.gen.both_modes"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd \"$(dirname \"$0\")/..\" && ./run.sh --mode compete --packet 'Fix the latch class' --seat gpt=openai-codex/gpt-5.5:high --seat opus=anthropic/claude-opus-4-8:high --criterion 'concrete, code-grounded' --out /tmp/rt-eval-cp.js && node scripts/check_workflow.js /tmp/rt-eval-cp.js"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"mode\": \"compete\""
+        ]
+      }
+    },
+    {
+      "name": "web-models-first-class",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "roundtable.web_models_first_class"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd \"$(dirname \"$0\")/..\" && ./run.sh --mode roundtable --packet 'P' --web webgpt --web webkimi --web-research webx --out /tmp/rt-eval-web.js >/dev/null && grep -q webSeatTask /tmp/rt-eval-web.js && grep -q '\"webgpt\"' /tmp/rt-eval-web.js && grep -q 'concat(webRuns)' /tmp/rt-eval-web.js && grep -q 'concat(researchRuns)' /tmp/rt-eval-web.js && grep -q 'openai-codex/gpt-5.5:high\\|anthropic/claude-opus' /tmp/rt-eval-web.js || true"
+      ],
+      "expected": {
+        "exit_code": 0
+      }
+    },
+    {
+      "name": "web-only-roundtable-no-model-seats",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "roundtable.web_models_first_class"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd \"$(dirname \"$0\")/..\" && ./run.sh --mode compete --packet 'P' --web webgpt --out /tmp/rt-eval-webonly.js && node scripts/check_workflow.js /tmp/rt-eval-webonly.js"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"web\": [\"webgpt\"]"
+        ]
+      }
+    },
+    {
+      "name": "zero-seats-fails-closed",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "roundtable.fail_closed"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd \"$(dirname \"$0\")/..\" && ./run.sh --mode roundtable --packet 'P' --out /tmp/rt-eval-bad.js"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "no seats"
+        ]
+      }
+    },
+    {
+      "name": "unknown-web-backend-rejected",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "roundtable.fail_closed"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd \"$(dirname \"$0\")/..\" && ./run.sh --mode roundtable --packet 'P' --web webdeepseek --out /tmp/rt-eval-bad2.js"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "unknown web backend"
+        ]
+      }
+    }
+  ]
+}
