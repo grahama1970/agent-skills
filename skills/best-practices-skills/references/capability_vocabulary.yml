@@ -67,6 +67,19 @@ capabilities:
   project-state-readiness-pattern:
     providers:
       - best-practices-skills
+  acceptance-contract:
+    providers:
+      - acceptance-contract
+  requirements-extraction:
+    providers:
+      - acceptance-contract
+  immutable-goal-draft:
+    providers:
+      - acceptance-contract
+  report-generation:
+    providers:
+      - acceptance-contract
+      - create-report
   animation-vocabulary:
     providers:
       - animation-vocabulary

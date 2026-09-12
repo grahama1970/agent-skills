@@ -1,0 +1,159 @@
+{
+  "version": 2,
+  "skill": "acceptance-contract",
+  "trials": 2,
+  "live": true,
+  "proof_scope": "Acceptance-contract real CLI path: extracts source-backed requirements from local briefs and zip bundles, validates the pydantic acceptance_contract.bundle.v1 boundary, renders create_report.report.v1 artifacts through create-report, and fails closed on unsafe zip input.",
+  "claims": {
+    "proves": "acceptance-contract accepts local file and zip inputs, emits typed requirements/cases/open questions, creates draft-only immutable-goal text, validates the bundle boundary, delegates report rendering to create-report, and rejects unsafe zip traversal.",
+    "does_not_prove": "that extracted requirements are semantically complete, human-approved, sufficient for a real client contract, or that Battle has executed the resulting bundle."
+  },
+  "capability_claims": [
+    {
+      "id": "acceptance_contract.extracts_requirements",
+      "description": "The skill extracts explicit must/shall/acceptance/fail-closed requirements from supplied local source files.",
+      "criticality": "critical",
+      "evidence_required": {"live_e2e": true},
+      "claim_semantics": "protocol"
+    },
+    {
+      "id": "acceptance_contract.report_bridge",
+      "description": "The skill renders a create-report-backed report from validated JSON.",
+      "criticality": "critical",
+      "evidence_required": {"live_e2e": true},
+      "claim_semantics": "protocol"
+    },
+    {
+      "id": "acceptance_contract.safe_bundle_input",
+      "description": "The skill rejects unsafe zip members instead of extracting path traversal entries.",
+      "criticality": "critical",
+      "evidence_required": {"adversarial_live_e2e": true},
+      "claim_semantics": "control_flow"
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "cli_input_bundle",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "claim_id": "acceptance_contract.extracts_requirements",
+      "required_evidence": ["live_e2e"]
+    },
+    {
+      "seam_id": "create_report_bridge",
+      "seam_type": "subprocess/schema",
+      "criticality": "critical",
+      "claim_id": "acceptance_contract.report_bridge",
+      "required_evidence": ["live_e2e"]
+    },
+    {
+      "seam_id": "zip_safety",
+      "seam_type": "filesystem/security",
+      "criticality": "critical",
+      "claim_id": "acceptance_contract.safe_bundle_input",
+      "required_evidence": ["adversarial_live_e2e"]
+    }
+  ],
+  "cases": [
+    {
+      "name": "skill-contract-validation",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [],
+      "seams": ["cli_input_bundle"],
+      "timeout_seconds": 60,
+      "command": ["python3", "../../best-practices-skills/scripts/validate_skill.py", "..", "--json"],
+      "expected": {"exit_code": 0}
+    },
+    {
+      "name": "file-brief-extracts-requirements",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": ["acceptance_contract.extracts_requirements"],
+      "seams": ["cli_input_bundle"],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-lc",
+        "ROOT=/home/graham/workspace/experiments/agent-skills; tmp=/tmp/acceptance-contract-eval-file; rm -rf $tmp; mkdir -p $tmp; cat >$tmp/brief.md <<'BRIEF'\nThe system must remove customer phone numbers in every representation.\nValid CSV rows must accept non-sensitive literals unchanged.\nOutputs must not leak policy values.\nShould images be in scope?\nBRIEF\n$ROOT/skills/acceptance-contract/run.sh extract $tmp/brief.md --out $tmp/out --project-name demo --goal-mode create >/tmp/acceptance-contract-eval-file-receipt.json && python3 - <<'PY' $tmp/out/acceptance_bundle.json\nimport json, sys\nbundle=json.load(open(sys.argv[1], encoding='utf-8'))\nassert len(bundle['requirements'])==3\nassert len(bundle['acceptance_cases'])==3\nassert bundle['immutable_goal']['mutation_policy']=='draft_only_human_approval_required'\nprint('file extraction PASS')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["file extraction PASS"],
+        "artifacts": [
+          {"path": "/tmp/acceptance-contract-eval-file/out/acceptance_bundle.json", "json_pointer": "/schema", "equals": "acceptance_contract.bundle.v1"},
+          {"path": "/tmp/acceptance-contract-eval-file/out/acceptance_bundle.json", "json_pointer": "/requirements/0/statement", "equals": "The system must remove customer phone numbers in every representation."}
+        ]
+      }
+    },
+    {
+      "name": "create-report-bridge-renders-report",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": ["acceptance_contract.report_bridge"],
+      "seams": ["create_report_bridge"],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-lc",
+        "ROOT=/home/graham/workspace/experiments/agent-skills; tmp=/tmp/acceptance-contract-eval-report; rm -rf $tmp; mkdir -p $tmp; printf 'The product must preserve literal non-PII text.\n' >$tmp/brief.md; $ROOT/skills/acceptance-contract/run.sh extract $tmp/brief.md --out $tmp/out --project-name demo --goal-mode create >/tmp/acceptance-contract-eval-report-receipt.json && grep -q 'Report Summary' $tmp/out/acceptance_report.md && echo 'report bridge PASS'"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["report bridge PASS"],
+        "artifacts": [
+          {"path": "/tmp/acceptance-contract-eval-report/out/acceptance_report.json", "json_pointer": "/schema", "equals": "create_report.report.v1"},
+          {"path": "/tmp/acceptance-contract-eval-report/out/acceptance_report.json", "json_pointer": "/primary_object", "equals": "acceptance requirements bundle"}
+        ]
+      }
+    },
+    {
+      "name": "zip-brief-extracts",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": ["acceptance_contract.extracts_requirements"],
+      "seams": ["cli_input_bundle"],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-lc",
+        "ROOT=/home/graham/workspace/experiments/agent-skills; tmp=/tmp/acceptance-contract-eval-zip; rm -rf $tmp; mkdir -p $tmp; printf 'The gate shall fail closed when the judge errors.\n' >$tmp/brief.txt; (cd $tmp && zip -q brief.zip brief.txt); $ROOT/skills/acceptance-contract/run.sh extract $tmp/brief.zip --out $tmp/out --project-name demo --goal-mode none >/tmp/acceptance-contract-eval-zip-receipt.json && python3 - <<'PY' $tmp/out/acceptance_bundle.json\nimport json, sys\nd=json.load(open(sys.argv[1], encoding='utf-8'))\nassert len(d['requirements'])==1\nprint('zip extraction PASS')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["zip extraction PASS"],
+        "artifacts": [
+          {"path": "/tmp/acceptance-contract-eval-zip/out/acceptance_bundle.json", "json_pointer": "/source/kind", "equals": "zip"}
+        ]
+      }
+    },
+    {
+      "name": "unsafe-zip-fails-closed",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": ["acceptance_contract.safe_bundle_input"],
+      "seams": ["zip_safety"],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-lc",
+        "ROOT=/home/graham/workspace/experiments/agent-skills; tmp=/tmp/acceptance-contract-eval-unsafe; rm -rf $tmp; mkdir -p $tmp; python3 - <<'PY' $tmp/bad.zip\nimport sys, zipfile\nwith zipfile.ZipFile(sys.argv[1], 'w') as zf:\n    zf.writestr('../brief.txt', 'The system must reject traversal.\\n')\nPY\nif $ROOT/skills/acceptance-contract/run.sh extract $tmp/bad.zip --out $tmp/out >$tmp/stdout 2>$tmp/stderr; then exit 9; fi; python3 - <<'PY' $tmp/stderr /tmp/acceptance-contract-eval-unsafe-proof.json\nimport json, pathlib, sys\nerr=pathlib.Path(sys.argv[1]).read_text()\nproof={'status':'PASS' if 'unsafe zip member' in err else 'FAIL', 'stderr_contains_unsafe_zip_member':'unsafe zip member' in err}\npathlib.Path(sys.argv[2]).write_text(json.dumps(proof))\nassert proof['status']=='PASS'\nprint('unsafe zip rejected PASS')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["unsafe zip rejected PASS"],
+        "artifacts": [
+          {"path": "/tmp/acceptance-contract-eval-unsafe-proof.json", "json_pointer": "/status", "equals": "PASS"},
+          {"path": "/tmp/acceptance-contract-eval-unsafe-proof.json", "json_pointer": "/stderr_contains_unsafe_zip_member", "equals": true}
+        ]
+      }
+    }
+  ]
+}
