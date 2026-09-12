@@ -384,6 +384,8 @@ If the 7.5-second path is unstable, fall back to six 5-second clips:
 ## Fail-Closed Rules
 
 - If no residue is recalled, return `blocked` with `reason: no_dream`.
+- Canon-entity misspellings in the scene/about text are corrected deterministically at the video_plan gate (e.g. `Zeitch Eye` -> `Eye of Tzeentch`) with a `canon_entity_corrections.json` receipt; the immutable Phase 01 human idea keeps its original wording. Tokens that near-match a canon entity with no deterministic correction fail closed with `reason: canon_entity_ambiguous` and no storyboard is composed.
+
 - In `video_plan` mode, dialogue scenes must fail closed before provider prompt
   readiness unless `cinematography_coverage_receipt.json` passes the
   `$best-practices-cinematography` coverage rules and the voice handoff names

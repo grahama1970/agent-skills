@@ -7,6 +7,7 @@ Excalidraw source: skills/persona-dream/docs/explain/boards/persona-dream-kling-
 from __future__ import annotations
 
 from pydantic_step_gate import validate_http_json
+from canon_entities import correct_canon_entities, blocked_response as canon_blocked_response
 
 import hashlib
 import json
@@ -976,7 +977,7 @@ Core tension: {core_tension}
             "coverage": "horus-reverse-medium-close-up",
             "speaker": "horus",
             "eyeline": "Horus screen-right faces camera-left; Embry screen-left listens in profile",
-            "visual": "Horus taps the table; evidence receipts arrange like a campaign map under the purple Zeitch Eye light.",
+            "visual": "Horus taps the table; evidence receipts arrange like a campaign map under the purple Eye of Tzeentch light.",
             "dialogue": "Then make the receipt a battle standard: case, state, reason, artifact, next action. No theater.",
         },
         {
@@ -1013,7 +1014,7 @@ Core tension: {core_tension}
             "speaker-favored framing",
             "stable 180-degree line and eyelines",
             "matched shot/reverse-shot framing",
-            "motivated lighting from the SPARTA map and Zeitch Eye",
+            "motivated lighting from the SPARTA map and Eye of Tzeentch",
         ],
         "shot_plan": [
             {key: shot[key] for key in ("shot_id", "speaker", "coverage", "camera", "eyeline", "beat")}
@@ -1797,6 +1798,32 @@ def generate(
             typer.echo(json.dumps(response, indent=2))
             raise typer.Exit(3)
         artifacts.extend(crew_result)  # type: ignore[arg-type]
+
+        # Canon-entity gate: correct known misspellings (e.g. Zeitch -> Eye of
+        # Tzeentch) with a receipt; fail closed on ambiguous canon near-misses.
+        scene_canon = correct_canon_entities(scene)
+        about_canon = correct_canon_entities(about)
+        ambiguous = scene_canon.ambiguous + about_canon.ambiguous
+        corrections = scene_canon.corrections + about_canon.corrections
+        if ambiguous:
+            response = {
+                "schema": "persona_dream.canon_entity_gate.v1",
+                **canon_blocked_response(scene_canon if scene_canon.ambiguous else about_canon),
+                "ambiguous_entities": ambiguous,
+                "run_id": run_id,
+                "output_dir": str(out),
+            }
+            _write_json(out / "response.json", response)
+            typer.echo(json.dumps(response, indent=2))
+            raise typer.Exit(3)
+        if corrections:
+            _write_json(out / "canon_entity_corrections.json", {
+                "schema": "persona_dream.canon_entity_corrections.v1",
+                "scope": "scene + about (generated content only; the immutable Phase 01 human idea keeps original wording)",
+                "corrections": corrections,
+            })
+            artifacts.append("canon_entity_corrections.json")
+        scene, about = scene_canon.corrected, about_canon.corrected
 
         persona_ids = [persona.id] + ([secondary_persona.id] if secondary_persona else [])
         persona_source_context = _persona_context(persona_ids)

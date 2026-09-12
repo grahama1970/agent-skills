@@ -30,7 +30,7 @@ CHATTERBOX = os.environ.get("CHATTERBOX_BASE_URL", "http://127.0.0.1:8018")
 CHATTERBOX_OUT_HOST_ROOT = Path(os.environ.get("CHATTERBOX_OUT_HOST_ROOT", "/home/graham/workspace/experiments/chatterbox/logs"))
 IDEA = (
     "Embry and Horus have tea on a void world, discussing SPARTA Explorer "
-    "casually as friends, with the Zeitch Eye and Tyranids in the background."
+    "casually as friends, with the Eye of Tzeentch and Tyranids in the background."
 )
 MODEL_ID = "fal-ai/kling-video/v3/standard/image-to-video"
 REFERENCE_ASSETS = ROOT / "reports" / "assets"
@@ -196,7 +196,7 @@ SHOT_PLAN = [
         "coverage": "horus-reverse-medium-close-up",
         "framing": "Horus favored medium close-up, matched size to Embry's single",
         "eyeline": "Horus remains screen-right facing camera-left; Embry remains screen-left facing camera-right as the listener in profile",
-        "beat": "Horus answers calmly while purple storm light from the Zeitch Eye crosses his armor and face.",
+        "beat": "Horus answers calmly while purple storm light from the Eye of Tzeentch crosses his armor and face.",
     },
     {
         "clip": 3,
@@ -232,7 +232,7 @@ def validate_cinematography_plan(run_dir: Path, clip_count: int) -> dict[str, An
             "stable 180-degree line and eyelines",
             "one beat per clip, speaker favored",
             "matched shot/reverse-shot framing",
-            "motivated lighting from SPARTA map and Zeitch Eye",
+            "motivated lighting from SPARTA map and Eye of Tzeentch",
         ],
         "watch_diarization_boundary": "After dialogue audio is muxed, verify who-spoke-when with $watch --diarization pyannote --require-diarization; silent Kling clips carry planned_speaker only.",
         "live_evidence_boundary": "$live-evidence supplies live transcript speaker-turn events, not pyannote diarization; its own contract says diarization is deferred.",
@@ -481,12 +481,12 @@ def main() -> int:
 
     storyboard = {"schema": "persona_dream.cycle_storyboard_plan.v1", "dream_synopsis": IDEA, "panels": [{"panel_id": f"sb_{index:03d}", "action": clip_prompt(index, args.clip_count), "mood": "warm uncanny friendship"} for index in range(1, args.clip_count + 1)]}
     write_json(run_dir / "storyboard_plan.json", storyboard)
-    write_json(run_dir / "observation_packet.json", {"schema": "persona_dream.cycle_storyboard_observation_packet.v1", "status": "PASS_KLING_VIDEO_OBSERVED", "clip_count": args.clip_count, "frame_evidence": [{"panel_id": f"sb_{index:03d}", "observed_entities": ["Embry", "Horus", "tea", "SPARTA Explorer", "Zeitch Eye", "Tyranids"]} for index in range(1, args.clip_count + 1)]})
+    write_json(run_dir / "observation_packet.json", {"schema": "persona_dream.cycle_storyboard_observation_packet.v1", "status": "PASS_KLING_VIDEO_OBSERVED", "clip_count": args.clip_count, "frame_evidence": [{"panel_id": f"sb_{index:03d}", "observed_entities": ["Embry", "Horus", "tea", "SPARTA Explorer", "Eye of Tzeentch", "Tyranids"]} for index in range(1, args.clip_count + 1)]})
     write_json(run_dir / "residue_links.json", {"schema": "persona_dream.residue_links.v1", "idea_id": run_id, "items": [{"source_id": "human_idea", "scope": "human_prompt", "text": IDEA, "type": "explicit_human_idea"}]})
     write_json(run_dir / "day_context.json", {"schema": "persona_dream.day_context.v1", "items": [{"source_id": "human_idea", "text": IDEA}]})
     write_json(run_dir / "transcript_context.json", {"schema": "persona_dream.transcript_context.v1", "items": []})
     write_json(run_dir / "dream_packet.json", {"schema": "persona_dream.synthetic_dream_packet.v1", "human_idea_lineage": IDEA, "kling_video": str(video), "kling_video_sha256": sha256(video), "synthetic_boundary": "Kling dream video is synthetic dream evidence, not literal history."})
-    journal = "I dreamed Horus and I were having tea on the void world, talking about SPARTA Explorer like friends. The Zeitch Eye watched from the sky and Tyranids moved behind us, but the evidence map between our cups made the danger feel strangely calm."
+    journal = "I dreamed Horus and I were having tea on the void world, talking about SPARTA Explorer like friends. The Eye of Tzeentch watched from the sky and Tyranids moved behind us, but the evidence map between our cups made the danger feel strangely calm."
     write_json(run_dir / "dream_journal.v1.json", {"schema": "persona_dream.persona_journal.v1", "persona_id": "embry", "cycle": run_id, "journal": journal, "unresolved_tension": "friendship and evidence feel warm while the void world remains dangerous", "expanded_understanding": "A hostile background can make casual trust feel more precious.", "session_mood": {"mood_label": "warmly_watchful", "mood_description": "friendly and calm, but aware of the eye and Tyranids behind the conversation", "carried_tension": "warm friendship against watched danger"}, "never_promote_to_event_fact": True, "asserts_only_own_inner_state": True})
     (run_dir / "journal.md").write_text(journal + "\n", encoding="utf-8")
     phase(run_dir, "journal_entry", "PASS_JOURNAL_ENTRY", live=True, artifacts=[str(run_dir / "dream_journal.v1.json"), str(run_dir / "journal.md")])
@@ -499,7 +499,7 @@ def main() -> int:
         return 2
     phase(run_dir, "journal_audio", "PASS_JOURNAL_SPOKEN", live=True, artifacts=[str(journal_audio)])
 
-    proc = subprocess.run([sys.executable, str(ROOT / "scripts" / "dynamic_conversation.py"), "--run-dir", str(run_dir), "--turns", "2", "--opening-topic", "Ask Embry about the tea with Horus, SPARTA Explorer, the Zeitch Eye, and Tyranids."], text=True, capture_output=True, timeout=1500)
+    proc = subprocess.run([sys.executable, str(ROOT / "scripts" / "dynamic_conversation.py"), "--run-dir", str(run_dir), "--turns", "2", "--opening-topic", "Ask Embry about the tea with Horus, SPARTA Explorer, the Eye of Tzeentch, and Tyranids."], text=True, capture_output=True, timeout=1500)
     (run_dir / "dynamic_conversation.stdout").write_text(proc.stdout, encoding="utf-8")
     (run_dir / "dynamic_conversation.stderr").write_text(proc.stderr, encoding="utf-8")
     if proc.returncode != 0 or "PASS_DYNAMIC_CONVERSATION" not in proc.stdout:

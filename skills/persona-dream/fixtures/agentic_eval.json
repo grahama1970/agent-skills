@@ -205,6 +205,28 @@
           "CRYING_SFX_ROUTING_OK"
         ]
       }
+    },
+    {
+      "name": "canon-entity-gate-corrects-and-fail-closes",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "required": true,
+      "supports_claims": [
+        "persona_dream.agentic_pipeline_driver"
+      ],
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "D1=$(mktemp -d /tmp/persona-dream-canon-e1.XXXXXX); bash ../run.sh generate --mode video_plan --persona horus --secondary-persona embry --fixture ../scripts/fixtures/sample_residue.json --crew-dir ../scripts/fixtures/crew --about 'creating the SPARTA Explorer app' --scene 'Horus and Embry have tea under a patio umbrella on a void world with the Zeitch Eye and Tyranids in the background.' --duration-seconds 30 --output-dir \"$D1\" --run-id canon-e1 --no-write-memory >/dev/null 2>&1; RC1=$?; D2=$(mktemp -d /tmp/persona-dream-canon-e2.XXXXXX); bash ../run.sh generate --mode video_plan --persona horus --secondary-persona embry --fixture ../scripts/fixtures/sample_residue.json --crew-dir ../scripts/fixtures/crew --about 'creating the SPARTA Explorer app' --scene 'Horus and Embry have tea under a patio umbrella on a void world with the Tzenntch Eye watching.' --duration-seconds 30 --output-dir \"$D2\" --run-id canon-e2 --no-write-memory >/dev/null 2>&1; RC2=$?; python3 - \"$D1\" \"$D2\" \"$RC1\" \"$RC2\" <<'PY2'\nimport json, pathlib, sys\nd1, d2, rc1, rc2 = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])\nassert rc1 == 0, rc1\ncorr = json.loads((pathlib.Path(d1) / 'canon_entity_corrections.json').read_text())\nassert any(c['corrected'] == 'Eye of Tzeentch' and c['entity'] == 'Tzeentch' for c in corr['corrections']), corr\nsb = json.loads((pathlib.Path(d1) / 'storyboard.json').read_text())\ns = json.dumps(sb)\nassert 'Eye of Tzeentch' in s and 'Zeitch' not in s, 'storyboard must carry corrected canon'\nassert rc2 == 3, rc2\nresp = json.loads((pathlib.Path(d2) / 'response.json').read_text())\nassert resp['reason'] == 'canon_entity_ambiguous', resp\nassert any('tzeentch' in a['candidates'] for a in resp['ambiguous_entities']), resp\nassert not (pathlib.Path(d2) / 'storyboard.json').exists(), 'ambiguous canon must not compose a storyboard'\nprint('CANON_ENTITY_GATE_OK')\nPY2"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CANON_ENTITY_GATE_OK"
+        ]
+      }
     }
   ]
 }
