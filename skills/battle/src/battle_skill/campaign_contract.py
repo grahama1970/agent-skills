@@ -28,7 +28,7 @@ from typing import Any
 
 from .docker_runtime import extract_docker_run_image
 from .evaluator_lock import verify_evaluator_lock
-from .invariant_campaign import _materialize_case_snapshot, _regular_files, load_profile, run_campaign
+from .invariant_campaign import _aggregate, _materialize_case_snapshot, _regular_files, load_profile, run_campaign
 from .invariant_judge import run_judge
 from .strict_json import finite_json_values, load_path
 
@@ -178,6 +178,7 @@ def run_contract_campaign(request: dict[str, Any]) -> dict[str, Any]:
         "request": request,
         "request_sha256": _sha256_bytes(json.dumps(request, sort_keys=True).encode()),
         "plan": plan,
+        "plan_sha256": _sha256_bytes(json.dumps(plan, sort_keys=True).encode()),
         "verdict": "PASS" if result.passed else "FAIL",
         "aggregation": {
             "cases_total": result.cases_total,
@@ -223,24 +224,75 @@ def verify_campaign_receipt(receipt_path: Path, evaluator_root: Path | None = No
             report["artifact_integrity"] = "FAIL"
         report["semantic_replay"] = "FAIL"
 
-    # 1. artifact integrity: recompute every recorded hash
-    for entry in receipt["output_manifest"]:
-        f = out_root / entry["path"]
-        if not f.is_file():
-            problem("artifact_integrity", f"missing artifact {entry['path']}")
-        elif _sha256_file(f) != entry["sha256"]:
-            problem("artifact_integrity", f"hash mismatch {entry['path']}")
+    def manifest_map(entries: list[dict[str, Any]], label: str) -> dict[str, tuple[str, int]]:
+        out: dict[str, tuple[str, int]] = {}
+        for entry in entries:
+            path = entry.get("path")
+            if not isinstance(path, str) or path in out:
+                problem("artifact_integrity", f"duplicate or invalid {label} manifest path {path!r}")
+                continue
+            out[path] = (entry.get("sha256"), entry.get("bytes"))
+        return out
+
+    def compare_manifest(label: str, recorded: list[dict[str, Any]], actual: list[dict[str, Any]]) -> None:
+        recorded_map = manifest_map(recorded, label)
+        actual_map = manifest_map(actual, f"actual {label}")
+        if set(recorded_map) != set(actual_map):
+            missing = sorted(set(recorded_map) - set(actual_map))
+            extra = sorted(set(actual_map) - set(recorded_map))
+            problem("artifact_integrity", f"{label} inventory mismatch missing={missing} extra={extra}")
+        for path in sorted(set(recorded_map) & set(actual_map)):
+            if recorded_map[path] != actual_map[path]:
+                problem("artifact_integrity", f"{label} hash/size mismatch {path}")
+
+    # 1. artifact integrity: exact retained inventories, not only recorded paths
+    compare_manifest("output", receipt["output_manifest"], _manifest_tree(out_root))
     case_input_dirs = {case["id"]: Path(case["input_dir"]) for case in plan.get("cases", [])}
     for case_manifest in plan["input_manifest"]:
         base = case_input_dirs.get(case_manifest["id"], work / "gen" / case_manifest["id"])
-        for entry in case_manifest["files"]:
-            f = base / entry["path"]
-            if not f.is_file():
-                problem("artifact_integrity", f"missing input {case_manifest['id']}/{entry['path']}")
-            elif _sha256_file(f) != entry["sha256"]:
-                problem("artifact_integrity", f"input hash mismatch {case_manifest['id']}/{entry['path']}")
+        compare_manifest(f"input {case_manifest['id']}", case_manifest["files"], _manifest_tree(base))
 
-    # 2. judge identity: digests must match the supplied evaluator tree
+    request_sha = _sha256_bytes(json.dumps(request, sort_keys=True).encode())
+    if receipt.get("request_sha256") != request_sha:
+        problem("artifact_integrity", "request_sha256 mismatch")
+    plan_sha = _sha256_bytes(json.dumps(plan, sort_keys=True).encode())
+    if receipt.get("plan_sha256") != plan_sha:
+        problem("artifact_integrity", "plan_sha256 mismatch")
+
+    # 2. roster and aggregate closure: planned cases, observations, and receipts are one-to-one.
+    plan_ids = [case.get("id") for case in plan.get("cases", [])]
+    final_cases = receipt.get("case_receipts") or receipt["case_results"]
+    receipt_ids = [case.get("case_id") or case.get("case") for case in final_cases]
+    if len(plan_ids) != len(set(plan_ids)):
+        problem("semantic_replay", f"duplicate planned case IDs: {plan_ids}")
+    if len(receipt_ids) != len(set(receipt_ids)):
+        problem("semantic_replay", f"duplicate receipt case IDs: {receipt_ids}")
+    if set(plan_ids) != set(receipt_ids):
+        problem("semantic_replay", f"case roster mismatch planned={sorted(plan_ids)} receipts={sorted(receipt_ids)}")
+    if receipt.get("case_results") and set(receipt_ids) != {case.get("case") for case in receipt["case_results"]}:
+        problem("semantic_replay", "case_results and case_receipts rosters differ")
+    if "functional" in (plan.get("required_judges") or []):
+        missing_functional = [case.get("case_id") for case in final_cases
+                              if case.get("execution", {}).get("kind") == "ACCEPT"
+                              and (case.get("functional_judge") or case.get("functional", {})).get("status") != "PASS"]
+        if missing_functional:
+            problem("semantic_replay", f"required functional Judge coverage missing: {missing_functional}")
+    recomputed_aggregate = {
+        "cases_total": len(final_cases),
+        "cases_passed": sum(1 for c in final_cases if c.get("verdict") == "PASS" or c.get("passed") is True),
+        "accepted": sum(1 for c in final_cases if c.get("execution", {}).get("kind") == "ACCEPT"),
+        "rejected": sum(1 for c in final_cases if c.get("execution", {}).get("kind") == "CONTRACT_REJECT"),
+        "must_accept": sum(1 for c in final_cases if c.get("expectation") == "MUST_ACCEPT"),
+        "must_reject": sum(1 for c in final_cases if c.get("expectation") == "MUST_REJECT"),
+        "may_reject": sum(1 for c in final_cases if c.get("expectation") == "MAY_REJECT"),
+        "failures": sum(1 for c in final_cases if c.get("verdict") != "PASS"),
+        **_aggregate(final_cases),
+    }
+    for key, value in recomputed_aggregate.items():
+        if receipt.get("aggregation", {}).get(key) != value:
+            problem("semantic_replay", f"aggregate mismatch {key}: {receipt.get('aggregation', {}).get(key)!r} != {value!r}")
+
+    # 3. judge identity: digests must match the supplied evaluator tree
     if evaluator_root is not None:
         for name, rel in (("judge_sha256", request["judge"]),
                           ("functional_judge_sha256", request["functional_judge"]),
@@ -249,7 +301,7 @@ def verify_campaign_receipt(receipt_path: Path, evaluator_root: Path | None = No
             if actual != plan[name]:
                 problem("artifact_integrity", f"{name} changed since the plan was frozen")
 
-    # 3. semantic replay: rerun judges on retained observations
+    # 4. semantic replay: rerun judges on retained observations
     if report["artifact_integrity"] == "PASS":
         replay_cases = receipt.get("case_receipts") or receipt["case_results"]
         for case in replay_cases:

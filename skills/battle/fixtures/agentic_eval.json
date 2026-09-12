@@ -85,6 +85,15 @@
       "claim_semantics": "control_flow"
     },
     {
+      "id": "battle.receipt_inventory.closure",
+      "description": "Battle offline verification re-enumerates retained input/output inventories, enforces one-to-one case rosters, and recomputes request and plan digests, aggregate counters, Judge coverage, and verdicts instead of trusting recorded PASS fields.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
       "id": "battle.local_docker.reactive_round",
       "description": "A clean local Battle repair round runs through the isolated Docker target and emits complete Red/Judge/Blue/scorekeeper receipts",
       "criticality": "critical",
@@ -689,6 +698,20 @@
         "any Judge failure is accepted as proof that the intended sensitive value exists",
         "MUST_REJECT fixtures bypass an approved invalid-input predicate",
         "invalid fixture is counted as a Red win or successful floor case"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "receipt_inventory.closure",
+      "claim_id": "battle.receipt_inventory.closure",
+      "seam_type": "receipt/offline-verifier",
+      "criticality": "critical",
+      "failure_modes": [
+        "unrecorded retained artifact is ignored by verification",
+        "duplicated or reassigned case receipt preserves recorded PASS verdict",
+        "request digest, plan digest, or aggregate counter tampering is trusted"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -1492,6 +1515,39 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/battle-b09-require-a-typed-fixture-witness-rather-than-any-judge-failu.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-b10-verify-complete-evidence-inventories-and-case-rosters",
+      "category": "battle-b10-verify-complete-evidence-inventories-and-case-rosters",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.receipt_inventory.closure"
+      ],
+      "seams": [
+        "receipt_inventory.closure"
+      ],
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b10-verify-complete-evidence-inventories-and-case-rosters --summary /tmp/battle-agentic-evals/battle-b10-verify-complete-evidence-inventories-and-case-rosters.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b10-verify-complete-evidence-inventories-and-case-rosters"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-b10-verify-complete-evidence-inventories-and-case-rosters.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800
