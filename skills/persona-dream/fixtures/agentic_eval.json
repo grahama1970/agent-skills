@@ -15,7 +15,8 @@
       "evidence_required": {
         "deterministic": true,
         "fault_injected_deterministic": true
-      }
+      },
+      "claim_semantics": "control_flow"
     }
   ],
   "cases": [
@@ -180,6 +181,28 @@
         "exit_code": 0,
         "stdout_contains": [
           "PYDANTIC_TRIAGE_STEP_BOUNDARIES_OK"
+        ]
+      }
+    },
+    {
+      "name": "crying-routes-to-sfx-not-turbo-tag",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "required": true,
+      "supports_claims": [
+        "persona_dream.agentic_pipeline_driver"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "uv run --project .. python - <<'EOF'\nimport sys, json, pathlib\nsys.path.insert(0, '../scripts')\nimport chatterbox_utterances as u\nassert '[crying]' not in u.EXTENDED_STYLE_TOKENS, 'crying tag must not be a Turbo inline token'\nassert '[crying]' not in u.ALL_SUPPORTED_INLINE_TOKENS\ngrief = 'The grief of losing Kai came crying back; I sat with the ache.'\ntags = u.choose_event_tags(grief, 'grief_safe')\nassert '[crying]' not in tags, tags\ntext, used = u.inject_event_tags(grief, 'grief_safe')\nassert '[crying]' not in text, text\nchunks = u.compile_render_chunks(text, 'grief_safe')\nassert chunks and all('[crying]' not in c['text'] for c in chunks), chunks\nlast = chunks[-1]\nassert last.get('sfx_after', '').startswith('cry-'), last\nlib = json.loads(pathlib.Path(last['sfx_after_library']).read_text())\nassert last['sfx_after'] in {e['id'] for e in lib['entries']}, 'sfx asset must exist in chatterbox-speak library'\nassert any(e['id'] == last['sfx_after'] and e.get('generated_by', {}).get('engine') == 'elevenlabs_v3' for e in lib['entries'])\nt2, _ = u.inject_event_tags('[crying] I keep thinking about the devastating news.', 'grief_safe')\nc2 = u.compile_render_chunks(t2, 'grief_safe')\nassert all('[crying]' not in c['text'] for c in c2), c2\nassert c2[-1].get('sfx_after'), 'model-emitted [crying] must route to sfx_after'\nc3 = u.compile_render_chunks('The report finished on time. Two sections passed.', 'playful_light')\nassert all('sfx_after' not in c for c in c3), c3\npg = u.prompt_guidance()\nassert 'write [crying]' in pg and 'inert' in pg, 'guidance must forbid the inert tag'\nprint('CRYING_SFX_ROUTING_OK')\nEOF"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CRYING_SFX_ROUTING_OK"
         ]
       }
     }

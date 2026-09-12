@@ -17,8 +17,17 @@ ACCEPTED_EVENT_TAGS = {
 
 EXTENDED_STYLE_TOKENS = {
     "[angry]", "[fear]", "[surprised]", "[whispering]", "[advertisement]",
-    "[dramatic]", "[narration]", "[crying]", "[happy]", "[sarcastic]",
+    "[dramatic]", "[narration]", "[happy]", "[sarcastic]",
 }
+
+# [crying] is intentionally absent everywhere: it is inert on Chatterbox Turbo
+# (measured; upstream issue #186). Crying beats are NEVER inline tags. When the
+# line carries crying intent, compile_render_chunks attaches sfx_after naming a
+# cached ElevenLabs v3 clip from the chatterbox-speak SFX library (embry-nonverbal
+# clone), which the audio lane splices at the sentence boundary.
+CRYING_SFX_LIBRARY = "/mnt/storage12tb/skills/chatterbox-speak/outputs/sfx-library/manifest.json"
+CRYING_SFX_DEFAULT_ASSET = "cry-choked-v1"
+_CRYING_INTENT_RE = re.compile(r"\b(tender|tenderness|grief|ache|aching|devastating|cry|crying)\b", re.I)
 
 ALL_SUPPORTED_INLINE_TOKENS = ACCEPTED_EVENT_TAGS | EXTENDED_STYLE_TOKENS
 PAUSE_IMPLEMENTATION = "chatterbox_render_chunks_post_render_stitching"
@@ -78,7 +87,7 @@ def prompt_guidance(*, include_clean_reply_rule: bool = False) -> str:
 
 Extended tokenizer style/emotion tokens available when genuinely relevant:
 [angry], [fear], [surprised], [whispering], [advertisement], [dramatic],
-[narration], [crying], [happy], [sarcastic]. Prefer the native vocal event tags
+[narration], [happy], [sarcastic]. Prefer the native vocal event tags
 for audible utterances; use extended style tokens sparingly because their effect
 varies.
 
@@ -88,8 +97,11 @@ or -- for an abrupt break. Use spaces around ellipses: write "Kai ... and I",
 not "Kai...and I". Put pauses where Embry is thinking or feeling, not mechanically.
 Do not end the utterance on an ellipsis, dash, tag, or unfinished thought.
 For tenderness, grief, fear, or a moment where she has to collect herself, prefer
-repeated embodied cues such as "[sniff] [sniff] ... give me a second" and use
-[crying] only when the line genuinely carries tears. Persona Dream will convert
+repeated embodied cues such as "[sniff] [sniff] ... give me a second". Never
+write [crying]; it is inert on Turbo. When the line genuinely carries tears,
+write the [sniff] and halting ellipses only — the audio lane splices a cached
+ElevenLabs v3 cry clip at the sentence boundary automatically. Persona Dream will
+convert
 these ellipses and collection cues into exact Chatterbox render_chunks
 pause_after_ms silence, stitched after each generated segment with crossfade_ms={EXACT_PAUSE_CROSSFADE_MS};
 your job is to put the affect beats at honest locations.
@@ -128,7 +140,6 @@ _SECONDARY_BY_TONE = {
 
 _CONTENT_TAGS = [
     (re.compile(r"\b(tender|tenderness|ache|aching|cry|crying|grief|sad|scared|afraid|fear|hurt|shame|lonely|alone|devastating|flinch)\b", re.I), "[sniff]"),
-    (re.compile(r"\b(tender|tenderness|grief|ache|aching|devastating|cry|crying)\b", re.I), "[crying]"),
     (re.compile(r"\b(surprise|surprised|sudden|realized|realise|caught|startled|shock|shocked)\b", re.I), "[gasp]"),
     (re.compile(r"\b(warm|gentle|relieved|safe|soft|funny|laugh|light|permission)\b", re.I), "[chuckle]"),
 ]
@@ -203,6 +214,16 @@ def choose_event_tags(text: str, tone: str, *, max_tags: int = 5) -> list[str]:
     return _dedupe(tags)[:max_tags]
 
 
+def strip_inert_crying_tag(text: str) -> tuple[str, bool]:
+    """Remove literal [crying] tokens; report whether the line carries crying intent.
+
+    Models may still emit [crying] despite guidance; it is inert on Turbo, so it
+    is stripped here and the crying beat is routed to the SFX lane instead.
+    """
+    stripped = str(text or "").replace("[crying]", " ")
+    return " ".join(stripped.split()), bool(_CRYING_INTENT_RE.search(str(text or "")))
+
+
 def inject_event_tags(text: str, tone: str, *, max_tags: int = 5) -> tuple[str, list[str]]:
     """Return text with inline native event tags and the tags used.
 
@@ -223,7 +244,7 @@ def inject_event_tags(text: str, tone: str, *, max_tags: int = 5) -> tuple[str, 
     if not sentences:
         return f"{tags[0]}... {clean}".strip(), tags
 
-    if any(tag in {"[sniff]", "[crying]"} for tag in tags):
+    if any(tag in {"[sniff]"} for tag in tags):
         opener = "[sniff] [sniff] ..." if "[sniff]" in tags else f"{tags[0]} ..."
         sentences[0] = f"{opener} {sentences[0]}"
         remaining = [tag for tag in tags if tag != "[sniff]"]
@@ -244,7 +265,7 @@ def pause_ms_for_chunk(text: str, *, final: bool = False) -> int:
         return 0
     if _COLLECT_RE.search(text):
         return 1400
-    if "[crying]" in text or "[groan]" in text:
+    if "[groan]" in text:
         return 1100
     if "..." in text:
         return 900
@@ -276,6 +297,9 @@ def compile_render_chunks(text: str, tone: str, *, max_chunk_chars: int = 180,
     punctuation remains a natural prosody hint inside each generated chunk.
     """
     clean = normalize_collect_cues(str(text or ""))
+    if not clean:
+        return []
+    clean, crying_intent = strip_inert_crying_tag(clean)
     if not clean:
         return []
     split_clean = re.sub(r"(\[sniff\]\s*\[sniff\]\s*\.\.\.)\s*(give me a second[.!?]?)", rf"\1 {_ELLIPSIS_PAUSE_MARKER}\n\2", clean, flags=re.I)
@@ -336,4 +360,7 @@ def compile_render_chunks(text: str, tone: str, *, max_chunk_chars: int = 180,
             "role": "persona_affect_beat",
             "interruptible": True,
         })
+    if crying_intent and planned:
+        planned[-1]["sfx_after"] = CRYING_SFX_DEFAULT_ASSET
+        planned[-1]["sfx_after_library"] = CRYING_SFX_LIBRARY
     return planned
