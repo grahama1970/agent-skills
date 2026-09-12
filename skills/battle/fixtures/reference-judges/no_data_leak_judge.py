@@ -17,8 +17,9 @@ import base64
 import binascii
 import json
 import sqlite3
+import re
 import unicodedata
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 
@@ -49,21 +50,50 @@ def _digit_tokens(s: str) -> set[str]:
     return tokens
 
 
+def _normalize_decimal_text(s: str) -> str | None:
+    chars = []
+    for ch in s.strip():
+        try:
+            chars.append(str(unicodedata.decimal(ch)))
+        except (TypeError, ValueError):
+            chars.append(ch)
+    try:
+        d = Decimal("".join(chars))
+    except InvalidOperation:
+        return None
+    if not d.is_finite():
+        return None
+    return str(d.normalize()) if d else "0"
+
+
 def _num_forms(x):
     out = set()
     if isinstance(x, bool):
         return out
-    if isinstance(x, int):
-        out.add(str(x))
+    if isinstance(x, Decimal):
+        out.add(str(x.normalize()) if x else "0")
+        out.add(format(x, "f"))
+        if x == x.to_integral_value():
+            out.add(str(int(x)))
+    elif isinstance(x, int):
+        out.update(_num_forms(Decimal(x)))
     elif isinstance(x, float):
         out.add(repr(x))
-        if x.is_integer():
-            out.add(str(int(x)))
         try:
-            out.add(format(Decimal(x), "f"))
+            out.update(_num_forms(Decimal(str(x))))
         except Exception:
             pass
     return out
+
+
+def _number_tokens(text: str) -> set[str]:
+    tokens = set()
+    for raw in re.findall(r"(?<![\w.])[+-]?[\d\u0660-\u0669\u06f0-\u06f9]+(?:\.\d+)?(?:[eE][+-]?\d+)?(?![\w.])", text):
+        if normalized := _normalize_decimal_text(raw):
+            tokens.add(normalized)
+            if normalized.lstrip("+-").startswith("0"):
+                tokens.add(normalized.lstrip("+0") or "0")
+    return tokens
 
 
 def _scalar_text(value) -> str | None:
@@ -140,7 +170,7 @@ def _gather(root: Path, profile: dict | None = None):
             texts.extend(_adjacent_recon(o.values()))
         if profile.get("record_local_reconstruction") and isinstance(o, list):
             texts.extend(_adjacent_recon(o))
-        if isinstance(o, (int, float)):
+        if isinstance(o, (int, float, Decimal)):
             nums.update(_num_forms(o))
         elif isinstance(o, str):
             texts.append(o)
@@ -179,7 +209,7 @@ def _gather(root: Path, profile: dict | None = None):
                         for c in row:
                             if isinstance(c, str):
                                 texts.append(c)
-                            elif isinstance(c, (int, float)) and not isinstance(c, bool):
+                            elif isinstance(c, (int, float, Decimal)) and not isinstance(c, bool):
                                 nums.update(_num_forms(c))
                         if profile.get("record_local_reconstruction"):
                             texts.extend(_adjacent_recon(row))
@@ -197,7 +227,7 @@ def _gather(root: Path, profile: dict | None = None):
             continue
         if f.suffix == ".json":
             try:
-                walk(json.loads(raw.decode("utf-8-sig")))
+                walk(json.loads(raw.decode("utf-8-sig"), parse_int=Decimal, parse_float=Decimal))
                 continue
             except Exception:
                 pass
@@ -223,7 +253,7 @@ def judge(target_dir, params):
     policy_path = Path(params["policy"])
     target = Path(target_dir)
     out = target / params.get("output_subdir", "corpus")
-    values = [str(v["value"]) for v in json.loads(policy_path.read_text())["sensitive_values"]]
+    values = [v["value"] for v in json.loads(policy_path.read_text(), parse_int=Decimal, parse_float=Decimal)["sensitive_values"]]
     scan_paths = [out]
     for extra in ("report.json", ".battle-execution"):
         extra_path = target / extra
@@ -235,18 +265,32 @@ def judge(target_dir, params):
     text, nums, problems, inventory = _gather_many(scan_paths, profile)
     nfc, nfd = unicodedata.normalize("NFC", text), unicodedata.normalize("NFD", text)
     digit_tokens = _digit_tokens(text)
+    number_tokens = _number_tokens(text)
     leaked = []
     for v in values:
-        if unicodedata.normalize("NFC", v) in nfc or unicodedata.normalize("NFD", v) in nfd:
-            leaked.append(v)
+        if isinstance(v, bool) or v is None:
             continue
-        digits = _digits(v)
-        if len(digits) >= 7 and (digits in nums or digits in digit_tokens):
-            leaked.append(v)
+        display = str(v)
+        if isinstance(v, str) and (unicodedata.normalize("NFC", v) in nfc or unicodedata.normalize("NFD", v) in nfd):
+            leaked.append(display)
             continue
-        if len(digits) >= 7 and digits.startswith("0") and digits.lstrip("0") in nums:
-            leaked.append(v)
-            continue
+        if isinstance(v, (int, float, Decimal)):
+            forms = _num_forms(v)
+            digits = _digits(format(v, "f") if isinstance(v, Decimal) else str(v))
+            if forms & nums or forms & number_tokens or digits in digit_tokens:
+                leaked.append(display)
+                continue
+            if digits and any(token.lstrip("0") == digits for token in digit_tokens):
+                leaked.append(display)
+                continue
+        elif isinstance(v, str):
+            digits = _digits(v)
+            if len(digits) >= 7 and (digits in nums or digits in digit_tokens):
+                leaked.append(display)
+                continue
+            if len(digits) >= 7 and digits.startswith("0") and digits.lstrip("0") in nums:
+                leaked.append(display)
+                continue
     violations = [f"policy value survives in output: {v!r}" for v in leaked]
     violations.extend(f"scan incomplete: {p}" for p in problems)
     return {"passed": not violations,

@@ -3025,6 +3025,39 @@
       }
     },
     {
+      "name": "battle-b16-remove-the-seven-digit-confidentiality-threshold",
+      "category": "battle-b16-remove-the-seven-digit-confidentiality-threshold",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.anonymization.comprehensive_contract_and_beyond_contract_campaign"
+      ],
+      "seams": [
+        "no_data_leak_judge.numeric_policy_values"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b16-remove-the-seven-digit-confidentiality-threshold --summary /tmp/battle-agentic-evals/battle-b16-remove-the-seven-digit-confidentiality-threshold.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b16-remove-the-seven-digit-confidentiality-threshold"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-b16-remove-the-seven-digit-confidentiality-threshold.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 400
+          }
+        ]
+      }
+    },
+    {
       "name": "docker-execution-boundary",
       "category": "docker-execution-boundary",
       "type": "adversarial",
