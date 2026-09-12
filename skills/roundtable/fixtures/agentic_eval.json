@@ -39,7 +39,7 @@
     {
       "id": "roundtable.live_execution",
       "description": "a generated workflow actually executes through the subagent tool with live model seats and returns join/verdict output",
-      "criticality": "important",
+      "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
       },
@@ -164,6 +164,38 @@
           "unknown web backend"
         ]
       }
+    },
+    {
+      "name": "live-execution-through-subagent-tool",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "roundtable.live_execution"
+      ],
+      "command": [
+        "bash",
+        "../scripts/live_case.sh"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "live-out.json",
+            "json_pointer": "/schema",
+            "equals": "roundtable.live.v1"
+          },
+          {
+            "path": "live-out.json",
+            "json_pointer": "/synthesis",
+            "min_bytes": 20
+          }
+        ]
+      },
+      "timeout_seconds": 600,
+      "blocked_when_stdout_contains": [
+        "LIVE_BLOCKED_RATE_LIMIT"
+      ]
     }
   ]
 }

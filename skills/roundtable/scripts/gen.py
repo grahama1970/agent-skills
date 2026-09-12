@@ -4,12 +4,12 @@ import argparse, json, sys, pathlib
 
 FANOUTS = {
  "roundtable": """const results = await runs.all(SEATS.map(s => ({ key: s.key, agent: s.agent, model: s.model, task: PACKET + '\\n\\nYou are seat ' + s.key + ' in a concurrent roundtable. Answer independently; other seats cannot see you.' })).concat(webRuns).concat(researchRuns));
-const join = await runs.run({ key: 'join', agent: 'reviewer', model: 'anthropic/claude-opus-4-8:high',
+const join = await runs.run('join', { agent: 'reviewer', model: 'anthropic/claude-opus-4.8:high',
   task: 'Synthesize these roundtable responses into one answer with attributed agreements, disagreements, and dissent preserved by seat key.\\n\\n' + JSON.stringify(results) });
 return { seats: results, synthesis: join };""",
  "compete": """const candidates = await runs.all(SEATS.map(s => ({ key: s.key, agent: s.agent, model: s.model,
   task: 'COMPETITION BRIEF: ' + TASK + '\\n\\nYou are competing against other models you cannot see. Maximize: ' + CRITERION })).concat(webRuns).concat(researchRuns));
-const verdict = await runs.run({ key: 'judge', agent: 'reviewer', model: 'anthropic/claude-opus-4-8:high',
+const verdict = await runs.run('judge', { agent: 'reviewer', model: 'anthropic/claude-opus-4.8:high',
   task: 'Judge this model competition. Criterion: ' + CRITERION + '. Score each candidate, name exactly one winner, state what losers missed. Return a scorecard.\\n\\n' + JSON.stringify(candidates) });
 return { candidates, verdict };""",
 }

@@ -7,13 +7,14 @@ const SEATS = __SEATS__;
 const WEB_BACKENDS = __WEB__;
 // pi-web-access research seats: children with native web_search/fetch_content tools (no model id needed).
 const WEB_RESEARCH_SEATS = __WEBRESEARCH__;
+const CHILD_MODEL = 'zai/glm-5.3-flash'; // registry-valid default for tool-only seats
 function webSeatTask(backend, packet) {
   return 'Run exactly this and return the handler response verbatim plus the artifact dir:\n' +
     'cd /home/graham/.pi/agent/skills/ask && ./run.sh ' + backend + ' ' + JSON.stringify(packet) + '\n' +
     'If it fails, return the failure_code and next_command from the receipt, not prose.';
 }
 for (const s of SEATS) if (!s.model) throw new Error('__MODE__ fail-closed: seat ' + s.key + ' has no explicit model');
-const webRuns = WEB_BACKENDS.map(b => ({ key: b, agent: 'general-purpose', task: webSeatTask(b, PACKET) }));
-const researchRuns = WEB_RESEARCH_SEATS.map(k => ({ key: k, agent: 'general-purpose',
+const webRuns = WEB_BACKENDS.map(b => ({ key: b, agent: 'general-purpose', model: CHILD_MODEL, task: webSeatTask(b, PACKET) }));
+const researchRuns = WEB_RESEARCH_SEATS.map(k => ({ key: k, agent: 'general-purpose', model: CHILD_MODEL,
   task: 'Research seat. Use web_search/fetch_content to ground your answer in current sources; cite URLs.\n\n' + PACKET }));
 __FANOUT__
