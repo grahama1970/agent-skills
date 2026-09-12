@@ -544,6 +544,15 @@
         "adversarial_live_e2e": true
       },
       "claim_semantics": "control_flow"
+    },
+    {
+      "id": "battle.receipt_store.crash_safe_immutable_attempts",
+      "description": "Battle persists immutable run/attempt receipts with content-addressed artifacts, atomic commits, idempotent acknowledged retries, and incomplete recovery for ambiguous launches.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "protocol"
     }
   ],
   "seams": [
@@ -1261,6 +1270,22 @@
       "required_evidence": [
         "adversarial_live_e2e"
       ]
+    },
+    {
+      "seam_id": "receipt_store.crash_safe_immutable_attempts",
+      "claim_id": "battle.receipt_store.crash_safe_immutable_attempts",
+      "seam_type": "storage_protocol",
+      "criticality": "critical",
+      "failure_modes": [
+        "receipt overwrite",
+        "lost artifact evidence",
+        "non-idempotent retry",
+        "ambiguous launch relabeled success"
+      ],
+      "required_evidence": [
+        "crash-recovery pytest",
+        "agentic eval receipt readback"
+      ]
     }
   ],
   "cases": [
@@ -1660,6 +1685,39 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/battle-b12-add-runner-attested-execution-provenance.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-b13-persist-immutable-attempts-with-crash-safe-recovery",
+      "category": "battle-b13-persist-immutable-attempts-with-crash-safe-recovery",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.receipt_store.crash_safe_immutable_attempts"
+      ],
+      "seams": [
+        "receipt_store.crash_safe_immutable_attempts"
+      ],
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b13-persist-immutable-attempts-with-crash-safe-recovery --summary /tmp/battle-agentic-evals/battle-b13-persist-immutable-attempts-with-crash-safe-recovery.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b13-persist-immutable-attempts-with-crash-safe-recovery"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-b13-persist-immutable-attempts-with-crash-safe-recovery.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800

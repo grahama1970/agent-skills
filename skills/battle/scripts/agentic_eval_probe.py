@@ -1232,6 +1232,14 @@ def probe_b12_execution_attestation(summary_path: Path) -> int:
     )
 
 
+def probe_b13_receipt_store_crash_recovery(summary_path: Path) -> int:
+    return probe_pytest_contracts(
+        summary_path,
+        suite="battle-b13-persist-immutable-attempts-with-crash-safe-recovery",
+        tests=["test_receipt_store_crash_recovery.py"],
+    )
+
+
 
 def probe_b05_strict_campaign_acceptance_envelopes(summary_path: Path) -> int:
     return probe_pytest_contracts(
@@ -4641,6 +4649,8 @@ def main() -> int:
             return probe_b11_portable_offline_replay(args.summary)
         if args.suite == "battle-b12-add-runner-attested-execution-provenance":
             return probe_b12_execution_attestation(args.summary)
+        if args.suite == "battle-b13-persist-immutable-attempts-with-crash-safe-recovery":
+            return probe_b13_receipt_store_crash_recovery(args.summary)
         if args.suite == "review-receipt-hash-finalization":
             return probe_review_receipt_hash_finalization(args.summary)
         if args.suite == "review-judge-authority":
