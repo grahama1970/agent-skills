@@ -150,6 +150,16 @@ python3 scripts/conversation_arc.py plan --latency-ms 30000 --emotion grief \
 $phart-dag-chart chart out/arc.dag.json   # terminal-visible arc
 ```
 
+**Runtime is streamed, not a frozen guess.** The fast agent speaks a quick initial
+arc (opener, instantly; restate if complexity>=2) then consumes Agent B's JSON
+event stream (`solver_event.v1`: `{stage, eta_ms, answer_text?, done}`) and adapts
+each beat via `conversation_arc.py next_element(state)` — wide remaining ETA -> hum
+bed, narrow -> pause, `answer_ready`/`done` -> barge to the answer. B slow -> keep
+covering (never dry); B fast -> barge early. `conversation_arc.py stream --events
+solver.jsonl` demos it; `plan_arc` is the same policy simulated against the
+predicted latency (instant floor + preview only). Runtime + barge-in owned by
+`embry-voice-control`.
+
 Inputs are SOURCED, not guessed: `--latency-ms` from `$memory POST /execution-stats`
 (`recommended_timeout_ms`), `--emotion`/`--intensity` from `$memory POST /intent`
 `delivery_context` (+ `/speaker/resolve`), `--complexity` = parts in the request.

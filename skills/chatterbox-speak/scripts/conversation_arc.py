@@ -74,6 +74,77 @@ def _hum_for(emotion: str, seed: str, songs: list[dict]) -> dict | None:
     return _pick(matches or songs, seed + "hum")
 
 
+# --- Reactive runtime policy -------------------------------------------------
+# The RUNTIME is not a frozen timeline. Agent A calls next_element(state) each
+# time it finishes speaking, passing Agent B's latest event (b_stage) and updated
+# remaining ETA (b_eta_ms). The arc EMERGES from B's real progress: A extends
+# cover if B is slow, barges in when B signals answer_ready, and never runs out
+# of arc on a bad latency guess. plan_arc() below is this policy SIMULATED against
+# a predicted latency -- the instant floor + preview, not the runtime truth.
+# The concurrent runtime that feeds real b_stage/b_eta events lives in
+# embry-voice-control; this function is the deterministic element policy it drives.
+
+def next_element(state: dict) -> dict | None:
+    """Return the next arc element given live solver progress, or None when done.
+
+    state (mutated by the caller between calls):
+      emotion, intensity, complexity, request, answer_text, situation
+      b_stage: latest Agent-B event, e.g. 'working:recall'/'working:debugging'/'answer_ready'
+      b_eta_ms: B's CURRENT estimate of remaining solve time (updated each call)
+      started/restated/answered: bools; last_kind: str; spoken: list (no-repeat)
+    """
+    emotion = state.get("emotion", "neutral")
+    intensity = int(state.get("intensity", 5))
+    complexity = int(state.get("complexity", 1))
+    seed = state.get("situation") or emotion
+    band = _band(intensity, complexity)
+    songs = _load(SKILL / "fixtures" / "song_hum_macros.json")["songs"]
+    prog = _load(SKILL / "fixtures" / "progress_macros.json")["stages"]
+    spoken = state.setdefault("spoken", [])
+
+    def mk(kind, **kw):
+        state["last_kind"] = kind
+        return {"kind": kind, **kw}
+
+    # 1. instant opener
+    if not state.get("started"):
+        state["started"] = True
+        fused = [e for e in _load(FUSED)["entries"] if e["band"] == band] or _load(FUSED)["entries"]
+        op = _pick(fused, seed + "open")
+        return mk("fused_hmm", source=op["id"], text=op["text"], band=band, tags=["thinking"])
+    # 2. restate only for multi-part problems
+    if complexity >= 2 and state.get("request") and not state.get("restated"):
+        state["restated"] = True
+        return mk("restate", source="restate", tone="neutral_warm",
+                  text=f"Let me make sure I've got it — you said: {state['request']}", tags=["restate"])
+    # 3. B is done -> deliver the answer once, then end
+    if state.get("b_stage") == "answer_ready":
+        if state.get("answered"):
+            return None
+        state["answered"] = True
+        arc_name = "reassure" if emotion.lower() in REASSURE else "answer"
+        phases = ["careful_concerned", "calm_precise", "memory_confident", "playful_light"] \
+            if arc_name == "answer" else ["careful_concerned", "neutral_warm", "relieved"]
+        return mk("answer", source=f"arc:{arc_name}", arc=arc_name, phase_tones=phases,
+                  text=state.get("answer_text") or "<answer>", tags=["answer"] + phases)
+    # 4. still working -> cover. After a spoken line, a WIDE remaining ETA gets a
+    #    hum bed, else a short pause; otherwise say where B is.
+    stage = str(state.get("b_stage", "working:recall")).split(":", 1)[-1]
+    if stage not in prog:
+        stage = "recall"
+    if state.get("last_kind") in ("fused_hmm", "restate", "progress"):
+        if int(state.get("b_eta_ms", 0)) > HUM_GAP_MS and state.get("last_kind") != "hum":
+            hum = _hum_for(emotion, seed + str(len(spoken)), songs)
+            if hum:
+                return mk("hum", source=f"hum:{hum['id']}", title=hum.get("title"),
+                          gain_db=HUM_BED_GAIN_DB, mood=hum.get("mood"),
+                          memory_links=hum.get("memory_links", []), tags=["hum", "under_speech"])
+        return mk("pause", source="pause:beat", dur_ms=PAUSE_MS, tags=["hold"])
+    line = _pick(prog[stage]["pool"], seed + stage + str(len(spoken)))
+    spoken.append(line)
+    return mk("progress", source=f"progress:{stage}", text=line, tone=prog[stage].get("tone"), tags=[stage])
+
+
 def plan_arc(latency_ms: int, emotion: str, intensity: int = 5, complexity: int = 1,
              situation: str = "", answer_text: str = "", request: str = "") -> dict:
     if latency_ms < 0:
@@ -154,6 +225,57 @@ def _safe(s: str) -> str:
     while "__" in out:
         out = out.replace("__", "_")
     return out.strip("_")[:44]
+
+
+def stream(events: list[dict], base: dict) -> list[dict]:
+    """Drive the arc from Agent B's JSON event stream (solver_event.v1).
+
+    Each event: {stage, eta_ms, answer_text?, done}. The fast agent speaks its
+    quick initial arc (opener[+restate]) before the first event, then emits one
+    cover beat per incoming event, and barges to the answer when B sends done/
+    answer_ready. If B outruns the events, A keeps covering (never dry).
+    """
+    st = dict(base)
+    st.setdefault("b_eta_ms", 0)
+    st.setdefault("b_stage", "working:recall")
+    out: list[dict] = []
+
+    def drain_prework():  # opener + restate flow out before the first cover beat
+        while True:
+            el = next_element(st)
+            if el is None:
+                return None
+            out.append(el)
+            if el["kind"] not in ("fused_hmm", "restate"):
+                return el
+
+    drain_prework()
+    for ev in events:
+        if ev.get("stage"):
+            st["b_stage"] = ev["stage"]
+        if ev.get("eta_ms") is not None:
+            st["b_eta_ms"] = ev["eta_ms"]
+        if ev.get("answer_text"):
+            st["answer_text"] = ev["answer_text"]
+        if ev.get("done") or ev.get("stage") == "answer_ready":
+            st["b_stage"] = "answer_ready"
+        el = next_element(st)
+        while el and el["kind"] in ("fused_hmm", "restate"):
+            out.append(el)
+            el = next_element(st)
+        if el:
+            out.append(el)
+        if el and el["kind"] == "answer":
+            return out
+    # events exhausted but B not done: keep covering, then close if answer known
+    while not st.get("answered"):
+        el = next_element(st)
+        if el is None:
+            break
+        out.append(el)
+        if len(out) > 40:
+            break
+    return out
 
 
 def _label(el: dict, descriptive: bool) -> str:
@@ -266,13 +388,33 @@ def self_check() -> None:
     q = plan_arc(4000, "happy", intensity=6)
     assert q["answer_arc"] == "answer" and q["covers_latency"]
     assert dag["nodes"][-1]["input"]["kind"] == "answer"
+    # streamed runtime: drive next_element with live events (slow solver, then done)
+    st = {"emotion": "grief", "intensity": 4, "complexity": 3, "request": "what does SC-7 require?",
+          "answer_text": "SC-7 guards the boundary.", "situation": "stream-test",
+          "b_stage": "working:recall", "b_eta_ms": 20000}
+    seq = []
+    for _ in range(30):
+        if len(seq) == 6:
+            st["b_stage"] = "answer_ready"  # B finishes mid-stream; A must barge to the answer
+        el = next_element(st)
+        if el is None:
+            break
+        seq.append(el)
+    kinds = [e["kind"] for e in seq]
+    assert kinds[0] == "fused_hmm", "stream must open with a thinking beat"
+    assert "restate" in kinds, "complex turn must restate"
+    assert "hum" in kinds, "a long live ETA must insert a hum bed"
+    assert kinds[-1] == "answer", "stream must end on the answer when B signals ready"
+    assert next_element(st) is None, "after the answer the stream is done"
     print(f"conversation_arc self-check PASS (grief: {len(p['elements'])} elements, "
           f"{p['planned_total_ms']}ms covers 30000ms; hum bed + reassure arc)")
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["plan", "self-check"])
+    ap.add_argument("cmd", choices=["plan", "stream", "self-check"])
+    ap.add_argument("--events", help="JSONL of solver_event.v1 {stage,eta_ms,answer_text?,done} (stream mode)")
+    ap.add_argument("--request", default="")
     ap.add_argument("--latency-ms", type=int, default=20000, help="predicted Agent B solve time")
     ap.add_argument("--emotion", default="neutral")
     ap.add_argument("--intensity", type=int, default=5)
@@ -286,6 +428,17 @@ if __name__ == "__main__":
     a = ap.parse_args()
     if a.cmd == "self-check":
         self_check()
+        sys.exit(0)
+    if a.cmd == "stream":
+        raw = Path(a.events).read_text() if a.events else sys.stdin.read()
+        events = [json.loads(x) for x in raw.splitlines() if x.strip()]
+        base = {"emotion": a.emotion, "intensity": a.intensity, "complexity": a.complexity,
+                "request": a.request, "answer_text": a.answer_text, "situation": a.situation}
+        beats = stream(events, base)
+        for i, e in enumerate(beats):
+            txt = e.get("text") or e.get("title") or e.get("source", "")
+            print(f"  {i:>2} {e['kind']:<11} {str(txt)[:60]}")
+        print(f"  ({len(beats)} beats; ended on {beats[-1]['kind'] if beats else 'none'})")
         sys.exit(0)
     plan = plan_arc(a.latency_ms, a.emotion, a.intensity, a.complexity, a.situation, a.answer_text)
     if a.json_out:

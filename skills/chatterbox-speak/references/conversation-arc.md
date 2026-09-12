@@ -46,6 +46,39 @@ off the request.)
 The planner encodes steps 4's rules below so you never hand-assemble; supply the
 four sourced inputs and it emits the ordered, latency-covering, emotion-shaped arc.
 
+## Runtime is STREAMED, not a frozen guess
+
+A fixed arc pre-computed from a predicted latency is the wrong runtime — the
+prediction is usually wrong, so a frozen timeline either runs dry (B slower than
+guessed) or wastes cover (B faster). The predicted latency is a **prior** (from
+`$memory /execution-stats`); Agent B's live progress is the **posterior**.
+
+The fast agent lays down a **quick initial arc** (the opener, instantly, plus a
+restate for multi-part turns) and then consumes **Agent B's JSON event stream**,
+adapting each beat with `next_element(state)`:
+
+```
+solver_event.v1 (one JSON object per line, streamed from B):
+  {"stage": "working:recall", "eta_ms": 20000}
+  {"stage": "working:searching", "eta_ms": 4000}
+  {"stage": "answer_ready", "answer_text": "...", "done": true}
+```
+
+`next_element` uses the latest `b_stage` + `b_eta_ms`: a wide remaining ETA gets a
+hum bed, a narrow one a short pause, and `answer_ready`/`done` barges straight to
+the answer. B slow -> A keeps covering (never dry); B fast -> A barges early.
+
+```bash
+# see the arc adapt to a live solver stream:
+python3 scripts/conversation_arc.py stream --events solver.jsonl \
+  --emotion grief --complexity 3 --request 'what does SC-7 require?'
+```
+
+`plan_arc` (below) is this same policy SIMULATED against the predicted latency —
+it is the instant floor + preview + test artifact, NOT the runtime. The concurrent
+runtime that feeds real `solver_event.v1` events into `next_element` (and handles
+barge-in) lives in `embry-voice-control`.
+
 ## Mental model: two agents, one mouth
 
 ```
