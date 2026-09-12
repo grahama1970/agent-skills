@@ -13,7 +13,7 @@
 stdlib only for check/self-check so the agentic-evals runner can execute them.
 """
 from __future__ import annotations
-import argparse, json, subprocess, sys
+import argparse, json, re, subprocess, sys
 from pathlib import Path
 
 SKILL = Path(__file__).resolve().parent.parent
@@ -103,6 +103,16 @@ def render_steps(plan: dict) -> list[dict]:
     return steps
 
 
+def _speak_wav(text: str, tone: str, context: str) -> str | None:
+    """Render one line via the live speak CLI and return the produced wav path."""
+    r = subprocess.run(["bash", str(SKILL / "run.sh"), "speak", "--voice", "embry",
+                        "--text", text, "--tone", tone, "--context", context],
+                       capture_output=True, text=True)
+    # speak prints pretty (multi-line) JSON; grab the wav path directly.
+    m = re.search(r'"wav":\s*"([^"]+\.wav)"', r.stdout)
+    return m.group(1) if m else None
+
+
 def render(scenario_id: str, play: bool) -> int:
     scen = {s["id"]: s for s in load(BANK)}
     if scenario_id not in scen:
@@ -114,6 +124,7 @@ def render(scenario_id: str, play: bool) -> int:
     chart(scenario_id)  # show the arc graphically first, to check against what you hear
     steps = render_steps(plan)
     seq = []
+    answered = False
     for i, st in enumerate(steps):
         wav = OUT / f"{scenario_id}-{i:02d}.wav"
         if st["do"] == "play_wav":
@@ -123,14 +134,18 @@ def render(scenario_id: str, play: bool) -> int:
             subprocess.run(["cp", st["wav"], str(wav)], check=True)
         elif st["do"] == "silence":
             subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i",
-                            f"anullsrc=r=44100:cl=stereo", "-t", f"{st['ms']/1000:.2f}", str(wav)], check=True)
+                            "anullsrc=r=44100:cl=stereo", "-t", f"{st['ms']/1000:.2f}", str(wav)], check=True)
         elif st["do"] == "speak":
-            subprocess.run(["bash", str(SKILL / "run.sh"), "speak", "--voice", "embry",
-                            "--text", st["text"], "--tone", st["tone"], "--context",
-                            f"arc scenario {scenario_id}", "--out-wav", str(wav)], check=False)
-            if not wav.exists():
+            # answer phases all carry the whole answer text; speak it ONCE (lead tone).
+            if str(st.get("why", "")).startswith("arc:"):
+                if answered:
+                    continue
+                answered = True
+            src = _speak_wav(st["text"], st["tone"], f"arc scenario {scenario_id}")
+            if not src or not Path(src).exists():
                 print(f"  [skip] speak produced no wav for: {st['text'][:40]}", file=sys.stderr)
                 continue
+            subprocess.run(["cp", src, str(wav)], check=True)
         seq.append(str(wav))
     if not seq:
         print("no renderable steps (service down?)", file=sys.stderr)
