@@ -419,7 +419,11 @@ def _is_non_ticket_event(ev: dict) -> bool:
     sentinels so a genuinely malformed ticket receipt still surfaces.
     """
     repo, issue = str(ev.get("repo") or ""), str(ev.get("issue") or "")
-    return ("receipt_missing_repo" in repo and "receipt_missing_issue" in issue)
+    if "receipt_missing_repo" in repo and "receipt_missing_issue" in issue:
+        return True
+    # A receipt with neither repo nor issue cannot be ticket work; render as
+    # lifecycle rather than None#None (#1660 canary).
+    return not repo and not issue
 
 
 def _subject_target(ev: dict) -> str:
