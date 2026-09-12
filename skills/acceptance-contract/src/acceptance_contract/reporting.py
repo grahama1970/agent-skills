@@ -13,7 +13,49 @@ from pathlib import Path
 from .models import AcceptanceBundle
 
 
+def progress_summary(bundle: AcceptanceBundle) -> dict:
+    has_questions = bool(bundle.open_questions)
+    checks = [
+        ("source-read", "Source bundle was read and hashed", True),
+        ("requirements", "Source-backed requirements were extracted", bool(bundle.requirements)),
+        ("acceptance-cases", "Executable acceptance cases were extracted", bool(bundle.acceptance_cases)),
+        ("open-questions", "No unresolved source questions remain", not has_questions),
+        ("human-approval", "Human approved the immutable-goal draft/amendment", False),
+        ("docker-or-battle", "Docker/Battle consumed this frozen bundle and passed", False),
+    ]
+    passed = sum(1 for _, _, ok in checks if ok)
+    outstanding = []
+    if not bundle.requirements:
+        outstanding.append("extract at least one source-backed requirement")
+    if not bundle.acceptance_cases:
+        outstanding.append("add at least one executable acceptance case")
+    outstanding.extend(q.question for q in bundle.open_questions)
+    outstanding.append("human approval before GOAL.md mutation")
+    outstanding.append("run Docker/Battle with acceptance_bundle.json")
+    next_steps = outstanding[:]
+    state = "NEEDS_CHANGES" if has_questions or not bundle.requirements or not bundle.acceptance_cases else "READY_FOR_HUMAN_REVIEW"
+    return {
+        "schema": "acceptance_contract.progress.v1",
+        "state": state,
+        "percent": round(passed * 100 / len(checks)),
+        "passed": passed,
+        "total": len(checks),
+        "counts": {
+            "requirements": len(bundle.requirements),
+            "acceptance_cases": len(bundle.acceptance_cases),
+            "open_questions": len(bundle.open_questions),
+        },
+        "checks": [
+            {"id": cid, "label": label, "status": "PASS" if ok else "PENDING"}
+            for cid, label, ok in checks
+        ],
+        "outstanding": outstanding,
+        "next_steps": next_steps,
+    }
+
+
 def build_report(bundle: AcceptanceBundle) -> dict:
+    progress = progress_summary(bundle)
     has_questions = bool(bundle.open_questions)
     status = "Needs Changes" if has_questions else "Partially Verified"
     finding_status = "Needs Decision" if has_questions else "Unverified"
@@ -44,10 +86,10 @@ def build_report(bundle: AcceptanceBundle) -> dict:
         "primary_object": "acceptance requirements bundle",
         "decision_supported": "Decide whether to create or amend an immutable goal from the supplied brief.",
         "overall_finding": status,
-        "core_conclusion": f"Extracted {len(bundle.requirements)} clear requirement(s), {len(bundle.acceptance_cases)} acceptance case(s), and {len(bundle.open_questions)} open question(s).",
+        "core_conclusion": f"Progress {progress['passed']}/{progress['total']} ({progress['percent']}%): extracted {len(bundle.requirements)} clear requirement(s), {len(bundle.acceptance_cases)} acceptance case(s), and {len(bundle.open_questions)} open question(s).",
         "evidence_basis": "Local source files were read and requirements were selected from explicit modal/acceptance language.",
         "highest_risk_issues": [q.question for q in bundle.open_questions[:5]],
-        "immediate_next_steps": ["Resolve open questions before freezing the goal."] if has_questions else ["Review and approve the immutable-goal draft."],
+        "immediate_next_steps": progress["next_steps"],
         "scope": {
             "reviewed": [bundle.source.path],
             "excluded": ["Unprovided client context", "Battle execution", "Implementation correctness"],
@@ -91,9 +133,9 @@ def build_report(bundle: AcceptanceBundle) -> dict:
             }
         ],
         "state_split": {
-            "finished": ["Local source extraction completed."],
-            "pending": ["Human approval of create/amend choice."],
-            "outstanding": [q.question for q in bundle.open_questions],
+            "finished": [check["label"] for check in progress["checks"] if check["status"] == "PASS"],
+            "pending": [step for step in progress["outstanding"] if step not in [q.question for q in bundle.open_questions]],
+            "outstanding": progress["outstanding"],
             "broken": [],
             "blocked": [] if bundle.requirements else ["No clear requirements found."],
             "unproven": bundle.non_claims,

@@ -5,7 +5,7 @@
   "live": true,
   "proof_scope": "Acceptance-contract real CLI path: extracts source-backed requirements from local briefs and zip bundles, validates the pydantic acceptance_contract.bundle.v1 boundary, renders create_report.report.v1 artifacts through create-report, and fails closed on unsafe zip input.",
   "claims": {
-    "proves": "acceptance-contract accepts local file and zip inputs, emits typed requirements/cases/open questions, creates draft-only immutable-goal text, validates the bundle boundary, delegates report rendering to create-report, and rejects unsafe zip traversal. It also proves the ensure preflight creates/validates frozen contracts, rejects stale source hashes, and refuses repository roots by default. It proves quick brief plus numeric policy bundle derives the typed-scalar PII case that oai-trial missed. It proves the derived contract includes canonical-equivalence matching, not just typed-scalar wording. It proves the roundtable-driven all-format trap and lossy numeric conversion clauses are derived too.",
+    "proves": "acceptance-contract accepts local file and zip inputs, emits typed requirements/cases/open questions, creates draft-only immutable-goal text, validates the bundle boundary, delegates report rendering to create-report, and rejects unsafe zip traversal. It also proves the ensure preflight creates/validates frozen contracts, rejects stale source hashes, and refuses repository roots by default. It proves quick brief plus numeric policy bundle derives the typed-scalar PII case that oai-trial missed. It proves the derived contract includes canonical-equivalence matching, not just typed-scalar wording. It proves the roundtable-driven all-format trap and lossy numeric conversion clauses are derived too. It proves status emits a machine-readable progress meter rather than prose.",
     "does_not_prove": "that extracted requirements are semantically complete, human-approved, sufficient for a real client contract, or that Battle has executed the resulting bundle."
   },
   "capability_claims": [
@@ -81,6 +81,15 @@
         "source": "TRIAL_BRIEF.md + policy.json",
         "requirement": "The same synthetic identity can appear in every format; policy.json supplies sensitive values by type and value."
       }
+    },
+    {
+      "id": "acceptance_contract.progress_meter",
+      "description": "The skill emits a machine-readable progress meter with counts, checks, outstanding items, and next steps from the acceptance bundle.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      },
+      "claim_semantics": "protocol"
     }
   ],
   "seams": [
@@ -143,6 +152,15 @@
       "seam_type": "requirements/spec",
       "criticality": "critical",
       "claim_id": "acceptance_contract.derives_canonical_equivalence_case",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "progress_meter_output",
+      "seam_type": "cli/json",
+      "criticality": "critical",
+      "claim_id": "acceptance_contract.progress_meter",
       "required_evidence": [
         "live_e2e"
       ]
@@ -419,6 +437,48 @@
             "path": "/tmp/acceptance-contract-eval-typed-scalar-proof.json",
             "json_pointer": "/lossy_numeric_case",
             "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "status-command-prints-progress-meter",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "acceptance_contract.progress_meter"
+      ],
+      "seams": [
+        "progress_meter_output"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-lc",
+        "ROOT=/home/graham/workspace/experiments/agent-skills; tmp=/tmp/acceptance-contract-eval-progress; rm -rf $tmp; mkdir -p $tmp; printf 'The system must redact policy values.\nShould images be included?\n' >$tmp/brief.md; $ROOT/skills/acceptance-contract/run.sh ensure $tmp/brief.md --out $tmp/out --project-name demo >/tmp/acceptance-contract-eval-progress-ensure.json; $ROOT/skills/acceptance-contract/run.sh status $tmp/out/acceptance_bundle.json >/tmp/acceptance-contract-eval-progress-status.json; python3 - <<'PY' /tmp/acceptance-contract-eval-progress-status.json\nimport json, sys\np=json.load(open(sys.argv[1]))\nassert p['schema']=='acceptance_contract.progress.v1'\nassert p['counts']=={'requirements':1,'acceptance_cases':1,'open_questions':1}\nassert 'Should images be included?' in p['outstanding']\nassert 'run Docker/Battle with acceptance_bundle.json' in p['next_steps']\nprint('progress meter PASS')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "progress meter PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/acceptance-contract-eval-progress-status.json",
+            "json_pointer": "/schema",
+            "equals": "acceptance_contract.progress.v1"
+          },
+          {
+            "path": "/tmp/acceptance-contract-eval-progress-status.json",
+            "json_pointer": "/counts/open_questions",
+            "equals": 1
+          },
+          {
+            "path": "/tmp/acceptance-contract-eval-progress-status.json",
+            "json_pointer": "/next_steps/1",
+            "equals": "human approval before GOAL.md mutation"
           }
         ]
       }

@@ -18,7 +18,7 @@ from pydantic import ValidationError
 
 from .extract import build_bundle, write_json
 from .models import AcceptanceBundle, GoalMode
-from .reporting import build_report, run_create_report
+from .reporting import build_report, progress_summary, run_create_report
 
 app = typer.Typer(no_args_is_help=True, add_completion=False)
 
@@ -64,6 +64,7 @@ def receipt(status: str, bundle_path: Path, report_json: Path, report_md: Path, 
         "requirements": len(bundle.requirements),
         "acceptance_cases": len(bundle.acceptance_cases),
         "open_questions": len(bundle.open_questions),
+        "progress": progress_summary(bundle),
         "goal_policy": "draft_only_human_approval_required",
     }
 
@@ -78,7 +79,14 @@ def schema() -> None:
 def validate(bundle: Annotated[Path, typer.Argument(exists=True, dir_okay=False, readable=True)]) -> None:
     """Validate an acceptance bundle JSON file."""
     loaded = load_bundle(bundle)
-    typer.echo(json.dumps({"schema": "acceptance_contract.validation_result.v1", "status": "PASS", "requirements": len(loaded.requirements), "open_questions": len(loaded.open_questions)}, indent=2))
+    typer.echo(json.dumps({"schema": "acceptance_contract.validation_result.v1", "status": "PASS", "requirements": len(loaded.requirements), "open_questions": len(loaded.open_questions), "progress": progress_summary(loaded)}, indent=2))
+
+
+@app.command()
+def status(bundle: Annotated[Path, typer.Argument(exists=True, dir_okay=False, readable=True)]) -> None:
+    """Print the machine-readable progress meter for an acceptance bundle."""
+    loaded = load_bundle(bundle)
+    typer.echo(json.dumps(progress_summary(loaded), indent=2))
 
 
 @app.command()

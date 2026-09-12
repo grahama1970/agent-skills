@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from acceptance_contract.extract import build_bundle
 from acceptance_contract.models import AcceptanceBundle, GoalMode
-from acceptance_contract.reporting import build_report
+from acceptance_contract.reporting import build_report, progress_summary
 
 
 def test_extracts_clear_requirements_from_directory(tmp_path: Path) -> None:
@@ -134,7 +134,22 @@ def test_create_report_shape_is_valid_for_extracted_bundle(tmp_path: Path) -> No
 
     assert report["schema"] == "create_report.report.v1"
     assert report["findings"][0]["id"] == "F-001"
+    assert "Progress " in report["core_conclusion"]
     assert report["plan_iterate_seed"]["human_decisions"] == ["create new immutable goal or amend existing immutable goal"]
+
+
+def test_progress_summary_is_machine_readable_next_steps(tmp_path: Path) -> None:
+    brief = tmp_path / "brief.md"
+    brief.write_text("The product must redact policy values.\nShould images be included?\n", encoding="utf-8")
+    bundle = build_bundle(brief, "demo", GoalMode.CREATE)
+
+    progress = progress_summary(bundle)
+
+    assert progress["schema"] == "acceptance_contract.progress.v1"
+    assert progress["state"] == "NEEDS_CHANGES"
+    assert progress["counts"] == {"requirements": 1, "acceptance_cases": 1, "open_questions": 1}
+    assert "Should images be included?" in progress["outstanding"]
+    assert "run Docker/Battle with acceptance_bundle.json" in progress["next_steps"]
 
 
 def test_ensure_creates_validates_and_rejects_stale_contract(tmp_path: Path) -> None:
@@ -144,8 +159,14 @@ def test_ensure_creates_validates_and_rejects_stale_contract(tmp_path: Path) -> 
 
     cmd = [sys.executable, "-m", "acceptance_contract.cli", "ensure", str(brief), "--out", str(out), "--project-name", "demo"]
     created = subprocess.run(cmd, check=True, text=True, capture_output=True)
-    assert json.loads(created.stdout)["action"] == "created_missing_contract"
+    created_receipt = json.loads(created.stdout)
+    assert created_receipt["action"] == "created_missing_contract"
+    assert created_receipt["progress"]["schema"] == "acceptance_contract.progress.v1"
     assert (out / "acceptance_bundle.json").exists()
+
+    status_cmd = [sys.executable, "-m", "acceptance_contract.cli", "status", str(out / "acceptance_bundle.json")]
+    status = subprocess.run(status_cmd, check=True, text=True, capture_output=True)
+    assert json.loads(status.stdout)["next_steps"][-1] == "run Docker/Battle with acceptance_bundle.json"
 
     validated = subprocess.run(cmd, check=True, text=True, capture_output=True)
     assert json.loads(validated.stdout)["action"] == "validated_existing_contract"

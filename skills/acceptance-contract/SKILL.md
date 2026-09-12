@@ -49,8 +49,10 @@ skills/acceptance-contract/run.sh ensure <zip|directory|file> \
 
 `ensure` is the mechanical guard: it validates an existing `acceptance_bundle.json`,
 auto-extracts one when missing, and fails closed when the supplied source bundle
-has changed since the frozen contract was written. Do not implement from a brief
-until `ensure` returns `status=PASS`.
+has changed since the frozen contract was written. Its JSON receipt includes an
+`acceptance_contract.progress.v1` meter with `percent`, `checks`, `outstanding`,
+and `next_steps`. Do not implement from a brief until `ensure` returns
+`status=PASS` and the progress meter says what remains.
 
 Pass the **client brief, zip bundle, or deliberately staged spec directory** as
 input. The CLI refuses repository roots by default so implementation files cannot
@@ -88,7 +90,8 @@ Commands:
 
 - `extract` always writes a fresh draft bundle/report from the supplied source.
 - `ensure` validates or creates the frozen bundle and rejects stale source hashes.
-- `validate` validates an existing `acceptance_bundle.json` only.
+- `validate` validates an existing `acceptance_bundle.json` only and prints the progress meter.
+- `status` reads an existing `acceptance_bundle.json` and prints only the machine-readable progress meter.
 
 ## Goal policy
 
