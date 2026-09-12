@@ -155,6 +155,10 @@ Inputs are SOURCED, not guessed: `--latency-ms` from `$memory POST /execution-st
 `delivery_context` (+ `/speaker/resolve`), `--complexity` = parts in the request.
 The numbered step-by-step recipe is in `references/conversation-arc.md`.
 
+**Confused about composing an arc? Scan `references/arc-examples.md`** — working
+vs non-working arcs keyed off the request (greeting / worried / grief), each
+non-working case naming the rule it breaks. Fastest way from stuck to a correct arc.
+
 Latency budget: `opener(~2.5s) + Σ progress(~1.4s + ~0.6s pause) ≥ predicted_latency_ms`.
 Walk `intent -> recall -> searching`; after each line, a **remaining gap > 7s**
 gets a **hum bed** (bone-dry, mood-matched, gain-fit under speech), else a short

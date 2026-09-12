@@ -14,6 +14,8 @@ tricks.
 ## How the project agent composes an arc — step by step
 
 This is the unambiguous recipe. Every input has a named source; do not guess.
+(Stuck or unsure? Scan `arc-examples.md` for working vs non-working arcs keyed
+off the request.)
 
 1. **Predicted Agent-B latency** (`--latency-ms`): ask `$memory` for the ETA of
    the route B will run —
