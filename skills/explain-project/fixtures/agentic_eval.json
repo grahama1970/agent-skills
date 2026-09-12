@@ -21,7 +21,11 @@
       },
       "readback": true,
       "evidence_class": "deterministic",
-      "notes": "Also asserts deterministic read/speak estimates emitted on generated strict JSONL for chatterbox-speak planning; actual audio duration remains unclaimed."
+      "notes": "Also asserts deterministic read/speak estimates emitted on generated strict JSONL for chatterbox-speak planning; actual audio duration remains unclaimed.",
+      "seams": [
+        "routing-source-grounding",
+        "cockpit-reducer-state"
+      ]
     },
     {
       "name": "deploy-config-validates",
@@ -76,7 +80,10 @@
         ]
       },
       "readback": true,
-      "evidence_class": "deterministic"
+      "evidence_class": "deterministic",
+      "seams": [
+        "routing-source-grounding"
+      ]
     },
     {
       "name": "route-no-match",
@@ -93,7 +100,10 @@
         ]
       },
       "readback": true,
-      "evidence_class": "fault_injected_deterministic"
+      "evidence_class": "fault_injected_deterministic",
+      "seams": [
+        "routing-source-grounding"
+      ]
     },
     {
       "name": "route-ambiguous",
@@ -110,7 +120,10 @@
         ]
       },
       "readback": true,
-      "evidence_class": "fault_injected_deterministic"
+      "evidence_class": "fault_injected_deterministic",
+      "seams": [
+        "routing-source-grounding"
+      ]
     },
     {
       "name": "three-step-sync-no-live-effects",
@@ -128,7 +141,10 @@
         ]
       },
       "readback": true,
-      "evidence_class": "deterministic"
+      "evidence_class": "deterministic",
+      "seams": [
+        "cockpit-reducer-state"
+      ]
     },
     {
       "name": "invalid-step-source-ref-triaged",
@@ -180,7 +196,10 @@
         ]
       },
       "readback": true,
-      "evidence_class": "deterministic"
+      "evidence_class": "deterministic",
+      "seams": [
+        "live-evidence-replay-intake"
+      ]
     },
     {
       "name": "interaction-manifest-qid-only",
@@ -198,7 +217,10 @@
         ]
       },
       "readback": true,
-      "evidence_class": "deterministic"
+      "evidence_class": "deterministic",
+      "seams": [
+        "browser-ui-transport"
+      ]
     },
     {
       "name": "react-cockpit-ui-builds",
@@ -217,7 +239,15 @@
         ]
       },
       "readback": true,
-      "evidence_class": "deterministic"
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "explain_project.cockpit_browser_sync",
+        "explain_project.live_cockpit_walkthrough_ui"
+      ],
+      "seams": [
+        "browser-ui-transport",
+        "cockpit-reducer-state"
+      ]
     },
     {
       "name": "debugger-source-reveal-receipt-boundary",
@@ -235,7 +265,10 @@
         ]
       },
       "readback": true,
-      "evidence_class": "deterministic"
+      "evidence_class": "deterministic",
+      "seams": [
+        "debugger-proof-boundary"
+      ]
     },
     {
       "name": "debugger-runtime-proof-receipt-boundary",
@@ -253,7 +286,14 @@
         ]
       },
       "readback": true,
-      "evidence_class": "deterministic"
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "explain_project.first_interview_debugger_excalidraw",
+        "explain_project.first_question_chain_voice"
+      ],
+      "seams": [
+        "debugger-proof-boundary"
+      ]
     },
     {
       "name": "excalidraw-proposal-receipt-boundary",
@@ -271,7 +311,14 @@
         ]
       },
       "readback": true,
-      "evidence_class": "deterministic"
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "explain_project.first_interview_debugger_excalidraw",
+        "explain_project.first_question_chain_voice"
+      ],
+      "seams": [
+        "excalidraw-proposal-boundary"
+      ]
     },
     {
       "name": "browser-external-update-sync",
@@ -295,7 +342,15 @@
           "late-snapshot-does-not-regress",
           "external import appears without reload"
         ]
-      }
+      },
+      "supports_claims": [
+        "explain_project.cockpit_browser_sync"
+      ],
+      "seams": [
+        "browser-ui-transport",
+        "cockpit-reducer-state",
+        "live-evidence-replay-intake"
+      ]
     },
     {
       "name": "bridge-execution-safety",
@@ -318,7 +373,11 @@
           "without a trusted bridge the executor blocks honestly",
           "superseded intent is never dispatched as current"
         ]
-      }
+      },
+      "seams": [
+        "debugger-proof-boundary",
+        "excalidraw-proposal-boundary"
+      ]
     },
     {
       "name": "ui-contract-static-check",
@@ -355,7 +414,14 @@
       },
       "readback": true,
       "evidence_class": "deterministic",
-      "notes": "Generic project scaffold from caller-provided entrypoint. Binds an existing project-state receipt path and discovers SVG/Excalidraw references from source docstrings/docs. Does not claim architecture completeness."
+      "notes": "Generic project scaffold from caller-provided entrypoint. Binds an existing project-state receipt path and discovers SVG/Excalidraw references from source docstrings/docs. Does not claim architecture completeness.",
+      "supports_claims": [
+        "explain_project.question_first_walkthrough"
+      ],
+      "seams": [
+        "debugger-proof-boundary",
+        "excalidraw-proposal-boundary"
+      ]
     },
     {
       "name": "first-interview-question-cockpit-debugger-excalidraw",
@@ -375,7 +441,16 @@
       },
       "readback": true,
       "evidence_class": "live_e2e",
-      "notes": "Replays the retained first pasted interview question through the oai-trial explainer catalog, headless cockpit reducer, real Python-bdb $debugger breakpoint, $debugger validator, and safe ops-excalidraw proposal. Does not claim microphone input, visible VS Code control, accepted board mutation, or rendered speech."
+      "notes": "Replays the retained first pasted interview question through the oai-trial explainer catalog, headless cockpit reducer, real Python-bdb $debugger breakpoint, $debugger validator, and safe ops-excalidraw proposal. Does not claim microphone input, visible VS Code control, accepted board mutation, or rendered speech.",
+      "supports_claims": [
+        "explain_project.first_interview_debugger_excalidraw"
+      ],
+      "seams": [
+        "routing-source-grounding",
+        "live-evidence-replay-intake",
+        "debugger-proof-boundary",
+        "excalidraw-proposal-boundary"
+      ]
     },
     {
       "name": "milestone-refresh-writes-project-state-bundle",
@@ -415,7 +490,15 @@
       },
       "readback": true,
       "evidence_class": "live_e2e",
-      "notes": "Question-first walkthrough creates a monitor receipt, strict explainer, missing Excalidraw diagram board, ops-excalidraw diagram registry metadata, breakpoint target, and validated debugger proof. Tone must remain plain spoken and concise."
+      "notes": "Question-first walkthrough creates a monitor receipt, strict explainer, missing Excalidraw diagram board, ops-excalidraw diagram registry metadata, breakpoint target, and validated debugger proof. Tone must remain plain spoken and concise.",
+      "supports_claims": [
+        "explain_project.question_first_walkthrough"
+      ],
+      "seams": [
+        "routing-source-grounding",
+        "debugger-proof-boundary",
+        "excalidraw-proposal-boundary"
+      ]
     },
     {
       "name": "service-health-endpoint-fail-closed",
@@ -433,7 +516,10 @@
         ]
       },
       "readback": true,
-      "evidence_class": "deterministic"
+      "evidence_class": "deterministic",
+      "seams": [
+        "service-health-fail-closed"
+      ]
     },
     {
       "name": "first-question-chain-rehearsal",
@@ -459,7 +545,17 @@
       },
       "readback": true,
       "evidence_class": "live_e2e",
-      "notes": "Real first interviewer question through the live-evidence intake boundary, MATCHED route to project.walkthrough, walk to the debugger-target step, REAL headless breakpoint stop at src/anonymization_trial/pipeline.py:210 under python -m anonymization_trial demo (locals tmp/report_path/output_corpus), debugger-proof adapter receipt flips health to READY, excalidraw proposal receipt (display-only) keeps diagram READY, cockpit scannable-bullets contract asserted (>=2 bullets, <=160 chars), and chatterbox-speak narrates the breakpoint stop (title + source context + proves + diagram nodes + bullets) with a render receipt when the service is live. No microphone, no playback, no Excalidraw mutation, no VS Code GUI control."
+      "notes": "Real first interviewer question through the live-evidence intake boundary, MATCHED route to project.walkthrough, walk to the debugger-target step, REAL headless breakpoint stop at src/anonymization_trial/pipeline.py:210 under python -m anonymization_trial demo (locals tmp/report_path/output_corpus), debugger-proof adapter receipt flips health to READY, excalidraw proposal receipt (display-only) keeps diagram READY, cockpit scannable-bullets contract asserted (>=2 bullets, <=160 chars), and chatterbox-speak narrates the breakpoint stop (title + source context + proves + diagram nodes + bullets) with a render receipt when the service is live. No microphone, no playback, no Excalidraw mutation, no VS Code GUI control.",
+      "supports_claims": [
+        "explain_project.first_question_chain_voice"
+      ],
+      "seams": [
+        "routing-source-grounding",
+        "live-evidence-replay-intake",
+        "debugger-proof-boundary",
+        "excalidraw-proposal-boundary",
+        "voice-narration-boundary"
+      ]
     },
     {
       "name": "live-cockpit-walkthrough-ui",
@@ -487,7 +583,17 @@
       },
       "readback": true,
       "evidence_class": "live_e2e",
-      "notes": "Real first interviewer question through the live-evidence intake boundary drives the REAL cockpit UI in the single persistent Chrome tab (LIVEUI_TAB_ID, default 837436340; navigated and restored, never new/closed). Per step: 1-2 sentence source context + >=2 scannable bullets asserted in the live DOM. At each breakpoint step: ops-excalidraw whiteboard opened in ONE dedicated tab (title verified, closed after), REAL headless $debugger break at the step's stop line (dynamic from the API state), canonical debugger.proof.v1, adapter receipt posted, and the live UI flips to PROOF_RECEIVED. J hotkey advances with revision fence. Embry narration render receipt. Diagram Explorer interactions verified live: expand, filter (native-setter input), no-match empty state, diagram select via explainer.select (revision bump), proposal-safe note. js probes are single-expression only (the surf js wrapper rejects statement sequences) and React inputs use the native value setter. No mic, no playback, no Excalidraw mutation, no VS Code GUI control."
+      "notes": "Real first interviewer question through the live-evidence intake boundary drives the REAL cockpit UI in the single persistent Chrome tab (LIVEUI_TAB_ID, default 837436340; navigated and restored, never new/closed). Per step: 1-2 sentence source context + >=2 scannable bullets asserted in the live DOM. At each breakpoint step: ops-excalidraw whiteboard opened in ONE dedicated tab (title verified, closed after), REAL headless $debugger break at the step's stop line (dynamic from the API state), canonical debugger.proof.v1, adapter receipt posted, and the live UI flips to PROOF_RECEIVED. J hotkey advances with revision fence. Embry narration render receipt. Diagram Explorer interactions verified live: expand, filter (native-setter input), no-match empty state, diagram select via explainer.select (revision bump), proposal-safe note. js probes are single-expression only (the surf js wrapper rejects statement sequences) and React inputs use the native value setter. No mic, no playback, no Excalidraw mutation, no VS Code GUI control.",
+      "supports_claims": [
+        "explain_project.live_cockpit_walkthrough_ui"
+      ],
+      "seams": [
+        "browser-ui-transport",
+        "live-evidence-replay-intake",
+        "debugger-proof-boundary",
+        "excalidraw-proposal-boundary",
+        "voice-narration-boundary"
+      ]
     },
     {
       "name": "docstring-link-proposal",
@@ -523,7 +629,152 @@
       },
       "readback": true,
       "evidence_class": "deterministic",
-      "notes": "Composes $acceptance-contract into explain-project by binding only a bounded acceptance bundle reference; it does not approve or mutate immutable goals."
+      "notes": "Composes $acceptance-contract into explain-project by binding only a bounded acceptance bundle reference; it does not approve or mutate immutable goals.",
+      "supports_claims": [
+        "explain_project.acceptance_contract_bound_explainers"
+      ],
+      "seams": [
+        "acceptance-contract-boundary"
+      ]
+    }
+  ],
+  "capability_claims": [
+    {
+      "id": "explain_project.acceptance_contract_bound_explainers",
+      "description": "Explain-project can bind source-backed acceptance-contract bundles into generated explainer records without approving or mutating the immutable goal.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
+      "id": "explain_project.cockpit_browser_sync",
+      "description": "The cockpit keeps the compiled React UI, live HTTP API state, manual drafts, conflict refreshes, and externally imported explainers synchronized in a real Chrome tab without reload.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true,
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "control_flow"
+    },
+    {
+      "id": "explain_project.first_interview_debugger_excalidraw",
+      "description": "The retained first interview question routes to a source-backed project walkthrough and proves the debugger and ops-excalidraw proposal boundaries with receipts.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
+      "id": "explain_project.question_first_walkthrough",
+      "description": "The fixture-backed question-first path can create a source-backed walkthrough with diagram metadata, breakpoint target, validated debugger proof, and plain-spoken teaching tone.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
+      "id": "explain_project.first_question_chain_voice",
+      "description": "The first-question rehearsal chain reaches route selection, real debugger stop, debugger/excalidraw receipts, cockpit bullets, and Chatterbox narration receipt.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      },
+      "claim_semantics": "human_perceptual"
+    },
+    {
+      "id": "explain_project.live_cockpit_walkthrough_ui",
+      "description": "The live cockpit UI can drive the retained walkthrough through DOM proof, debugger proof UI, dedicated whiteboard tab, hotkey stepping, Embry narration, and Diagram Explorer interactions.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      },
+      "claim_semantics": "human_perceptual"
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "acceptance-contract-boundary",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "routing-source-grounding",
+      "seam_type": "pure deterministic transform",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic",
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "seam_id": "cockpit-reducer-state",
+      "seam_type": "pure deterministic transform",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "browser-ui-transport",
+      "seam_type": "browser/UI transport",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic",
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "live-evidence-replay-intake",
+      "seam_type": "external HTTP/API/provider",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic",
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "debugger-proof-boundary",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic",
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "excalidraw-proposal-boundary",
+      "seam_type": "mutation/destructive effect",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic",
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "voice-narration-boundary",
+      "seam_type": "audio/device/media path",
+      "criticality": "critical",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "service-health-fail-closed",
+      "seam_type": "external HTTP/API/provider",
+      "criticality": "normal",
+      "required_evidence": [
+        "deterministic"
+      ]
     }
   ]
 }

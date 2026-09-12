@@ -227,7 +227,7 @@ def main() -> int:
             imported['title'] = 'External catalog ' + token
             latest = post('/api/cockpit/explainers', {'record': imported})
             observed(latest['state'], 'external-catalog-revision')
-            selector = '[data-qid="cockpit:explainer:select:' + imported['feature_id'] + '"]'
+            selector = '[data-qid="cockpit:explainer:item:' + imported['feature_id'] + '"]'
             check('external import appears without reload', js('JSON.stringify(!!document.querySelector(' + json.dumps(selector) + '))'), imported['feature_id'])
             fill('cockpit:explainer:page-input', '1')
             jumped = wait_for(lambda: (s if (s := bootstrap()['state'])['selection']['feature_id'] == imported['feature_id'] else None), 'one-based first explainer')
