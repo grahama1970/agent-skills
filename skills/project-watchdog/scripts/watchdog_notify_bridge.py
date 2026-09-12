@@ -813,7 +813,17 @@ def _heartbeat_payload() -> dict[str, Any]:
         except (OSError, ValueError):
             continue
         status = str(doc.get("current_status") or "").upper()
-        if doc.get("process_running") or status not in _TERMINAL_RUN_STATUSES:
+        # A dead process with NO recorded status is only "current" briefly: past
+        # the freshness window it is an unsettled run the reconciler owns, not
+        # live progress. Without this, #1641's statusless dead monitor (run died
+        # before any terminal status, 48h old) latched NO_ACTIVE_PROCESS forever
+        # even while cron kept writing fresh receipts (operator 2026-09-12).
+        try:
+            age = time.time() - os.path.getmtime(candidate)
+        except OSError:
+            age = 0
+        fresh_enough = age <= 900
+        if doc.get("process_running") or (status not in _TERMINAL_RUN_STATUSES and fresh_enough):
             monitor_path = Path(candidate)
             m = doc
             break

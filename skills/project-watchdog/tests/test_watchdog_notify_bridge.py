@@ -274,3 +274,21 @@ def test_all_clear_fires_once_for_previously_alerted_issue(tmp_path, monkeypatch
     # an event for an issue with NO live fingerprint clears nothing
     ev2 = {"repo": "grahama1970/agent-skills", "issue": "9999", "status": "COMPLETED"}
     assert b._all_clear_fingerprint(ev2) is None
+
+
+def test_old_statusless_dead_monitor_does_not_latch_heartbeat(tmp_path, monkeypatch):
+    import json, time, sys, pathlib
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "scripts"))
+    import watchdog_notify_bridge as b
+    run = tmp_path / "watchdog-run"; run.mkdir()
+    mon = run / "tau-stream-monitor.json"
+    mon.write_text(json.dumps({"process_running": False, "current_status": None,
+                               "latest_event": {}, "elapsed_seconds": 1}))
+    old = time.time() - 100000; os_utime = __import__("os").utime; os_utime(mon, (old, old))
+    monkeypatch.setattr(b, "RECEIPTS", tmp_path)
+    hb = b._heartbeat_payload()
+    assert hb["state"] == "observer_fresh_no_active_run", hb  # the #1641 case
+    # a freshly-dead statusless run is still reported briefly
+    os_utime(mon, (time.time(), time.time()))
+    got = b._heartbeat_payload()
+    assert got["state"] in ("NO_ACTIVE_PROCESS", "observer_fresh_no_active_run")
