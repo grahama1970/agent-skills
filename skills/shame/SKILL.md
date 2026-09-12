@@ -135,15 +135,15 @@ block yourself.
 ## pi.agent_status.v1
 
 Every status requires a non-empty `goal` and `changed` (use `no change: <reason>`
-when appropriate). Optional `plain_answer` (≤4000 chars) is the plain-spoken
-verdict the renderer leads the visible Status Report with; `answer` stays the
+when appropriate). Optional `plain_answer` (≤4000 chars) is plain-spoken
+verdict text for clients that render a summary; `answer` stays the
 ≤300-char machine headline. `plain_answer` is display text, not new evidence —
 anti-fabrication still binds to `verified[]`/`proof[]`, and the renderer never
 displays raw `verified[].result` substrings (they exist for validation only).
 Use concrete operational anchors when they exist: `run_dir`,
 `artifacts[]`, `receipts[]`, `nodes[]` (`id`, `status`, optional `artifact` or
 `receipt`), `blocked[]`, and `missing_artifacts[]`. The extension renders those
-fields in the visible `Status Report`; do not substitute vague prose summaries
+fields in the JSON/proof record; do not substitute vague prose summaries
 such as "task completed" or "tests passed" for paths, node states, and receipt
 locations.
 

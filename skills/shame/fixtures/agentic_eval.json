@@ -1085,7 +1085,7 @@
       "proves": "NeedsAgent is runtime-bound: the trusted runtime project-agent family (env-supplied, never agent-authored) selects exactly one first-ask handler (openai->claude-fable-low, claude->gpt-5.5-high); wrong/same-family handlers, mismatched payload family, unsupported runtime family, missing runtime supply, and missing handler availability all produce typed operational failures without silent substitution."
     },
     {
-      "name": "status-report-renderer-round-trips-through-checker",
+      "name": "accepted-status-json-not-prose-footer",
       "type": "positive",
       "evidence_class": "deterministic",
       "mocked": true,
@@ -1109,7 +1109,7 @@
           }
         ]
       },
-      "proves": "The Status Report is deterministically rendered from validated pi.agent_status.v1 JSON (never hand-authored prose): render -> re-extract fenced json -> re-validate preserves state/goal/not_done.next_command anchors."
+      "proves": "Accepted pi.agent_status.v1 output remains the terminal machine contract; the extension does not append a prose Status Report footer that duplicates receipts and teaches GLM the wrong stop shape."
     }
   ]
 }

@@ -23,7 +23,7 @@ At terminal assistant `message_end` (`stopReason="stop"`, no tool calls or queue
 5. rejects unresolved URL/digest `proof[]`, missing/empty/non-file local proof, failed known receipt schemas, and `verified[]` entries not backed by local proof text;
 6. when `LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE` points at an active goal/ticket ledger, rejects a final `state=done` report while relevant `agent-work` tickets, acceptance gates, or explicit next steps remain open;
 7. ignores trailing prose after valid status JSON because pydantic data is authoritative and the renderer discards model prose;
-8. strips model-authored status JSON/prose from accepted output and renders the visible `Status Report` from the validated JSON, including concrete anchors such as `run_dir`, `artifacts[]`, `receipts[]`, `nodes[]`, `blocked[]`, and `missing_artifacts[]` when supplied;
+8. leaves accepted model output unchanged after validation: the human answer stays plain, and the fenced `pi.agent_status.v1` JSON remains the terminal machine contract. It does not append a prose `Status Report` footer.
 9. replaces rejected output with a compact `REJECTED_BY_SLOTH_COURT` notice that hashes raw diagnostics and points to the typed retry packet;
 10. prepares at most one output-only `UNLAZY_FORCED_RETRY` correction per reporting episode, armed or unarmed, and dispatches it only at `agent_end`; correction turns cannot call tools or request another correction; the retry packet includes a copyable `suggested_status` continuing report; format-only retry output must be exactly one fenced `pi.agent_status.v1` JSON block, and guard-internal `lazy_report_shame.*` schemas are rejected as `format_retry_wrong_schema`;
 11. tells the human how to label the raw rejected candidate with `/shame reject|allow|warn <reason> -- <note>` after automatic repair is exhausted.
@@ -171,7 +171,7 @@ The intended human-agent flow is:
 
 1. The extension rejects the bad status answer and shows the machine reason, raw candidate hash, excerpt, and required JSON contract.
 2. The extension atomically writes `/mnt/storage12tb/skills/shame/training/pending-review-packet.json.sessions/<sha256(session-id)>.json` so the raw candidate survives reload without crossing session boundaries. Legacy packets are read only by their recorded owner, after checking the candidate hash.
-3. The agent rewrites the answer and ends with one valid `pi.agent_status.v1` JSON block; the extension renders the visible `Status Report`.
+3. The agent rewrites the answer in plain language and ends with one valid `pi.agent_status.v1` JSON block. The extension validates it and does not append a duplicate prose status footer.
 4. The human approves or corrects the classification with `/shame review` for an interactive label picker, or directly with `/shame allow|reject|warn <reason> -- <note>`.
 5. `/shame show` displays the raw candidate, pending packet path, machine decision, checker version, excerpt, and copyable human-labeling commands.
 6. The captured label goes to JSONL and Memory for the future classifier loop.

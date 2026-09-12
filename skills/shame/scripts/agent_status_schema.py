@@ -528,7 +528,7 @@ class AgentStatus(BaseModel):
         min_length=1,
         max_length=4000,
         description=(
-            "Optional plain-spoken verdict for the human-visible Status Report "
+            "Optional plain-spoken verdict for clients that render a human summary "
             "lead line; `answer` stays the <=300-char machine headline. "
             "Anti-fabrication validation still binds to verified[]/proof[]; "
             "plain_answer is display text, not new evidence."

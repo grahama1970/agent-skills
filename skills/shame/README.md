@@ -38,7 +38,7 @@ The deterministic PHART view is retained at:
 1. A leading `$shame`, `/shame`, `/skill:shame`, `$unlazy`, or guarded mutating turn activates the Pi extension.
 2. The extension extracts the final fenced `pi.agent_status.v1` JSON block and sends only that data to `status-json-check.mjs`.
 3. `status-json-check.mjs` rejects duplicate keys, invokes `scripts/agent_status_schema.py`, and returns the validated status object.
-4. The extension strips model-authored status prose and renders the visible `Status Report` from validated data.
+4. The extension validates the terminal `pi.agent_status.v1` JSON and does not append a duplicate prose `Status Report`. Human prose should state what was actually done before the JSON.
 5. `compile-status-command.mjs` maps `continuing` and legal `needs_*` states to exact runnable commands. `done`, `needs_human`, and `failed` do not dispatch automatically.
 6. The escalation ladder is schema data, not prose:
    - `state="needs_brave_search"` requires `needs_brave_search.queries[]` and compiles to `skills/brave-search/run.sh web ... --count 5`.
