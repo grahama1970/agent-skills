@@ -1,4 +1,7 @@
+import json
 from pathlib import Path
+import subprocess
+import sys
 import zipfile
 
 import pytest
@@ -53,6 +56,17 @@ def test_rejects_unsafe_zip_member(tmp_path: Path) -> None:
         build_bundle(zip_path, "demo", GoalMode.CREATE)
 
 
+def test_refuses_repo_root_by_default(tmp_path: Path) -> None:
+    (tmp_path / ".git").mkdir()
+    (tmp_path / "README.md").write_text("The system must not derive acceptance from implementation.\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="refusing repository root"):
+        build_bundle(tmp_path, "demo", GoalMode.CREATE)
+
+    bundle = build_bundle(tmp_path, "demo", GoalMode.CREATE, allow_repo=True)
+    assert bundle.requirements[0].statement == "The system must not derive acceptance from implementation."
+
+
 def test_bundle_validation_rejects_case_without_requirement(tmp_path: Path) -> None:
     payload = build_bundle(tmp_path, "demo", GoalMode.NONE).model_dump(by_alias=True) if False else {
         "schema": "acceptance_contract.bundle.v1",
@@ -88,3 +102,22 @@ def test_create_report_shape_is_valid_for_extracted_bundle(tmp_path: Path) -> No
     assert report["schema"] == "create_report.report.v1"
     assert report["findings"][0]["id"] == "F-001"
     assert report["plan_iterate_seed"]["human_decisions"] == ["create new immutable goal or amend existing immutable goal"]
+
+
+def test_ensure_creates_validates_and_rejects_stale_contract(tmp_path: Path) -> None:
+    brief = tmp_path / "brief.md"
+    out = tmp_path / "contract"
+    brief.write_text("The container must remove policy values.\n", encoding="utf-8")
+
+    cmd = [sys.executable, "-m", "acceptance_contract.cli", "ensure", str(brief), "--out", str(out), "--project-name", "demo"]
+    created = subprocess.run(cmd, check=True, text=True, capture_output=True)
+    assert json.loads(created.stdout)["action"] == "created_missing_contract"
+    assert (out / "acceptance_bundle.json").exists()
+
+    validated = subprocess.run(cmd, check=True, text=True, capture_output=True)
+    assert json.loads(validated.stdout)["action"] == "validated_existing_contract"
+
+    brief.write_text("The container must remove policy values.\nThe output must verify every decoded file.\n", encoding="utf-8")
+    stale = subprocess.run(cmd, text=True, capture_output=True)
+    assert stale.returncode == 1
+    assert "stale acceptance contract" in stale.stderr

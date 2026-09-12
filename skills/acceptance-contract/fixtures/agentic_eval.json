@@ -5,7 +5,7 @@
   "live": true,
   "proof_scope": "Acceptance-contract real CLI path: extracts source-backed requirements from local briefs and zip bundles, validates the pydantic acceptance_contract.bundle.v1 boundary, renders create_report.report.v1 artifacts through create-report, and fails closed on unsafe zip input.",
   "claims": {
-    "proves": "acceptance-contract accepts local file and zip inputs, emits typed requirements/cases/open questions, creates draft-only immutable-goal text, validates the bundle boundary, delegates report rendering to create-report, and rejects unsafe zip traversal.",
+    "proves": "acceptance-contract accepts local file and zip inputs, emits typed requirements/cases/open questions, creates draft-only immutable-goal text, validates the bundle boundary, delegates report rendering to create-report, and rejects unsafe zip traversal. It also proves the ensure preflight creates/validates frozen contracts, rejects stale source hashes, and refuses repository roots by default.",
     "does_not_prove": "that extracted requirements are semantically complete, human-approved, sufficient for a real client contract, or that Battle has executed the resulting bundle."
   },
   "capability_claims": [
@@ -13,21 +13,45 @@
       "id": "acceptance_contract.extracts_requirements",
       "description": "The skill extracts explicit must/shall/acceptance/fail-closed requirements from supplied local source files.",
       "criticality": "critical",
-      "evidence_required": {"live_e2e": true},
+      "evidence_required": {
+        "live_e2e": true
+      },
       "claim_semantics": "protocol"
     },
     {
       "id": "acceptance_contract.report_bridge",
       "description": "The skill renders a create-report-backed report from validated JSON.",
       "criticality": "critical",
-      "evidence_required": {"live_e2e": true},
+      "evidence_required": {
+        "live_e2e": true
+      },
       "claim_semantics": "protocol"
     },
     {
       "id": "acceptance_contract.safe_bundle_input",
       "description": "The skill rejects unsafe zip members instead of extracting path traversal entries.",
       "criticality": "critical",
-      "evidence_required": {"adversarial_live_e2e": true},
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "control_flow"
+    },
+    {
+      "id": "acceptance_contract.ensure_freezes_contract",
+      "description": "The skill validates an existing acceptance bundle, creates it when missing, and rejects stale source hashes.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
+      "id": "acceptance_contract.rejects_repo_root_default",
+      "description": "The skill refuses repository roots by default so implementation files cannot become the acceptance source.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
       "claim_semantics": "control_flow"
     }
   ],
@@ -37,21 +61,45 @@
       "seam_type": "filesystem/process",
       "criticality": "critical",
       "claim_id": "acceptance_contract.extracts_requirements",
-      "required_evidence": ["live_e2e"]
+      "required_evidence": [
+        "live_e2e"
+      ]
     },
     {
       "seam_id": "create_report_bridge",
       "seam_type": "subprocess/schema",
       "criticality": "critical",
       "claim_id": "acceptance_contract.report_bridge",
-      "required_evidence": ["live_e2e"]
+      "required_evidence": [
+        "live_e2e"
+      ]
     },
     {
       "seam_id": "zip_safety",
       "seam_type": "filesystem/security",
       "criticality": "critical",
       "claim_id": "acceptance_contract.safe_bundle_input",
-      "required_evidence": ["adversarial_live_e2e"]
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "frozen_contract_guard",
+      "seam_type": "filesystem/schema",
+      "criticality": "critical",
+      "claim_id": "acceptance_contract.ensure_freezes_contract",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "repo_root_guard",
+      "seam_type": "filesystem/security",
+      "criticality": "critical",
+      "claim_id": "acceptance_contract.rejects_repo_root_default",
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
     }
   ],
   "cases": [
@@ -61,10 +109,19 @@
       "real_world": true,
       "evidence_class": "deterministic",
       "supports_claims": [],
-      "seams": ["cli_input_bundle"],
+      "seams": [
+        "cli_input_bundle"
+      ],
       "timeout_seconds": 60,
-      "command": ["python3", "../../best-practices-skills/scripts/validate_skill.py", "..", "--json"],
-      "expected": {"exit_code": 0}
+      "command": [
+        "python3",
+        "../../best-practices-skills/scripts/validate_skill.py",
+        "..",
+        "--json"
+      ],
+      "expected": {
+        "exit_code": 0
+      }
     },
     {
       "name": "file-brief-extracts-requirements",
@@ -72,8 +129,12 @@
       "real_world": true,
       "evidence_class": "live_e2e",
       "readback": true,
-      "supports_claims": ["acceptance_contract.extracts_requirements"],
-      "seams": ["cli_input_bundle"],
+      "supports_claims": [
+        "acceptance_contract.extracts_requirements"
+      ],
+      "seams": [
+        "cli_input_bundle"
+      ],
       "timeout_seconds": 120,
       "command": [
         "bash",
@@ -82,10 +143,20 @@
       ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["file extraction PASS"],
+        "stdout_contains": [
+          "file extraction PASS"
+        ],
         "artifacts": [
-          {"path": "/tmp/acceptance-contract-eval-file/out/acceptance_bundle.json", "json_pointer": "/schema", "equals": "acceptance_contract.bundle.v1"},
-          {"path": "/tmp/acceptance-contract-eval-file/out/acceptance_bundle.json", "json_pointer": "/requirements/0/statement", "equals": "The system must remove customer phone numbers in every representation."}
+          {
+            "path": "/tmp/acceptance-contract-eval-file/out/acceptance_bundle.json",
+            "json_pointer": "/schema",
+            "equals": "acceptance_contract.bundle.v1"
+          },
+          {
+            "path": "/tmp/acceptance-contract-eval-file/out/acceptance_bundle.json",
+            "json_pointer": "/requirements/0/statement",
+            "equals": "The system must remove customer phone numbers in every representation."
+          }
         ]
       }
     },
@@ -95,8 +166,12 @@
       "real_world": true,
       "evidence_class": "live_e2e",
       "readback": true,
-      "supports_claims": ["acceptance_contract.report_bridge"],
-      "seams": ["create_report_bridge"],
+      "supports_claims": [
+        "acceptance_contract.report_bridge"
+      ],
+      "seams": [
+        "create_report_bridge"
+      ],
       "timeout_seconds": 120,
       "command": [
         "bash",
@@ -105,10 +180,20 @@
       ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["report bridge PASS"],
+        "stdout_contains": [
+          "report bridge PASS"
+        ],
         "artifacts": [
-          {"path": "/tmp/acceptance-contract-eval-report/out/acceptance_report.json", "json_pointer": "/schema", "equals": "create_report.report.v1"},
-          {"path": "/tmp/acceptance-contract-eval-report/out/acceptance_report.json", "json_pointer": "/primary_object", "equals": "acceptance requirements bundle"}
+          {
+            "path": "/tmp/acceptance-contract-eval-report/out/acceptance_report.json",
+            "json_pointer": "/schema",
+            "equals": "create_report.report.v1"
+          },
+          {
+            "path": "/tmp/acceptance-contract-eval-report/out/acceptance_report.json",
+            "json_pointer": "/primary_object",
+            "equals": "acceptance requirements bundle"
+          }
         ]
       }
     },
@@ -117,8 +202,12 @@
       "type": "positive",
       "real_world": true,
       "evidence_class": "live_e2e",
-      "supports_claims": ["acceptance_contract.extracts_requirements"],
-      "seams": ["cli_input_bundle"],
+      "supports_claims": [
+        "acceptance_contract.extracts_requirements"
+      ],
+      "seams": [
+        "cli_input_bundle"
+      ],
       "timeout_seconds": 120,
       "command": [
         "bash",
@@ -127,9 +216,15 @@
       ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["zip extraction PASS"],
+        "stdout_contains": [
+          "zip extraction PASS"
+        ],
         "artifacts": [
-          {"path": "/tmp/acceptance-contract-eval-zip/out/acceptance_bundle.json", "json_pointer": "/source/kind", "equals": "zip"}
+          {
+            "path": "/tmp/acceptance-contract-eval-zip/out/acceptance_bundle.json",
+            "json_pointer": "/source/kind",
+            "equals": "zip"
+          }
         ]
       }
     },
@@ -138,8 +233,12 @@
       "type": "negative",
       "real_world": true,
       "evidence_class": "adversarial_live_e2e",
-      "supports_claims": ["acceptance_contract.safe_bundle_input"],
-      "seams": ["zip_safety"],
+      "supports_claims": [
+        "acceptance_contract.safe_bundle_input"
+      ],
+      "seams": [
+        "zip_safety"
+      ],
       "timeout_seconds": 120,
       "command": [
         "bash",
@@ -148,10 +247,84 @@
       ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["unsafe zip rejected PASS"],
+        "stdout_contains": [
+          "unsafe zip rejected PASS"
+        ],
         "artifacts": [
-          {"path": "/tmp/acceptance-contract-eval-unsafe-proof.json", "json_pointer": "/status", "equals": "PASS"},
-          {"path": "/tmp/acceptance-contract-eval-unsafe-proof.json", "json_pointer": "/stderr_contains_unsafe_zip_member", "equals": true}
+          {
+            "path": "/tmp/acceptance-contract-eval-unsafe-proof.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/acceptance-contract-eval-unsafe-proof.json",
+            "json_pointer": "/stderr_contains_unsafe_zip_member",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "ensure-creates-validates-and-rejects-stale",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "acceptance_contract.ensure_freezes_contract"
+      ],
+      "seams": [
+        "frozen_contract_guard"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-lc",
+        "ROOT=/home/graham/workspace/experiments/agent-skills; tmp=/tmp/acceptance-contract-eval-ensure; rm -rf $tmp; mkdir -p $tmp; printf 'The container must remove policy values.\n' >$tmp/brief.md; $ROOT/skills/acceptance-contract/run.sh ensure $tmp/brief.md --out $tmp/out --project-name demo >/tmp/acceptance-contract-eval-ensure-created.json && $ROOT/skills/acceptance-contract/run.sh ensure $tmp/brief.md --out $tmp/out --project-name demo >/tmp/acceptance-contract-eval-ensure-validated.json && printf 'The container must remove policy values.\nThe output must verify decoded files.\n' >$tmp/brief.md; if $ROOT/skills/acceptance-contract/run.sh ensure $tmp/brief.md --out $tmp/out --project-name demo >$tmp/stdout 2>$tmp/stderr; then exit 9; fi; python3 - <<'PY' /tmp/acceptance-contract-eval-ensure-created.json /tmp/acceptance-contract-eval-ensure-validated.json $tmp/stderr /tmp/acceptance-contract-eval-ensure-proof.json\nimport json, pathlib, sys\ncreated=json.load(open(sys.argv[1]))\nvalidated=json.load(open(sys.argv[2]))\nstderr=pathlib.Path(sys.argv[3]).read_text()\nproof={'created':created['action'], 'validated':validated['action'], 'stale_rejected':'stale acceptance contract' in stderr}\npathlib.Path(sys.argv[4]).write_text(json.dumps(proof))\nassert proof=={'created':'created_missing_contract','validated':'validated_existing_contract','stale_rejected':True}\nprint('ensure guard PASS')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ensure guard PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/acceptance-contract-eval-ensure-proof.json",
+            "json_pointer": "/stale_rejected",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "repo-root-input-fails-closed",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "acceptance_contract.rejects_repo_root_default"
+      ],
+      "seams": [
+        "repo_root_guard"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-lc",
+        "ROOT=/home/graham/workspace/experiments/agent-skills; tmp=/tmp/acceptance-contract-eval-reporoot; rm -rf $tmp; mkdir -p $tmp/.git; printf 'The implementation must not define the client contract.\n' >$tmp/README.md; if $ROOT/skills/acceptance-contract/run.sh ensure $tmp --out $tmp/out --project-name demo >$tmp/stdout 2>$tmp/stderr; then exit 9; fi; python3 - <<'PY' $tmp/stderr /tmp/acceptance-contract-eval-reporoot-proof.json\nimport json, pathlib, sys\nstderr=pathlib.Path(sys.argv[1]).read_text()\nproof={'status':'PASS' if 'refusing repository root' in stderr else 'FAIL', 'refused_repo_root':'refusing repository root' in stderr}\npathlib.Path(sys.argv[2]).write_text(json.dumps(proof))\nassert proof['status']=='PASS'\nprint('repo root rejected PASS')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "repo root rejected PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/acceptance-contract-eval-reporoot-proof.json",
+            "json_pointer": "/refused_repo_root",
+            "equals": true
+          }
         ]
       }
     }

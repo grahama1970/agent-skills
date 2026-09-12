@@ -38,6 +38,25 @@ taxonomy:
 Use this before implementation when a brief, ticket, email, README, zip bundle,
 or evidence packet needs to become executable acceptance criteria.
 
+First command for implementation work:
+
+```bash
+skills/acceptance-contract/run.sh ensure <zip|directory|file> \
+  --out /tmp/acceptance-contract \
+  --project-name oai-trial \
+  --goal-mode create
+```
+
+`ensure` is the mechanical guard: it validates an existing `acceptance_bundle.json`,
+auto-extracts one when missing, and fails closed when the supplied source bundle
+has changed since the frozen contract was written. Do not implement from a brief
+until `ensure` returns `status=PASS`.
+
+Pass the **client brief, zip bundle, or deliberately staged spec directory** as
+input. The CLI refuses repository roots by default so implementation files cannot
+silently become the acceptance source. Use `--allow-repo` only when the human
+explicitly asks for a repository-wide contract.
+
 ## What it does
 
 ```bash
@@ -53,6 +72,12 @@ Outputs:
 - `acceptance_report.json` — `create_report.report.v1` JSON
 - `acceptance_report.md` — rendered through `$create-report`
 - `IMMUTABLE_GOAL.draft.md` — draft goal text or amendment proposal
+
+Commands:
+
+- `extract` always writes a fresh draft bundle/report from the supplied source.
+- `ensure` validates or creates the frozen bundle and rejects stale source hashes.
+- `validate` validates an existing `acceptance_bundle.json` only.
 
 ## Goal policy
 
@@ -71,6 +96,8 @@ stood in for the client brief.
 This skill extracts clear, source-backed requirements from supplied local files.
 It does not claim the extracted contract is complete when the source bundle is
 ambiguous. Ambiguity becomes `open_questions[]` and a Needs Changes report.
+It refuses repo roots by default because oai-trial failed when code-shaped checks
+stood in for the delivered brief.
 
 For Battle, pass the resulting bundle/profile into `$battle`; do not make Battle
 invent the requirements.

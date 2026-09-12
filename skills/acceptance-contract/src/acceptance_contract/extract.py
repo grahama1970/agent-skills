@@ -60,13 +60,15 @@ def is_text_path(path: str) -> bool:
     return Path(path).suffix.lower() in TEXT_SUFFIXES
 
 
-def read_input(path: Path) -> tuple[SourceKind, list[TextDocument]]:
+def read_input(path: Path, *, allow_repo: bool = False) -> tuple[SourceKind, list[TextDocument]]:
     if not path.exists():
         raise FileNotFoundError(path)
     if path.is_file() and path.suffix.lower() == ".zip":
         return SourceKind.ZIP, read_zip(path)
     if path.is_file():
         return SourceKind.FILE, [read_file(path, path.name)]
+    if (path / ".git").exists() and not allow_repo:
+        raise ValueError("refusing repository root as acceptance source; pass the client brief/zip/spec directory, or use --allow-repo only for an intentional repository-wide contract")
     return SourceKind.DIRECTORY, read_directory(path)
 
 
@@ -231,8 +233,8 @@ def goal_markdown(project_name: str, mode: GoalMode, requirements: list[Requirem
     return "\n".join(lines) + "\n"
 
 
-def build_bundle(input_path: Path, project_name: str, goal_mode: GoalMode) -> AcceptanceBundle:
-    kind, docs = read_input(input_path)
+def build_bundle(input_path: Path, project_name: str, goal_mode: GoalMode, *, allow_repo: bool = False) -> AcceptanceBundle:
+    kind, docs = read_input(input_path, allow_repo=allow_repo)
     logger.info("acceptance-contract reading {} text file(s) from {}", len(docs), input_path)
     requirements, cases, questions = extract_records(docs)
     goal = None
