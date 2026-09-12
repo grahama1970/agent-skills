@@ -203,7 +203,7 @@ def run_production_round(adapter_request: dict[str, Any]) -> dict[str, Any]:
             "retained_acceptance_bundle": retained_bundle,
             "acceptance_floor": floor_receipt,
             "post_acceptance_phase_plan": phase_plan,
-            "target_launches": campaign["aggregation"]["cases_total"],
+            "target_launches": campaign["aggregation"].get("observed_target_launch_count", campaign["aggregation"]["cases_total"]),
             "campaign": campaign,
             "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
 

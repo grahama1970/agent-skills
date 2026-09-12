@@ -210,10 +210,35 @@ def _fixture_precheck(input_dir: Path, judge_path: str, judge_params: dict[str, 
     return {"status": "FAIL", "evidence_sha256": _manifest_sha256(input_dir), "violations": ["fixture_precheck:no_policy_value_witness"]}
 
 
-def _execution_kind(run_returncode: int, produced: bool) -> str:
+SAFE_REJECTION_MARKER = "BATTLE_CONTRACT_REJECT"
+
+
+def _text_tail(value: str | bytes | None, limit: int = 2000) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        value = value.decode("utf-8", errors="replace")
+    return value[-limit:]
+
+
+def _execution_kind(run_returncode: int | None, produced: bool, *, timed_out: bool = False) -> str:
+    if timed_out:
+        return "TIMEOUT"
+    if run_returncode in (125, 126, 127):
+        return "LAUNCH_ERROR"
+    if run_returncode in (137, -9):
+        return "OOM"
+    if run_returncode is not None and run_returncode < 0:
+        return "CRASH"
     if run_returncode == 0 and produced:
         return "ACCEPT"
-    return "REJECT"
+    if run_returncode == 0 and not produced:
+        return "INCOMPLETE_CAPTURE"
+    return "CONTRACT_REJECT" if run_returncode is not None else "CRASH"
+
+
+def _rejection_predicate_verified(run: subprocess.CompletedProcess[str] | None, kind: str) -> bool:
+    return bool(run and kind == "CONTRACT_REJECT" and SAFE_REJECTION_MARKER in f"{run.stdout}\n{run.stderr}")
 
 
 def _rejection_code(run: subprocess.CompletedProcess[str], produced: bool) -> str | None:
@@ -228,6 +253,7 @@ def _case_receipt(name: str, input_dir: Path, expectation: str, expectation_sour
                   produced: bool, verdict: dict[str, Any], security: dict[str, Any] | None,
                   functional: dict[str, Any] | None, run: subprocess.CompletedProcess[str] | None) -> dict[str, Any]:
     passed = bool(verdict.get("passed")) and fixture_precheck.get("status") == "PASS"
+    kind = (execution or {}).get("kind")
     return {
         "schema": "battle.case_receipt.v1",
         "case_id": name,
@@ -240,8 +266,8 @@ def _case_receipt(name: str, input_dir: Path, expectation: str, expectation_sour
         "execution": execution or {"kind": "NOT_RUN", "exit_code": None, "signal": None, "timed_out": False, "oom_killed": False, "duration_ms": 0},
         "rejection": {
             "code": _rejection_code(run, produced) if run is not None else "fixture_precheck_failed",
-            "permitted": expectation in ("MUST_REJECT", "MAY_REJECT") if run is not None and not produced else None,
-            "predicate_verified": fixture_precheck.get("status") == "PASS" if run is not None and not produced else None,
+            "permitted": expectation in ("MUST_REJECT", "MAY_REJECT") and kind == "CONTRACT_REJECT" if run is not None and not produced else None,
+            "predicate_verified": _rejection_predicate_verified(run, kind) if run is not None and not produced else None,
         },
         "capture_complete": execution is not None,
         "security_judge": security or {"status": "NOT_RUN", "violations": []},
@@ -253,7 +279,8 @@ def _case_receipt(name: str, input_dir: Path, expectation: str, expectation_sour
 
 def _aggregate(case_receipts: list[dict[str, Any]]) -> dict[str, Any]:
     accepted = [c for c in case_receipts if c["execution"]["kind"] == "ACCEPT"]
-    rejected = [c for c in case_receipts if c["execution"]["kind"] == "REJECT"]
+    rejected = [c for c in case_receipts if c["execution"]["kind"] == "CONTRACT_REJECT"]
+    execution_failures = [c for c in case_receipts if c["execution"]["kind"] in {"LAUNCH_ERROR", "CRASH", "TIMEOUT", "OOM", "INCOMPLETE_CAPTURE"}]
     return {
         "schema": "battle.campaign_aggregate.v1",
         "planned_count": len(case_receipts),
@@ -263,9 +290,11 @@ def _aggregate(case_receipts: list[dict[str, Any]]) -> dict[str, Any]:
         "safe_rejected_count": sum(1 for c in rejected if c["verdict"] == "PASS"),
         "unexpected_rejected_count": sum(1 for c in rejected if c["expectation"] == "MUST_ACCEPT"),
         "unsafe_rejected_count": sum(1 for c in rejected if c["security_judge"]["status"] == "FAIL"),
+        "execution_failure_count": len(execution_failures),
+        "observed_target_launch_count": sum(1 for c in case_receipts if c["execution"]["kind"] not in {"NOT_RUN", "LAUNCH_ERROR"}),
         "target_error_count": sum(1 for c in case_receipts if c["execution"].get("exit_code") not in (0, None) and c["expectation"] == "MUST_ACCEPT"),
         "judge_error_count": sum(1 for c in case_receipts if any("judge error:" in v for v in c.get("violations", []))),
-        "incomplete_count": sum(1 for c in case_receipts if not c.get("capture_complete")),
+        "incomplete_count": sum(1 for c in case_receipts if not c.get("capture_complete") or c["execution"]["kind"] == "INCOMPLETE_CAPTURE"),
         "failed_count": sum(1 for c in case_receipts if c["verdict"] != "PASS"),
         "required_case_failures": [c["case_id"] for c in case_receipts if c["expectation"] == "MUST_ACCEPT" and c["verdict"] != "PASS"],
     }
@@ -371,13 +400,22 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
             cmd = target_run_cmd.format(input=shlex.quote(str(input_path)),
                                         output=shlex.quote(str(out_dir)))
             started = time.monotonic()
-            run = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=600)
+            timed_out = False
+            try:
+                run = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=600)
+            except subprocess.TimeoutExpired as exc:
+                timed_out = True
+                run = subprocess.CompletedProcess(cmd, None, _text_tail(exc.stdout), _text_tail(exc.stderr))
             duration_ms = int((time.monotonic() - started) * 1000)
             produced = (out_dir / output_subdir).exists() and any((out_dir / output_subdir).rglob("*"))
-            execution_observation = {"kind": _execution_kind(run.returncode, produced), "exit_code": run.returncode,
-                                     "signal": None, "timed_out": False, "oom_killed": False,
-                                     "duration_ms": duration_ms, "stdout_tail": run.stdout[-2000:],
-                                     "stderr_tail": run.stderr[-2000:]}
+            kind = _execution_kind(run.returncode, produced, timed_out=timed_out)
+            if kind == "CONTRACT_REJECT" and not _rejection_predicate_verified(run, kind):
+                kind = "CRASH"
+            execution_observation = {"kind": kind, "exit_code": run.returncode,
+                                     "signal": -run.returncode if isinstance(run.returncode, int) and run.returncode < 0 else None,
+                                     "timed_out": timed_out, "oom_killed": kind == "OOM",
+                                     "duration_ms": duration_ms, "stdout_tail": _text_tail(run.stdout),
+                                     "stderr_tail": _text_tail(run.stderr)}
             execution_dir = out_dir / ".battle-execution"
             execution_dir.mkdir(parents=True, exist_ok=True)
             (execution_dir / "stdout.txt").write_text(run.stdout, encoding="utf-8", errors="replace")
@@ -386,21 +424,25 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
             # invariant holds for MAY_REJECT/MUST_REJECT only after the Judge
             # also scans stdout/stderr. MUST_ACCEPT rejection is a release gate
             # failure because useful processing was not proven.
-            if run.returncode != 0 or not produced:
-                result.rejected_count += 1
+            if kind != "ACCEPT":
+                if kind == "CONTRACT_REJECT":
+                    result.rejected_count += 1
                 jr = run_judge(judge, str(out_dir), jp)
                 security = {"status": "PASS" if jr.passed else "FAIL", "violations": jr.violations}
+                safe_reject = expectation in ("MUST_REJECT", "MAY_REJECT") and jr.passed and _rejection_predicate_verified(run, kind)
                 verdict = {"case": name, "expectation": expectation, "expectation_source": expectation_source,
-                           "judged": True, "passed": jr.passed,
-                           "violations": jr.violations, "note": "target fail-closed (no released output)",
+                           "judged": True, "passed": safe_reject,
+                           "violations": jr.violations, "note": "target contract rejection" if safe_reject else f"execution_failure:{kind}",
                            "execution": execution_observation}
                 if expectation == "MUST_ACCEPT":
                     verdict["passed"] = False
                     verdict["violations"] = ["required-accept-case-rejected (vacuous-pass blocker)", *jr.violations]
                     result.failures.append(verdict)
-                elif jr.passed:
+                elif safe_reject:
                     result.cases_passed += 1
                 else:
+                    if not jr.violations:
+                        verdict["violations"] = [f"unverified-rejection:{kind}:missing-{SAFE_REJECTION_MARKER}"]
                     result.failures.append(verdict)
                 result.case_receipts.append(_case_receipt(name, input_path, expectation, expectation_source,
                                                           fixture_precheck, execution_observation, produced,

@@ -1192,6 +1192,14 @@ def probe_b07_confine_materialized_artifacts(summary_path: Path) -> int:
     )
 
 
+def probe_b08_separate_safe_rejection(summary_path: Path) -> int:
+    return probe_pytest_contracts(
+        summary_path,
+        suite="battle-b08-separate-safe-rejection-from-execution-failure",
+        tests=["test_execution_outcome_classification.py"],
+    )
+
+
 
 def probe_b05_strict_campaign_acceptance_envelopes(summary_path: Path) -> int:
     return probe_pytest_contracts(
@@ -4591,6 +4599,8 @@ def main() -> int:
             return probe_b06_verify_evaluator_locks(args.summary)
         if args.suite == "battle-b07-confine-all-materialized-artifacts-to-owned-snapshots":
             return probe_b07_confine_materialized_artifacts(args.summary)
+        if args.suite == "battle-b08-separate-safe-rejection-from-execution-failure":
+            return probe_b08_separate_safe_rejection(args.summary)
         if args.suite == "review-receipt-hash-finalization":
             return probe_review_receipt_hash_finalization(args.summary)
         if args.suite == "review-judge-authority":

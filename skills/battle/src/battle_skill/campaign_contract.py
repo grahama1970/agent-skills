@@ -264,8 +264,10 @@ def verify_campaign_receipt(receipt_path: Path, evaluator_root: Path | None = No
             params["input_dir"] = str(input_dir)
             sec = run_judge(request["judge"], str(case_dir), params)
             sec_ok = sec.passed
-            if case.get("execution", {}).get("kind") == "REJECT":
-                fn_ok = True
+            kind = case.get("execution", {}).get("kind")
+            if kind == "CONTRACT_REJECT":
+                rejection = case.get("rejection") or {}
+                fn_ok = bool(rejection.get("permitted") is True and rejection.get("predicate_verified") is True)
             else:
                 fn = run_judge(request["functional_judge"], str(case_dir), params)
                 fn_ok = fn.passed

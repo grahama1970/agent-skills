@@ -67,6 +67,15 @@
       "claim_semantics": "control_flow"
     },
     {
+      "id": "battle.execution_outcome.safe_rejection",
+      "description": "Battle case receipts distinguish accepted output, contract-verified rejection, launch error, crash, timeout, OOM, and incomplete capture; only contract-marked permitted rejection can satisfy a rejection expectation, and target launches are counted from observed starts.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "control_flow"
+    },
+    {
       "id": "battle.local_docker.reactive_round",
       "description": "A clean local Battle repair round runs through the isolated Docker target and emits complete Red/Judge/Blue/scorekeeper receipts",
       "criticality": "critical",
@@ -643,6 +652,20 @@
         "case ID traversal writes output outside the work root",
         "generator symlink imports host files into retained evidence",
         "external mutation changes evidence after plan resolution"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "execution_outcome.safe_rejection",
+      "claim_id": "battle.execution_outcome.safe_rejection",
+      "seam_type": "runner/execution-observation",
+      "criticality": "critical",
+      "failure_modes": [
+        "Docker launch error is recorded as safe rejection",
+        "crash or incomplete capture satisfies MUST_REJECT",
+        "target_launches is copied from planned case count instead of observed starts"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -1380,6 +1403,39 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/battle-b07-confine-all-materialized-artifacts-to-owned-snapshots.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-b08-separate-safe-rejection-from-execution-failure",
+      "category": "battle-b08-separate-safe-rejection-from-execution-failure",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.execution_outcome.safe_rejection"
+      ],
+      "seams": [
+        "execution_outcome.safe_rejection"
+      ],
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b08-separate-safe-rejection-from-execution-failure --summary /tmp/battle-agentic-evals/battle-b08-separate-safe-rejection-from-execution-failure.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b08-separate-safe-rejection-from-execution-failure"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-b08-separate-safe-rejection-from-execution-failure.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800
