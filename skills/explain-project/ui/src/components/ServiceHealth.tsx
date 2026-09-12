@@ -43,6 +43,10 @@ const serviceMeta: Record<
     label: 'Debugger bridge',
     icon: Bug,
   },
+  ops_excalidraw: {
+    label: 'Ops Excalidraw',
+    icon: Globe,
+  },
   surf: {
     label: 'Surf browser',
     icon: Globe,

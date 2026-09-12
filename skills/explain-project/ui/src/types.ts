@@ -194,7 +194,7 @@ export type ServiceStatusKind =
   | 'NOT_CONFIGURED'
 
 export interface SkillServiceHealth {
-  service: 'live_evidence' | 'debugger' | 'surf'
+  service: 'live_evidence' | 'debugger' | 'ops_excalidraw' | 'surf'
   status: ServiceStatusKind
   detail: string
 }

@@ -131,6 +131,18 @@ class RuntimeLaunch(StrictModel):
     cwd: str | None = None
 
 
+class AcceptanceContractRef(StrictModel):
+    """Source-backed requirements bundle produced by $acceptance-contract."""
+
+    schema_: Literal["explain_project.acceptance_contract_ref.v1"] = Field(alias="schema")
+    path: str = Field(min_length=1)
+    sha256: str = Field(min_length=64, max_length=64)
+    project_name: str = Field(min_length=1)
+    requirements: int = Field(ge=0)
+    acceptance_cases: int = Field(ge=0)
+    open_questions: int = Field(ge=0)
+
+
 class ExplainerStep(StrictModel):
     """One concise, slide-like cockpit step."""
 
@@ -139,6 +151,15 @@ class ExplainerStep(StrictModel):
     bullets: list[str] = Field(min_length=2, max_length=4)
     source_range_index: int = Field(ge=0)
     source_explanation: str = Field(min_length=1)
+    spoken: str | None = Field(
+        default=None,
+        max_length=2000,
+        description=(
+            "Authored humanized spoken narration for this step. "
+            "Presenters read this aloud; falls back to composed "
+            "fragments when absent."
+        ),
+    )
     debugger_stop_index: int | None = Field(default=None, ge=0)
     diagram_node_ids: list[str] = Field(min_length=1)
     proof_boundary: str | None = None
@@ -166,6 +187,7 @@ class FeatureExplainer(StrictModel):
     proof_boundary: str = Field(min_length=1)
     debugger_stops: list[DebuggerStop] = Field(default_factory=list)
     runtime_launch: RuntimeLaunch | None = None
+    acceptance_contract: AcceptanceContractRef | None = None
     related_questions: list[str] = Field(default_factory=list)
     confidence: Confidence = "medium"
     last_verified: str | None = None
@@ -842,6 +864,7 @@ class ServiceHealth(StrictModel):
     service: Literal[
         "live_evidence",
         "debugger",
+        "ops_excalidraw",
         "surf",
     ]
     status: ServiceStatus

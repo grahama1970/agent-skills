@@ -12,6 +12,7 @@ surfaces report OFFLINE / NOT_CONFIGURED, never READY.
 from __future__ import annotations
 
 from pathlib import Path
+import json
 import os
 import subprocess
 import time
@@ -82,8 +83,8 @@ def probe_debugger(repo: Path | None) -> ServiceHealth:
         if age > 900:
             return ServiceHealth(
                 service="debugger",
-                status="DEGRADED",
-                detail=f"bridge idle {int(age // 60)}m",
+                status="NOT_CONFIGURED",
+                detail=f"no recent bridge response; last {int(age // 60)}m",
             )
 
         return ServiceHealth(
@@ -152,6 +153,98 @@ def probe_live_evidence(
         )
 
     return _cached("live_evidence", base, build)
+
+
+def _ops_excalidraw_runner() -> Path | None:
+    override = os.environ.get(
+        "EXPLAIN_PROJECT_OPS_EXCALIDRAW_RUNNER",
+    )
+    if override:
+        path = Path(override)
+        return path if path.is_file() else None
+
+    default = (
+        Path(__file__).resolve()
+        .parents[3]
+        / "ops-excalidraw"
+        / "run.sh"
+    )
+    return default if default.is_file() else None
+
+
+def _project_excalidraw_boards(repo: Path) -> list[Path]:
+    boards: list[Path] = []
+    catalog = repo / "docs" / "explain" / "explainers.jsonl"
+    if catalog.is_file():
+        for line in catalog.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            try:
+                record = json.loads(line)
+            except ValueError:
+                continue
+            diagram = record.get("diagram") or {}
+            source = diagram.get("source_path")
+            if isinstance(source, str) and source.endswith(".excalidraw"):
+                path = Path(source)
+                boards.append(path if path.is_absolute() else repo / path)
+
+    boards_dir = repo / "docs" / "explain" / "boards"
+    if boards_dir.is_dir():
+        boards.extend(boards_dir.glob("*.excalidraw"))
+
+    return sorted(set(boards))
+
+
+def probe_ops_excalidraw(repo: Path | None) -> ServiceHealth:
+    """Validate project Excalidraw boards through the owning skill."""
+    fingerprint = str(repo or "none")
+
+    def build() -> ServiceHealth:
+        if repo is None:
+            return ServiceHealth(
+                service="ops_excalidraw",
+                status="NOT_CONFIGURED",
+                detail="no --repo bound to cockpit",
+            )
+
+        runner = _ops_excalidraw_runner()
+        if runner is None:
+            return ServiceHealth(
+                service="ops_excalidraw",
+                status="NOT_CONFIGURED",
+                detail="skills/ops-excalidraw/run.sh not found",
+            )
+
+        boards = _project_excalidraw_boards(repo)
+        if not boards:
+            return ServiceHealth(
+                service="ops_excalidraw",
+                status="NOT_CONFIGURED",
+                detail="no docs/explain Excalidraw boards",
+            )
+
+        for board in boards:
+            completed = subprocess.run(
+                ["bash", str(runner), "validate", str(board)],
+                capture_output=True,
+                text=True,
+                timeout=20,
+            )
+            if completed.returncode != 0:
+                return ServiceHealth(
+                    service="ops_excalidraw",
+                    status="DEGRADED",
+                    detail=f"validate failed: {board.name}",
+                )
+
+        return ServiceHealth(
+            service="ops_excalidraw",
+            status="ONLINE",
+            detail=f"validated {len(boards)} board(s)",
+        )
+
+    return _cached("ops_excalidraw", fingerprint, build)
 
 
 def _surf_runner() -> Path | None:
@@ -264,5 +357,6 @@ def probe_services(
     return [
         probe_live_evidence(live_evidence_url),
         probe_debugger(repo),
+        probe_ops_excalidraw(repo),
         probe_surf(surf_tab_id),
     ]
