@@ -135,28 +135,6 @@
       "render_note": "de-vintaged prompt (no era cue; modern clean render)"
     },
     {
-      "id": "moonlight-sonata",
-      "title": "Moonlight Sonata (1st mvt)",
-      "year": 1801,
-      "composer": "Beethoven",
-      "song_category": "classical",
-      "genre": "classical",
-      "tempo_bpm": null,
-      "mood": [
-        "night",
-        "reflection"
-      ],
-      "pd_basis": "composed 1801; composer/work pre-1930, US public domain",
-      "evokes": "Embry anchor: night, reflection",
-      "persona_anchor": "night, reflection",
-      "gen": {
-        "engine": "eleven_sfx",
-        "text": "Slow hushed humming of a still moonlit piano melody, tender and pensive, clear present modern close-microphone recording, non-melodic, no words",
-        "duration_s": 20
-      },
-      "hum_render_status": "rendered"
-    },
-    {
       "id": "chopin-nocturne-9-2",
       "title": "Nocturne Op. 9 No. 2",
       "year": 1832,
@@ -174,50 +152,6 @@
       "gen": {
         "engine": "eleven_sfx",
         "text": "Gentle flowing humming of a tender nocturne, soft and dreamy at night, clear present modern close-microphone recording, non-melodic, no words",
-        "duration_s": 20
-      },
-      "hum_render_status": "rendered"
-    },
-    {
-      "id": "mahler-adagietto",
-      "title": "Adagietto, Symphony No. 5",
-      "year": 1901,
-      "composer": "Mahler",
-      "song_category": "classical",
-      "genre": "classical",
-      "tempo_bpm": null,
-      "mood": [
-        "grief",
-        "longing"
-      ],
-      "pd_basis": "composed 1901; composer/work pre-1930, US public domain",
-      "evokes": "Embry anchor: grief, longing",
-      "persona_anchor": "grief, longing",
-      "gen": {
-        "engine": "eleven_sfx",
-        "text": "Slow aching humming of a string adagietto, deep tender longing, unhurried, clear present modern close-microphone recording, non-melodic, no words",
-        "duration_s": 20
-      },
-      "hum_render_status": "rendered"
-    },
-    {
-      "id": "mahler-abhanden",
-      "title": "Ich bin der Welt abhanden gekommen",
-      "year": 1901,
-      "composer": "Mahler",
-      "song_category": "classical",
-      "genre": "classical",
-      "tempo_bpm": null,
-      "mood": [
-        "grief",
-        "withdrawal"
-      ],
-      "pd_basis": "composed 1901; composer/work pre-1930, US public domain",
-      "evokes": "Embry anchor: grief, withdrawal",
-      "persona_anchor": "grief, withdrawal",
-      "gen": {
-        "engine": "eleven_sfx",
-        "text": "Very slow withdrawn humming of a quiet song of leaving the world behind, serene sorrow, clear present modern close-microphone recording, non-melodic, no words",
         "duration_s": 20
       },
       "hum_render_status": "rendered"
@@ -284,7 +218,7 @@
       "persona_anchor": "warmth, home",
       "gen": {
         "engine": "eleven_sfx",
-        "text": "Warm gentle humming of a hopeful uplifting melody, contented, clear present modern close-microphone recording, non-melodic, no words",
+        "text": "Warm gentle humming of a hopeful uplifting melody, contented, bone dry, no reverb, no room ambience, intimate close-microphone, studio-dry, non-melodic, no words",
         "duration_s": 20
       },
       "hum_render_status": "rendered"
@@ -306,7 +240,7 @@
       "persona_anchor": "grief, longing",
       "gen": {
         "engine": "eleven_sfx",
-        "text": "Slow bluesy humming of a soulful melancholy blues melody, warm and aching, clear present modern close-microphone recording, non-melodic, no words",
+        "text": "Slow bluesy humming of a soulful melancholy blues melody, warm and aching, bone dry, no reverb, no room ambience, intimate close-microphone, studio-dry, non-melodic, no words",
         "duration_s": 20
       },
       "hum_render_status": "rendered",
@@ -352,14 +286,105 @@
       "persona_anchor": "home, river",
       "gen": {
         "engine": "eleven_sfx",
-        "text": "Easy warm humming of a slow strolling blues melody, homey and mellow, clear present modern close-microphone recording, non-melodic, no words",
+        "text": "Easy warm humming of a slow strolling blues melody, homey and mellow, bone dry, no reverb, no room ambience, intimate close-microphone, studio-dry, non-melodic, no words",
         "duration_s": 20
       },
       "hum_render_status": "rendered",
       "pd_verified": "brave-search 2026-09-12"
+    },
+    {
+      "id": "debussy-reverie",
+      "title": "Reverie",
+      "year": 1890,
+      "composer": "Debussy",
+      "song_category": "classical",
+      "genre": "classical",
+      "tempo_bpm": null,
+      "mood": [
+        "longing",
+        "reflection"
+      ],
+      "pd_basis": "composed 1890; Debussy d.1918, US public domain",
+      "pd_verified": "brave-search 2026-09-12",
+      "evokes": "Embry anchor: home,night",
+      "persona_anchor": "home,night",
+      "gen": {
+        "engine": "eleven_sfx",
+        "text": "Soft dreamy drifting humming of a gentle reverie melody, wistful and unhurried, clear present modern close-microphone recording, non-melodic, no words",
+        "duration_s": 20
+      },
+      "hum_render_status": "rendered"
+    },
+    {
+      "id": "debussy-flaxen-hair",
+      "title": "The Girl with the Flaxen Hair",
+      "year": 1910,
+      "composer": "Debussy",
+      "song_category": "classical",
+      "genre": "classical",
+      "tempo_bpm": null,
+      "mood": [
+        "tenderness"
+      ],
+      "pd_basis": "composed 1910; Debussy d.1918, US public domain",
+      "pd_verified": "brave-search 2026-09-12",
+      "evokes": "Embry anchor: home",
+      "persona_anchor": "home",
+      "gen": {
+        "engine": "eleven_sfx",
+        "text": "Tender gentle humming of a soft flowing melody, warm and delicate, clear present modern close-microphone recording, non-melodic, no words",
+        "duration_s": 20
+      },
+      "hum_render_status": "rendered"
+    },
+    {
+      "id": "debussy-beau-soir",
+      "title": "Beau Soir",
+      "year": 1891,
+      "composer": "Debussy",
+      "song_category": "classical",
+      "genre": "classical",
+      "tempo_bpm": null,
+      "mood": [
+        "longing",
+        "reflection"
+      ],
+      "pd_basis": "composed 1891; Debussy d.1918, US public domain",
+      "pd_verified": "brave-search 2026-09-12",
+      "evokes": "Embry anchor: night,sea",
+      "persona_anchor": "night,sea",
+      "gen": {
+        "engine": "eleven_sfx",
+        "text": "Wistful calm humming of a beautiful-evening melody, serene and yearning at dusk, clear present modern close-microphone recording, non-melodic, no words",
+        "duration_s": 20
+      },
+      "hum_render_status": "rendered"
+    },
+    {
+      "id": "debussy-la-mer",
+      "title": "La Mer (main theme)",
+      "year": 1905,
+      "composer": "Debussy",
+      "song_category": "classical",
+      "genre": "classical",
+      "tempo_bpm": null,
+      "mood": [
+        "reflection",
+        "longing"
+      ],
+      "pd_basis": "composed 1905; Debussy d.1918, US public domain",
+      "pd_verified": "brave-search 2026-09-12",
+      "evokes": "Embry anchor: sea,hawaii",
+      "persona_anchor": "sea,hawaii",
+      "gen": {
+        "engine": "eleven_sfx",
+        "text": "Flowing swelling humming of a sea-themed melody, ocean-wide and reflective, clear present modern close-microphone recording, non-melodic, no words",
+        "duration_s": 20
+      },
+      "hum_render_status": "rendered"
     }
   ],
-  "render_rule": "NEVER vintage-sounding. The tune may be old/public-domain, but every hum RENDER must be a clean, present, modern close-microphone recording of Embry humming \u2014 never phonograph/period/lo-fi texture. Prompts must NOT contain era cues (1910s/1920s/old-timey/novelty/craze/vintage); those make the SFX model produce a lo-fi phone-like recording (human-caught on ukulele-lady). Say 'clear, present, modern, close-mic' instead. Render at 44.1k stereo.",
+  "render_rule": "NEVER vintage-sounding. The tune may be old/public-domain, but every hum RENDER must be a clean, present, modern close-microphone recording of Embry humming \u2014 never phonograph/period/lo-fi texture. Prompts must NOT contain era cues (1910s/1920s/old-timey/novelty/craze/vintage); those make the SFX model produce a lo-fi phone-like recording (human-caught on ukulele-lady). Say 'clear, present, modern, close-mic' instead. Render at 44.1k stereo. HUMS MUST BE BONE DRY \u2014 no reverb, no room ambience, intimate close-mic (human rule 2026-09-12); use prompt_influence<=0.25 and a 'bone dry, no reverb' prompt. Piano/orchestral-only pieces that have no vocal hum line (e.g. Moonlight Sonata, Mahler Adagietto) are NOT hums and are removed. SFX-generated hums are a neutral voice, NOT Embry's clone \u2014 'sounds like Embry' needs her v3 clone humming (open limitation).",
   "expanded_note": "Choices broadened beyond Hawaiian to PD classical (Beethoven/Chopin/Mahler/Debussy/Satie) and early jazz/blues (Handy/Creamer&Layton/Spencer Williams), all compositions pre-1930 -> US PD, mapped to Embry persona_memory anchors (grief, sea, night, rain, home, Kai/parting; recall conf 0.93). All renders follow the no-vintage rule.",
   "pd_verification": "Classical picks (Beethoven/Chopin/Debussy/Satie/Mahler) are long-PD (composers pre-1930, Mahler PD since 1981). Jazz picks verified via brave-search: St. Louis Blues (1914) and After You Gone (1918) PD; Basin Street Blues (1928) PD since Jan 1 2024. Only composition PD matters since hums are freshly generated."
 }
