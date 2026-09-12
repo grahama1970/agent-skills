@@ -9,6 +9,7 @@ from battle_skill.invariant_campaign import run_campaign
 
 HERE = Path(__file__).resolve().parent
 GEN = str(HERE / "fixtures/mini_generator.py")
+GEN_EXP = str(HERE / "fixtures/mini_expectation_generator.py")
 JUDGE = str(HERE.parent / "fixtures/reference-judges/no_data_leak_judge.py")
 
 
@@ -41,13 +42,66 @@ def test_beyond_brief_generator_yields_complete_bundles() -> None:
     spec.loader.exec_module(mod)
     with tempfile.TemporaryDirectory() as td:
         cases = list(mod.generate(td, {}))
-        names = [n for n, _ in cases]
+        names = [c[0] for c in cases]
+        expectations = [c[2] for c in cases]
         assert len(cases) == 13
-        for name, input_dir in cases:
+        for name, input_dir, _ in cases:
             assert (Path(input_dir) / "policy.json").is_file(), name
             assert any((Path(input_dir) / "corpus").iterdir()), name
         assert "bb-json-object-key" in names and "bb-filename-value" in names
         assert "bb-utf16le-bomless-text" in names
+        assert expectations.count("MUST_ACCEPT") == 4
+        assert expectations.count("MUST_REJECT") == 2
+        assert expectations.count("MAY_REJECT") == 7
+
+
+def test_campaign_fails_when_target_rejects_everything() -> None:
+    # Vacuous-pass killer: an always-rejecting target FAILS the two-axis gate
+    # because the MUST_ACCEPT case was not processed (WebGPT roadmap #1).
+    r = run_campaign(GEN_EXP, "exit 1", JUDGE, output_subdir="corpus")
+    assert r.passed is False
+    assert r.declares_expectations is True and r.accepted_count == 0
+    assert any("required-accept-case-rejected" in v for f in r.failures for v in f["violations"])
+
+
+def test_campaign_fails_when_required_reject_case_is_accepted() -> None:
+    # A target that accepts the out-of-domain MUST_REJECT input fails coverage
+    # even though the judge finds no leak in the copied bytes.
+    r = run_campaign(
+        GEN_EXP,
+        "mkdir -p {output}/corpus && cp -r {input}/corpus/. {output}/corpus/ && echo '{{}}' > {output}/report.json",
+        JUDGE, output_subdir="corpus")
+    assert r.passed is False
+    assert any("required-reject-case-accepted" in v for f in r.failures for v in f["violations"])
+
+
+def test_campaign_fails_on_vacuous_expectation_declaration() -> None:
+    # A generator that declares expectations but zero MUST_ACCEPT cases is a
+    # vacuous campaign contract and must fail.
+    import importlib.util
+    import tempfile
+
+    spec = importlib.util.spec_from_file_location("gen_exp", GEN_EXP)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    original = mod.generate
+
+    def only_may(work_dir, params):
+        for name, d, _ in original(work_dir, params):
+            yield name, d, "MAY_REJECT"
+
+    with tempfile.TemporaryDirectory() as td:
+        gen_path = Path(td) / "gen.py"
+        gen_path.write_text(
+            "import json\nfrom pathlib import Path\n\n"
+            "def generate(work_dir, params):\n"
+            "    d = Path(work_dir); (d / 'c').mkdir(parents=True, exist_ok=True)\n"
+            "    (d / 'policy.json').write_text(json.dumps({'sensitive_values': [{'value': 'x'}]}))\n"
+            "    (d / 'c' / 'd.txt').write_text('x')\n"
+            "    yield 'only-case', str(d), 'MAY_REJECT'\n")
+        r = run_campaign(str(gen_path), "exit 1", JUDGE, output_subdir="corpus")
+    assert r.passed is False
+    assert any("vacuous_campaign_no_required_accept_cases" in v for f in r.failures for v in f["violations"])
 
 
 def test_beyond_brief_judge_catches_filename_and_utf16_leaks() -> None:

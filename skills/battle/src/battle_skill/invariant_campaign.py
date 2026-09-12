@@ -41,6 +41,16 @@ class CampaignResult:
     cases_passed: int = 0
     failures: list[dict[str, Any]] = field(default_factory=list)
     case_log: list[dict[str, Any]] = field(default_factory=list)
+    # Two-axis (non-vacuous) coverage: generators may declare per-case
+    # expectations. MUST_ACCEPT cases must be accepted, processed, and judged
+    # clean; MUST_REJECT cases must be safely rejected (fail-closed); a target
+    # that rejects everything now FAILS instead of passing vacuously.
+    declares_expectations: bool = False
+    must_accept_count: int = 0
+    must_reject_count: int = 0
+    may_reject_count: int = 0
+    accepted_count: int = 0
+    rejected_count: int = 0
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -58,6 +68,9 @@ def _load_generator(path: str):
     return mod.generate
 
 
+VALID_EXPECTATIONS = {"MUST_ACCEPT", "MUST_REJECT", "MAY_REJECT"}
+
+
 def run_campaign(generator: str, target_run_cmd: str, judge: str,
                  gen_params: dict[str, Any] | None = None,
                  judge_params: dict[str, Any] | None = None,
@@ -67,35 +80,69 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
     result = CampaignResult()
     work = Path(tempfile.mkdtemp(prefix="invariant-campaign-"))
     try:
-        gen: Iterator[tuple[str, str]] = _load_generator(generator)(str(work / "gen"), gen_params)
-        for name, input_dir in gen:
+        gen: Iterator[tuple] = _load_generator(generator)(str(work / "gen"), gen_params)
+        for case in gen:
+            if len(case) == 3:
+                name, input_dir, expectation = case
+                expectation = str(expectation).upper()
+                if expectation not in VALID_EXPECTATIONS:
+                    raise ValueError(f"case {name!r} declares invalid expectation {expectation!r}; expected one of {sorted(VALID_EXPECTATIONS)}")
+                result.declares_expectations = True
+            else:
+                name, input_dir = case
+                expectation = "MAY_REJECT"
+            if expectation == "MUST_ACCEPT":
+                result.must_accept_count += 1
+            elif expectation == "MUST_REJECT":
+                result.must_reject_count += 1
+            else:
+                result.may_reject_count += 1
             out_dir = work / "out" / name
             out_dir.mkdir(parents=True, exist_ok=True)
             cmd = target_run_cmd.format(input=shlex.quote(str(input_dir)),
                                         output=shlex.quote(str(out_dir)))
             run = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=600)
             # A fail-closed target that produces no output is not a leak; the
-            # invariant holds vacuously for that version.
+            # invariant holds vacuously for that version -- unless the case was
+            # declared MUST_ACCEPT, where safe rejection is a coverage failure.
             produced = (out_dir / output_subdir).exists() and any((out_dir / output_subdir).rglob("*"))
+            verdict = {"case": name, "expectation": expectation, "judged": False, "passed": True,
+                       "note": "target fail-closed (no released output)"}
             if run.returncode != 0 or not produced:
-                verdict = {"case": name, "judged": False, "passed": True,
-                           "note": "target fail-closed (no released output)"}
-                result.cases_passed += 1
+                result.rejected_count += 1
+                if expectation == "MUST_ACCEPT":
+                    verdict["passed"] = False
+                    verdict["violations"] = ["required-accept-case-rejected (vacuous-pass blocker)"]
+                    result.failures.append(verdict)
+                else:
+                    result.cases_passed += 1
             else:
+                result.accepted_count += 1
                 jp = dict(judge_params)
                 # let the generator pass a per-case policy path via a sentinel file
                 policy_sentinel = Path(input_dir) / "policy.json"
                 if policy_sentinel.exists() and "policy" not in jp:
                     jp["policy"] = str(policy_sentinel)
                 jr = run_judge(judge, str(out_dir), jp)
-                verdict = {"case": name, "judged": True, "passed": jr.passed,
+                verdict = {"case": name, "expectation": expectation, "judged": True, "passed": jr.passed,
                            "violations": jr.violations}
                 if jr.passed:
                     result.cases_passed += 1
+                    if expectation == "MUST_REJECT":
+                        verdict["passed"] = False
+                        verdict["violations"] = ["required-reject-case-accepted (out-of-domain input was not safely rejected)"]
+                        result.failures.append(verdict)
                 else:
                     result.failures.append(verdict)
+                    if expectation == "MUST_REJECT":
+                        result.failures.append({"case": name, "expectation": expectation,
+                                                "judged": True, "passed": False,
+                                                "violations": ["required-reject-case-accepted (out-of-domain input was not safely rejected)"]})
             result.cases_total += 1
             result.case_log.append(verdict)
+        if result.declares_expectations and result.must_accept_count == 0:
+            result.failures.append({"case": None, "judged": False, "passed": False,
+                                    "violations": ["vacuous_campaign_no_required_accept_cases"]})
         result.passed = not result.failures and result.cases_total > 0
         return result
     finally:
