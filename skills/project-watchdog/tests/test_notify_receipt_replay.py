@@ -66,3 +66,17 @@ def test_wip_isolation_skips_busy_project_without_blocking_fleet():
     progressed = [p for p in (busy, ready) if m._project_runtime_state(p, state) == "active"]
     assert [p["project_id"] for p in skipped] == ["busy-lane"]
     assert [p["project_id"] for p in progressed] == ["ready-lane"]
+
+
+def test_park_on_quota_carries_backlog_snapshot():
+    """#1661: a quota park event records the deferred backlog; no lease burn."""
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+    from watchdog import transport_health as th
+    th.parked_backlog_snapshot = lambda: {"routable_count": 25, "oldest_age_hours": 72.0,
+                                          "issue_refs": ["agent-skills#1658"]}
+    res = th.park_on_quota("codex", "rate limit exceeded; resets 2026-09-14T21:36:00Z")
+    assert res["parked"] is True and res["code"] == th.QUOTA_CODE
+    assert res["parked_backlog"]["routable_count"] == 25
+    assert res["parked_backlog"]["issue_refs"] == ["agent-skills#1658"]
+    assert th.park_on_quota("codex", "unrelated hard failure")["parked"] is False

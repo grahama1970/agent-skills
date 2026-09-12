@@ -111,6 +111,31 @@ def classify_transport_failure(text: str) -> str | None:
     return QUOTA_CODE if quota_signal(text) else None
 
 
+def parked_backlog_snapshot() -> dict[str, Any] | None:
+    """#1661: count/age of open routable agent-work tickets while parked.
+
+    Read-only gh query; failures return None (digest is best-effort, never a
+    dispatch gate). Ages are hours since issue creation.
+    """
+    try:
+        import subprocess, datetime, json as _json
+        out = subprocess.run(
+            ["gh", "issue", "list", "-R", "grahama1970/agent-skills", "--label", "agent-work",
+             "--state", "open", "--json", "number,createdAt", "--limit", "100"],
+            capture_output=True, text=True, timeout=30)
+        if out.returncode != 0:
+            return None
+        rows = _json.loads(out.stdout or "[]")
+        now = datetime.datetime.now(datetime.timezone.utc)
+        ages = [(now - datetime.datetime.fromisoformat(r["createdAt"].replace("Z", "+00:00"))).total_seconds() / 3600
+                for r in rows]
+        return {"routable_count": len(rows),
+                "oldest_age_hours": round(max(ages), 1) if ages else 0.0,
+                "issue_refs": [f"agent-skills#{r['number']}" for r in rows[:10]]}
+    except Exception:
+        return None
+
+
 def park_on_quota(transport: str, failure_text: str) -> dict[str, Any]:
     """Park the repair lane on a quota/limit signal.
 
@@ -125,6 +150,7 @@ def park_on_quota(transport: str, failure_text: str) -> dict[str, Any]:
     outage = record_outage(transport, resume_at=resume_at, evidence=failure_text[:200])
     return {"parked": True, "code": QUOTA_CODE, "transport": transport,
             "resume_at": outage.resume_at,
+            "parked_backlog": parked_backlog_snapshot(),
             "alert_dedup_key": f"{transport}:{QUOTA_CODE}"}
 
 

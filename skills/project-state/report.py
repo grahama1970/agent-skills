@@ -293,6 +293,46 @@ def format_markdown(report: dict) -> str:
         lines.append("## Phase 5: External Research (skipped -- quick mode)")
         lines.append("")
 
+    # Phase 7: Operational Evidence (#1662: keyword scans are not readiness)
+    try:
+        import subprocess as _sp, json as _json, pathlib as _pl, datetime as _dt
+        root = _pl.Path(_sp.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, timeout=15).stdout.strip() or ".")
+        sha = _sp.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, timeout=15).stdout.strip()
+        pt = _sp.run(["uv", "run", "--project", "skills/project-watchdog", "pytest", "-q",
+                      "skills/project-watchdog/tests/test_notify_receipt_replay.py"],
+                     capture_output=True, text=True, timeout=600, cwd=str(root))
+        pytest_line = (pt.stdout or "").strip().splitlines()[-1] if (pt.stdout or "").strip() else "no-output"
+        tick = "none"
+        logf = _pl.Path.home() / ".local/state/project-watchdog/logs/project-watchdog.log"
+        if logf.exists():
+            last = None
+            for ln in logf.read_text(errors="replace").splitlines():
+                if '"tick_finish"' in ln:
+                    last = ln
+            if last:
+                try:
+                    tick = _json.loads(last)["record"]["extra"].get("status", "?")
+                except Exception:
+                    tick = "unreadable"
+        reg = root / "skills/project-watchdog/registry/projects.json"
+        states = {}
+        if reg.exists():
+            try:
+                states = {p_.get("project_id"): (p_.get("state_policy") or {}).get("default_state")
+                          for p_ in _json.loads(reg.read_text()).get("projects", [])}
+            except Exception:
+                pass
+        lines.append("## Phase 7: Operational Evidence")
+        lines.append("")
+        lines.append(f"- repo sha: {sha or 'unknown'}")
+        lines.append(f"- watchdog replay suite: {pytest_line}")
+        lines.append(f"- latest tick status: {tick}")
+        lines.append(f"- registry project default states: {states}")
+        lines.append("")
+    except Exception as _e:
+        lines.append(f"## Phase 7: Operational Evidence (unavailable: {str(_e)[:80]})")
+        lines.append("")
+
     # Phase 6: Gaps + Improvements
     phase6 = report.get("phase_6_gaps", {})
     if isinstance(phase6, list):
