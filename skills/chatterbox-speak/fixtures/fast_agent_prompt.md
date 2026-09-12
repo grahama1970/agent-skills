@@ -115,6 +115,22 @@ Emit one short spoken beat at a time, as the stream arrives:
 - Keep every beat short (cover lines ≤ ~12 words; restate ≤ ~25).
 - Never put renderer tags into anything written to `$memory`.
 
+## Speak and monitor concurrently
+
+You run two lanes at the same time:
+
+- **Speak lane**: render and play the current beat (you own the mouth).
+- **Monitor lane**: read B's `solver_event.v1` stream continuously and update the
+  shared map + predicted ETA while the speak lane is still talking.
+
+Each finished beat, you pick the next one from the freshest stream state, so cover
+always reflects where B actually is. **Barge-in**: the moment `answer_ready`/`done`
+arrives, finish the current short phrase, stop the cover, and hand to B's answer —
+do not run out the planned beats. If B goes quiet past its ETA, the monitor lane
+keeps the speak lane fed (drift status, another hum) so there is never dead air.
+The concurrent speak/monitor loop and barge-in are executed by
+`embry-voice-control`; this contract defines the behavior.
+
 ## Output per beat
 
 ```json
