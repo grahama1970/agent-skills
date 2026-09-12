@@ -104,7 +104,8 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
                  judge_params: dict[str, Any] | None = None,
                  output_subdir: str = "corpus",
                  profile: dict[str, Any] | None = None,
-                 functional_judge: str | None = None) -> CampaignResult:
+                 functional_judge: str | None = None,
+                 work_root: Path | None = None) -> CampaignResult:
     gen_params = gen_params or {}
     judge_params = dict(judge_params or {})
     result = CampaignResult()
@@ -115,7 +116,12 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
     required_case_ids = (profile or {}).get("required_case_ids") or []
     required_judges = (profile or {}).get("required_judges") or []
     seen_cases: set[str] = set()
-    work = Path(tempfile.mkdtemp(prefix="invariant-campaign-"))
+    retained = work_root is not None
+    if retained:
+        work = Path(work_root)
+        work.mkdir(parents=True, exist_ok=True)
+    else:
+        work = Path(tempfile.mkdtemp(prefix="invariant-campaign-"))
     # The approved contract determines the required judge set: omitting a
     # required judge must fail BEFORE any target execution (WebGPT review).
     if "functional" in required_judges and not functional_judge:
@@ -156,12 +162,13 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
             cmd = target_run_cmd.format(input=shlex.quote(str(input_dir)),
                                         output=shlex.quote(str(out_dir)))
             run = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=600)
+            execution_observation = {"exit_code": run.returncode, "stdout_tail": run.stdout[-2000:], "stderr_tail": run.stderr[-2000:]}
             # A fail-closed target that produces no output is not a leak; the
             # invariant holds vacuously for that version -- unless the case was
             # declared MUST_ACCEPT, where safe rejection is a coverage failure.
             produced = (out_dir / output_subdir).exists() and any((out_dir / output_subdir).rglob("*"))
             verdict = {"case": name, "expectation": expectation, "expectation_source": expectation_source, "judged": False, "passed": True,
-                       "note": "target fail-closed (no released output)"}
+                       "note": "target fail-closed (no released output)", "execution": execution_observation}
             if run.returncode != 0 or not produced:
                 result.rejected_count += 1
                 if expectation == "MUST_ACCEPT":
@@ -180,7 +187,7 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
                 jp.setdefault("input_dir", str(input_dir))
                 jr = run_judge(judge, str(out_dir), jp)
                 verdict = {"case": name, "expectation": expectation, "expectation_source": expectation_source, "judged": True, "passed": jr.passed,
-                           "violations": jr.violations}
+                           "violations": jr.violations, "execution": execution_observation}
                 functional = {"status": "PASS", "violations": []}  # no functional gate configured
                 if functional_judge is not None:
                     fr = run_judge(functional_judge, str(out_dir), jp)
@@ -193,6 +200,7 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
                         verdict["violations"] = ["required-reject-case-accepted (out-of-domain input was not safely rejected)"]
                         result.failures.append(verdict)
                 else:
+                    verdict["passed"] = False
                     result.failures.append(verdict)
                     if expectation == "MUST_REJECT":
                         result.failures.append({"case": name, "expectation": expectation,
@@ -214,9 +222,10 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
         result.passed = not result.failures and result.cases_total > 0
         return result
     finally:
-        subprocess.run(["docker", "run", "--rm", "-v", f"{work}:/w", "--entrypoint", "rm",
-                        "anonymization-trial", "-rf", "/w"], capture_output=True, text=True)
-        subprocess.run(["rm", "-rf", str(work)], capture_output=True, text=True)
+        if not retained:
+            subprocess.run(["docker", "run", "--rm", "-v", f"{work}:/w", "--entrypoint", "rm",
+                            "anonymization-trial", "-rf", "/w"], capture_output=True, text=True)
+            subprocess.run(["rm", "-rf", str(work)], capture_output=True, text=True)
 
 
 def _cli(argv: list[str]) -> int:
