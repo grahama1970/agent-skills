@@ -62,6 +62,7 @@ def generate(work_dir, params):
 
     # -- encoding / transport --
     yield _bundle(root, "bb-utf16le-text", NAME, _utf16_text(NAME))
+    yield _bundle(root, "bb-utf16le-bomless-text", NAME, _utf16_bomless_text(NAME))
     yield _bundle(root, "bb-filename-value", NAME,
                   lambda c: (c / f"{NAME}.txt").write_text("clean contents\n"))
 
@@ -83,4 +84,13 @@ def _sql_trigger(corpus: Path, value: str):
 def _utf16_text(value: str):
     def w(c: Path):
         (c / "d.txt").write_bytes(b"\xff\xfe" + f"note: {value}\n".encode("utf-16-le"))
+    return w
+
+
+def _utf16_bomless_text(value: str):
+    # ASCII-range UTF-16LE without BOM passes strict UTF-8 decode with embedded
+    # NULs (battle Red win #18): invisible to naive scanners and to targets
+    # that only reject on UnicodeDecodeError.
+    def w(c: Path):
+        (c / "d.txt").write_bytes(f"note: {value}\n".encode("utf-16-le"))
     return w

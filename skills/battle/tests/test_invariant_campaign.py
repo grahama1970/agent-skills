@@ -42,11 +42,12 @@ def test_beyond_brief_generator_yields_complete_bundles() -> None:
     with tempfile.TemporaryDirectory() as td:
         cases = list(mod.generate(td, {}))
         names = [n for n, _ in cases]
-        assert len(cases) == 12
+        assert len(cases) == 13
         for name, input_dir in cases:
             assert (Path(input_dir) / "policy.json").is_file(), name
             assert any((Path(input_dir) / "corpus").iterdir()), name
         assert "bb-json-object-key" in names and "bb-filename-value" in names
+        assert "bb-utf16le-bomless-text" in names
 
 
 def test_beyond_brief_judge_catches_filename_and_utf16_leaks() -> None:
@@ -68,6 +69,10 @@ def test_beyond_brief_judge_catches_filename_and_utf16_leaks() -> None:
         # leak 2: value inside a UTF-16LE text file (invisible to plain utf-8 scan)
         (out / "corpus" / "u.txt").write_bytes(
             b"\xff\xfe" + f"note: {value}\n".encode("utf-16-le"))
+        # leak 3: BOM-less UTF-16LE passes strict UTF-8 decode with embedded
+        # NULs; the NUL-triggered scan must still catch it (Red win #18).
+        (out / "corpus" / "u2.txt").write_bytes(
+            f"note: {value}\n".encode("utf-16-le"))
         r = judge_mod.judge(str(out), {"policy": str(out / "policy.json"),
                                        "output_subdir": "corpus"})
     assert r["passed"] is False and len(r["violations"]) == 1

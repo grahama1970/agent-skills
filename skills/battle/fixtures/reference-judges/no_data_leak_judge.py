@@ -74,6 +74,15 @@ def _gather(root: Path):
                     except UnicodeDecodeError:
                         continue
                 texts.append(raw.decode("utf-8", errors="replace"))
+            # BOM-less ASCII-range UTF-16LE passes strict UTF-8 with embedded
+            # NULs; NUL presence triggers UTF-16 interpretation regardless.
+            if b"\x00" in raw:
+                for enc in ("utf-16-le", "utf-16-be"):
+                    try:
+                        texts.append(raw.decode(enc))
+                        break
+                    except UnicodeDecodeError:
+                        continue
         elif f.suffix == ".sqlite":
             con = sqlite3.connect(f"file:{f}?mode=ro", uri=True)
             for row in con.execute("SELECT type,name,tbl_name,sql FROM sqlite_master"):
