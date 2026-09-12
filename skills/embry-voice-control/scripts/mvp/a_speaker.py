@@ -44,6 +44,35 @@ def key_terms(text: str) -> set[str]:
     return set(re.findall(r'\b[A-Z]{2,}(?:-\d+(?:\([0-9a-z]+\))?)?\b', text or ""))
 
 
+def _scillm(prompt: str, max_tokens: int = 220) -> str | None:
+    body = json.dumps({"model": "zai-glm-flash",
+                       "messages": [{"role": "user", "content": prompt}],
+                       "temperature": 0.2, "max_tokens": max_tokens}).encode()
+    req = urllib.request.Request(SCILLM, data=body,
+                                 headers={"Content-Type": "application/json",
+                                          "Authorization": f"Bearer {SCILLM_KEY}",
+                                          "X-Caller-Skill": "embry-voice-control"})
+    with urllib.request.urlopen(req, timeout=45) as r:
+        return json.loads(r.read())["choices"][0]["message"]["content"].strip()
+
+
+def entailment_ok(raw: str, spoken: str) -> bool:
+    """WebGPT r3: identifier preservation != claim preservation. Judge whether the
+    rewrite asserts any fact/certainty/causal link/scope/condition NOT supported by
+    the source. Fail SAFE (return False -> raw fallback) if the judge can't verify.
+    """
+    prompt = ("SOURCE and SPOKEN below. Does SPOKEN assert any fact, certainty, causal "
+              "link, scope, or condition that is NOT supported by SOURCE? Reply with exactly "
+              "one word: ENTAILED (fully supported) or OVERREACH (adds/strengthens a claim).\n\n"
+              f"SOURCE:\n{raw}\n\nSPOKEN:\n{spoken}\n\nVerdict:")
+    try:
+        v = (_scillm(prompt, max_tokens=8) or "").upper()
+    except Exception as exc:
+        print(f"[entailment] judge failed, safe-fallback to raw: {exc!r}", file=sys.stderr)
+        return False
+    return "ENTAILED" in v and "OVERREACH" not in v
+
+
 def compose_spoken_answer(question: str, raw: str) -> tuple[str, bool]:
     """WebGPT fix #1: A (fast model) rewrites B's raw answer as a natural spoken
     reply (direct answer + one essential caveat, 2-3 sentences). Hard constraint:
@@ -80,6 +109,9 @@ def compose_spoken_answer(question: str, raw: str) -> tuple[str, bool]:
     if not out or dropped or fabricated:
         print(f"[compose] fallback; dropped={sorted(dropped)} fabricated={sorted(fabricated)}",
               file=sys.stderr)
+        return raw, False
+    if not entailment_ok(raw, out):  # claim-level guard, not just identifiers
+        print("[compose] entailment OVERREACH -> raw fallback", file=sys.stderr)
         return raw, False
     return out, True
 LOCK = "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/playback.lock"
