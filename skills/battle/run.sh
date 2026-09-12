@@ -65,6 +65,11 @@ if [[ "${1:-}" == "invariant-report" ]]; then
   exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/render_invariant_campaign_report.py" "$@"
 fi
 
+if [[ "${1:-}" == "campaign-contract" ]]; then
+  shift
+  exec uv run --project "$SCRIPT_DIR" python -m battle_skill.campaign_contract "$@"
+fi
+
 if [[ "${1:-}" == "release-candidate-baseline" ]]; then
   shift
   exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/release_candidate_baseline.py" "$@"

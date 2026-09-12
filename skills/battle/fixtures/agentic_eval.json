@@ -87,7 +87,7 @@
     },
     {
       "id": "battle.contract_variation.dogpile_family_expansion",
-      "description": "For any acceptance_contract.bundle.v1, Battle emits a generic battle.contract_variation_plan.v1 mapping each acceptance case to source-filtered Dogpile research lanes, reusable variation families, deterministic case slots, and 20-30 retained agentic-eval workflow classes before Docker/Judge campaign proof.",
+      "description": "For any acceptance_contract.bundle.v1, Battle emits a generic battle.contract_variation_plan.v1 with Phase 1 acceptance floor, Phase 2 project-state + source-filtered Dogpile + Ask one-shot research expansion, Phase 3 adaptive-lineage promotion/replay, plus reusable variation families, deterministic case slots, and 20-30 retained agentic-eval workflow classes before Docker/Judge campaign proof.",
       "criticality": "critical",
       "evidence_required": {
         "deterministic": true

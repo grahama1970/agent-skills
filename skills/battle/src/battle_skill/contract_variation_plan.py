@@ -15,6 +15,7 @@ from typing import Any
 
 PLAN_SCHEMA = "battle.contract_variation_plan.v1"
 BUNDLE_SCHEMA = "acceptance_contract.bundle.v1"
+DEFAULT_ASK_HANDLERS = ["webgpt", "webgemini", "webkimi", "webclaude"]
 DOGPILE_SOURCES = {
     "brave-search",
     "brave-questions",
@@ -198,12 +199,102 @@ def _dogpile_lanes(case: dict[str, Any], requirement: dict[str, Any], dogpile_so
     ]
 
 
+def _normalize_ask_handlers(handlers: list[str] | None) -> list[str]:
+    if not handlers:
+        return list(DEFAULT_ASK_HANDLERS)
+    normalized: list[str] = []
+    for handler in handlers:
+        key = str(handler).strip()
+        _require(bool(key), "Ask handler cannot be empty")
+        if key not in normalized:
+            normalized.append(key)
+    return normalized
+
+
+def _ask_one_shot_command(handlers: list[str]) -> list[str]:
+    command = [
+        "../ask/run.sh",
+        "one-shot",
+        "Review the attached Battle Phase 2 research packet. Return candidate exploit families only when they can be frozen into deterministic cases; include gaps, non-claims, and what evidence would make each case judgeable.",
+        "--out-dir",
+        "{work_root}/ask-one-shot",
+        "--attach-file",
+        "{phase2_context_packet}",
+        "--min-answered",
+        "1",
+    ]
+    for handler in handlers:
+        command += ["--handler", handler]
+    return command
+
+
+def _phase_plan(
+    *,
+    project_root: Path | None,
+    battle_receipts: list[Path] | None,
+    dogpile_lanes: list[dict[str, Any]],
+    ask_handlers: list[str] | None,
+) -> list[dict[str, Any]]:
+    receipts = [str(path.resolve()) for path in (battle_receipts or [])]
+    project_state_step: dict[str, Any] = {
+        "id": "project-state-context",
+        "tool": "project-state",
+        "command": ["../project-state/run.sh", "report", "--json", "--output", "{work_root}/project-state.json"],
+        "cwd": str(project_root.resolve()) if project_root else "{project_root}",
+        "required": True,
+    }
+    ask_handlers_normalized = _normalize_ask_handlers(ask_handlers)
+    return [
+        {
+            "phase": 1,
+            "id": "acceptance-floor",
+            "purpose": "Prove the frozen source-derived acceptance contract before any expansion work.",
+            "entry_gate": "acceptance_contract.bundle.v1 has no open questions and all acceptance cases are mapped to required Battle cases",
+            "exit_gate": "battle.production_adapter_round.v1 status PASS and battle.campaign_aggregate.v1 failed_count == 0",
+        },
+        {
+            "phase": 2,
+            "id": "research-expansion",
+            "purpose": "After the floor passes, learn from current receipts and outside sources to propose missing exploit families.",
+            "inputs": [
+                "acceptance_bundle",
+                "project-state report",
+                "current Battle receipts",
+                "acceptance-contract gaps and non-claims",
+                "source-filtered Dogpile research",
+                "Ask one-shot reviewer proposals",
+            ],
+            "battle_receipts": receipts,
+            "steps": [
+                project_state_step,
+                {"id": "dogpile-variation-lanes", "tool": "dogpile", "lanes": [lane["id"] for lane in dogpile_lanes], "required": True},
+                {"id": "ask-one-shot-exploit-review", "tool": "ask", "handlers": ask_handlers_normalized, "command": _ask_one_shot_command(ask_handlers_normalized), "required": True},
+            ],
+            "exit_gate": "source-bearing candidate exploit families are frozen into deterministic generator cases or explicitly rejected with rationale",
+        },
+        {
+            "phase": 3,
+            "id": "adaptive-lineage",
+            "purpose": "Run the newly frozen cases, let Red wins force Blue repair, then retain replay proof as adaptive lineage.",
+            "entry_gate": "phase 2 emitted deterministic case definitions with judgeable invariants",
+            "steps": [
+                {"id": "run-expanded-deterministic-campaign", "tool": "battle", "command": ["./run.sh", "campaign-contract", "run", "--request", "{expanded_request.json}"], "required": True},
+                {"id": "promote-red-wins", "tool": "battle", "command": ["./run.sh", "invariant-lineage-receipt", "--red-campaign", "{red_campaign.json}", "--replay-campaign", "{replay_campaign.json}", "--out", "{work_root}/adaptive-lineage.json"], "required": True},
+            ],
+            "exit_gate": "every Red win is either fixed and replayed green or remains a release-blocking RED_WIN",
+        },
+    ]
+
+
 def build_plan(
     bundle_path: Path,
     *,
     execute_dogpile: bool = False,
     dogpile_limit: int = 0,
     dogpile_sources: list[str] | None = None,
+    project_root: Path | None = None,
+    battle_receipts: list[Path] | None = None,
+    ask_handlers: list[str] | None = None,
 ) -> dict[str, Any]:
     bundle_path = bundle_path.resolve()
     bundle = load_acceptance_bundle(bundle_path)
@@ -239,9 +330,17 @@ def build_plan(
             "acceptance_cases": len(cases),
             "open_questions": len(open_questions),
         },
-        "dogpile_role": "research_input_only",
+        "dogpile_role": "phase_2_research_input_only",
         "dogpile_source_filter": _normalize_dogpile_sources(dogpile_sources),
-        "battle_role": "freeze_selected_families_into_deterministic_generators_and_prove_with_Docker_Judge_receipts",
+        "ask_handlers": _normalize_ask_handlers(ask_handlers),
+        "battle_role": "phase_3_freeze_selected_families_into_deterministic_generators_and_prove_with_Docker_Judge_receipts",
+        "phase_order": ["acceptance-floor", "research-expansion", "adaptive-lineage"],
+        "phases": _phase_plan(
+            project_root=project_root,
+            battle_receipts=battle_receipts,
+            dogpile_lanes=dogpile_lanes,
+            ask_handlers=ask_handlers,
+        ),
         "contract_items": contract_items,
         "dogpile_lanes": dogpile_lanes,
         "deterministic_case_floor": sum(item["minimum_deterministic_case_slots"] for item in contract_items),
@@ -254,8 +353,11 @@ def build_plan(
             for name in AGENTIC_EVAL_CLASSES
         ],
         "release_gate": {
+            "must_pass_phase_1_acceptance_floor_before_phase_2": True,
             "must_run_dogpile_or_attach_source_bearing_research": True,
+            "must_run_ask_one_shot_or_attach_reviewer_receipts": True,
             "must_freeze_selected_families_before_target_execution": True,
+            "must_promote_adaptive_lineage_in_phase_3": True,
             "must_emit_case_receipts": "battle.case_receipt.v1",
             "must_emit_aggregate": "battle.campaign_aggregate.v1",
             "red_win_blocks_release": True,
@@ -302,12 +404,18 @@ def write_plan(
     execute_dogpile: bool = False,
     dogpile_limit: int = 0,
     dogpile_sources: list[str] | None = None,
+    project_root: Path | None = None,
+    battle_receipts: list[Path] | None = None,
+    ask_handlers: list[str] | None = None,
 ) -> dict[str, Any]:
     plan = build_plan(
         bundle_path,
         execute_dogpile=execute_dogpile,
         dogpile_limit=dogpile_limit,
         dogpile_sources=dogpile_sources,
+        project_root=project_root,
+        battle_receipts=battle_receipts,
+        ask_handlers=ask_handlers,
     )
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(plan, indent=2, sort_keys=True) + "\n", encoding="utf-8")

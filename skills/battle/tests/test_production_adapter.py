@@ -97,6 +97,11 @@ def test_acceptance_contract_floor_is_required_before_launch(tmp_path: Path):
     assert result["acceptance_floor"]["status"] == "PASS"
     assert result["acceptance_floor"]["case_map"] == {"AC-001": ["case-str", "case-int"]}
     assert result["target_launches"] == 2
+    phase_plan = result["post_acceptance_phase_plan"]
+    assert phase_plan["phase_order"] == ["acceptance-floor", "research-expansion", "adaptive-lineage"]
+    assert phase_plan["release_gate"]["must_run_ask_one_shot_or_attach_reviewer_receipts"] is True
+    assert phase_plan["phases"][1]["id"] == "research-expansion"
+    assert phase_plan["phases"][2]["id"] == "adaptive-lineage"
 
 
 def test_acceptance_contract_floor_blocks_unmapped_cases_before_launch(tmp_path: Path):

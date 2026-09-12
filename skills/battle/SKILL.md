@@ -94,22 +94,31 @@ Dogpile before claiming comprehensive adversarial coverage:
   --out /tmp/battle-variation-plan.json
 ```
 
-The output is `battle.contract_variation_plan.v1`. It maps every acceptance case
-to source-bearing Dogpile research lanes and reusable variation families. Use
-repeatable `--dogpile-source` filters when a Battle phase needs only selected
-Dogpile providers such as `brave-search`, `arxiv`, `github-search`, `youtube`,
-`brave-questions`, `feeds`, `wayback`, or `context7` instead of the full source
-fanout. The reusable variation families include
-representation equivalence, encoding/normalization, parser differentials,
+The output is `battle.contract_variation_plan.v1`. It is a three-phase Battle
+contract, not a loose note:
+
+1. Phase 1: pass the frozen `acceptance_contract.bundle.v1` floor.
+2. Phase 2: after that pass, gather `$project-state`, current Battle receipts,
+   source-filtered `$dogpile` research, and `$ask one-shot` reviewer proposals.
+3. Phase 3: freeze useful Phase 2 findings into deterministic cases, run them,
+   and retain adaptive-lineage proof for Red wins, Blue fixes, and replay.
+
+The plan maps every acceptance case to source-bearing Dogpile research lanes and
+reusable variation families. Use repeatable `--dogpile-source` filters when a
+Battle phase needs only selected Dogpile providers such as `brave-search`,
+`arxiv`, `github-search`, `youtube`, `brave-questions`, `feeds`, `wayback`, or
+`context7` instead of the full source fanout. The reusable variation families
+include representation equivalence, encoding/normalization, parser differentials,
 release-surface boundaries, lossy conversion, split/composed facts, scale,
-retry/concurrency, authorization, and failure-leak boundaries. Dogpile is research
-input only: it discovers meaningful variation families and source evidence.
-Battle then freezes selected families into deterministic generators, runs the
-real target in Docker/QEMU/digital-twin evidence gates, emits `battle.case_receipt.v1`
-per case, aggregates with `battle.campaign_aggregate.v1`, and retains the
-workflow classes as `$agentic-evals` cases. A serious release gate should expect
-hundreds of deterministic cases and roughly 20-30 retained eval classes when the
-contract surface is broad; smaller smoke gates must label themselves as smoke.
+retry/concurrency, authorization, and failure-leak boundaries. Dogpile and Ask
+are research input only: they discover meaningful variation families and source
+evidence. Battle then freezes selected families into deterministic generators,
+runs the real target in Docker/QEMU/digital-twin evidence gates, emits
+`battle.case_receipt.v1` per case, aggregates with `battle.campaign_aggregate.v1`,
+and retains the workflow classes as `$agentic-evals` cases. A serious release
+gate should expect hundreds of deterministic cases and roughly 20-30 retained
+eval classes when the contract surface is broad; smaller smoke gates must label
+themselves as smoke.
 
 
 ## Invariant campaigns (test the contract floor, then attack beyond it)

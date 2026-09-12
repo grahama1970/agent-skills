@@ -62,13 +62,21 @@ def test_contract_variation_plan_is_generic_dogpile_to_battle_bridge(tmp_path: P
     assert plan["schema"] == PLAN_SCHEMA
     assert plan["status"] == "READY"
     assert plan["acceptance_bundle"]["project_name"] == "generic-ledger-service"
-    assert plan["dogpile_role"] == "research_input_only"
-    assert plan["battle_role"] == "freeze_selected_families_into_deterministic_generators_and_prove_with_Docker_Judge_receipts"
+    assert plan["dogpile_role"] == "phase_2_research_input_only"
+    assert plan["battle_role"] == "phase_3_freeze_selected_families_into_deterministic_generators_and_prove_with_Docker_Judge_receipts"
+    assert plan["phase_order"] == ["acceptance-floor", "research-expansion", "adaptive-lineage"]
+    assert [phase["phase"] for phase in plan["phases"]] == [1, 2, 3]
+    assert plan["phases"][1]["id"] == "research-expansion"
+    assert {step["tool"] for step in plan["phases"][1]["steps"]} == {"project-state", "dogpile", "ask"}
+    assert plan["phases"][2]["id"] == "adaptive-lineage"
     assert len(plan["contract_items"]) == 2
     assert len(plan["dogpile_lanes"]) == 6
     assert plan["deterministic_case_floor"] >= 60
     assert 20 <= len(plan["agentic_eval_plan"]) <= 30
+    assert plan["release_gate"]["must_pass_phase_1_acceptance_floor_before_phase_2"] is True
     assert plan["release_gate"]["must_run_dogpile_or_attach_source_bearing_research"] is True
+    assert plan["release_gate"]["must_run_ask_one_shot_or_attach_reviewer_receipts"] is True
+    assert plan["release_gate"]["must_promote_adaptive_lineage_in_phase_3"] is True
     assert plan["release_gate"]["red_win_blocks_release"] is True
 
     families = {family["id"] for family in plan["contract_items"][0]["variation_families"]}
@@ -82,13 +90,22 @@ def test_contract_variation_plan_is_generic_dogpile_to_battle_bridge(tmp_path: P
 
 
 def test_contract_variation_plan_filters_dogpile_sources_without_bespoke_targets(tmp_path: Path) -> None:
+    receipt = tmp_path / "battle-receipt.json"
+    receipt.write_text('{"schema":"battle.campaign_contract_receipt.v1"}\n', encoding="utf-8")
     plan = build_plan(
         _bundle(tmp_path / "acceptance_bundle.json"),
         dogpile_sources=["brave-search", "arxiv"],
+        project_root=tmp_path,
+        battle_receipts=[receipt],
+        ask_handlers=["webgpt", "webgemini"],
     )
 
     assert plan["dogpile_source_filter"] == ["brave-search", "arxiv"]
     assert len(plan["dogpile_lanes"]) == 6
+    assert plan["ask_handlers"] == ["webgpt", "webgemini"]
+    assert plan["phases"][1]["battle_receipts"] == [str(receipt.resolve())]
+    assert plan["phases"][1]["steps"][0]["cwd"] == str(tmp_path.resolve())
+    assert "webgpt" in plan["phases"][1]["steps"][2]["command"]
     for lane in plan["dogpile_lanes"]:
         assert lane["dogpile_sources"] == ["brave-search", "arxiv"]
         assert lane["command"].count("--source") == 2

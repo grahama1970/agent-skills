@@ -71,6 +71,9 @@ def contract_variation_plan(
     execute_dogpile: bool = typer.Option(False, "--execute-dogpile", help="Run generated Dogpile lanes now. Default only writes the typed plan."),
     dogpile_limit: int = typer.Option(0, "--dogpile-limit", help="Optional cap when --execute-dogpile is set. 0 means all lanes."),
     dogpile_source: Optional[list[str]] = typer.Option(None, "--dogpile-source", help="Limit Dogpile provider lanes. Repeatable: brave-search, arxiv, github-search, youtube, brave-questions, feeds, wayback, context7."),
+    project_root: Optional[Path] = typer.Option(None, "--project-root", exists=True, file_okay=False, help="Project checkout used by the Phase 2 project-state step."),
+    battle_receipt: Optional[list[Path]] = typer.Option(None, "--battle-receipt", exists=True, readable=True, help="Current Battle receipt(s) used as Phase 2 learning input."),
+    ask_handler: Optional[list[str]] = typer.Option(None, "--ask-handler", help="Ask one-shot reviewer handler. Defaults to webgpt, webgemini, webkimi, webclaude."),
 ) -> None:
     """Plan Dogpile-backed variation-family expansion for any acceptance contract."""
     from .contract_variation_plan import write_plan
@@ -81,6 +84,9 @@ def contract_variation_plan(
         execute_dogpile=execute_dogpile,
         dogpile_limit=dogpile_limit,
         dogpile_sources=dogpile_source,
+        project_root=project_root,
+        battle_receipts=battle_receipt,
+        ask_handlers=ask_handler,
     )
     typer.echo(json.dumps(plan, indent=2, sort_keys=True))
     if plan["status"] != "READY":

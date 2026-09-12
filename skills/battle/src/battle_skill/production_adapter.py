@@ -43,6 +43,10 @@ def build_contract_request(adapter_request: dict[str, Any]) -> dict[str, Any]:
                         every acceptance case must map to required campaign cases
       candidate_cases: optional list of extra retained case dirs (advisory adds;
                        they appear in lineage only — case admission is plan-level)
+      post_acceptance_research: optional Phase 2 knobs. After Phase 1 passes,
+                       Battle emits a generic contract variation plan whose
+                       Phase 2 is project-state + Dogpile + Ask one-shot and
+                       whose Phase 3 is adaptive-lineage replay/promotion.
     """
     if adapter_request.get("schema") != ADAPTER_SCHEMA:
         raise ValueError(f"adapter request schema must be {ADAPTER_SCHEMA}")
@@ -96,10 +100,29 @@ def run_production_round(adapter_request: dict[str, Any]) -> dict[str, Any]:
                     "acceptance_floor": floor_receipt,
                     "target_launches": 0}
     campaign = run_contract_campaign(request)
+    phase_plan = None
+    if floor_receipt is not None and campaign["verdict"] == "PASS":
+        from .contract_variation_plan import build_plan
+
+        phase_options = adapter_request.get("post_acceptance_research") or {}
+        campaign_receipt = Path(str(request.get("work_root", ""))) / "receipt.json"
+        receipt_paths = [Path(path) for path in phase_options.get("battle_receipts", [])]
+        if campaign_receipt.is_file():
+            receipt_paths.append(campaign_receipt)
+        phase_plan = build_plan(
+            Path(floor_request["bundle_path"]),
+            execute_dogpile=bool(phase_options.get("execute_dogpile", False)),
+            dogpile_limit=int(phase_options.get("dogpile_limit", 0) or 0),
+            dogpile_sources=phase_options.get("dogpile_sources"),
+            project_root=Path(phase_options["project_root"]) if phase_options.get("project_root") else None,
+            battle_receipts=receipt_paths,
+            ask_handlers=phase_options.get("ask_handlers"),
+        )
     return {"schema": "battle.production_adapter_round.v1",
             "status": campaign["verdict"],
             "authorization_receipt": receipt,
             "acceptance_floor": floor_receipt,
+            "post_acceptance_phase_plan": phase_plan,
             "target_launches": campaign["aggregation"]["cases_total"],
             "campaign": campaign,
             "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
