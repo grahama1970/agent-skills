@@ -832,7 +832,12 @@ def _heartbeat_payload() -> dict[str, Any]:
         except OSError:
             age = 0
         fresh_enough = age <= 900
-        if doc.get("process_running") or (status not in _TERMINAL_RUN_STATUSES and fresh_enough):
+        # A monitor untouched for 15+ min is not current state, PERIOD -- even
+        # one claiming process_running=True (#1606: process died without the
+        # flag clearing; a 17h-old 'running' monitor latched STALE_PROGRESS
+        # forever). The heartbeat only reports monitors touched inside the
+        # freshness window; anything older means no active run to observe.
+        if fresh_enough and (doc.get("process_running") or status not in _TERMINAL_RUN_STATUSES):
             monitor_path = Path(candidate)
             m = doc
             break
