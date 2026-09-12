@@ -163,6 +163,10 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
                                         output=shlex.quote(str(out_dir)))
             run = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=600)
             execution_observation = {"exit_code": run.returncode, "stdout_tail": run.stdout[-2000:], "stderr_tail": run.stderr[-2000:]}
+            execution_dir = out_dir / ".battle-execution"
+            execution_dir.mkdir(parents=True, exist_ok=True)
+            (execution_dir / "stdout.txt").write_text(run.stdout, encoding="utf-8", errors="replace")
+            (execution_dir / "stderr.txt").write_text(run.stderr, encoding="utf-8", errors="replace")
             # A fail-closed target that produces no output is not a leak; the
             # invariant holds vacuously for that version -- unless the case was
             # declared MUST_ACCEPT, where safe rejection is a coverage failure.
@@ -171,12 +175,24 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
                        "note": "target fail-closed (no released output)", "execution": execution_observation}
             if run.returncode != 0 or not produced:
                 result.rejected_count += 1
+                jp = dict(judge_params)
+                policy_sentinel = Path(input_dir) / "policy.json"
+                if policy_sentinel.exists() and "policy" not in jp:
+                    jp["policy"] = str(policy_sentinel)
+                jp.setdefault("input_dir", str(input_dir))
+                jr = run_judge(judge, str(out_dir), jp)
+                verdict = {"case": name, "expectation": expectation, "expectation_source": expectation_source,
+                           "judged": True, "passed": jr.passed,
+                           "violations": jr.violations, "note": "target fail-closed (no released output)",
+                           "execution": execution_observation}
                 if expectation == "MUST_ACCEPT":
                     verdict["passed"] = False
-                    verdict["violations"] = ["required-accept-case-rejected (vacuous-pass blocker)"]
+                    verdict["violations"] = ["required-accept-case-rejected (vacuous-pass blocker)", *jr.violations]
                     result.failures.append(verdict)
-                else:
+                elif jr.passed:
                     result.cases_passed += 1
+                else:
+                    result.failures.append(verdict)
             else:
                 result.accepted_count += 1
                 jp = dict(judge_params)

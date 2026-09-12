@@ -420,6 +420,30 @@ def _write_minimal_run(root: Path) -> Path:
         "judge_replays": replay_records,
     }
     _write_json(integrity_path, integrity)
+    for generation in (1, 2):
+        for team in ("red", "blue"):
+            receipt_path = (
+                root
+                / f"generation-{generation}"
+                / "tau-live"
+                / team
+                / "scillm-call-receipt.json"
+            )
+            _write_json(
+                receipt_path,
+                {
+                    "schema": "tau.scillm_call_receipt.v1",
+                    "status": "PASS",
+                    "live": True,
+                    "mocked": False,
+                    "http_status": 200,
+                    "api_key_present": True,
+                    "parse_status": "PASS",
+                    "parsed_json": {"team": team, "generation": generation},
+                    "model": "fixture-live-authority",
+                    "surface": "provider",
+                },
+            )
     for team in ("red", "blue"):
         auth_path = (
             root

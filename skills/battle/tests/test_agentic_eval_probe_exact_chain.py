@@ -39,6 +39,7 @@ def test_exact_chain_probe_regenerates_when_cached_root_missing(
         "immutable_slots_match_required_count",
         "exact_replays_match_required_count",
         "docker_observed_input_hashes_bound",
+        "provider_live_authority_receipts_bound",
         "red_blue_generation_ids_valid",
     ]
 

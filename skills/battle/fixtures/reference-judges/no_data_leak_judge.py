@@ -4,7 +4,8 @@ This is the anonymizer confidentiality invariant expressed as a Battle Judge.
 params: {"policy": "<path to policy.json>", "output_subdir": "corpus"}.
 It independently scans the released output (JSON scalars incl decoded \\u,
 numeric expansion, SQLite cells + schema DDL + header integers, text/CSV,
-report.json) for any policy value in any representation.
+report.json, and captured execution logs) for any policy value in any
+representation.
 
 Because Battle judges are independent and deterministic, this same judge can be
 reused by Red (adversarially search for an input that makes it FAIL) and by the
@@ -42,6 +43,8 @@ def _num_forms(x):
 
 def _gather(root: Path):
     texts, nums = [], set()
+    if not root.exists():
+        return "", nums
 
     def walk(o):
         if isinstance(o, bool) or o is None:
@@ -57,7 +60,8 @@ def _gather(root: Path):
             for v in o:
                 walk(v)
 
-    for f in sorted(root.rglob("*")):
+    files = [root] if root.is_file() else sorted(root.rglob("*"))
+    for f in files:
         if not f.is_file():
             continue
         texts.append(str(f.relative_to(root)))  # file names are released data too
@@ -107,11 +111,27 @@ def _gather(root: Path):
     return "\x00".join(texts), nums
 
 
+def _gather_many(paths):
+    texts, nums = [], set()
+    for path in paths:
+        text, path_nums = _gather(Path(path))
+        if text:
+            texts.append(text)
+        nums.update(path_nums)
+    return "\x00".join(texts), nums
+
+
 def judge(target_dir, params):
     policy_path = Path(params["policy"])
-    out = Path(target_dir) / params.get("output_subdir", "corpus")
+    target = Path(target_dir)
+    out = target / params.get("output_subdir", "corpus")
     values = [str(v["value"]) for v in json.loads(policy_path.read_text())["sensitive_values"]]
-    text, nums = _gather(out)
+    scan_paths = [out]
+    for extra in ("report.json", ".battle-execution"):
+        extra_path = target / extra
+        if extra_path.exists():
+            scan_paths.append(extra_path)
+    text, nums = _gather_many(scan_paths)
     nfc, nfd = unicodedata.normalize("NFC", text), unicodedata.normalize("NFD", text)
     leaked = []
     for v in values:

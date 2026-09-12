@@ -62,14 +62,22 @@ def test_beyond_brief_generator_yields_complete_bundles() -> None:
         cases = list(mod.generate(td, {}))
         names = [c[0] for c in cases]
         expectations = [c[2] for c in cases]
-        assert len(cases) == 13
+        assert len(cases) == 23
         for name, input_dir, _ in cases:
             assert (Path(input_dir) / "policy.json").is_file(), name
             assert any((Path(input_dir) / "corpus").iterdir()), name
         assert "bb-json-object-key" in names and "bb-filename-value" in names
+        assert "bb-json-object-key-numeric-alias" in names
+        assert "bb-csv-header-numeric-alias" in names
+        assert "bb-csv-multiline-quoted-cell" in names
+        assert "bb-sqlite-column-identifier-numeric-alias" in names
+        assert "bb-sqlite-default-numeric-alias" in names
+        assert "bb-sqlite-generated-reconstruction" in names
+        assert "bb-sqlite-partial-index" in names
         assert "bb-utf16le-bomless-text" in names
-        assert expectations.count("MUST_ACCEPT") == 4
-        assert expectations.count("MUST_REJECT") == 3
+        assert "bb-filename-numeric-alias" in names
+        assert expectations.count("MUST_ACCEPT") == 5
+        assert expectations.count("MUST_REJECT") == 12
         assert expectations.count("MAY_REJECT") == 6
 
 
@@ -190,6 +198,47 @@ def test_no_data_leak_judge_catches_numeric_aliases() -> None:
                                        "output_subdir": "corpus"})
     assert r["passed"] is False
     assert "555-123-4567" in r["violations"][0]
+
+
+def test_judge_scans_report_and_execution_logs() -> None:
+    import importlib.util
+    import json
+    import tempfile
+
+    spec = importlib.util.spec_from_file_location("no_data_leak_judge", JUDGE)
+    judge_mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(judge_mod)
+    value = "Mara Ellison"
+    with tempfile.TemporaryDirectory() as td:
+        out = Path(td) / "out"
+        (out / "corpus").mkdir(parents=True)
+        (out / ".battle-execution").mkdir()
+        (out / "policy.json").write_text(json.dumps({
+            "sensitive_values": [{"value": value}]}))
+        (out / "corpus" / "d.txt").write_text("clean\n")
+        (out / "report.json").write_text(json.dumps({"debug": value}))
+        (out / ".battle-execution" / "stderr.txt").write_text(f"bad log: {value}\n")
+        r = judge_mod.judge(str(out), {"policy": str(out / "policy.json"),
+                                       "output_subdir": "corpus"})
+    assert r["passed"] is False and value in r["violations"][0]
+
+
+def test_rejected_campaign_case_fails_if_execution_log_leaks_policy_value() -> None:
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as td:
+        gen = Path(td) / "gen.py"
+        gen.write_text(
+            "import json\nfrom pathlib import Path\n"
+            "def generate(work_dir, params):\n"
+            "    d = Path(work_dir) / 'case'; (d / 'corpus').mkdir(parents=True)\n"
+            "    (d / 'policy.json').write_text(json.dumps({'sensitive_values': [{'value': 'Alice'}]}))\n"
+            "    (d / 'corpus' / 'd.txt').write_text('clean')\n"
+            "    yield 'reject-log-leak', str(d), 'MUST_REJECT'\n"
+        )
+        r = run_campaign(str(gen), "echo Alice >&2; exit 1", JUDGE, output_subdir="corpus")
+    assert r.passed is False
+    assert any("Alice" in v for f in r.failures for v in f["violations"])
 
 
 def test_beyond_brief_judge_catches_filename_and_utf16_leaks() -> None:
