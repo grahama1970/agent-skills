@@ -1,0 +1,9 @@
+{
+  "schema": "chatterbox_speak.arc_scenarios.v1",
+  "note": "NEGATIVE fixture for the eval: expected_band is deliberately wrong so check() must FAIL (non-vacuity proof).",
+  "scenarios": [
+    {"id": "broken-band", "tier": "complex", "user_request": "hard 3-part question",
+     "emotion": "neutral", "intensity": 5, "complexity": 3, "predicted_latency_ms": 30000,
+     "answer_text": "x", "expected_arc": "answer", "expected_band": "low"}
+  ]
+}

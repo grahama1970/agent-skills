@@ -1,0 +1,156 @@
+#!/usr/bin/env python3
+"""Scenario bank for testing the conversation arc — deterministic check + audible render.
+
+`check`  : plan every scenario and assert it covers the predicted latency and
+           produces the expected answer arc + band. Deterministic, non-vacuous
+           (a wrong expectation fails). This is the $agentic-evals path.
+`render`  : assemble a scenario's arc into one playable WAV and play it, so a
+           human can ear-verify the WHOLE turn (opener -> cover/hum -> answer arc).
+           Live: needs the Chatterbox service; perceived delivery stays human-owned.
+`self-check`: dry validation (bank parses, every scenario plans, expectations match,
+           render step-list builds) with no service calls.
+
+stdlib only for check/self-check so the agentic-evals runner can execute them.
+"""
+from __future__ import annotations
+import argparse, json, subprocess, sys
+from pathlib import Path
+
+SKILL = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(SKILL / "scripts"))
+import conversation_arc as arc  # noqa: E402
+
+BANK = SKILL / "fixtures" / "arc_scenarios.json"
+FUSED = Path("/mnt/storage12tb/skills/chatterbox-speak/outputs/sfx-library/fused-hmm")
+HUMS = Path("/mnt/storage12tb/skills/chatterbox-speak/outputs/sfx-library/song-hums")
+OUT = Path("/mnt/storage12tb/skills/chatterbox-speak/outputs/arc-scenarios")
+
+
+def load(path: Path) -> list[dict]:
+    return json.loads(path.read_text())["scenarios"]
+
+
+def plan_of(s: dict) -> dict:
+    return arc.plan_arc(s["predicted_latency_ms"], s["emotion"], s["intensity"],
+                        s["complexity"], s["id"], s.get("answer_text", ""))
+
+
+def check(path: Path) -> int:
+    scen = load(path)
+    if not scen:
+        print("FAIL: no scenarios", file=sys.stderr)
+        return 1
+    bad = 0
+    for s in scen:
+        p = plan_of(s)
+        errs = []
+        if not p["covers_latency"]:
+            errs.append(f"total {p['planned_total_ms']}ms < latency {p['predicted_latency_ms']}ms")
+        if p["answer_arc"] != s["expected_arc"]:
+            errs.append(f"arc {p['answer_arc']} != expected {s['expected_arc']}")
+        if p["band"] != s["expected_band"]:
+            errs.append(f"band {p['band']} != expected {s['expected_band']}")
+        status = "OK" if not errs else "FAIL"
+        if errs:
+            bad += 1
+        print(f"  [{status}] {s['id']:<26} {s['tier']:<7} {len(p['elements'])} els "
+              f"{p['planned_total_ms']:>6}ms/{p['predicted_latency_ms']}ms arc={p['answer_arc']} band={p['band']}"
+              + (f"  <- {'; '.join(errs)}" if errs else ""))
+    if bad:
+        print(f"FAIL: {bad}/{len(scen)} scenarios mis-planned", file=sys.stderr)
+        return 1
+    print(f"PASS: all {len(scen)} scenarios plan correctly (cover latency + expected arc/band)")
+    return 0
+
+
+def render_steps(plan: dict) -> list[dict]:
+    """Ordered concrete render actions for one arc (dry data; render executes them)."""
+    steps = []
+    for el in plan["elements"]:
+        if el["kind"] == "fused_hmm":
+            steps.append({"do": "play_wav", "wav": str(FUSED / f"{el['source']}.wav"), "why": "opener"})
+        elif el["kind"] == "hum":
+            hid = el["source"].split(":", 1)[1]
+            steps.append({"do": "play_wav", "wav": str(HUMS / f"{hid}.wav"), "gain_db": el.get("gain_db"), "why": "hum bed"})
+        elif el["kind"] == "pause":
+            steps.append({"do": "silence", "ms": el["dur_ms"]})
+        elif el["kind"] == "progress":
+            steps.append({"do": "speak", "text": el["text"], "tone": el.get("tone", "neutral_warm"), "why": el["source"]})
+        elif el["kind"] == "answer_phase":
+            steps.append({"do": "speak", "text": el["text"], "tone": el.get("phase_tone", "neutral_warm"), "why": el["source"]})
+    return steps
+
+
+def render(scenario_id: str, play: bool) -> int:
+    scen = {s["id"]: s for s in load(BANK)}
+    if scenario_id not in scen:
+        print(f"unknown scenario: {scenario_id}", file=sys.stderr)
+        return 2
+    s = scen[scenario_id]
+    plan = plan_of(s)
+    OUT.mkdir(parents=True, exist_ok=True)
+    steps = render_steps(plan)
+    seq = []
+    for i, st in enumerate(steps):
+        wav = OUT / f"{scenario_id}-{i:02d}.wav"
+        if st["do"] == "play_wav":
+            if not Path(st["wav"]).exists():
+                print(f"  [skip] missing {st['wav']}", file=sys.stderr)
+                continue
+            subprocess.run(["cp", st["wav"], str(wav)], check=True)
+        elif st["do"] == "silence":
+            subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i",
+                            f"anullsrc=r=44100:cl=stereo", "-t", f"{st['ms']/1000:.2f}", str(wav)], check=True)
+        elif st["do"] == "speak":
+            subprocess.run(["bash", str(SKILL / "run.sh"), "speak", "--voice", "embry",
+                            "--text", st["text"], "--tone", st["tone"], "--context",
+                            f"arc scenario {scenario_id}", "--out-wav", str(wav)], check=False)
+            if not wav.exists():
+                print(f"  [skip] speak produced no wav for: {st['text'][:40]}", file=sys.stderr)
+                continue
+        seq.append(str(wav))
+    if not seq:
+        print("no renderable steps (service down?)", file=sys.stderr)
+        return 1
+    combined = OUT / f"{scenario_id}-arc.wav"
+    lst = OUT / f"{scenario_id}.concat.txt"
+    lst.write_text("".join(f"file '{w}'\n" for w in seq))
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", str(lst),
+                    "-ar", "44100", "-ac", "2", str(combined)], check=True)
+    print(f"assembled: {combined} ({len(seq)} elements, arc={plan['answer_arc']}, band={plan['band']})")
+    if play:
+        subprocess.run(["pw-play", str(combined)], check=False)
+    return 0
+
+
+def self_check() -> None:
+    scen = load(BANK)
+    assert 10 <= len(scen) <= 12, f"want 10-12 scenarios, have {len(scen)}"
+    tiers = {s["tier"] for s in scen}
+    assert {"simple", "medium", "complex"} <= tiers, f"missing tiers: {tiers}"
+    for s in scen:
+        p = plan_of(s)
+        assert p["covers_latency"], f"{s['id']} does not cover latency"
+        assert p["answer_arc"] == s["expected_arc"], f"{s['id']} arc {p['answer_arc']} != {s['expected_arc']}"
+        assert p["band"] == s["expected_band"], f"{s['id']} band {p['band']} != {s['expected_band']}"
+        assert render_steps(p), f"{s['id']} produced no render steps"
+    print(f"arc_scenarios self-check PASS ({len(scen)} scenarios; tiers {sorted(tiers)}; all plan + build render steps)")
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    ap.add_argument("cmd", choices=["check", "render", "self-check"])
+    ap.add_argument("--scenarios", default=str(BANK))
+    ap.add_argument("--id", dest="scenario_id")
+    ap.add_argument("--play", action="store_true")
+    a = ap.parse_args()
+    if a.cmd == "self-check":
+        self_check()
+        sys.exit(0)
+    if a.cmd == "check":
+        sys.exit(check(Path(a.scenarios)))
+    if a.cmd == "render":
+        if not a.scenario_id:
+            print("render needs --id <scenario>", file=sys.stderr)
+            sys.exit(2)
+        sys.exit(render(a.scenario_id, a.play))

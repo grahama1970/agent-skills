@@ -1,0 +1,48 @@
+{
+  "version": 2,
+  "skill": "chatterbox-speak",
+  "trials": 2,
+  "proof_scope": "conversation-arc scenario bank: 12 simple->complex turns each plan a latency-covering arc with the expected emotional arc + band",
+  "claims": {
+    "proves": "every scenario in the bank plans an arc that covers its predicted Agent-B latency and yields the expected answer arc (answer/reassure) and band, and the checker is non-vacuous (a wrong expectation fails)",
+    "does_not_prove": "human-perceived audible quality of the assembled arc (that is ear-verified via `arc_scenarios.py render`), or that simple turns should NOT over-cover"
+  },
+  "capability_claims": [
+    {
+      "id": "chatterbox.arc.scenario_bank",
+      "description": "the 12-scenario bank (simple/medium/complex) each plans a latency-covering arc with the correct emotional arc and band; the checker fails on a wrong expectation",
+      "criticality": "critical",
+      "claim_semantics": "control_flow",
+      "evidence_required": {"deterministic": true}
+    }
+  ],
+  "cases": [
+    {
+      "name": "scenarios-all-plan-correctly",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["chatterbox.arc.scenario_bank"],
+      "command": ["python3", "../scripts/arc_scenarios.py", "check"],
+      "expected": {"exit_code": 0, "stdout_contains": ["PASS: all 12 scenarios", "s09-grief-plus-hard", "reassure", "s08-three-control-synthesis"]}
+    },
+    {
+      "name": "checker-is-non-vacuous",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["chatterbox.arc.scenario_bank"],
+      "command": ["python3", "../scripts/arc_scenarios.py", "check", "--scenarios", "arc_scenarios_broken.json"],
+      "expected": {"exit_code": 1, "stderr_contains": ["mis-planned"]}
+    },
+    {
+      "name": "self-check-covers-all-tiers",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["chatterbox.arc.scenario_bank"],
+      "command": ["python3", "../scripts/arc_scenarios.py", "self-check"],
+      "expected": {"exit_code": 0, "stdout_contains": ["self-check PASS", "12 scenarios", "complex"]}
+    }
+  ]
+}

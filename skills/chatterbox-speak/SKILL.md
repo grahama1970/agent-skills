@@ -162,6 +162,18 @@ Boundary: this PLANS the arc; the concurrent runtime + barge-in live in
 `embry-voice-control`; renderer tags appear only on fused_hmm/answer render lines,
 never in `$memory` canonical text.
 
+**Testing it audibly.** `fixtures/arc_scenarios.json` is a 12-turn bank
+(simple->medium->complex: greeting, one-line fact, control walk-through, compare,
+mild frustration, worried deadline, 3-control synthesis, grief+hard question, deep
+debug, diagram request, tension repair). `scripts/arc_scenarios.py check` proves
+each turn PLANS a latency-covering arc with the expected arc+band (retained eval
+`fixtures/arc_scenarios_eval.json`, READY, non-vacuous). `arc_scenarios.py render
+--id <id> --play` assembles that scenario's arc into one WAV and plays it for
+human ear-verification (perceived delivery stays human-owned). Open tuning
+question the audible pass exists to answer: simple turns currently over-cover
+(an ~11s arc for "Morning") because the answer arc always runs full phases —
+listen and decide whether short turns need a trimmed arc.
+
 ## Pause, thinking, and song-hum macros
 
 Three named vocabularies the agent selects by context (all human-verified by ear):
