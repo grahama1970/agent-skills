@@ -19,8 +19,10 @@ stereo; compressed + true-peak limited to a steady under-speech bed (~-20 LUFS,
 stdlib only (urllib, not httpx) so the agentic-evals runner python can self-check.
 """
 from __future__ import annotations
-import argparse, hashlib, json, subprocess, sys, urllib.request
+import argparse, hashlib, json, math, subprocess, sys, urllib.request, wave
 from pathlib import Path
+
+import numpy as np
 
 SKILL = Path(__file__).resolve().parent.parent
 BANK = SKILL / "fixtures" / "song_hum_macros.json"
@@ -47,6 +49,52 @@ def _sha(p: Path) -> str:
     return hashlib.sha256(p.read_bytes()).hexdigest()
 
 
+HUM_LO_HZ, HUM_HI_HZ = 150.0, 330.0  # comfortable vocal hum register
+
+
+def _f0(wav: Path) -> float:
+    """Crude fundamental (Hz) via autocorrelation on a mid segment. 0 if silent."""
+    with wave.open(str(wav)) as w:
+        sr, n, ch = w.getframerate(), w.getnframes(), w.getnchannels()
+        a = np.frombuffer(w.readframes(n), dtype=np.int16).astype(float)
+    if ch == 2:
+        a = a.reshape(-1, 2).mean(1)
+    seg = a[sr * 3: sr * 4] if len(a) > sr * 4 else a
+    d = max(1, sr // 4000)  # decimate to ~4kHz (f0<500Hz) so autocorrelation is fast
+    seg = seg[::d]
+    esr = sr / d
+    seg = seg - seg.mean()
+    if seg.std() < 1:
+        return 0.0
+    corr = np.correlate(seg, seg, "full")[len(seg):]
+    lo, hi = int(esr / 500), int(esr / 55)
+    if hi <= lo or hi >= len(corr):
+        return 0.0
+    return esr / (lo + int(np.argmax(corr[lo:hi])))
+
+
+def _octave_shift(f0: float) -> int:
+    """Whole-octave shift to land f0 in the hum register (0 if already in range)."""
+    if f0 <= 0:
+        return 0
+    if f0 < HUM_LO_HZ:
+        return math.ceil(math.log2(HUM_LO_HZ / f0))
+    if f0 > HUM_HI_HZ:
+        return -math.floor(math.log2(f0 / HUM_HI_HZ))
+    return 0
+
+
+def pitch_normalize(wav: Path) -> int:
+    """Shift a hum into the hum register with tempo-preserving sox pitch. Returns octaves shifted."""
+    oct_ = _octave_shift(_f0(wav))
+    if oct_ == 0:
+        return 0
+    tmp = wav.with_suffix(".pitch.wav")
+    subprocess.run(["sox", str(wav), str(tmp), "pitch", str(1200 * oct_)], check=True)
+    tmp.replace(wav)
+    return oct_
+
+
 def load_bank() -> dict:
     return json.loads(BANK.read_text())
 
@@ -65,6 +113,7 @@ def render_one(song: dict, key: str) -> Path:
     wav = OUT / f"{song['id']}.wav"
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(mp3), "-af", FFMPEG_BED,
                     "-ar", "44100", "-ac", "2", str(wav)], check=True)
+    pitch_normalize(wav)  # keep every hum in a natural vocal register (no sub-bass growl)
     return wav
 
 
@@ -118,7 +167,31 @@ def register(bank: dict, ids: list[str]) -> dict:
             "materialize_needed": "graph_memory.maintenance.sanity_recall persona-graph-materialize (memory repo)"}
 
 
+def pitch_fix(bank: dict) -> dict:
+    """Normalize the pitch of already-rendered hum wavs (no ElevenLabs call) + update shas."""
+    fixed = []
+    for s in bank["songs"]:
+        w = OUT / f"{s['id']}.wav"
+        if not w.exists():
+            continue
+        before = _f0(w)
+        oct_ = pitch_normalize(w)
+        if oct_:
+            after = _f0(w)
+            fixed.append({"id": s["id"], "octaves": oct_, "f0_before": round(before), "f0_after": round(after)})
+            try:  # sha refresh is best-effort; the audio fix must not block on a slow daemon
+                _post("/upsert", {"collection": "persona_memory", "documents": [
+                    {"_key": f"embry-hum-{s['id']}", "hum_artifact_sha256": _sha(w),
+                     "render_note": f"pitch-normalized {oct_:+d} octave(s) into hum register"}]}, timeout=5.0)
+            except Exception as exc:
+                fixed[-1]["sha_update"] = f"deferred: {exc}"
+    return {"fixed": fixed, "unchanged": len(bank["songs"]) - len(fixed)}
+
+
 def self_check() -> None:
+    assert _octave_shift(73) >= 2, "73 Hz must shift up >= 2 octaves"
+    assert _octave_shift(200) == 0, "200 Hz is already in the hum register"
+    assert _octave_shift(334) == 0, "334 Hz is in tolerance, no shift"
     bank = load_bank()
     assert bank.get("songs"), "bank has no songs"
     s = bank["songs"][0]
@@ -135,13 +208,16 @@ def self_check() -> None:
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["render", "register", "all", "self-check"])
+    ap.add_argument("cmd", choices=["render", "register", "all", "pitch-fix", "self-check"])
     ap.add_argument("ids", nargs="*", help="song ids (default: all)")
     a = ap.parse_args()
     if a.cmd == "self-check":
         self_check()
         sys.exit(0)
     bank = load_bank()
+    if a.cmd == "pitch-fix":
+        print(json.dumps(pitch_fix(bank), indent=2))
+        sys.exit(0)
     if a.cmd in ("render", "all"):
         key = _elevenlabs_key()
         for s in bank["songs"]:

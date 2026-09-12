@@ -75,7 +75,7 @@ def _hum_for(emotion: str, seed: str, songs: list[dict]) -> dict | None:
 
 
 def plan_arc(latency_ms: int, emotion: str, intensity: int = 5, complexity: int = 1,
-             situation: str = "", answer_text: str = "") -> dict:
+             situation: str = "", answer_text: str = "", request: str = "") -> dict:
     if latency_ms < 0:
         raise ValueError("latency_ms must be >= 0")
     seed = situation or emotion
@@ -97,6 +97,12 @@ def plan_arc(latency_ms: int, emotion: str, intensity: int = 5, complexity: int 
     op = _pick(fused, seed + "open")
     add("open", "speech", "fused_hmm", _dur_ms(Path(op["wav"]), OPENER_MS),
         source=op["id"], text=op["text"], band=band, emotion=emotion, tags=["thinking"])
+
+    # RESTATE only for multi-part problems (complexity >= 2). Single-step turns
+    # don't need the request echoed back.
+    if request and complexity >= 2:
+        add("restate", "speech", "restate", LINE_MS, source="restate", tone="neutral_warm",
+            text=f"Let me make sure I've got it — you said: {request}", tags=["restate"])
 
     # 2. COVER — progress lines paced to fill latency; hum bed on wide gaps
     si = 0

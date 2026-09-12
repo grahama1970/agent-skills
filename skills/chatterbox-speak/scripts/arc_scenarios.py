@@ -33,7 +33,8 @@ def load(path: Path) -> list[dict]:
 
 def plan_of(s: dict) -> dict:
     return arc.plan_arc(s["predicted_latency_ms"], s["emotion"], s["intensity"],
-                        s["complexity"], s["id"], s.get("answer_text", ""))
+                        s["complexity"], s["id"], s.get("answer_text", ""),
+                        request=s.get("user_request", ""))
 
 
 def check(path: Path) -> int:
@@ -116,6 +117,8 @@ def script(scenario_id: str | None) -> int:
             k = e["kind"]
             if k == "fused_hmm":
                 elem, voice, payload = "OPENER", f"v3:{e['source']}", f'"{e["text"]}"'
+            elif k == "restate":
+                elem, voice, payload = "RESTATE", f"turbo:{e.get('tone')}", f'"{e["text"]}"'
             elif k == "progress":
                 elem, voice, payload = "SAY", f"turbo:{e.get('tone')}", f'"{e["text"]}"'
             elif k == "pause":
@@ -146,7 +149,7 @@ def render_steps(plan: dict) -> list[dict]:
             steps.append({"do": "play_wav", "wav": str(HUMS / f"{hid}.wav"), "gain_db": el.get("gain_db"), "why": "hum bed"})
         elif el["kind"] == "pause":
             steps.append({"do": "silence", "ms": el["dur_ms"]})
-        elif el["kind"] == "progress":
+        elif el["kind"] in ("progress", "restate"):
             steps.append({"do": "speak", "text": el["text"], "tone": el.get("tone", "neutral_warm"), "why": el["source"]})
         elif el["kind"] == "answer":
             tones = el.get("phase_tones") or ["neutral_warm"]
