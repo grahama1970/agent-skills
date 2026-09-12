@@ -22,6 +22,7 @@ python3 scripts/cover_plan.py && echo "cover_plan OK"
 python3 scripts/joke_search.py && echo "joke_search OK"
 python3 scripts/filler_gain.py && echo "filler_gain OK"
 python3 scripts/hum_render.py self-check && echo "hum_render OK"
+python3 scripts/conversation_arc.py self-check && echo "conversation_arc OK"
 
 # negative control: unknown voice must exit non-zero without touching the service
 if ./run.sh speak --text hi --voice nosuchvoice 2>/dev/null; then

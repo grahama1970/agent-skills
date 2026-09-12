@@ -1,0 +1,55 @@
+{
+  "version": 2,
+  "skill": "chatterbox-speak",
+  "trials": 2,
+  "proof_scope": "conversation-arc planner: deterministic latency-covering timeline + phart-renderable ask.dag.v1",
+  "claims": {
+    "proves": "conversation_arc.py builds an ordered arc that covers the predicted Agent-B latency, opens with a thinking beat, ends on the answer arc, fails closed on bad latency, and emits a phart-valid ask.dag.v1",
+    "does_not_prove": "human-perceived delivery quality, live barge-in handoff, or that Agent B's latency prediction is accurate"
+  },
+  "capability_claims": [
+    {
+      "id": "chatterbox.arc.latency_cover",
+      "description": "the fast agent maps an ordered element timeline (opener -> progress/hum cover -> answer arc) whose planned total covers the predicted Agent-B latency",
+      "criticality": "critical",
+      "claim_semantics": "control_flow",
+      "evidence_required": {"deterministic": true}
+    },
+    {
+      "id": "chatterbox.arc.phart_renderable",
+      "description": "the arc serializes to a valid ask.dag.v1 that $phart-dag-chart accepts, so it is visible in the terminal",
+      "criticality": "critical",
+      "claim_semantics": "protocol",
+      "evidence_required": {"live_e2e": true}
+    }
+  ],
+  "cases": [
+    {
+      "name": "arc-self-check",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["chatterbox.arc.latency_cover"],
+      "command": ["python3", "../scripts/conversation_arc.py", "self-check"],
+      "expected": {"exit_code": 0, "stdout_contains": ["self-check PASS", "covers 30000ms", "reassure arc"]}
+    },
+    {
+      "name": "arc-invalid-latency-fails-closed",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["chatterbox.arc.latency_cover"],
+      "command": ["python3", "../scripts/conversation_arc.py", "plan", "--latency-ms", "-1"],
+      "expected": {"exit_code": 1}
+    },
+    {
+      "name": "arc-emits-phart-valid-dag",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": ["chatterbox.arc.phart_renderable"],
+      "command": ["bash", "-lc", "python3 ../scripts/conversation_arc.py plan --latency-ms 20000 --emotion grief --complexity 3 --dag /tmp/arc-eval.dag.json >/dev/null && ~/.pi/agent/skills/phart-dag-chart/run.sh validate /tmp/arc-eval.dag.json"],
+      "expected": {"exit_code": 0, "stdout_excludes": ["error", "Traceback"]}
+    }
+  ]
+}

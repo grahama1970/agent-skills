@@ -134,6 +134,34 @@ instant. The lexicon is seeded from the existing control/definition collections
 and extended as renders prove entries; the receipt records `original_text` vs
 `spoken_text`. `python3 scripts/pronounce.py` runs the self-check.
 
+## Conversation arc — covering Agent-B latency (the culmination)
+
+`scripts/conversation_arc.py` is how the fast Voice/Cover agent (Agent A) maps a
+WHOLE turn into an ordered timeline of verified elements — fused-hmm opener ->
+progress lines -> mood-matched hum beds -> emotional answer-arc — **sized to the
+predicted Agent-B solve latency** so there is never dead air and Embry lands the
+answer with the right emotional shape start to finish. It composes ONLY
+bank-verified elements (below); it invents no new affect tricks.
+
+```bash
+python3 scripts/conversation_arc.py plan --latency-ms 30000 --emotion grief \
+  --intensity 4 --complexity 3 --situation '...' --answer-text '...' \
+  --json out/arc.json --svg out/arc.svg --dag out/arc.dag.json
+$phart-dag-chart chart out/arc.dag.json   # terminal-visible arc
+```
+
+Latency budget: `opener(~2.5s) + Σ progress(~1.4s + ~0.6s pause) ≥ predicted_latency_ms`.
+Walk `intent -> recall -> searching`; after each line, a **remaining gap > 7s**
+gets a **hum bed** (bone-dry, mood-matched, gain-fit under speech), else a short
+pause; then an imminence beat and the **answer arc**. Emotion picks the arc
+(`grief/fear/sad -> reassure`, else `answer`) AND the hum (mood/`memory_links`
+match). Two visuals: a self-contained SVG timeline (`--svg`) and a `$phart-dag-chart`
+terminal chart (`--dag`, emitted as `ask.dag.v1`). **Full mix-and-match guide,
+latency math, and a worked 30s grief example: `references/conversation-arc.md`.**
+Boundary: this PLANS the arc; the concurrent runtime + barge-in live in
+`embry-voice-control`; renderer tags appear only on fused_hmm/answer render lines,
+never in `$memory` canonical text.
+
 ## Pause, thinking, and song-hum macros
 
 Three named vocabularies the agent selects by context (all human-verified by ear):
