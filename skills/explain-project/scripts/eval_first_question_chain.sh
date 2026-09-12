@@ -2,7 +2,7 @@
 # First-interviewer-question full-chain rehearsal for $explain-project.
 #
 # Chain: REAL first pasted question -> live-evidence intake boundary ->
-# deterministic route (publish.report_last) -> walk steps to the
+# deterministic route (project.walkthrough) -> walk steps to the
 # debugger-target step -> REAL headless breakpoint at pipeline.py:210 under
 # `python -m anonymization_trial demo` -> debugger-proof adapter receipt ->
 # excalidraw proposal receipt -> integration health READY -> Chatterbox
@@ -125,7 +125,7 @@ try:
     assert state["route"]["status"] == "MATCHED"
     assert (
         state["selection"]["feature_id"]
-        == "publish.report_last"
+        == "project.walkthrough"
     )
     assert (
         state["integration_health"]["live_evidence"]
@@ -133,7 +133,7 @@ try:
     )
     step_count = state["selection"]["step_count"]
     print(
-        "STEP1_ROUTE_OK publish.report_last"
+        "STEP1_ROUTE_OK project.walkthrough"
         f" step 1/{step_count} live_evidence READY"
     )
 
@@ -243,7 +243,7 @@ try:
         "src/anonymization_trial/pipeline.py",
         "--start-line", str(target["line"] - 30),
         "--end-line", str(target["line"] + 10),
-        "--feature-id", "publish.report_last",
+        "--feature-id", "project.walkthrough",
         "--step-id", step_id,
         "--request-revision", str(rev),
         "--local", "tmp",
@@ -285,7 +285,7 @@ try:
         "bash", str(SKILL / "run.sh"),
         "excalidraw-proposal-receipt",
         "--receipt", str(T / "ops.json"),
-        "--feature-id", "publish.report_last",
+        "--feature-id", "project.walkthrough",
         "--step-id", step_id,
         "--request-revision", str(state["revision"]),
     ], cwd=SKILL)

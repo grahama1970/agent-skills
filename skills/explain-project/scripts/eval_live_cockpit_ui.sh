@@ -448,7 +448,7 @@ try:
                     "src/anonymization_trial/pipeline.py",
                     "--start-line", str(stop_line - 30),
                     "--end-line", str(stop_line + 10),
-                    "--feature-id", "publish.report_last",
+                    "--feature-id", "project.walkthrough",
                     "--step-id",
                     state["selection"]["step_id"],
                     "--request-revision",

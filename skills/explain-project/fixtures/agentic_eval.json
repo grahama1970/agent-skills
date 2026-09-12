@@ -364,7 +364,7 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && T=$(mktemp -d) && ./run.sh eval-interview-cockpit-path --out-dir $T | tee $T/stdout.jsonl && python3 - <<'PYCODE' $T/stdout.jsonl\nimport json,sys\ntext=open(sys.argv[1]).read()\nstart=text.index('{'); end=text.rindex('}')+1\np=json.loads(text[start:end])\nassert p['status']=='PASS'\nassert p['first_question'].startswith('Walk me through your solution')\nassert p['route']['matched_feature']=='publish.report_last'\nassert p['debugger']['stopped']['hit'] is True\nassert sorted(p['debugger']['locals'])==['output_corpus','report_path','tmp']\nassert p['ops_excalidraw']['mode']=='proposal'\nassert p['adapter_receipts']['debugger_runtime']['status']=='PROOF_RECEIVED'\nassert p['adapter_receipts']['excalidraw_proposal']['status']=='PROPOSED'\nprint('EXPLAIN_PROJECT_FIRST_INTERVIEW_PATH_OK')\nPYCODE"
+        "cd .. && T=$(mktemp -d) && ./run.sh eval-interview-cockpit-path --out-dir $T | tee $T/stdout.jsonl && python3 - <<'PYCODE' $T/stdout.jsonl\nimport json,sys\ntext=open(sys.argv[1]).read()\nstart=text.index('{'); end=text.rindex('}')+1\np=json.loads(text[start:end])\nassert p['status']=='PASS'\nassert p['first_question'].startswith('Walk me through your solution')\nassert p['route']['matched_feature']=='project.walkthrough'\nassert p['debugger']['stopped']['hit'] is True\nassert sorted(p['debugger']['locals'])==['output_corpus','report_path','tmp']\nassert p['ops_excalidraw']['mode']=='proposal'\nassert p['adapter_receipts']['debugger_runtime']['status']=='PROOF_RECEIVED'\nassert p['adapter_receipts']['excalidraw_proposal']['status']=='PROPOSED'\nprint('EXPLAIN_PROJECT_FIRST_INTERVIEW_PATH_OK')\nPYCODE"
       ],
       "timeout_seconds": 300,
       "expected": {
@@ -459,7 +459,7 @@
       },
       "readback": true,
       "evidence_class": "live_e2e",
-      "notes": "Real first interviewer question through the live-evidence intake boundary, MATCHED route to publish.report_last, walk to the debugger-target step, REAL headless breakpoint stop at src/anonymization_trial/pipeline.py:210 under python -m anonymization_trial demo (locals tmp/report_path/output_corpus), debugger-proof adapter receipt flips health to READY, excalidraw proposal receipt (display-only) keeps diagram READY, cockpit scannable-bullets contract asserted (>=2 bullets, <=160 chars), and chatterbox-speak narrates the breakpoint stop (title + source context + proves + diagram nodes + bullets) with a render receipt when the service is live. No microphone, no playback, no Excalidraw mutation, no VS Code GUI control."
+      "notes": "Real first interviewer question through the live-evidence intake boundary, MATCHED route to project.walkthrough, walk to the debugger-target step, REAL headless breakpoint stop at src/anonymization_trial/pipeline.py:210 under python -m anonymization_trial demo (locals tmp/report_path/output_corpus), debugger-proof adapter receipt flips health to READY, excalidraw proposal receipt (display-only) keeps diagram READY, cockpit scannable-bullets contract asserted (>=2 bullets, <=160 chars), and chatterbox-speak narrates the breakpoint stop (title + source context + proves + diagram nodes + bullets) with a render receipt when the service is live. No microphone, no playback, no Excalidraw mutation, no VS Code GUI control."
     },
     {
       "name": "live-cockpit-walkthrough-ui",
@@ -505,6 +505,25 @@
       },
       "readback": true,
       "evidence_class": "deterministic"
+    },
+    {
+      "name": "acceptance-contract-bundle-boundary",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && T=$(mktemp -d) && cat > $T/BRIEF.md <<'EOF'\n# Demo brief\nThe project must explain source-backed acceptance criteria before implementation.\nAcceptance: the explainer must cite the acceptance bundle hash.\nEOF\n../acceptance-contract/run.sh extract $T/BRIEF.md --out $T/acceptance --project-name demo --goal-mode create >/tmp/explain-project-acceptance-extract.json && ./run.sh scaffold --repo fixtures/scaffold-project --entrypoint app.py --output $T/explainers.jsonl --acceptance-bundle $T/acceptance/acceptance_bundle.json | tee $T/scaffold.json && ./run.sh validate $T/explainers.jsonl >/tmp/explain-project-acceptance-validate.json && python3 - <<'PY2' $T/explainers.jsonl $T/scaffold.json\nimport json,sys\nrow=json.loads(open(sys.argv[1]).readline())\nscaffold=json.load(open(sys.argv[2]))\nassert row['acceptance_contract']['schema']=='explain_project.acceptance_contract_ref.v1'\nassert row['acceptance_contract']['sha256']==scaffold['acceptance_contract']['sha256']\nassert row['acceptance_contract']['requirements'] >= 1\nprint('EXPLAIN_PROJECT_ACCEPTANCE_CONTRACT_BOUND_OK')\nPY2"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXPLAIN_PROJECT_ACCEPTANCE_CONTRACT_BOUND_OK"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "deterministic",
+      "notes": "Composes $acceptance-contract into explain-project by binding only a bounded acceptance bundle reference; it does not approve or mutate immutable goals."
     }
   ]
 }
