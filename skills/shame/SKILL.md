@@ -82,9 +82,10 @@ skill explicitly handed you a typed packet for it.
 
 The mechanical exit:
 
-1. End a mutating or `$shame`-invoked terminal reply with one fenced
-   ```` ```json ```` block containing `pi.agent_status.v1`. Prose "Status
-   Report" lists never parse.
+1. End a mutating, format-retry, task-budget, continuation-ledger, strict-mode,
+   or otherwise guard-forced terminal reply with one fenced ```` ```json ````
+   block containing `pi.agent_status.v1`. Read-only `$shame` questions may stay
+   plain. Prose "Status Report" lists never parse.
 2. If unsure, use `state=continuing`, not `done`.
 3. For `state=done` with a plain-text proof file, verified items must be
    `{"command": "read <proof-file>", "result": "<exact substring of file>"}`.
@@ -104,8 +105,10 @@ block yourself.
   assistant `stopReason="stop"` messages with no tool calls or queued work.
 - Mutating or guard-forced runs must include one fenced `json` block containing
   `pi.agent_status.v1`. A leading `$shame`, `/shame`, or `/skill:shame` invocation
-  activates self-correction; mentioning those names in an advisory question does
-  not. Strict mode remains an explicit opt-in. Actual mutations remain guarded.
+  requires reading this contract before tool use, but it does not by itself make
+  a read-only answer strict. Strict mode remains an explicit opt-in. Actual
+  mutations, task budgets, continuation ledgers, and format-only retries remain
+  guarded.
 - Pydantic data decides status validity. Never classify status prose with regex
   or an LLM. Strip model status prose/raw JSON; render the visible answer before
   the `Status Report` metadata. Trailing prose after valid JSON is ignored.

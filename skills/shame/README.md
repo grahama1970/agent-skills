@@ -35,8 +35,8 @@ The deterministic PHART view is retained at:
 
 ## Runtime flow
 
-1. A leading `$shame`, `/shame`, `/skill:shame`, `$unlazy`, or guarded mutating turn activates the Pi extension.
-2. The extension extracts the final fenced `pi.agent_status.v1` JSON block and sends only that data to `status-json-check.mjs`.
+1. The Pi extension always observes the stop boundary, but status JSON is forced only for mutating turns, strict mode, task budgets, continuation ledgers, format retries, or an explicitly armed guard. A read-only `$shame` question stays plain.
+2. When status is required or provided, the extension extracts the final fenced `pi.agent_status.v1` JSON block and sends only that data to `status-json-check.mjs`.
 3. `status-json-check.mjs` rejects duplicate keys, invokes `scripts/agent_status_schema.py`, and returns the validated status object.
 4. The extension validates the terminal `pi.agent_status.v1` JSON and does not append a duplicate prose `Status Report`. Human prose should state what was actually done before the JSON.
 5. `compile-status-command.mjs` maps `continuing` and legal `needs_*` states to exact runnable commands. `done`, `needs_human`, and `failed` do not dispatch automatically.

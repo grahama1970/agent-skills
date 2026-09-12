@@ -1432,7 +1432,10 @@ export default function lazyReportShameShameShame(pi: any) {
     // five rejections, all on non-mutating Q&A turns).
     const guardArmed = (sessionGuardActive || turnGuardActive) && (mutatingTurn || formatRepairTurn);
     const forceStatus = Boolean(budget.current) || sessionMode === "strict" || mutatingTurn || guardArmed || Boolean(activeContinuationState());
-    const strictStatus = shameSelfCorrectTurn;
+    // Keep ordinary `$shame` questions advisory. Strict format enforcement is
+    // only for the guard-owned retry packet; mutating/armed turns are covered
+    // by forceStatus above.
+    const strictStatus = formatRepairTurn;
     let check = checkReport(text, forceStatus, mutatingTurn, strictStatus, currentUserText, formatRepairTurn);
     const statusState = typeof (check as any)?.features?.state === "string" ? String((check as any).features.state) : undefined;
     const status = (check as any)?.features?.status;

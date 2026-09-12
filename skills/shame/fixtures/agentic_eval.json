@@ -261,6 +261,32 @@
       }
     },
     {
+      "name": "advisory-question-scope",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "mocked": false,
+      "timeout_seconds": 60,
+      "supports_claims": [
+        "shame.advisory_question"
+      ],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-advisory-question-scope.py",
+        "/tmp/shame-advisory-question-scope.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/tmp/shame-advisory-question-scope.json",
+            "json_pointer": "/passed",
+            "equals": true
+          }
+        ]
+      },
+      "proves": "Read-only/advisory $shame questions are not forced into pi.agent_status.v1, while mutating and strict retry paths still require status JSON."
+    },
+    {
       "name": "single-format-correction",
       "type": "adversarial",
       "real_world": true,
