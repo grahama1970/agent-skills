@@ -18,11 +18,24 @@ import agent_status_schema as s  # noqa: E402
 
 
 def render_status(status: dict) -> str:
-    lines = ["Status Report"]
+    # Twin of the extension renderStatusLine (index.ts). Keep in sync.
+    # plain_answer is the human verdict lead; answer stays the <=300 headline.
+    # verified[].result substrings are validation-only and are NOT displayed.
+    lines = []
+    if status.get("plain_answer"):
+        lines.append(f"Answer: {status['plain_answer']}")
+    elif status.get("answer"):
+        lines.append(f"Answer: {status['answer']}")
+    lines.append("Status Report")
     lines.append(f"- Goal: {status.get('goal','')}")
     lines.append(f"- State: {status.get('state','')}")
     for c in status.get("changed") or []:
         lines.append(f"- Changed: {c}")
+    verified = status.get("verified") or []
+    if verified:
+        lines.append(f"- Verified: {len(verified)} command(s), each backed by a proof file below")
+        for v in verified:
+            lines.append(f"- Verified: {v.get('command','')} (receipt-backed)")
     for nd in status.get("not_done") or []:
         lines.append(f"- Not done: {nd.get('item','')} -> {nd.get('next_command','')}")
     body = "\n".join(lines)
@@ -64,6 +77,30 @@ check("round_trip_preserves_anchors",
       reparsed["state"] == "continuing"
       and reparsed["not_done"][0]["next_command"] == "gh issue view 1"
       and reparsed["goal"] == status["goal"])
+
+# plain_answer + no-fragment display (operator 2026-09-11):
+import tempfile
+proof_tmp = Path(tempfile.mkstemp(suffix=".txt")[1])
+proof_tmp.write_text("SECTION HEADING FRAGMENT:\nproof body line\n")
+plain_status = {"schema": "pi.agent_status.v1", "goal": "ship the fix",
+                "state": "done",
+                "answer": "done: renderer fixed",
+                "plain_answer": ("Fixed. The renderer now leads with this plain verdict, "
+                                 "and verified lines no longer dump raw proof substrings."),
+                "changed": ["extensions/pi/lazy-report-shame-shame-shame/index.ts"],
+                "verified": [{"command": f"read {proof_tmp}", "result": "SECTION HEADING FRAGMENT:"}],
+                "proof": [str(proof_tmp)]}
+s.AgentStatus.model_validate(plain_status)  # schema must accept plain_answer
+rendered2 = render_status(plain_status)
+check("plain_answer_accepted_by_schema", True)
+check("plain_answer_leads_render", rendered2.startswith("Answer: Fixed. The renderer now leads"))
+check("raw_result_fragment_hidden", "SECTION HEADING FRAGMENT:" not in rendered2.split("```json")[0])
+check("verified_shows_command_and_backing",
+      f"- Verified: read {proof_tmp} (receipt-backed)" in rendered2
+      and "1 command(s), each backed by a proof file" in rendered2)
+reparsed2 = extract_status_block(rendered2)
+s.AgentStatus.model_validate(reparsed2)
+check("plain_round_trip_validates", reparsed2["plain_answer"] == plain_status["plain_answer"])
 
 passed = all(c["passed"] for c in checks)
 out = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("/tmp/shame-renderer-case.json")

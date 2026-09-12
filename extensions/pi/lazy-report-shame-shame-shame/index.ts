@@ -164,15 +164,24 @@ function stripStatusJson(content: unknown): unknown {
 
 function renderStatusLine(status: any): string {
   const lines = [];
-  if (status?.answer) lines.push(`Answer: ${String(status.answer)}`);
+  // Plain-spoken verdict first (operator 2026-09-11): plain_answer carries the
+  // human-readable verdict; answer remains the <=300-char machine headline.
+  if (status?.plain_answer) lines.push(`Answer: ${String(status.plain_answer)}`);
+  else if (status?.answer) lines.push(`Answer: ${String(status.answer)}`);
   lines.push("Status Report");
   lines.push(`- Goal: ${String(status?.goal || "unknown")}`);
   lines.push(`- State: ${String(status?.state || "unknown")}`);
   if (status?.run_dir) lines.push(`- Run dir: ${String(status.run_dir)}`);
   const changed = Array.isArray(status?.changed) ? status.changed : [];
   for (const item of changed) lines.push(`- Changed: ${String(item)}`);
+  // Verified display shows the command and that a proof backs it; the raw
+  // result substring stays in the JSON for anti-fabrication validation only.
+  // Dumping fragments here rendered meaningless headings to the human.
   const verified = Array.isArray(status?.verified) ? status.verified : [];
-  for (const item of verified) lines.push(`- Verified: ${String(item?.command || "") } -> ${String(item?.result || "")}`);
+  if (verified.length) {
+    lines.push(`- Verified: ${verified.length} command(s), each backed by a proof file below`);
+    for (const item of verified) lines.push(`- Verified: ${String(item?.command || "") } (receipt-backed)`);
+  }
   const proof = Array.isArray(status?.proof) ? status.proof : [];
   for (const item of proof) lines.push(`- Proof: ${String(item)}`);
   const artifacts = Array.isArray(status?.artifacts) ? status.artifacts : [];
@@ -898,8 +907,11 @@ function recoveryDecision(check: CheckResult, retried: boolean, taskPhase?: stri
   if (has(["proof_json_schema_missing", "proof_schema_unsupported", "ticket_closure_receipt_not_closed"])) {
     return { schema: "lazy_report_shame.recovery_decision.v1", action: "existing_proof_substitution", format_only: true, allowed_tools: [], reason: "cite_existing_typed_receipt" };
   }
+  // Proof-missing done reports are safely copy-repairable now that the retry
+  // is a single-target byte-for-byte continuing status (no tools needed); the
+  // compiled follow-up then drives the model to finish with real proof.
   if (has(["proof_reference_unresolved", "proof_path_missing", "proof_empty", "done_requires_proof", "done_requires_verified", "verified_not_backed_by_proof"])) {
-    return { schema: "lazy_report_shame.recovery_decision.v1", action: "continue_execution", format_only: false, allowed_tools: [], reason: "missing_executable_evidence", next_command: check.features?.next_action || null };
+    return { schema: "lazy_report_shame.recovery_decision.v1", action: "output_only_repair", format_only: true, allowed_tools: [], reason: "missing_executable_evidence_copy_repair" };
   }
   return { schema: "lazy_report_shame.recovery_decision.v1", action: "output_only_repair", format_only: true, allowed_tools: [], reason: "status_field_repair" };
 }
@@ -1098,9 +1110,12 @@ function retryPrompt(candidate: Candidate, check: CheckResult, reviewPacketPath:
   // exactly ONE JSON object. Rejection-notice parroting came from competing
   // JSON attractors; the rich packet stays in the review/telemetry file only.
   const target = suggestedRetryStatus(candidate, check);
+  const placeholderNote = String((target as any).answer || "").includes("ANSWER_PLACEHOLDER")
+    ? " Replace ANSWER_PLACEHOLDER_REPLACE_WITH_YOUR_ONE_SENTENCE_ANSWER with your one-sentence answer to the user's question."
+    : "";
   return `UNLAZY_FORCED_RETRY
 One-shot format correction. Do not re-answer the task. Do not call tools.
-Your entire reply must be exactly this fenced json block, byte for byte:
+Your entire reply must be exactly this fenced json block, byte for byte:${placeholderNote}
 \`\`\`json
 ${JSON.stringify(target, null, 2)}
 \`\`\``;
@@ -1311,7 +1326,9 @@ export default function lazyReportShameShameShame(pi: any) {
   pi.on("input", async (event: any) => {
     const text = String(event.text || "");
     beginGuardTurn(text, event.source);
-    currentUserText = text;
+    // Preserve the human's original question across guard-injected follow-ups;
+    // overwriting it with CONTINUE/RETRY text silently disabled the answer gate.
+    if (event.source !== "extension") currentUserText = text;
     pendingFollowUp = null;
     mutatingTurn = false;
     // Derive turn state anew. A previous correction must not contaminate a
@@ -1484,10 +1501,14 @@ export default function lazyReportShameShameShame(pi: any) {
         let displayReturn: any = undefined;
         if (status && typeof statusState === "string") {
           resetGuardRepairBudget();
-          // Representation conditioning (WebGPT review 2026-09-11): the model's
-          // own reply already contains the canonical fenced status JSON. Keep it
-          // in model-visible history verbatim; a prose "Status Report" rewrite
-          // taught imitating models the wrong terminal shape (20/24 failures).
+          // Representation conditioning (WebGPT 2026-09-11) + answer-visibility
+          // (operator 2026-08-31): keep the model's own answer prose and
+          // canonical fenced status JSON in model-visible history verbatim,
+          // then APPEND the rendered Status Report footer. The old strip+rewrite
+          // removed the fence and taught imitating models a prose-only shape
+          // (20/24 failures); appending preserves both contracts.
+          const line = renderStatusLine(status);
+          displayReturn = { message: { ...event.message, content: appendText(event.message.content, line) } };
           lastReportState = statusState;
           try { syncBadge(ctx); } catch { /* optional UI */ }
           const compiled = compileStatusCommand(status);

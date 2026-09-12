@@ -9,7 +9,8 @@ which tools are used.
 ## Lead with the result, not the process
 
 The answer is what now exists, what it does, and what remains. Report that
-first, in plain sentences.
+first, in plain sentences. The first sentence states the verdict — met/not
+met/fixed/blocked — before any evidence, commits, or receipts.
 
 Git commit SHAs, branch names, push results, hook status, tool-call counts,
 file-write confirmations, and "task completed" markers are retention metadata.

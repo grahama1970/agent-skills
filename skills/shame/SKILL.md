@@ -92,9 +92,11 @@ The mechanical exit:
    `skills/shame/run.sh preflight /tmp/candidate.md` — stop only on
    `decision: pass`.
 
-If the guard returns `UNLAZY_FORCED_RETRY`, copy `packet.suggested_status` unless
-you can make a stricter `pi.agent_status.v1` from already-cited proof. Do not
-invent the schema from memory.
+If the guard returns `UNLAZY_FORCED_RETRY`, your entire reply must be exactly the
+TARGET fenced json block it shows you, byte for byte. Do not invent the schema
+from memory. A prose-only stop on a guarded turn is auto-repaired by the guard
+with a `continuing` status (never `done`), so the fastest path is to emit the
+block yourself.
 
 ## Stop-boundary behavior
 
@@ -133,7 +135,12 @@ invent the schema from memory.
 ## pi.agent_status.v1
 
 Every status requires a non-empty `goal` and `changed` (use `no change: <reason>`
-when appropriate). Use concrete operational anchors when they exist: `run_dir`,
+when appropriate). Optional `plain_answer` (≤4000 chars) is the plain-spoken
+verdict the renderer leads the visible Status Report with; `answer` stays the
+≤300-char machine headline. `plain_answer` is display text, not new evidence —
+anti-fabrication still binds to `verified[]`/`proof[]`, and the renderer never
+displays raw `verified[].result` substrings (they exist for validation only).
+Use concrete operational anchors when they exist: `run_dir`,
 `artifacts[]`, `receipts[]`, `nodes[]` (`id`, `status`, optional `artifact` or
 `receipt`), `blocked[]`, and `missing_artifacts[]`. The extension renders those
 fields in the visible `Status Report`; do not substitute vague prose summaries

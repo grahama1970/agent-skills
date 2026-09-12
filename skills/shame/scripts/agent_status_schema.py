@@ -523,6 +523,17 @@ class AgentStatus(BaseModel):
     schema_: Literal["pi.agent_status.v1"] = Field(alias="schema")
     goal: str = Field(min_length=1)
     answer: str | None = Field(default=None, min_length=1, max_length=300)
+    plain_answer: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=4000,
+        description=(
+            "Optional plain-spoken verdict for the human-visible Status Report "
+            "lead line; `answer` stays the <=300-char machine headline. "
+            "Anti-fabrication validation still binds to verified[]/proof[]; "
+            "plain_answer is display text, not new evidence."
+        ),
+    )
     goal_id: str | None = None
     goal_hash: str | None = Field(
         default=None,
