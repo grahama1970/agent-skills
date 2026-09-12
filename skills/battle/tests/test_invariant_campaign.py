@@ -32,6 +32,24 @@ def test_campaign_passes_when_value_removed() -> None:
     assert r.passed is True and not r.failures
 
 
+def test_anonymizer_generator_includes_roundtable_red_wins() -> None:
+    import importlib.util
+    import tempfile
+
+    spec = importlib.util.spec_from_file_location(
+        "anon_brief_gen", str(HERE.parent / "fixtures/reference-generators/anon_brief_matrix.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    with tempfile.TemporaryDirectory() as td:
+        cases = list(mod.generate(td, {"fuzz": 0}))
+        by_name = {case[0]: case for case in cases}
+        assert by_name["adv-formatted-phone-json-integer"][2] == "MUST_ACCEPT"
+        assert by_name["adv-formatted-phone-sqlite-integer"][2] == "MUST_ACCEPT"
+        assert by_name["adv-cross-format-same-identity-trap"][2] == "MUST_ACCEPT"
+        assert by_name["adv-leading-zero-json-integer"][2] == "MUST_REJECT"
+        assert by_name["adv-lossy-big-json-float"][2] == "MUST_REJECT"
+
+
 def test_beyond_brief_generator_yields_complete_bundles() -> None:
     import importlib.util
     import tempfile
@@ -152,6 +170,26 @@ def test_campaign_fails_on_vacuous_expectation_declaration() -> None:
         r = run_campaign(str(gen_path), "exit 1", JUDGE, output_subdir="corpus")
     assert r.passed is False
     assert any("vacuous_campaign_no_required_accept_cases" in v for f in r.failures for v in f["violations"])
+
+
+def test_no_data_leak_judge_catches_numeric_aliases() -> None:
+    import importlib.util
+    import json
+    import tempfile
+
+    spec = importlib.util.spec_from_file_location("no_data_leak_judge", JUDGE)
+    judge_mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(judge_mod)
+    with tempfile.TemporaryDirectory() as td:
+        out = Path(td) / "out"
+        (out / "corpus").mkdir(parents=True)
+        (out / "policy.json").write_text(json.dumps({
+            "sensitive_values": [{"value": "555-123-4567"}]}))
+        (out / "corpus" / "d.json").write_text(json.dumps({"phone": 5551234567}))
+        r = judge_mod.judge(str(out), {"policy": str(out / "policy.json"),
+                                       "output_subdir": "corpus"})
+    assert r["passed"] is False
+    assert "555-123-4567" in r["violations"][0]
 
 
 def test_beyond_brief_judge_catches_filename_and_utf16_leaks() -> None:

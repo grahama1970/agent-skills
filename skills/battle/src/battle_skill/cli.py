@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Optional
 
@@ -50,6 +51,54 @@ except ImportError:
 
 app = typer.Typer(help="Red vs Blue Team Security Competition Orchestrator")
 console = Console()
+
+
+def _load_campaign_json(path: Path) -> dict:
+    text = path.read_text(encoding="utf-8")
+    start, end = text.find("{"), text.rfind("}")
+    if start < 0 or end < start:
+        raise ValueError(f"campaign JSON not found: {path}")
+    data = json.loads(text[start:end + 1])
+    if data.get("schema") != "battle.invariant_campaign_result.v1":
+        raise ValueError(f"not an invariant campaign result: {path}")
+    return data
+
+
+@app.command("invariant-lineage-receipt")
+def invariant_lineage_receipt(
+    red_campaign: Path = typer.Option(..., "--red-campaign", exists=True, readable=True, help="Failing campaign where Red found invariant violations."),
+    replay_campaign: Path = typer.Option(..., "--replay-campaign", exists=True, readable=True, help="Successful replay campaign after Blue fixes."),
+    out: Path = typer.Option(..., "--out", help="Receipt output path."),
+    target: str = typer.Option("target", "--target", help="Target being improved."),
+) -> None:
+    """Emit a machine-readable invariant adaptive-lineage improvement receipt."""
+    red = _load_campaign_json(red_campaign)
+    replay = _load_campaign_json(replay_campaign)
+    red_wins = [f for f in red.get("failures", []) if f.get("case")]
+    replay_failures = {f.get("case") for f in replay.get("failures", []) if f.get("case")}
+    fixed_cases = sorted({f["case"] for f in red_wins if f.get("case") not in replay_failures})
+    status = "PASS" if (not red.get("passed") and replay.get("passed") and fixed_cases) else "NOT_PROVEN"
+    receipt = {
+        "schema": "battle.invariant_adaptive_lineage.v1",
+        "status": status,
+        "created_at": datetime.now(UTC).isoformat(),
+        "target": target,
+        "red_campaign": str(red_campaign),
+        "replay_campaign": str(replay_campaign),
+        "red_wins": [{"case": f.get("case"), "violations": f.get("violations", [])} for f in red_wins],
+        "fixed_cases": fixed_cases,
+        "replay_passed": bool(replay.get("passed")),
+        "replay_cases": {"passed": replay.get("cases_passed"), "total": replay.get("cases_total")},
+        "proof_scope": {
+            "proves": ["Red found contract edge cases", "Blue patch removed those Red wins", "Battle Judge replay passed after the patch"],
+            "does_not_prove": ["all possible PII representations", "unbounded overnight search", "provider-generated exploit quality"],
+        },
+    }
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    typer.echo(json.dumps(receipt, indent=2, sort_keys=True))
+    if status != "PASS":
+        raise typer.Exit(1)
 
 
 def _write_ux_transport_artifacts(*, out: Path, battle_id: str) -> dict:

@@ -98,8 +98,25 @@ python3 -m battle_skill.invariant_campaign \
 `fixtures/reference-generators/anon_brief_matrix.py` yields the anonymization
 brief's versions: the four formats, JSON string/int/float/scientific, SQLite
 TEXT/INTEGER/REAL, Unicode NFC/NFD, BOM, JSON \u-escape, SQLite CHECK-literal,
-plus fuzz. A generator + target-run-cmd + judge is a pluggable trio: point it at
-any project's spec matrix and invariant.
+plus fuzz. It also carries the oai-trial roundtable edge cases: formatted policy
+phone values stored as digit-only JSON/SQLite numerics, the same identity seeded
+across every in-scope format, and lossy leading-zero / large-float traps. A
+generator + target-run-cmd + judge is a pluggable trio: point it at any project's
+spec matrix and invariant.
+
+After Red finds failing cases and Blue patches the target, emit the replayable
+lineage receipt instead of summarizing in prose:
+
+```bash
+./run.sh invariant-lineage-receipt \
+  --red-campaign /tmp/red-result.json \
+  --replay-campaign /tmp/replay-result.json \
+  --target oai-trial \
+  --out /tmp/battle-lineage.json
+```
+
+A `battle.invariant_adaptive_lineage.v1` PASS proves Red found contract edge
+cases, Blue removed those Red wins, and the independent Judge replay passed.
 
 ## Purpose Boundary
 

@@ -131,8 +131,11 @@ PII must be matched against the **value**, not the string: before any
 JSON/SQL scalar is passed through unchanged, stringify it canonically
 (phone-shaped numbers in E.164 form) and run the policy match on the
 stringified form. Fixtures must include every PII class in every JSON
-scalar type. A phone number stored as an integer is the same phone
-number. See $best-practices-skills "Value representation matrix".
+scalar type. A phone number stored as an integer is the same phone number, including when the
+policy writes it as a formatted string such as `555-123-4567` and the corpus
+stores `5551234567`. Leading-zero or float-precision lossy numeric conversions
+must fail closed unless a type-specific canonical rule proves safe equivalence.
+See $best-practices-skills "Value representation matrix".
 
 ## Hardening lessons (do not relearn these the hard way)
 

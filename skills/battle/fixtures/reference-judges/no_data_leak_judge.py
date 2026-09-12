@@ -19,6 +19,10 @@ from decimal import Decimal
 from pathlib import Path
 
 
+def _digits(s: str) -> str:
+    return "".join(ch for ch in s if ch.isdigit())
+
+
 def _num_forms(x):
     out = set()
     if isinstance(x, bool):
@@ -113,8 +117,14 @@ def judge(target_dir, params):
     for v in values:
         if unicodedata.normalize("NFC", v) in nfc or unicodedata.normalize("NFD", v) in nfd:
             leaked.append(v)
-        elif v.isdigit() and str(int(v)) == v and str(int(v)) in nums:
+            continue
+        digits = _digits(v)
+        if len(digits) >= 7 and digits in nums:
             leaked.append(v)
+            continue
+        if len(digits) >= 7 and digits.startswith("0") and digits.lstrip("0") in nums:
+            leaked.append(v)
+            continue
     return {"passed": not leaked,
             "violations": [f"policy value survives in output: {v!r}" for v in leaked],
             "evidence": {"policy_values": len(values), "scanned": str(out)}}
