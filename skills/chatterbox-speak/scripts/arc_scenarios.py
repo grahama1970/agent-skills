@@ -21,6 +21,7 @@ sys.path.insert(0, str(SKILL / "scripts"))
 import conversation_arc as arc  # noqa: E402
 
 BANK = SKILL / "fixtures" / "arc_scenarios.json"
+PHART = SKILL.parent / "phart-dag-chart" / "run.sh"  # sibling skill in the repo
 FUSED = Path("/mnt/storage12tb/skills/chatterbox-speak/outputs/sfx-library/fused-hmm")
 HUMS = Path("/mnt/storage12tb/skills/chatterbox-speak/outputs/sfx-library/song-hums")
 OUT = Path("/mnt/storage12tb/skills/chatterbox-speak/outputs/arc-scenarios")
@@ -63,6 +64,27 @@ def check(path: Path) -> int:
     return 0
 
 
+def chart(scenario_id: str | None) -> int:
+    """Emit each scenario's arc as a descriptive ask.dag.v1 and render it with
+    $phart-dag-chart, so the arc is checkable graphically against the conversation."""
+    scen = {s["id"]: s for s in load(BANK)}
+    ids = list(scen) if scenario_id in (None, "all") else [scenario_id]
+    if any(i not in scen for i in ids):
+        print(f"unknown scenario: {scenario_id}", file=sys.stderr)
+        return 2
+    OUT.mkdir(parents=True, exist_ok=True)
+    for sid in ids:
+        s = scen[sid]
+        p = plan_of(s)
+        dag = arc.to_dag(p, descriptive=True)
+        f = OUT / f"{sid}.dag.json"
+        f.write_text(json.dumps(dag, indent=2) + "\n")
+        print(f"\n=== {sid} [{s['tier']}] user: {s['user_request']!r}")
+        print(f"    arc={p['answer_arc']} band={p['band']} covers {p['predicted_latency_ms']}ms in {p['planned_total_ms']}ms")
+        subprocess.run(["bash", str(PHART), "chart", str(f)], check=False)
+    return 0
+
+
 def render_steps(plan: dict) -> list[dict]:
     """Ordered concrete render actions for one arc (dry data; render executes them)."""
     steps = []
@@ -89,6 +111,7 @@ def render(scenario_id: str, play: bool) -> int:
     s = scen[scenario_id]
     plan = plan_of(s)
     OUT.mkdir(parents=True, exist_ok=True)
+    chart(scenario_id)  # show the arc graphically first, to check against what you hear
     steps = render_steps(plan)
     seq = []
     for i, st in enumerate(steps):
@@ -139,7 +162,7 @@ def self_check() -> None:
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["check", "render", "self-check"])
+    ap.add_argument("cmd", choices=["check", "render", "chart", "self-check"])
     ap.add_argument("--scenarios", default=str(BANK))
     ap.add_argument("--id", dest="scenario_id")
     ap.add_argument("--play", action="store_true")
@@ -149,6 +172,8 @@ if __name__ == "__main__":
         sys.exit(0)
     if a.cmd == "check":
         sys.exit(check(Path(a.scenarios)))
+    if a.cmd == "chart":
+        sys.exit(chart(a.scenario_id))
     if a.cmd == "render":
         if not a.scenario_id:
             print("render needs --id <scenario>", file=sys.stderr)

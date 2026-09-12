@@ -172,7 +172,10 @@ each turn PLANS a latency-covering arc with the expected arc+band (retained eval
 human ear-verification (perceived delivery stays human-owned). Open tuning
 question the audible pass exists to answer: simple turns currently over-cover
 (an ~11s arc for "Morning") because the answer arc always runs full phases —
-listen and decide whether short turns need a trimmed arc.
+listen and decide whether short turns need a trimmed arc. `arc_scenarios.py chart --id <id>` (and `render` before
+play) renders the arc GRAPHICALLY via `$phart-dag-chart` with timed, descriptive
+nodes (opener -> say_intent -> hum bed -> say_recall -> ... -> answer phases) so
+you can check the planned arc against the actual conversation while you hear it.
 
 ## Pause, thinking, and song-hum macros
 

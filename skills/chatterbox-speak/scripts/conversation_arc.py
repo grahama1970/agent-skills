@@ -141,16 +141,46 @@ def plan_arc(latency_ms: int, emotion: str, intensity: int = 5, complexity: int 
     }
 
 
-def to_dag(plan: dict) -> dict:
+def _safe(s: str) -> str:
+    """phart node ids must be safe identifiers (alnum + _). Sanitize + collapse."""
+    out = "".join(c if c.isalnum() else "_" for c in str(s))
+    while "__" in out:
+        out = out.replace("__", "_")
+    return out.strip("_")[:44]
+
+
+def _label(el: dict, descriptive: bool) -> str:
+    """Node id for the phart chart. Descriptive (safe) labels show timing + kind +
+    which element, so a human can check the arc structure against the real
+    conversation; the exact line stays in the node input and the SVG."""
+    if not descriptive:
+        return f"{el['seq']:02d}_{el['kind']}"
+    secs = el["start_ms"] // 1000
+    if el["kind"] == "hum":
+        tail = f"hum_{el.get('title', el.get('source'))}_{el.get('gain_db')}dB"
+    elif el["kind"] == "answer_phase":
+        tail = f"answer_{el.get('phase_tone', '')}"
+    elif el["kind"] == "progress":
+        tail = (el.get("source") or "progress").replace("progress:", "say_")
+    elif el["kind"] == "fused_hmm":
+        tail = f"open_{el.get('source', 'hmm')}"
+    else:
+        tail = el["kind"]
+    return _safe(f"{el['seq']:02d}_{secs}s_{tail}")
+
+
+def to_dag(plan: dict, descriptive: bool = False) -> dict:
     """Emit the arc as ask.dag.v1 so $phart-dag-chart renders it in the terminal.
 
     Each element is a node; the arc is a linear chain (each depends on the prior).
     Node type is skill.run (a valid ask.dag.v1 type); the real element is in input.
+    descriptive=True gives node ids that show timing + the actual line, so the
+    terminal chart is checkable against the real conversation.
     """
     nodes = []
     prev = None
     for el in plan["elements"]:
-        nid = f"{el['seq']:02d}_{el['kind']}"
+        nid = _label(el, descriptive)
         nodes.append({
             "id": nid, "type": "skill.run", "depends_on": [prev] if prev else [],
             "input": {"skill": "chatterbox-speak",
@@ -243,6 +273,7 @@ if __name__ == "__main__":
     ap.add_argument("--json", dest="json_out")
     ap.add_argument("--svg", dest="svg_out")
     ap.add_argument("--dag", dest="dag_out", help="emit ask.dag.v1 JSON for $phart-dag-chart terminal rendering")
+    ap.add_argument("--descriptive-dag", action="store_true", help="node labels show timing + actual line (checkable against the conversation)")
     a = ap.parse_args()
     if a.cmd == "self-check":
         self_check()
@@ -253,7 +284,7 @@ if __name__ == "__main__":
     if a.svg_out:
         Path(a.svg_out).write_text(to_svg(plan) + "\n")
     if a.dag_out:
-        Path(a.dag_out).write_text(json.dumps(to_dag(plan), indent=2) + "\n")
+        Path(a.dag_out).write_text(json.dumps(to_dag(plan, a.descriptive_dag), indent=2) + "\n")
     print(json.dumps({k: plan[k] for k in ("planned_total_ms", "covers_latency", "band", "answer_arc")}, indent=2))
     if a.svg_out:
         print("svg:", a.svg_out)

@@ -14,6 +14,13 @@
       "criticality": "critical",
       "claim_semantics": "control_flow",
       "evidence_required": {"deterministic": true}
+    },
+    {
+      "id": "chatterbox.arc.scenario_chartable",
+      "description": "each scenario's arc emits a descriptive ask.dag.v1 that $phart-dag-chart validates, so the arc is checkable graphically against the conversation",
+      "criticality": "critical",
+      "claim_semantics": "protocol",
+      "evidence_required": {"live_e2e": true}
     }
   ],
   "cases": [
@@ -43,6 +50,15 @@
       "supports_claims": ["chatterbox.arc.scenario_bank"],
       "command": ["python3", "../scripts/arc_scenarios.py", "self-check"],
       "expected": {"exit_code": 0, "stdout_contains": ["self-check PASS", "12 scenarios", "complex"]}
+    },
+    {
+      "name": "scenario-chart-is-phart-valid",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": ["chatterbox.arc.scenario_chartable"],
+      "command": ["bash", "-lc", "python3 ../scripts/arc_scenarios.py chart --id s09-grief-plus-hard >/dev/null 2>&1 && /home/graham/workspace/experiments/agent-skills/skills/phart-dag-chart/run.sh validate /mnt/storage12tb/skills/chatterbox-speak/outputs/arc-scenarios/s09-grief-plus-hard.dag.json"],
+      "expected": {"exit_code": 0, "stdout_contains": ["ok:"], "stdout_excludes": ["error", "Traceback"]}
     }
   ]
 }
