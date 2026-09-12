@@ -1,18 +1,65 @@
 {
-  "schema": "chatterbox_speak.emotion_peak_routing.v1",
-  "note": "At the HIGHEST intensity, do not just do 'more of the same' — route the peak by valence/safety. Grounded in persona_memory (Embry: Hawaii/ocean/Kai/hum ties, NOT a Hawaiian speaker; Horus Lupercal: Warmaster authority conf 0.91) and de-escalation research (CPI/Mandt: set limits, escalate when unsafe).",
-  "routes": [
-    {"peak": "positive_nostalgic_overwhelmed", "behavior": "embry_hawaiian_hum",
-     "detail": "Drift into a hummed PD Hawaiian tune (song-hum bank), her authentic comfort overflow. At most a single word like 'aloha'. NEVER fluent Hawaiian speech (not in memory).",
-     "avoid": "anger/tension/abusive contexts"},
-    {"peak": "tense_mildly_hostile", "behavior": "embry_self_deprecating_joke",
-     "detail": "Warm self-deprecating joke from the deflect-quip pool or joke_search (de-escalate). Gate: benign, relationship allows it, user not genuinely distressed.",
-     "avoid": "grief peaks; genuine distress"},
-    {"peak": "abusive_sustained_or_deescalation_failed", "behavior": "escalate_to_supervisor_horus",
-     "detail": "When abuse is sustained OR a de-escalation joke has already been tried and failed, Embry STOPS trying to defuse and hands off to supervisor Horus — like a human agent escalating to their manager. Switch render to the Horus reference voice, tone firm_boundary, deliver a firm authority boundary. This protects the Embry persona and signals the line was crossed.",
-     "horus_ref_audio_container": "/work/persona_dream_voice_refs/horus_v2_agent_ref_6s.wav",
-     "tone": "firm_boundary",
-     "avoid": "using Horus for ordinary firmness or first-time friction (over-escalation); reserve for sustained abuse"}
+  "schema": "chatterbox_speak.emotion_peak_routing.v2",
+  "note": "REVISED per WebGPT strategic review (2026-09-12, proof_status=response_proven; review at /mnt/storage12tb/skills/chatterbox-speak/outputs/webgpt-escalation-review.md). Core correction: safety/conduct determines the PERMITTED action; user NEED determines the response; valence/arousal/preference only shape DELIVERY. Peaks are not one mutually-exclusive emotion axis, and abuse is CONDUCT not an emotion. A failed joke changes STYLE, never enforcement state.",
+  "framework": {
+    "permitted_action": "gated by safety + conduct",
+    "response": "gated by user need",
+    "delivery": "shaped by valence/arousal/preference"
+  },
+  "delivery_routes": [
+    {"route": "positive_peak_hum", "gate": "clearly positive context + established receptivity + no urgent task/unanswered question + no distress",
+     "behavior": "brief (~1-2s), interruptible Hawaiian hum from the PD bank; character backstory, not cultural expertise; serve the user's moment, never imply the user must comfort Embry. Ambiguous nostalgia -> quiet acknowledgment instead.",
+     "never": "automatic climax; fluent Hawaiian speech"},
+    {"route": "tension_repair_then_optional_joke", "gate": "AFFIRMATIVE evidence humor is welcome (prior rapport, reciprocal humor, low-stakes, or invitation) — NOT merely 'no distress detected'",
+     "behavior": "acknowledge/repair first; at most ONE self-targeted joke (Embry's verbosity/misstep, never the user's vulnerability). On miss: 'That didn't help. Let me be direct.' then repair.",
+     "never": "jokes that undermine core competence; escalation from a failed joke"},
+    {"route": "quiet_support", "gate": "distress, grief, fear, confusion, OR uncertain valence (the DEFAULT fallback when the moment can't be confidently read)",
+     "behavior": "grounded acknowledgment, fewer words, space, practical help. Giving processing time beats filling silence.",
+     "never": "humor or humming as the fallback"}
   ],
-  "runtime_owner": "embry-voice-control (persona/voice switch); chatterbox-speak provides the render + reference-voice swap"
+  "conduct_ladder": {
+    "note": "Deterministic controller owns transitions; the model only proposes classifications. Count episodes AFTER a DELIVERED boundary (playback-completion event, not TTS synthesis). One episode may span many transcript revisions.",
+    "classes": {
+      "friction_not_abuse": {"examples": "'this is broken', 'you're wrong', 'stop joking', 'I want a manager', raised volume", "action": "acknowledge + repair; NO strike, NO Horus"},
+      "uncertain": {"examples": "ambiguous teasing, quoted abuse, partial transcript, unclear speaker", "action": "clarify or respond neutrally; no punitive transition"},
+      "clear_directed_abuse": {"action": "Stage1 Embry boundary -> (new episode) Stage2 final warning -> (new episode) Stage3 end session"},
+      "severe_targeted_harassment": {"action": "skip to final warning in Embry's voice; do NOT require a joke or more turns"},
+      "immediate_danger": {"action": "leave the conduct ladder; enter the separate human-safety workflow; no humor/hum/supervisor scene"}
+    },
+    "stages": {
+      "stage0": "repair/support (no warning merely because the user is still angry)",
+      "stage1": "Embry first boundary: 'I can help with the problem, but please leave out personal insults.'",
+      "stage2": "one final-boundary state with interchangeable approved voices (Embry DEFAULT; Horus only if disclosed-AI-voice conditions met)",
+      "stage3": "'The personal insults have continued, so I'm ending this voice session now.' then actually end"
+    }
+  },
+  "horus_policy": {
+    "status": "DISABLED for automatic moderation until controlled user testing shows benefit without intimidation/confusion (WebGPT ship decision). Embry warm-firmness ships now.",
+    "framing": "Horus is an OPTIONAL, explicitly-disclosed AI MODERATION VOICE, not a 'supervisor'. Never imply a human joined, that anyone independently reviewed, or that Horus can grant exceptions Embry cannot.",
+    "line": "I'm Horus, the AI moderation voice. We can continue without personal insults. Further insults will end this voice session.",
+    "requires": "user already knows Horus is AI; alternate moderation voice enabled; Embry already delivered a boundary; a subsequent confirmed abusive act; not interrupting an urgent human-safety response",
+    "delivery": "ordinary loudness/register, calm finality NOT increased force; no entrance sound, dramatic pause, or ominous pitch; one short intro + one boundary",
+    "voice_ref": "/work/persona_dream_voice_refs/horus_v2_agent_ref_6s.wav",
+    "failure_fallback": "same boundary in Embry's voice — never dead air, retries, or improvisation",
+    "gender_stereotype_guard": "Embry sets the first boundary and can deliver the final warning herself; both voices carry identical policy authority; never 'you don't talk to her that way' or portray Embry as needing rescue"
+  },
+  "exit_paths_after_final_boundary": {
+    "task_directed_response": "return to Embry immediately (one non-abusive response suffices even if still irritated)",
+    "apology": "brief acknowledgment, return to task; no forgiveness performance",
+    "go_back_to_embry": "honor preference; final-warning state persists",
+    "not_a_real_supervisor": "clarify once: 'Correct — I'm an AI moderation voice, not a human manager'; offer real human route only if one exists",
+    "policy_disagreement_no_abuse": "explain briefly / route complaint; NOT a strike",
+    "pause_request": "pause by agreement, retain context + warning state",
+    "silence": "processing time then normal accessible inactivity policy",
+    "renewed_abuse": "end the voice session; no handback-then-re-entrance",
+    "danger_signal": "switch to safety workflow",
+    "return_requires": "a workable interaction, NOT emotional submission/apology/agreement"
+  },
+  "false_certainty_guards": {
+    "asr": "require attributable, stable evidence of directed abuse; acoustic intensity may slow/suppress humor but must NOT independently discipline (ASR error disparities, Koenecke 2020)",
+    "distress_vs_abuse": "distress and abuse may coexist; distress changes style, never erases a clear boundary, and distress alone never triggers one",
+    "state": "keep boundary/warning state across voice changes + brief reconnects; no permanent 'abusive person' label without a separate disclosed policy; mistaken strikes reversible"
+  },
+  "regression_cases_required": ["failed jokes", "profanity about the product", "quoted abuse", "background speakers", "transcript revisions", "interrupted warnings", "voice-switch requests", "polite policy disputes", "severe harassment", "crisis disclosures", "renewed abuse after handback"],
+  "runtime_owner": "embry-voice-control (deterministic conduct controller + persona/voice switch); chatterbox-speak provides renders, the reference-voice swap, and pre-rendered approved boundary clips in both voices"
 }

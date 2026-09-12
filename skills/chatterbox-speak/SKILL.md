@@ -66,15 +66,21 @@ crying (v3 splice), sadness, surprised, angry (controlled/firm, not shouting).
 out ~7; HIGH intensity pivots to a warm self-deprecating JOKE. Sarcasm/joke gate
 to BENIGN `/deflect` only (OFF_TOPIC/NO_MATCH), never safety/confusion.
 
-**Highest-intensity peak routing** (`fixtures/emotion_peak_routing.json`): at the
-peak, route by valence/safety, not "more of the same": positive/nostalgic → Embry
-Hawaiian *hum* (comfort tell; she is not a Hawaiian speaker, so never fluent
-speech); tense/mildly-hostile → self-deprecating joke (de-escalate); ABUSIVE +
-sustained OR after a failed de-escalation joke → hand off to **supervisor Horus**
-(switch render to the Horus reference voice `/work/persona_dream_voice_refs/horus_v2_agent_ref_6s.wav`,
-tone firm_boundary, one firm authority boundary), like a human agent escalating
-to a manager. Reserve Horus for sustained abuse only (never first-time friction);
-runtime persona/voice switch is owned by embry-voice-control.
+**Highest-intensity peak routing** (`fixtures/emotion_peak_routing.json` v2,
+REVISED per WebGPT strategic review — `outputs/webgpt-escalation-review.md`):
+safety/conduct gates the permitted ACTION, user NEED gates the response, and
+valence/arousal/preference only shape DELIVERY. Delivery routes: positive peak →
+brief interruptible Hawaiian hum (preference-gated, never fluent speech, never a
+forced climax); tension → acknowledge/repair first, at most ONE self-targeted
+joke only with affirmative evidence humor is welcome; distress/grief/fear/confusion
+or uncertain → QUIET SUPPORT (the fallback — not humor/hum). ABUSE is a CONDUCT
+ladder, not an emotion peak: Stage0 repair → Stage1 Embry boundary → Stage2 final
+warning (Embry default) → Stage3 end session, counting episodes only AFTER a
+delivered boundary. A failed joke changes style, NEVER enforcement. **Horus is an
+optional, disclosed AI *moderation voice* (not a 'supervisor'), DISABLED for
+automatic moderation until user-tested**; he may voice a boundary but is never
+what makes Embry's 'no' valid. Deterministic controller owns transitions; runtime
+in embry-voice-control.
 
 **De-escalation joke search** (`scripts/joke_search.py`, `fixtures/joke_corpus.json`):
 for an ABUSIVE-flagged conversation, search a GENTLE on-topic safe joke to defuse
