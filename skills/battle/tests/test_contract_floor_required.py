@@ -57,7 +57,7 @@ def test_enrolled_contract_floor_runs_from_retained_approved_bundle(tmp_path: Pa
     result = run_production_round(_adapter(
         tmp_path,
         enrollment=enrollment,
-        acceptance_floor={"case_map": {"AC-001": ["case-str", "case-int"]}},
+        acceptance_floor={"case_map": {"AC-001": {"case_ids": ["case-str", "case-int"], "assertion": "client floor replay passes", "evidence_extractors": ["case_results.passed"]}}},
     ))
     assert result["status"] == "PASS", result.get("acceptance_floor")
     retained = result["retained_acceptance_bundle"]
@@ -72,7 +72,7 @@ def test_missing_enrollment_blocks_before_launch(tmp_path: Path):
     result = run_production_round(_adapter(
         tmp_path,
         enrollment=None,
-        acceptance_floor={"case_map": {"AC-001": ["case-str", "case-int"]}},
+        acceptance_floor={"case_map": {"AC-001": {"case_ids": ["case-str", "case-int"], "assertion": "client floor replay passes", "evidence_extractors": ["case_results.passed"]}}},
     ))
     assert result["status"] == "BLOCKED"
     assert result["failure_code"] == "project-contract-enrollment-invalid"
@@ -99,7 +99,7 @@ def test_modified_bundle_digest_blocks_before_launch(tmp_path: Path):
     result = run_production_round(_adapter(
         tmp_path,
         enrollment=enrollment,
-        acceptance_floor={"case_map": {"AC-001": ["case-str", "case-int"]}},
+        acceptance_floor={"case_map": {"AC-001": {"case_ids": ["case-str", "case-int"], "assertion": "client floor replay passes", "evidence_extractors": ["case_results.passed"]}}},
     ))
     assert result["status"] == "BLOCKED"
     assert result["failure_code"] == "project-contract-enrollment-invalid"
@@ -116,7 +116,7 @@ def test_substituted_bundle_path_in_campaign_request_is_ignored(tmp_path: Path):
         enrollment=enrollment,
         acceptance_floor={
             "bundle_path": str(substituted),
-            "case_map": {"AC-001": ["case-str", "case-int"]},
+            "case_map": {"AC-001": {"case_ids": ["case-str", "case-int"], "assertion": "client floor replay passes", "evidence_extractors": ["case_results.passed"]}},
         },
     ))
     assert result["status"] == "PASS", result.get("acceptance_floor")

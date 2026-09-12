@@ -2959,6 +2959,39 @@
       }
     },
     {
+      "name": "battle-b14-require-executed-requirement-evidence-before-beyond-contrac",
+      "category": "battle-b14-require-executed-requirement-evidence-before-beyond-contrac",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.anonymization.comprehensive_contract_and_beyond_contract_campaign"
+      ],
+      "seams": [
+        "acceptance_floor.production_adapter"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b14-require-executed-requirement-evidence-before-beyond-contrac --summary /tmp/battle-agentic-evals/battle-b14-require-executed-requirement-evidence-before-beyond-contrac.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b14-require-executed-requirement-evidence-before-beyond-contrac"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-b14-require-executed-requirement-evidence-before-beyond-contrac.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 500
+          }
+        ]
+      }
+    },
+    {
       "name": "docker-execution-boundary",
       "category": "docker-execution-boundary",
       "type": "adversarial",

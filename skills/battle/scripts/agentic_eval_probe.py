@@ -4720,6 +4720,12 @@ def main() -> int:
                 suite=args.suite,
                 tests=["test_contract_floor_required.py", "test_production_adapter.py"],
             )
+        if args.suite == "battle-b14-require-executed-requirement-evidence-before-beyond-contrac":
+            return probe_pytest_contracts(
+                args.summary,
+                suite=args.suite,
+                tests=["test_executed_acceptance_floor.py"],
+            )
         if args.suite == "battle-functional-judge":
             return probe_battle_functional_judge(args.summary)
         if args.suite == "battle-commentary-causality":

@@ -82,7 +82,7 @@ def test_acceptance_floor_returns_blocking_receipts_for_invalid_envelopes(tmp_pa
     result = validate_acceptance_floor(
         bundle_path=bundle,
         campaign_profile=profile,
-        case_map={"AC-001": ["case-str", "case-str"]},
+        case_map={"AC-001": {"case_ids": ["case-str", "case-str"], "assertion": "a", "evidence_extractors": ["e"]}},
     )
     assert result["status"] == "BLOCKED"
     assert "acceptance-case-map-invalid:AC-001" in result["problems"]
@@ -93,7 +93,7 @@ def test_acceptance_floor_returns_blocking_receipts_for_invalid_envelopes(tmp_pa
     result = validate_acceptance_floor(
         bundle_path=bundle,
         campaign_profile=profile,
-        case_map={"AC-001": ["case-str"]},
+        case_map={"AC-001": {"case_ids": ["case-str"], "assertion": "a", "evidence_extractors": ["e"]}},
     )
     assert result["status"] == "BLOCKED"
     assert "acceptance-case-duplicate:AC-001" in result["problems"]

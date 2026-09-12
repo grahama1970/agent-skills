@@ -21,6 +21,7 @@ from typing import Any
 from .acceptance_floor import (
     retain_approved_bundle,
     validate_acceptance_floor,
+    validate_executed_acceptance_floor,
     validate_project_contract_enrollment,
 )
 from .campaign_contract import run_contract_campaign, validate_request
@@ -177,8 +178,26 @@ def run_production_round(adapter_request: dict[str, Any]) -> dict[str, Any]:
                 "project_contract_enrollment": enrollment_receipt,
                 "problems": [str(exc)],
                 "target_launches": 0}
+    executed_floor_receipt = None
+    if floor_receipt is not None:
+        executed_floor_receipt = validate_executed_acceptance_floor(
+            floor_receipt=floor_receipt,
+            campaign_receipt=campaign,
+        )
+        if executed_floor_receipt["status"] != "PASS":
+            return {"schema": "battle.production_adapter_round.v1",
+                    "status": "BLOCKED",
+                    "failure_code": "executed-acceptance-floor-incomplete",
+                    "authorization_receipt": receipt,
+                    "docker_boundary": docker_receipt,
+                    "project_contract_enrollment": enrollment_receipt,
+                    "retained_acceptance_bundle": retained_bundle,
+                    "acceptance_floor": floor_receipt,
+                    "executed_acceptance_floor": executed_floor_receipt,
+                    "target_launches": campaign["aggregation"].get("observed_target_launch_count", campaign["aggregation"]["cases_total"]),
+                    "campaign": campaign}
     phase_plan = None
-    if floor_receipt is not None and campaign["verdict"] == "PASS":
+    if executed_floor_receipt is not None and campaign["verdict"] == "PASS":
         from .contract_variation_plan import build_plan
 
         phase_options = adapter_request.get("post_acceptance_research") or {}
@@ -202,6 +221,7 @@ def run_production_round(adapter_request: dict[str, Any]) -> dict[str, Any]:
             "project_contract_enrollment": enrollment_receipt,
             "retained_acceptance_bundle": retained_bundle,
             "acceptance_floor": floor_receipt,
+            "executed_acceptance_floor": executed_floor_receipt,
             "post_acceptance_phase_plan": phase_plan,
             "target_launches": campaign["aggregation"].get("observed_target_launch_count", campaign["aggregation"]["cases_total"]),
             "campaign": campaign,

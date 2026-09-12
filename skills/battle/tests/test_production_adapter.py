@@ -114,12 +114,13 @@ def test_acceptance_contract_floor_is_required_before_launch(tmp_path: Path):
                )),
                "base_request": base,
                "acceptance_floor": {
-                   "case_map": {"AC-001": ["case-str", "case-int"]},
+                   "case_map": {"AC-001": {"case_ids": ["case-str", "case-int"], "assertion": "client floor replay passes", "evidence_extractors": ["case_results.passed"]}},
                }}
     result = run_production_round(adapter)
     assert result["status"] == "PASS", result.get("acceptance_floor")
     assert result["acceptance_floor"]["status"] == "PASS"
-    assert result["acceptance_floor"]["case_map"] == {"AC-001": ["case-str", "case-int"]}
+    assert result["acceptance_floor"]["case_map"]["AC-001"]["case_ids"] == ["case-str", "case-int"]
+    assert result["executed_acceptance_floor"]["status"] == "PASS"
     assert result["target_launches"] == 2
     phase_plan = result["post_acceptance_phase_plan"]
     assert phase_plan["phase_order"] == ["acceptance-floor", "research-expansion", "adaptive-lineage"]
@@ -163,7 +164,7 @@ def test_acceptance_contract_floor_blocks_cases_not_in_required_profile(tmp_path
                )),
                "base_request": base,
                "acceptance_floor": {
-                   "case_map": {"AC-001": ["case-str", "bonus-fuzz"]},
+                   "case_map": {"AC-001": {"case_ids": ["case-str", "bonus-fuzz"], "assertion": "client floor replay passes", "evidence_extractors": ["case_results.passed"]}},
                }}
     result = run_production_round(adapter)
     assert result["status"] == "BLOCKED"
@@ -184,7 +185,7 @@ def test_acceptance_contract_floor_blocks_open_questions_before_launch(tmp_path:
                )),
                "base_request": base,
                "acceptance_floor": {
-                   "case_map": {"AC-001": ["case-str", "case-int"]},
+                   "case_map": {"AC-001": {"case_ids": ["case-str", "case-int"], "assertion": "client floor replay passes", "evidence_extractors": ["case_results.passed"]}},
                }}
     result = run_production_round(adapter)
     assert result["status"] == "BLOCKED"

@@ -142,7 +142,7 @@ def validate_acceptance_floor(
     *,
     bundle_path: str | Path,
     campaign_profile: dict[str, Any],
-    case_map: dict[str, list[str]] | None,
+    case_map: dict[str, Any] | None,
     approved_bundle_sha256: str | None = None,
 ) -> dict[str, Any]:
     """Return a fail-closed receipt proving the contract floor is in the arena."""
@@ -234,13 +234,29 @@ def validate_acceptance_floor(
         if not mapped:
             problems.append(f"acceptance-case-unmapped:{ac_id}")
             continue
-        if not isinstance(mapped, list) or not mapped or not all(isinstance(item, str) and item.strip() for item in mapped) or len(set(mapped)) != len(mapped):
+        if not isinstance(mapped, dict):
             problems.append(f"acceptance-case-map-invalid:{ac_id}")
             continue
-        missing = [case_id for case_id in mapped if case_id not in required_case_ids]
+        mapped_extra = sorted(set(mapped) - {"case_ids", "assertion", "evidence_extractors"})
+        if mapped_extra:
+            problems.append(f"acceptance-case-map-extra-fields:{ac_id}:{','.join(mapped_extra)}")
+        case_ids = mapped.get("case_ids")
+        assertion = mapped.get("assertion")
+        extractors = mapped.get("evidence_extractors")
+        if (not isinstance(case_ids, list) or not case_ids
+                or not all(isinstance(item, str) and item.strip() for item in case_ids)
+                or len(set(case_ids)) != len(case_ids)):
+            problems.append(f"acceptance-case-map-invalid:{ac_id}")
+            continue
+        if not isinstance(assertion, str) or not assertion.strip():
+            problems.append(f"acceptance-case-assertion-missing:{ac_id}")
+        if (not isinstance(extractors, list) or not extractors
+                or not all(isinstance(item, str) and item.strip() for item in extractors)):
+            problems.append(f"acceptance-case-evidence-extractors-missing:{ac_id}")
+        missing = [case_id for case_id in case_ids if case_id not in required_case_ids]
         if missing:
             problems.append(f"acceptance-case-not-required:{ac_id}:{','.join(missing)}")
-        covered[ac_id] = list(mapped)
+        covered[ac_id] = {"case_ids": list(case_ids), "assertion": assertion, "evidence_extractors": list(extractors or [])}
 
     return {
         "schema": FLOOR_SCHEMA,
@@ -253,5 +269,57 @@ def validate_acceptance_floor(
         "covered_acceptance_cases": len(covered),
         "required_campaign_cases": sorted(required_case_ids),
         "case_map": covered,
+        "problems": problems,
+    }
+
+
+def validate_executed_acceptance_floor(
+    *,
+    floor_receipt: dict[str, Any],
+    campaign_receipt: dict[str, Any],
+) -> dict[str, Any]:
+    """Require retained passing predicate evidence for every acceptance mapping."""
+    problems: list[str] = []
+    case_results = {item.get("case"): item for item in campaign_receipt.get("case_results") or [] if isinstance(item, dict)}
+    evidence: dict[str, Any] = {}
+    for ac_id, mapping in (floor_receipt.get("case_map") or {}).items():
+        assertions = []
+        for case_id in mapping.get("case_ids", []):
+            result = case_results.get(case_id)
+            if not result:
+                problems.append(f"acceptance-case-not-executed:{ac_id}:{case_id}")
+                continue
+            if result.get("passed") is not True:
+                problems.append(f"acceptance-case-not-passing:{ac_id}:{case_id}")
+                continue
+            assertions.append({
+                "case_id": case_id,
+                "assertion": mapping.get("assertion"),
+                "evidence_extractors": mapping.get("evidence_extractors") or [],
+                "execution": result.get("execution"),
+                "functional": result.get("functional"),
+                "violations": result.get("violations", []),
+            })
+        evidence[ac_id] = assertions
+        if len(assertions) != len(mapping.get("case_ids", [])):
+            problems.append(f"acceptance-case-evidence-incomplete:{ac_id}")
+    plan = campaign_receipt.get("plan") or {}
+    binding = {
+        "target_run_cmd_sha256": "sha256:" + hashlib.sha256(str((campaign_receipt.get("request") or {}).get("target_run_cmd", "")).encode()).hexdigest(),
+        "bundle_sha256": floor_receipt.get("bundle_sha256"),
+        "profile_sha256": plan.get("profile_sha256"),
+        "lock_sha256": plan.get("lock_sha256"),
+        "evaluator_lock_receipt_sha256": "sha256:" + hashlib.sha256(repr((campaign_receipt.get("request") or {}).get("evaluator_lock_receipt")).encode()).hexdigest(),
+        "floor_receipt_sha256": "sha256:" + hashlib.sha256(repr(floor_receipt).encode()).hexdigest(),
+    }
+    if floor_receipt.get("status") != "PASS":
+        problems.append("acceptance-floor-not-passing")
+    if campaign_receipt.get("verdict") != "PASS":
+        problems.append("campaign-not-passing")
+    return {
+        "schema": "battle.executed_acceptance_floor_receipt.v1",
+        "status": "PASS" if not problems else "BLOCKED",
+        "binding": binding,
+        "acceptance_evidence": evidence,
         "problems": problems,
     }
