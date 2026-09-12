@@ -77,6 +77,30 @@ confidentiality invariant as a Judge: it independently scans released output
 (JSON scalars incl decoded escapes, numeric expansion, SQLite cells + schema
 DDL + header integers, text/CSV) for any policy value in any representation.
 
+
+## Invariant campaigns (test all versions in the spec, and more)
+
+An invariant *battle* judges one output. An invariant *campaign* has Red generate
+the whole MATRIX of input "versions" the target's spec names -- every format x
+every representation x the documented edge cases -- PLUS random fuzz, runs the
+real target on each, and the Judge scores every output. A campaign PASSES only if
+every version's Judge passed; one failing version is a concrete, reproducible
+Red win.
+
+```bash
+python3 -m battle_skill.invariant_campaign \
+  --generator fixtures/reference-generators/anon_brief_matrix.py \
+  --target-run-cmd 'docker run --rm -v {input}/corpus:/trial/input/corpus:ro -v {input}/policy.json:/trial/input/policy.json:ro -v {output}:/trial/output anonymization-trial run' \
+  --judge fixtures/reference-judges/no_data_leak_judge.py \
+  --gen-params '{"fuzz": 20}' --judge-params '{"output_subdir": "corpus"}'
+```
+
+`fixtures/reference-generators/anon_brief_matrix.py` yields the anonymization
+brief's versions: the four formats, JSON string/int/float/scientific, SQLite
+TEXT/INTEGER/REAL, Unicode NFC/NFD, BOM, JSON \u-escape, SQLite CHECK-literal,
+plus fuzz. A generator + target-run-cmd + judge is a pluggable trio: point it at
+any project's spec matrix and invariant.
+
 ## Purpose Boundary
 
 Battle's purpose is the Red/Blue security competition backend: authorized target
