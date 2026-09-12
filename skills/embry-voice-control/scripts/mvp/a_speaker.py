@@ -12,10 +12,28 @@ is never missed.
 stdlib only; renders through chatterbox-speak run.sh (Chatterbox Turbo).
 """
 from __future__ import annotations
-import json, re, subprocess, sys, time
+import json, os, re, subprocess, sys, time
 from pathlib import Path
 
 CBSPEAK = Path.home() / "workspace/experiments/agent-skills/skills/chatterbox-speak/run.sh"
+PLAY = os.environ.get("MVP_PLAY") == "1"
+LOCK = "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/playback.lock"
+
+
+def mon(who: str, msg: str) -> None:
+    """Live text monitor line, printed as the exchange happens."""
+    print(f"  {time.strftime('%H:%M:%S')} {who:>2} | {msg}", flush=True)
+
+
+def play(wav: str | None) -> None:
+    if PLAY and wav and Path(wav).exists():
+        with open(LOCK, "w") as lk:
+            try:
+                import fcntl
+                fcntl.flock(lk, fcntl.LOCK_EX)
+            except Exception:
+                pass
+            subprocess.run(["pw-play", wav], check=False)
 
 
 def speak(text: str, tone: str) -> str | None:
@@ -55,6 +73,8 @@ def main() -> int:
                 return
             consumed.append({"seq": ev.get("seq"), "stage": ev.get("stage"),
                              "offset": pos, "recv_ts": time.time()})
+            eta = f" eta={ev['eta_ms']}ms" if ev.get("eta_ms") else ""
+            mon("B>", f"{ev.get('stage')}{eta}")
             if ev.get("answer_text"):
                 answer_text = ev["answer_text"]
             if ev.get("done") or ev.get("stage") == "answer_ready":
@@ -72,9 +92,12 @@ def main() -> int:
         # cover: as soon as we see any B activity, speak one opener (once)
         if consumed and not opened:
             opened = True
-            wav = speak("Hmm, let me pull that up for you.", "neutral_warm")
+            cover = "Hmm, let me pull that up for you."
+            mon("A>", f"[cover] {cover}")
+            wav = speak(cover, "neutral_warm")
             spoke_cover_ts = time.time()
             consumed.append({"cover_wav": wav, "spoke_ts": spoke_cover_ts})
+            play(wav)
         time.sleep(0.2)
 
     # final full-file read on timeout so a fast answer is never missed
@@ -85,7 +108,10 @@ def main() -> int:
 
     # never speak an error payload aloud; the loop still records the failure
     speakable = bool(answer_text) and not str(answer_text).startswith("solver error:")
+    if speakable:
+        mon("A>", f"[answer] {answer_text[:70]}...")
     answer_wav = speak(answer_text, "memory_confident") if speakable else None
+    play(answer_wav)
     answer_done_ts = time.time()
     receipt = {
         "schema": "embry_voice_control.mvp_a_receipt.v1",
