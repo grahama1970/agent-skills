@@ -154,7 +154,7 @@
         "text": "Slow hushed humming of a still moonlit piano melody, tender and pensive, clear present modern close-microphone recording, non-melodic, no words",
         "duration_s": 20
       },
-      "hum_render_status": "pending_render"
+      "hum_render_status": "rendered"
     },
     {
       "id": "chopin-nocturne-9-2",
@@ -176,7 +176,7 @@
         "text": "Gentle flowing humming of a tender nocturne, soft and dreamy at night, clear present modern close-microphone recording, non-melodic, no words",
         "duration_s": 20
       },
-      "hum_render_status": "pending_render"
+      "hum_render_status": "rendered"
     },
     {
       "id": "mahler-adagietto",
@@ -198,7 +198,7 @@
         "text": "Slow aching humming of a string adagietto, deep tender longing, unhurried, clear present modern close-microphone recording, non-melodic, no words",
         "duration_s": 20
       },
-      "hum_render_status": "pending_render"
+      "hum_render_status": "rendered"
     },
     {
       "id": "mahler-abhanden",
@@ -220,7 +220,7 @@
         "text": "Very slow withdrawn humming of a quiet song of leaving the world behind, serene sorrow, clear present modern close-microphone recording, non-melodic, no words",
         "duration_s": 20
       },
-      "hum_render_status": "pending_render"
+      "hum_render_status": "rendered"
     },
     {
       "id": "clair-de-lune",
@@ -243,7 +243,7 @@
         "text": "Soft rippling humming of a moonlit reflective melody, calm and floating, clear present modern close-microphone recording, non-melodic, no words",
         "duration_s": 20
       },
-      "hum_render_status": "pending_render"
+      "hum_render_status": "rendered"
     },
     {
       "id": "gymnopedie-1",
@@ -265,7 +265,7 @@
         "text": "Slow spare contemplative humming of a gentle piano melody, calm and unhurried, clear present modern close-microphone recording, non-melodic, no words",
         "duration_s": 20
       },
-      "hum_render_status": "pending_render"
+      "hum_render_status": "rendered"
     },
     {
       "id": "ode-to-joy",
@@ -287,7 +287,7 @@
         "text": "Warm gentle humming of a hopeful uplifting melody, contented, clear present modern close-microphone recording, non-melodic, no words",
         "duration_s": 20
       },
-      "hum_render_status": "pending_render"
+      "hum_render_status": "rendered"
     },
     {
       "id": "st-louis-blues",
@@ -309,7 +309,7 @@
         "text": "Slow bluesy humming of a soulful melancholy blues melody, warm and aching, clear present modern close-microphone recording, non-melodic, no words",
         "duration_s": 20
       },
-      "hum_render_status": "pending_render",
+      "hum_render_status": "rendered",
       "pd_verified": "brave-search 2026-09-12"
     },
     {
@@ -332,7 +332,7 @@
         "text": "Wistful slow humming of a bittersweet parting-song melody, tender regret, clear present modern close-microphone recording, non-melodic, no words",
         "duration_s": 20
       },
-      "hum_render_status": "pending_render",
+      "hum_render_status": "rendered",
       "pd_verified": "brave-search 2026-09-12"
     },
     {
@@ -355,7 +355,7 @@
         "text": "Easy warm humming of a slow strolling blues melody, homey and mellow, clear present modern close-microphone recording, non-melodic, no words",
         "duration_s": 20
       },
-      "hum_render_status": "pending_render",
+      "hum_render_status": "rendered",
       "pd_verified": "brave-search 2026-09-12"
     }
   ],
