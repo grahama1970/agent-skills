@@ -53,10 +53,11 @@ def compose_spoken_answer(question: str, raw: str) -> tuple[str, bool]:
     # Preserve the SUBJECT the user asked about (question control IDs) + core
     # meaning; a spoken summary may drop supporting cross-refs (e.g. a CWE id).
     must = key_terms(question) & key_terms(raw)
-    prompt = ("Rewrite the ANSWER as a natural spoken reply for a voice assistant: "
-              "a direct answer plus at most one essential caveat, 2-3 short sentences, "
-              "conversational, no lists, no preamble. Keep the primary control ID and the "
-              "core meaning; do not flip any negation or change numbers.\n\n"
+    prompt = ("Rewrite the ANSWER as a natural spoken reply addressed to a person, in at "
+              "most 3 short sentences: (1) directly answer the question, (2) one sentence "
+              "on why, (3) at most one caveat. Do NOT add any fact, cause, or claim that "
+              "is not already in the ANSWER — compress, do not elaborate. Keep the primary "
+              "control ID; you may drop cross-references. No lists, no preamble.\n\n"
               f"QUESTION: {question}\nANSWER: {raw}\n\nSpoken reply:")
     body = json.dumps({"model": "zai-glm-flash",
                        "messages": [{"role": "user", "content": prompt}],
@@ -73,8 +74,12 @@ def compose_spoken_answer(question: str, raw: str) -> tuple[str, bool]:
         return raw, False
     out = re.sub(r'^\s*Spoken reply:\s*', '', out)  # strip echoed label
     dropped = must - key_terms(out)
-    if not out or dropped:
-        print(f"[compose] guard fallback; dropped={sorted(dropped)}", file=sys.stderr)
+    # no-fabrication guard (WebGPT r2): the rewrite must not INVENT control IDs /
+    # numbers / acronyms absent from the raw answer or question (semantic overreach).
+    fabricated = key_terms(out) - key_terms(raw) - key_terms(question)
+    if not out or dropped or fabricated:
+        print(f"[compose] fallback; dropped={sorted(dropped)} fabricated={sorted(fabricated)}",
+              file=sys.stderr)
         return raw, False
     return out, True
 LOCK = "/mnt/storage12tb/skills/chatterbox-speak/outputs/contextual/playback.lock"
