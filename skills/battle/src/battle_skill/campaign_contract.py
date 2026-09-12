@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 import time
 from pathlib import Path
 from typing import Any
@@ -70,7 +71,8 @@ def resolve_plan(request: dict[str, Any]) -> dict[str, Any]:
     effective expectations WITHOUT executing any target.
     """
     work = Path(request["work_root"])
-    gen_root = work / "gen"
+    gen_root = work / "plan-gen"
+    shutil.rmtree(gen_root, ignore_errors=True)
     gen_root.mkdir(parents=True, exist_ok=True)
     import importlib.util
     gen_path = Path(request["generator"]).resolve()
@@ -112,6 +114,7 @@ def run_contract_campaign(request: dict[str, Any]) -> dict[str, Any]:
     validate_request(request)
     work = Path(request["work_root"])
     plan = resolve_plan(request)
+    shutil.rmtree(work / "gen", ignore_errors=True)
     profile = load_profile(request["profile_path"])
     result = run_campaign(
         request["generator"], request["target_run_cmd"], request["judge"],
