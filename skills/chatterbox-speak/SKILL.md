@@ -156,7 +156,10 @@ generates Embry's cover in real time — a natural thinking opener, a restate in
 simple steps for multi-part turns, progress narration, hum calls on long waits,
 and barge-in — while reading Agent B's JSON event stream (`solver_event.v1`:
 `{stage, eta_ms, answer_text?, steps?, done}`). Its system prompt/contract is
-`fixtures/fast_agent_prompt.md`. The deterministic `conversation_arc.py` is NOT
+`fixtures/fast_agent_prompt.md`. The `conversation_arc.v1` map is the SHARED
+blackboard for the turn: A maps/updates it (plan, emotional frame, barge point),
+B reads it (cover budget, barge-on-answer_ready) and streams `solver_event.v1`
+back into it — A's plan out, B's progress in. The deterministic `conversation_arc.py` is NOT
 the generator: it is the model's **constraint palette** (verified hums, singular
 Turbo tags, pause macros, emotion->arc) and the **instant fallback** —
 `next_element(state)` speaks a pooled line so there is no dead air when the model

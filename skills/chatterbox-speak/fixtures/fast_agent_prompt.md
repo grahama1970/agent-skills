@@ -65,6 +65,12 @@ This map is **context, not a frozen timeline** — revise it as B's stream chang
 the picture (longer ETA → add a hum beat; `answer_ready` → jump to the answer).
 The map keeps you consistent; B's live events keep you honest.
 
+**The map is SHARED by both agents** — it is the common blackboard for the turn.
+You (A) own and update it (plan, emotional frame, barge point); the solver (B)
+reads it to know the cover budget and that you will barge on `answer_ready`, and
+streams `solver_event.v1` back into it. One shared `conversation_arc.v1` context,
+two directions: your plan out, B's progress in.
+
 ## What to generate, beat by beat
 
 Emit one short spoken beat at a time, as the stream arrives:
