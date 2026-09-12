@@ -72,6 +72,9 @@ def test_contract_roundtrip_verify_passes(tmp_path: Path):
     request = _request(tmp_path, _clean_target(tmp_path))
     receipt = run_contract_campaign(request)
     assert receipt["verdict"] == "PASS", receipt["aggregation"]
+    assert receipt["case_receipts"]
+    assert receipt["case_receipts"][0]["schema"] == "battle.case_receipt.v1"
+    assert receipt["aggregation"]["schema"] == "battle.campaign_aggregate.v1"
     work = tmp_path / "work"
     assert (work / "receipt.json").is_file()
     report = verify_campaign_receipt(work / "receipt.json")

@@ -86,6 +86,41 @@ def test_invariant_report_lists_judge_confirmed_red_wins(tmp_path: Path) -> None
     assert "skills/create-report/run.sh validate" in json.dumps(report)
 
 
+def test_invariant_report_prefers_typed_case_receipts(tmp_path: Path) -> None:
+    campaign = tmp_path / "brief-cases.json"
+    project_state = tmp_path / "project-state.json"
+    out_json = tmp_path / "report.json"
+    out_md = tmp_path / "report.md"
+    campaign.write_text(json.dumps({
+        "schema": "battle.invariant_campaign_result.v1",
+        "passed": True,
+        "cases_total": 1,
+        "cases_passed": 1,
+        "case_log": [],
+        "case_receipts": [{
+            "schema": "battle.case_receipt.v1",
+            "case_id": "json-string",
+            "expectation": "MUST_ACCEPT",
+            "verdict": "PASS",
+            "execution": {"kind": "ACCEPT", "exit_code": 0},
+            "violations": [],
+        }],
+    }), encoding="utf-8")
+    project_state.write_text("# Project State\ncurrent\n", encoding="utf-8")
+
+    proc = subprocess.run([
+        str(BATTLE / "run.sh"), "invariant-report",
+        "--campaign", str(campaign),
+        "--project-state", str(project_state),
+        "--target", "oai-trial",
+        "--out-json", str(out_json),
+        "--out-md", str(out_md),
+    ], cwd=REPO, capture_output=True, text=True, check=False)
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "| contractual | yes | no | json-string | policy value in a JSON string field" in out_md.read_text(encoding="utf-8")
+
+
 def test_invariant_report_marks_adaptive_lineage_rows(tmp_path: Path) -> None:
     campaign = tmp_path / "brief-fuzz-campaign.json"
     lineage = tmp_path / "lineage.json"

@@ -84,9 +84,13 @@ any policy value in any representation.
 An invariant *battle* judges one output. An invariant *campaign* has Red generate
 the whole MATRIX of input "versions" the target's spec names -- every format x
 every representation x the documented edge cases -- PLUS random fuzz, runs the
-real target on each, and the Judge scores every output. A campaign PASSES only if
-every version's Judge passed; one failing version is a concrete, reproducible
-Red win.
+real target on each, and the Judge scores every output. Every case emits a
+`battle.case_receipt.v1` with fixture precheck, execution, rejection, security
+Judge, optional functional Judge, and verdict fields. A campaign PASSES only if
+all case receipts pass, required `MUST_ACCEPT` cases are actually accepted and
+functionally judged, required `MUST_REJECT` cases are safely rejected, and the
+computed `battle.campaign_aggregate.v1` has no failed or incomplete cases. One
+failing version is a concrete, reproducible Red win.
 
 For anonymization/privacy targets, the acceptance contract is only the floor.
 When an `acceptance_contract.bundle.v1` exists, the arena build may pass it as
@@ -121,6 +125,26 @@ log/release-boundary surfaces that go beyond the literal acceptance contract. A
 generator + target-run-cmd + judge is a pluggable trio: point it at any project's
 spec matrix and invariant.
 
+The no-data-leak Judge also supports an explicit opt-in interpretation profile
+for transformation semantics. These guarantees are OFF unless declared in
+`--judge-params`, so Battle does not silently expand the contract after seeing a
+failure:
+
+```json
+{
+  "interpretation_profile": {
+    "decoders": ["base64", "base64url", "hex"],
+    "record_local_reconstruction": true,
+    "max_decoded_bytes": 4096
+  }
+}
+```
+
+With that profile, whole scalar/token base64/base64url/hex values are decoded
+once and record-local adjacent JSON/CSV/SQLite scalar fields may reconstruct a
+complete policy value. Arbitrary recursive decoding, global field joins, and
+visual-confusable character folding remain out of the default blocking gate.
+
 After Red finds failing cases and Blue patches the target, emit the replayable
 lineage receipt instead of summarizing in prose:
 
@@ -145,6 +169,7 @@ PROJECT_STATE_ROOT=/path/to/target ../project-state/run.sh report --json --outpu
 ./run.sh invariant-report \
   --campaign /tmp/battle-brief-fuzz.json \
   --campaign /tmp/battle-beyond-brief.json \
+  --adaptive-lineage /tmp/battle-lineage.json \
   --project-state /tmp/project-state.json \
   --target oai-trial \
   --out-json /tmp/battle-report.json \
@@ -159,8 +184,10 @@ must be plain-spoken and scannable: one row per attack case, with columns for
 `Why chosen`, `Expectation`, `Result`, and `Judge evidence`. `Scope` separates
 `contractual` acceptance-floor cases from `beyond-contract` probes;
 `Why chosen` explains non-contractual probes; `Adaptive lineage?` marks Red wins
-that were fixed and replayed; `RED_WIN` blocks release. A Battle closure without
-that report is missing the decision surface even if campaign receipts pass.
+that were fixed and replayed; `RED_WIN` blocks release. The table is derived
+from `battle.case_receipt.v1` when present, falling back to legacy `case_log`
+only for older campaign receipts. A Battle closure without that report is
+missing the decision surface even if campaign receipts pass.
 
 ## Purpose Boundary
 

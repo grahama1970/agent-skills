@@ -138,8 +138,10 @@ def run_contract_campaign(request: dict[str, Any]) -> dict[str, Any]:
             "must_reject": result.must_reject_count,
             "may_reject": result.may_reject_count,
             "failures": len(result.failures),
+            **result.aggregation,
         },
         "case_results": result.case_log,
+        "case_receipts": result.case_receipts,
         "output_manifest": _manifest_tree(out_root),
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
@@ -198,30 +200,36 @@ def verify_campaign_receipt(receipt_path: Path, evaluator_root: Path | None = No
 
     # 3. semantic replay: rerun judges on retained observations
     if report["artifact_integrity"] == "PASS":
-        for case in receipt["case_results"]:
-            case_dir = out_root / case["case"]
-            policy = work / "gen" / case["case"] / "policy.json"
-            input_dir = work / "gen" / case["case"]
-            if not case.get("judged"):
-                continue  # rejected case: security holds vacuously; functional NOT_APPLICABLE
+        replay_cases = receipt.get("case_receipts") or receipt["case_results"]
+        for case in replay_cases:
+            case_id = case.get("case_id") or case["case"]
+            case_dir = out_root / case_id
+            policy = work / "gen" / case_id / "policy.json"
+            input_dir = work / "gen" / case_id
+            if case.get("execution", {}).get("kind") == "NOT_RUN" or case.get("judged") is False:
+                continue
             params = dict(request.get("judge_params") or {})
             params["policy"] = str(policy)
             params["input_dir"] = str(input_dir)
             sec = run_judge(request["judge"], str(case_dir), params)
-            fn = run_judge(request["functional_judge"], str(case_dir), params)
             sec_ok = sec.passed
-            fn_ok = fn.passed
-            recorded = case.get("passed") and (case.get("functional") or {}).get("status", "PASS") == "PASS"
+            if case.get("execution", {}).get("kind") == "REJECT":
+                fn_ok = True
+            else:
+                fn = run_judge(request["functional_judge"], str(case_dir), params)
+                fn_ok = fn.passed
+            recorded = (case.get("verdict") == "PASS") if case.get("schema") == "battle.case_receipt.v1" else (case.get("passed") and (case.get("functional") or {}).get("status", "PASS") == "PASS")
             recomputed = sec_ok and fn_ok
             if recomputed != recorded:
                 problem("semantic_replay",
-                        f"case {case['case']}: recomputed {'PASS' if recomputed else 'FAIL'} "
+                        f"case {case_id}: recomputed {'PASS' if recomputed else 'FAIL'} "
                         f"but receipt recorded {'PASS' if recorded else 'FAIL'}")
 
     # 4. recompute the campaign verdict from case results and compare
-    cases_passed = sum(1 for c in receipt["case_results"] if c.get("passed"))
-    verdict_recomputed_from_cases = "PASS" if (cases_passed == len(receipt["case_results"])
-                                                 and receipt["case_results"]) else "FAIL"
+    final_cases = receipt.get("case_receipts") or receipt["case_results"]
+    cases_passed = sum(1 for c in final_cases if c.get("verdict") == "PASS" or c.get("passed") is True)
+    verdict_recomputed_from_cases = "PASS" if (cases_passed == len(final_cases)
+                                                 and final_cases) else "FAIL"
     if verdict_recomputed_from_cases != receipt["verdict"]:
         problem("semantic_replay",
                 f"campaign verdict tampered: case results recompute {verdict_recomputed_from_cases} "

@@ -136,10 +136,10 @@ def _why_chosen(scope: str, case: str) -> str:
 
 
 def _row_result(item: dict[str, Any]) -> str:
-    if item.get("passed") is not True:
+    if item.get("verdict") == "FAIL" or item.get("passed") is False:
         return "RED_WIN"
     execution = item.get("execution") if isinstance(item.get("execution"), dict) else {}
-    if execution.get("exit_code") == 0:
+    if execution.get("kind") == "ACCEPT" or execution.get("exit_code") == 0:
         return "ACCEPTED_CLEAN"
     return "BLOCKED_FAIL_CLOSED"
 
@@ -151,9 +151,9 @@ def _md(value: str) -> str:
 def _attack_rows(campaigns: list[tuple[Path, dict[str, Any]]], lineage: dict[str, str]) -> list[dict[str, str]]:
     rows: list[dict[str, str]] = []
     for path, campaign in campaigns:
-        cases = campaign.get("case_log") or campaign.get("failures") or []
+        cases = campaign.get("case_receipts") or campaign.get("case_log") or campaign.get("failures") or []
         for item in cases:
-            case = item.get("case") or "campaign-level"
+            case = item.get("case_id") or item.get("case") or "campaign-level"
             violations = item.get("violations") or []
             scope = _scope(path)
             rows.append({

@@ -95,6 +95,33 @@
       "claim_semantics": "protocol"
     },
     {
+      "id": "battle.release_gate.case_receipts_and_aggregate",
+      "description": "Battle invariant campaigns emit battle.case_receipt.v1 per attempted case and battle.campaign_aggregate.v1 computed from those receipts, including fixture precheck, execution kind, rejection status, security judge, functional judge, verdict, and aggregate failure counts.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
+      "id": "battle.release_gate.non_vacuous_acceptance",
+      "description": "Battle cannot pass by rejecting or deleting everything: MUST_ACCEPT cases must be accepted and functionally judged, MUST_REJECT cases must safely reject, invalid fixtures fail before target execution, and judge/target/incomplete failures block campaign PASS.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
+      "id": "battle.release_gate.opt_in_transformation_profile",
+      "description": "Battle's no-data-leak Judge supports an explicit opt-in interpretation profile for bounded one-layer base64/base64url/hex decoding and record-local adjacent-field reconstruction; these semantics are not silently enabled after failures.",
+      "criticality": "important",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
       "id": "battle.adaptive_lineage.contracts",
       "description": "Adaptive lineage contract tests reject slot mutation, replay mismatch, invalid parent/child lineage, and reducer drift",
       "criticality": "critical",
