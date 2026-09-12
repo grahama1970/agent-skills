@@ -133,7 +133,233 @@
         "duration_s": 6
       },
       "render_note": "de-vintaged prompt (no era cue; modern clean render)"
+    },
+    {
+      "id": "moonlight-sonata",
+      "title": "Moonlight Sonata (1st mvt)",
+      "year": 1801,
+      "composer": "Beethoven",
+      "song_category": "classical",
+      "genre": "classical",
+      "tempo_bpm": null,
+      "mood": [
+        "night",
+        "reflection"
+      ],
+      "pd_basis": "composed 1801; composer/work pre-1930, US public domain",
+      "evokes": "Embry anchor: night, reflection",
+      "persona_anchor": "night, reflection",
+      "gen": {
+        "engine": "eleven_sfx",
+        "text": "Slow hushed humming of a still moonlit piano melody, tender and pensive, clear present modern close-microphone recording, non-melodic, no words",
+        "duration_s": 20
+      },
+      "hum_render_status": "pending_render"
+    },
+    {
+      "id": "chopin-nocturne-9-2",
+      "title": "Nocturne Op. 9 No. 2",
+      "year": 1832,
+      "composer": "Chopin",
+      "song_category": "classical",
+      "genre": "classical",
+      "tempo_bpm": null,
+      "mood": [
+        "night",
+        "tenderness"
+      ],
+      "pd_basis": "composed 1832; composer/work pre-1930, US public domain",
+      "evokes": "Embry anchor: night, tenderness",
+      "persona_anchor": "night, tenderness",
+      "gen": {
+        "engine": "eleven_sfx",
+        "text": "Gentle flowing humming of a tender nocturne, soft and dreamy at night, clear present modern close-microphone recording, non-melodic, no words",
+        "duration_s": 20
+      },
+      "hum_render_status": "pending_render"
+    },
+    {
+      "id": "mahler-adagietto",
+      "title": "Adagietto, Symphony No. 5",
+      "year": 1901,
+      "composer": "Mahler",
+      "song_category": "classical",
+      "genre": "classical",
+      "tempo_bpm": null,
+      "mood": [
+        "grief",
+        "longing"
+      ],
+      "pd_basis": "composed 1901; composer/work pre-1930, US public domain",
+      "evokes": "Embry anchor: grief, longing",
+      "persona_anchor": "grief, longing",
+      "gen": {
+        "engine": "eleven_sfx",
+        "text": "Slow aching humming of a string adagietto, deep tender longing, unhurried, clear present modern close-microphone recording, non-melodic, no words",
+        "duration_s": 20
+      },
+      "hum_render_status": "pending_render"
+    },
+    {
+      "id": "mahler-abhanden",
+      "title": "Ich bin der Welt abhanden gekommen",
+      "year": 1901,
+      "composer": "Mahler",
+      "song_category": "classical",
+      "genre": "classical",
+      "tempo_bpm": null,
+      "mood": [
+        "grief",
+        "withdrawal"
+      ],
+      "pd_basis": "composed 1901; composer/work pre-1930, US public domain",
+      "evokes": "Embry anchor: grief, withdrawal",
+      "persona_anchor": "grief, withdrawal",
+      "gen": {
+        "engine": "eleven_sfx",
+        "text": "Very slow withdrawn humming of a quiet song of leaving the world behind, serene sorrow, clear present modern close-microphone recording, non-melodic, no words",
+        "duration_s": 20
+      },
+      "hum_render_status": "pending_render"
+    },
+    {
+      "id": "clair-de-lune",
+      "title": "Clair de Lune",
+      "year": 1905,
+      "composer": "Debussy",
+      "song_category": "classical",
+      "genre": "classical",
+      "tempo_bpm": null,
+      "mood": [
+        "night",
+        "sea",
+        "reflection"
+      ],
+      "pd_basis": "composed 1905; composer/work pre-1930, US public domain",
+      "evokes": "Embry anchor: night, sea, reflection",
+      "persona_anchor": "night, sea, reflection",
+      "gen": {
+        "engine": "eleven_sfx",
+        "text": "Soft rippling humming of a moonlit reflective melody, calm and floating, clear present modern close-microphone recording, non-melodic, no words",
+        "duration_s": 20
+      },
+      "hum_render_status": "pending_render"
+    },
+    {
+      "id": "gymnopedie-1",
+      "title": "Gymnopedie No. 1",
+      "year": 1888,
+      "composer": "Satie",
+      "song_category": "classical",
+      "genre": "classical",
+      "tempo_bpm": null,
+      "mood": [
+        "reflection",
+        "quiet"
+      ],
+      "pd_basis": "composed 1888; composer/work pre-1930, US public domain",
+      "evokes": "Embry anchor: reflection, quiet",
+      "persona_anchor": "reflection, quiet",
+      "gen": {
+        "engine": "eleven_sfx",
+        "text": "Slow spare contemplative humming of a gentle piano melody, calm and unhurried, clear present modern close-microphone recording, non-melodic, no words",
+        "duration_s": 20
+      },
+      "hum_render_status": "pending_render"
+    },
+    {
+      "id": "ode-to-joy",
+      "title": "Ode to Joy theme",
+      "year": 1824,
+      "composer": "Beethoven",
+      "song_category": "classical",
+      "genre": "classical",
+      "tempo_bpm": null,
+      "mood": [
+        "warmth",
+        "home"
+      ],
+      "pd_basis": "composed 1824; composer/work pre-1930, US public domain",
+      "evokes": "Embry anchor: warmth, home",
+      "persona_anchor": "warmth, home",
+      "gen": {
+        "engine": "eleven_sfx",
+        "text": "Warm gentle humming of a hopeful uplifting melody, contented, clear present modern close-microphone recording, non-melodic, no words",
+        "duration_s": 20
+      },
+      "hum_render_status": "pending_render"
+    },
+    {
+      "id": "st-louis-blues",
+      "title": "St. Louis Blues",
+      "year": 1914,
+      "composer": "W.C. Handy",
+      "song_category": "jazz_blues",
+      "genre": "jazz_blues",
+      "tempo_bpm": null,
+      "mood": [
+        "grief",
+        "longing"
+      ],
+      "pd_basis": "composed 1914; US public domain (verified NYPL/IMSLP/PD Info)",
+      "evokes": "Embry anchor: grief, longing",
+      "persona_anchor": "grief, longing",
+      "gen": {
+        "engine": "eleven_sfx",
+        "text": "Slow bluesy humming of a soulful melancholy blues melody, warm and aching, clear present modern close-microphone recording, non-melodic, no words",
+        "duration_s": 20
+      },
+      "hum_render_status": "pending_render",
+      "pd_verified": "brave-search 2026-09-12"
+    },
+    {
+      "id": "after-youve-gone",
+      "title": "After You've Gone",
+      "year": 1918,
+      "composer": "Creamer & Layton",
+      "song_category": "jazz_blues",
+      "genre": "jazz_blues",
+      "tempo_bpm": null,
+      "mood": [
+        "parting",
+        "Kai"
+      ],
+      "pd_basis": "published 1918 (before 1931); US public domain (verified Wikisource)",
+      "evokes": "Embry anchor: parting, Kai",
+      "persona_anchor": "parting, Kai",
+      "gen": {
+        "engine": "eleven_sfx",
+        "text": "Wistful slow humming of a bittersweet parting-song melody, tender regret, clear present modern close-microphone recording, non-melodic, no words",
+        "duration_s": 20
+      },
+      "hum_render_status": "pending_render",
+      "pd_verified": "brave-search 2026-09-12"
+    },
+    {
+      "id": "basin-street-blues",
+      "title": "Basin Street Blues",
+      "year": 1928,
+      "composer": "Spencer Williams",
+      "song_category": "jazz_blues",
+      "genre": "jazz_blues",
+      "tempo_bpm": null,
+      "mood": [
+        "home",
+        "river"
+      ],
+      "pd_basis": "published 1928; copyright was renewed BUT the 95-yr term expired \u2014 entered US public domain Jan 1 2024 (verified Peter Spitzer PD-day list). Composition PD; we render a fresh hum so recording rights are irrelevant.",
+      "evokes": "Embry anchor: home, river",
+      "persona_anchor": "home, river",
+      "gen": {
+        "engine": "eleven_sfx",
+        "text": "Easy warm humming of a slow strolling blues melody, homey and mellow, clear present modern close-microphone recording, non-melodic, no words",
+        "duration_s": 20
+      },
+      "hum_render_status": "pending_render",
+      "pd_verified": "brave-search 2026-09-12"
     }
   ],
-  "render_rule": "NEVER vintage-sounding. The tune may be old/public-domain, but every hum RENDER must be a clean, present, modern close-microphone recording of Embry humming \u2014 never phonograph/period/lo-fi texture. Prompts must NOT contain era cues (1910s/1920s/old-timey/novelty/craze/vintage); those make the SFX model produce a lo-fi phone-like recording (human-caught on ukulele-lady). Say 'clear, present, modern, close-mic' instead. Render at 44.1k stereo."
+  "render_rule": "NEVER vintage-sounding. The tune may be old/public-domain, but every hum RENDER must be a clean, present, modern close-microphone recording of Embry humming \u2014 never phonograph/period/lo-fi texture. Prompts must NOT contain era cues (1910s/1920s/old-timey/novelty/craze/vintage); those make the SFX model produce a lo-fi phone-like recording (human-caught on ukulele-lady). Say 'clear, present, modern, close-mic' instead. Render at 44.1k stereo.",
+  "expanded_note": "Choices broadened beyond Hawaiian to PD classical (Beethoven/Chopin/Mahler/Debussy/Satie) and early jazz/blues (Handy/Creamer&Layton/Spencer Williams), all compositions pre-1930 -> US PD, mapped to Embry persona_memory anchors (grief, sea, night, rain, home, Kai/parting; recall conf 0.93). All renders follow the no-vintage rule.",
+  "pd_verification": "Classical picks (Beethoven/Chopin/Debussy/Satie/Mahler) are long-PD (composers pre-1930, Mahler PD since 1981). Jazz picks verified via brave-search: St. Louis Blues (1914) and After You Gone (1918) PD; Basin Street Blues (1928) PD since Jan 1 2024. Only composition PD matters since hums are freshly generated."
 }
