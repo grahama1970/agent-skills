@@ -77,11 +77,57 @@ def chart(scenario_id: str | None) -> int:
         s = scen[sid]
         p = plan_of(s)
         dag = arc.to_dag(p, descriptive=True)
+        dag["graph_id"] = sid
+        dag["description"] = (f"CONTEXT {s['user_request']!r} | emotion={s['emotion']} "
+                              f"intensity={s['intensity']}/10 complexity={s['complexity']} "
+                              f"| arc={p['answer_arc']} band={p['band']} | "
+                              f"covers {s['predicted_latency_ms']}ms in {p['planned_total_ms']}ms")
         f = OUT / f"{sid}.dag.json"
         f.write_text(json.dumps(dag, indent=2) + "\n")
         print(f"\n=== {sid} [{s['tier']}] user: {s['user_request']!r}")
         print(f"    arc={p['answer_arc']} band={p['band']} covers {p['predicted_latency_ms']}ms in {p['planned_total_ms']}ms")
         subprocess.run(["bash", str(PHART), "chart", str(f)], check=False)
+    return 0
+
+
+def script(scenario_id: str | None) -> int:
+    """Print the concrete render script per element so a human can VERIFY the arc:
+    exact text WITH emotion tags, pause/delay durations, and SFX/hum + gain."""
+    scen = {s["id"]: s for s in load(BANK)}
+    ids = list(scen) if scenario_id in (None, "all") else [scenario_id]
+    if any(i not in scen for i in ids):
+        print(f"unknown scenario: {scenario_id}", file=sys.stderr)
+        return 2
+    for sid in ids:
+        s = scen[sid]
+        p = plan_of(s)
+        print(f"\n=== {sid} [{s['tier']}] REQUEST: {s['user_request']!r}")
+        print(f"    inputs: latency {s['predicted_latency_ms']}ms | emotion {s['emotion']} | "
+              f"intensity {s['intensity']} | complexity {s['complexity']}  ->  arc={p['answer_arc']} band={p['band']}")
+        hdr = f"  {'#':>2}  {'time':>6}  {'element':<9} {'voice/tone':<18} payload (text incl. [tags] / delay / sfx+gain)"
+        print(hdr)
+        print("  " + "-" * (len(hdr) - 2))
+        for i, e in enumerate(p["elements"]):
+            t = f"{e['start_ms']/1000:.1f}s"
+            k = e["kind"]
+            if k == "fused_hmm":
+                elem, voice, payload = "OPENER", f"v3:{e['source']}", f'"{e["text"]}"'
+            elif k == "progress":
+                elem, voice, payload = "SAY", f"turbo:{e.get('tone')}", f'"{e["text"]}"'
+            elif k == "pause":
+                elem, voice, payload = "PAUSE", e["source"], f"{e['dur_ms']}ms silence"
+            elif k == "hum":
+                elem, voice = "SFX HUM", f"bed {e.get('gain_db')}dB"
+                payload = f"{e.get('title')} ({e['dur_ms']/1000:.0f}s dry) evokes {e.get('memory_links')}"
+            elif k == "answer":
+                elem, voice = "ANSWER", "turbo arc:" + ">".join(e.get("phase_tones", []))
+                payload = f'"{e["text"]}"'
+            else:
+                elem, voice, payload = k, "", str(e.get("text", ""))
+            print(f"  {i:>2}  {t:>6}  {elem:<9} {voice:<18} {payload}")
+        tags = sorted({x.strip("[]") for e in p["elements"]
+                       for x in str(e.get("text", "")).split() if x.startswith("[")})
+        print(f"  inline emotion tags: {tags or 'none (low-band/plain-turbo lines carry no tags)'}")
     return 0
 
 
@@ -98,8 +144,9 @@ def render_steps(plan: dict) -> list[dict]:
             steps.append({"do": "silence", "ms": el["dur_ms"]})
         elif el["kind"] == "progress":
             steps.append({"do": "speak", "text": el["text"], "tone": el.get("tone", "neutral_warm"), "why": el["source"]})
-        elif el["kind"] == "answer_phase":
-            steps.append({"do": "speak", "text": el["text"], "tone": el.get("phase_tone", "neutral_warm"), "why": el["source"]})
+        elif el["kind"] == "answer":
+            tones = el.get("phase_tones") or ["neutral_warm"]
+            steps.append({"do": "speak", "text": el["text"], "tone": tones[0], "why": el["source"]})
     return steps
 
 
@@ -177,7 +224,7 @@ def self_check() -> None:
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["check", "render", "chart", "self-check"])
+    ap.add_argument("cmd", choices=["check", "render", "chart", "script", "self-check"])
     ap.add_argument("--scenarios", default=str(BANK))
     ap.add_argument("--id", dest="scenario_id")
     ap.add_argument("--play", action="store_true")
@@ -189,6 +236,8 @@ if __name__ == "__main__":
         sys.exit(check(Path(a.scenarios)))
     if a.cmd == "chart":
         sys.exit(chart(a.scenario_id))
+    if a.cmd == "script":
+        sys.exit(script(a.scenario_id))
     if a.cmd == "render":
         if not a.scenario_id:
             print("render needs --id <scenario>", file=sys.stderr)

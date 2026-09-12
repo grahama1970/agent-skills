@@ -126,10 +126,11 @@ def plan_arc(latency_ms: int, emotion: str, intensity: int = 5, complexity: int 
     arc_name = "reassure" if emotion.lower() in REASSURE else "answer"
     phases = ["careful_concerned", "calm_precise", "memory_confident", "playful_light"] \
         if arc_name == "answer" else ["careful_concerned", "neutral_warm", "relieved"]
-    for i, ph in enumerate(phases):
-        add("answer", "speech", "answer_phase", ANSWER_PHASE_MS,
-            source=f"arc:{arc_name}:{ph}", arc=arc_name, phase_tone=ph,
-            text=answer_text or f"<answer phase {i+1}/{len(phases)}>", tags=["answer", ph])
+    # ONE answer utterance delivered across the tone arc (speak --arc phases the
+    # single text). Never repeat the whole answer once per phase.
+    add("answer", "speech", "answer", ANSWER_PHASE_MS * len(phases),
+        source=f"arc:{arc_name}", arc=arc_name, phase_tones=phases,
+        text=answer_text or "<answer>", tags=["answer"] + phases)
 
     return {
         "schema": "chatterbox_speak.conversation_arc.v1",
@@ -158,8 +159,8 @@ def _label(el: dict, descriptive: bool) -> str:
     secs = el["start_ms"] // 1000
     if el["kind"] == "hum":
         tail = f"hum_{el.get('title', el.get('source'))}_{el.get('gain_db')}dB"
-    elif el["kind"] == "answer_phase":
-        tail = f"answer_{el.get('phase_tone', '')}"
+    elif el["kind"] in ("answer", "answer_phase"):
+        tail = f"answer_{el.get('arc', el.get('phase_tone', ''))}"
     elif el["kind"] == "progress":
         tail = (el.get("source") or "progress").replace("progress:", "say_")
     elif el["kind"] == "fused_hmm":
@@ -197,8 +198,8 @@ def to_dag(plan: dict, descriptive: bool = False) -> dict:
 
 
 LANE_Y = {"speech": 70, "sfx": 120, "pause": 170}
-KIND_COLOR = {"fused_hmm": "#7c5cff", "progress": "#2d9cdb", "answer_phase": "#27ae60",
-              "hum": "#f2994a", "pause": "#9aa0a6"}
+KIND_COLOR = {"fused_hmm": "#7c5cff", "progress": "#2d9cdb", "answer": "#27ae60",
+              "answer_phase": "#27ae60", "hum": "#f2994a", "pause": "#9aa0a6"}
 
 
 def to_svg(plan: dict, px_per_sec: int = 60) -> str:
@@ -244,7 +245,8 @@ def self_check() -> None:
     assert p["covers_latency"], f"plan {p['planned_total_ms']}ms must cover {p['predicted_latency_ms']}ms"
     assert p["answer_arc"] == "reassure", "grief must route to the reassure delivery arc"
     assert any(e["kind"] == "hum" for e in p["elements"]), "a long wait must insert a hum bed"
-    assert p["elements"][-1]["kind"] == "answer_phase", "arc must end on the answer delivery"
+    assert p["elements"][-1]["kind"] == "answer", "arc must end on the single answer delivery"
+    assert sum(1 for e in p["elements"] if e["kind"] == "answer") == 1, "answer must be ONE element, not repeated per phase"
     # progress/pause are plain lexical Turbo lines (no tags); fused_hmm/answer render
     # lines MAY carry tags — those are render instructions, never written to $memory.
     assert all("[" not in str(e.get("text", "")) for e in p["elements"]
@@ -257,6 +259,7 @@ def self_check() -> None:
     # happy/short-latency path takes the answer arc and still covers
     q = plan_arc(4000, "happy", intensity=6)
     assert q["answer_arc"] == "answer" and q["covers_latency"]
+    assert dag["nodes"][-1]["input"]["kind"] == "answer"
     print(f"conversation_arc self-check PASS (grief: {len(p['elements'])} elements, "
           f"{p['planned_total_ms']}ms covers 30000ms; hum bed + reassure arc)")
 
