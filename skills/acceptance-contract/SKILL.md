@@ -57,6 +57,17 @@ input. The CLI refuses repository roots by default so implementation files canno
 silently become the acceptance source. Use `--allow-repo` only when the human
 explicitly asks for a repository-wide contract.
 
+For high-stakes client briefs, run a second-line `$ask` roundtable review on the
+brief/zip plus `acceptance_bundle.json` before implementation. Include WebGPT as
+one reviewer when available. Ask plainly: "Are these contract requirements
+correct, and did we miss anything?" Require reviewers to check whether any client
+obligation is missing from the frozen contract, especially representation
+classes, typed values, boundary conditions, and disqualifying failure modes. The
+review is advisory evidence; deterministic gates still own PASS/FAIL. The oai-trial
+review found that typed-scalar coverage must also require canonical equivalence:
+formatted policy strings, digit-only numeric scalars, decimal forms, scientific
+notation, and SQLite numeric values cannot be separate acceptance universes.
+
 ## What it does
 
 ```bash

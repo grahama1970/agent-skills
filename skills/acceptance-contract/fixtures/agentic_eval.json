@@ -5,7 +5,7 @@
   "live": true,
   "proof_scope": "Acceptance-contract real CLI path: extracts source-backed requirements from local briefs and zip bundles, validates the pydantic acceptance_contract.bundle.v1 boundary, renders create_report.report.v1 artifacts through create-report, and fails closed on unsafe zip input.",
   "claims": {
-    "proves": "acceptance-contract accepts local file and zip inputs, emits typed requirements/cases/open questions, creates draft-only immutable-goal text, validates the bundle boundary, delegates report rendering to create-report, and rejects unsafe zip traversal. It also proves the ensure preflight creates/validates frozen contracts, rejects stale source hashes, and refuses repository roots by default.",
+    "proves": "acceptance-contract accepts local file and zip inputs, emits typed requirements/cases/open questions, creates draft-only immutable-goal text, validates the bundle boundary, delegates report rendering to create-report, and rejects unsafe zip traversal. It also proves the ensure preflight creates/validates frozen contracts, rejects stale source hashes, and refuses repository roots by default. It proves quick brief plus numeric policy bundle derives the typed-scalar PII case that oai-trial missed. It proves the derived contract includes canonical-equivalence matching, not just typed-scalar wording. It proves the roundtable-driven all-format trap and lossy numeric conversion clauses are derived too.",
     "does_not_prove": "that extracted requirements are semantically complete, human-approved, sufficient for a real client contract, or that Battle has executed the resulting bundle."
   },
   "capability_claims": [
@@ -53,6 +53,34 @@
         "adversarial_live_e2e": true
       },
       "claim_semantics": "control_flow"
+    },
+    {
+      "id": "acceptance_contract.derives_typed_scalar_pii_case",
+      "description": "The skill derives an executable typed-scalar PII acceptance case from a quick brief plus numeric-looking policy values in the supplied bundle.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      },
+      "claim_semantics": "value_bearing",
+      "domain_profile": "json-scalar-v1",
+      "derived_from": {
+        "source": "TRIAL_BRIEF.md + policy.json",
+        "requirement": "The same synthetic identity can appear in every format; policy.json contains numeric-looking sensitive_values[].value entries."
+      }
+    },
+    {
+      "id": "acceptance_contract.derives_canonical_equivalence_case",
+      "description": "The skill derives a canonical-equivalence acceptance case so formatted policy strings cannot evade typed JSON/SQLite numeric scalar detection.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      },
+      "claim_semantics": "value_bearing",
+      "domain_profile": "json-scalar-v1",
+      "derived_from": {
+        "source": "TRIAL_BRIEF.md + policy.json",
+        "requirement": "The same synthetic identity can appear in every format; policy.json supplies sensitive values by type and value."
+      }
     }
   ],
   "seams": [
@@ -99,6 +127,24 @@
       "claim_id": "acceptance_contract.rejects_repo_root_default",
       "required_evidence": [
         "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "brief_policy_representation_derivation",
+      "seam_type": "requirements/spec",
+      "criticality": "critical",
+      "claim_id": "acceptance_contract.derives_typed_scalar_pii_case",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "brief_policy_canonical_equivalence_derivation",
+      "seam_type": "requirements/spec",
+      "criticality": "critical",
+      "claim_id": "acceptance_contract.derives_canonical_equivalence_case",
+      "required_evidence": [
+        "live_e2e"
       ]
     }
   ],
@@ -323,6 +369,55 @@
           {
             "path": "/tmp/acceptance-contract-eval-reporoot-proof.json",
             "json_pointer": "/refused_repo_root",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "quick-brief-policy-derives-typed-scalar-pii-case",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "acceptance_contract.derives_typed_scalar_pii_case",
+        "acceptance_contract.derives_canonical_equivalence_case"
+      ],
+      "seams": [
+        "brief_policy_representation_derivation",
+        "brief_policy_canonical_equivalence_derivation"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-lc",
+        "ROOT=/home/graham/workspace/experiments/agent-skills; tmp=/tmp/acceptance-contract-eval-typed-scalar; rm -rf $tmp; mkdir -p $tmp/spec; printf 'The system must anonymize CSV, JSON, UTF-8 text, and SQLite database files. The same synthetic identity can appear in every format.\\n' >$tmp/spec/TRIAL_BRIEF.md; printf '{\"sensitive_values\":[{\"type\":\"phone\",\"value\":\"5550102000\"}]}\\n' >$tmp/spec/policy.json; $ROOT/skills/acceptance-contract/run.sh ensure $tmp/spec --out $tmp/out --project-name demo >/tmp/acceptance-contract-eval-typed-scalar-receipt.json && python3 - <<'PY' $tmp/out/acceptance_bundle.json /tmp/acceptance-contract-eval-typed-scalar-proof.json\nimport json, pathlib, sys\nb=json.load(open(sys.argv[1]))\nstatements=[r['statement'] for r in b['requirements']]\nproof={'typed_scalar_case': any('typed JSON or SQLite scalar' in s for s in statements), 'canonical_equivalence_case': any('canonical equivalence' in s and 'CSV cells' in s for s in statements), 'cross_format_trap_case': any('seeded across every in-scope format' in s for s in statements), 'lossy_numeric_case': any('leading-zero loss' in s and 'float precision loss' in s for s in statements), 'requirements': len(statements)}\npathlib.Path(sys.argv[2]).write_text(json.dumps(proof))\nassert proof['typed_scalar_case'] and proof['canonical_equivalence_case'] and proof['cross_format_trap_case'] and proof['lossy_numeric_case']\nprint('typed scalar derivation PASS')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "typed scalar derivation PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/acceptance-contract-eval-typed-scalar-proof.json",
+            "json_pointer": "/typed_scalar_case",
+            "equals": true
+          },
+          {
+            "path": "/tmp/acceptance-contract-eval-typed-scalar-proof.json",
+            "json_pointer": "/canonical_equivalence_case",
+            "equals": true
+          },
+          {
+            "path": "/tmp/acceptance-contract-eval-typed-scalar-proof.json",
+            "json_pointer": "/cross_format_trap_case",
+            "equals": true
+          },
+          {
+            "path": "/tmp/acceptance-contract-eval-typed-scalar-proof.json",
+            "json_pointer": "/lossy_numeric_case",
             "equals": true
           }
         ]

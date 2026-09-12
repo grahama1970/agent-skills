@@ -67,6 +67,39 @@ def test_refuses_repo_root_by_default(tmp_path: Path) -> None:
     assert bundle.requirements[0].statement == "The system must not derive acceptance from implementation."
 
 
+def test_quick_brief_and_policy_bundle_derives_typed_scalar_case(tmp_path: Path) -> None:
+    (tmp_path / "TRIAL_BRIEF.md").write_text(
+        "The system must anonymize CSV, JSON, UTF-8 text, and SQLite database files. "
+        "The same synthetic identity can appear in every format.\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "policy.json").write_text(
+        json.dumps({"sensitive_values": [{"type": "phone", "value": "5550102000"}]}),
+        encoding="utf-8",
+    )
+
+    bundle = build_bundle(tmp_path, "demo", GoalMode.CREATE)
+
+    requirement = next(req for req in bundle.requirements if "typed JSON or SQLite scalar" in req.statement)
+    assert requirement.kind == "acceptance"
+    acceptance = next(case for case in bundle.acceptance_cases if case.requirement_id == requirement.id)
+    assert acceptance.kind == "MUST_REJECT"
+    assert "JSON integer" in acceptance.deterministic_check
+
+    canonical = next(req for req in bundle.requirements if "canonical equivalence" in req.statement)
+    assert canonical.kind == "acceptance"
+    canonical_case = next(case for case in bundle.acceptance_cases if case.requirement_id == canonical.id)
+    assert "scientific notation" in canonical_case.deterministic_check
+    assert "CSV bare/quoted cells" in canonical_case.deterministic_check
+
+    cross_format = next(req for req in bundle.requirements if "seeded across every in-scope format" in req.statement)
+    assert "complete released output boundary" in cross_format.statement
+
+    lossy = next(req for req in bundle.requirements if "Lossy or ambiguous numeric representations" in req.statement)
+    assert "leading-zero loss" in lossy.statement
+    assert "float precision loss" in lossy.statement
+
+
 def test_bundle_validation_rejects_case_without_requirement(tmp_path: Path) -> None:
     payload = build_bundle(tmp_path, "demo", GoalMode.NONE).model_dump(by_alias=True) if False else {
         "schema": "acceptance_contract.bundle.v1",
