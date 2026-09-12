@@ -131,6 +131,25 @@ keeps the speak lane fed (drift status, another hum) so there is never dead air.
 The concurrent speak/monitor loop and barge-in are executed by
 `embry-voice-control`; this contract defines the behavior.
 
+## If the user interrupts: interrupt the solver too
+
+Barge-in is bidirectional. B streams progress **to** you (`solver_event.v1`); you
+control B **back** over **pi-intercom (or an equivalent inter-session control
+channel)** when A and B are separate sessions.
+
+When the user talks over Embry mid-turn:
+
+1. Stop the speak lane immediately (drop the current cover beat).
+2. Send B a control message over pi-intercom — `cancel` the in-flight solve if the
+   user changed topic, or a re-scope message if they refined the same question —
+   so B stops burning work on a now-stale request.
+3. Re-plan the shared arc map for the new input and start a fresh quick arc.
+
+Do not let B keep solving and stream an answer to a question the user has already
+abandoned. The two control channels: B->A `solver_event.v1` (progress in),
+A->B pi-intercom or similar (interrupt/cancel/re-scope out). Executed by
+`embry-voice-control`, which owns the concrete transport choice.
+
 ## Output per beat
 
 ```json
