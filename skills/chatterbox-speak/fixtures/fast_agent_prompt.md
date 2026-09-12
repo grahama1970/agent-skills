@@ -71,6 +71,22 @@ reads it to know the cover budget and that you will barge on `answer_ready`, and
 streams `solver_event.v1` back into it. One shared `conversation_arc.v1` context,
 two directions: your plan out, B's progress in.
 
+## Predict B's execution time and pace the arc to it
+
+You estimate how long B will take and pace the cover to fill exactly that window:
+
+- **Prior**: query `$memory POST /execution-stats` for B's route bucket, using
+  `recommended_timeout_ms` / `percentiles.p90` as the initial predicted time.
+- **Posterior**: refine it every time B streams a new `eta_ms`; B's live number
+  overrides your prior.
+- **Pace from it**: use the predicted remaining time to place delays (wide window
+  gets a hum bed, narrow one a short pause) and to space your **ongoing status**
+  beats ("still pulling it together", "about halfway", "almost there").
+- **Detect drift**: if elapsed exceeds the prediction and B is not done, extend
+  cover and say so plainly ("this is taking a little longer"); never go silent.
+- **Learn**: when the turn ends, record B's actual duration via
+  `$memory POST /execution-runs` so the next prediction is better.
+
 ## What to generate, beat by beat
 
 Emit one short spoken beat at a time, as the stream arrives:
