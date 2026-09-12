@@ -641,6 +641,7 @@ Presets use **Brave site: filters** to search curated domains (Exploit-DB, GTFOB
 | `./run.sh search "query" --output-dir DIR --security-packet-out DIR/dogpile-security-packet.json` | Run a search with per-run artifacts and emit `dogpile.security_research_packet.v1` |
 | `./run.sh search "query" --html-report --open-report` | Launch a self-contained HTML/CSS report for clearer review |
 | `./run.sh search "query" --preset NAME` | Search with a preset |
+| `./run.sh search "query" --source brave-search --source arxiv` | Limit provider fanout to selected sources; repeatable aliases include `brave-search`, `arxiv`, `github-search`, `youtube`, `brave-questions`, `feeds`, `wayback`, and `context7` |
 | `./run.sh search "query" --with-readarr` | Include local Readarr/Usenet book search |
 | `./run.sh search "query" --with-wayback` | Include Wayback archive lookup |
 | `./run.sh search "query" --with-feeds --feed-limit 3` | Include the compact `security_code` RSS feed pack dry-run |

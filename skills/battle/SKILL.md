@@ -89,11 +89,17 @@ Dogpile before claiming comprehensive adversarial coverage:
 ```bash
 ./run.sh contract-variation-plan \
   --acceptance-bundle /path/to/acceptance_bundle.json \
+  --dogpile-source brave-search \
+  --dogpile-source arxiv \
   --out /tmp/battle-variation-plan.json
 ```
 
 The output is `battle.contract_variation_plan.v1`. It maps every acceptance case
-to source-bearing Dogpile research lanes and reusable variation families such as
+to source-bearing Dogpile research lanes and reusable variation families. Use
+repeatable `--dogpile-source` filters when a Battle phase needs only selected
+Dogpile providers such as `brave-search`, `arxiv`, `github-search`, `youtube`,
+`brave-questions`, `feeds`, `wayback`, or `context7` instead of the full source
+fanout. The reusable variation families include
 representation equivalence, encoding/normalization, parser differentials,
 release-surface boundaries, lossy conversion, split/composed facts, scale,
 retry/concurrency, authorization, and failure-leak boundaries. Dogpile is research

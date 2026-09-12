@@ -41,6 +41,43 @@ from dogpile.context7_docs import search_context7_docs
 
 PARTIAL_RESULTS_PATH = _SCRIPT_DIR / "dogpile_partial_results.json"
 
+SOURCE_ALIASES = {
+    "brave-search": "brave",
+    "brave": "brave",
+    "brave_questions": "brave_questions",
+    "brave-questions": "brave_questions",
+    "github-search": "github",
+    "github": "github",
+    "arxiv": "arxiv",
+    "youtube": "youtube",
+    "ingest-youtube": "youtube",
+    "codex-knowledge": "codex_knowledge",
+    "codex_knowledge": "codex_knowledge",
+    "readarr": "readarr",
+    "wayback": "wayback",
+    "feeds": "feeds",
+    "context7": "context7",
+}
+
+
+def normalize_source_filter(sources: list[str] | None) -> set[str] | None:
+    if not sources:
+        return None
+    normalized: set[str] = set()
+    unknown: list[str] = []
+    for source in sources:
+        key = source.strip().lower()
+        if not key:
+            continue
+        mapped = SOURCE_ALIASES.get(key)
+        if mapped:
+            normalized.add(mapped)
+        else:
+            unknown.append(source)
+    if unknown:
+        raise ValueError(f"unknown Dogpile source filter(s): {', '.join(unknown)}")
+    return normalized or None
+
 # Memory integration (graceful degradation)
 try:
     from dogpile.memory_integration import learn_execution_batch
@@ -483,6 +520,7 @@ def run_stage1_searches(
     publisher: Optional[PartialResultsPublisher] = None,
     on_result=None,
     monitor=None,
+    sources: list[str] | None = None,
 ) -> Dict[str, Any]:
     """Stage 1: Run broad parallel searches across all providers.
 
@@ -502,6 +540,8 @@ def run_stage1_searches(
         with_context7: Include current library/API docs from Context7.
         context7_library: Required library name or Context7 library ID for Context7.
         context7_tokens: Max Context7 doc tokens to request.
+        sources: Optional provider filter. Aliases include brave-search, arxiv,
+            github-search, youtube, brave-questions, feeds, wayback, context7.
 
     Returns:
         Dict with results from each provider
@@ -538,6 +578,12 @@ def run_stage1_searches(
             [tailored.get("context7", query)],
             {"library": context7_library, "tokens": context7_tokens},
         )
+
+    source_filter = normalize_source_filter(sources)
+    if source_filter is not None:
+        providers = {name: spec for name, spec in providers.items() if name in source_filter}
+        if not providers:
+            raise ValueError("Dogpile source filter selected no enabled providers")
 
     # Provider status for Rich live display
     status: Dict[str, str] = {name: "[dim]waiting[/dim]" for name in providers}

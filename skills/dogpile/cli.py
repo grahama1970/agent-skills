@@ -18,7 +18,7 @@ Orchestrates searches across:
 import json
 import sys
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 # Add parent directory to path for package imports when running as script
 _SCRIPT_DIR = Path(__file__).resolve().parent
@@ -57,6 +57,7 @@ def search(
     interactive: bool = typer.Option(True, "--interactive/--no-interactive", help="Enable ambiguity/intent check"),
     tailor: bool = typer.Option(True, "--tailor/--no-tailor", help="Tailor queries per service"),
     use_github_skill: bool = typer.Option(True, "--github-skill/--no-github-skill", help="Use /github-search skill"),
+    source: Optional[List[str]] = typer.Option(None, "--source", help="Limit provider lanes. Repeatable: brave-search, arxiv, github-search, youtube, brave-questions, feeds, wayback, context7."),
     auto_preset: bool = typer.Option(False, "--auto-preset", help="Auto-detect preset from query"),
     with_perplexity: bool = typer.Option(False, "--with-perplexity", help="Deprecated: record Perplexity as skipped; never calls the paid API"),
     with_readarr: bool = typer.Option(False, "--with-readarr", help="Include local Readarr/Usenet book search"),
@@ -115,6 +116,7 @@ def search(
             interactive=interactive,
             tailor=tailor,
             use_github_skill=use_github_skill,
+            sources=source,
             auto_preset=auto_preset,
             monitor=monitor,
             with_perplexity=with_perplexity,

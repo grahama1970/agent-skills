@@ -15,6 +15,16 @@ from typing import Any
 
 PLAN_SCHEMA = "battle.contract_variation_plan.v1"
 BUNDLE_SCHEMA = "acceptance_contract.bundle.v1"
+DOGPILE_SOURCES = {
+    "brave-search",
+    "brave-questions",
+    "github-search",
+    "arxiv",
+    "youtube",
+    "feeds",
+    "wayback",
+    "context7",
+}
 
 VARIATION_FAMILIES = [
     {
@@ -123,7 +133,25 @@ def _requirement_index(bundle: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return {str(item.get("id")): item for item in bundle.get("requirements", []) if item.get("id")}
 
 
-def _dogpile_lanes(case: dict[str, Any], requirement: dict[str, Any]) -> list[dict[str, Any]]:
+def _normalize_dogpile_sources(sources: list[str] | None) -> list[str]:
+    if not sources:
+        return []
+    normalized: list[str] = []
+    for source in sources:
+        key = str(source).strip().lower().replace("_", "-")
+        if key == "brave":
+            key = "brave-search"
+        if key == "github":
+            key = "github-search"
+        if key == "brave-questions":
+            key = "brave-questions"
+        _require(key in DOGPILE_SOURCES, f"unknown Dogpile source filter: {source}")
+        if key not in normalized:
+            normalized.append(key)
+    return normalized
+
+
+def _dogpile_lanes(case: dict[str, Any], requirement: dict[str, Any], dogpile_sources: list[str] | None = None) -> list[dict[str, Any]]:
     case_id = str(case.get("id") or "unknown-case")
     req_id = str(case.get("requirement_id") or requirement.get("id") or "unknown-requirement")
     contract_text = _short(case.get("predicate") or requirement.get("statement") or case.get("deterministic_check") or "")
@@ -137,6 +165,7 @@ def _dogpile_lanes(case: dict[str, Any], requirement: dict[str, Any]) -> list[di
         f"real-world bug classes and exploit patterns for requirement edge cases: {contract_text}",
         f"deterministic test generation strategies for proving this invariant across input representations and failure surfaces: {contract_text}",
     ]
+    source_args = [arg for source in _normalize_dogpile_sources(dogpile_sources) for arg in ("--source", source)]
     return [
         {
             "id": f"{case_id}-dogpile-{idx}",
@@ -144,10 +173,12 @@ def _dogpile_lanes(case: dict[str, Any], requirement: dict[str, Any]) -> list[di
             "requirement_id": req_id,
             "purpose": purpose,
             "query": query,
+            "dogpile_sources": _normalize_dogpile_sources(dogpile_sources),
             "command": [
                 "../dogpile/run.sh",
                 "search",
                 query,
+                *source_args,
                 "--persona",
                 "battle-red",
                 "--rationale",
@@ -167,7 +198,13 @@ def _dogpile_lanes(case: dict[str, Any], requirement: dict[str, Any]) -> list[di
     ]
 
 
-def build_plan(bundle_path: Path, *, execute_dogpile: bool = False, dogpile_limit: int = 0) -> dict[str, Any]:
+def build_plan(
+    bundle_path: Path,
+    *,
+    execute_dogpile: bool = False,
+    dogpile_limit: int = 0,
+    dogpile_sources: list[str] | None = None,
+) -> dict[str, Any]:
     bundle_path = bundle_path.resolve()
     bundle = load_acceptance_bundle(bundle_path)
     requirements = _requirement_index(bundle)
@@ -178,7 +215,7 @@ def build_plan(bundle_path: Path, *, execute_dogpile: bool = False, dogpile_limi
     contract_items: list[dict[str, Any]] = []
     for case in cases:
         requirement = requirements.get(str(case.get("requirement_id")), {})
-        lanes = _dogpile_lanes(case, requirement)
+        lanes = _dogpile_lanes(case, requirement, dogpile_sources=dogpile_sources)
         dogpile_lanes.extend(lanes)
         contract_items.append(
             {
@@ -203,6 +240,7 @@ def build_plan(bundle_path: Path, *, execute_dogpile: bool = False, dogpile_limi
             "open_questions": len(open_questions),
         },
         "dogpile_role": "research_input_only",
+        "dogpile_source_filter": _normalize_dogpile_sources(dogpile_sources),
         "battle_role": "freeze_selected_families_into_deterministic_generators_and_prove_with_Docker_Judge_receipts",
         "contract_items": contract_items,
         "dogpile_lanes": dogpile_lanes,
@@ -257,8 +295,20 @@ def _execute_dogpile_lanes(lanes: list[dict[str, Any]], *, limit: int = 0) -> di
     }
 
 
-def write_plan(bundle_path: Path, out: Path, *, execute_dogpile: bool = False, dogpile_limit: int = 0) -> dict[str, Any]:
-    plan = build_plan(bundle_path, execute_dogpile=execute_dogpile, dogpile_limit=dogpile_limit)
+def write_plan(
+    bundle_path: Path,
+    out: Path,
+    *,
+    execute_dogpile: bool = False,
+    dogpile_limit: int = 0,
+    dogpile_sources: list[str] | None = None,
+) -> dict[str, Any]:
+    plan = build_plan(
+        bundle_path,
+        execute_dogpile=execute_dogpile,
+        dogpile_limit=dogpile_limit,
+        dogpile_sources=dogpile_sources,
+    )
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(plan, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return plan

@@ -77,6 +77,7 @@ def _run_search(
     ip_limit: int = 5,
     security_packet_out: Optional[Path] = None,
     target_context: Optional[Dict[str, Any]] = None,
+    sources: Optional[list[str]] = None,
 ):
     """Internal search implementation."""
     # Pre-hook: Recall prior research on this topic to avoid redundant API calls
@@ -193,6 +194,7 @@ def _run_search(
             publisher=publisher,
             on_result=schedule_stage2,
             monitor=monitor,
+            sources=sources,
         )
         monitor.complete_stage("stage1")
 

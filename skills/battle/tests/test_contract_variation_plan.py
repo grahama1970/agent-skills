@@ -81,6 +81,31 @@ def test_contract_variation_plan_is_generic_dogpile_to_battle_bridge(tmp_path: P
     assert all("oai" not in json.dumps(item).lower() for item in plan["contract_items"])
 
 
+def test_contract_variation_plan_filters_dogpile_sources_without_bespoke_targets(tmp_path: Path) -> None:
+    plan = build_plan(
+        _bundle(tmp_path / "acceptance_bundle.json"),
+        dogpile_sources=["brave-search", "arxiv"],
+    )
+
+    assert plan["dogpile_source_filter"] == ["brave-search", "arxiv"]
+    assert len(plan["dogpile_lanes"]) == 6
+    for lane in plan["dogpile_lanes"]:
+        assert lane["dogpile_sources"] == ["brave-search", "arxiv"]
+        assert lane["command"].count("--source") == 2
+        assert "brave-search" in lane["command"]
+        assert "arxiv" in lane["command"]
+        assert "oai" not in json.dumps(lane).lower()
+
+
+def test_contract_variation_plan_blocks_unknown_dogpile_source(tmp_path: Path) -> None:
+    try:
+        build_plan(_bundle(tmp_path / "acceptance_bundle.json"), dogpile_sources=["made-up"])
+    except ValueError as exc:
+        assert "unknown Dogpile source filter: made-up" in str(exc)
+    else:  # pragma: no cover
+        raise AssertionError("unknown source filter should fail closed")
+
+
 def test_contract_variation_plan_blocks_open_questions_without_losing_plan(tmp_path: Path) -> None:
     out = tmp_path / "plan.json"
     plan = write_plan(_bundle(tmp_path / "acceptance_bundle.json", open_questions=True), out)
