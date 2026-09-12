@@ -12,7 +12,7 @@ is never missed.
 stdlib only; renders through chatterbox-speak run.sh (Chatterbox Turbo).
 """
 from __future__ import annotations
-import json, os, re, subprocess, sys, time, urllib.request, wave
+import json, os, random, re, subprocess, sys, threading, time, urllib.request, wave
 from pathlib import Path
 
 
@@ -32,6 +32,44 @@ CBSPEAK = Path.home() / "workspace/experiments/agent-skills/skills/chatterbox-sp
 SFX = Path("/mnt/storage12tb/skills/chatterbox-speak/outputs/sfx-library")
 FUSED_MANIFEST = SFX / "fused-hmm/manifest.json"
 HUMS = SFX / "song-hums"
+COVER = Path("/mnt/storage12tb/skills/embry-voice-control/outputs/cover-clips")
+PLAYED: list[str] = []  # ordered wavs A actually played -> assembled into one arc.wav
+
+
+# Cover vocabulary = pools of pre-rendered SPEECH clips (natural, instant). Hums
+# are NOT used as compose cover (they read inhuman as filler).
+POOLS = {
+    "opener": ["hmm-let-me-see", "opener-02", "opener-03", "opener-04"],
+    "restate": ["restate", "restate-02", "restate-03"],
+    "lookup": ["look-that-up", "lookup-02", "lookup-03"],
+    "filler": ["still-pulling", "one-moment", "almost-there", "filler-02", "filler-03", "filler-04"],
+}
+
+
+def cover(role: str) -> str | None:
+    """Pick a random pre-rendered clip from the role's variation pool (no-repeat-ish)."""
+    cands = [str(COVER / f"{s}.wav") for s in POOLS.get(role, [role]) if (COVER / f"{s}.wav").exists()]
+    return random.choice(cands) if cands else None
+
+
+def assemble_arc(seq: list[str], out: Path) -> str | None:
+    """Concat every played clip into ONE conversation-arc wav (uniform 44.1k stereo)."""
+    tmps = []
+    for i, w in enumerate(seq):
+        t = out.with_suffix(f".part{i}.wav")
+        subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", w, "-ar", "44100", "-ac", "2", str(t)], check=False)
+        if t.exists():
+            tmps.append(t)
+    if not tmps:
+        return None
+    lst = out.with_suffix(".list.txt")
+    lst.write_text("".join(f"file '{t}'\n" for t in tmps))
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", str(lst),
+                    "-c", "copy", str(out)], check=False)
+    for t in tmps:
+        t.unlink(missing_ok=True)
+    lst.unlink(missing_ok=True)
+    return str(out) if out.exists() else None
 PLAY = os.environ.get("MVP_PLAY") == "1"
 HUM_LONG_MS = 7000  # hum only when B's remaining ETA is a genuinely long pause
 SCILLM = os.environ.get("SCILLM_URL", "http://127.0.0.1:4001/v1/chat/completions")
@@ -123,6 +161,8 @@ def mon(who: str, msg: str) -> None:
 
 
 def play(wav: str | None) -> None:
+    if wav and Path(wav).exists():
+        PLAYED.append(wav)  # record order even when not playing live, so we can assemble
     if PLAY and wav and Path(wav).exists():
         with open(LOCK, "w") as lk:
             try:
@@ -144,9 +184,12 @@ def opener_clip() -> tuple[str, str] | None:
 
 
 def hum_clip() -> tuple[str, str] | None:
-    """A bone-dry ElevenLabs SFX hum to bed under the wait."""
+    """A bone-dry ElevenLabs SFX hum to bed under the wait (varied, no-repeat-ish)."""
     w = sorted(HUMS.glob("*.wav"))
-    return (str(w[0]), w[0].stem) if w else None
+    if not w:
+        return None
+    c = random.choice(w)
+    return (str(c), c.stem)
 
 
 def speak(text: str, pace: str | None = None) -> str | None:
@@ -169,10 +212,9 @@ def speak_arc(text: str, arc: str) -> list[str]:
     """DELEGATE answer delivery to chatterbox-speak's own conversation-arc macro.
     speak --arc phases the answer across tone+PACE waypoints and compiles pauses;
     we do NOT re-implement phasing/pacing/tags here."""
+    # render only (no --play): a_speaker controls playback so cover can run until ready
     args = ["bash", str(CBSPEAK), "speak", "--voice", "embry", "--arc", arc,
             "--planned-pauses", "--text", text, "--context", "two-agent MVP"]
-    if PLAY:
-        args += ["--play"]
     r = subprocess.run(args, capture_output=True, text=True)
     return re.findall(r'"wav":\s*"([^"]+\.wav)"', r.stdout)
 
@@ -233,36 +275,21 @@ def main() -> int:
             if chunk:
                 ingest(chunk)
         # cover: as soon as we see any B activity, speak one opener (once)
+        # Cover beats are PRE-RENDERED clips (instant, no live render, no dead air).
         if consumed and not opened:
             opened = True
-            oc = opener_clip()  # ElevenLabs fused-hmm opener (tag baked in)
-            if oc:
-                mon("A>", f"[opener/ElevenLabs+tag] {oc[1]!r}")
-                play(oc[0]); wav = oc[0]
-            else:
-                wav = speak("Hmm, let me see.")  # opener stays plain (no compulsory tag)
-            cover_ready_ts = time.time()
-            consumed.append({"cover_wav": wav})
-        # 2) restate the problem back, after "let me see..."
+            oc = cover("opener")
+            mon("A>", "[opener clip]")
+            play(oc); cover_ready_ts = time.time()
+            consumed.append({"cover_wav": oc})
         if opened and not restated and question:
             restated = True
-            rst = "So — to make sure I've got it: " + question
-            mon("A>", f"[restate] {rst}")
-            play(speak(rst))
-        # 3) announce the lookup once, then the hum bed fills the actual wait
+            mon("A>", "[restate clip]")
+            play(cover("restate"))
         if opened and restated and not announced_lookup and b_done_ts is None:
             announced_lookup = True
-            lk = "Okay — give me a second while I look that up."
-            mon("A>", f"[lookup] {lk}")
-            play(speak(lk))
-        # 4) hum ONLY during a genuinely long pause (remaining ETA > threshold), spaced
-        if opened and restated and b_done_ts is None and last_eta_ms and last_eta_ms > HUM_LONG_MS:
-            if time.time() - last_hum_ts > 8:
-                hc = hum_clip()
-                if hc:
-                    mon("A>", f"[hum/ElevenLabs SFX — long pause] {hc[1]}")
-                    play(hc[0]); last_hum_ts = time.time()
-                    consumed.append({"hum_wav": hc[0], "hum": hc[1]})
+            mon("A>", "[lookup clip]")
+            play(cover("lookup"))
         time.sleep(0.2)
 
     # final full-file read on timeout so a fast answer is never missed
@@ -280,17 +307,54 @@ def main() -> int:
     spoken_answer = None
     rewritten = False
     if speakable:
-        # FIX #1: A composes the spoken answer (rewrite B's raw text conversationally,
-        # conclusion preserved), THEN delegate delivery to chatterbox-speak's arc.
-        spoken_answer, rewritten = compose_spoken_answer(question, answer_text)
+        # FIX (audible gap): prepare the answer (compose rewrite + render) in a
+        # BACKGROUND thread while the foreground keeps covering with hums, so there
+        # is no dead air during the ~15s compose+render window.
         arc_used = "reassure" if any(k in (question or "").lower()
                      for k in ("worried", "grief", "afraid", "scared", "anxious")) else "answer"
-        mon("A>", f"[answer rewritten={rewritten} via speak --arc {arc_used}] {spoken_answer[:60]}")
+        result: dict = {}
+
+        def prepare():
+            sp, rw = compose_spoken_answer(question, answer_text)
+            result["spoken"], result["rewritten"] = sp, rw
+            result["wavs"] = speak_arc(sp, arc_used)
+
+        th = threading.Thread(target=prepare, daemon=True)
+        th.start()
+        mon("A>", "[composing answer — covering with hums, no dead air]")
+        # Cover the wait with a FEW spaced filler clips, then wait quietly. Spamming
+        # 15+ fillers to cover a long batch-render window sounds robotic; the real
+        # cure is streaming LLM+TTS (see references/prior-art.md), out of MVP scope.
+        last_fc = None
+        fillers_played = 0
+        MAX_FILLERS = 3
+        while th.is_alive():
+            if fillers_played < MAX_FILLERS:
+                fc = cover("filler")
+                if fc == last_fc:
+                    fc = cover("filler")
+                last_fc = fc
+                if fc:
+                    mon("A>", f"[cover clip] {Path(fc).stem}")
+                    play(fc)
+                    fillers_played += 1
+                    if not PLAY:
+                        time.sleep(max(0.5, wav_facts(fc)["seconds"]))
+                    continue
+            time.sleep(0.3)  # fillers spent; wait quietly for the answer to finish rendering
+        th.join()
+        spoken_answer = result.get("spoken")
+        rewritten = result.get("rewritten", False)
+        wavs = result.get("wavs", [])
         first_answer_ts = time.time()
-        wavs = speak_arc(spoken_answer, arc_used)
+        mon("A>", f"[answer rewritten={rewritten} via speak --arc {arc_used}] {(spoken_answer or '')[:60]}")
+        for w in wavs:
+            play(w)
         answer_chunks = [{"i": i, "arc": arc_used, **wav_facts(w)} for i, w in enumerate(wavs)]
         answer_wav = wavs[0] if wavs else None
     answer_done_ts = time.time()
+    arc_wav_combined = assemble_arc(PLAYED, receipt_path.with_suffix(".arc.wav"))
+    mon("A>", f"[assembled arc] {arc_wav_combined}")
     receipt = {
         "schema": "embry_voice_control.mvp_a_receipt.v1",
         "a_start_ts": a_start, "cover_ready_ts": cover_ready_ts,
@@ -305,6 +369,7 @@ def main() -> int:
         "conclusion_preserved": bool(spoken_answer) and
             (key_terms(question) & key_terms(answer_text)) <= key_terms(spoken_answer),
         "answer_arc": arc_used,
+        "arc_wav_combined": arc_wav_combined,
         "answer_chunks": answer_chunks,
         "answer_joined": spoken_answer or answer_text or "",
         "played_audio": PLAY,
