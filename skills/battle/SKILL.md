@@ -50,6 +50,33 @@ disciplines:
 
 Pits a Red Team (attack) against a Blue Team (defense) in a long-running competitive loop. Each team leverages all `.pi/skills` to attack or defend a target codebase.
 
+
+## Invariant battles (the common case)
+
+Battle's default scoring targets exploitation (system-down, command injection),
+but the most frequent real use of an adversarial Red/Blue loop is verifying a
+PROJECT-SPECIFIC INVARIANT: "no PII value leaks", "the ledger balances", "the
+parser drops no record", "the authz check cannot be bypassed".
+
+Supply a pluggable invariant Judge -- a small independent module
+`judge(target_dir, params) -> {passed, violations, evidence}` (schema
+`battle.invariant_result.v1`). Red's objective becomes "produce an input that
+makes the Judge fail"; Blue's is "make it pass"; the scorekeeper reads the Judge
+result, never an agent's self-report. Judges are fail-closed: a judge that
+errors is a FAILED invariant, never a silent pass.
+
+```bash
+python3 -m battle_skill.invariant_judge \
+  --judge fixtures/reference-judges/no_data_leak_judge.py \
+  --target <released-output-dir> \
+  --params '{"policy": "policy.json", "output_subdir": "corpus"}'
+```
+
+`fixtures/reference-judges/no_data_leak_judge.py` is the anonymizer
+confidentiality invariant as a Judge: it independently scans released output
+(JSON scalars incl decoded escapes, numeric expansion, SQLite cells + schema
+DDL + header integers, text/CSV) for any policy value in any representation.
+
 ## Purpose Boundary
 
 Battle's purpose is the Red/Blue security competition backend: authorized target
