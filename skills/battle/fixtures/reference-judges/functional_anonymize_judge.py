@@ -26,6 +26,15 @@ import unicodedata
 from pathlib import Path
 
 
+def _digits(text: str) -> str:
+    return "".join(ch for ch in text if ch.isdigit())
+
+
+def _aliases(text: str) -> set[str]:
+    digits = _digits(text)
+    return {digits} if len(digits) >= 7 and digits != text else set()
+
+
 def _num_forms(text: str):
     forms = {text}
     try:
@@ -251,9 +260,13 @@ def judge(target_dir, params):
     out = Path(target_dir) / params.get("output_subdir", "corpus")
     policy = json.loads(Path(params["policy"]).read_text(encoding="utf-8"))
     entries = policy.get("sensitive_values", [])
-    values = [str(e["value"]) for e in entries]
-    types = [str(e.get("type", "")) for e in entries]
-    subjects = [str(e.get("subject_id", e.get("rule_id", ""))) for e in entries]
+    values, types, subjects = [], [], []
+    for entry in entries:
+        value = str(entry["value"])
+        for form in (value, *_aliases(value)):
+            values.append(form)
+            types.append(str(entry.get("type", "")))
+            subjects.append(str(entry.get("subject_id", entry.get("rule_id", ""))))
     cmp_ = _Comparator(values, types, subjects)
 
     in_files = sorted(str(p.relative_to(inp)) for p in inp.rglob("*") if p.is_file())

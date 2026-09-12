@@ -33,6 +33,22 @@ def _digits(s: str) -> str:
     return "".join(out)
 
 
+def _digit_tokens(s: str) -> set[str]:
+    tokens: set[str] = set()
+    current: list[str] = []
+    for ch in s:
+        try:
+            current.append(str(unicodedata.decimal(ch)))
+            continue
+        except (TypeError, ValueError):
+            pass
+        if current:
+            tokens.add("".join(current)); current = []
+    if current:
+        tokens.add("".join(current))
+    return tokens
+
+
 def _num_forms(x):
     out = set()
     if isinstance(x, bool):
@@ -197,13 +213,14 @@ def judge(target_dir, params):
             scan_paths.append(extra_path)
     text, nums = _gather_many(scan_paths, params.get("interpretation_profile") or {})
     nfc, nfd = unicodedata.normalize("NFC", text), unicodedata.normalize("NFD", text)
+    digit_tokens = _digit_tokens(text)
     leaked = []
     for v in values:
         if unicodedata.normalize("NFC", v) in nfc or unicodedata.normalize("NFD", v) in nfd:
             leaked.append(v)
             continue
         digits = _digits(v)
-        if len(digits) >= 7 and digits in nums:
+        if len(digits) >= 7 and (digits in nums or digits in digit_tokens):
             leaked.append(v)
             continue
         if len(digits) >= 7 and digits.startswith("0") and digits.lstrip("0") in nums:
