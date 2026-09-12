@@ -49,6 +49,15 @@
       "claim_semantics": "control_flow"
     },
     {
+      "id": "battle.evaluator_lock.enforced_before_load",
+      "description": "Battle verifies generator, Judge, adapter, profile, and helper files against an independent evaluator lock before loading executable Docker campaign components.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "control_flow"
+    },
+    {
       "id": "battle.local_docker.reactive_round",
       "description": "A clean local Battle repair round runs through the isolated Docker target and emits complete Red/Judge/Blue/scorekeeper receipts",
       "criticality": "critical",
@@ -597,6 +606,20 @@
         "duplicate JSON keys are silently collapsed before validation",
         "extra fields or non-finite numeric values enter campaign envelopes",
         "duplicate or empty case IDs and invalid case maps reach target execution"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "evaluator_lock.enforced_before_load",
+      "claim_id": "battle.evaluator_lock.enforced_before_load",
+      "seam_type": "supply-chain/evaluator-lock",
+      "criticality": "critical",
+      "failure_modes": [
+        "changed imported helper remains trusted because only top-level Judge file was hashed",
+        "worker replaces both evaluator path and claimed expected digest in the request",
+        "lock mismatch reaches target launch"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -1268,6 +1291,39 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/battle-b05-strictly-validate-campaign-and-acceptance-envelopes.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-b06-verify-evaluator-locks-before-loading-executable-components",
+      "category": "battle-b06-verify-evaluator-locks-before-loading-executable-components",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.evaluator_lock.enforced_before_load"
+      ],
+      "seams": [
+        "evaluator_lock.enforced_before_load"
+      ],
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b06-verify-evaluator-locks-before-loading-executable-components --summary /tmp/battle-agentic-evals/battle-b06-verify-evaluator-locks-before-loading-executable-components.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b06-verify-evaluator-locks-before-loading-executable-components"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-b06-verify-evaluator-locks-before-loading-executable-components.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800

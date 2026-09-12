@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import Any
 
 from .docker_runtime import extract_docker_run_image
+from .evaluator_lock import verify_evaluator_lock
 from .invariant_campaign import load_profile, run_campaign
 from .invariant_judge import run_judge
 from .strict_json import finite_json_values, load_path
@@ -85,6 +86,7 @@ def validate_request(request: dict[str, Any]) -> None:
         "output_subdir",
         "lineage",
         "authorization_receipt",
+        "evaluator_lock_receipt",
     }
     extra = sorted(set(request) - allowed)
     _require(not extra, f"request contains unknown fields: {extra}")
@@ -101,6 +103,10 @@ def validate_request(request: dict[str, Any]) -> None:
     if "lineage" in request:
         _require(isinstance(request["lineage"], dict), "lineage must be an object")
     _validate_execution_authorization(request)
+    if extract_docker_run_image(request["target_run_cmd"]):
+        lock_receipt = verify_evaluator_lock(request["lock_path"], request)
+        _require(lock_receipt["status"] == "PASS", "; ".join(lock_receipt["problems"]))
+        request["evaluator_lock_receipt"] = lock_receipt
 
 
 def resolve_plan(request: dict[str, Any]) -> dict[str, Any]:

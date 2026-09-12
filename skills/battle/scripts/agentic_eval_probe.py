@@ -1176,6 +1176,15 @@ def probe_pytest_contracts(summary_path: Path, *, suite: str, tests: list[str]) 
     )
 
 
+def probe_b06_verify_evaluator_locks(summary_path: Path) -> int:
+    return probe_pytest_contracts(
+        summary_path,
+        suite="battle-b06-verify-evaluator-locks-before-loading-executable-components",
+        tests=["test_evaluator_lock_enforcement.py"],
+    )
+
+
+
 def probe_b05_strict_campaign_acceptance_envelopes(summary_path: Path) -> int:
     return probe_pytest_contracts(
         summary_path,
@@ -4570,6 +4579,8 @@ def main() -> int:
             return probe_b04_bind_authorization_to_executable_target(args.summary)
         if args.suite == "battle-b05-strictly-validate-campaign-and-acceptance-envelopes":
             return probe_b05_strict_campaign_acceptance_envelopes(args.summary)
+        if args.suite == "battle-b06-verify-evaluator-locks-before-loading-executable-components":
+            return probe_b06_verify_evaluator_locks(args.summary)
         if args.suite == "review-receipt-hash-finalization":
             return probe_review_receipt_hash_finalization(args.summary)
         if args.suite == "review-judge-authority":

@@ -105,7 +105,16 @@ def run_production_round(adapter_request: dict[str, Any]) -> dict[str, Any]:
     authorized_request["authorization_receipt"] = receipt
     adapter_request = dict(adapter_request)
     adapter_request["base_request"] = authorized_request
-    request = build_contract_request(adapter_request)
+    try:
+        request = build_contract_request(adapter_request)
+    except ValueError as exc:
+        return {"schema": "battle.production_adapter_round.v1",
+                "status": "BLOCKED",
+                "failure_code": "campaign-envelope-invalid",
+                "authorization_receipt": receipt,
+                "docker_boundary": docker_receipt,
+                "problems": [str(exc)],
+                "target_launches": 0}
     enrollment_receipt = validate_project_contract_enrollment(
         adapter_request.get("project_contract_enrollment"),
         expected_target=expected_target,
