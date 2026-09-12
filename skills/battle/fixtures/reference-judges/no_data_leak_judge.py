@@ -112,11 +112,26 @@ def _decode_tokens(text: str, profile: dict) -> list[str]:
     return decoded
 
 
+def _read_text_stream(f: Path, raw: bytes) -> list[str]:
+    texts = []
+    for enc in ("utf-8-sig", "utf-16", "utf-16-le", "utf-16-be"):
+        try:
+            text = raw.decode(enc)
+        except UnicodeDecodeError:
+            continue
+        texts.append(text)
+        if "\x00" not in text:
+            break
+    if not texts:
+        texts.append(raw.decode("utf-8", errors="replace"))
+    return texts
+
+
 def _gather(root: Path, profile: dict | None = None):
     profile = profile or {}
-    texts, nums = [], set()
+    texts, nums, problems, inventory = [], set(), [], []
     if not root.exists():
-        return "", nums
+        return "", nums, problems, inventory
 
     def walk(o):
         if isinstance(o, bool) or o is None:
@@ -137,68 +152,71 @@ def _gather(root: Path, profile: dict | None = None):
                 walk(v)
 
     files = [root] if root.is_file() else sorted(root.rglob("*"))
+    max_scan_bytes = int(profile.get("max_scan_bytes", 10 * 1024 * 1024))
     for f in files:
         if not f.is_file():
             continue
-        texts.append(str(f.relative_to(root)))  # file names are released data too
+        rel = str(f.relative_to(root))
+        inventory.append(rel)
+        texts.append(rel)  # file names are released data too
+        try:
+            size = f.stat().st_size
+        except OSError as exc:
+            problems.append(f"{rel}: stat failed: {exc}")
+            continue
+        if size > max_scan_bytes:
+            problems.append(f"{rel}: scan limit exceeded ({size} > {max_scan_bytes} bytes)")
+            continue
+        if f.suffix == ".sqlite":
+            try:
+                con = sqlite3.connect(f"file:{f}?mode=ro", uri=True)
+                for row in con.execute("SELECT type,name,tbl_name,sql FROM sqlite_master"):
+                    texts.extend(x for x in row if isinstance(x, str))
+                tbls = [r[0] for r in con.execute(
+                    "SELECT name FROM sqlite_master WHERE type IN ('table','view') AND name NOT GLOB 'sqlite_*'")]
+                for t in tbls:
+                    for row in con.execute(f'SELECT * FROM "{t}"'):
+                        for c in row:
+                            if isinstance(c, str):
+                                texts.append(c)
+                            elif isinstance(c, (int, float)) and not isinstance(c, bool):
+                                nums.update(_num_forms(c))
+                        if profile.get("record_local_reconstruction"):
+                            texts.extend(_adjacent_recon(row))
+                con.close()
+                header = f.read_bytes()[:100]
+                for off, w in ((16, 2), (28, 4), (40, 4), (48, 4), (52, 4), (56, 4), (60, 4), (64, 4), (68, 4)):
+                    nums.add(str(int.from_bytes(header[off:off + w], "big")))
+                continue
+            except sqlite3.Error:
+                pass
+        try:
+            raw = f.read_bytes()
+        except OSError as exc:
+            problems.append(f"{rel}: read failed: {exc}")
+            continue
         if f.suffix == ".json":
             try:
-                walk(json.loads(f.read_text(encoding="utf-8-sig")))
+                walk(json.loads(raw.decode("utf-8-sig")))
+                continue
             except Exception:
-                texts.append(f.read_text(encoding="utf-8", errors="replace"))
-        elif f.suffix in (".csv", ".txt"):
-            raw = f.read_bytes()
-            try:
-                texts.append(raw.decode("utf-8"))
-            except UnicodeDecodeError:
-                for enc in ("utf-16", "utf-16-le", "utf-16-be"):
-                    try:
-                        texts.append(raw.decode(enc))
-                        break
-                    except UnicodeDecodeError:
-                        continue
-                texts.append(raw.decode("utf-8", errors="replace"))
-            # BOM-less ASCII-range UTF-16LE passes strict UTF-8 with embedded
-            # NULs; NUL presence triggers UTF-16 interpretation regardless.
-            if b"\x00" in raw:
-                for enc in ("utf-16-le", "utf-16-be"):
-                    try:
-                        texts.append(raw.decode(enc))
-                        break
-                    except UnicodeDecodeError:
-                        continue
-        elif f.suffix == ".sqlite":
-            con = sqlite3.connect(f"file:{f}?mode=ro", uri=True)
-            for row in con.execute("SELECT type,name,tbl_name,sql FROM sqlite_master"):
-                texts.extend(x for x in row if isinstance(x, str))
-            tbls = [r[0] for r in con.execute(
-                "SELECT name FROM sqlite_master WHERE type IN ('table','view') AND name NOT GLOB 'sqlite_*'")]
-            for t in tbls:
-                for row in con.execute(f'SELECT * FROM "{t}"'):
-                    for c in row:
-                        if isinstance(c, str):
-                            texts.append(c)
-                        elif isinstance(c, (int, float)) and not isinstance(c, bool):
-                            nums.update(_num_forms(c))
-                    if profile.get("record_local_reconstruction"):
-                        texts.extend(_adjacent_recon(row))
-            con.close()
-            header = f.read_bytes()[:100]
-            for off, w in ((16, 2), (28, 4), (40, 4), (48, 4), (52, 4), (56, 4), (60, 4), (64, 4), (68, 4)):
-                nums.add(str(int.from_bytes(header[off:off + w], "big")))
+                pass
+        texts.extend(_read_text_stream(f, raw))
     if profile.get("decoders"):
         texts.extend(_decode_tokens("\x00".join(texts), profile))
-    return "\x00".join(texts), nums
+    return "\x00".join(texts), nums, problems, inventory
 
 
 def _gather_many(paths, profile: dict | None = None):
-    texts, nums = [], set()
+    texts, nums, problems, inventory = [], set(), [], []
     for path in paths:
-        text, path_nums = _gather(Path(path), profile)
+        text, path_nums, path_problems, path_inventory = _gather(Path(path), profile)
         if text:
             texts.append(text)
         nums.update(path_nums)
-    return "\x00".join(texts), nums
+        problems.extend(path_problems)
+        inventory.extend(f"{Path(path).name}/{item}" for item in path_inventory)
+    return "\x00".join(texts), nums, problems, inventory
 
 
 def judge(target_dir, params):
@@ -211,7 +229,10 @@ def judge(target_dir, params):
         extra_path = target / extra
         if extra_path.exists():
             scan_paths.append(extra_path)
-    text, nums = _gather_many(scan_paths, params.get("interpretation_profile") or {})
+    profile = dict(params.get("interpretation_profile") or {})
+    if "max_scan_bytes" in params:
+        profile["max_scan_bytes"] = params["max_scan_bytes"]
+    text, nums, problems, inventory = _gather_many(scan_paths, profile)
     nfc, nfd = unicodedata.normalize("NFC", text), unicodedata.normalize("NFD", text)
     digit_tokens = _digit_tokens(text)
     leaked = []
@@ -226,6 +247,8 @@ def judge(target_dir, params):
         if len(digits) >= 7 and digits.startswith("0") and digits.lstrip("0") in nums:
             leaked.append(v)
             continue
-    return {"passed": not leaked,
-            "violations": [f"policy value survives in output: {v!r}" for v in leaked],
-            "evidence": {"policy_values": len(values), "scanned": str(out)}}
+    violations = [f"policy value survives in output: {v!r}" for v in leaked]
+    violations.extend(f"scan incomplete: {p}" for p in problems)
+    return {"passed": not violations,
+            "violations": violations,
+            "evidence": {"policy_values": len(values), "scanned": str(out), "release_inventory": inventory}}

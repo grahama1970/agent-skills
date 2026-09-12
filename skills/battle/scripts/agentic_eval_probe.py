@@ -4726,6 +4726,12 @@ def main() -> int:
                 suite=args.suite,
                 tests=["test_executed_acceptance_floor.py"],
             )
+        if args.suite == "battle-b15-scan-every-declared-release-and-execution-log-stream":
+            return probe_pytest_contracts(
+                args.summary,
+                suite=args.suite,
+                tests=["test_release_stream_coverage.py"],
+            )
         if args.suite == "battle-functional-judge":
             return probe_battle_functional_judge(args.summary)
         if args.suite == "battle-commentary-causality":
