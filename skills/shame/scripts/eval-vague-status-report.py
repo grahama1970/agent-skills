@@ -84,8 +84,11 @@ def main() -> None:
     assert "guard_substituted_status" in index_text
     assert "function guardContinuingStatus" in index_text
     # Accepted output keeps the model's canonical fenced JSON in history;
-    # the prose Status Report rewrite is gone (representation conditioning).
+    # GLM copied the prose Status Report footer, so accepted messages must not
+    # append or rewrite a model-visible prose status after the JSON contract.
     assert "const strippedContent = stripStatusJson" not in index_text
+    assert "appendText(event.message.content, line)" not in index_text
+    assert "if (statusState !== \"continuing\") resetGuardRepairBudget()" in index_text
     retry_fn = index_text[index_text.index("function retryPrompt"):index_text.index("function continuationPrompt")]
     assert retry_fn.count("suggested_status") == 1, "retry prompt must inline exactly one status target"
     notice = index_text[index_text.index("function rejectionNotice"):index_text.index("function retryEvidenceSnapshot")]
@@ -104,7 +107,7 @@ def main() -> None:
             "visible rejection notice is compact and hashes raw diagnostics",
             "retry prompt is single-target: exactly one status JSON inline, byte-for-byte copy instruction",
             "guard substitutes a safe continuing status for prose-only stops and never synthesizes done",
-            "accepted output keeps the canonical fenced status JSON in model-visible history",
+            "accepted output keeps the canonical fenced status JSON in model-visible history without appending a prose Status Report footer",
             "retry_request and follow_up typed packet schemas remain present",
         ],
     }, indent=2))

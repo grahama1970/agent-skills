@@ -1500,15 +1500,16 @@ export default function lazyReportShameShameShame(pi: any) {
         // command; done/needs_human/failed compile to null and end the turn.
         let displayReturn: any = undefined;
         if (status && typeof statusState === "string") {
-          resetGuardRepairBudget();
-          // Representation conditioning (WebGPT 2026-09-11) + answer-visibility
-          // (operator 2026-08-31): keep the model's own answer prose and
-          // canonical fenced status JSON in model-visible history verbatim,
-          // then APPEND the rendered Status Report footer. The old strip+rewrite
-          // removed the fence and taught imitating models a prose-only shape
-          // (20/24 failures); appending preserves both contracts.
-          const line = renderStatusLine(status);
-          displayReturn = { message: { ...event.message, content: appendText(event.message.content, line) } };
+          // Do not reset the one-correction budget for `continuing`: that lets
+          // GLM alternate valid continuing JSON with prose-only "Status Report"
+          // stops forever. New user input starts a new rootKey; terminal states
+          // may clear the budget normally.
+          if (statusState !== "continuing") resetGuardRepairBudget();
+          // GLM spiral fix (2026-09-12): never append a model-visible prose
+          // Status Report after accepted JSON. The JSON block is the contract;
+          // rendering prose after it trains GLM to copy the wrong shape and also
+          // violates the "status JSON last" stop-boundary rule.
+          displayReturn = undefined;
           lastReportState = statusState;
           try { syncBadge(ctx); } catch { /* optional UI */ }
           const compiled = compileStatusCommand(status);
