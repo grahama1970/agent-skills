@@ -31,6 +31,15 @@
       "claim_semantics": "control_flow"
     },
     {
+      "id": "battle.authorization.executable_target_binding",
+      "description": "Battle production campaigns validate authorization against the actual executable Docker image and lower-level Docker campaign execution refuses unbound authorization receipts.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "control_flow"
+    },
+    {
       "id": "battle.local_docker.reactive_round",
       "description": "A clean local Battle repair round runs through the isolated Docker target and emits complete Red/Judge/Blue/scorekeeper receipts",
       "criticality": "critical",
@@ -551,6 +560,20 @@
         "CLI validates authorization identity A while executing target path B",
         "CLI validates authorization identity A while constructing a Docker battle for image B",
         "caller-supplied authorization aliases bypass the actual target mapping check"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "authorization.executable_target_binding",
+      "claim_id": "battle.authorization.executable_target_binding",
+      "seam_type": "production-adapter/security-authorization",
+      "criticality": "critical",
+      "failure_modes": [
+        "production adapter authorizes target A while executing Docker image B",
+        "effective Docker runtime scope is not checked by the authorization validator",
+        "lower-level Docker campaign execution runs without a bound authorization receipt"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -1156,6 +1179,39 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/review-cli-authorization-target-binding.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-b04-bind-authorization-to-the-actual-executable-target",
+      "category": "battle-b04-bind-authorization-to-the-actual-executable-target",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.authorization.executable_target_binding"
+      ],
+      "seams": [
+        "authorization.executable_target_binding"
+      ],
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b04-bind-authorization-to-the-actual-executable-target --summary /tmp/battle-agentic-evals/battle-b04-bind-authorization-to-the-actual-executable-target.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b04-bind-authorization-to-the-actual-executable-target"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-b04-bind-authorization-to-the-actual-executable-target.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800

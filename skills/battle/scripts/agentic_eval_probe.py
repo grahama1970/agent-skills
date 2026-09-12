@@ -1176,6 +1176,50 @@ def probe_pytest_contracts(summary_path: Path, *, suite: str, tests: list[str]) 
     )
 
 
+def probe_b04_bind_authorization_to_executable_target(summary_path: Path) -> int:
+    proc = _run(
+        [
+            "uv",
+            "run",
+            "--project",
+            str(BATTLE_DIR),
+            "python",
+            "-m",
+            "pytest",
+            "-q",
+            str(BATTLE_DIR / "tests" / "test_execution_authorization_binding.py"),
+        ],
+        timeout=240,
+    )
+    stdout_path = summary_path.parent / "battle-b04-bind-authorization-to-the-actual-executable-target.stdout.txt"
+    stderr_path = summary_path.parent / "battle-b04-bind-authorization-to-the-actual-executable-target.stderr.txt"
+    stdout_path.write_text(proc.stdout, encoding="utf-8")
+    stderr_path.write_text(proc.stderr, encoding="utf-8")
+    if proc.returncode != 0:
+        sys.stderr.write(proc.stdout + proc.stderr)
+        return proc.returncode
+    marker = proc.stdout.strip().splitlines()[-1] if proc.stdout.strip() else ""
+    return _emit(
+        summary_path,
+        _summary(
+            suite="battle-b04-bind-authorization-to-the-actual-executable-target",
+            live="pytest_contracts_over_production_adapter_and_campaign_authorization_boundary",
+            checks=[{"name": "execution_authorization_binding_pytest", "status": "PASS", "stdout_marker": marker}],
+            artifacts={"stdout": str(stdout_path), "stderr": str(stderr_path)},
+            claims_proves=[
+                "The production adapter validates authorization against the executable Docker image before launch.",
+                "An authorization for target/image A cannot launch target/image B.",
+                "Lower-level Docker campaign execution refuses requests without a bound authorization receipt.",
+            ],
+            claims_does_not_prove=[
+                "external target authorization sufficiency",
+                "production deployment readiness",
+            ],
+        ),
+    )
+
+
+
 def probe_transport(summary_path: Path) -> int:
     out = Path(tempfile.mkdtemp(prefix="battle-agentic-transport-"))
     proc = _run(
@@ -4513,6 +4557,8 @@ def main() -> int:
             return probe_authorization_sampling(args.summary, samples=args.samples, seed=args.seed)
         if args.suite == "review-cli-authorization-target-binding":
             return probe_review_cli_authorization_target_binding(args.summary)
+        if args.suite == "battle-b04-bind-authorization-to-the-actual-executable-target":
+            return probe_b04_bind_authorization_to_executable_target(args.summary)
         if args.suite == "review-receipt-hash-finalization":
             return probe_review_receipt_hash_finalization(args.summary)
         if args.suite == "review-judge-authority":

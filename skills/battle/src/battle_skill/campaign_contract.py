@@ -26,6 +26,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from .docker_runtime import extract_docker_run_image
 from .invariant_campaign import load_profile, run_campaign
 from .invariant_judge import run_judge
 
@@ -55,6 +56,18 @@ def _require(condition: bool, message: str) -> None:
         raise ValueError(message)
 
 
+def _validate_execution_authorization(request: dict[str, Any]) -> None:
+    image = extract_docker_run_image(str(request.get("target_run_cmd", "")))
+    if not image:
+        return
+    receipt = request.get("authorization_receipt")
+    _require(isinstance(receipt, dict), "docker campaign request missing authorization_receipt")
+    _require(receipt.get("status") == "PASS", "docker campaign authorization_receipt did not PASS")
+    _require(receipt.get("requested_action") == "battle", "docker campaign authorization action mismatch")
+    _require(receipt.get("requested_runtime_mode") == "docker", "docker campaign authorization runtime mismatch")
+    _require(receipt.get("expected_execution_target") == image, "docker campaign authorization target does not match executable image")
+
+
 def validate_request(request: dict[str, Any]) -> None:
     _require(request.get("schema") == REQUEST_SCHEMA,
              f"request schema must be {REQUEST_SCHEMA}")
@@ -62,6 +75,7 @@ def validate_request(request: dict[str, Any]) -> None:
                 "target_run_cmd", "work_root"):
         _require(bool(request.get(key)), f"request missing {key}")
     _require(isinstance(request.get("gen_params", {}), dict), "gen_params must be an object")
+    _validate_execution_authorization(request)
 
 
 def resolve_plan(request: dict[str, Any]) -> dict[str, Any]:

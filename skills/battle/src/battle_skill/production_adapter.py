@@ -24,7 +24,7 @@ from .acceptance_floor import (
     validate_project_contract_enrollment,
 )
 from .campaign_contract import run_contract_campaign, validate_request
-from .docker_runtime import validate_docker_run_command
+from .docker_runtime import extract_docker_run_image, validate_docker_run_command
 from .invariant_campaign import load_profile
 
 _ADAPTER_PATH = Path(__file__).resolve()
@@ -67,33 +67,45 @@ def run_production_round(adapter_request: dict[str, Any]) -> dict[str, Any]:
     """Authorization-first contract round. Zero launches without valid auth."""
     auth_path = adapter_request.get("authorization_manifest")
     expected_target = adapter_request.get("expected_target")
-    if not auth_path or not expected_target:
+    base_request = adapter_request.get("base_request")
+    if not auth_path or not expected_target or not isinstance(base_request, dict):
         return {"schema": "battle.production_adapter_round.v1",
                 "status": "BLOCKED",
                 "failure_code": "adapter-authorization-missing",
                 "target_launches": 0}
+
+    docker_image = extract_docker_run_image(str(base_request.get("target_run_cmd", "")))
+    docker_receipt = None
+    if adapter_request.get("enforce_docker_boundary") is True or docker_image:
+        docker_receipt = validate_docker_run_command(str(base_request.get("target_run_cmd", "")))
+        if docker_receipt["status"] != "PASS":
+            return {"schema": "battle.production_adapter_round.v1",
+                    "status": "BLOCKED",
+                    "failure_code": "docker-boundary-invalid",
+                    "docker_boundary": docker_receipt,
+                    "target_launches": 0}
+        docker_image = str(docker_receipt["image"])
+
     receipt = validate_target_authorization(
         Path(auth_path),
         expected_target=expected_target,
+        expected_execution_target=docker_image or expected_target,
         requested_action="battle",
-        requested_runtime_mode="battle",
+        requested_runtime_mode="docker" if docker_image else "battle",
     )
     if receipt.get("status") != "PASS":
         return {"schema": "battle.production_adapter_round.v1",
                 "status": "BLOCKED",
                 "failure_code": "adapter-authorization-invalid",
                 "authorization_receipt": receipt,
+                "docker_boundary": docker_receipt,
                 "target_launches": 0}
+
+    authorized_request = dict(base_request)
+    authorized_request["authorization_receipt"] = receipt
+    adapter_request = dict(adapter_request)
+    adapter_request["base_request"] = authorized_request
     request = build_contract_request(adapter_request)
-    if adapter_request.get("enforce_docker_boundary") is True:
-        docker_receipt = validate_docker_run_command(request.get("target_run_cmd", ""))
-        if docker_receipt["status"] != "PASS":
-            return {"schema": "battle.production_adapter_round.v1",
-                    "status": "BLOCKED",
-                    "failure_code": "docker-boundary-invalid",
-                    "authorization_receipt": receipt,
-                    "docker_boundary": docker_receipt,
-                    "target_launches": 0}
     enrollment_receipt = validate_project_contract_enrollment(
         adapter_request.get("project_contract_enrollment"),
         expected_target=expected_target,
@@ -167,6 +179,7 @@ def run_production_round(adapter_request: dict[str, Any]) -> dict[str, Any]:
     return {"schema": "battle.production_adapter_round.v1",
             "status": campaign["verdict"],
             "authorization_receipt": receipt,
+            "docker_boundary": docker_receipt,
             "project_contract_enrollment": enrollment_receipt,
             "retained_acceptance_bundle": retained_bundle,
             "acceptance_floor": floor_receipt,
