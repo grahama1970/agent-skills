@@ -197,7 +197,13 @@ def _gather(root: Path, profile: dict | None = None):
         if size > max_scan_bytes:
             problems.append(f"{rel}: scan limit exceeded ({size} > {max_scan_bytes} bytes)")
             continue
+        try:
+            raw = f.read_bytes()
+        except OSError as exc:
+            problems.append(f"{rel}: read failed: {exc}")
+            continue
         if f.suffix == ".sqlite":
+            texts.extend(_read_text_stream(f, raw))
             try:
                 con = sqlite3.connect(f"file:{f}?mode=ro", uri=True)
                 for row in con.execute("SELECT type,name,tbl_name,sql FROM sqlite_master"):
@@ -209,22 +215,19 @@ def _gather(root: Path, profile: dict | None = None):
                         for c in row:
                             if isinstance(c, str):
                                 texts.append(c)
+                            elif isinstance(c, (bytes, bytearray)):
+                                texts.extend(_read_text_stream(f, bytes(c)))
                             elif isinstance(c, (int, float, Decimal)) and not isinstance(c, bool):
                                 nums.update(_num_forms(c))
                         if profile.get("record_local_reconstruction"):
                             texts.extend(_adjacent_recon(row))
                 con.close()
-                header = f.read_bytes()[:100]
+                header = raw[:100]
                 for off, w in ((16, 2), (28, 4), (40, 4), (48, 4), (52, 4), (56, 4), (60, 4), (64, 4), (68, 4)):
                     nums.add(str(int.from_bytes(header[off:off + w], "big")))
                 continue
             except sqlite3.Error:
                 pass
-        try:
-            raw = f.read_bytes()
-        except OSError as exc:
-            problems.append(f"{rel}: read failed: {exc}")
-            continue
         if f.suffix == ".json":
             try:
                 walk(json.loads(raw.decode("utf-8-sig"), parse_int=Decimal, parse_float=Decimal))

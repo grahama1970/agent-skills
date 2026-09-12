@@ -553,6 +553,15 @@
         "adversarial_live_e2e": true
       },
       "claim_semantics": "protocol"
+    },
+    {
+      "id": "no_data_leak_judge.sqlite_raw_text_surfaces",
+      "description": "No-data-leak Judge scans complete released SQLite bytes for text encodings in the frozen profile, including BLOB content and unused raw byte surfaces, while failing closed on scan limits.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "control_flow"
     }
   ],
   "seams": [
@@ -3116,6 +3125,39 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/frozen-plan-execution.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 400
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-b17-scan-whole-sqlite-files-for-retained-text-form-values",
+      "category": "battle-b17-scan-whole-sqlite-files-for-retained-text-form-values",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "no_data_leak_judge.sqlite_raw_text_surfaces"
+      ],
+      "seams": [
+        "sqlite.raw_text_surfaces"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b17-scan-whole-sqlite-files-for-retained-text-form-values --summary /tmp/battle-agentic-evals/battle-b17-scan-whole-sqlite-files-for-retained-text-form-values.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b17-scan-whole-sqlite-files-for-retained-text-form-values"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-b17-scan-whole-sqlite-files-for-retained-text-form-values.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 400
