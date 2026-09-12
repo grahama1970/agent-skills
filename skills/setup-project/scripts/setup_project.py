@@ -154,7 +154,7 @@ def battle_receipt_evidence(root: Path, paths: list[Path]) -> list[dict]:
         json_schema_evidence(
             root,
             path,
-            {"battle.invariant_campaign_result.v1", "battle.campaign_aggregate.v1"},
+            {"battle.invariant_campaign_result.v1", "battle.campaign_aggregate.v1", "battle.campaign_contract_receipt.v1"},
             "battle_receipt_missing",
             "battle_receipt_invalid",
         )

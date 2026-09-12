@@ -102,8 +102,8 @@ When enabled, setup-project augments `required_skills` with
 `acceptance-contract`, `battle`, and `create-report`, and audit fails unless:
 
 - `acceptance_contract` exists and has schema `acceptance_contract.bundle.v1`;
-- `battle_receipts` contains at least one typed `battle.invariant_campaign_result.v1`
-  or `battle.campaign_aggregate.v1` JSON receipt;
+- `battle_receipts` contains at least one typed `battle.campaign_contract_receipt.v1`,
+  `battle.invariant_campaign_result.v1`, or `battle.campaign_aggregate.v1` JSON receipt;
 - `release_report` exists and has schema `create_report.report.v1`;
 - `wrapper_proof`, when configured, exists.
 
