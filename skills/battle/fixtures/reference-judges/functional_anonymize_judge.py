@@ -159,8 +159,8 @@ class _Comparator:
                 self.violations.append(f"functional:{where}: row {r} width changed")
                 return
             for c, (a, b) in enumerate(zip(rin, rout)):
-                if a in self.values:
-                    self.bind(a, b, f"{where}:row{r}:cell{c}")
+                if any(v in unicodedata.normalize("NFC", a) for v in self.values):
+                    self.text(a, b, f"{where}:row{r}:cell{c}")
                 elif unicodedata.normalize("NFC", a) != unicodedata.normalize("NFC", b):
                     self.violations.append(f"functional:{where}:row{r}:cell{c}: non-slot cell changed ({a!r} -> {b!r})")
 
