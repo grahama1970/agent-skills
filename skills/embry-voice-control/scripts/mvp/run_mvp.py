@@ -36,18 +36,25 @@ def main() -> int:
     stages = [e.get("stage") for e in events]
     rec = json.loads(a_receipt.read_text()) if a_receipt.exists() else {}
 
+    def norm(s):
+        return " ".join((s or "").split())
+    b_answer = next((e.get("answer_text") for e in reversed(events) if e.get("answer_text")), None)
+    # consumed (seq,stage) compared against the ACTUAL solver log, not A's word
+    log_pairs = {(e.get("seq"), e.get("stage")) for e in events if e.get("seq") is not None}
+    consumed_pairs = {(c.get("seq"), c.get("stage")) for c in rec.get("consumed_events", [])}
+    chunks = rec.get("answer_chunks", [])
     checks = {
         "b_exit_ok": b_rc == 0,
         "a_exit_ok": a_rc == 0,
         "valid_event_sequence": bool(events) and stages[0].startswith("working:")
                                 and stages[-1] == "answer_ready",
-        "a_consumed_real_events": len([c for c in rec.get("consumed_events", []) if c.get("stage")]) >= 3,
-        "a_spoke_before_b_done": rec.get("spoke_cover_before_b_done") is True,
-        "answer_matches_b": bool(rec.get("answer_text")) and rec.get("answer_text") ==
-                            next((e.get("answer_text") for e in reversed(events) if e.get("answer_text")), None),
-        "answer_rendered": bool(rec.get("answer_wav")),
-        "timestamps_overlap": bool(rec.get("spoke_cover_ts") and rec.get("b_done_ts")
-                                   and rec.get("spoke_cover_ts") < rec.get("b_done_ts")),
+        "a_consumed_matches_log": bool(log_pairs) and log_pairs <= consumed_pairs,
+        "cover_ready_before_b_done": rec.get("cover_ready_before_b_done") is True,
+        "answer_matches_b": bool(b_answer) and norm(rec.get("answer_joined")) == norm(b_answer),
+        "all_answer_chunks_real_audio": bool(chunks) and all(c.get("size", 0) > 1000
+                                             and c.get("seconds", 0) > 0.3 for c in chunks),
+        "timestamps_overlap": bool(rec.get("cover_ready_ts") and rec.get("b_done_ts")
+                                   and rec.get("cover_ready_ts") < rec.get("b_done_ts")),
     }
     passed = all(checks.values())
     combined = OUT / f"{run_id}.mvp-receipt.json"
