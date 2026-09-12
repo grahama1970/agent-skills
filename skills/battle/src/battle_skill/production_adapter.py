@@ -23,7 +23,7 @@ from .campaign_contract import run_contract_campaign, validate_request
 from .invariant_campaign import load_profile
 
 _ADAPTER_PATH = Path(__file__).resolve()
-for _candidate in (_ADAPTER_PATH.parents[3] / "skills",):
+for _candidate in (_ADAPTER_PATH.parents[3],):
     if str(_candidate) not in sys.path:
         sys.path.insert(0, str(_candidate))
 
