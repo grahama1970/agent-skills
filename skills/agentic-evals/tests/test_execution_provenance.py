@@ -33,6 +33,7 @@ def _manifest(case: dict, admitted: list[dict] | None = None) -> dict:
         "id": "claim.qid",
         "description": "frozen selector regression",
         "criticality": "critical",
+        "claim_semantics": "protocol",
         "evidence_required": {"fault_injected_deterministic": True},
     }
     if admitted is not None:
