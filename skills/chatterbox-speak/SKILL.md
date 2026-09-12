@@ -168,7 +168,9 @@ Turbo tags, pause macros, emotion->arc) and the **instant fallback** —
 can't beat the speech deadline; the generated line replaces it when it arrives.
 `stream --events solver.jsonl` demos the fallback policy; `plan_arc` simulates it
 against a predicted latency for preview/test only. Runtime + barge-in owned by
-`embry-voice-control`.
+`embry-voice-control`. Build-vs-adopt + local substrate (RealtimeSTT listener
+spine, chatterbox mouth, pi-mono-embry-interrupt-contract, Talker-Reasoner
+pattern): `references/prior-art.md`.
 
 Inputs are SOURCED, not guessed: `--latency-ms` from `$memory POST /execution-stats`
 (`recommended_timeout_ms`), `--emotion`/`--intensity` from `$memory POST /intent`
