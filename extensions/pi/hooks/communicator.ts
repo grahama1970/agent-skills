@@ -96,6 +96,21 @@ function formatMessage(msg: SwitchboardMessage): string {
 /**
  * Process a received message
  */
+function shouldAutoAck(msg: SwitchboardMessage): boolean {
+  // Watchdog has durable receipts under ~/.local/state/project-watchdog; once
+  // a Pi pane displays the notification, keeping it in Switchboard only makes
+  // every /reload replay the same backlog. Tasks/questions from humans still
+  // require explicit handling.
+  return (msg.type === "info" && msg.priority === "low")
+    || msg.from === "project-watchdog-bridge";
+}
+
+function ackIfNeeded(msg: SwitchboardMessage): void {
+  if (shouldAutoAck(msg) && ws?.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: "ack", id: msg.id }));
+  }
+}
+
 function handleIncomingMessage(msg: SwitchboardMessage): void {
   if (!sendHandler) {
     // Queue for later if send handler not ready
@@ -105,11 +120,7 @@ function handleIncomingMessage(msg: SwitchboardMessage): void {
 
   const formatted = formatMessage(msg);
   sendHandler(formatted);
-
-  // Auto-acknowledge low priority info messages
-  if (msg.type === "info" && msg.priority === "low" && ws?.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: "ack", id: msg.id }));
-  }
+  ackIfNeeded(msg);
 }
 
 /**
@@ -121,6 +132,7 @@ function flushPendingMessages(): void {
   for (const msg of pendingMessages) {
     const formatted = formatMessage(msg);
     sendHandler(formatted);
+    ackIfNeeded(msg);
   }
   pendingMessages.length = 0;
 }
