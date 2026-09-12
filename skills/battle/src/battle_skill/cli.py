@@ -64,6 +64,27 @@ def _load_campaign_json(path: Path) -> dict:
     return data
 
 
+@app.command("contract-variation-plan")
+def contract_variation_plan(
+    acceptance_bundle: Path = typer.Option(..., "--acceptance-bundle", exists=True, readable=True, help="acceptance_contract.bundle.v1 to expand into Battle research/test lanes."),
+    out: Path = typer.Option(..., "--out", help="battle.contract_variation_plan.v1 output path."),
+    execute_dogpile: bool = typer.Option(False, "--execute-dogpile", help="Run generated Dogpile lanes now. Default only writes the typed plan."),
+    dogpile_limit: int = typer.Option(0, "--dogpile-limit", help="Optional cap when --execute-dogpile is set. 0 means all lanes."),
+) -> None:
+    """Plan Dogpile-backed variation-family expansion for any acceptance contract."""
+    from .contract_variation_plan import write_plan
+
+    plan = write_plan(
+        acceptance_bundle,
+        out,
+        execute_dogpile=execute_dogpile,
+        dogpile_limit=dogpile_limit,
+    )
+    typer.echo(json.dumps(plan, indent=2, sort_keys=True))
+    if plan["status"] != "READY":
+        raise typer.Exit(1)
+
+
 @app.command("invariant-lineage-receipt")
 def invariant_lineage_receipt(
     red_campaign: Path = typer.Option(..., "--red-campaign", exists=True, readable=True, help="Failing campaign where Red found invariant violations."),

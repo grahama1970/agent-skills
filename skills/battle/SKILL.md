@@ -22,6 +22,7 @@ provides:
 composes:
   - hack
   - anvil
+  - dogpile
   - memory
   - treesitter
   - taxonomy
@@ -77,6 +78,32 @@ confidentiality invariant as a Judge: it independently scans released output
 (JSON scalars incl decoded escapes, numeric expansion, SQLite cells + schema
 DDL + header integers, text/CSV, report.json, and captured stdout/stderr) for
 any policy value in any representation.
+
+
+## Contract variation-family research (generic Battle composition)
+
+Battle is not project-specific. For any project or skill with an
+`acceptance_contract.bundle.v1`, Battle should expand each contract item through
+Dogpile before claiming comprehensive adversarial coverage:
+
+```bash
+./run.sh contract-variation-plan \
+  --acceptance-bundle /path/to/acceptance_bundle.json \
+  --out /tmp/battle-variation-plan.json
+```
+
+The output is `battle.contract_variation_plan.v1`. It maps every acceptance case
+to source-bearing Dogpile research lanes and reusable variation families such as
+representation equivalence, encoding/normalization, parser differentials,
+release-surface boundaries, lossy conversion, split/composed facts, scale,
+retry/concurrency, authorization, and failure-leak boundaries. Dogpile is research
+input only: it discovers meaningful variation families and source evidence.
+Battle then freezes selected families into deterministic generators, runs the
+real target in Docker/QEMU/digital-twin evidence gates, emits `battle.case_receipt.v1`
+per case, aggregates with `battle.campaign_aggregate.v1`, and retains the
+workflow classes as `$agentic-evals` cases. A serious release gate should expect
+hundreds of deterministic cases and roughly 20-30 retained eval classes when the
+contract surface is broad; smaller smoke gates must label themselves as smoke.
 
 
 ## Invariant campaigns (test the contract floor, then attack beyond it)

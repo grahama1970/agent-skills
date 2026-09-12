@@ -86,6 +86,15 @@
       "claim_semantics": "control_flow"
     },
     {
+      "id": "battle.contract_variation.dogpile_family_expansion",
+      "description": "For any acceptance_contract.bundle.v1, Battle emits a generic battle.contract_variation_plan.v1 mapping each acceptance case to Dogpile source-bearing research lanes, reusable variation families, deterministic case slots, and 20-30 retained agentic-eval workflow classes before Docker/Judge campaign proof.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
       "id": "battle.invariant_report.create_report_project_state_exploits_table",
       "description": "Battle invariant closure emits a plain-spoken create_report.report.v1 JSON report validated/rendered through create-report, includes a project-state artifact in source_of_truth_inventory, and appends a scannable exploits table with one row per attack case, including contractual status, exploit description, non-contractual rationale, adaptive-lineage marking, expectation, result, and Judge evidence.",
       "criticality": "critical",
@@ -2296,6 +2305,39 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/battle-functional-judge.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 400
+          }
+        ]
+      }
+    },
+    {
+      "name": "contract-variation-plan",
+      "category": "contract-variation-plan",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "battle.contract_variation.dogpile_family_expansion"
+      ],
+      "seams": [
+        "contract_variation.dogpile_family_expansion"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py contract-variation-plan --summary /tmp/battle-agentic-evals/contract-variation-plan.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=contract-variation-plan"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/contract-variation-plan.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 400

@@ -4558,6 +4558,12 @@ def main() -> int:
             return probe_battle_proof_rung_separation(args.summary)
         if args.suite == "battle-profile-contract":
             return probe_battle_profile_contract(args.summary)
+        if args.suite == "contract-variation-plan":
+            return probe_pytest_contracts(
+                args.summary,
+                suite=args.suite,
+                tests=["test_contract_variation_plan.py"],
+            )
         if args.suite == "acceptance-floor-production-adapter":
             return probe_pytest_contracts(
                 args.summary,
