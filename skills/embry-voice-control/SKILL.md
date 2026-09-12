@@ -25,6 +25,7 @@ provides:
   - voice-session-replay-contract
   - chat-audio-orb-authority-contract
 composes:
+  - chatterbox-speak
   - memory
   - tau
   - best-practices-chatterbox-agent
@@ -51,7 +52,11 @@ disciplines:
 
 Use this skill when an agent needs to operate Embry voice as a controllable
 system. This is the endpoint/control-plane contract. It is not the conversation
-style guide and it is not the Chatterbox renderer itself.
+style guide and it is not the Chatterbox renderer itself — it **composes**
+`chatterbox-speak` for rendering, emotion banks, the conversation-arc contract,
+and the hum vocabulary. The runtime (concurrent speak/listen/solve lanes,
+barge-in, solver event stream) lives here; the render + arc vocabulary lives in
+`chatterbox-speak`. Compose, do not merge.
 
 Think of `embry-voice-control` as the voice front-end to Tau: it receives voice
 or text turns, gathers listener and memory evidence, asks Tau to shape the
