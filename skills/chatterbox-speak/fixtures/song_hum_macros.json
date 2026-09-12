@@ -22,7 +22,12 @@
         "text": "Gentle wistful humming of a slow Hawaiian farewell waltz, soft female voice, warm, non-melodic, nostalgic, no words, clear present modern close-microphone recording.",
         "duration_s": 6
       },
-      "render_note": "de-vintaged prompt (no era cue; modern clean render)"
+      "render_note": "de-vintaged prompt (no era cue; modern clean render)",
+      "memory_links": [
+        "embry_age15_19_b03_memory_041",
+        "embry_age19_23_b01_memory_023",
+        "embry_age19_23_b01_memory_030"
+      ]
     },
     {
       "id": "ukulele-lady",
@@ -44,7 +49,11 @@
         "text": "Light playful contented humming of a cheerful bouncy Hawaiian melody, warm present close-microphone female voice, clear clean modern recording, non-melodic, no words.",
         "duration_s": 6
       },
-      "render_note": "de-vintaged prompt + 44.1k stereo (old 1920s/ukulele-craze cue produced lo-fi phonograph texture; human-caught)"
+      "render_note": "de-vintaged prompt + 44.1k stereo (old 1920s/ukulele-craze cue produced lo-fi phonograph texture; human-caught)",
+      "memory_links": [
+        "embry_age15_19_b03_memory_041",
+        "embry_age19_23_b01_memory_012"
+      ]
     },
     {
       "id": "on-the-beach-at-waikiki",
@@ -66,7 +75,11 @@
         "text": "Warm nostalgic humming of a sunny Hawaiian song, soft female voice, gentle sway, non-melodic, no words, clear present modern close-microphone recording.",
         "duration_s": 6
       },
-      "render_note": "de-vintaged prompt (no era cue; modern clean render)"
+      "render_note": "de-vintaged prompt (no era cue; modern clean render)",
+      "memory_links": [
+        "embry_age15_19_b03_memory_041",
+        "embry_age19_23_b01_memory_012"
+      ]
     },
     {
       "id": "song-of-the-islands",
@@ -88,7 +101,11 @@
         "text": "Soft lush humming of a slow serene Hawaiian ballad, tender female voice, longing, non-melodic, no words, clear present modern close-microphone recording.",
         "duration_s": 6
       },
-      "render_note": "de-vintaged prompt (no era cue; modern clean render)"
+      "render_note": "de-vintaged prompt (no era cue; modern clean render)",
+      "memory_links": [
+        "embry_age15_19_b03_memory_041",
+        "embry_age19_23_b01_memory_012"
+      ]
     },
     {
       "id": "yacki-hacki-wicki-wacki-woo",
@@ -110,7 +127,11 @@
         "text": "Bouncy comic humming of a silly Hawaiian song, upbeat soft female voice, kitschy, non-melodic, no words, clear present modern close-microphone recording.",
         "duration_s": 6
       },
-      "render_note": "de-vintaged prompt (no era cue; modern clean render)"
+      "render_note": "de-vintaged prompt (no era cue; modern clean render)",
+      "memory_links": [
+        "embry_age15_19_b03_memory_041",
+        "embry_age19_23_b01_memory_012"
+      ]
     },
     {
       "id": "hawaiian-war-chant-original",
@@ -132,7 +153,11 @@
         "text": "Spirited warm humming of a lively Hawaiian folk melody, soft female voice, gentle rhythm, non-melodic, no words, clear present modern close-microphone recording.",
         "duration_s": 6
       },
-      "render_note": "de-vintaged prompt (no era cue; modern clean render)"
+      "render_note": "de-vintaged prompt (no era cue; modern clean render)",
+      "memory_links": [
+        "embry_age15_19_b03_memory_041",
+        "embry_age19_23_b01_memory_012"
+      ]
     },
     {
       "id": "chopin-nocturne-9-2",
@@ -154,7 +179,11 @@
         "text": "Gentle flowing humming of a tender nocturne, soft and dreamy at night, clear present modern close-microphone recording, non-melodic, no words",
         "duration_s": 20
       },
-      "hum_render_status": "rendered"
+      "hum_render_status": "rendered",
+      "memory_links": [
+        "embry_age19_23_b01_memory_012",
+        "embry_age15_19_b03_memory_041"
+      ]
     },
     {
       "id": "clair-de-lune",
@@ -177,7 +206,11 @@
         "text": "Soft rippling humming of a moonlit reflective melody, calm and floating, clear present modern close-microphone recording, non-melodic, no words",
         "duration_s": 20
       },
-      "hum_render_status": "rendered"
+      "hum_render_status": "rendered",
+      "memory_links": [
+        "embry_age15_19_b03_memory_041",
+        "embry_age19_23_b01_memory_012"
+      ]
     },
     {
       "id": "gymnopedie-1",
@@ -199,7 +232,11 @@
         "text": "Slow spare contemplative humming of a gentle piano melody, calm and unhurried, clear present modern close-microphone recording, non-melodic, no words",
         "duration_s": 20
       },
-      "hum_render_status": "rendered"
+      "hum_render_status": "rendered",
+      "memory_links": [
+        "embry_age19_23_b01_memory_012",
+        "embry_age15_19_b03_memory_041"
+      ]
     },
     {
       "id": "ode-to-joy",
@@ -221,7 +258,11 @@
         "text": "Warm gentle humming of a hopeful uplifting melody, contented, bone dry, no reverb, no room ambience, intimate close-microphone, studio-dry, non-melodic, no words",
         "duration_s": 20
       },
-      "hum_render_status": "rendered"
+      "hum_render_status": "rendered",
+      "memory_links": [
+        "embry_age19_23_b01_memory_012",
+        "embry_age15_19_b03_memory_041"
+      ]
     },
     {
       "id": "st-louis-blues",
@@ -244,7 +285,12 @@
         "duration_s": 20
       },
       "hum_render_status": "rendered",
-      "pd_verified": "brave-search 2026-09-12"
+      "pd_verified": "brave-search 2026-09-12",
+      "memory_links": [
+        "embry_age15_19_b03_memory_041",
+        "embry_age19_23_b01_memory_023",
+        "embry_age19_23_b01_memory_030"
+      ]
     },
     {
       "id": "after-youve-gone",
@@ -267,7 +313,12 @@
         "duration_s": 20
       },
       "hum_render_status": "rendered",
-      "pd_verified": "brave-search 2026-09-12"
+      "pd_verified": "brave-search 2026-09-12",
+      "memory_links": [
+        "embry_age15_19_b03_memory_041",
+        "embry_age19_23_b01_memory_023",
+        "embry_age19_23_b01_memory_030"
+      ]
     },
     {
       "id": "basin-street-blues",
@@ -290,7 +341,12 @@
         "duration_s": 20
       },
       "hum_render_status": "rendered",
-      "pd_verified": "brave-search 2026-09-12"
+      "pd_verified": "brave-search 2026-09-12",
+      "memory_links": [
+        "embry_age15_19_b03_memory_041",
+        "embry_age19_23_b01_memory_023",
+        "embry_age19_23_b01_memory_030"
+      ]
     },
     {
       "id": "debussy-reverie",
@@ -313,7 +369,11 @@
         "text": "Soft dreamy drifting humming of a gentle reverie melody, wistful and unhurried, clear present modern close-microphone recording, non-melodic, no words",
         "duration_s": 20
       },
-      "hum_render_status": "rendered"
+      "hum_render_status": "rendered",
+      "memory_links": [
+        "embry_age15_19_b03_memory_041",
+        "embry_age19_23_b01_memory_012"
+      ]
     },
     {
       "id": "debussy-flaxen-hair",
@@ -335,7 +395,11 @@
         "text": "Tender gentle humming of a soft flowing melody, warm and delicate, clear present modern close-microphone recording, non-melodic, no words",
         "duration_s": 20
       },
-      "hum_render_status": "rendered"
+      "hum_render_status": "rendered",
+      "memory_links": [
+        "embry_age19_23_b01_memory_012",
+        "embry_age15_19_b03_memory_041"
+      ]
     },
     {
       "id": "debussy-beau-soir",
@@ -358,7 +422,11 @@
         "text": "Wistful calm humming of a beautiful-evening melody, serene and yearning at dusk, clear present modern close-microphone recording, non-melodic, no words",
         "duration_s": 20
       },
-      "hum_render_status": "rendered"
+      "hum_render_status": "rendered",
+      "memory_links": [
+        "embry_age15_19_b03_memory_041",
+        "embry_age19_23_b01_memory_012"
+      ]
     },
     {
       "id": "debussy-la-mer",
@@ -381,10 +449,15 @@
         "text": "Flowing swelling humming of a sea-themed melody, ocean-wide and reflective, clear present modern close-microphone recording, non-melodic, no words",
         "duration_s": 20
       },
-      "hum_render_status": "rendered"
+      "hum_render_status": "rendered",
+      "memory_links": [
+        "embry_age15_19_b03_memory_041",
+        "embry_age19_23_b01_memory_012"
+      ]
     }
   ],
   "render_rule": "NEVER vintage-sounding. The tune may be old/public-domain, but every hum RENDER must be a clean, present, modern close-microphone recording of Embry humming \u2014 never phonograph/period/lo-fi texture. Prompts must NOT contain era cues (1910s/1920s/old-timey/novelty/craze/vintage); those make the SFX model produce a lo-fi phone-like recording (human-caught on ukulele-lady). Say 'clear, present, modern, close-mic' instead. Render at 44.1k stereo. HUMS MUST BE BONE DRY \u2014 no reverb, no room ambience, intimate close-mic (human rule 2026-09-12); use prompt_influence<=0.25 and a 'bone dry, no reverb' prompt. Piano/orchestral-only pieces that have no vocal hum line (e.g. Moonlight Sonata, Mahler Adagietto) are NOT hums and are removed. SFX-generated hums are a neutral voice, NOT Embry's clone \u2014 'sounds like Embry' needs her v3 clone humming (open limitation). All hums are post-processed as steady under-speech beds: acompressor=threshold=-20dB:ratio=3:attack=20:release=250 (tame internal dynamics) -> loudnorm=I=-20:TP=-1.5:LRA=7 (consistent loudness + -1.5 dBTP true-peak limit). No hum plays louder or peaks higher than the others; filler_gain.py then fits each -1.5..-5 dB under measured speech RMS (human rule 2026-09-12).",
   "expanded_note": "Choices broadened beyond Hawaiian to PD classical (Beethoven/Chopin/Mahler/Debussy/Satie) and early jazz/blues (Handy/Creamer&Layton/Spencer Williams), all compositions pre-1930 -> US PD, mapped to Embry persona_memory anchors (grief, sea, night, rain, home, Kai/parting; recall conf 0.93). All renders follow the no-vintage rule.",
-  "pd_verification": "Classical picks (Beethoven/Chopin/Debussy/Satie/Mahler) are long-PD (composers pre-1930, Mahler PD since 1981). Jazz picks verified via brave-search: St. Louis Blues (1914) and After You Gone (1918) PD; Basin Street Blues (1928) PD since Jan 1 2024. Only composition PD matters since hums are freshly generated."
+  "pd_verification": "Classical picks (Beethoven/Chopin/Debussy/Satie/Mahler) are long-PD (composers pre-1930, Mahler PD since 1981). Jazz picks verified via brave-search: St. Louis Blues (1914) and After You Gone (1918) PD; Basin Street Blues (1928) PD since Jan 1 2024. Only composition PD matters since hums are freshly generated.",
+  "graph_note": "Each hum is a persona_memory doc (kind=persona_music_preference, modality=audio) carrying style(genre)/year/tempo_bpm/emotion_category(mood)/composer/song_category/evokes/connected_memory_keys. hum_evokes_memory edges (persona_memory_edges) link each hum to specific Embry memory records (memory_links). Multi-hop /recall RANKING of these edges requires the memory project's persona-graph-materialize (graph_memory.maintenance.sanity_recall), currently swept into .cleanup/20260725 in the memory repo \u2014 restoring it is a memory-project task; skills must not hand-roll traversal AQL (best-practices-arangodb). Docs+edges are written via /upsert endpoints and are directly filterable via /list."
 }
