@@ -154,3 +154,19 @@ def test_acceptance_contract_floor_blocks_open_questions_before_launch(tmp_path:
     assert result["status"] == "BLOCKED"
     assert result["target_launches"] == 0
     assert "bundle-open-questions" in result["acceptance_floor"]["problems"]
+
+
+def test_docker_boundary_blocks_host_commands_before_launch(tmp_path: Path):
+    _profile()
+    base = _request(tmp_path, _clean_target(tmp_path))
+    base["target_run_cmd"] = "python3 -c 'print(1)'"
+    adapter = {"schema": "battle.production_adapter_request.v1",
+               "authorization_manifest": AUTH,
+               "expected_target": "battle-reactive-judge-fixture@sha256:reactive-judge-v1",
+               "base_request": base,
+               "enforce_docker_boundary": True}
+    result = run_production_round(adapter)
+    assert result["status"] == "BLOCKED"
+    assert result["failure_code"] == "docker-boundary-invalid"
+    assert result["target_launches"] == 0
+    assert "docker-command-required" in result["docker_boundary"]["problems"]

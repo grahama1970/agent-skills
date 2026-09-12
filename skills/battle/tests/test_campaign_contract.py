@@ -118,3 +118,32 @@ def test_request_validation_fails_closed(tmp_path: Path):
         assert False, "should have raised"
     except ValueError:
         pass
+
+
+def test_contract_execution_uses_frozen_plan_without_regenerating(tmp_path: Path):
+    _profile()
+    counter = tmp_path / "counter.txt"
+    gen = tmp_path / "counting_generator.py"
+    gen.write_text(f'''
+from pathlib import Path
+
+def generate(work_dir, params):
+    counter = Path({str(counter)!r})
+    count = int(counter.read_text()) if counter.exists() else 0
+    counter.write_text(str(count + 1))
+    root = Path(work_dir) / "case-str"
+    (root / "corpus").mkdir(parents=True, exist_ok=True)
+    (root / "policy.json").write_text('{{"version":1,"protected_values":[],"sensitive_values":[{{"rule_id":"r","subject_id":"s","type":"name","value":"5551234567"}}]}}')
+    (root / "corpus" / "record.json").write_text('{{"phone":"5551234567"}}')
+    yield "case-str", root, "MAY_REJECT"
+    root2 = Path(work_dir) / "case-int"
+    (root2 / "corpus").mkdir(parents=True, exist_ok=True)
+    (root2 / "policy.json").write_text('{{"version":1,"protected_values":[],"sensitive_values":[{{"rule_id":"r","subject_id":"s","type":"name","value":"5551234567"}}]}}')
+    (root2 / "corpus" / "record.json").write_text('{{"phone":5551234567}}')
+    yield "case-int", root2, "MUST_ACCEPT"
+''')
+    request = _request(tmp_path, _clean_target(tmp_path))
+    request["generator"] = str(gen)
+    receipt = run_contract_campaign(request)
+    assert receipt["verdict"] == "PASS", receipt["case_receipts"]
+    assert counter.read_text() == "1"

@@ -20,6 +20,7 @@ from typing import Any
 
 from .acceptance_floor import validate_acceptance_floor
 from .campaign_contract import run_contract_campaign, validate_request
+from .docker_runtime import validate_docker_run_command
 from .invariant_campaign import load_profile
 
 _ADAPTER_PATH = Path(__file__).resolve()
@@ -77,6 +78,15 @@ def run_production_round(adapter_request: dict[str, Any]) -> dict[str, Any]:
                 "authorization_receipt": receipt,
                 "target_launches": 0}
     request = build_contract_request(adapter_request)
+    if adapter_request.get("enforce_docker_boundary") is True:
+        docker_receipt = validate_docker_run_command(request.get("target_run_cmd", ""))
+        if docker_receipt["status"] != "PASS":
+            return {"schema": "battle.production_adapter_round.v1",
+                    "status": "BLOCKED",
+                    "failure_code": "docker-boundary-invalid",
+                    "authorization_receipt": receipt,
+                    "docker_boundary": docker_receipt,
+                    "target_launches": 0}
     floor_request = adapter_request.get("acceptance_floor")
     floor_receipt = None
     if floor_request is not None:

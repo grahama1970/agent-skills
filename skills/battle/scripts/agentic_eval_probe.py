@@ -4564,6 +4564,18 @@ def main() -> int:
                 suite=args.suite,
                 tests=["test_contract_variation_plan.py"],
             )
+        if args.suite == "docker-execution-boundary":
+            return probe_pytest_contracts(
+                args.summary,
+                suite=args.suite,
+                tests=["test_production_adapter.py"],
+            )
+        if args.suite == "frozen-plan-execution":
+            return probe_pytest_contracts(
+                args.summary,
+                suite=args.suite,
+                tests=["test_campaign_contract.py"],
+            )
         if args.suite == "acceptance-floor-production-adapter":
             return probe_pytest_contracts(
                 args.summary,

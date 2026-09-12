@@ -114,16 +114,16 @@ def run_contract_campaign(request: dict[str, Any]) -> dict[str, Any]:
     validate_request(request)
     work = Path(request["work_root"])
     plan = resolve_plan(request)
-    shutil.rmtree(work / "gen", ignore_errors=True)
     profile = load_profile(request["profile_path"])
     result = run_campaign(
-        request["generator"], request["target_run_cmd"], request["judge"],
-        gen_params=request.get("gen_params") or {},
+        "", request["target_run_cmd"], request["judge"],
+        gen_params={},
         judge_params=request.get("judge_params") or {},
         output_subdir=request.get("output_subdir", "corpus"),
         profile=profile,
         functional_judge=request["functional_judge"],
         work_root=work,
+        frozen_cases=plan["cases"],
     )
     out_root = work / "out"
     receipt = {
@@ -183,8 +183,9 @@ def verify_campaign_receipt(receipt_path: Path, evaluator_root: Path | None = No
             problem("artifact_integrity", f"missing artifact {entry['path']}")
         elif _sha256_file(f) != entry["sha256"]:
             problem("artifact_integrity", f"hash mismatch {entry['path']}")
+    case_input_dirs = {case["id"]: Path(case["input_dir"]) for case in plan.get("cases", [])}
     for case_manifest in plan["input_manifest"]:
-        base = work / "gen" / case_manifest["id"]
+        base = case_input_dirs.get(case_manifest["id"], work / "gen" / case_manifest["id"])
         for entry in case_manifest["files"]:
             f = base / entry["path"]
             if not f.is_file():
@@ -207,8 +208,8 @@ def verify_campaign_receipt(receipt_path: Path, evaluator_root: Path | None = No
         for case in replay_cases:
             case_id = case.get("case_id") or case["case"]
             case_dir = out_root / case_id
-            policy = work / "gen" / case_id / "policy.json"
-            input_dir = work / "gen" / case_id
+            input_dir = case_input_dirs.get(case_id, work / "gen" / case_id)
+            policy = input_dir / "policy.json"
             if case.get("execution", {}).get("kind") == "NOT_RUN" or case.get("judged") is False:
                 continue
             params = dict(request.get("judge_params") or {})

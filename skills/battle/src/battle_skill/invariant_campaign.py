@@ -212,7 +212,8 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
                  output_subdir: str = "corpus",
                  profile: dict[str, Any] | None = None,
                  functional_judge: str | None = None,
-                 work_root: Path | None = None) -> CampaignResult:
+                 work_root: Path | None = None,
+                 frozen_cases: list[dict[str, Any]] | None = None) -> CampaignResult:
     gen_params = gen_params or {}
     judge_params = dict(judge_params or {})
     result = CampaignResult()
@@ -238,7 +239,13 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
         result.passed = False
         return result
     try:
-        gen: Iterator[tuple] = _load_generator(generator)(str(work / "gen"), gen_params)
+        if frozen_cases is None:
+            gen: Iterator[tuple] = _load_generator(generator)(str(work / "gen"), gen_params)
+        else:
+            def _frozen_iter() -> Iterator[tuple]:
+                for item in frozen_cases:
+                    yield (item["id"], item["input_dir"], item["declared_expectation"])
+            gen = _frozen_iter()
         for case in gen:
             if len(case) == 3:
                 name, input_dir, expectation = case
@@ -250,7 +257,11 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
                 name, input_dir = case
                 expectation = "MAY_REJECT"
             expectation_source = "generator"
-            if name in profile_overrides:
+            if frozen_cases is not None:
+                frozen = next(item for item in frozen_cases if item["id"] == name)
+                expectation = frozen.get("effective_expectation", expectation)
+                expectation_source = frozen.get("expectation_source", expectation_source)
+            elif name in profile_overrides:
                 resolved = str(profile_overrides[name]).upper()
                 if expectation != "MAY_REJECT":
                     result.failures.append({"case": name, "judged": False, "passed": False,

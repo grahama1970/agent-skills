@@ -445,6 +445,24 @@
       "evidence_required": {
         "adversarial_live_e2e": true
       }
+    },
+    {
+      "id": "battle.docker_execution_boundary",
+      "description": "Battle production adapter can block non-Docker target command templates before target launch when the Docker boundary gate is enabled.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "control_flow"
+    },
+    {
+      "id": "battle.frozen_plan_execution",
+      "description": "Battle campaign contract execution consumes the materialized frozen plan without invoking the generator a second time.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "control_flow"
     }
   ],
   "seams": [
@@ -2373,6 +2391,72 @@
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 500
+          }
+        ]
+      }
+    },
+    {
+      "name": "docker-execution-boundary",
+      "category": "docker-execution-boundary",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.docker_execution_boundary"
+      ],
+      "seams": [
+        "docker.execution.boundary"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py docker-execution-boundary --summary /tmp/battle-agentic-evals/docker-execution-boundary.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=docker-execution-boundary"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/docker-execution-boundary.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 400
+          }
+        ]
+      }
+    },
+    {
+      "name": "frozen-plan-execution",
+      "category": "frozen-plan-execution",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.frozen_plan_execution"
+      ],
+      "seams": [
+        "frozen.plan.execution"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py frozen-plan-execution --summary /tmp/battle-agentic-evals/frozen-plan-execution.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=frozen-plan-execution"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/frozen-plan-execution.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 400
           }
         ]
       }
