@@ -44,6 +44,11 @@ class Config(BaseModel):
     # consumes (e.g. policy.json) - so the check is derived from the delivered
     # spec, not authored from the code (operator 2026-09-11).
     requirements_spec: RequirementsSpec | None = None
+    acceptance_contract: Path | None = None
+    client_contract_gate: Literal["auto", "required", "off"] = "auto"
+    battle_receipts: list[Path] = Field(default_factory=list)
+    release_report: Path | None = None
+    wrapper_proof: Path | None = None
 
 
 def load_config(path: Path) -> Config:
@@ -89,6 +94,118 @@ def git_value(root: Path, *args: str) -> str:
     return proc.stdout.strip()
 
 
+def acceptance_contract_evidence(root: Path, path: Path | None) -> dict | None:
+    if path is None:
+        return None
+    resolved = path if path.is_absolute() else root / path
+    if not resolved.exists():
+        return {"status": "FAIL", "code": "acceptance_contract_missing", "path": str(resolved)}
+    try:
+        data = json.loads(resolved.read_text())
+    except json.JSONDecodeError as error:
+        return {"status": "FAIL", "code": "acceptance_contract_invalid_json", "path": str(resolved), "error": str(error)}
+    if data.get("schema") != "acceptance_contract.bundle.v1":
+        return {"status": "FAIL", "code": "acceptance_contract_invalid_schema", "path": str(resolved)}
+    return {
+        "status": "PASS",
+        "path": str(resolved),
+        "project_name": data.get("project_name"),
+        "requirements": len(data.get("requirements") or []),
+        "acceptance_cases": len(data.get("acceptance_cases") or []),
+        "open_questions": len(data.get("open_questions") or []),
+    }
+
+
+def client_contract_gate_enabled(config: Config) -> bool:
+    if config.client_contract_gate == "required":
+        return True
+    if config.client_contract_gate == "off":
+        return False
+    return bool(config.requirements_spec or config.acceptance_contract)
+
+
+def effective_required_skills(config: Config) -> list[str]:
+    skills = list(config.required_skills)
+    if client_contract_gate_enabled(config):
+        for skill in ["acceptance-contract", "battle", "create-report"]:
+            if skill not in skills:
+                skills.append(skill)
+    return skills
+
+
+def json_schema_evidence(root: Path, path: Path | None, expected: set[str], missing_code: str, invalid_code: str) -> dict | None:
+    if path is None:
+        return None
+    resolved = path if path.is_absolute() else root / path
+    if not resolved.exists():
+        return {"status": "FAIL", "code": missing_code, "path": str(resolved)}
+    try:
+        data = json.loads(resolved.read_text())
+    except json.JSONDecodeError as error:
+        return {"status": "FAIL", "code": invalid_code, "path": str(resolved), "error": str(error)}
+    schema = data.get("schema")
+    if schema not in expected:
+        return {"status": "FAIL", "code": invalid_code, "path": str(resolved), "schema": schema}
+    return {"status": "PASS", "path": str(resolved), "schema": schema}
+
+
+def battle_receipt_evidence(root: Path, paths: list[Path]) -> list[dict]:
+    return [
+        json_schema_evidence(
+            root,
+            path,
+            {"battle.invariant_campaign_result.v1", "battle.campaign_aggregate.v1"},
+            "battle_receipt_missing",
+            "battle_receipt_invalid",
+        )
+        for path in paths
+    ]
+
+
+def client_contract_gate_evidence(config: Config) -> dict:
+    enabled = client_contract_gate_enabled(config)
+    acceptance = acceptance_contract_evidence(config.project_root, config.acceptance_contract)
+    battle = battle_receipt_evidence(config.project_root, config.battle_receipts)
+    report = json_schema_evidence(
+        config.project_root,
+        config.release_report,
+        {"create_report.report.v1"},
+        "release_report_missing",
+        "release_report_invalid",
+    )
+    wrapper = None
+    if config.wrapper_proof:
+        path = config.wrapper_proof if config.wrapper_proof.is_absolute() else config.project_root / config.wrapper_proof
+        wrapper = {"status": "PASS", "path": str(path)} if path.exists() else {"status": "FAIL", "code": "wrapper_proof_missing", "path": str(path)}
+    problems = []
+    if enabled:
+        if not acceptance:
+            problems.append({"code": "acceptance_contract_required"})
+        elif acceptance.get("status") != "PASS":
+            problems.append({"code": acceptance.get("code", "acceptance_contract_invalid"), "detail": acceptance})
+        if not battle:
+            problems.append({"code": "battle_receipt_required"})
+        problems.extend(item for item in battle if item and item.get("status") != "PASS")
+        if not report:
+            problems.append({"code": "release_report_required"})
+        elif report.get("status") != "PASS":
+            problems.append({"code": report.get("code", "release_report_invalid"), "detail": report})
+        if wrapper and wrapper.get("status") != "PASS":
+            problems.append({"code": "wrapper_proof_missing", "detail": wrapper})
+    return {
+        "schema": "setup_project.client_contract_gate.v1",
+        "mode": config.client_contract_gate,
+        "enabled": enabled,
+        "required_skills": ["acceptance-contract", "battle", "create-report"],
+        "status": "PASS" if not problems else "FAIL",
+        "acceptance_contract": acceptance,
+        "battle_receipts": battle,
+        "release_report": report,
+        "wrapper_proof": wrapper,
+        "problems": problems,
+    }
+
+
 def assembly_evidence(root: Path) -> dict:
     first = git_value(root, "rev-list", "--max-parents=0", "HEAD").splitlines()[0]
     head = git_value(root, "rev-parse", "HEAD")
@@ -108,13 +225,16 @@ def assembly_evidence(root: Path) -> dict:
 def plan(config: Config) -> dict:
     steps = [
         {"order": 1, "skill": "curate-client", "action": "build or verify the interview brief prep pack", "writes": "knowledge/prep-pack only"},
-        {"order": 2, "skill": "best-practices-readme", "action": "write README navigation, skill provenance, proof, and non-claims", "writes": "README.md"},
-        {"order": 3, "skill": "setup-project", "action": "write immutable_goal.json and audit setup surface", "writes": "immutable_goal.json plus setup receipt"},
-        {"order": 4, "skill": "best-practices-fastapi", "action": "shape Pydantic contracts and FastAPI adapter boundary", "writes": "src/"},
-        {"order": 5, "skill": "memory", "action": "route persistence through Memory endpoints", "writes": "Memory collections via /memory only"},
-        {"order": 6, "skill": "hack", "action": "run bounded SAST and read Hack-owned receipts", "writes": "receipts/"},
-        {"order": 7, "skill": "terraform + ops-terraform", "action": "create and validate plan-only deployment handoff", "writes": "infra/terraform/"},
-        {"order": 8, "skill": "agentic-evals", "action": "prove claims and seams with repeated retained evals", "writes": "fixtures/agentic_eval.json and reports"},
+        {"order": 2, "skill": "acceptance-contract", "action": "extract the source-backed requirements bundle and immutable-goal draft", "writes": "acceptance_bundle.json plus IMMUTABLE_GOAL.draft.md"},
+        {"order": 3, "skill": "best-practices-readme", "action": "write README navigation, skill provenance, proof, and non-claims", "writes": "README.md"},
+        {"order": 4, "skill": "setup-project", "action": "write immutable_goal.json from the approved acceptance contract and audit setup surface", "writes": "immutable_goal.json plus setup receipt"},
+        {"order": 5, "skill": "best-practices-fastapi", "action": "shape Pydantic contracts and FastAPI adapter boundary", "writes": "src/"},
+        {"order": 6, "skill": "memory", "action": "route persistence through Memory endpoints", "writes": "Memory collections via /memory only"},
+        {"order": 7, "skill": "hack", "action": "run bounded SAST and read Hack-owned receipts", "writes": "receipts/"},
+        {"order": 8, "skill": "terraform + ops-terraform", "action": "create and validate plan-only deployment handoff", "writes": "infra/terraform/"},
+        {"order": 9, "skill": "agentic-evals", "action": "prove claims and seams with repeated retained evals", "writes": "fixtures/agentic_eval.json and reports"},
+        {"order": 10, "skill": "battle", "action": "default for client/evaluator contracts: attack the frozen acceptance bundle and beyond-contract release surfaces", "writes": "battle case/campaign receipts"},
+        {"order": 11, "skill": "create-report", "action": "default for client/evaluator contracts: render a release table from acceptance, Battle, wrapper, and non-claim receipts", "writes": "release report"},
     ]
     return {
         "schema": "setup_project.plan_receipt.v1",
@@ -123,9 +243,11 @@ def plan(config: Config) -> dict:
         "project": config.project,
         "project_root": str(config.project_root),
         "purpose": config.purpose,
-        "required_skills": config.required_skills,
+        "required_skills": effective_required_skills(config),
         "steps": steps,
         "curate_client_plan": curate_plan(config),
+        "acceptance_contract": acceptance_contract_evidence(config.project_root, config.acceptance_contract),
+        "client_contract_gate": client_contract_gate_evidence(config),
         "assembly_evidence": assembly_evidence(config.project_root),
         "writes": False,
     }
@@ -160,6 +282,8 @@ def audit(config: Config) -> dict:
             requirements_problems.append({"code": "immutable_goal_missing_requirements"})
     curate = curate_plan(config)
     curate_check = curate_verify(config)
+    acceptance = acceptance_contract_evidence(root, config.acceptance_contract)
+    client_gate = client_contract_gate_evidence(config)
     problems = []
     if missing_files:
         problems.append({"code": "missing_files", "items": missing_files})
@@ -171,6 +295,10 @@ def audit(config: Config) -> dict:
         problems.append({"code": "curate_client_plan_failed", "detail": curate})
     if curate_check and curate_check.get("status") != "PASS":
         problems.append({"code": "curate_client_verify_failed", "detail": curate_check})
+    if acceptance and acceptance.get("status") != "PASS":
+        problems.append({"code": acceptance.get("code", "acceptance_contract_invalid"), "detail": acceptance})
+    if client_gate["enabled"] and client_gate["status"] != "PASS":
+        problems.append({"code": "client_contract_gate_failed", "detail": client_gate})
     problems.extend(requirements_problems)
     return {
         "schema": "setup_project.audit_receipt.v1",
@@ -178,10 +306,12 @@ def audit(config: Config) -> dict:
         "classification": config.classification,
         "project": config.project,
         "project_root": str(root),
-        "required_skills": config.required_skills,
+        "required_skills": effective_required_skills(config),
         "curate_client_plan_status": curate.get("status") if curate else None,
         "curate_client_verify_status": curate_check.get("status") if curate_check else None,
         "curate_client_probe_count": len(curate_check.get("probes", [])) if curate_check else 0,
+        "acceptance_contract": acceptance,
+        "client_contract_gate": client_gate,
         "assembly_evidence": assembly_evidence(root),
         "missing_files": missing_files,
         "missing_readme_terms": missing_readme,
