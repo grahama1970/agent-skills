@@ -607,6 +607,9 @@ def _tick_locked(
     project = None
     issues: list[dict[str, Any]] = []
     issue_scans: list[dict[str, Any]] = []
+    repair_admissions: list[dict[str, Any]] = []
+    deadline = tick_deadline_seconds()
+    started = time.monotonic()
 
     for candidate in candidates:
         cid = str(candidate.get("project_id"))
@@ -738,32 +741,68 @@ def _tick_locked(
                 }
             )
             continue
-        project, issues = candidate, found
-        receipt["issue_scans"] = issue_scans
-        receipt["excluded_counts"] = scan["excluded"]
-        receipt["excluded_issues"] = scan["excluded_issues"]
-        receipt["excluded_issue_refs"] = {
-            reason: [f"{scan['repo']}#{number}" for number in numbers]
-            for reason, numbers in scan["excluded_issues"].items()
-        }
-        receipt["lease_staleness"] = candidate_staleness
-        receipt["reclaimed_leases"] = reclaimed
-        if stale:
-            receipt["expired_leases_retained"] = stale
-        receipt["in_flight"] = {
-            "issues": [int(i["number"]) for i in in_flight],
-            "targets": sorted(busy),
-            "leases": registry.LAST_LEASE_SCAN.get("active", []),
-        }
-        break
+        if project is None:
+            project = candidate
+            receipt["issue_scans"] = issue_scans
+            receipt["excluded_counts"] = scan["excluded"]
+            receipt["excluded_issues"] = scan["excluded_issues"]
+            receipt["excluded_issue_refs"] = {
+                reason: [f"{scan['repo']}#{number}" for number in numbers]
+                for reason, numbers in scan["excluded_issues"].items()
+            }
+            receipt["lease_staleness"] = candidate_staleness
+            receipt["reclaimed_leases"] = reclaimed
+            if stale:
+                receipt["expired_leases_retained"] = stale
+            receipt["in_flight"] = {
+                "issues": [int(i["number"]) for i in in_flight],
+                "targets": sorted(busy),
+                "leases": registry.LAST_LEASE_SCAN.get("active", []),
+            }
+        for index, issue in enumerate(found):
+            if len(repair_admissions) >= max_tickets:
+                break
+            if defer_for_deadline(index, time.monotonic() - started, deadline):
+                receipt["deadline_deferred"] = [int(i["number"]) for i in found[index:]]
+                receipt["stop_reason"] = "tick_deadline"
+                log_event(
+                    run_id, "tick_deadline_reached",
+                    deadline_seconds=deadline, deferred=receipt["deadline_deferred"],
+                )
+                break
+            targets = set(str(t) for t in issue.get("watchdog_targets") or registry.issue_targets(issue))
+            execution_lock = acquire_execution_lock(run_id, targets) if apply else None
+            if apply and execution_lock is None:
+                receipt["handled_issues"].append(
+                    {
+                        "action": "ticket_repair",
+                        "issue_number": int(issue["number"]),
+                        "repo": registry.project_repo(candidate),
+                        "ok": True,
+                        "status": "SKIPPED",
+                        "stop_reason": "execution_lock_held",
+                        "targets": sorted(targets),
+                    }
+                )
+                continue
+            repair_admissions.append({"project": candidate, "issue": issue, "targets": sorted(targets), "lock": execution_lock})
+        if rotation_mode == "strict" or len(repair_admissions) >= max_tickets:
+            break
 
     receipt["rotation"] = {
         "mode": rotation_mode,
         "requested": project_id,
         "selected": None if project is None else str(project.get("project_id")),
+        "admitted_projects": [str(entry["project"].get("project_id")) for entry in repair_admissions],
         "skipped": skipped,
     }
     receipt.setdefault("issue_scans", issue_scans)
+
+    if project is None and receipt["handled_issues"]:
+        receipt["handled_count"] = len(receipt["handled_issues"])
+        receipt.update(ok=all(item.get("ok") for item in receipt["handled_issues"]),
+                       status="SKIPPED", stop_reason="execution_lock_held")
+        return finish(run_id, receipt_dir, receipt, 0 if receipt["ok"] else 1, persist=apply)
 
     if project is None and receipt["errors"]:
         receipt.update(ok=False, status="NEEDS_ATTENTION", stop_reason="unsettled_execution_or_scan_failure",
@@ -953,6 +992,7 @@ def _tick_locked(
         _persist_tick_state(state)
         streaks.clear_idle(project_id)
 
+    issues = [entry["issue"] for entry in repair_admissions]
     receipt["scanned_issues"] = issues
     if not issues and receipt.get("dependency_unblocks"):
         receipt["handled_issues"].extend(
@@ -976,46 +1016,14 @@ def _tick_locked(
     # deadline below the period makes it structural. Without one the lock is
     # the only thing standing between a slow tick and a queue of skipped ones,
     # and the 302.8s maximum is a measurement, not a bound.
-    deadline = tick_deadline_seconds()
-    started = time.monotonic()
-    dispatch_plan: list[dict[str, Any]] = []
-    # A lock-skipped issue must not burn a dispatch slot: one long-running
-    # repair otherwise starves every other routable ticket for its duration
-    # (observed 2026-09-01: #1553's held target consumed the slot on every
-    # tick for hours). Iterate the full routable list until the plan is full.
-    for index, issue in enumerate(issues):
-        if len(dispatch_plan) >= min(max_tickets, 1):
-            break
-        if defer_for_deadline(index, time.monotonic() - started, deadline):
-            receipt["deadline_deferred"] = [int(i["number"]) for i in issues[index:]]
-            receipt["stop_reason"] = "tick_deadline"
-            log_event(
-                run_id, "tick_deadline_reached",
-                deadline_seconds=deadline, deferred=receipt["deadline_deferred"],
-            )
-            break
-        targets = set(str(t) for t in issue.get("watchdog_targets") or registry.issue_targets(issue))
-        execution_lock = acquire_execution_lock(run_id, targets) if apply else None
-        if apply and execution_lock is None:
-            receipt["handled_issues"].append(
-                {
-                    "action": "ticket_repair",
-                    "issue_number": int(issue["number"]),
-                    "repo": registry.project_repo(project),
-                    "ok": True,
-                    "status": "SKIPPED",
-                    "stop_reason": "execution_lock_held",
-                    "targets": sorted(targets),
-                }
-            )
-            continue
-        dispatch_plan.append({"issue": issue, "targets": sorted(targets), "lock": execution_lock})
+    dispatch_plan = repair_admissions
 
     for entry in dispatch_plan:
         issue = entry["issue"]
         execution_lock = entry.get("lock")
+        admitted_project = entry["project"]
         try:
-            result = handle_issue(run_id, receipt_dir, project, issue, apply=apply)
+            result = handle_issue(run_id, receipt_dir, admitted_project, issue, apply=apply)
             _record_agent_authorization(receipt, result)
             result.setdefault("execution_lock_targets", entry["targets"])
             if execution_lock is not None:
