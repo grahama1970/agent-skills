@@ -59,6 +59,7 @@ ACCEPTANCE_SCOPE = {
         "dependency_closure_unblock_then_later_fresh_dispatch",
         "manual_owner_reservation_blocks_overlapping_writer",
         "human_only_escalation_via_ops_discord",
+        "operator_authorized_scheduled_canary_binding",
         "queue_projection_classifies_current_states",
         "no_unresolved_machine_actionable_error_hidden",
         "independent_final_verifier_readback",
@@ -400,6 +401,10 @@ def scenario_checks(
         and row.get("tau_settled") is True
         and row.get("proof_comment_read_back") is True
     ]
+    authorized_scheduled_canaries = [
+        row for row in receipts
+        if canary_has_operator_authorization_and_scheduled_binding(row, cron_starts)
+    ]
     human_alerts = []
     for row in receipts:
         alert = row.get("alert")
@@ -467,6 +472,7 @@ def scenario_checks(
         "dependency_closure_unblock_then_later_fresh_dispatch": bool(dependency_unblocks),
         "manual_owner_reservation_blocks_overlapping_writer": bool(reservation_blocks),
         "human_only_escalation_via_ops_discord": bool(human_alerts),
+        "operator_authorized_scheduled_canary_binding": bool(authorized_scheduled_canaries),
         "queue_projection_classifies_current_states": set(projection) == {
             "historical_error", "unresolved_error", "active_work", "dependency_wait", "resolved_closure"
         },

@@ -81,3 +81,28 @@ def test_canary_requires_operator_authorization_and_scheduled_candidate_binding(
     assert unattended_acceptance.canary_has_operator_authorization_and_scheduled_binding({**good, "operator_authorization": "manual"}, cron) is False
     assert unattended_acceptance.canary_has_operator_authorization_and_scheduled_binding({**good, "run_id": "manual-run"}, cron) is False
     assert unattended_acceptance.canary_has_operator_authorization_and_scheduled_binding({**good, "handled_issues": [{"repo": "grahama1970/agent-skills", "issue_number": 9999}]}, cron) is False
+
+    projection = _base_projection([])
+    checks = unattended_acceptance.scenario_checks(
+        status={"schema": "status"},
+        dry_tick={"result": {"exit_code": 0}, "json": {}},
+        receipts=[good],
+        closures=[],
+        projection=projection,
+        cron_starts=cron,
+        operations=[],
+        issue_states={},
+    )
+    assert checks["operator_authorized_scheduled_canary_binding"] is True
+
+    checks = unattended_acceptance.scenario_checks(
+        status={"schema": "status"},
+        dry_tick={"result": {"exit_code": 0}, "json": {}},
+        receipts=[{**good, "operator_authorization": "manual"}],
+        closures=[],
+        projection=projection,
+        cron_starts=cron,
+        operations=[],
+        issue_states={},
+    )
+    assert checks["operator_authorized_scheduled_canary_binding"] is False
