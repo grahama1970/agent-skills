@@ -39,6 +39,7 @@ def _load_campaign(path: Path) -> dict[str, Any]:
         campaign = dict(campaign)
         campaign["_source_schema"] = schema
         campaign["_source_status"] = data.get("status")
+        campaign["_acceptance_parent_by_case"] = _acceptance_parent_by_case(data.get("acceptance_floor"))
         return campaign
     if schema not in {"battle.invariant_campaign_result.v1", "battle.campaign_contract_receipt.v1"}:
         raise ValueError(f"not a Battle campaign receipt: {path}")
@@ -56,12 +57,23 @@ def _load_project_state(path: Path) -> tuple[str, list[str]]:
     return str(state), [str(item) for item in goals]
 
 
+def _campaign_passed(campaign: dict[str, Any]) -> bool:
+    if campaign.get("passed") is True or campaign.get("verdict") == "PASS":
+        return True
+    return campaign.get("_source_status") == "PASS" and (campaign.get("campaign") or {}).get("verdict") == "PASS"
+
+
+def _campaign_counts(campaign: dict[str, Any]) -> tuple[Any, Any, int]:
+    aggregate = campaign.get("aggregation") if isinstance(campaign.get("aggregation"), dict) else {}
+    passed = campaign.get("cases_passed", aggregate.get("cases_passed"))
+    total = campaign.get("cases_total", aggregate.get("cases_total"))
+    failures = campaign.get("failures") or []
+    return passed, total, len(failures) if isinstance(failures, list) else int(aggregate.get("failures") or 0)
+
+
 def _campaign_summary(path: Path, campaign: dict[str, Any]) -> str:
-    return (
-        f"{path}: {'PASS' if campaign.get('passed') else 'FAIL'} "
-        f"({campaign.get('cases_passed')}/{campaign.get('cases_total')} versions clean; "
-        f"failures={len(campaign.get('failures') or [])})"
-    )
+    passed, total, failures = _campaign_counts(campaign)
+    return f"{path}: {'PASS' if _campaign_passed(campaign) else 'FAIL'} ({passed}/{total} versions clean; failures={failures})"
 
 
 def _load_lineage(path: Path) -> dict[str, Any]:
@@ -85,11 +97,30 @@ def _lineage_cases(paths: list[Path]) -> dict[str, str]:
     return {case: "yes: adaptive Red win fixed/replayed for " + ", ".join(sorted(targets)) for case, targets in marked.items()}
 
 
-def _scope(path: Path) -> str:
-    name = path.name.lower()
-    if "beyond" in name:
+def _acceptance_parent_by_case(acceptance_floor: Any) -> dict[str, str]:
+    if not isinstance(acceptance_floor, dict):
+        return {}
+    parents: dict[str, list[str]] = {}
+    case_map = acceptance_floor.get("case_map")
+    if not isinstance(case_map, dict):
+        return {}
+    for parent, cases in case_map.items():
+        if not isinstance(cases, list):
+            continue
+        for case in cases:
+            parents.setdefault(str(case), []).append(str(parent))
+    return {case: ", ".join(sorted(set(items))) for case, items in parents.items()}
+
+
+def _scope(path: Path, campaign: dict[str, Any] | None = None) -> str:
+    text = "/".join(part.lower() for part in path.parts)
+    campaign = campaign or {}
+    if campaign.get("_source_schema") == "battle.production_adapter_round.v1" or "acceptance-floor" in text:
+        return "contractual"
+    haystack = text + " " + json.dumps({"request": campaign.get("request"), "plan": campaign.get("plan")}, sort_keys=True).lower()
+    if "beyond" in haystack:
         return "beyond-contract"
-    if "brief" in name or "fuzz" in name or "contract" in name:
+    if "brief" in text or "fuzz" in text or "contract" in path.name.lower():
         return "contractual"
     return "campaign"
 
@@ -190,8 +221,9 @@ def _attack_rows(campaigns: list[tuple[Path, dict[str, Any]]], lineage: dict[str
         for item in cases:
             case = item.get("case_id") or item.get("case") or "campaign-level"
             violations = item.get("violations") or []
-            scope = _scope(path)
+            scope = _scope(path, campaign)
             description = str(item.get("description") or _case_description(str(case)))
+            acceptance_parent_by_case = campaign.get("_acceptance_parent_by_case") if isinstance(campaign.get("_acceptance_parent_by_case"), dict) else {}
             rows.append({
                 "scope": scope,
                 "contractual": "yes" if scope == "contractual" else "no",
@@ -202,6 +234,7 @@ def _attack_rows(campaigns: list[tuple[Path, dict[str, Any]]], lineage: dict[str
                 "example": str(item.get("example") or _case_example(str(case), description)),
                 "why_chosen": str(item.get("why_chosen") or item.get("rationale") or _why_chosen(scope, str(case))),
                 "related_research": _format_refs(item.get("research_refs") or item.get("source_refs") or item.get("sources")),
+                "acceptance_parent": str(item.get("acceptance_parent") or acceptance_parent_by_case.get(str(case)) or "not recorded in case receipt"),
                 "expectation": str(item.get("expectation") or "unknown"),
                 "result": _row_result(item),
                 "evidence": "; ".join(str(v) for v in violations) or "Judge passed; no policy value survived.",
@@ -376,6 +409,22 @@ def _terminal_summary(target: str, rows: list[dict[str, Any]]) -> str:
 
 
 
+def _terminal_card_lines(row: dict[str, Any]) -> list[str]:
+    return [
+        "==============",
+        f"Scope: {row['scope']}",
+        f"Case: {row['case']}",
+        f"Acceptance parent: {row['acceptance_parent']}",
+        f"Expect: {row['expectation']}",
+        f"Result: {row['result']}",
+        f"Example: {row['example']}",
+        f"Why Battle checks this: {row['why_chosen']}",
+        f"Related research: {row['related_research']}",
+        f"Adaptive lineage: {row['adaptive_lineage']}",
+        f"Judge evidence: {_terminal_evidence(row)}",
+    ]
+
+
 def _terminal_cards(target: str, rows: list[dict[str, Any]]) -> str:
     counts = _row_counts(rows)
     lines = [
@@ -383,20 +432,23 @@ def _terminal_cards(target: str, rows: list[dict[str, Any]]) -> str:
         f"Scorekeeper call: {counts['total']} total cases; {counts['accepted_clean']} accepted clean; {counts['fail_closed']} stopped fail-closed; {counts['red_wins']} RED_WIN.",
     ]
     if not rows:
-        lines += ["==============", "Case: NO_CASES_RECORDED", "Judge evidence: Campaign had no case rows."]
+        lines += ["", "## Other campaign cases", "==============", "Case: NO_CASES_RECORDED", "Judge evidence: Campaign had no case rows."]
         return "\n".join(lines) + "\n"
-    for row in rows:
-        lines += [
-            "==============",
-            f"Scope: {row['scope']}",
-            f"Case: {row['case']}",
-            f"Expect: {row['expectation']}",
-            f"Result: {row['result']}",
-            f"Example: {row['example']}",
-            f"Why Battle checks this: {row['why_chosen']}",
-            f"Related research: {row['related_research']}",
-            f"Judge evidence: {_terminal_evidence(row)}",
-        ]
+
+    sections = [
+        ("Acceptance contract floor", [row for row in rows if row["scope"] == "contractual" and row["adaptive_lineage"] == "no"]),
+        ("Beyond-contract exploits", [row for row in rows if row["scope"] == "beyond-contract" and row["adaptive_lineage"] == "no"]),
+        ("Adaptive lineage", [row for row in rows if row["adaptive_lineage"] != "no"]),
+        ("Other campaign cases", [row for row in rows if row["scope"] not in {"contractual", "beyond-contract"} and row["adaptive_lineage"] == "no"]),
+    ]
+    for title, section_rows in sections:
+        if not section_rows and title != "Other campaign cases":
+            continue
+        if not section_rows:
+            continue
+        lines += ["", f"## {title}"]
+        for row in section_rows:
+            lines += _terminal_card_lines(row)
     return "\n".join(lines) + "\n"
 
 def build_report(*, campaigns: list[Path], project_state: Path, target: str, adaptive_lineage: list[Path] | None = None) -> tuple[dict[str, Any], str]:
@@ -406,7 +458,7 @@ def build_report(*, campaigns: list[Path], project_state: Path, target: str, ada
     current_state, goals = _load_project_state(project_state)
     attack_rows = _attack_rows(loaded, lineage)
     red_win_rows = [row for row in attack_rows if row["result"] == "RED_WIN"]
-    all_passed = all(campaign.get("passed") is True for _, campaign in loaded)
+    all_passed = all(_campaign_passed(campaign) for _, campaign in loaded)
     evidence = [_campaign_summary(path, campaign) for path, campaign in loaded]
     report = {
         "schema": "create_report.report.v1",

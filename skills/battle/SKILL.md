@@ -233,12 +233,17 @@ For project-agent terminal review, use cards when cases have long evidence:
 
 `invariant-report` is a Typer CLI command. It writes machine JSON to stdout and
 keeps the human Battle report on stderr. Use `--terminal-cards` for normal
-project-agent review of Battle evidence: it prints one `==============` block per
-case with `Scope`, `Case`, `Expect`, `Result`, `Example`, `Why Battle checks
-this`, `Related research`, and `Judge evidence`. If a receipt has `example`,
-`why_chosen`, `research_refs`, or `source_refs`, cards show those exact fields;
-otherwise examples/rationales are deterministic from the case id and research is
-reported as `not recorded in case receipt`.
+project-agent review of Battle evidence: it groups cards under `Acceptance
+contract floor`, `Beyond-contract exploits`, `Adaptive lineage`, and fallback
+`Other campaign cases` headings, then prints one `==============` block per case
+with `Scope`, `Case`, `Acceptance parent`, `Expect`, `Result`, `Example`, `Why
+Battle checks this`, `Related research`, `Adaptive lineage`, and `Judge
+evidence`. If a production-adapter receipt carries `acceptance_floor.case_map`,
+contract-floor cards show the parent `AC-*` id(s); otherwise `Acceptance parent`
+is `not recorded in case receipt`. If a receipt has `example`, `why_chosen`,
+`research_refs`, or `source_refs`, cards show those exact fields; otherwise
+examples/rationales are deterministic from the case id and research is reported
+as `not recorded in case receipt`.
 
 `--terminal-table` remains the compact overview alias for `--terminal-summary`:
 both print contract floor, Red pressure, Scorekeeper call, and one case-table row

@@ -3482,6 +3482,39 @@
       }
     },
     {
+      "name": "battle-b25-route-red-and-blue-authoring-through-tau",
+      "category": "battle-b25-route-red-and-blue-authoring-through-tau",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.tau_subagent.provider_handoff"
+      ],
+      "seams": [
+        "tau_subagent.provider_handoff"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b25-route-red-and-blue-authoring-through-tau --summary /tmp/battle-agentic-evals/battle-b25-route-red-and-blue-authoring-through-tau.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b25-route-red-and-blue-authoring-through-tau"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-b25-route-red-and-blue-authoring-through-tau.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 400
+          }
+        ]
+      }
+    },
+    {
       "name": "battle-invariant-report-terminal-cards-live",
       "category": "battle-invariant-report-terminal-cards",
       "type": "positive",
@@ -3500,7 +3533,7 @@
       "command": [
         "bash",
         "-c",
-        "set -euo pipefail\nroot=/home/graham/workspace/experiments/agent-skills\noai=/home/graham/workspace/experiments/oai-trial\nout=/tmp/battle-agentic-evals/invariant-report-terminal-cards-live\nmkdir -p \"$out\"\nif [ ! -x \"$oai/security/invariant_campaign_gate.sh\" ]; then\n  echo \"missing executable oai-trial Battle gate\" >&2\n  exit 2\nfi\n(\n  cd \"$oai\"\n  ./security/invariant_campaign_gate.sh anonymization-trial 0 > \"$out/live-gate.stdout.txt\" 2> \"$out/live-gate.stderr.txt\"\n)\naccept=\"$oai/security/battle/runs/acceptance-floor-latest/production-adapter-receipt.json\"\nbeyond=\"$oai/security/battle/runs/latest/receipt.json\"\nqual=\"$oai/security/battle/qualification/receipt.json\"\npython - \"$accept\" \"$beyond\" \"$qual\" <<'PY2'\nimport json, sys\nfor path in sys.argv[1:]:\n    data=json.load(open(path))\n    if path.endswith('production-adapter-receipt.json') and data.get('status') != 'PASS':\n        raise SystemExit(f'acceptance adapter not PASS: {path}')\n    if path.endswith('/receipt.json') and data.get('schema') == 'battle.campaign_contract_receipt.v1' and data.get('verdict') != 'PASS':\n        raise SystemExit(f'campaign not PASS: {path}')\n    if data.get('schema') == 'battle.judge_qualification.v1.receipt' and data.get('passed') is not True:\n        raise SystemExit(f'judge qualification not passed: {path}')\nPY2\n\"$root/skills/battle/run.sh\" invariant-report \\\n  --campaign \"$accept\" \\\n  --campaign \"$beyond\" \\\n  --project-state \"$oai/TRIAL_BRIEF.md\" \\\n  --target oai-trial \\\n  --out-json \"$out/report.json\" \\\n  --out-md \"$out/report.md\" \\\n  --terminal-cards \\\n  > \"$out/stdout.json\" \\\n  2> \"$out/terminal-cards.stderr.txt\"\n\"$root/skills/create-report/run.sh\" validate \"$out/report.json\" > \"$out/create-report-validate.json\"\npython - \"$out\" \"$accept\" \"$beyond\" \"$qual\" <<'PY3'\nimport json, sys\nfrom pathlib import Path\nout=Path(sys.argv[1])\naccept=json.load(open(sys.argv[2]))\nbeyond=json.load(open(sys.argv[3]))\nqual=json.load(open(sys.argv[4]))\nstdout=json.loads((out/'stdout.json').read_text())\nvalidate=json.loads((out/'create-report-validate.json').read_text())\nterminal=(out/'terminal-cards.stderr.txt').read_text()\naccept_campaign=accept.get('campaign') or {}\nsummary={\n  'schema':'battle.agentic_eval_terminal_cards_live.v1',\n  'status':'PASS',\n  'live_gate_stdout':str(out/'live-gate.stdout.txt'),\n  'live_gate_stderr':str(out/'live-gate.stderr.txt'),\n  'acceptance_adapter_status':accept.get('status'),\n  'acceptance_campaign_verdict':accept_campaign.get('verdict'),\n  'acceptance_cases_total':(accept_campaign.get('aggregation') or {}).get('cases_total'),\n  'beyond_campaign_verdict':beyond.get('verdict'),\n  'beyond_cases_total':(beyond.get('aggregation') or {}).get('cases_total'),\n  'judge_qualification_passed':qual.get('passed'),\n  'report_stdout_schema':stdout.get('schema'),\n  'report_stdout_status':stdout.get('status'),\n  'create_report_valid':validate.get('valid'),\n  'separator_count':terminal.count('=============='),\n  'has_cards_header':'Battle case cards: oai-trial' in terminal,\n  'has_example':'Example:' in terminal,\n  'has_why':'Why Battle checks this:' in terminal,\n  'has_related_research':'Related research:' in terminal,\n  'has_judge_evidence':'Judge evidence:' in terminal,\n  'has_case_table':'Case table:' in terminal,\n  'terminal_cards_path':str(out/'terminal-cards.stderr.txt'),\n  'report_json':str(out/'report.json'),\n  'report_md':str(out/'report.md'),\n}\nchecks=[\n  summary['acceptance_adapter_status']=='PASS',\n  summary['acceptance_campaign_verdict']=='PASS',\n  summary['beyond_campaign_verdict']=='PASS',\n  summary['judge_qualification_passed'] is True,\n  summary['report_stdout_schema']=='battle.invariant_report_result.v1',\n  summary['report_stdout_status']=='PASS',\n  summary['create_report_valid'] is True,\n  summary['separator_count'] >= 40,\n  summary['has_cards_header'], summary['has_example'], summary['has_why'], summary['has_related_research'], summary['has_judge_evidence'],\n  not summary['has_case_table'],\n]\nif not all(checks):\n  summary['status']='FAIL'\nPath('/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json').write_text(json.dumps(summary, indent=2, sort_keys=True)+'\\n')\nif summary['status'] != 'PASS':\n  raise SystemExit(json.dumps(summary, indent=2, sort_keys=True))\nprint('BATTLE_AGENTIC_EVAL_PASS suite=battle-invariant-report-terminal-cards live_gate=true')\nPY3"
+        "set -euo pipefail\nroot=/home/graham/workspace/experiments/agent-skills\noai=/home/graham/workspace/experiments/oai-trial\nout=/tmp/battle-agentic-evals/invariant-report-terminal-cards-live\nmkdir -p \"$out\"\nif [ ! -x \"$oai/security/invariant_campaign_gate.sh\" ]; then\n  echo \"missing executable oai-trial Battle gate\" >&2\n  exit 2\nfi\n(\n  cd \"$oai\"\n  ./security/invariant_campaign_gate.sh anonymization-trial 0 > \"$out/live-gate.stdout.txt\" 2> \"$out/live-gate.stderr.txt\"\n)\naccept=\"$oai/security/battle/runs/acceptance-floor-latest/production-adapter-receipt.json\"\nbeyond=\"$oai/security/battle/runs/latest/receipt.json\"\nqual=\"$oai/security/battle/qualification/receipt.json\"\npython - \"$accept\" \"$beyond\" \"$qual\" <<'PY2'\nimport json, sys\nfor path in sys.argv[1:]:\n    data=json.load(open(path))\n    if path.endswith('production-adapter-receipt.json') and data.get('status') != 'PASS':\n        raise SystemExit(f'acceptance adapter not PASS: {path}')\n    if path.endswith('/receipt.json') and data.get('schema') == 'battle.campaign_contract_receipt.v1' and data.get('verdict') != 'PASS':\n        raise SystemExit(f'campaign not PASS: {path}')\n    if data.get('schema') == 'battle.judge_qualification.v1.receipt' and data.get('passed') is not True:\n        raise SystemExit(f'judge qualification not passed: {path}')\nPY2\n\"$root/skills/battle/run.sh\" invariant-report \\\n  --campaign \"$accept\" \\\n  --campaign \"$beyond\" \\\n  --project-state \"$oai/TRIAL_BRIEF.md\" \\\n  --target oai-trial \\\n  --out-json \"$out/report.json\" \\\n  --out-md \"$out/report.md\" \\\n  --terminal-cards \\\n  > \"$out/stdout.json\" \\\n  2> \"$out/terminal-cards.stderr.txt\"\n\"$root/skills/create-report/run.sh\" validate \"$out/report.json\" > \"$out/create-report-validate.json\"\npython - \"$out\" \"$accept\" \"$beyond\" \"$qual\" <<'PY3'\nimport json, sys\nfrom pathlib import Path\nout=Path(sys.argv[1])\naccept=json.load(open(sys.argv[2]))\nbeyond=json.load(open(sys.argv[3]))\nqual=json.load(open(sys.argv[4]))\nstdout=json.loads((out/'stdout.json').read_text())\nvalidate=json.loads((out/'create-report-validate.json').read_text())\nterminal=(out/'terminal-cards.stderr.txt').read_text()\naccept_campaign=accept.get('campaign') or {}\nsummary={\n  'schema':'battle.agentic_eval_terminal_cards_live.v1',\n  'status':'PASS',\n  'live_gate_stdout':str(out/'live-gate.stdout.txt'),\n  'live_gate_stderr':str(out/'live-gate.stderr.txt'),\n  'acceptance_adapter_status':accept.get('status'),\n  'acceptance_campaign_verdict':accept_campaign.get('verdict'),\n  'acceptance_cases_total':(accept_campaign.get('aggregation') or {}).get('cases_total'),\n  'beyond_campaign_verdict':beyond.get('verdict'),\n  'beyond_cases_total':(beyond.get('aggregation') or {}).get('cases_total'),\n  'judge_qualification_passed':qual.get('passed'),\n  'report_stdout_schema':stdout.get('schema'),\n  'report_stdout_status':stdout.get('status'),\n  'create_report_valid':validate.get('valid'),\n  'separator_count':terminal.count('=============='),\n  'has_cards_header':'Battle case cards: oai-trial' in terminal,\n  'has_example':'Example:' in terminal,\n  'has_why':'Why Battle checks this:' in terminal,\n  'has_related_research':'Related research:' in terminal,\n  'has_judge_evidence':'Judge evidence:' in terminal,\n  'has_acceptance_section':'## Acceptance contract floor' in terminal,\n  'has_beyond_section':'## Beyond-contract exploits' in terminal,\n  'has_campaign_scope':'Scope: campaign' in terminal,\n  'has_contractual_scope':'Scope: contractual' in terminal,\n  'has_beyond_scope':'Scope: beyond-contract' in terminal,\n  'has_acceptance_parent':'Acceptance parent:' in terminal,\n  'has_case_table':'Case table:' in terminal,\n  'terminal_cards_path':str(out/'terminal-cards.stderr.txt'),\n  'report_json':str(out/'report.json'),\n  'report_md':str(out/'report.md'),\n}\nchecks=[\n  summary['acceptance_adapter_status']=='PASS',\n  summary['acceptance_campaign_verdict']=='PASS',\n  summary['beyond_campaign_verdict']=='PASS',\n  summary['judge_qualification_passed'] is True,\n  summary['report_stdout_schema']=='battle.invariant_report_result.v1',\n  summary['report_stdout_status']=='PASS',\n  summary['create_report_valid'] is True,\n  summary['separator_count'] >= 40,\n  summary['has_cards_header'], summary['has_example'], summary['has_why'], summary['has_related_research'], summary['has_judge_evidence'],\n  summary['has_acceptance_section'], summary['has_beyond_section'], summary['has_contractual_scope'], summary['has_beyond_scope'], summary['has_acceptance_parent'],\n  not summary['has_campaign_scope'],\n  not summary['has_case_table'],\n]\nif not all(checks):\n  summary['status']='FAIL'\nPath('/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json').write_text(json.dumps(summary, indent=2, sort_keys=True)+'\\n')\nif summary['status'] != 'PASS':\n  raise SystemExit(json.dumps(summary, indent=2, sort_keys=True))\nprint('BATTLE_AGENTIC_EVAL_PASS suite=battle-invariant-report-terminal-cards live_gate=true')\nPY3"
       ],
       "expected": {
         "exit_code": 0,
@@ -3538,6 +3571,36 @@
             "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
             "json_pointer": "/has_case_table",
             "equals": false
+          },
+          {
+            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
+            "json_pointer": "/has_acceptance_section",
+            "equals": true
+          },
+          {
+            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
+            "json_pointer": "/has_beyond_section",
+            "equals": true
+          },
+          {
+            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
+            "json_pointer": "/has_campaign_scope",
+            "equals": false
+          },
+          {
+            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
+            "json_pointer": "/has_contractual_scope",
+            "equals": true
+          },
+          {
+            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
+            "json_pointer": "/has_beyond_scope",
+            "equals": true
+          },
+          {
+            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
+            "json_pointer": "/has_acceptance_parent",
+            "equals": true
           }
         ]
       }

@@ -360,14 +360,30 @@ def test_invariant_report_terminal_cards_preserve_typed_receipt_fields(tmp_path:
 
 
 def test_invariant_report_terminal_cards_accept_live_receipt_shapes(tmp_path: Path) -> None:
-    contract = tmp_path / "production-adapter-receipt.json"
-    beyond = tmp_path / "campaign-contract-receipt.json"
+    contract = tmp_path / "acceptance-floor-latest" / "production-adapter-receipt.json"
+    beyond = tmp_path / "runs" / "latest" / "beyond-contract-receipt.json"
     project_state = tmp_path / "project-state.md"
     out_json = tmp_path / "report.json"
     out_md = tmp_path / "report.md"
-    campaign_body = {
+    contract.parent.mkdir(parents=True)
+    beyond.parent.mkdir(parents=True)
+    contract_campaign = {
         "schema": "battle.campaign_contract_receipt.v1",
         "verdict": "PASS",
+        "aggregation": {"cases_total": 1, "cases_passed": 1},
+        "case_receipts": [{
+            "schema": "battle.case_receipt.v1",
+            "case_id": "json-string",
+            "expectation": "MUST_ACCEPT",
+            "verdict": "PASS",
+            "execution": {"kind": "ACCEPT", "exit_code": 0},
+            "violations": [],
+        }],
+    }
+    beyond_campaign = {
+        "schema": "battle.campaign_contract_receipt.v1",
+        "verdict": "PASS",
+        "request": {"generator": "anon_beyond_brief_matrix.py"},
         "aggregation": {"cases_total": 1, "cases_passed": 1},
         "case_receipts": [{
             "schema": "battle.case_receipt.v1",
@@ -378,8 +394,13 @@ def test_invariant_report_terminal_cards_accept_live_receipt_shapes(tmp_path: Pa
             "violations": [],
         }],
     }
-    contract.write_text(json.dumps({"schema": "battle.production_adapter_round.v1", "status": "PASS", "campaign": campaign_body}), encoding="utf-8")
-    beyond.write_text(json.dumps(campaign_body), encoding="utf-8")
+    contract.write_text(json.dumps({
+        "schema": "battle.production_adapter_round.v1",
+        "status": "PASS",
+        "acceptance_floor": {"case_map": {"AC-001": ["json-string"]}},
+        "campaign": contract_campaign,
+    }), encoding="utf-8")
+    beyond.write_text(json.dumps(beyond_campaign), encoding="utf-8")
     project_state.write_text("# Project State\ncurrent\n", encoding="utf-8")
 
     proc = subprocess.run([
@@ -395,9 +416,52 @@ def test_invariant_report_terminal_cards_accept_live_receipt_shapes(tmp_path: Pa
 
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert json.loads(proc.stdout)["status"] == "PASS"
-    assert proc.stderr.count("==============") == 2
+    assert "## Acceptance contract floor" in proc.stderr
+    assert "Scope: contractual" in proc.stderr
+    assert "Case: json-string" in proc.stderr
+    assert "Acceptance parent: AC-001" in proc.stderr
+    assert "## Beyond-contract exploits" in proc.stderr
+    assert "Scope: beyond-contract" in proc.stderr
     assert "Case: bb-json-object-key" in proc.stderr
+    assert "Acceptance parent: not recorded in case receipt" in proc.stderr
     assert "Related research: not recorded in case receipt" in proc.stderr
+
+
+def test_invariant_report_terminal_cards_group_adaptive_lineage(tmp_path: Path) -> None:
+    campaign = tmp_path / "beyond-contract-campaign.json"
+    lineage = tmp_path / "lineage.json"
+    project_state = tmp_path / "project-state.md"
+    out_json = tmp_path / "report.json"
+    out_md = tmp_path / "report.md"
+    _campaign(campaign, passed=True, case_log=[{
+        "case": "bb-filename-value",
+        "expectation": "MUST_REJECT",
+        "passed": True,
+        "execution": {"kind": "REJECT", "exit_code": 1},
+    }])
+    lineage.write_text(json.dumps({
+        "schema": "battle.invariant_adaptive_lineage.v1",
+        "target": "oai-trial",
+        "red_wins": [{"case": "bb-filename-value"}],
+        "fixed_cases": ["bb-filename-value"],
+    }), encoding="utf-8")
+    project_state.write_text("# Project State\ncurrent\n", encoding="utf-8")
+
+    proc = subprocess.run([
+        str(BATTLE / "run.sh"), "invariant-report",
+        "--campaign", str(campaign),
+        "--adaptive-lineage", str(lineage),
+        "--project-state", str(project_state),
+        "--target", "oai-trial",
+        "--out-json", str(out_json),
+        "--out-md", str(out_md),
+        "--terminal-cards",
+    ], cwd=REPO, capture_output=True, text=True, check=False)
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "## Adaptive lineage" in proc.stderr
+    assert "Case: bb-filename-value" in proc.stderr
+    assert "Adaptive lineage: yes: adaptive Red win fixed/replayed for oai-trial" in proc.stderr
 
 
 def test_invariant_report_rich_terminal_table_path_renders_colored_rows(monkeypatch, capsys) -> None:
