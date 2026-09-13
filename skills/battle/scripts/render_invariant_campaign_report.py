@@ -39,6 +39,8 @@ def _load_campaign(path: Path) -> dict[str, Any]:
         campaign = dict(campaign)
         campaign["_source_schema"] = schema
         campaign["_source_status"] = data.get("status")
+        campaign["_source_acceptance_floor"] = data.get("acceptance_floor")
+        campaign["_source_executed_acceptance_floor"] = data.get("executed_acceptance_floor")
         campaign["_acceptance_parent_by_case"] = _acceptance_parent_by_case(data.get("acceptance_floor"))
         return campaign
     if schema not in {"battle.invariant_campaign_result.v1", "battle.campaign_contract_receipt.v1"}:
@@ -104,7 +106,8 @@ def _acceptance_parent_by_case(acceptance_floor: Any) -> dict[str, str]:
     case_map = acceptance_floor.get("case_map")
     if not isinstance(case_map, dict):
         return {}
-    for parent, cases in case_map.items():
+    for parent, mapping in case_map.items():
+        cases = mapping.get("case_ids") if isinstance(mapping, dict) else mapping
         if not isinstance(cases, list):
             continue
         for case in cases:
@@ -241,6 +244,7 @@ def _attack_rows(campaigns: list[tuple[Path, dict[str, Any]]], lineage: dict[str
                 "expectation": str(item.get("expectation") or "unknown"),
                 "result": _row_result(item),
                 "evidence": "; ".join(str(v) for v in violations) or "Judge passed; no policy value survived.",
+                "row_kind": "campaign",
             })
     for case, marker in sorted(lineage.items()):
         if case in seen_cases:
@@ -260,6 +264,7 @@ def _attack_rows(campaigns: list[tuple[Path, dict[str, Any]]], lineage: dict[str
             "expectation": "REPLAY_PASS",
             "result": "ACCEPTED_CLEAN",
             "evidence": "Adaptive-lineage proof was validated live/non-mocked before rendering.",
+            "row_kind": "lineage",
         })
     return rows
 
@@ -290,6 +295,29 @@ def _row_counts(rows: list[dict[str, Any]]) -> dict[str, int]:
         "fail_closed": sum(1 for row in rows if row["result"] == "BLOCKED_FAIL_CLOSED"),
         "red_wins": sum(1 for row in rows if row["result"] == "RED_WIN"),
     }
+
+
+def _campaign_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [row for row in rows if row.get("row_kind") != "lineage"]
+
+
+def _acceptance_gate_problems(campaigns: list[tuple[Path, dict[str, Any]]]) -> list[str]:
+    problems: list[str] = []
+    for path, campaign in campaigns:
+        if campaign.get("_source_schema") != "battle.production_adapter_round.v1":
+            continue
+        floor = campaign.get("_source_acceptance_floor")
+        if floor is None:
+            continue
+        if not isinstance(floor, dict) or floor.get("status") != "PASS":
+            problems.append(f"{path}: acceptance floor did not pass")
+        executed = campaign.get("_source_executed_acceptance_floor")
+        if not isinstance(executed, dict):
+            problems.append(f"{path}: executed acceptance-floor coverage ledger missing")
+        elif executed.get("status") != "PASS":
+            detail = ", ".join(str(item) for item in executed.get("problems") or [])
+            problems.append(f"{path}: executed acceptance-floor coverage ledger blocked{(': ' + detail) if detail else ''}")
+    return problems
 
 
 def _terminal_evidence(row: dict[str, Any]) -> str:
@@ -376,10 +404,12 @@ def _print_rich_terminal_summary(target: str, rows: list[dict[str, Any]]) -> Non
     sys.stderr.write(capture.get())
 
 def _terminal_summary(target: str, rows: list[dict[str, Any]]) -> str:
-    contract = [row for row in rows if row["scope"] == "contractual"]
-    beyond = [row for row in rows if row["scope"] == "beyond-contract"]
-    other = [row for row in rows if row["scope"] not in {"contractual", "beyond-contract"}]
-    total = _row_counts(rows)
+    scored_rows = _campaign_rows(rows)
+    lineage_rows = [row for row in rows if row.get("row_kind") == "lineage"]
+    contract = [row for row in scored_rows if row["scope"] == "contractual"]
+    beyond = [row for row in scored_rows if row["scope"] == "beyond-contract"]
+    other = [row for row in scored_rows if row["scope"] not in {"contractual", "beyond-contract"}]
+    total = _row_counts(scored_rows)
     contract_counts = _row_counts(contract)
     beyond_counts = _row_counts(beyond)
     highlights = [row for row in rows if row["result"] == "RED_WIN"]
@@ -406,12 +436,14 @@ def _terminal_summary(target: str, rows: list[dict[str, Any]]) -> str:
         lines.append(f"  {other_counts['total']} other campaign cases: {other_counts['accepted_clean']} accepted clean, {other_counts['fail_closed']} fail-closed, {other_counts['red_wins']} RED_WIN.")
     lines += [
         "Scorekeeper call:",
-        f"  {total['total']} total cases; {total['accepted_clean']} accepted clean; {total['fail_closed']} stopped fail-closed; {total['red_wins']} RED_WIN.",
+        f"  {total['total']} campaign cases; {total['accepted_clean']} accepted clean; {total['fail_closed']} stopped fail-closed; {total['red_wins']} RED_WIN.",
     ]
     if total["red_wins"]:
         lines.append("  RED_WIN blocks release until Blue patches and Judge replay passes.")
     else:
         lines.append("  No RED_WIN rows in this bounded report.")
+    if lineage_rows:
+        lines.append(f"  {len(lineage_rows)} adaptive-lineage records tracked separately from campaign-case totals.")
     lines += ["", "Case table:", *_terminal_table(rows), ""]
     lines.append("Highlight plays:")
     if highlights:
@@ -448,11 +480,14 @@ def _terminal_card_lines(row: dict[str, Any]) -> list[str]:
 
 
 def _terminal_cards(target: str, rows: list[dict[str, Any]]) -> str:
-    counts = _row_counts(rows)
+    counts = _row_counts(_campaign_rows(rows))
+    lineage_count = sum(1 for row in rows if row.get("row_kind") == "lineage")
     lines = [
         f"Battle case cards: {target}",
-        f"Scorekeeper call: {counts['total']} total cases; {counts['accepted_clean']} accepted clean; {counts['fail_closed']} stopped fail-closed; {counts['red_wins']} RED_WIN.",
+        f"Scorekeeper call: {counts['total']} campaign cases; {counts['accepted_clean']} accepted clean; {counts['fail_closed']} stopped fail-closed; {counts['red_wins']} RED_WIN.",
     ]
+    if lineage_count:
+        lines.append(f"Adaptive lineage: {lineage_count} record(s) tracked separately from campaign-case totals.")
     if not rows:
         lines += ["", "## Other campaign cases", "==============", "Case: NO_CASES_RECORDED", "Judge evidence: Campaign had no case rows."]
         return "\n".join(lines) + "\n"
@@ -479,9 +514,14 @@ def build_report(*, campaigns: list[Path], project_state: Path, target: str, ada
     lineage = _lineage_cases(lineage_paths)
     current_state, goals = _load_project_state(project_state)
     attack_rows = _attack_rows(loaded, lineage)
-    red_win_rows = [row for row in attack_rows if row["result"] == "RED_WIN"]
+    scored_rows = _campaign_rows(attack_rows)
+    red_win_rows = [row for row in scored_rows if row["result"] == "RED_WIN"]
     all_passed = all(_campaign_passed(campaign) for _, campaign in loaded)
+    acceptance_floor_problems = _acceptance_gate_problems(loaded)
+    acceptance_complete = not acceptance_floor_problems
+    ready = all_passed and acceptance_complete
     evidence = [_campaign_summary(path, campaign) for path, campaign in loaded]
+    acceptance_evidence = ["acceptance_floor_complete=PASS"] if acceptance_complete else [f"acceptance_floor_complete=BLOCKED: {problem}" for problem in acceptance_floor_problems]
     report = {
         "schema": "create_report.report.v1",
         "report_id": f"battle-invariant-{target}",
@@ -489,11 +529,11 @@ def build_report(*, campaigns: list[Path], project_state: Path, target: str, ada
         "persona": "Battle scorekeeper",
         "primary_object": target,
         "decision_supported": "decide whether the invariant campaign found exploitable release-boundary leaks",
-        "overall_finding": "Ready" if all_passed else "Needs Changes",
-        "core_conclusion": f"No Judge-confirmed exploits survived {len(attack_rows)} attempted attack cases." if all_passed else f"{len(red_win_rows)} Judge-confirmed exploit rows require repair and replay.",
-        "evidence_basis": "Battle campaign receipts plus project-state artifact; Markdown appends the exploits table derived from every campaign case_log row, including contractual and beyond-contract cases, descriptions, selection rationale, and adaptive-lineage marks.",
-        "highest_risk_issues": [] if all_passed else ["F-001 Judge-confirmed Battle exploits remain"],
-        "immediate_next_steps": [] if all_passed else ["A-001 Patch each Red win and rerun Battle replay"],
+        "overall_finding": "Ready" if ready else "Needs Changes",
+        "core_conclusion": f"No Judge-confirmed exploits survived {len(scored_rows)} attempted attack cases; acceptance-floor coverage is digest-bound and executed." if ready else f"Report is not acceptance-complete: {len(red_win_rows)} Judge-confirmed exploit rows and {len(acceptance_floor_problems)} acceptance-floor coverage problem(s) require repair.",
+        "evidence_basis": "Battle campaign receipts plus project-state artifact; Markdown appends the exploits table derived from every campaign case_log row, including contractual and beyond-contract cases, descriptions, selection rationale, and adaptive-lineage marks. Production-adapter receipts with an acceptance floor require an executed acceptance-floor coverage ledger before the report may say Ready.",
+        "highest_risk_issues": ([] if ready else (["F-001 Judge-confirmed Battle exploits remain"] if red_win_rows else []) + (["F-002 Acceptance-contract floor coverage is incomplete or unproven"] if acceptance_floor_problems else [])),
+        "immediate_next_steps": [] if ready else (["A-001 Patch each Red win and rerun Battle replay"] if red_win_rows else []) + (["A-002 Build or repair the digest-bound acceptance-case to Battle-case to Judge-receipt coverage ledger"] if acceptance_floor_problems else []),
         "scope": {
             "reviewed": [target, "Battle invariant campaign receipts", "project-state artifact"],
             "excluded": ["unbounded exploit search", "manual human approval"],
@@ -519,44 +559,56 @@ def build_report(*, campaigns: list[Path], project_state: Path, target: str, ada
             {
                 "id": "F-001",
                 "title": "Battle invariant campaign exploit status",
-                "status": "Verified" if all_passed else "Needs Changes",
-                "evidence": evidence + [f"exploits_table_rows={len(attack_rows)}", f"red_win_rows={len(red_win_rows)}", f"adaptive_lineage_rows={sum(1 for row in attack_rows if row['adaptive_lineage'] != 'no')}"],
+                "status": "Verified" if ready else "Needs Changes",
+                "evidence": evidence + acceptance_evidence + [f"campaign_case_rows={len(scored_rows)}", f"exploits_table_rows={len(attack_rows)}", f"red_win_rows={len(red_win_rows)}", f"adaptive_lineage_rows={sum(1 for row in attack_rows if row['adaptive_lineage'] != 'no')}"],
                 "rationale": "The independent Judge, not team self-report, scored each generated version.",
                 "impact": "Determines whether release-boundary PII leaks require another Blue repair cycle.",
                 "owner": "Battle scorekeeper",
                 "valid_next_actions": ["rerun Battle with broader generators", "patch Judge-confirmed Red wins"],
-                "acceptance_check": "create-report validate passes and the Markdown contains ## Exploits Table",
+                "acceptance_check": "create-report validate passes, the Markdown contains ## Exploits Table, and any production-adapter acceptance_floor has executed_acceptance_floor.status=PASS",
                 "non_claims": ["does not prove all possible exploit classes", "does not replace human acceptance review"],
             }
         ],
         "surface_contracts": [],
         "state_split": {
-            "finished": evidence if all_passed else [],
+            "finished": evidence + acceptance_evidence if ready else [],
             "pending": [],
-            "outstanding": [] if all_passed else ["Patch and replay Judge-confirmed Red wins"],
-            "broken": [] if all_passed else [row["case"] for row in red_win_rows],
-            "blocked": [],
+            "outstanding": [] if ready else (["Patch and replay Judge-confirmed Red wins"] if red_win_rows else []) + (["Build or repair digest-bound acceptance-floor execution coverage"] if acceptance_floor_problems else []),
+            "broken": [] if not red_win_rows else [row["case"] for row in red_win_rows],
+            "blocked": acceptance_floor_problems,
             "unproven": ["unbounded exploit search", "human approval"],
         },
-        "plan_ready_next_actions": [] if all_passed else [
-            {
+        "plan_ready_next_actions": [] if ready else [
+            *([{
                 "id": "A-001",
                 "related_finding": "F-001",
                 "action": "Patch every Judge-confirmed Red win and rerun the same campaigns.",
                 "owner_persona": "Blue team",
                 "primary_object": target,
                 "rationale": "Battle found an invariant violation in the release boundary.",
-                "acceptance_check": "all replay campaign receipts pass and the exploits table is empty",
+                "acceptance_check": "all replay campaign receipts pass and the exploits table has no RED_WIN rows",
                 "dependencies": [],
                 "risk_if_skipped": "Known exploit remains reproducible",
                 "suggested_priority": "P0",
-            }
+            }] if red_win_rows else []),
+            *([{
+                "id": "A-002",
+                "related_finding": "F-001",
+                "action": "Bind every frozen acceptance case to required Battle cases and executed Judge evidence, then rerender the report.",
+                "owner_persona": "Battle scorekeeper",
+                "primary_object": target,
+                "rationale": "Beyond-contract hardening cannot credit over an unproven acceptance-contract floor.",
+                "acceptance_check": "executed_acceptance_floor.status=PASS and no acceptance-floor coverage problems are present in the report",
+                "dependencies": [],
+                "risk_if_skipped": "The report can claim readiness from a table while the client contract floor is unproven.",
+                "suggested_priority": "P0",
+            }] if acceptance_floor_problems else []),
         ],
-        "plan_iterate_seed": None if all_passed else {
-            "recommended_phase_id": "battle-red-win-repair",
-            "objective": "Remove Judge-confirmed Battle exploit rows and replay the same campaigns.",
-            "candidate_phases": ["patch target", "rerun Battle", "regenerate create-report"],
-            "deterministic_evidence_gates": ["Battle campaign replay PASS", "skills/create-report/run.sh validate <report.json>"],
+        "plan_iterate_seed": None if ready else {
+            "recommended_phase_id": "battle-readiness-repair",
+            "objective": "Remove Judge-confirmed Battle exploit rows and prove the acceptance-contract floor with an executed coverage ledger.",
+            "candidate_phases": ["repair acceptance-floor coverage", "patch target if Red wins exist", "rerun Battle", "regenerate create-report"],
+            "deterministic_evidence_gates": ["executed_acceptance_floor.status=PASS", "Battle campaign replay PASS", "skills/create-report/run.sh validate <report.json>"],
             "domain_review_loops": [],
             "interaction_evidence": "not required",
             "ask_persona_review": "optional after deterministic replay",

@@ -2414,6 +2414,7 @@ def probe_invariant_terminal_cards_live_e2e(summary_path: Path, *, proof_root: s
         raise AssertionError(validate.stdout + validate.stderr)
 
     stdout = _read_json(out / "stdout.json")
+    rendered_report = _read_json(out / "report.json")
     create_report = _read_json(out / "create-report-validate.json")
     terminal = (out / "terminal-cards.stderr.txt").read_text(encoding="utf-8")
     summary = _summary(
@@ -2433,6 +2434,7 @@ def probe_invariant_terminal_cards_live_e2e(summary_path: Path, *, proof_root: s
         claims_proves=[
             "terminal cards render acceptance-contract, beyond-contract, and adaptive-lineage sections from live Battle receipts",
             "Scope: campaign is rejected by independent terminal readback",
+            "Battle reports cannot claim Ready from a production-adapter acceptance floor unless executed_acceptance_floor.status=PASS is present",
         ],
         claims_does_not_prove=[
             "research_refs are present in oai-trial receipts",
@@ -2454,6 +2456,9 @@ def probe_invariant_terminal_cards_live_e2e(summary_path: Path, *, proof_root: s
         "adaptive_verification_mocked": adaptive_verification.get("mocked"),
         "report_stdout_schema": stdout.get("schema"),
         "report_stdout_status": stdout.get("status"),
+        "report_overall_finding": rendered_report.get("overall_finding"),
+        "report_core_conclusion": rendered_report.get("core_conclusion"),
+        "acceptance_executed_floor_status": ((accept_data.get("executed_acceptance_floor") or {}) if isinstance(accept_data.get("executed_acceptance_floor"), dict) else {}).get("status"),
         "create_report_valid": create_report.get("valid"),
         "separator_count": terminal.count("=============="),
         "has_acceptance_section": "## Acceptance contract floor" in terminal,
@@ -2475,6 +2480,7 @@ def probe_invariant_terminal_cards_live_e2e(summary_path: Path, *, proof_root: s
             ("judge_qualification_passed", summary["judge_qualification_passed"] is True),
             ("adaptive_lineage_live_non_mocked", summary["adaptive_qualification_live"] is True and summary["adaptive_qualification_mocked"] is False and summary["adaptive_verification_live"] is True and summary["adaptive_verification_mocked"] is False),
             ("create_report_valid", summary["create_report_valid"] is True),
+            ("report_readiness_matches_executed_floor", (summary["acceptance_executed_floor_status"] == "PASS" and summary["report_overall_finding"] == "Ready") or (summary["acceptance_executed_floor_status"] != "PASS" and summary["report_overall_finding"] == "Needs Changes" and "acceptance-floor coverage" in str(summary["report_core_conclusion"]))),
             ("terminal_has_three_sections", summary["has_acceptance_section"] and summary["has_beyond_section"] and summary["has_adaptive_section"]),
             ("terminal_has_scopes", summary["has_contractual_scope"] and summary["has_beyond_scope"] and summary["has_adaptive_scope"]),
             ("terminal_rejects_campaign_scope", not summary["has_campaign_scope"]),

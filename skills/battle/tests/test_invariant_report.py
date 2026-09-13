@@ -228,7 +228,7 @@ def test_invariant_report_terminal_summary_is_plain_battle_story(tmp_path: Path)
     assert "Red pressure:" in terminal
     assert "2 beyond-contract probes: 0 accepted clean, 1 fail-closed, 1 RED_WIN." in terminal
     assert "Scorekeeper call:" in terminal
-    assert "4 total cases; 1 accepted clean; 2 stopped fail-closed; 1 RED_WIN." in terminal
+    assert "4 campaign cases; 1 accepted clean; 2 stopped fail-closed; 1 RED_WIN." in terminal
     assert "RED_WIN blocks release until Blue patches and Judge replay passes." in terminal
     assert "Case table:" in terminal
     assert "Scope" in terminal and "Case" in terminal and "Expect" in terminal and "Result" in terminal and "Attack" in terminal and "Evidence" in terminal
@@ -425,6 +425,91 @@ def test_invariant_report_terminal_cards_accept_live_receipt_shapes(tmp_path: Pa
     assert "Case: bb-json-object-key" in proc.stderr
     assert "Acceptance parent: not recorded in case receipt" in proc.stderr
     assert "Related research: not recorded in case receipt" in proc.stderr
+    report = json.loads(out_json.read_text(encoding="utf-8"))
+    assert report["overall_finding"] == "Needs Changes"
+    assert "Acceptance-contract floor coverage is incomplete or unproven" in json.dumps(report)
+    assert "executed acceptance-floor coverage ledger missing" in json.dumps(report)
+
+
+def test_invariant_report_acceptance_floor_ready_requires_executed_ledger(tmp_path: Path) -> None:
+    contract = tmp_path / "acceptance-floor-latest" / "production-adapter-receipt.json"
+    project_state = tmp_path / "project-state.md"
+    out_json = tmp_path / "report.json"
+    out_md = tmp_path / "report.md"
+    contract.parent.mkdir(parents=True)
+    campaign = {
+        "schema": "battle.campaign_contract_receipt.v1",
+        "verdict": "PASS",
+        "aggregation": {"cases_total": 1, "cases_passed": 1},
+        "case_receipts": [{
+            "schema": "battle.case_receipt.v1",
+            "case_id": "json-string",
+            "expectation": "MUST_ACCEPT",
+            "verdict": "PASS",
+            "execution": {"kind": "ACCEPT", "exit_code": 0},
+            "violations": [],
+        }],
+    }
+    contract.write_text(json.dumps({
+        "schema": "battle.production_adapter_round.v1",
+        "status": "PASS",
+        "acceptance_floor": {"status": "PASS", "case_map": {"AC-001": {"case_ids": ["json-string"], "assertion": "PII removed", "evidence_extractors": ["case_results.passed"]}}},
+        "executed_acceptance_floor": {"schema": "battle.executed_acceptance_floor_receipt.v1", "status": "PASS", "problems": []},
+        "campaign": campaign,
+    }), encoding="utf-8")
+    project_state.write_text("# Project State\ncurrent\n", encoding="utf-8")
+
+    proc = subprocess.run([
+        str(BATTLE / "run.sh"), "invariant-report",
+        "--campaign", str(contract),
+        "--project-state", str(project_state),
+        "--target", "oai-trial",
+        "--out-json", str(out_json),
+        "--out-md", str(out_md),
+    ], cwd=REPO, capture_output=True, text=True, check=False)
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    report = json.loads(out_json.read_text(encoding="utf-8"))
+    assert report["overall_finding"] == "Ready"
+    assert "acceptance_floor_complete=PASS" in json.dumps(report)
+
+
+def test_invariant_report_terminal_cards_do_not_count_lineage_only_as_attack_case(tmp_path: Path) -> None:
+    campaign = tmp_path / "beyond-contract-campaign.json"
+    lineage = tmp_path / "lineage.json"
+    project_state = tmp_path / "project-state.md"
+    out_json = tmp_path / "report.json"
+    out_md = tmp_path / "report.md"
+    _campaign(campaign, passed=True, case_log=[{
+        "case": "bb-filename-value",
+        "expectation": "MUST_REJECT",
+        "passed": True,
+        "execution": {"kind": "REJECT", "exit_code": 1},
+    }])
+    lineage.write_text(json.dumps({
+        "schema": "battle.invariant_adaptive_lineage.v1",
+        "target": "battle-004",
+        "red_wins": [{"case": "battle-004-adaptive-lineage"}],
+        "fixed_cases": ["battle-004-adaptive-lineage"],
+    }), encoding="utf-8")
+    project_state.write_text("# Project State\ncurrent\n", encoding="utf-8")
+
+    proc = subprocess.run([
+        str(BATTLE / "run.sh"), "invariant-report",
+        "--campaign", str(campaign),
+        "--adaptive-lineage", str(lineage),
+        "--project-state", str(project_state),
+        "--target", "oai-trial",
+        "--out-json", str(out_json),
+        "--out-md", str(out_md),
+        "--terminal-cards",
+    ], cwd=REPO, capture_output=True, text=True, check=False)
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    report = json.loads(out_json.read_text(encoding="utf-8"))
+    assert "No Judge-confirmed exploits survived 1 attempted attack cases" in report["core_conclusion"]
+    assert "Scorekeeper call: 1 campaign cases" in proc.stderr
+    assert "Adaptive lineage: 1 record(s) tracked separately" in proc.stderr
 
 
 def test_invariant_report_terminal_cards_group_adaptive_lineage(tmp_path: Path) -> None:
