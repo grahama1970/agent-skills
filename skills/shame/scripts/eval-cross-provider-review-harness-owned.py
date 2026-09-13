@@ -69,6 +69,9 @@ def main() -> None:
     index_text = INDEX.read_text(encoding="utf-8")
     assert all(token not in index_text for token in FORBIDDEN), "agent-visible impossible repair action survived in index.ts"
     assert "harnessReviewUnavailableNotice" in index_text, "hook review failure must stop at harness notice"
+    assert "const mustRunHarnessReview = forceStatus" in index_text, "accepted harness stops must still invoke review"
+    assert 'check.decision !== "reject"' in index_text, "a checker PASS with old review proof must not skip the hook reviewer"
+    assert "withoutAgentAuthoredReviewProof(statusForReview)" in index_text, "hook must strip agent-supplied review proof before rerun"
 
     print(json.dumps({
         "schema": "lazy_report_shame.cross_provider_review_harness_owned_eval.v1",
@@ -79,6 +82,8 @@ def main() -> None:
             "forbidden agent repair actions are absent",
             "run.sh preflight passes valid status while marking review pending for the hook",
             "index.ts has a harness-owned unavailable-review stop path",
+            "checker PASS with pre-attached review proof still routes through mustRunHarnessReview",
+            "hook strips any agent-supplied review proof before rerunning the reviewer",
         ],
     }, indent=2))
 

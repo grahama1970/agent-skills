@@ -1155,7 +1155,7 @@
           "lazy_report_shame.auto_cross_provider_review_eval.v1",
           "auto-cross-provider-review invokes configured reviewer command",
           "hook-owned receipt, metadata, and reviewer output are written",
-          "zai authors are assigned an OpenAI-family reviewer by default"
+          "zai authors are assigned a Kimi-family reviewer by default"
         ]
       },
       "proves": "The Shame reviewer invocation path calls a configured different-provider reviewer command, writes hook-owned lazy_report_shame.cross_provider_review.v1 metadata/output, and turns a previously rejected guarded stop into an accepted one."

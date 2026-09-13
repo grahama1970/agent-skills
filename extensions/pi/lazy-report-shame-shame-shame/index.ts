@@ -1547,12 +1547,18 @@ export default function lazyReportShameShameShame(pi: any) {
     // by forceStatus above.
     const strictStatus = formatRepairTurn;
     let check = checkReport(text, forceStatus, mutatingTurn, strictStatus, currentUserText, formatRepairTurn);
-    if (crossProviderReviewHarnessOwns(check) && !crossProviderReviewRejected(check)) {
-      const candidateStatus = (check as any)?.features?.status || terminalStatusFromText(text);
-      const reviewed = runStopReviewer(text, candidateStatus, event.message);
+    const statusForReview = (check as any)?.features?.status || terminalStatusFromText(text);
+    const mustRunHarnessReview = forceStatus && statusForReview && !crossProviderReviewRejected(check)
+      && (check.decision !== "reject" || crossProviderReviewHarnessOwns(check));
+    if (mustRunHarnessReview) {
+      const reviewText = replaceTerminalStatusJson(text, withoutAgentAuthoredReviewProof(statusForReview)) || text;
+      const reviewed = runStopReviewer(reviewText, statusForReview, event.message);
       if (reviewed) {
         text = reviewed.text;
         autoReviewContent = [textBlock(text)];
+        check = checkReport(text, forceStatus, mutatingTurn, strictStatus, currentUserText, formatRepairTurn);
+      } else {
+        text = reviewText;
         check = checkReport(text, forceStatus, mutatingTurn, strictStatus, currentUserText, formatRepairTurn);
       }
     }
