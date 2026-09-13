@@ -4,9 +4,14 @@
   "categories": {
     "clean-room-webgpt-loop": {
       "category_id": "agentic-evals:agent-skills:clean-room-webgpt-loop",
-      "defect": "clean-room WebGPT loop contract regressed",
-      "seams": ["clean_room_ticket_preview_boundary"],
-      "supports_claims": ["project_state.clean_room_webgpt_loop"],
+      "defect": "clean-room multi-web Ask loop contract regressed",
+      "seams": [
+        "clean_room_multi_web_review_boundary",
+        "clean_room_ticket_preview_boundary"
+      ],
+      "supports_claims": [
+        "project_state.clean_room_webgpt_loop"
+      ],
       "depends_on": []
     }
   }

@@ -54,6 +54,9 @@ def main() -> int:
         receipt = json.loads(result.stdout)
         assert receipt["status"] == "not-ready"
         assert receipt["controlled_tab_id"] == "tab-123"
+        assert receipt["review_handlers"] == ["webgpt", "webkimi", "webgemini"]
+        assert receipt["review_mode"] == "ask_tau_roundtable"
+        assert "--handler webgpt --handler webkimi --handler webgemini" in receipt["ask_roundtable_shell"]
         assert receipt["tickets"][0]["observed"] == "two paths own browser zip delivery"
         assert receipt["iteration_driver"] == "project-watchdog"
         assert receipt["project_watchdog"]["eligible_route"] == "ticket_repair"
@@ -65,9 +68,11 @@ def main() -> int:
         with zipfile.ZipFile(zip_path) as zf:
             assert len(zf.namelist()) <= 5
             assert "review_context.md" in zf.namelist()
+            assert "source_excerpts.md" not in zf.namelist()
         prompt_text = (out / "round-01" / "prompt.md").read_text(encoding="utf-8")
         assert str(target) not in prompt_text
         assert f"Target: `{target.name}`" in prompt_text
+        assert "Review seats: `webgpt, webkimi, webgemini`" in prompt_text
         preview = out / "round-01" / "ticket_previews.md"
         preview_text = preview.read_text(encoding="utf-8")
         assert "Remove conflicting WebGPT ownership" in preview_text
@@ -108,6 +113,32 @@ def main() -> int:
         missing_receipt = json.loads(missing_tab.stdout)
         assert missing_receipt["status"] == "not-ready"
         assert missing_receipt["status_reason"] == "missing_same_tab_binding"
+
+        evidence_gap = work / "evidence-gap.md"
+        evidence_gap.write_text(
+            "CLASSIFICATION: not-ready\n"
+            "FOCUSED_TICKETS:\n"
+            "- title: Bundle missing source\n"
+            "  target: skills/fake\n"
+            "  observed: bundle is incomplete and missing source, cannot judge readiness\n"
+            "  expected: provide source-first bundle\n"
+            "  proof: rerun clean-room bundle\n",
+            encoding="utf-8",
+        )
+        gap_result = run([
+            str(ROOT / "run.sh"), "clean-room", str(target),
+            "--output-dir", str(work / "evidence-gap-out"),
+            "--project-state-json", str(state),
+            "--webgpt-response", str(evidence_gap),
+            "--tab-id", "tab-123",
+            "--conversation-url", "https://chatgpt.com/c/clean-room",
+        ])
+        assert gap_result.returncode == 2, gap_result.stderr + gap_result.stdout
+        gap_receipt = json.loads(gap_result.stdout)
+        assert gap_receipt["status"] == "not-ready"
+        assert gap_receipt["status_reason"] == "clean_room_bundle_incomplete"
+        assert gap_receipt["ticket_count"] == 0
+        assert not (work / "evidence-gap-out" / "round-01" / "ticket_previews.md").exists()
 
     print("CLEAN_ROOM_LOOP_OK")
     return 0

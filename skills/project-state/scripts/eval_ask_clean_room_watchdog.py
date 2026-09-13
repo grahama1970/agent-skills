@@ -96,7 +96,8 @@ def main() -> int:
         preview = (round_dir / "ticket_previews.md").read_text(encoding="utf-8")
         prompt = (round_dir / "prompt.md").read_text(encoding="utf-8")
         assert "$project-watchdog" in prompt
-        assert "WebGPT is advisory only" in prompt
+        assert "Web seats are advisory only" in prompt
+        assert "Review seats: `webgpt, webkimi, webgemini`" in prompt
         assert "--required-skill project-watchdog" in preview
         assert "--required-skill triage-error" in preview
         assert "--label \"executor:local\"" in preview
@@ -121,7 +122,7 @@ def main() -> int:
                 "--acceptance",
                 "project-state emits the bundle and project-watchdog owns repair iteration",
                 "--proof",
-                "cd skills/agentic-evals && ./run.sh run ../project-state/fixtures/agentic_eval.json --only-category agentic-evals:agent-skills:clean-room-webgpt-loop --map ../project-state/fixtures/category_map.json shows READY; python3 -c 'import json; print(json.load(open(\"/tmp/nonexistent-clean-room-manifest.json\"))[\"schema\"])' # readback receipt",
+                "cd skills/agentic-evals && ./run.sh run ../project-state/fixtures/agentic_eval.json --only-category agentic-evals:agent-skills:clean-room-webgpt-loop --map ../project-state/fixtures/category_map.json must report readiness READY; python3 -c 'import json; print(json.load(open(\"/tmp/nonexistent-clean-room-manifest.json\"))[\"schema\"])' # readback receipt",
                 "--route",
                 "backend_python_or_skill_runtime",
                 "--lane",

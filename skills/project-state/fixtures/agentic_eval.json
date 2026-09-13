@@ -118,7 +118,7 @@
     },
     {
       "id": "project_state.clean_room_webgpt_loop",
-      "description": "clean-room builds a downloadable project-state/WebGPT bundle, preserves same tab metadata, classifies ready-to-deploy vs not-ready, and emits focused ticket previews for not-ready findings.",
+      "description": "clean-room builds a source-first project-state bundle, routes review through a multi-web Ask roundtable (webgpt, webkimi, webgemini by default), preserves browser conversation metadata, distinguishes missing-evidence not-ready responses from actionable repair findings, and emits focused ticket previews only for validated not-ready implementation gaps.",
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
@@ -281,8 +281,17 @@
       ]
     },
     {
+      "seam_id": "clean_room_multi_web_review_boundary",
+      "seam_type": "browser/provider orchestration",
+      "criticality": "critical",
+      "claim_id": "project_state.clean_room_webgpt_loop",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
       "seam_id": "clean_room_ticket_preview_boundary",
-      "seam_type": "filesystem/process",
+      "seam_type": "ticketing boundary",
       "criticality": "critical",
       "claim_id": "project_state.clean_room_webgpt_loop",
       "required_evidence": [
@@ -807,7 +816,7 @@
       "command": [
         "bash",
         "-c",
-        "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/project-state python skills/project-state/scripts/eval_ask_clean_room_watchdog.py --proof-output skills/project-state/fixtures/ask_clean_room_watchdog_receipt.json && skills/ticket/run.sh feature 'Keep ask out of clean-room delivery' --target 'skills/ask' --limitation 'ask still appears to own WebGPT zip delivery' --capability 'project-state emits the bundle and project-watchdog owns repair iteration' --workflow 'Continue in WebGPT tab ask-tab-777 at https://chatgpt.com/c/ask-clean-room; project-watchdog owns iteration' --acceptance 'project-state emits the bundle and project-watchdog owns repair iteration' --proof \"cd skills/agentic-evals && ./run.sh run ../project-state/fixtures/agentic_eval.json --only-category agentic-evals:agent-skills:clean-room-webgpt-loop --map ../project-state/fixtures/category_map.json shows READY; python3 -c 'import json; print(json.load(open(\\\"/tmp/nonexistent-clean-room-manifest.json\\\"))[\\\"schema\\\"])' # readback receipt\" --route backend_python_or_skill_runtime --lane be --agent coder --required-skill project-watchdog --required-skill triage-error --label executor:local --json > /tmp/ask-clean-room-ticket-preview.json"
+        "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/project-state python skills/project-state/scripts/eval_ask_clean_room_watchdog.py --proof-output skills/project-state/fixtures/ask_clean_room_watchdog_receipt.json && skills/ticket/run.sh feature 'Keep ask out of clean-room delivery' --target 'skills/ask' --limitation 'ask still appears to own WebGPT zip delivery' --capability 'project-state emits the bundle and project-watchdog owns repair iteration' --workflow 'Continue in WebGPT tab ask-tab-777 at https://chatgpt.com/c/ask-clean-room; project-watchdog owns iteration' --acceptance 'project-state emits the bundle and project-watchdog owns repair iteration' --proof \"cd skills/agentic-evals && ./run.sh run ../project-state/fixtures/agentic_eval.json --only-category agentic-evals:agent-skills:clean-room-webgpt-loop --map ../project-state/fixtures/category_map.json must report readiness READY; python3 -c 'import json; print(json.load(open(\\\"/tmp/nonexistent-clean-room-manifest.json\\\"))[\\\"schema\\\"])' # readback receipt\" --route backend_python_or_skill_runtime --lane be --agent coder --required-skill project-watchdog --required-skill triage-error --label executor:local --json > /tmp/ask-clean-room-ticket-preview.json"
       ],
       "expected": {
         "exit_code": 0,
@@ -845,6 +854,76 @@
       "must_exercise": [
         "skills/ticket/run.sh feature"
       ]
+    },
+    {
+      "name": "ask-clean-room-multi-web-roundtable-contract",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "project_state.clean_room_webgpt_loop"
+      ],
+      "seams": [
+        "clean_room_multi_web_review_boundary"
+      ],
+      "must_exercise": [
+        "skills/project-state/run.sh clean-room",
+        "skills/ask/scripts/browser_prompt_preflight.py",
+        "skills/ask/run.sh tau-dag",
+        "--handler webgpt",
+        "--handler webkimi",
+        "--handler webgemini"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills && tmp=$(mktemp -d) && skills/project-state/run.sh clean-room skills/ask --output-dir \"$tmp/out\" --handler webgpt --handler webkimi --handler webgemini > \"$tmp/receipt.json\"; rc=$?; test \"$rc\" -eq 2 && python3 skills/ask/scripts/browser_prompt_preflight.py --prompt \"$(cat \"$tmp/out/round-01/prompt.md\")\" \"$tmp/out/round-01/clean-room-bundle.zip\" > \"$tmp/preflight.txt\" && skills/ask/run.sh tau-dag \"$(cat \"$tmp/out/round-01/prompt.md\")\" --repo grahama1970/agent-skills --target skills/ask --immutable-goal \"Clean-room review finds the simplest accurate repair path; incomplete evidence fixes the bundle before ticketing.\" --dag-template roundtable --handler webgpt --handler webkimi --handler webgemini --topology concurrent --attach-file \"$tmp/out/round-01/clean-room-bundle.zip\" --run-output-root \"$tmp/ask\" --ask-id clean-room-multi-web-compile --json > \"$tmp/ask.json\" && python3 skills/project-state/scripts/verify_clean_room_multi_web.py \"$tmp/out/round-01/manifest.json\" \"$tmp/ask.json\" && cp \"$tmp/out/round-01/manifest.json\" /tmp/clean-room-multi-web-manifest.json && cp \"$tmp/ask.json\" /tmp/clean-room-multi-web-ask.json && python3 -c \"import json, pathlib; d=json.load(open(pathlib.Path('$tmp')/'out/round-01/manifest.json')); print(d['schema']); print(','.join(d['review_handlers'])); print(len(d['bundle_files']))\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CLEAN_ROOM_MULTI_WEB_ASK_OK",
+          "clean_room.loop_receipt.v1",
+          "webgpt,webkimi,webgemini"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/clean-room-multi-web-manifest.json",
+            "json_pointer": "/schema",
+            "equals": "clean_room.loop_receipt.v1"
+          },
+          {
+            "path": "/tmp/clean-room-multi-web-manifest.json",
+            "json_pointer": "/review_handlers/0",
+            "equals": "webgpt"
+          },
+          {
+            "path": "/tmp/clean-room-multi-web-manifest.json",
+            "json_pointer": "/review_handlers/1",
+            "equals": "webkimi"
+          },
+          {
+            "path": "/tmp/clean-room-multi-web-manifest.json",
+            "json_pointer": "/review_handlers/2",
+            "equals": "webgemini"
+          },
+          {
+            "path": "/tmp/clean-room-multi-web-ask.json",
+            "json_pointer": "/bundle/dag/context/browser_transport_chain/0",
+            "equals": "handler-webgpt"
+          },
+          {
+            "path": "/tmp/clean-room-multi-web-ask.json",
+            "json_pointer": "/bundle/dag/context/browser_transport_chain/1",
+            "equals": "handler-webkimi"
+          },
+          {
+            "path": "/tmp/clean-room-multi-web-ask.json",
+            "json_pointer": "/bundle/dag/context/browser_transport_chain/2",
+            "equals": "handler-webgemini"
+          }
+        ]
+      }
     }
   ]
 }

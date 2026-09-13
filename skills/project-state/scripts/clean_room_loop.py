@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -133,13 +134,15 @@ def display_target(target: Path) -> str:
         return target.name
 
 
-def prompt(target: Path, tab_id: str, conversation_url: str) -> str:
+def prompt(target: Path, tab_id: str, conversation_url: str, handlers: list[str]) -> str:
+    seats = ", ".join(handlers)
     return f"""# Clean-room redesign request
 
 You are reviewing a project from scratch. Ignore current implementation inertia. Use the attached bundle only.
 
 Target: `{display_target(target)}`
-Existing WebGPT tab id: `{tab_id or 'unbound'}`
+Review seats: `{seats}`
+Existing browser tab id: `{tab_id or 'unbound'}`
 Conversation URL: `{conversation_url or 'unbound'}`
 
 Return exactly one classification line:
@@ -161,13 +164,30 @@ FOCUSED_TICKETS:
   proof: <deterministic local proof command>
 ```
 
-WebGPT is advisory only. Not-ready findings become `$ticket` items for `$project-watchdog`; local repair and closure require deterministic proof. Judge whether the clean-room direction is coherent, smaller, and deployable. Prefer deletion and simpler boundaries over patching around contradictions.
+Web seats are advisory only. If the bundle lacks required source or proof, say what evidence is missing; do not invent implementation tickets from incomplete evidence. Only concrete not-ready implementation findings become `$ticket` items for `$project-watchdog`; local repair and closure require deterministic proof. Judge whether the clean-room direction is coherent, smaller, and deployable. Prefer deletion and simpler boundaries over patching around contradictions.
 """
 
 
 def classify_response(text: str) -> str:
     m = re.search(r"^\s*CLASSIFICATION:\s*(ready-to-deploy|not-ready)\s*$", text, re.I | re.M)
     return m.group(1).lower() if m else "not-ready"
+
+
+def is_evidence_gap(text: str) -> bool:
+    lowered = text.lower()
+    markers = (
+        "missing source",
+        "missing required source",
+        "missing proof",
+        "incomplete bundle",
+        "bundle is incomplete",
+        "cannot judge",
+        "can't judge",
+        "cannot assess",
+        "not enough evidence",
+        "insufficient evidence",
+    )
+    return any(marker in lowered for marker in markers)
 
 
 def parse_tickets(text: str) -> list[dict[str, str]]:
@@ -267,7 +287,7 @@ def ticket_preview(
         ticket_target = ticket.get("target") or str(target)
         observed = ticket.get("observed") or "Clean-room WebGPT classified the direction as not-ready."
         expected = ticket.get("expected") or "Implement the smallest focused fix for this blocking clean-room finding."
-        raw_proof = ticket.get("proof") or "cd skills/agentic-evals && ./run.sh run ../project-state/fixtures/agentic_eval.json --only-category agentic-evals:agent-skills:clean-room-webgpt-loop --map ../project-state/fixtures/category_map.json shows READY"
+        raw_proof = ticket.get("proof") or "cd skills/agentic-evals && ./run.sh run ../project-state/fixtures/agentic_eval.json --only-category agentic-evals:agent-skills:clean-room-webgpt-loop --map ../project-state/fixtures/category_map.json must report readiness READY"
         proof = ensure_watchdog_proof(raw_proof, bundle_zip.parent / "manifest.json")
         triage = triage_error_classify(observed)
         workflow = (
@@ -329,6 +349,40 @@ def write_zip(round_dir: Path, files: list[Path]) -> Path:
     return zip_path
 
 
+def ask_roundtable_command(target: Path, handlers: list[str], bundle_zip: Path, run_output_root: Path) -> list[str]:
+    command = [
+        "skills/ask/run.sh",
+        "tau-dag",
+        "$(cat prompt.md)",
+        "--repo",
+        "grahama1970/agent-skills",
+        "--target",
+        display_target(target),
+        "--immutable-goal",
+        "Clean-room review finds the simplest accurate repair path; incomplete evidence fixes the bundle before ticketing.",
+        "--dag-template",
+        "roundtable",
+        "--topology",
+        "concurrent",
+    ]
+    for handler in handlers:
+        command.extend(["--handler", handler])
+    command.extend([
+        "--browser-tab-lifecycle",
+        "fresh-keep",
+        "--attach-file",
+        str(bundle_zip),
+        "--run-output-root",
+        str(run_output_root),
+        "--json",
+    ])
+    return command
+
+
+def shell_join(command: list[str]) -> str:
+    return " ".join(part if part == "$(cat prompt.md)" else shlex.quote(part) for part in command)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("target", type=Path)
@@ -339,9 +393,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--conversation-url", default="")
     parser.add_argument("--round", type=int, default=1)
     parser.add_argument("--watchdog-project", default="agent-skills")
+    parser.add_argument("--handler", action="append", dest="handlers", help="Browser review handler for the clean-room roundtable. Repeatable.")
     args = parser.parse_args(argv)
 
     target = args.target.resolve()
+    handlers = args.handlers or ["webgpt", "webkimi", "webgemini"]
     round_dir = args.output_dir.resolve() / f"round-{args.round:02d}"
     round_dir.mkdir(parents=True, exist_ok=True)
 
@@ -367,7 +423,7 @@ def main(argv: list[str] | None = None) -> int:
     source_excerpt_path = round_dir / "source_excerpts.md"
     source_excerpt_path.write_text(source_excerpts(target), encoding="utf-8")
     prompt_path = round_dir / "prompt.md"
-    prompt_path.write_text(prompt(target, args.tab_id, args.conversation_url), encoding="utf-8")
+    prompt_path.write_text(prompt(target, args.tab_id, args.conversation_url, handlers), encoding="utf-8")
     generated = [project_state_path, review_context, source_excerpt_path, prompt_path]
 
     status = "needs_webgpt"
@@ -395,22 +451,25 @@ def main(argv: list[str] | None = None) -> int:
             )
         if status == "not-ready":
             triage_error = triage_error_classify(f"clean-room {status_reason}: {text[:1000]}")
-            tickets = parse_tickets(text)
-            preview = round_dir / "ticket_previews.md"
-            preview.write_text(
-                ticket_preview(
-                    tickets,
-                    target,
-                    args.tab_id,
-                    args.conversation_url,
-                    source_round=args.round,
-                    bundle_zip=bundle_zip,
-                    webgpt_response=response_path,
-                    watchdog_project=args.watchdog_project,
-                ),
-                encoding="utf-8",
-            )
-            generated.append(preview)
+            tickets = [] if is_evidence_gap(text) else parse_tickets(text)
+            if is_evidence_gap(text):
+                status_reason = "clean_room_bundle_incomplete"
+            if tickets:
+                preview = round_dir / "ticket_previews.md"
+                preview.write_text(
+                    ticket_preview(
+                        tickets,
+                        target,
+                        args.tab_id,
+                        args.conversation_url,
+                        source_round=args.round,
+                        bundle_zip=bundle_zip,
+                        webgpt_response=response_path,
+                        watchdog_project=args.watchdog_project,
+                    ),
+                    encoding="utf-8",
+                )
+                generated.append(preview)
 
     manifest = {
         "schema": "clean_room.loop_receipt.v1",
@@ -421,6 +480,8 @@ def main(argv: list[str] | None = None) -> int:
         "classification": classification,
         "controlled_tab_id": args.tab_id,
         "conversation_url": args.conversation_url,
+        "review_handlers": handlers,
+        "review_mode": "ask_tau_roundtable",
         "created_at": now(),
         "files": [p.name for p in generated],
         "file_sha256": {p.name: sha256(p) for p in generated},
@@ -435,6 +496,7 @@ def main(argv: list[str] | None = None) -> int:
         },
         "triage_error": triage_error,
         "zip_path": str(bundle_zip),
+        "ask_roundtable_command": ask_roundtable_command(target, handlers, bundle_zip, args.output_dir.resolve() / "ask-runs"),
     }
     manifest_path = round_dir / "manifest.json"
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
@@ -444,6 +506,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         bundle_members = [project_state_path, review_context, source_excerpt_path, manifest_path, prompt_path]
     manifest["bundle_files"] = [p.name for p in bundle_members]
+    manifest["ask_roundtable_shell"] = shell_join(manifest["ask_roundtable_command"])
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     zip_path = write_zip(round_dir, bundle_members)
     manifest["zip_sha256"] = sha256(zip_path)

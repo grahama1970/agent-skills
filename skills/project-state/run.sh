@@ -36,7 +36,7 @@ Commands:
   repair-report   Self-heal invalid project-state JSON into a valid repair skeleton
   render-report   Render a saved pydantic-valid project-state JSON report as Markdown
   config doctor   Check non-secret project-state configuration without prompting
-  clean-room      Build one deterministic clean-room WebGPT bundle receipt; iteration is handed to $ticket/$project-watchdog
+  clean-room      Build one deterministic source-first clean-room bundle and Ask multi-web roundtable receipt; actionable iteration is handed to $ticket/$project-watchdog
 
   Default (no flag) runs Phases 1-4 + 6 (~30s):
     Infrastructure, Memory, Doc-Code Drift, Best Practices, Gap Analysis
@@ -54,7 +54,7 @@ Examples:
   ./run.sh render-report state.json --output state.md
   ./run.sh config doctor --json
   ./run.sh clean-room skills/ask --output-dir /tmp/clean-room-ask
-  ./run.sh clean-room skills/ask --output-dir /tmp/clean-room-ask --watchdog-project agent-skills
+  ./run.sh clean-room skills/ask --output-dir /tmp/clean-room-ask --handler webgpt --handler webkimi --handler webgemini --watchdog-project agent-skills
 EOF
 }
 

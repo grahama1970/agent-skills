@@ -131,23 +131,26 @@ PROJECT_STATE_ROOT=/path/to/project ./run.sh report --json
 # Non-interactive configuration check
 ./run.sh config doctor --json
 
-# One clean-room WebGPT review round; project-watchdog owns forced iteration after tickets are filed
+# One clean-room multi-web review round; project-watchdog owns forced iteration after actionable tickets are filed
 ./run.sh clean-room skills/ask --output-dir /tmp/clean-room-ask --watchdog-project agent-skills
 ```
 
-## Clean-room WebGPT loop boundary
+## Clean-room multi-web loop boundary
 
 `clean-room` is intentionally one deterministic round, not an agentic prose loop.
-It writes a bundle/receipt, parses an optional WebGPT response, and exits:
+It writes a source-first bundle/receipt, prepares the `$ask tau-dag` roundtable
+command for `webgpt`, `webkimi`, and `webgemini` by default, parses an optional
+review response, and exits:
 
 - `0` only for exact `CLASSIFICATION: ready-to-deploy` with preserved tab id and conversation URL
-- `2` for `not-ready`, malformed output, missing same-tab binding, or waiting for WebGPT
+- `2` for `not-ready`, malformed output, missing same-tab binding, or waiting for browser review
 
-Not-ready findings become focused `$ticket` preview commands. Once a ticket is filed
-with `--apply`, `$project-watchdog` is the forced-iteration system: it leases the
-routable issue, dispatches one bounded repair tick, requires local proof, audits
-closure, and reopens or continues from receipts. WebGPT remains advisory; it does
-not implement or verify code.
+Incomplete-evidence responses fix the bundle first and do not emit tickets. Concrete
+not-ready implementation findings become focused `$ticket` preview commands. Once a
+ticket is filed with `--apply`, `$project-watchdog` is the forced-iteration system:
+it leases the routable issue, dispatches one bounded repair tick, requires local
+proof, audits closure, and reopens or continues from receipts. Web seats remain
+advisory; they do not implement or verify code.
 
 Boundary failures carry a `$triage-error` classification in the receipt and ticket
 preview metadata. Use the triage code to replace generic `not-ready`/`NEEDS_ATTENTION`
