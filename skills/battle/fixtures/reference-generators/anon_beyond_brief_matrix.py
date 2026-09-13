@@ -32,6 +32,12 @@ def _bundle(root: Path, name: str, value: str, writer, expectation: str = "MAY_R
         "version": 1, "protected_values": [],
         "sensitive_values": [{"rule_id": "r", "subject_id": "s", "type": "name", "value": value}],
     }), encoding="utf-8")
+    if expectation == "MUST_REJECT":
+        (d / "invalid_input.json").write_text(json.dumps({
+            "schema": "battle.invalid_input_predicate.v1",
+            "approved": True,
+            "predicate": "case is intentionally outside the supported release contract",
+        }), encoding="utf-8")
     writer(d / "corpus")
     return name, str(d), expectation
 
