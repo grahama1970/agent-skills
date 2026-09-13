@@ -9,7 +9,11 @@
       "id": "demo.core",
       "description": "core capability requiring both deterministic and live proof",
       "criticality": "critical",
-      "evidence_required": {"deterministic": true, "live_e2e": true}
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      },
+      "claim_semantics": "protocol"
     }
   ],
   "cases": [
@@ -17,17 +21,29 @@
       "name": "det-1",
       "type": "positive",
       "evidence_class": "deterministic",
-      "supports_claims": ["demo.core"],
-      "command": ["true"],
-      "expected": {"exit_code": 0}
+      "supports_claims": [
+        "demo.core"
+      ],
+      "command": [
+        "true"
+      ],
+      "expected": {
+        "exit_code": 0
+      }
     },
     {
       "name": "det-2",
       "type": "negative",
       "evidence_class": "deterministic",
-      "supports_claims": ["demo.core"],
-      "command": ["false"],
-      "expected": {"exit_code": 1}
+      "supports_claims": [
+        "demo.core"
+      ],
+      "command": [
+        "false"
+      ],
+      "expected": {
+        "exit_code": 1
+      }
     }
   ]
 }

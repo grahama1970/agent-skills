@@ -404,6 +404,16 @@ def validate_case(case: dict[str, Any]) -> None:
     expected = case.get("expected")
     if not isinstance(expected, dict) or not isinstance(expected.get("exit_code"), int):
         raise typer.BadParameter(f"case {case['name']} expected.exit_code must be an integer")
+    must_exercise = case.get("must_exercise") or []
+    if not isinstance(must_exercise, list) or not all(isinstance(item, str) and item for item in must_exercise):
+        raise typer.BadParameter(f"case {case['name']} must_exercise must be a list of non-empty strings")
+    command_text = _command_text(command)
+    missing = [marker for marker in must_exercise if marker not in command_text]
+    if missing:
+        raise typer.BadParameter(
+            f"case {case['name']} must exercise downstream contract(s) in its top-level command; "
+            f"missing {missing!r}. Wrapper-only checks are not accepted as proof."
+        )
 
 
 def _stream_text(value: str | bytes | None) -> str:

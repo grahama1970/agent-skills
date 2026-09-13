@@ -109,9 +109,13 @@ block yourself.
   a read-only answer strict. Strict mode remains an explicit opt-in. Actual
   mutations, task budgets, continuation ledgers, and format-only retries remain
   guarded.
-- Pydantic data decides status validity. Never classify status prose with regex
-  or an LLM. Strip model status prose/raw JSON; render the visible answer before
-  the `Status Report` metadata. Trailing prose after valid JSON is ignored.
+- Pydantic data decides status/proof validity. After that passes, a bounded
+  semantic clarity review checks only `plain_answer`/`answer`: it must answer the
+  user request in plain English, avoid receipt/hash/handler jargon, and keep the
+  result separate from proof metadata. The clarity review never validates proof,
+  changes status facts, or marks work done. Strip model status prose/raw JSON;
+  render the visible answer before machine proof metadata when a UI surface needs
+  metadata. Trailing prose after valid JSON is ignored.
 - Immutable-goal turns must lead with a decisive answer headline: `IMMUTABLE_GOAL:
   COMPLETE`, `IMMUTABLE_GOAL: NOT_COMPLETE`, or `IMMUTABLE_GOAL: NEEDS_HUMAN`.
   Do not bury the goal state under proof, commits, or status metadata.
@@ -134,15 +138,24 @@ block yourself.
 - After two same-goal/triage failure fingerprints, require a plain human question,
   valid `debugger.proof.v1`, or `lazy_report_shame.debugger_failure_handoff.v1`
   with exact file:line and debugger error. Preserve the failure evidence.
+- A guarded `done` answer that names an `$agentic-evals` gate as READY, green,
+  passing, verified, or proof-bearing must cite a fresh local
+  `agentic_evals.report.v2` proof with `readiness=READY` and zero failing
+  outcomes. Prose summaries, prior green state, and hand-written text proofs are
+  rejected with `agentic_evals_proof_required`.
 
 ## pi.agent_status.v1
 
 Every status requires a non-empty `goal` and `changed` (use `no change: <reason>`
-when appropriate). Optional `plain_answer` (≤4000 chars) is plain-spoken
-verdict text for clients that render a summary; `answer` stays the
-≤300-char machine headline. `plain_answer` is display text, not new evidence —
-anti-fabrication still binds to `verified[]`/`proof[]`, and the renderer never
-displays raw `verified[].result` substrings (they exist for validation only).
+when appropriate). Guarded terminal reports (`done`, `failed`, `needs_human` on
+mutating/strict/forced turns) also require `plain_answer` (≤4000 chars): a
+plain-spoken sentence that directly answers the current human request before any
+proof/status metadata. Opaque receipt jargon such as handler ids, hashes, or raw
+checker reason codes is not a substitute for semantic understanding. `answer`
+stays the ≤300-char machine headline. `plain_answer` is display text, not new
+evidence — anti-fabrication still binds to `verified[]`/`proof[]`, and the
+renderer never displays raw `verified[].result` substrings (they exist for
+validation only).
 Use concrete operational anchors when they exist: `run_dir`,
 `artifacts[]`, `receipts[]`, `nodes[]` (`id`, `status`, optional `artifact` or
 `receipt`), `blocked[]`, and `missing_artifacts[]`. The extension renders those

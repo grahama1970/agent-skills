@@ -1,0 +1,13 @@
+{
+  "schema": "agentic_evals.category_map.v1",
+  "repo": "grahama1970/agent-skills",
+  "categories": {
+    "clean-room-webgpt-loop": {
+      "category_id": "agentic-evals:agent-skills:clean-room-webgpt-loop",
+      "defect": "clean-room WebGPT loop contract regressed",
+      "seams": ["clean_room_ticket_preview_boundary"],
+      "supports_claims": ["project_state.clean_room_webgpt_loop"],
+      "depends_on": []
+    }
+  }
+}

@@ -17,7 +17,8 @@
       "criticality": "critical",
       "evidence_required": {
         "fault_injected_deterministic": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "ae.gate.process_teardown",
@@ -25,7 +26,8 @@
       "criticality": "critical",
       "evidence_required": {
         "fault_injected_deterministic": true
-      }
+      },
+      "claim_semantics": "timing"
     },
     {
       "id": "ae.claims.class_separation",
@@ -33,7 +35,8 @@
       "criticality": "critical",
       "evidence_required": {
         "fault_injected_deterministic": true
-      }
+      },
+      "claim_semantics": "protocol"
     },
     {
       "id": "ae.evidence.real_e2e_contract",
@@ -41,7 +44,8 @@
       "criticality": "critical",
       "evidence_required": {
         "fault_injected_deterministic": true
-      }
+      },
+      "claim_semantics": "protocol"
     },
     {
       "id": "ae.report.readable_artifact",
@@ -49,7 +53,8 @@
       "criticality": "important",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "protocol"
     },
     {
       "id": "ae.remediation.categorize",
@@ -57,7 +62,8 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "protocol"
     },
     {
       "id": "ae.remediation.phart_viz",
@@ -65,7 +71,8 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "protocol"
     },
     {
       "id": "ae.remediation.plan",
@@ -73,7 +80,8 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "protocol"
     },
     {
       "id": "ae.remediation.acyclicity",
@@ -81,7 +89,8 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "ae.remediation.total_categorization",
@@ -89,7 +98,8 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "ae.provenance.immutable_replay",
@@ -97,7 +107,17 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "protocol"
+    },
+    {
+      "id": "ae.contract.project_watchdog_composition",
+      "description": "agentic-evals declares project-watchdog as an explicit composed skill for remediation dispatch ownership",
+      "criticality": "important",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "protocol"
     }
   ],
   "seams": [
@@ -171,6 +191,18 @@
       ],
       "required_evidence": [
         "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "contract.skill_frontmatter",
+      "claim_id": "ae.contract.project_watchdog_composition",
+      "seam_type": "static contract",
+      "criticality": "important",
+      "failure_modes": [
+        "project-watchdog omitted from composes metadata"
+      ],
+      "required_evidence": [
+        "deterministic"
       ]
     }
   ],
@@ -248,6 +280,26 @@
       }
     },
     {
+      "name": "unlabelled-claims-and-cases-default-to-live-required",
+      "description": "A fixture with omitted evidence_required and omitted evidence_class defaults to live_e2e, downgrades pseudo-live plumbing, and is not READY.",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "required": true,
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-lc",
+        "R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; cd /home/graham/workspace/experiments/agent-skills/skills/agentic-evals; $R run fixtures/selftest/default_live_required.json --report-only 2>/dev/null | python3 -c \"import json,sys;d=json.load(sys.stdin);case=d['cases'][0];claim=d['capability_readiness']['claims'][0];assert case['declared_evidence_class']=='live_e2e', case;assert case['effective_evidence_class']=='deterministic', case;assert claim['required_evidence']==['live_e2e'], claim;assert claim['verdict']=='NOT_ESTABLISHED' and claim['missing_evidence']==['live_e2e'], claim;assert d['readiness']!='READY', d['readiness'];print('DEFAULT_LIVE_REQUIRED_OK')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "DEFAULT_LIVE_REQUIRED_OK"
+        ]
+      }
+    },
+    {
       "name": "pseudo-live-without-readback-is-downgraded",
       "type": "adversarial",
       "real_world": true,
@@ -296,6 +348,30 @@
             "json_pointer": "/readiness",
             "equals": "READY"
           }
+        ]
+      }
+    },
+    {
+      "name": "skill-frontmatter-composes-project-watchdog",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "ae.contract.project_watchdog_composition"
+      ],
+      "seams": [
+        "contract.skill_frontmatter"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "python3",
+        "-c",
+        "from pathlib import Path; text=Path('/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/SKILL.md').read_text(); fm=text.split('---',2)[1]; assert '\\n  - project-watchdog\\n' in fm; print('COMPOSES_PROJECT_WATCHDOG_OK')"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "COMPOSES_PROJECT_WATCHDOG_OK"
         ]
       }
     },

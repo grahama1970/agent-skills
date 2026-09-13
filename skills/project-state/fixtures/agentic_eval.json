@@ -14,7 +14,8 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "protocol"
     },
     {
       "id": "project_state.phase2.memory_recall_honesty",
@@ -22,7 +23,8 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "protocol"
     },
     {
       "id": "project_state.phase3.doc_drift_emitted",
@@ -30,7 +32,8 @@
       "criticality": "important",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "protocol"
     },
     {
       "id": "project_state.phase4.best_practices_emitted",
@@ -38,7 +41,8 @@
       "criticality": "important",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "protocol"
     },
     {
       "id": "project_state.phase5.research_target_scope",
@@ -46,7 +50,8 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "protocol"
     },
     {
       "id": "project_state.phase6.gap_analysis_emitted",
@@ -54,7 +59,8 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "protocol"
     },
     {
       "id": "project_state.modes.quick_standard_full_boundaries",
@@ -62,7 +68,8 @@
       "criticality": "important",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "protocol"
     },
     {
       "id": "project_state.cleanup_tail_readiness_receipt",
@@ -70,7 +77,8 @@
       "criticality": "important",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "protocol"
     },
     {
       "id": "project_state.standard_report_schema",
@@ -78,7 +86,8 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "protocol"
     },
     {
       "id": "project_state.pydantic_report_contract",
@@ -86,7 +95,8 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "protocol"
     },
     {
       "id": "project_state.markdown_render_from_json",
@@ -94,7 +104,8 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "protocol"
     },
     {
       "id": "project_state.pydantic_self_repair",
@@ -102,7 +113,17 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "protocol"
+    },
+    {
+      "id": "project_state.clean_room_webgpt_loop",
+      "description": "clean-room builds a downloadable project-state/WebGPT bundle, preserves same tab metadata, classifies ready-to-deploy vs not-ready, and emits focused ticket previews for not-ready findings.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      },
+      "claim_semantics": "protocol"
     }
   ],
   "seams": [
@@ -255,6 +276,15 @@
       "seam_type": "error-boundary",
       "criticality": "critical",
       "claim_id": "project_state.pydantic_self_repair",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "clean_room_ticket_preview_boundary",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "claim_id": "project_state.clean_room_webgpt_loop",
       "required_evidence": [
         "live_e2e"
       ]
@@ -734,6 +764,87 @@
         ],
         "stderr_contains": []
       }
+    },
+    {
+      "name": "clean-room-webgpt-loop-deterministic",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "project_state.clean_room_webgpt_loop"
+      ],
+      "seams": [
+        "clean_room_ticket_preview_boundary"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python scripts/eval_clean_room_loop.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CLEAN_ROOM_LOOP_OK"
+        ],
+        "stderr_contains": []
+      },
+      "category_id": "agentic-evals:agent-skills:clean-room-webgpt-loop"
+    },
+    {
+      "name": "ask-clean-room-project-watchdog-contract",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "project_state.clean_room_webgpt_loop"
+      ],
+      "seams": [
+        "clean_room_ticket_preview_boundary"
+      ],
+      "category_id": "agentic-evals:agent-skills:clean-room-webgpt-loop",
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/project-state python skills/project-state/scripts/eval_ask_clean_room_watchdog.py --proof-output skills/project-state/fixtures/ask_clean_room_watchdog_receipt.json && skills/ticket/run.sh feature 'Keep ask out of clean-room delivery' --target 'skills/ask' --limitation 'ask still appears to own WebGPT zip delivery' --capability 'project-state emits the bundle and project-watchdog owns repair iteration' --workflow 'Continue in WebGPT tab ask-tab-777 at https://chatgpt.com/c/ask-clean-room; project-watchdog owns iteration' --acceptance 'project-state emits the bundle and project-watchdog owns repair iteration' --proof \"cd skills/agentic-evals && ./run.sh run ../project-state/fixtures/agentic_eval.json --only-category agentic-evals:agent-skills:clean-room-webgpt-loop --map ../project-state/fixtures/category_map.json shows READY; python3 -c 'import json; print(json.load(open(\\\"/tmp/nonexistent-clean-room-manifest.json\\\"))[\\\"schema\\\"])' # readback receipt\" --route backend_python_or_skill_runtime --lane be --agent coder --required-skill project-watchdog --required-skill triage-error --label executor:local --json > /tmp/ask-clean-room-ticket-preview.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ASK_CLEAN_ROOM_WATCHDOG_OK"
+        ],
+        "artifacts": [
+          {
+            "path": "ask_clean_room_watchdog_receipt.json",
+            "json_pointer": "/ok",
+            "equals": true
+          },
+          {
+            "path": "ask_clean_room_watchdog_receipt.json",
+            "json_pointer": "/target",
+            "equals": "/home/graham/workspace/experiments/agent-skills/skills/ask"
+          },
+          {
+            "path": "ask_clean_room_watchdog_receipt.json",
+            "json_pointer": "/iteration_driver",
+            "equals": "project-watchdog"
+          },
+          {
+            "path": "ask_clean_room_watchdog_receipt.json",
+            "json_pointer": "/watchdog_route",
+            "equals": "ticket_repair"
+          },
+          {
+            "path": "ask_clean_room_watchdog_receipt.json",
+            "json_pointer": "/ticket_target",
+            "equals": "skills/ask"
+          }
+        ]
+      },
+      "must_exercise": [
+        "skills/ticket/run.sh feature"
+      ]
     }
   ]
 }

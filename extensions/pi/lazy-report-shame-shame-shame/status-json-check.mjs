@@ -6,7 +6,7 @@
 
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { findJsonControlFrames, selectTerminalStatusFrame } from './terminal-status-frame.mjs';
@@ -663,6 +663,132 @@ if (verdict.valid !== true) {
 const parsedStatus = JSON.parse(statusJson);
 const terminalStates = new Set(['done', 'failed', 'needs_human']);
 
+function localStatusProofPath(value) {
+  const raw = String(value || '').trim();
+  if (!raw || raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('sha256:')) return null;
+  return raw.startsWith('/') ? raw : join(process.cwd(), raw);
+}
+
+function readProofJson(path) {
+  try {
+    return JSON.parse(readFileSync(path, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function hasReadyAgenticEvalProof(status) {
+  if (!Array.isArray(status?.proof)) return false;
+  for (const proof of status.proof) {
+    const path = localStatusProofPath(proof);
+    if (!path || !existsSync(path)) continue;
+    const data = readProofJson(path);
+    if (!data || data.schema !== 'agentic_evals.report.v2') continue;
+    const counts = data.outcome_counts || {};
+    if (data.readiness === 'READY' && !counts.FAIL && !counts.BLOCKED && !counts.NOT_TESTED) return true;
+  }
+  return false;
+}
+
+function mentionsAgenticEvalGate(value) {
+  const lower = String(value || '').toLowerCase();
+  const namesEval = lower.includes('$agentic-evals')
+    || lower.includes('/agentic-evals')
+    || lower.includes('skills/agentic-evals/run.sh')
+    || lower.includes('agentic-evals')
+    || lower.includes('agentic eval');
+  if (!namesEval) return false;
+  const gateWords = [
+    'ready', 'readiness', 'green', 'pass', 'passed', 'passes', 'verified', 'verify',
+    'gate', 'proof', 'run ', 'rerun', 'evaluate', 'evaluation', 'eval ', 'evals',
+  ];
+  return gateWords.some((word) => lower.includes(word));
+}
+
+const CLARITY_SCHEMA = 'lazy_report_shame.semantic_clarity_review.v1';
+
+function answerText(status) {
+  return String(status?.plain_answer || status?.answer || '').trim();
+}
+
+function metadataJargonHits(text) {
+  const lower = String(text || '').toLowerCase();
+  const opaqueTerms = [
+    'provider_live', 'response_chars', 'candidate_hash', 'diagnostics_sha256',
+    'pi.agent_status.v1', 'lazy_report_shame', 'handler receipt', 'node receipt',
+    'tau wrapper caveat', 'valid_agent_status_json', 'proof_json_schema_missing',
+    'handler-', 'node=', 'seat_verdict', 'wrapper exit', 'receipt:', 'sha256:',
+  ];
+  return opaqueTerms.filter((term) => lower.includes(term));
+}
+
+function boundedRewriteGuidance(status, failures) {
+  const state = String(status?.state || 'unknown');
+  return {
+    field: 'plain_answer',
+    instruction: 'Rewrite plain_answer only. Use one or two plain-English sentences that answer the user request first. Do not change state, proof, verified, receipts, nodes, or completion facts.',
+    status_state: state,
+    forbidden: ['handler ids', 'hashes', 'raw checker reason codes', 'receipt dumps as the answer'],
+    failures,
+  };
+}
+
+const RESPONSE_STOPWORDS = new Set([
+  'the', 'and', 'that', 'this', 'with', 'from', 'have', 'your', 'you', 'for',
+  'are', 'was', 'were', 'will', 'what', 'why', 'how', 'should', 'would',
+  'could', 'about', 'into', 'onto', 'than', 'then', 'them', 'they', 'there',
+]);
+
+function contentTokens(value) {
+  const normalized = String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ');
+  return normalized.split(' ').filter((token) => token.length >= 4 && !RESPONSE_STOPWORDS.has(token));
+}
+
+function plainAnswerUnderstandsQuestion(status) {
+  if (!answerRequired) return true;
+  const answer = answerText(status);
+  if (!answer) return false;
+  const lower = answer.toLowerCase();
+  if (lower.startsWith('yes') || lower.startsWith('no') || lower.startsWith('partly')
+    || lower.includes("i don't know") || lower.includes('i cannot') || lower.includes('i can’t')) return true;
+  const questionTokens = new Set(contentTokens(USER_TEXT));
+  if (!questionTokens.size) return true;
+  const answerTokens = new Set(contentTokens(answer));
+  let overlap = 0;
+  for (const token of questionTokens) if (answerTokens.has(token)) overlap += 1;
+  return overlap >= Math.min(2, questionTokens.size);
+}
+
+function semanticClarityReview(status) {
+  const text = answerText(status);
+  const failures = [];
+  const words = text.split(/\s+/).filter(Boolean);
+  if (!text || words.length < 4) {
+    failures.push({ code: 'missing_plain_answer', message: 'plain_answer must be a plain human-facing answer, not empty or fragmentary' });
+  }
+  const jargon = metadataJargonHits(text);
+  if (jargon.length >= 2) {
+    failures.push({ code: 'plain_answer_metadata_jargon', message: 'plain_answer is dominated by receipt/checker/provider metadata', terms: jargon.slice(0, 8) });
+  }
+  if (text && !/[.!?。]$/.test(text) && words.length < 8) {
+    failures.push({ code: 'plain_answer_not_plain_english', message: 'plain_answer should be a complete plain-English sentence' });
+  }
+  if (!plainAnswerUnderstandsQuestion(status)) {
+    failures.push({ code: 'plain_answer_not_responsive', message: 'plain_answer must directly answer the current user request before proof/status metadata' });
+  }
+  return {
+    schema: CLARITY_SCHEMA,
+    reviewer: 'compiled_bounded_rubric',
+    live_model: false,
+    reviewed_fields: ['plain_answer', 'answer'],
+    proof_validated: false,
+    status_facts_changed: false,
+    verdict: failures.length ? 'reject' : 'pass',
+    failures,
+    rewrite_guidance: failures.length ? boundedRewriteGuidance(status, failures.map((f) => f.code)) : null,
+  };
+}
+
 function operationalAnchorCount(status) {
   let count = 0;
   if (String(status?.run_dir || '').trim()) count += 1;
@@ -680,6 +806,63 @@ function operationalAnchorCount(status) {
   if (Array.isArray(status?.needs_roundtable?.handlers)) count += status.needs_roundtable.handlers.length;
   if (Array.isArray(status?.needs_competition?.criteria)) count += status.needs_competition.criteria.length;
   return count;
+}
+
+const guardedTerminalReport = (MUTATING_TURN || FORCE_STATUS || STRICT_STATUS) && terminalStates.has(String(verdict.state || ''));
+if (guardedTerminalReport && String(parsedStatus.state || '') === 'done') {
+  const agenticEvalContext = [USER_TEXT, text, parsedStatus.goal, parsedStatus.answer, parsedStatus.plain_answer, JSON.stringify(parsedStatus.changed || [])].join('\n');
+  if (mentionsAgenticEvalGate(agenticEvalContext) && !hasReadyAgenticEvalProof(parsedStatus)) {
+    emit('reject', ['agentic_evals_proof_required'], {
+      status: parsedStatus,
+      diagnostics_sha256: sha256('agentic_evals_proof_required'),
+      validation_result: {
+        schema: 'pi.agent_status.validation_result.v1',
+        valid: false,
+        errors: [{
+          type: 'agentic_evals_proof_required',
+          loc: ['proof'],
+          msg: 'A guarded done answer that names an agentic-evals gate must cite a fresh READY agentic_evals.report.v2 proof, not prior state or prose.',
+          ctx: { required_schema: 'agentic_evals.report.v2', required_readiness: 'READY' },
+        }],
+        steering: [{
+          code: 'agentic_evals_proof_required',
+          loc: ['proof'],
+          action: 'run_agentic_evals_and_cite_report',
+          required_schema: 'agentic_evals.report.v2',
+        }],
+      },
+    });
+  }
+}
+let semanticClarityReviewResult = null;
+if (guardedTerminalReport) {
+  const clarity = semanticClarityReview(parsedStatus);
+  semanticClarityReviewResult = clarity;
+  if (clarity.verdict !== 'pass') {
+    const reasonCodes = [...new Set(clarity.failures.map((failure) => failure.code))];
+    emit('reject', reasonCodes, {
+      status: parsedStatus,
+      semantic_clarity_review: clarity,
+      diagnostics_sha256: sha256(JSON.stringify(clarity.failures)),
+      validation_result: {
+        schema: 'pi.agent_status.validation_result.v1',
+        valid: false,
+        errors: clarity.failures.map((failure) => ({
+          type: failure.code,
+          loc: ['plain_answer'],
+          msg: failure.message,
+          ctx: { field: 'plain_answer', semantic_clarity_review: CLARITY_SCHEMA },
+        })),
+        steering: [{
+          code: 'semantic_clarity_review_failed',
+          loc: ['plain_answer'],
+          action: 'rewrite_plain_answer_only',
+          field: 'plain_answer',
+          rewrite_guidance: clarity.rewrite_guidance,
+        }],
+      },
+    });
+  }
 }
 
 if ((MUTATING_TURN || FORCE_STATUS || STRICT_STATUS) && operationalAnchorCount(parsedStatus) === 0) {
@@ -727,5 +910,6 @@ emit('pass', ['valid_agent_status_json'], {
   status: parsedStatus,
   status_frame: terminalStatus.status_frame_spans[0],
   typed_turn_context: typedTurnContextFeature(immutableGoal),
+  semantic_clarity_review: semanticClarityReviewResult,
   ignored_trailing_content_chars: trailingContent.length,
 });

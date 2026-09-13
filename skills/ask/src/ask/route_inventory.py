@@ -11,13 +11,11 @@ ticket #1220's architecture invariant:
 - ``deprecated_direct_agent_path``: direct model/subagent call that must be
   migrated behind Tau (grahama1970/tau#310) or fail closed.
 
-The inventory is the migration ledger: ``tests/test_route_inventory.py``
-scans the source tree for real dispatch call sites and fails if any module
-that issues provider/browser/model calls is missing from this table, or if a
-``local_non_agentic`` entry issues such calls without a ``probe_only``
-justification. Closure of #1220 requires every ``deprecated_direct_agent_path``
-entry to migrate to ``tau_native_agent`` or ``tau_opaque_compat``; that final
-step is blocked on tau#308/310 and scillm#27/28.
+The inventory is the migration ledger. Keep route-coverage checks in retained
+agentic eval fixtures or focused seam checks, not a broad pytest suite. Closure
+of #1220 requires every ``deprecated_direct_agent_path`` entry to migrate to
+``tau_native_agent`` or ``tau_opaque_compat``; that final step is blocked on
+tau#308/310 and scillm#27/28.
 """
 
 from __future__ import annotations

@@ -99,6 +99,7 @@ def _manifest(case: dict[str, Any], admitted_case: dict[str, Any], app_identity:
                 "id": "issue1631.immutable_replay",
                 "description": "fixed replay only accepts the admitted test/oracle identity",
                 "criticality": "critical",
+                "claim_semantics": "protocol",
                 "evidence_required": {"live_e2e": True},
                 "admitted_evidence": [
                     {

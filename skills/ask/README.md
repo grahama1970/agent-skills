@@ -1178,13 +1178,11 @@ bugs:
 ASK_LIVE_SANITY_E2E=1 ./sanity-e2e.sh
 ```
 
-When tests are added or modified:
+When behavior changes, use retained `$agentic-evals` fixtures and `bash sanity.sh`. Do not add pytest cases for agent behavior; broad unit suites were pruned as self-serving noise.
 
 ```bash
-uv run --project . --group dev python -m pytest -q tests/test_human_chat_examples.py
-uv run --project . --group dev python -m pytest -q tests/test_ask_cli_protocols.py
-uv run --project . --group dev python -m pytest -q tests/test_deep_review_protocol.py
 bash sanity.sh
+../agentic-evals/run.sh run fixtures/agentic_eval.json --timeout-seconds 300
 ```
 
 ## Troubleshooting

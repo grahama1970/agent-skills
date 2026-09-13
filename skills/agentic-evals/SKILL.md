@@ -22,6 +22,7 @@ provides:
 composes:
   - eval-skills
   - phart-dag-chart
+  - project-watchdog
 complies:
   - best-practices-skills
   - best-practices-python
@@ -237,6 +238,7 @@ Optional expectations:
 
 - `expected.stdout_contains`
 - `expected.stderr_contains`
+- `must_exercise`: list of downstream contract command substrings that must appear in the case's top-level command. Use this when a wrapper could otherwise fake success; for example an eval that claims `$ticket`/`$project-watchdog` routability must include `"skills/ticket/run.sh feature"`, not only a helper script that prints `OK`.
 
 ## Anti-Slop Contract (fail-closed)
 

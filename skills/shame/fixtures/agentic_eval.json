@@ -169,6 +169,15 @@
       "claim_semantics": "protocol"
     },
     {
+      "id": "shame.agentic_evals_proof_required",
+      "description": "A guarded done answer that names an agentic-evals gate is rejected unless it cites a READY agentic_evals.report.v2 proof.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
       "id": "shame.typed_recovery_routing",
       "description": "Shame recovery separates format repair, existing-proof substitution, missing evidence, validator failure, unresolved work, and accepted-task cases with typed decisions.",
       "criticality": "critical",
@@ -839,6 +848,32 @@
         "stdout_excludes": [
           "Traceback",
           "AssertionError"
+        ]
+      }
+    },
+    {
+      "name": "agentic-evals-proof-required",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "mocked": false,
+      "timeout_seconds": 60,
+      "supports_claims": [
+        "shame.agentic_evals_proof_required"
+      ],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-agentic-evals-proof-required.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "lazy_report_shame.agentic_evals_proof_required_eval.v1",
+          "\"bad_rejected\": true",
+          "\"good_passed\": true",
+          "agentic_evals_proof_required"
+        ],
+        "stdout_excludes": [
+          "Traceback"
         ]
       }
     },

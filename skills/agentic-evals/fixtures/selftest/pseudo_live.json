@@ -9,7 +9,10 @@
       "id": "demo.pseudo",
       "description": "capability whose only live case is a self-reporting smoke",
       "criticality": "critical",
-      "evidence_required": {"live_e2e": true}
+      "evidence_required": {
+        "live_e2e": true
+      },
+      "claim_semantics": "protocol"
     }
   ],
   "cases": [
@@ -17,9 +20,16 @@
       "name": "pseudo-live-no-readback",
       "type": "positive",
       "evidence_class": "live_e2e",
-      "supports_claims": ["demo.pseudo"],
-      "command": ["bash", "prod.sh"],
-      "expected": {"exit_code": 0}
+      "supports_claims": [
+        "demo.pseudo"
+      ],
+      "command": [
+        "bash",
+        "prod.sh"
+      ],
+      "expected": {
+        "exit_code": 0
+      }
     }
   ]
 }
