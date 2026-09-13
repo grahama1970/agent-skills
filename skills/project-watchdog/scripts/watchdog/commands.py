@@ -97,6 +97,14 @@ def _record_agent_authorization(receipt: dict[str, Any], result: dict[str, Any])
     receipt["agent_action_required"] = True
 
 
+_CONFIRMED_NO_START_REASONS = frozenset({
+    "capability_preflight_not_ready",
+    "creator_transport_outage",
+    "execution_lock_held",
+    "target_ownership_conflict",
+})
+
+
 def _as_scoped_contention_skip(result: dict[str, Any]) -> dict[str, Any]:
     triage = result.get("triage") if isinstance(result.get("triage"), dict) else {}
     if triage.get("code") != "project_watchdog_target_ownership_conflict":
@@ -113,6 +121,16 @@ def _as_scoped_contention_skip(result: dict[str, Any]) -> dict[str, Any]:
         ),
     )
     return skipped
+
+
+def _creator_admission(result: dict[str, Any], *, apply: bool) -> str:
+    if not apply:
+        return "preview"
+    if result.get("status") == "SKIPPED" and result.get("stop_reason") in _CONFIRMED_NO_START_REASONS:
+        return "not_started"
+    if result.get("ok") is True:
+        return "started"
+    return "indeterminate"
 
 
 def _deliver_tick_notifications(run_id: str, receipt_dir: Path) -> dict[str, Any]:
@@ -632,6 +650,7 @@ def _tick_locked(
     issues: list[dict[str, Any]] = []
     issue_scans: list[dict[str, Any]] = []
     repair_admissions: list[dict[str, Any]] = []
+    attempted_tickets: list[str] = []
     service_count = 0
     stop_admission = False
     deadline = tick_deadline_seconds()
@@ -812,13 +831,16 @@ def _tick_locked(
                 )
                 continue
             try:
+                attempted_tickets.append(f"{registry.project_repo(candidate)}#{int(issue['number'])}")
                 result = _as_scoped_contention_skip(handle_issue(run_id, receipt_dir, candidate, issue, apply=apply))
+                admission = _creator_admission(result, apply=apply)
+                result["creator_admission"] = admission
                 _record_agent_authorization(receipt, result)
                 result.setdefault("execution_lock_targets", sorted(targets))
                 if execution_lock is not None:
                     result.setdefault("execution_lock", str(execution_lock))
                 receipt["handled_issues"].append(result)
-                if not (apply and result.get("ok") is True and result.get("status") == "SKIPPED"):
+                if admission in {"started", "preview"}:
                     service_count += 1
                     repair_admissions.append({"project": candidate, "issue": issue, "targets": sorted(targets), "lock": None})
                     if apply:
@@ -826,7 +848,7 @@ def _tick_locked(
                         state["last_served_project"] = cid
                         _persist_tick_state(state)
                         streaks.clear_idle(cid)
-                if result.get("ok") is not True:
+                if admission == "indeterminate":
                     stop_admission = True
                     break
             finally:
@@ -838,7 +860,9 @@ def _tick_locked(
         "mode": rotation_mode,
         "requested": project_id,
         "selected": None if project is None else str(project.get("project_id")),
+        "attempted_tickets": attempted_tickets,
         "admitted_projects": [str(entry["project"].get("project_id")) for entry in repair_admissions],
+        "admitted_creators": [f"{registry.project_repo(entry['project'])}#{int(entry['issue']['number'])}" for entry in repair_admissions],
         "skipped": skipped,
     }
     receipt.setdefault("issue_scans", issue_scans)
