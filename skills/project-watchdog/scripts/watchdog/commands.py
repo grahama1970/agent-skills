@@ -102,8 +102,14 @@ def _deliver_tick_notifications(run_id: str, receipt_dir: Path) -> dict[str, Any
     try:
         import watchdog_notify_bridge as bridge
 
-        result = bridge.deliver_due(receipt_dir)
         receipt_path = receipt_dir / "receipt.json"
+        current_dir: Path | None = receipt_dir
+        try:
+            if receipt_path.is_file() and load_json(receipt_path).get("stop_reason") == "quiet_hours":
+                current_dir = None
+        except Exception:  # noqa: BLE001 - delivery should still replay pending work
+            pass
+        result = bridge.deliver_due(current_dir)
         if receipt_path.is_file():
             receipt = load_json(receipt_path)
             receipt["notification_delivery"] = result
@@ -191,26 +197,6 @@ def tick(*, apply: bool, project_id: str, max_tickets: int, only_issue: int | No
     receipt_dir.mkdir(parents=True, exist_ok=True)
     log_event(run_id, "tick_start", apply=apply, project_id=project_id, max_tickets=max_tickets)
 
-    # Overnight batch work owns the machine between the quiet hours; a repair
-    # dispatch there competes with jobs that cannot be restarted cheaply. The
-    # issues are still there afterwards.
-    if apply and config.tick_would_enter_quiet_hours():
-        receipt = base_receipt(run_id, receipt_dir, apply)
-        window = config.quiet_window()
-        receipt.update(
-            {
-                "ok": True,
-                "status": "SKIPPED",
-                "stop_reason": "quiet_hours",
-                "summary": (
-                    f"deferring to overnight batch work ({window[0]:02d}:00-{window[1]:02d}:00); "
-                    "set PROJECT_WATCHDOG_QUIET_HOURS to change"
-                ),
-            }
-        )
-        log_event(run_id, "tick_skipped_quiet_hours", window=list(window))
-        return finish(run_id, receipt_dir, receipt, 0, persist=False)
-
     if not acquire_lock(run_id):
         receipt = base_receipt(run_id, receipt_dir, apply)
         # Stepping aside for a tick that is genuinely working is not an error.
@@ -241,6 +227,26 @@ def tick(*, apply: bool, project_id: str, max_tickets: int, only_issue: int | No
 
     try:
         _test_hold_lock_if_requested(run_id)
+        # Overnight batch work owns the machine between the quiet hours; a repair
+        # dispatch there competes with jobs that cannot be restarted cheaply. The
+        # applying tick still owns finalization: pending notifications are replayed
+        # and the UI snapshot is refreshed before the singleton is released.
+        if apply and config.tick_would_enter_quiet_hours():
+            receipt = base_receipt(run_id, receipt_dir, apply)
+            window = config.quiet_window()
+            receipt.update(
+                {
+                    "ok": True,
+                    "status": "SKIPPED",
+                    "stop_reason": "quiet_hours",
+                    "summary": (
+                        f"deferring to overnight batch work ({window[0]:02d}:00-{window[1]:02d}:00); "
+                        "set PROJECT_WATCHDOG_QUIET_HOURS to change"
+                    ),
+                }
+            )
+            log_event(run_id, "tick_skipped_quiet_hours", window=list(window))
+            return finish(run_id, receipt_dir, receipt, 0, persist=True)
         return _tick_locked(
             run_id, receipt_dir, apply=apply, project_id=project_id, max_tickets=max_tickets,
             only_issue=only_issue, release_scheduler_lock=release_scheduler_lock,
@@ -1285,7 +1291,7 @@ def install_cron(*, apply: bool, minute: str, allow_every_minute: bool = False) 
     inner = (
         f"cd {shlex.quote(str(config.SKILL_DIR))} && "
         f"{shlex.quote(str(config.SKILL_DIR / 'run.sh'))} tick --apply --project all "
-        f"--max-tickets 1"
+        f"--max-tickets 3"
     )
     init_file = config.shell_init_file()
     if init_file is not None:
@@ -1295,8 +1301,23 @@ def install_cron(*, apply: bool, minute: str, allow_every_minute: bool = False) 
         f">> {shlex.quote(str(cron_log))} 2>&1 {config.CRON_MARKER}"
     )
     current = run_cmd(["crontab", "-l"])
+    if current["exit_code"] != 0 and "no crontab for" not in str(current.get("stderr", "")).lower():
+        receipt = {
+            "schema": "agent_skills.project_watchdog.cron_install_receipt.v1",
+            "run_id": run_id,
+            "apply": apply,
+            "ok": False,
+            "status": "FAILED",
+            "reason": "crontab_read_failed",
+            "read_result": current,
+            "mocked": False,
+            "live": True,
+        }
+        receipt_dir = config.receipt_root() / run_id
+        receipt_dir.mkdir(parents=True, exist_ok=True)
+        return finish(run_id, receipt_dir, receipt, 1, persist=True)
     existing = current["stdout"] if current["exit_code"] == 0 else ""
-    lines = [line for line in existing.splitlines() if config.CRON_MARKER not in line]
+    lines = [line for line in existing.splitlines() if "project-watchdog" not in line]
     lines.append(command)
     new_crontab = "\n".join(lines).rstrip() + "\n"
     receipt: dict[str, Any] = {
@@ -1311,8 +1332,11 @@ def install_cron(*, apply: bool, minute: str, allow_every_minute: bool = False) 
     }
     if apply:
         install = run_cmd(["crontab", "-"], input_text=new_crontab)
+        verify = run_cmd(["crontab", "-l"]) if install["exit_code"] == 0 else {"exit_code": 1, "stdout": "", "stderr": "install failed"}
+        installed_lines = [line for line in str(verify.get("stdout") or "").splitlines() if "project-watchdog" in line]
         receipt["install_result"] = install
-        receipt["ok"] = install["exit_code"] == 0
+        receipt["verify_result"] = verify
+        receipt["ok"] = install["exit_code"] == 0 and verify["exit_code"] == 0 and installed_lines == [command]
         receipt["status"] = "INSTALLED" if receipt["ok"] else "FAILED"
     else:
         receipt["ok"] = True
