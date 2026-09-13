@@ -1,12 +1,24 @@
 from __future__ import annotations
 
+import importlib.util
 import json
 import subprocess
 from pathlib import Path
 
+from rich.console import Console
+
 
 BATTLE = Path(__file__).resolve().parents[1]
 REPO = BATTLE.parents[1]
+
+
+def _report_module():
+    path = BATTLE / "scripts" / "render_invariant_campaign_report.py"
+    spec = importlib.util.spec_from_file_location("battle_invariant_report_test", path)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def _campaign(path: Path, *, passed: bool, case_log: list[dict] | None = None) -> None:
@@ -234,3 +246,71 @@ def test_invariant_report_terminal_summary_is_plain_battle_story(tmp_path: Path)
     assert "This is bounded Battle evidence, not proof that every possible exploit is absent." in terminal
     assert "project-state JSON artifact" not in terminal
     assert "Judge passed; no policy value survived." not in terminal
+
+
+def test_invariant_report_typer_terminal_table_alias_keeps_stdout_json(tmp_path: Path) -> None:
+    campaign = tmp_path / "contract-floor-campaign.json"
+    project_state = tmp_path / "project-state.json"
+    out_json = tmp_path / "report.json"
+    out_md = tmp_path / "report.md"
+    _campaign(campaign, passed=True, case_log=[{
+        "case": "json-string",
+        "expectation": "MUST_ACCEPT",
+        "passed": True,
+        "execution": {"kind": "ACCEPT", "exit_code": 0},
+    }])
+    project_state.write_text("# Project State\ncurrent\n", encoding="utf-8")
+
+    proc = subprocess.run([
+        str(BATTLE / "run.sh"), "invariant-report",
+        "--campaign", str(campaign),
+        "--project-state", str(project_state),
+        "--target", "oai-trial",
+        "--out-json", str(out_json),
+        "--out-md", str(out_md),
+        "--terminal-table",
+    ], cwd=REPO, capture_output=True, text=True, check=False)
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert json.loads(proc.stdout)["schema"] == "battle.invariant_report_result.v1"
+    assert "Case table:" in proc.stderr
+    assert "json-string" in proc.stderr
+    assert "ACCEPTED_CLEAN" in proc.stderr
+    assert "\u001b[" not in proc.stderr
+
+
+def test_invariant_report_rich_terminal_table_path_renders_colored_rows(monkeypatch, capsys) -> None:
+    module = _report_module()
+    monkeypatch.setattr(
+        module,
+        "Console",
+        lambda **kwargs: Console(force_terminal=True, color_system="standard", width=180, **kwargs),
+    )
+    module._print_rich_terminal_summary("oai-trial", [
+        {
+            "scope": "contractual",
+            "case": "json-string",
+            "expectation": "MUST_ACCEPT",
+            "result": "ACCEPTED_CLEAN",
+            "description": "policy value in a JSON string field",
+            "evidence": "Judge passed; no policy value survived.",
+        },
+        {
+            "scope": "beyond-contract",
+            "case": "bb-filename-value",
+            "expectation": "MUST_REJECT",
+            "result": "RED_WIN",
+            "description": "policy value hidden in the released filename",
+            "evidence": "policy value survives in filename: Alice",
+        },
+    ])
+
+    terminal = capsys.readouterr().err
+    assert "\u001b[" in terminal
+    assert "Battle report:" in terminal
+    assert "Case table" in terminal
+    assert "json-string" in terminal
+    assert "ACCEPTED_CLEAN" in terminal
+    assert "bb-filename-value" in terminal
+    assert "RED_WIN" in terminal
+    assert "policy value survives in filename: Alice" in terminal

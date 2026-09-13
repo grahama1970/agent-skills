@@ -218,6 +218,27 @@ PROJECT_STATE_ROOT=/path/to/target ../project-state/run.sh report --json --outpu
   --out-md /tmp/battle-report.md
 ```
 
+For project-agent terminal review, add `--terminal-table`:
+
+```bash
+./run.sh invariant-report \
+  --campaign /tmp/battle-brief-fuzz.json \
+  --campaign /tmp/battle-beyond-brief.json \
+  --project-state /tmp/project-state.json \
+  --target oai-trial \
+  --out-json /tmp/battle-report.json \
+  --out-md /tmp/battle-report.md \
+  --terminal-table
+```
+
+`invariant-report` is a Typer CLI command. It writes machine JSON to stdout and
+keeps the human Battle table/report on stderr. `--terminal-table` is the easy
+alias for `--terminal-summary`: both print contract floor, Red pressure,
+Scorekeeper call, and one case-table row per attack. In an interactive terminal
+Battle uses Rich's terminal-aware colored table (`RED_WIN` red, clean passes
+green, fail-closed stops yellow) and honors `NO_COLOR`; under capture/CI it falls
+back to deterministic plain text so logs and tests stay stable.
+
 `invariant-report` writes `create_report.report.v1`, validates it through
 `skills/create-report/run.sh validate`, renders Markdown through
 `skills/create-report/run.sh render`, and appends `## Exploits Table`. The table

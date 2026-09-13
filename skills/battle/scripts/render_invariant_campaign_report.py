@@ -9,10 +9,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
 from typing import Any
+
+from rich import box
+from rich.console import Console
+from rich.table import Table
+from rich.text import Text
 
 BATTLE_DIR = Path(__file__).resolve().parents[1]
 REPO_ROOT = BATTLE_DIR.parents[1]
@@ -247,6 +253,41 @@ def _terminal_table(rows: list[dict[str, str]]) -> list[str]:
     return lines
 
 
+def _color_enabled_stderr() -> bool:
+    return sys.stderr.isatty() and not os.environ.get("NO_COLOR")
+
+
+def _print_rich_terminal_summary(target: str, rows: list[dict[str, str]]) -> None:
+    summary = _terminal_summary(target, rows)
+    console = Console(stderr=True)
+    table = Table(title="Case table", box=box.SIMPLE_HEAVY, row_styles=["", "dim"])
+    for heading in ["Scope", "Case", "Expect", "Result", "Attack", "Evidence"]:
+        style = "bold" if heading != "Result" else "bold white"
+        table.add_column(heading, style=style, overflow="fold" if heading in {"Attack", "Evidence"} else "ellipsis")
+    if rows:
+        for row in rows:
+            result = row["result"]
+            result_style = {"RED_WIN": "bold red", "ACCEPTED_CLEAN": "green", "BLOCKED_FAIL_CLOSED": "yellow"}.get(result, "white")
+            table.add_row(
+                row["scope"],
+                row["case"],
+                row["expectation"],
+                Text(result, style=result_style),
+                row["description"],
+                _terminal_evidence(row),
+            )
+    else:
+        table.add_row("all", "NO_CASES_RECORDED", "n/a", Text("NO_CASES_RECORDED", style="yellow"), "Campaign had no case rows.", "n/a")
+    overview = "\n".join(summary.split("Case table:", 1)[0].splitlines()[2:]).rstrip()
+    tail = summary.split("Highlight plays:", 1)[1]
+    with console.capture() as capture:
+        console.print(f"[bold]Battle report:[/bold] {target}")
+        if overview:
+            console.print(overview)
+        console.print(table)
+        console.print("[bold]Highlight plays:[/bold]" + tail)
+    sys.stderr.write(capture.get())
+
 def _terminal_summary(target: str, rows: list[dict[str, str]]) -> str:
     contract = [row for row in rows if row["scope"] == "contractual"]
     beyond = [row for row in rows if row["scope"] == "beyond-contract"]
@@ -399,7 +440,7 @@ def build_report(*, campaigns: list[Path], project_state: Path, target: str, ada
     return report, _markdown_table(attack_rows)
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Create a Battle invariant report through create-report.")
     parser.add_argument("--campaign", action="append", required=True, type=Path, help="Battle invariant campaign result/log; repeatable.")
     parser.add_argument("--adaptive-lineage", action="append", default=[], type=Path, help="battle.invariant_adaptive_lineage.v1 receipt; repeatable.")
@@ -407,8 +448,9 @@ def main() -> int:
     parser.add_argument("--target", default="target")
     parser.add_argument("--out-json", required=True, type=Path)
     parser.add_argument("--out-md", required=True, type=Path)
-    parser.add_argument("--terminal-summary", action="store_true", help="Also print a plain-spoken Battle story to stderr; JSON stdout stays stable.")
-    args = parser.parse_args()
+    parser.add_argument("--terminal-summary", action="store_true", help="Also print a plain-spoken Battle story with a case table to stderr; JSON stdout stays stable.")
+    parser.add_argument("--terminal-table", action="store_true", help="Alias for --terminal-summary; prints the project-agent-friendly terminal table/report to stderr.")
+    args = parser.parse_args(argv)
 
     loaded = [(path, _load_campaign(path)) for path in args.campaign]
     lineage = _lineage_cases(args.adaptive_lineage)
@@ -428,8 +470,15 @@ def main() -> int:
         return render.returncode
     with args.out_md.open("a", encoding="utf-8") as handle:
         handle.write("\n" + exploits_table)
-    if args.terminal_summary:
-        sys.stderr.write(_terminal_summary(args.target, attack_rows))
+    if args.terminal_summary or args.terminal_table:
+        if _color_enabled_stderr():
+            try:
+                _print_rich_terminal_summary(args.target, attack_rows)
+            except Exception as exc:
+                sys.stderr.write(f"Battle terminal table color render failed; using plain fallback: {exc}\n")
+                sys.stderr.write(_terminal_summary(args.target, attack_rows))
+        else:
+            sys.stderr.write(_terminal_summary(args.target, attack_rows))
     print(json.dumps({"schema": "battle.invariant_report_result.v1", "status": "PASS", "report_json": str(args.out_json), "report_md": str(args.out_md), "campaigns": len(args.campaign)}, sort_keys=True))
     return 0
 

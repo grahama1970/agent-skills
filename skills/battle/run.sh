@@ -61,8 +61,7 @@ if [[ "${1:-}" == "current-status" ]]; then
 fi
 
 if [[ "${1:-}" == "invariant-report" ]]; then
-  shift
-  exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/render_invariant_campaign_report.py" "$@"
+  exec uv run --project "$SCRIPT_DIR" python -m battle_skill.cli "$@"
 fi
 
 if [[ "${1:-}" == "campaign-contract" ]]; then

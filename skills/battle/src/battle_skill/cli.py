@@ -21,6 +21,7 @@ Based on research into:
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 from datetime import UTC, datetime
@@ -64,6 +65,16 @@ def _load_campaign_json(path: Path) -> dict:
     return data
 
 
+def _render_invariant_report_module():
+    script = Path(__file__).resolve().parents[2] / "scripts" / "render_invariant_campaign_report.py"
+    spec = importlib.util.spec_from_file_location("battle_render_invariant_campaign_report", script)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load invariant report renderer: {script}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 @app.command("contract-variation-plan")
 def contract_variation_plan(
     acceptance_bundle: Path = typer.Option(..., "--acceptance-bundle", exists=True, readable=True, help="acceptance_contract.bundle.v1 to expand into Battle research/test lanes."),
@@ -91,6 +102,38 @@ def contract_variation_plan(
     typer.echo(json.dumps(plan, indent=2, sort_keys=True))
     if plan["status"] != "READY":
         raise typer.Exit(1)
+
+
+@app.command("invariant-report")
+def invariant_report(
+    campaign: list[Path] = typer.Option(..., "--campaign", exists=True, readable=True, help="Battle invariant campaign result/log; repeatable."),
+    adaptive_lineage: Optional[list[Path]] = typer.Option(None, "--adaptive-lineage", exists=True, readable=True, help="battle.invariant_adaptive_lineage.v1 receipt; repeatable."),
+    project_state: Path = typer.Option(..., "--project-state", exists=True, readable=True, help="Project-state JSON/Markdown artifact used as report context."),
+    target: str = typer.Option("target", "--target", help="Target name for the report."),
+    out_json: Path = typer.Option(..., "--out-json", help="create_report.report.v1 output path."),
+    out_md: Path = typer.Option(..., "--out-md", help="Markdown report output path."),
+    terminal_summary: bool = typer.Option(False, "--terminal-summary", help="Print the plain Battle report and case table to stderr; stdout remains JSON."),
+    terminal_table: bool = typer.Option(False, "--terminal-table", help="Alias for --terminal-summary; optimized for project-agent terminal review."),
+) -> None:
+    """Render a Battle invariant report, with optional terminal table on stderr."""
+    argv: list[str] = []
+    for path in campaign:
+        argv += ["--campaign", str(path)]
+    for path in adaptive_lineage or []:
+        argv += ["--adaptive-lineage", str(path)]
+    argv += [
+        "--project-state", str(project_state),
+        "--target", target,
+        "--out-json", str(out_json),
+        "--out-md", str(out_md),
+    ]
+    if terminal_summary:
+        argv.append("--terminal-summary")
+    if terminal_table:
+        argv.append("--terminal-table")
+    exit_code = _render_invariant_report_module().main(argv)
+    if exit_code:
+        raise typer.Exit(exit_code)
 
 
 @app.command("invariant-lineage-receipt")
