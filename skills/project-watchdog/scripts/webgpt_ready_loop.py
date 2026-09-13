@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import subprocess
 import sys
@@ -47,13 +48,21 @@ def sha256_file(path: Path) -> str:
 
 def classify_response(text: str, *, candidate_digest: str | None = None, packet_digest: str | None = None) -> dict[str, Any]:
     """Return a conservative readiness verdict from WebGPT text."""
-    lines = [line.strip() for line in text.splitlines()]
-    has_ready_line = READY_LINE in lines
-    has_no_blockers = NO_BLOCKERS_LINE in lines
-    candidate_bound = candidate_digest is None or f"CANDIDATE_DIGEST: {candidate_digest}" in lines
-    packet_bound = packet_digest is None or f"PACKET_DIGEST: {packet_digest}" in lines
-    blockers = [line for line in lines if line.startswith(("P0", "P1", "P2", "R1", "R2", "R3", "### R", "### P"))]
-    ready = has_ready_line and has_no_blockers and candidate_bound and packet_bound and not blockers
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    expected = [
+        READY_LINE,
+        f"CANDIDATE_DIGEST: {candidate_digest}",
+        f"PACKET_DIGEST: {packet_digest}",
+        NO_BLOCKERS_LINE,
+    ]
+    digest_inputs_present = bool(candidate_digest and packet_digest)
+    terminal_record = lines[-4:] if len(lines) >= 4 else []
+    field_lines = [line for line in lines if line.startswith(("VERDICT:", "CANDIDATE_DIGEST:", "PACKET_DIGEST:", "BLOCKING_FINDINGS:"))]
+    unique_terminal_record = field_lines == expected
+    candidate_bound = digest_inputs_present and f"CANDIDATE_DIGEST: {candidate_digest}" in terminal_record
+    packet_bound = digest_inputs_present and f"PACKET_DIGEST: {packet_digest}" in terminal_record
+    blockers = [line for line in lines if line.startswith(("- P", "P0", "P1", "P2", "R1", "R2", "R3", "### R", "### P"))]
+    ready = digest_inputs_present and terminal_record == expected and unique_terminal_record and candidate_bound and packet_bound and not blockers
     findings = [line for line in lines if line.startswith(("### ", "## ", "- P", "P1", "P2", "P0", "R1", "R2", "R3"))][:40]
     return {
         "schema": "project_watchdog.webgpt_ready_verdict.v1",
@@ -68,15 +77,19 @@ def classify_response(text: str, *, candidate_digest: str | None = None, packet_
     }
 
 
-def run_cmd(argv: list[str], *, cwd: Path, timeout: int = 600) -> dict[str, Any]:
+def run_cmd(argv: list[str], *, cwd: Path, timeout: int = 600, output_limit: int | None = 4000) -> dict[str, Any]:
     started = time.time()
     proc = subprocess.run(argv, cwd=cwd, text=True, capture_output=True, timeout=timeout, check=False)
+    stdout = proc.stdout if output_limit is None else proc.stdout[-output_limit:]
+    stderr = proc.stderr if output_limit is None else proc.stderr[-output_limit:]
     return {
         "argv": argv,
         "returncode": proc.returncode,
         "duration_seconds": round(time.time() - started, 3),
-        "stdout": proc.stdout[-4000:],
-        "stderr": proc.stderr[-4000:],
+        "stdout": stdout,
+        "stderr": stderr,
+        "stdout_truncated": output_limit is not None and len(proc.stdout) > output_limit,
+        "stderr_truncated": output_limit is not None and len(proc.stderr) > output_limit,
     }
 
 
@@ -93,30 +106,73 @@ def display_path(path: str) -> str:
     return path.replace("/", " > ")
 
 
+def _git_paths(repo: Path, *args: str) -> list[str]:
+    proc = subprocess.run(["git", "ls-files", "-z", *args, "--", "skills/project-watchdog"], cwd=repo, capture_output=True, check=False)
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr.decode(errors="replace")[-500:])
+    return [p.decode(errors="surrogateescape") for p in proc.stdout.split(b"\0") if p]
+
+
 def candidate_manifest(repo: Path) -> dict[str, Any]:
-    status = run_cmd(["git", "status", "--porcelain", "--", "skills/project-watchdog"], cwd=repo, timeout=60)
+    tracked = set(_git_paths(repo))
+    untracked = set(_git_paths(repo, "--others", "--exclude-standard"))
+    deleted = set(_git_paths(repo, "--deleted"))
+    base_tree = run_cmd(["git", "rev-parse", "origin/main^{tree}"], cwd=repo, timeout=60)
+    head = run_cmd(["git", "rev-parse", "HEAD"], cwd=repo, timeout=60)
     files = []
-    for line in status["stdout"].splitlines():
-        path = line[3:].strip()
-        if not path or path.endswith("/"):
-            continue
+    for path in sorted(tracked | untracked | deleted):
         p = repo / path
-        if p.is_file():
-            text = p.read_text(errors="replace")
-            files.append({"repo_path": display_path(path), "status": line[:2], "sha256": sha256_text(text), "bytes": len(text.encode())})
-        else:
-            files.append({"repo_path": display_path(path), "status": line[:2], "missing": True})
-    commits = run_cmd(["git", "log", "--oneline", "--max-count", "8", "origin/main", "--", "skills/project-watchdog"], cwd=repo, timeout=60)
-    manifest = {"status_returncode": status["returncode"], "files": files, "recent_origin_main_commits": commits["stdout"].splitlines()}
+        item: dict[str, Any] = {"repo_path": display_path(path), "tracked": path in tracked, "untracked": path in untracked, "deleted": path in deleted}
+        try:
+            st = p.lstat()
+            item["mode"] = oct(st.st_mode & 0o777777)
+            if p.is_symlink():
+                item["symlink_target"] = os.readlink(p)
+                item["sha256"] = sha256_text(item["symlink_target"])
+            elif p.is_file():
+                raw = p.read_bytes()
+                item["sha256"] = "sha256:" + hashlib.sha256(raw).hexdigest()
+                item["bytes"] = len(raw)
+            else:
+                item["kind"] = "non_file"
+        except FileNotFoundError:
+            item["missing"] = True
+        files.append(item)
+    manifest = {
+        "base_tree": base_tree["stdout"].strip(),
+        "head": head["stdout"].strip(),
+        "inventory_scope": "skills/project-watchdog",
+        "inventory_complete": True,
+        "files": files,
+    }
     manifest["candidate_digest"] = sha256_text(json.dumps(manifest, sort_keys=True))
     return manifest
 
 
+def collect_proof_results(repo: Path, output_dir: Path, candidate_digest: str) -> dict[str, Any]:
+    command = ["uv", "run", "--project", "skills/project-watchdog", "pytest", "-q", "skills/project-watchdog/tests/test_webgpt_ready_loop.py"]
+    result = run_cmd(command, cwd=repo, timeout=240, output_limit=None)
+    log_text = result["stdout"] + result["stderr"]
+    log_path = output_dir / "candidate-bound-tests.log"
+    log_path.write_text(log_text, encoding="utf-8")
+    return {
+        "candidate_digest": candidate_digest,
+        "command": command,
+        "returncode": result["returncode"],
+        "duration_seconds": result["duration_seconds"],
+        "log_sha256": sha256_file(log_path),
+        "stdout_tail": result["stdout"][-4000:],
+        "stderr_tail": result["stderr"][-4000:],
+        "qualifies_candidate": result["returncode"] == 0 and " passed" in log_text,
+    }
+
+
 def build_packet(repo: Path, *, prior_response: Path | None, output: Path) -> tuple[Path, str]:
+    output.parent.mkdir(parents=True, exist_ok=True)
     manifest = candidate_manifest(repo)
     diff = run_cmd(["git", "diff", "--", "skills/project-watchdog"], cwd=repo, timeout=120)
-    stat = run_cmd(["git", "diff", "--stat", "origin/main", "--", "skills/project-watchdog"], cwd=repo, timeout=120)
-    tests = run_cmd(["bash", "-lc", "tail -1 /tmp/pw-webgpt-loop-tests.txt /tmp/pw-webgpt-loop-sanitize-tests.txt 2>&1"], cwd=repo, timeout=60)
+    stat = run_cmd(["git", "diff", "--stat=200", "origin/main", "--", "skills/project-watchdog"], cwd=repo, timeout=120)
+    tests = collect_proof_results(repo, output.parent, manifest["candidate_digest"])
     cron = run_cmd(["crontab", "-l"], cwd=repo, timeout=60)
     cron_lines = [line for line in cron["stdout"].splitlines() if "project-watchdog" in line]
     body = [
@@ -147,29 +203,46 @@ def build_packet(repo: Path, *, prior_response: Path | None, output: Path) -> tu
         "",
         "## Proof command results",
         "```json",
-        json.dumps({"tests_tail": tests, "crontab_returncode": cron["returncode"], "project_watchdog_cron_line_count": len(cron_lines)}, indent=2, sort_keys=True),
+        json.dumps({"candidate_bound_tests": tests, "crontab_returncode": cron["returncode"], "project_watchdog_cron_line_count": len(cron_lines)}, indent=2, sort_keys=True),
         "```",
     ]
     if prior_response and prior_response.is_file():
         body.extend(["", "## Previous WebGPT response to close", "```text", browser_safe(prior_response.read_text(errors="replace")[-12000:]), "```"])
-    output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(browser_safe("\n".join(body)) + "\n", encoding="utf-8")
     return output, manifest["candidate_digest"]
 
 
-def latest_webgpt_response(ask_json: Path, output_root: Path) -> Path | None:
+def _parse_ask_json(path: Path) -> dict[str, Any] | None:
     try:
-        data = json.loads(ask_json.read_text())
+        text = path.read_text()
+        return json.loads(text)
     except (OSError, ValueError):
-        data = {}
+        return None
+
+
+def latest_webgpt_response(ask_json: Path, output_root: Path) -> Path | None:
+    data = _parse_ask_json(ask_json)
+    if not data:
+        return None
+    candidates = []
+    node_receipt = data.get("node_receipt_path") or data.get("handler_receipt_path")
+    if node_receipt:
+        candidates.append(Path(node_receipt).parent / "response.md")
+    join_artifact = data.get("join_artifact_path")
+    if join_artifact:
+        candidates.append(Path(join_artifact).parents[1] / "handler-webgpt" / "response.md")
+    execution = data.get("execution") or {}
+    receipt_path = execution.get("receipt_path")
+    if receipt_path:
+        candidates.append(Path(receipt_path).parents[1] / "node-artifacts" / "handler-webgpt" / "response.md")
     for key in ("run_dir", "ask_run_dir", "artifact_dir"):
         base = data.get(key)
         if base:
-            candidate = Path(base) / "node-artifacts" / "handler-webgpt" / "response.md"
-            if candidate.is_file():
-                return candidate
-    responses = sorted(output_root.glob("ask-tau-*/node-artifacts/handler-webgpt/response.md"), key=lambda p: p.stat().st_mtime)
-    return responses[-1] if responses else None
+            candidates.append(Path(base) / "node-artifacts" / "handler-webgpt" / "response.md")
+    for candidate in candidates:
+        if candidate.is_file() and output_root in candidate.parents:
+            return candidate
+    return None
 
 
 def ask_webgpt(repo: Path, packet: Path, *, project: str, output_root: Path, iteration: int, candidate_digest: str) -> dict[str, Any]:
@@ -206,7 +279,7 @@ def ask_webgpt(repo: Path, packet: Path, *, project: str, output_root: Path, ite
         "--poll-timeout-seconds", "3000",
         "--execute", "--json",
     ]
-    result = run_cmd(cmd, cwd=repo, timeout=3000)
+    result = run_cmd(cmd, cwd=repo, timeout=3000, output_limit=None)
     ask_json.write_text(result["stdout"], encoding="utf-8")
     response = latest_webgpt_response(ask_json, output_root)
     verdict = classify_response(response.read_text(errors="replace"), candidate_digest=candidate_digest, packet_digest=packet_digest) if response and response.is_file() else None
