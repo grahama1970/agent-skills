@@ -84,6 +84,28 @@ def main() -> None:
         assert after["decision"] == "pass", after
         assert after["features"]["cross_family_review"] == {"status": "reviewed", "degraded": False}, after
 
+        fallback_review = subprocess.run(
+            ["node", str(AUTO)],
+            input=json.dumps({"text": candidate, "status": status, "author_provider": "openai"}),
+            text=True,
+            capture_output=True,
+            timeout=30,
+            env={
+                **os.environ,
+                "LAZY_REPORT_SHAME_REVIEW_DIR": str(work / "fallback-reviews"),
+                "LAZY_REPORT_SHAME_REVIEWER_MODEL": "zai/glm-5.3-flash",
+                "LAZY_REPORT_SHAME_REVIEWER_FALLBACK_MODELS": "kimi/kimi-for-coding",
+                "LAZY_REPORT_SHAME_REVIEWER_COMMAND": "python3 -c 'import os; m=os.environ.get(\"LRSSS_REVIEWER_MODEL_ATTEMPT\", \"\"); print(\"VERDICT: PASS\\nCRITIQUE: fallback reviewer accepted.\" if \"kimi\" in m else \"NO EXPLICIT VERDICT\")'",
+            },
+            check=False,
+        )
+        assert fallback_review.returncode == 0, fallback_review.stderr or fallback_review.stdout
+        fallback_payload = json.loads(fallback_review.stdout)
+        fallback_receipt = json.loads(Path(fallback_payload["receipt_path"]).read_text(encoding="utf-8"))
+        fallback_meta = json.loads(Path(fallback_payload["metadata_path"]).read_text(encoding="utf-8"))
+        assert fallback_receipt["reviewer_provider"] == "kimi", fallback_receipt
+        assert [attempt["model"] for attempt in fallback_meta["attempts"]] == ["zai/glm-5.3-flash", "kimi/kimi-for-coding"], fallback_meta
+
         zai_review = subprocess.run(
             ["node", str(AUTO)],
             input=json.dumps({"text": candidate, "status": status, "author_provider": "zai"}),
@@ -100,7 +122,7 @@ def main() -> None:
         assert zai_review.returncode == 0, zai_review.stderr or zai_review.stdout
         zai_payload = json.loads(zai_review.stdout)
         zai_receipt = json.loads(Path(zai_payload["receipt_path"]).read_text(encoding="utf-8"))
-        assert zai_receipt["author_provider"] == "zai" and zai_receipt["reviewer_provider"] == "openai", zai_receipt
+        assert zai_receipt["author_provider"] == "zai" and zai_receipt["reviewer_provider"] == "kimi", zai_receipt
 
     print(json.dumps({
         "schema": "lazy_report_shame.auto_cross_provider_review_eval.v1",
@@ -110,7 +132,8 @@ def main() -> None:
             "auto-cross-provider-review invokes configured reviewer command",
             "hook-owned receipt, metadata, and reviewer output are written",
             "checker accepts the same stop after the generated receipt is attached",
-            "zai authors are assigned an OpenAI-family reviewer by default",
+            "reviewer fallback switches model after missing explicit verdict",
+            "zai authors are assigned a Kimi-family reviewer by default",
         ],
     }, indent=2))
 

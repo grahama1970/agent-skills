@@ -6,15 +6,32 @@
 import { spawnSync } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { join } from 'node:path';
 
 const GENERATOR = 'lazy-report-shame-shame-shame';
 const OUT_DIR = process.env.LAZY_REPORT_SHAME_REVIEW_DIR || '/mnt/storage12tb/skills/shame/cross-provider-review';
-const DEFAULT_REVIEWER_MODEL = process.env.LAZY_REPORT_SHAME_REVIEWER_MODEL || '';
+const STOP_REVIEW_SETTINGS = stopReviewSettings();
+const DEFAULT_REVIEWER_MODEL = process.env.LAZY_REPORT_SHAME_REVIEWER_MODEL || STOP_REVIEW_SETTINGS.reviewerModel || '';
+const REVIEWER_FALLBACK_MODELS = (process.env.LAZY_REPORT_SHAME_REVIEWER_FALLBACK_MODELS
+  ? String(process.env.LAZY_REPORT_SHAME_REVIEWER_FALLBACK_MODELS).split(',')
+  : STOP_REVIEW_SETTINGS.fallbackModels
+).map((s) => String(s).trim()).filter(Boolean);
 const REVIEW_TIMEOUT_MS = Number(process.env.LAZY_REPORT_SHAME_REVIEW_TIMEOUT_MS || 120000);
 
 function sha256(value) {
   return createHash('sha256').update(String(value)).digest('hex');
+}
+
+function readJson(path) {
+  if (!existsSync(path)) return null;
+  try { return JSON.parse(readFileSync(path, 'utf8')); } catch { return null; }
+}
+
+function stopReviewSettings() {
+  const user = readJson(join(homedir(), '.pi/agent/settings.json'))?.subagents?.stopReview || {};
+  const project = readJson(join(process.cwd(), '.pi/settings.json'))?.subagents?.stopReview || {};
+  return { ...user, ...project };
 }
 
 function providerFamily(raw) {
@@ -22,6 +39,7 @@ function providerFamily(raw) {
   if (value.includes('openai') || value.includes('codex') || value.includes('gpt')) return 'openai';
   if (value.includes('anthropic') || value.includes('claude') || value.includes('opus') || value.includes('sonnet')) return 'anthropic';
   if (value.includes('zai') || value.includes('glm')) return 'zai';
+  if (value.includes('kimi')) return 'kimi';
   if (value.includes('google') || value.includes('gemini')) return 'google';
   if (value.includes('xai') || value.includes('grok')) return 'xai';
   return value ? `unknown:${value}` : '';
@@ -40,16 +58,33 @@ function statusReviewHash(status) {
 function reviewerModelFor(authorProvider) {
   if (DEFAULT_REVIEWER_MODEL) return DEFAULT_REVIEWER_MODEL;
   const authorFamily = providerFamily(authorProvider);
-  if (authorFamily === 'zai') return 'openai-codex/gpt-5.5:high';
-  return 'zai/glm-5.3:high';
+  if (authorFamily === 'zai') return 'kimi/kimi-for-coding';
+  return 'zai/glm-5.3-flash';
 }
 
-function parseVerdict(stdout) {
+function reviewerModelChain(authorProvider) {
+  const authorFamily = providerFamily(authorProvider);
+  const seen = new Set();
+  const models = [reviewerModelFor(authorProvider), ...REVIEWER_FALLBACK_MODELS]
+    .filter((model) => model && providerFamily(model) !== authorFamily)
+    .filter((model) => {
+      if (seen.has(model)) return false;
+      seen.add(model);
+      return true;
+    });
+  return models.length ? models : [reviewerModelFor(authorProvider)];
+}
+
+function explicitVerdict(stdout) {
   const text = String(stdout || '').trim();
   const upper = text.toUpperCase();
   if (upper.includes('VERDICT: PASS') || upper.startsWith('PASS')) return 'PASS';
   if (upper.includes('VERDICT: REJECT') || upper.includes('VERDICT: FAIL') || upper.startsWith('FAIL') || upper.startsWith('REJECT')) return 'REJECT';
-  return 'REJECT';
+  return null;
+}
+
+function parseVerdict(stdout) {
+  return explicitVerdict(stdout) || 'REJECT';
 }
 
 function reviewerPrompt(input, candidateHash) {
@@ -73,7 +108,7 @@ function runReviewer(prompt, reviewerModel) {
       encoding: 'utf8',
       timeout: REVIEW_TIMEOUT_MS,
       shell: true,
-      env: process.env,
+      env: { ...process.env, LRSSS_REVIEWER_MODEL_ATTEMPT: reviewerModel },
     });
   }
   return spawnSync('pi', [
@@ -88,7 +123,7 @@ function runReviewer(prompt, reviewerModel) {
   ], {
     encoding: 'utf8',
     timeout: REVIEW_TIMEOUT_MS,
-    env: process.env,
+    env: { ...process.env, LRSSS_REVIEWER_MODEL_ATTEMPT: reviewerModel },
   });
 }
 
@@ -107,14 +142,25 @@ function main() {
   }
   mkdirSync(OUT_DIR, { recursive: true });
   const authorProvider = String(input.author_provider || process.env.LRSSS_AUTHOR_PROVIDER || process.env.PI_PROVIDER || process.env.PI_MODEL || 'unknown');
-  const reviewerModel = reviewerModelFor(authorProvider);
+  const reviewerModels = reviewerModelChain(authorProvider);
   const id = `${new Date().toISOString().replace(/[:.]/g, '-')}-${randomUUID()}`;
   const candidateHash = statusReviewHash(status);
   const prompt = reviewerPrompt(input, candidateHash);
-  const run = runReviewer(prompt, reviewerModel);
-  const stdout = String(run.stdout || '');
-  const stderr = String(run.stderr || run.error?.message || '');
-  const verdict = run.status === 0 ? parseVerdict(stdout) : 'REJECT';
+  const attempts = [];
+  let reviewerModel = reviewerModels[0];
+  let run = null;
+  let stdout = '';
+  let stderr = '';
+  for (const model of reviewerModels) {
+    reviewerModel = model;
+    run = runReviewer(prompt, reviewerModel);
+    stdout = String(run.stdout || '');
+    stderr = String(run.stderr || run.error?.message || '');
+    const verdict = run.status === 0 ? explicitVerdict(stdout) : null;
+    attempts.push({ model, exitCode: run.status ?? (run.error ? 1 : 0), signal: run.signal || null, explicitVerdict: verdict || null, stderr_excerpt: stderr.slice(0, 500) });
+    if (verdict) break;
+  }
+  const verdict = run && run.status === 0 ? parseVerdict(stdout) : 'REJECT';
   const outputPath = join(OUT_DIR, `${id}-output.md`);
   const metadataPath = join(OUT_DIR, `${id}-meta.json`);
   const receiptPath = join(OUT_DIR, `${id}-receipt.json`);
@@ -127,6 +173,7 @@ function main() {
     signal: run.signal || null,
     output_path: outputPath,
     stderr_excerpt: stderr.slice(0, 1000),
+    attempts,
   };
   writeFileSync(metadataPath, JSON.stringify(metadata, null, 2) + '\n', 'utf8');
   const receipt = {

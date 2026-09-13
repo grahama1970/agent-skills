@@ -70,6 +70,7 @@ function isMutatingShellCommand(command: string): boolean {
 }
 
 const MEMORY_ENABLED = !flagDisabled(process.env.LAZY_REPORT_SHAME_MEMORY_ENABLED || "1");
+const UNIVERSAL_STOP_REVIEW = !flagDisabled(process.env.LAZY_REPORT_SHAME_UNIVERSAL_STOP_REVIEW ?? "1");
 const AUDIO_COOLDOWN_MS = 10_000;
 const CONTINUATION_GUARD_FILE = process.env.LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE || "/mnt/storage12tb/skills/shame/continuation-guard/current.json";
 const OPS_DISCORD_RUN = process.env.LAZY_REPORT_SHAME_OPS_DISCORD_RUN || "/home/graham/workspace/experiments/agent-skills/skills/ops-discord/run.sh";
@@ -1540,7 +1541,7 @@ export default function lazyReportShameShameShame(pi: any) {
     // question; do not arm the full done/proof contract for it (2026-09-08:
     // five rejections, all on non-mutating Q&A turns).
     const guardArmed = (sessionGuardActive || turnGuardActive) && (mutatingTurn || formatRepairTurn);
-    const forceStatus = Boolean(budget.current) || sessionMode === "strict" || mutatingTurn || guardArmed || Boolean(activeContinuationState());
+    const forceStatus = UNIVERSAL_STOP_REVIEW || Boolean(budget.current) || sessionMode === "strict" || mutatingTurn || guardArmed || Boolean(activeContinuationState());
     // Keep ordinary `$shame` questions advisory. Strict format enforcement is
     // only for the guard-owned retry packet; mutating/armed turns are covered
     // by forceStatus above.
