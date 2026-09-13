@@ -4744,6 +4744,12 @@ def main() -> int:
                 suite=args.suite,
                 tests=["test_sqlite_raw_text_surfaces.py"],
             )
+        if args.suite == "battle-b18-complete-sqlite-header-integer-coverage":
+            return probe_pytest_contracts(
+                args.summary,
+                suite=args.suite,
+                tests=["test_sqlite_header_integer_coverage.py"],
+            )
         if args.suite == "battle-functional-judge":
             return probe_battle_functional_judge(args.summary)
         if args.suite == "battle-commentary-causality":

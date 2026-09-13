@@ -23,6 +23,31 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 
+_SQLITE_HEADER_INTEGER_FIELDS = (
+    (16, 2),  # page size; encoded 1 means 65536
+    (18, 1),  # file format write version
+    (19, 1),  # file format read version
+    (20, 1),  # reserved bytes per page
+    (21, 1),  # maximum embedded payload fraction
+    (22, 1),  # minimum embedded payload fraction
+    (23, 1),  # leaf payload fraction
+    (24, 4),  # file change counter
+    (28, 4),  # database size in pages
+    (32, 4),  # first freelist trunk page
+    (36, 4),  # freelist page count
+    (40, 4),  # schema cookie
+    (44, 4),  # schema format number
+    (48, 4),  # default page cache size
+    (52, 4),  # largest root b-tree page number
+    (56, 4),  # database text encoding
+    (60, 4),  # user version
+    (64, 4),  # incremental-vacuum mode
+    (68, 4),  # application ID
+    (92, 4),  # version-valid-for number
+    (96, 4),  # SQLite version number
+)
+
+
 def _digits(s: str) -> str:
     out = []
     for ch in s:
@@ -201,6 +226,11 @@ def _gather(root: Path, profile: dict | None = None):
             continue
         if f.suffix == ".sqlite":
             texts.extend(_read_text_stream(f, raw))
+            if raw.startswith(b"SQLite format 3\x00") and len(raw) >= 100:
+                header = raw[:100]
+                for off, w in _SQLITE_HEADER_INTEGER_FIELDS:
+                    raw_value = int.from_bytes(header[off:off + w], "big")
+                    nums.add(str(65536 if off == 16 and raw_value == 1 else raw_value))
             try:
                 con = sqlite3.connect(f"file:{f}?mode=ro", uri=True)
                 for row in con.execute("SELECT type,name,tbl_name,sql FROM sqlite_master"):
@@ -219,9 +249,6 @@ def _gather(root: Path, profile: dict | None = None):
                         if profile.get("record_local_reconstruction"):
                             texts.extend(_adjacent_recon(row))
                 con.close()
-                header = raw[:100]
-                for off, w in ((16, 2), (28, 4), (40, 4), (48, 4), (52, 4), (56, 4), (60, 4), (64, 4), (68, 4)):
-                    nums.add(str(int.from_bytes(header[off:off + w], "big")))
                 continue
             except sqlite3.Error:
                 pass
