@@ -11,7 +11,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { findJsonControlFrames, selectTerminalStatusFrame } from './terminal-status-frame.mjs';
 
-const CHECKER_VERSION = '2026-09-10.status-json-typed-context.v15';
+const CHECKER_VERSION = '2026-09-13.artifact-delivery-v16';
 const TRUTHY_FLAG_VALUES = new Set(['1', 'true', 'yes']);
 const FALSY_FLAG_VALUES = new Set(['0', 'false', 'no']);
 const flagEnabled = (value) => TRUTHY_FLAG_VALUES.has(String(value || '').trim().toLowerCase());
@@ -738,6 +738,8 @@ const RESPONSE_STOPWORDS = new Set([
   'are', 'was', 'were', 'will', 'what', 'why', 'how', 'should', 'would',
   'could', 'about', 'into', 'onto', 'than', 'then', 'them', 'they', 'there',
 ]);
+const ARTIFACT_DELIVERY_VERBS = /\b(show|paste|display|print|dump|render|read|include|provide|send)\b/;
+const ARTIFACT_DELIVERY_NOUNS = /\b(report|artifact|file|output|content|transcript|stdout|stderr|markdown|md|table|cards?)\b/;
 
 function contentTokens(value) {
   const normalized = String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ');
@@ -759,6 +761,30 @@ function plainAnswerUnderstandsQuestion(status) {
   return overlap >= Math.min(2, questionTokens.size);
 }
 
+function artifactDeliveryRequested() {
+  const lower = USER_TEXT.toLowerCase();
+  return ARTIFACT_DELIVERY_VERBS.test(lower) && ARTIFACT_DELIVERY_NOUNS.test(lower);
+}
+
+function visibleAnswerBeforeStatus() {
+  return text.slice(0, Math.max(0, extractedStatus?.start || 0)).trim();
+}
+
+function explicitlyCannotDeliverArtifact(status) {
+  const lower = answerText(status).toLowerCase();
+  return lower.includes('cannot access') || lower.includes("can't access") || lower.includes('can’t access')
+    || lower.includes('cannot read') || lower.includes("can't read") || lower.includes('can’t read')
+    || lower.includes('upload it') || lower.includes('provide the path');
+}
+
+function visibleArtifactContentDelivered() {
+  const visible = visibleAnswerBeforeStatus();
+  const nonWhitespaceChars = visible.replace(/\s+/g, '').length;
+  const lines = visible.split('\n').map((line) => line.trim()).filter(Boolean);
+  const markdownSignals = lines.filter((line) => line.startsWith('#') || line.includes('|') || line.startsWith('- ') || /^```/.test(line)).length;
+  return nonWhitespaceChars >= 240 && (lines.length >= 6 || markdownSignals >= 2);
+}
+
 function semanticClarityReview(status) {
   const text = answerText(status);
   const failures = [];
@@ -775,6 +801,12 @@ function semanticClarityReview(status) {
   }
   if (!plainAnswerUnderstandsQuestion(status)) {
     failures.push({ code: 'plain_answer_not_responsive', message: 'plain_answer must directly answer the current user request before proof/status metadata' });
+  }
+  if (artifactDeliveryRequested() && !visibleArtifactContentDelivered() && !explicitlyCannotDeliverArtifact(status)) {
+    failures.push({
+      code: 'artifact_delivery_missing_content',
+      message: 'When the user asks to show, paste, display, read, or print a report/artifact, the answer must include material artifact content before the status JSON or plainly say the artifact cannot be accessed.',
+    });
   }
   return {
     schema: CLARITY_SCHEMA,

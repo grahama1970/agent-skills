@@ -112,10 +112,13 @@ block yourself.
 - Pydantic data decides status/proof validity. After that passes, a bounded
   semantic clarity review checks only `plain_answer`/`answer`: it must answer the
   user request in plain English, avoid receipt/hash/handler jargon, and keep the
-  result separate from proof metadata. The clarity review never validates proof,
-  changes status facts, or marks work done. Strip model status prose/raw JSON;
-  render the visible answer before machine proof metadata when a UI surface needs
-  metadata. Trailing prose after valid JSON is ignored.
+  result separate from proof metadata. If the user asks to show, paste, display,
+  read, or print a report/artifact/file, the visible answer before the status JSON
+  must include material artifact content or plainly say the artifact cannot be
+  accessed. The clarity review never validates proof, changes status facts, or
+  marks work done. Strip model status prose/raw JSON; render the visible answer
+  before machine proof metadata when a UI surface needs metadata. Trailing prose
+  after valid JSON is ignored.
 - Immutable-goal turns must lead with a decisive answer headline: `IMMUTABLE_GOAL:
   COMPLETE`, `IMMUTABLE_GOAL: NOT_COMPLETE`, or `IMMUTABLE_GOAL: NEEDS_HUMAN`.
   Do not bury the goal state under proof, commits, or status metadata.

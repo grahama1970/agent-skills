@@ -236,6 +236,15 @@
         "deterministic": true
       },
       "claim_semantics": "human_perceptual"
+    },
+    {
+      "id": "shame.artifact_delivery_request_content_required",
+      "description": "When the user asks to show or paste a report/artifact, the guarded answer must include material artifact content before proof/status metadata or explicitly say the artifact cannot be accessed.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "human_perceptual"
     }
   ],
   "cases": [
@@ -1117,6 +1126,32 @@
           "Traceback"
         ]
       }
+    },
+    {
+      "name": "artifact-delivery-request-content-required",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.artifact_delivery_request_content_required"
+      ],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-artifact-delivery-request.py"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"PASS\"",
+          "\"lazy_report_shame.artifact_delivery_request_eval.v1\"",
+          "show/paste report requests reject proof-status-path-only answers"
+        ],
+        "stdout_excludes": [
+          "Traceback"
+        ]
+      },
+      "proves": "When the user asks to show or paste a report/artifact, the stop-boundary rejects path/proof/status-only answers unless material artifact content is rendered before the status JSON or the agent explicitly says the artifact is inaccessible."
     },
     {
       "name": "first-ask-runtime-route",
