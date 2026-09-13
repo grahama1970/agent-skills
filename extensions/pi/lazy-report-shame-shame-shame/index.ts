@@ -15,6 +15,7 @@ const EXTENSION_DIR = dirname(fileURLToPath(import.meta.url));
 // JSON-first checker (2026-09-01): regex/prose classification is banned.
 // status-json-check.mjs validates a pi.agent_status.v1 block via pydantic.
 const REPORT_CHECK = join(EXTENSION_DIR, "status-json-check.mjs");
+const CROSS_PROVIDER_REVIEW = join(EXTENSION_DIR, "auto-cross-provider-review.mjs");
 const SHAME_AUDIO = process.env.LAZY_REPORT_SHAME_AUDIO || join(EXTENSION_DIR, "shame.wav");
 const TRAINING_JSONL = process.env.LAZY_REPORT_SHAME_TRAINING_JSONL || "/mnt/storage12tb/skills/shame/training/classifier-feedback.jsonl";
 const PENDING_REVIEW_PACKET = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || "/mnt/storage12tb/skills/shame/training/pending-review-packet.json";
@@ -168,7 +169,7 @@ function renderStatusLine(status: any): string {
   // human-readable verdict; answer remains the <=300-char machine headline.
   if (status?.plain_answer) lines.push(`Answer: ${String(status.plain_answer)}`);
   else if (status?.answer) lines.push(`Answer: ${String(status.answer)}`);
-  lines.push("Status Report");
+  lines.push("Machine status (proof metadata)");
   lines.push(`- Goal: ${String(status?.goal || "unknown")}`);
   lines.push(`- State: ${String(status?.state || "unknown")}`);
   if (status?.run_dir) lines.push(`- Run dir: ${String(status.run_dir)}`);
@@ -504,6 +505,48 @@ function checkReport(text: string, forceStatus: boolean, mutatingTurn: boolean, 
     };
   }
   return parseCheckerPayload(String(result.stdout || ""), String(result.stderr || ""), result.status);
+}
+
+function replaceTerminalStatusJson(text: string, status: any): string | null {
+  const fenceStart = text.lastIndexOf("```json");
+  if (fenceStart < 0) return null;
+  const bodyStart = text.indexOf("\n", fenceStart);
+  if (bodyStart < 0) return null;
+  const fenceEnd = text.indexOf("```", bodyStart + 1);
+  if (fenceEnd < 0) return null;
+  const block = text.slice(bodyStart + 1, fenceEnd);
+  if (!block.includes("pi.agent_status.v1")) return null;
+  return `${text.slice(0, fenceStart)}\`\`\`json\n${JSON.stringify(status, null, 2)}\n\`\`\`${text.slice(fenceEnd + 3)}`;
+}
+
+function appendProofToStatusText(text: string, status: any, proofPath: string): string | null {
+  const nextStatus = { ...(status || {}) };
+  const proof = Array.isArray(nextStatus.proof) ? [...nextStatus.proof] : [];
+  if (!proof.includes(proofPath)) proof.push(proofPath);
+  nextStatus.proof = proof;
+  return replaceTerminalStatusJson(text, nextStatus);
+}
+
+function authorProviderForMessage(message: any): string {
+  return String(process.env.LRSSS_AUTHOR_PROVIDER || process.env.PI_PROVIDER || process.env.PI_MODEL || message?.provider || message?.model || "unknown");
+}
+
+function runStopReviewer(text: string, status: any, message: any): { text: string; receiptPath: string; verdict: string } | null {
+  if (!status || !existsSync(CROSS_PROVIDER_REVIEW)) return null;
+  const proc = spawnSync("node", [CROSS_PROVIDER_REVIEW], {
+    input: JSON.stringify({ text, status, author_provider: authorProviderForMessage(message) }),
+    encoding: "utf8",
+    timeout: Number(process.env.LAZY_REPORT_SHAME_REVIEW_TIMEOUT_MS || 125000),
+    env: process.env,
+  });
+  if (proc.error) return null;
+  let payload: any = null;
+  try { payload = JSON.parse(String(proc.stdout || "{}")); } catch { return null; }
+  const receiptPath = String(payload?.receipt_path || "");
+  if (!receiptPath || !existsSync(receiptPath)) return null;
+  const patched = appendProofToStatusText(text, status, receiptPath);
+  if (!patched) return null;
+  return { text: patched, receiptPath, verdict: String(payload?.verdict || "") };
 }
 
 function compileStatusCommand(status: unknown): { command: string | null; reason: string } | null {
@@ -1426,7 +1469,8 @@ export default function lazyReportShameShameShame(pi: any) {
       return;
     }
     if (sessionMode === "off" && !budget.current) return;
-    const text = contentToText(event.message.content);
+    let text = contentToText(event.message.content);
+    let autoReviewContent: unknown = null;
     // A4: a guard token on a turn with zero mutating tool calls is an advisory
     // question; do not arm the full done/proof contract for it (2026-09-08:
     // five rejections, all on non-mutating Q&A turns).
@@ -1437,6 +1481,15 @@ export default function lazyReportShameShameShame(pi: any) {
     // by forceStatus above.
     const strictStatus = formatRepairTurn;
     let check = checkReport(text, forceStatus, mutatingTurn, strictStatus, currentUserText, formatRepairTurn);
+    if (check.decision === "reject" && check.reason_codes.includes("cross_family_review_required")) {
+      const candidateStatus = (check as any)?.features?.status;
+      const reviewed = runStopReviewer(text, candidateStatus, event.message);
+      if (reviewed) {
+        text = reviewed.text;
+        autoReviewContent = [textBlock(text)];
+        check = checkReport(text, forceStatus, mutatingTurn, strictStatus, currentUserText, formatRepairTurn);
+      }
+    }
     const statusState = typeof (check as any)?.features?.state === "string" ? String((check as any).features.state) : undefined;
     const status = (check as any)?.features?.status;
     const continuationCheck = evaluateContinuationGuard(statusState);
@@ -1501,7 +1554,7 @@ export default function lazyReportShameShameShame(pi: any) {
         // through compile-status-command.mjs (pure data -> command; no regex).
         // continuing and needs_* escalation states queue their exact compiled
         // command; done/needs_human/failed compile to null and end the turn.
-        let displayReturn: any = undefined;
+        let displayReturn: any = autoReviewContent ? { message: { ...event.message, content: autoReviewContent } } : undefined;
         if (status && typeof statusState === "string") {
           // Do not reset the one-correction budget for `continuing`: that lets
           // GLM alternate valid continuing JSON with prose-only "Status Report"

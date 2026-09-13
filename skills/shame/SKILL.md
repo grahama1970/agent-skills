@@ -141,10 +141,12 @@ block yourself.
 - After two same-goal/triage failure fingerprints, require a plain human question,
   valid `debugger.proof.v1`, or `lazy_report_shame.debugger_failure_handoff.v1`
   with exact file:line and debugger error. Preserve the failure evidence.
-- Every guarded terminal report (`done`, `failed`, or `needs_human`) must cite a
+- Every guarded stop report must carry a hook-generated
   `lazy_report_shame.cross_provider_review.v1` proof from a different model
-  provider, backed by a successful reviewer subagent metadata file. No
-  same-provider self-review, no synthetic prose review, no exceptions.
+  provider, backed by reviewer metadata and reviewer output written by the Shame
+  stop hook. Same-provider self-review, agent-supplied review prose, and
+  synthetic/local receipt claims are rejected; if the reviewer rejects, the guard
+  restarts with the reviewer critique.
 - A guarded `done` answer that names an `$agentic-evals` gate as READY, green,
   passing, verified, or proof-bearing must cite a fresh local
   `agentic_evals.report.v2` proof with `readiness=READY` and zero failing
