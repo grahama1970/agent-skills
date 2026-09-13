@@ -153,6 +153,16 @@ def candidate_manifest(repo: Path) -> dict[str, Any]:
 def collect_proof_results(repo: Path, output_dir: Path, candidate_digest: str) -> dict[str, Any]:
     gate_specs = [
         ["skills/project-watchdog/tests/test_webgpt_ready_loop.py"],
+        ["skills/project-watchdog/tests/test_single_cron_fleet_adapter.py"],
+    ]
+    required_missing = [
+        "skills/project-watchdog/tests/test_notify_receipt_replay.py::test_restart_recovers_committed_unregistered_receipt",
+        "skills/project-watchdog/tests/test_notify_receipt_replay.py::test_drain_budget_and_acknowledgment_status",
+        "skills/project-watchdog/tests/test_notify_receipt_replay.py::test_idle_tick_retries_human_alert_after_source_commit",
+        "skills/project-watchdog/tests/test_watchdog_notify_bridge.py::test_mixed_ticket_outcomes_keep_identity_status_and_proof",
+        "skills/project-watchdog/tests/test_single_cron_owner.py::test_quiet_owner_finalizes_without_dispatch",
+        "skills/project-watchdog/tests/test_single_cron_owner.py::test_finalization_fault_preserves_receipt_and_records_degradation",
+        "skills/project-watchdog/tests/test_single_cron_installer.py",
     ]
     gates = []
     for index, spec in enumerate(gate_specs, start=1):
@@ -178,7 +188,8 @@ def collect_proof_results(repo: Path, output_dir: Path, candidate_digest: str) -
         "candidate_digest_after": after_digest,
         "candidate_stable": after_digest == candidate_digest,
         "gates": gates,
-        "qualifies_candidate": after_digest == candidate_digest and bool(gates) and all(gate["passed"] for gate in gates),
+        "missing_mandatory_gates": required_missing,
+        "qualifies_candidate": False if required_missing else after_digest == candidate_digest and bool(gates) and all(gate["passed"] for gate in gates),
     }
 
 
