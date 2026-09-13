@@ -192,6 +192,7 @@ def collect_proof_results(repo: Path, output_dir: Path, candidate_digest: str) -
     for index, gate_spec in enumerate(REQUIRED_PROOF_GATES, start=1):
         junit_path = output_dir / f"candidate-bound-gate-{index}.xml"
         command = ["uv", "run", "--project", "skills/project-watchdog", "pytest", "-q", f"--junitxml={junit_path}", *list(gate_spec["pytest"])]
+        display_command = ["uv", "run", "--project", "skills/project-watchdog", "pytest", "-q", f"--junitxml=artifact:candidate-bound-gate-{index}.xml", *list(gate_spec["pytest"])]
         result = run_cmd(command, cwd=repo, timeout=240, output_limit=None)
         log_text = result["stdout"] + result["stderr"]
         log_path = output_dir / f"candidate-bound-gate-{index}.log"
@@ -201,15 +202,15 @@ def collect_proof_results(repo: Path, output_dir: Path, candidate_digest: str) -
         gates.append({
             "name": gate_spec["name"],
             "candidate_digest": candidate_digest,
-            "command": command,
+            "command": display_command,
             "returncode": result["returncode"],
             "duration_seconds": result["duration_seconds"],
             "log_sha256": sha256_file(log_path),
-            "junit_path": str(junit_path),
+            "junit_path": f"artifact:candidate-bound-gate-{index}.xml",
             "junit_sha256": sha256_file(junit_path) if junit_path.is_file() else None,
             "junit": junit,
-            "stdout_tail": result["stdout"][-4000:],
-            "stderr_tail": result["stderr"][-4000:],
+            "stdout_tail": browser_safe(result["stdout"][-4000:]),
+            "stderr_tail": browser_safe(result["stderr"][-4000:]),
             "passed": passed,
         })
     after_digest = candidate_manifest(repo)["candidate_digest"]
@@ -253,7 +254,7 @@ def build_packet(repo: Path, *, prior_response: Path | None, output: Path) -> tu
         "",
         "## Relevant diff stat",
         "```text",
-        stat["stdout"] or "no working-tree diff against origin main for project-watchdog",
+        browser_safe(stat["stdout"]) or "no working-tree diff against origin main for project-watchdog",
         "```",
         "",
         "## Relevant working-tree diff bytes",

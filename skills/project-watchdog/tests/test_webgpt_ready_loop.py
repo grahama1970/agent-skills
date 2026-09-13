@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -115,6 +116,8 @@ def test_ask_requires_verified_current_run_not_just_response_path(tmp_path: Path
     ask_json.write_text(json.dumps({"execution": {"node_provider_receipts": [{"node_id": "handler-webgpt", "ok": True, "status": "PASS", "path": str(missing), "response_path": str(response)}]}}), encoding="utf-8")
     assert loop.latest_webgpt_response(ask_json, root) is None
     missing.write_text(json.dumps({"ok": True, "status": "PASS", "node_id": "handler-webgpt", "response_path": str(response)}), encoding="utf-8")
+    newer = ask_json.stat().st_mtime + 2
+    os.utime(response, (newer, newer))
     assert loop.latest_webgpt_response(ask_json, root) == response
 
 
@@ -265,6 +268,36 @@ def test_candidate_change_during_review_invalidates_approval(tmp_path: Path, mon
     assert rc == 1
     assert out["ready_to_deploy"] is False
     assert out["steps"][-1]["candidate_stable_after_review"] is False
+
+
+def test_packet_preflight_safe_redacts_gate_local_paths(tmp_path: Path, monkeypatch) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    candidate = "sha256:candidate"
+    monkeypatch.setattr(loop, "candidate_manifest", lambda repo: {"candidate_digest": candidate, "files": []})
+    monkeypatch.setattr(loop, "run_cmd", lambda *a, **k: {"stdout": "/tmp/private/candidate-bound-gate-1.xml\n", "stderr": "warning /home/graham/secret\n", "returncode": 0})
+    monkeypatch.setattr(loop, "collect_proof_results", lambda repo, output, digest: {
+        "candidate_digest_before": digest,
+        "candidate_digest_after": digest,
+        "candidate_stable": True,
+        "declared_required_gates": ["safe gate"],
+        "missing_mandatory_gates": [],
+        "failed_mandatory_gates": [],
+        "qualifies_candidate": True,
+        "gates": [{
+            "name": "safe gate",
+            "command": ["uv", "run", "--junitxml=artifact:candidate-bound-gate-1.xml"],
+            "junit_path": "artifact:candidate-bound-gate-1.xml",
+            "stdout_tail": loop.browser_safe("/tmp/private/out"),
+            "stderr_tail": loop.browser_safe("/home/graham/secret"),
+            "passed": True,
+        }],
+    })
+    packet, _, _ = loop.build_packet(repo, prior_response=None, output=tmp_path / "packet.md")
+    text = packet.read_text()
+    assert "/tmp/private" not in text
+    assert "/home/graham" not in text
+    assert "artifact:candidate-bound-gate-1.xml" in text
 
 
 def test_packet_roundtrip_preserves_schema_paths_and_digest(tmp_path: Path, monkeypatch) -> None:
