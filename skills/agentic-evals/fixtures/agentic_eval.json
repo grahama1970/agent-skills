@@ -40,7 +40,7 @@
     },
     {
       "id": "ae.evidence.real_e2e_contract",
-      "description": "a live_e2e case with no independent readback is downgraded and cannot satisfy a live slot (#1446)",
+      "description": "pseudo-live cases are downgraded and cannot satisfy a live slot, including $ask browser compile/preflight-only workflows (#1446)",
       "criticality": "critical",
       "evidence_required": {
         "fault_injected_deterministic": true
@@ -320,6 +320,30 @@
         "exit_code": 0,
         "stdout_contains": [
           "REAL_E2E_CONTRACT_OK"
+        ]
+      }
+    },
+    {
+      "name": "ask-browser-compile-only-cannot-qualify-as-live-e2e",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "ae.evidence.real_e2e_contract"
+      ],
+      "seams": [
+        "runner.evidence"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; D=$(mktemp -d); python3 - \"$D/ask_compile_only.json\" <<'PYMANIFEST'\nimport json, sys\nmanifest = {\n  \"version\": 2,\n  \"skill\": \"s\",\n  \"trials\": 1,\n  \"eval_kind\": \"runner_selftest\",\n  \"capability_claims\": [{\n    \"id\": \"c\",\n    \"description\": \"ask browser compile is not live\",\n    \"criticality\": \"critical\",\n    \"evidence_required\": {\"live_e2e\": True},\n    \"claim_semantics\": \"protocol\",\n  }],\n  \"cases\": [{\n    \"name\": \"bad\",\n    \"type\": \"positive\",\n    \"real_world\": True,\n    \"evidence_class\": \"live_e2e\",\n    \"supports_claims\": [\"c\"],\n    \"command\": [\"bash\", \"-c\", \"printf '{\\\\\\\"ok\\\\\\\":true}' > /tmp/ae-ask-compile-artifact.json; : skills/ask/run.sh tau-dag --handler webgpt --handler webkimi --handler webgemini --json\"],\n    \"expected\": {\"exit_code\": 0, \"artifacts\": [{\"path\": \"/tmp/ae-ask-compile-artifact.json\", \"json_pointer\": \"/ok\", \"equals\": True}]},\n  }],\n}\nopen(sys.argv[1], \"w\", encoding=\"utf-8\").write(json.dumps(manifest))\nPYMANIFEST\n$R run \"$D/ask_compile_only.json\" --report-only 2>/dev/null | python3 -c \"import json,sys;d=json.load(sys.stdin);case=d['cases'][0];claim=d['capability_readiness']['claims'][0];reasons=case['evidence_disqualifiers'];assert case['live_qualified'] is False, case;assert case['effective_evidence_class']=='fault_injected_deterministic', case;assert any('lacks --execute' in r for r in reasons), reasons;assert any('browser/provider run artifacts' in r for r in reasons), reasons;assert claim['verdict']=='NOT_ESTABLISHED' and claim['missing_evidence']==['live_e2e'], claim;print('ASK_BROWSER_COMPILE_ONLY_NOT_LIVE_OK')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ASK_BROWSER_COMPILE_ONLY_NOT_LIVE_OK"
         ]
       }
     },

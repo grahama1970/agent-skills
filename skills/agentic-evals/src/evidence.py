@@ -53,6 +53,17 @@ DETERMINISTIC_CLASSES = frozenset(
 #: constant. Reused from the anti-slop heuristic, but here they are a *necessary*
 #: not a *sufficient* condition for live classification.
 _ENTRYPOINT_MARKERS = ("run.sh", ".py", ".sh", "curl", "http://", "https://", "pytest", "nightly", "e2e")
+_BROWSER_HANDLERS = ("webgpt", "webclaude", "webkimi", "webgemini", "webgrok", "webperplexity")
+_ASK_BROWSER_ARTIFACT_MARKERS = (
+    "browser-tab-lifecycle",
+    "compete-scorecard",
+    "dag-progress",
+    "execution-status",
+    "node-receipt",
+    "response.md",
+    "response.meta",
+    "roundtable-summary",
+)
 
 
 def command_text(command: list[str]) -> str:
@@ -63,19 +74,18 @@ def command_text(command: list[str]) -> str:
 
 
 def declared_class(case: dict[str, Any]) -> str:
-    """The case's declared evidence class, defaulting to deterministic.
+    """The case's declared evidence class, defaulting to live E2E.
 
-    A case that says nothing is deterministic by default: the safe assumption is
-    that an unlabelled command proves a mechanism, never a live capability.
+    Agentic evals should fail closed toward real-world proof. A mechanism-only
+    case must say so explicitly with a deterministic evidence_class; silence is
+    treated as a live capability claim and then qualified/downgraded by the
+    real-E2E contract below if it uses stubs or lacks independent readback.
     """
     value = case.get("evidence_class")
     if value in EVIDENCE_CLASSES:
         return value
     if value is None:
-        # Back-compat: a legacy `real_world: true` case with no explicit class is
-        # treated as a live claim so it is still held to the real-E2E contract
-        # below rather than silently downgraded.
-        return LIVE_E2E if case.get("real_world") else DETERMINISTIC
+        return LIVE_E2E
     return DETERMINISTIC
 
 
@@ -118,6 +128,39 @@ def reaches_entrypoint(case: dict[str, Any]) -> bool:
     return any(marker in text for marker in _ENTRYPOINT_MARKERS)
 
 
+def _declares_browser_handler(text: str) -> bool:
+    return any(f"--handler {handler}" in text or f"--handler={handler}" in text for handler in _BROWSER_HANDLERS)
+
+
+def _is_ask_browser_workflow(case: dict[str, Any]) -> bool:
+    text = command_text(case.get("command", []))
+    invokes_ask = "skills/ask/run.sh" in text or "/ask/run.sh" in text or " ask/run.sh" in text
+    invokes_workflow = " tau-dag" in text or " compete" in text
+    return invokes_ask and invokes_workflow and _declares_browser_handler(text)
+
+
+def _reads_browser_run_artifact(case: dict[str, Any]) -> bool:
+    artifacts = (case.get("expected") or {}).get("artifacts") or []
+    for spec in artifacts:
+        path = str(spec.get("path", ""))
+        if any(marker in path for marker in _ASK_BROWSER_ARTIFACT_MARKERS):
+            return True
+    return False
+
+
+def ask_browser_workflow_reasons(case: dict[str, Any]) -> list[str]:
+    """Ask browser roundtable/compete is live only when it submits and reads provider artifacts."""
+    if not _is_ask_browser_workflow(case):
+        return []
+    text = command_text(case.get("command", []))
+    reasons: list[str] = []
+    if "--compile-only" in text or "--execute" not in text:
+        reasons.append("ask browser workflow lacks --execute; compile/preflight is not live_e2e")
+    if not _reads_browser_run_artifact(case):
+        reasons.append("ask browser live_e2e must read browser/provider run artifacts")
+    return reasons
+
+
 def qualify(case: dict[str, Any]) -> dict[str, Any]:
     """Decide the *effective* evidence class for a case and record why.
 
@@ -144,6 +187,7 @@ def qualify(case: dict[str, Any]) -> dict[str, Any]:
         reasons.append("command does not reach a substantive production entrypoint")
     if not has_independent_readback(case):
         reasons.append("no independent readback oracle (exit code / self-reported success only)")
+    reasons.extend(ask_browser_workflow_reasons(case))
 
     if not reasons:
         return {

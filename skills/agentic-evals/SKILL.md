@@ -153,10 +153,16 @@ A case that declares a live class (`live_e2e`/`adversarial_live_e2e`) is
 **qualified** structurally and **downgraded** (never silently accepted) if it:
 
 - feeds itself `fixtures/`/stub/`mocked` inputs as the boundary authority;
-- does not reach a substantive production entrypoint; or
+- does not reach a substantive production entrypoint;
 - has no independent readback oracle (`expected.artifacts`, `readback: true`,
   or `stdout_excludes`) — an exit code plus the command's own success prose is
-  not proof.
+  not proof; or
+- claims live evidence for `$ask` browser `tau-dag`/`compete` handlers without
+  `--execute` and readback from browser/provider run artifacts such as
+  `node-receipt.json`, `response.md`, `response.meta.json`,
+  `browser-tab-lifecycle.json`, `execution-status.json`,
+  `roundtable-summary.md`, or `compete-scorecard.json`. Compile/preflight-only
+  `$ask` cases are deterministic mechanism evidence, never `live_e2e`.
 
 A downgraded case becomes `fault_injected_deterministic` (fault on a real path)
 or `deterministic`, and the report records `evidence_disqualifiers`. A required
