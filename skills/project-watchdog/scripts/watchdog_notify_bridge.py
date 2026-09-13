@@ -460,6 +460,81 @@ def summarize(receipt_dir: Path) -> dict | None:
     }
 
 
+def summarize_events(receipt_dir: Path) -> list[dict]:
+    """Return one delivery event per handled ticket, plus aggregate lifecycle fallback."""
+    base = summarize(receipt_dir)
+    if base is None:
+        return []
+    if base.get("kind") != "tick":
+        return [base]
+    try:
+        r = json.loads((receipt_dir / "receipt.json").read_text())
+    except (OSError, json.JSONDecodeError):
+        return [base]
+    handled_items = [h for h in r.get("handled_issues") or [] if isinstance(h, dict)]
+    ticket_items = [h for h in handled_items if h.get("issue_number") or h.get("repo")]
+    if len(ticket_items) <= 1:
+        return [base]
+    import hashlib
+
+    out = []
+    op = _active_operation(r)
+    run_id = base["run_id"]
+    node = base["node"]
+    source_time = base["source_time"]
+    for handled in ticket_items:
+        triage = handled.get("triage") or r.get("triage") or {}
+        repo = _identity_value(handled.get("repo") or op.get("repo"), "repo", "receipt_missing_repo")
+        issue = _identity_value(handled.get("issue_number") or op.get("issue_number"), "issue", "receipt_missing_issue_number")
+        attempt = _identity_value(handled.get("attempt") or op.get("attempt"), "attempt", "not_recorded")
+        status = _identity_value(handled.get("status") or r.get("status"), "status", "receipt_missing_status")
+        event_key = {
+            "run_id": run_id,
+            "repo": repo,
+            "issue": issue,
+            "node": node,
+            "attempt": attempt,
+            "status": status,
+            "stop_reason": handled.get("stop_reason") or r.get("stop_reason"),
+            "receipt_dir": receipt_dir.name,
+        }
+        event_id = hashlib.sha256(json.dumps(event_key, sort_keys=True).encode()).hexdigest()[:24]
+        ev = dict(base)
+        ev.update({
+            "event_id": event_id,
+            "repo": repo,
+            "issue": issue,
+            "attempt": attempt,
+            "status": status,
+            "stop_reason": handled.get("stop_reason") or r.get("stop_reason"),
+            "source_time": source_time,
+            "phase": handled.get("action") or op.get("phase") or r.get("stop_reason") or "receipt",
+            "action": handled.get("action") or op.get("action"),
+            "summary": (handled.get("summary") or r.get("summary") or r.get("reason") or r.get("stop_reason") or "")[:300],
+            "requires_human_input": True if handled.get("requires_human_input") is True else handled.get("requires_human_input", r.get("requires_human_input")),
+            "triage_code": triage.get("code"),
+            "triage_cause": (triage.get("cause") or "")[:200],
+            "seats": _seats(handled),
+            "exit_code": handled.get("exit_code") or r.get("exit_code") or op.get("exit_code"),
+            "retry_budget": handled.get("retry_budget") or r.get("retry_budget"),
+            "not_before": handled.get("not_before") or r.get("not_before"),
+            "resolution_ref": handled.get("resolution_ref") or r.get("resolution_ref"),
+            "next_steps": _agent_next_steps(r, handled),
+            "ticket": _issue_card(str(repo), str(issue)),
+            "agents": _role_summary(handled),
+            "identity": {
+                "event_id": event_id,
+                "run_id": run_id,
+                "repo": repo,
+                "issue": issue,
+                "node": _identity_value(node if node != "-" else None, "node", "not_recorded"),
+                "attempt": attempt,
+            },
+        })
+        out.append(ev)
+    return out
+
+
 def _fmt(ev: dict) -> str:
     ticket = ev.get("ticket") or {}
     lines = [
@@ -1006,17 +1081,18 @@ def deliver_due(receipt_dir: Path | None = None) -> dict[str, Any]:
         if receipt_dir is not None:
             dirs.append(receipt_dir)
         for d in sorted({p for p in dirs if p.exists() and p.is_dir()}, key=lambda p: p.stat().st_mtime):
-            ev = summarize(d)
-            if ev is None:
+            events = summarize_events(d)
+            if not events:
                 continue
-            if ev.get("kind") == "pending_receipt":
+            if events[0].get("kind") == "pending_receipt":
                 pending_dirs.add(d.name)
-                results.append({"status": "PENDING", "dir": d.name, "reason": ev.get("reason")})
+                results.append({"status": "PENDING", "dir": d.name, "reason": events[0].get("reason")})
                 continue
             pending_dirs.discard(d.name)
-            if ev.get("kind") != "tick":
-                continue
-            results.append(deliver(ev, checkpoint, fresh=(time.time() - d.stat().st_mtime) < 900))
+            for ev in events:
+                if ev.get("kind") != "tick":
+                    continue
+                results.append(deliver(ev, checkpoint, fresh=(time.time() - d.stat().st_mtime) < 900))
             checkpoint.last_mtime = max(checkpoint.last_mtime, d.stat().st_mtime)
         if not results:
             stream = STATE_ROOT / "events.jsonl"
@@ -1062,17 +1138,18 @@ def main() -> None:
         for ev in list(checkpoint.pending.values()):
             results.append(deliver(ev, checkpoint, fresh=True))
         for d in dirs:
-            ev = summarize(d)
-            if ev is None:
+            events = summarize_events(d)
+            if not events:
                 continue
-            if ev.get("kind") == "pending_receipt":
+            if events[0].get("kind") == "pending_receipt":
                 pending_dirs.add(d.name)
                 continue
             pending_dirs.discard(d.name)
-            if ev.get("kind") != "tick":
-                continue
             fresh = (time.time() - d.stat().st_mtime) < 900
-            results.append(deliver(ev, checkpoint, fresh=fresh))
+            for ev in events:
+                if ev.get("kind") != "tick":
+                    continue
+                results.append(deliver(ev, checkpoint, fresh=fresh))
             max_mtime = max(max_mtime, d.stat().st_mtime)
         checkpoint.pending_dirs = sorted(pending_dirs)
         if not replay_last:

@@ -353,3 +353,29 @@ def test_old_statusless_dead_monitor_does_not_latch_heartbeat(tmp_path, monkeypa
     os_utime(mon, (time.time(), time.time()))
     got = b._heartbeat_payload()
     assert got["state"] in ("NO_ACTIVE_PROCESS", "observer_fresh_no_active_run")
+
+
+def test_mixed_ticket_outcomes_keep_identity_status_and_proof(tmp_path, monkeypatch):
+    bridge = load_bridge()
+    monkeypatch.setattr(bridge, "RECEIPTS", tmp_path)
+    receipt_dir = tmp_path / "project-watchdog-r7"
+    receipt_dir.mkdir()
+    (receipt_dir / "receipt.json").write_text(json.dumps({
+        "run_id": "project-watchdog-r7",
+        "status": "NEEDS_ATTENTION",
+        "handled_issues": [
+            {"repo": "grahama1970/agent-skills", "issue_number": 1, "action": "ticket_repair", "status": "COMPLETED", "ok": True, "resolution_ref": "proof-1"},
+            {"repo": "grahama1970/agent-skills", "issue_number": 2, "action": "ticket_repair", "status": "NEEDS_ATTENTION", "ok": False, "requires_human_input": False, "summary": "agent retry", "resolution_ref": "proof-2"},
+            {"repo": "grahama1970/agent-skills", "issue_number": 3, "action": "ticket_repair", "status": "COMPLETED", "ok": True, "resolution_ref": "proof-3"},
+        ],
+    }))
+
+    events = bridge.summarize_events(receipt_dir)
+
+    assert [(ev["issue"], ev["status"], ev["resolution_ref"]) for ev in events] == [
+        ("1", "COMPLETED", "proof-1"),
+        ("2", "NEEDS_ATTENTION", "proof-2"),
+        ("3", "COMPLETED", "proof-3"),
+    ]
+    assert events[1]["requires_human_input"] is False
+    assert len({ev["event_id"] for ev in events}) == 3
