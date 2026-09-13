@@ -119,6 +119,63 @@ def validate_known_receipt(path: Path, text: str) -> dict[str, Any] | None:
             )
     elif schema == "lazy_report_shame.collab_acceptance.v1":
         import_collab_acceptance().CollabAcceptance.model_validate(data)
+    elif schema == "lazy_report_shame.cross_provider_review.v1":
+        if data.get("verdict") not in {"PASS", "REJECT"}:
+            raise PydanticCustomError(
+                "cross_provider_review_bad_verdict",
+                "cross-provider review proof must record PASS or REJECT",
+                {"proof": str(path)},
+            )
+        reviewer = str(data.get("reviewer_provider") or "").strip().lower()
+        author = str(data.get("author_provider") or "").strip().lower()
+        if not reviewer or not author or reviewer == author:
+            raise PydanticCustomError(
+                "cross_provider_review_not_cross_provider",
+                "cross-provider review proof must bind different reviewer_provider and author_provider",
+                {"proof": str(path)},
+            )
+        if not data.get("reviewed_candidate_hash") or not data.get("reviewer_model"):
+            raise PydanticCustomError(
+                "cross_provider_review_incomplete",
+                "cross-provider review proof must bind reviewed_candidate_hash and reviewer_model",
+                {"proof": str(path)},
+            )
+        metadata_path = data.get("review_metadata_path")
+        if not metadata_path:
+            raise PydanticCustomError(
+                "cross_provider_review_metadata_missing",
+                "cross-provider review proof must cite the reviewer subagent metadata path",
+                {"proof": str(path)},
+            )
+        metadata_file = Path(str(metadata_path))
+        if not metadata_file.is_absolute():
+            metadata_file = path.parent / metadata_file
+        if not metadata_file.is_file():
+            raise PydanticCustomError(
+                "cross_provider_review_metadata_not_found",
+                "cross-provider review metadata path does not exist",
+                {"proof": str(path), "review_metadata_path": str(metadata_file)},
+            )
+        try:
+            metadata = json.loads(metadata_file.read_text(errors="ignore"))
+        except Exception as exc:
+            raise PydanticCustomError(
+                "cross_provider_review_metadata_malformed",
+                "cross-provider review metadata is not readable JSON",
+                {"proof": str(path), "error": str(exc)},
+            )
+        if str(metadata.get("model") or "") != str(data.get("reviewer_model") or ""):
+            raise PydanticCustomError(
+                "cross_provider_review_model_mismatch",
+                "cross-provider review metadata model must match reviewer_model",
+                {"proof": str(path)},
+            )
+        if metadata.get("exitCode") != 0:
+            raise PydanticCustomError(
+                "cross_provider_review_failed_run",
+                "cross-provider review subagent did not exit cleanly",
+                {"proof": str(path), "exitCode": metadata.get("exitCode")},
+            )
     elif schema == "pi.receipt_envelope.v1":
         import_receipt_envelope().ReceiptEnvelope.model_validate(data)
     elif schema == "debugger.proof.v1":
@@ -166,6 +223,8 @@ def receipt_supports_verified(data: dict[str, Any], item: "VerifiedItem") -> boo
         return item.command in {"status-json-check", "lazy_report_shame.report_check.v2"} and item.result == "pass"
     if schema == "lazy_report_shame.collab_acceptance.v1":
         return data.get("verified_command") == item.command and data.get("verified_result") == item.result
+    if schema == "lazy_report_shame.cross_provider_review.v1":
+        return item.command in {"cross-provider shame review", "lazy_report_shame.cross_provider_review.v1"} and item.result == data.get("verdict")
     if schema == "ticket.closure_receipt.v1":
         command_text = f"{data.get('action')} {data.get('repo')}#{data.get('issue')} {data.get('proof_path', '')}"
         return item.command in command_text and item.result == data.get("state")

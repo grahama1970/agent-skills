@@ -840,7 +840,88 @@ function operationalAnchorCount(status) {
   return count;
 }
 
+
+function readCrossProviderReviewProof(status) {
+  if (!Array.isArray(status?.proof)) return null;
+  for (const proof of status.proof) {
+    const path = localStatusProofPath(proof);
+    if (!path || !existsSync(path)) continue;
+    const data = readProofJson(path);
+    if (!data || data.schema !== 'lazy_report_shame.cross_provider_review.v1') continue;
+    return { path, data };
+  }
+  return null;
+}
+
+function activeProviderFamily() {
+  const raw = String(process.env.LRSSS_AUTHOR_PROVIDER || process.env.PI_PROVIDER || process.env.PI_MODEL || '').toLowerCase();
+  if (raw.includes('openai') || raw.includes('codex') || raw.includes('gpt')) return 'openai';
+  if (raw.includes('anthropic') || raw.includes('claude') || raw.includes('opus') || raw.includes('sonnet')) return 'anthropic';
+  if (raw.includes('zai') || raw.includes('glm')) return 'zai';
+  if (raw.includes('google') || raw.includes('gemini')) return 'google';
+  return raw || 'unknown';
+}
+
+
+function statusReviewHash(status) {
+  return sha256(JSON.stringify({
+    goal: status?.goal || null,
+    answer: status?.answer || null,
+    plain_answer: status?.plain_answer || null,
+    state: status?.state || null,
+    changed: Array.isArray(status?.changed) ? status.changed : [],
+  }));
+}
+
+function crossProviderReviewReason(status) {
+  const proof = readCrossProviderReviewProof(status);
+  if (!proof) return 'missing lazy_report_shame.cross_provider_review.v1 proof';
+  const data = proof.data || {};
+  const author = String(data.author_provider || '').toLowerCase();
+  const reviewer = String(data.reviewer_provider || '').toLowerCase();
+  const active = activeProviderFamily();
+  if (data.verdict !== 'PASS') return `cross-provider review verdict is ${data.verdict || 'missing'}`;
+  if (!author || !reviewer || author === reviewer) return 'cross-provider review proof is not cross-provider';
+  if (active !== 'unknown' && author !== active) return `cross-provider review author_provider ${author} does not match active provider ${active}`;
+  if (!data.reviewed_candidate_hash || !data.reviewer_model) return 'cross-provider review proof is incomplete';
+  if (String(data.reviewed_candidate_hash || '') !== statusReviewHash(status)) return 'cross-provider review proof does not match this terminal status';
+  const metaPath = String(data.review_metadata_path || '');
+  if (!metaPath) return 'cross-provider review proof lacks review_metadata_path';
+  if (!existsSync(metaPath)) return 'cross-provider review metadata path does not exist';
+  const meta = readProofJson(metaPath);
+  if (!meta) return 'cross-provider review metadata is not readable JSON';
+  if (String(meta.model || '') !== String(data.reviewer_model || '')) return 'cross-provider review metadata model does not match reviewer_model';
+  if (meta.exitCode !== 0) return 'cross-provider review subagent did not exit cleanly';
+  return null;
+}
+
 const guardedTerminalReport = (MUTATING_TURN || FORCE_STATUS || STRICT_STATUS) && terminalStates.has(String(verdict.state || ''));
+if (guardedTerminalReport) {
+  const reason = crossProviderReviewReason(parsedStatus);
+  if (reason) {
+    emit('reject', ['cross_provider_review_required'], {
+      status: parsedStatus,
+      diagnostics_sha256: sha256(`cross_provider_review_required:${reason}`),
+      validation_result: {
+        schema: 'pi.agent_status.validation_result.v1',
+        valid: false,
+        errors: [{
+          type: 'cross_provider_review_required',
+          loc: ['proof'],
+          msg: 'Every guarded Shame terminal report requires a PASS review from a different model provider. No exceptions.',
+          ctx: { reason, required_schema: 'lazy_report_shame.cross_provider_review.v1' },
+        }],
+        steering: [{
+          code: 'cross_provider_review_required',
+          loc: ['proof'],
+          action: 'obtain_cross_provider_review',
+          required_schema: 'lazy_report_shame.cross_provider_review.v1',
+        }],
+      },
+    });
+  }
+}
+
 if (guardedTerminalReport && String(parsedStatus.state || '') === 'done') {
   const agenticEvalContext = [USER_TEXT, text, parsedStatus.goal, parsedStatus.answer, parsedStatus.plain_answer, JSON.stringify(parsedStatus.changed || [])].join('\n');
   if (mentionsAgenticEvalGate(agenticEvalContext) && !hasReadyAgenticEvalProof(parsedStatus)) {
