@@ -30,6 +30,7 @@ import re
 import subprocess
 import sys
 import time
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
 
@@ -37,13 +38,40 @@ READY_PHRASE = "ready-to-deploy"
 READY_LINE = "VERDICT: ready-to-deploy"
 NO_BLOCKERS_LINE = "BLOCKING_FINDINGS: none"
 REQUIRED_PROOF_GATES = [
-    {"name": "ready-loop contract", "pytest": ["skills/project-watchdog/tests/test_webgpt_ready_loop.py"]},
+    {"name": "ready-loop exact digest verdict", "pytest": ["skills/project-watchdog/tests/test_webgpt_ready_loop.py::test_classify_requires_evidence_bound_ready_verdict"]},
+    {"name": "missing required case blocks qualification", "pytest": ["skills/project-watchdog/tests/test_webgpt_ready_loop.py::test_declared_required_gate_failure_blocks_positive_reviewer"]},
+    {"name": "skipped required case blocks qualification", "pytest": ["skills/project-watchdog/tests/test_webgpt_ready_loop.py::test_skipped_required_case_blocks_qualification"]},
+    {"name": "old provider receipt rejected", "pytest": ["skills/project-watchdog/tests/test_webgpt_ready_loop.py::test_old_valid_provider_receipt_cannot_authorize_current_review"]},
+    {"name": "post-review candidate stability", "pytest": ["skills/project-watchdog/tests/test_webgpt_ready_loop.py::test_candidate_change_during_review_invalidates_approval"]},
+    {"name": "packet canonical roundtrip", "pytest": ["skills/project-watchdog/tests/test_webgpt_ready_loop.py::test_packet_roundtrip_preserves_schema_paths_and_digest"]},
     {"name": "serial fleet admission", "pytest": ["skills/project-watchdog/tests/test_single_cron_fleet_adapter.py"]},
+    {"name": "started creator charges slot", "pytest": ["skills/project-watchdog/tests/test_single_cron_fleet_adapter.py::test_started_creator_with_failed_review_is_charged_as_started"]},
+    {"name": "retained operation not new admission", "pytest": ["skills/project-watchdog/tests/test_single_cron_fleet_adapter.py::test_retained_operation_is_not_a_new_creator_admission"]},
     {"name": "per-ticket notification scoping", "pytest": ["skills/project-watchdog/tests/test_watchdog_notify_bridge.py"]},
-    {"name": "notification receipt replay", "pytest": ["skills/project-watchdog/tests/test_notify_receipt_replay.py"]},
-    {"name": "quiet-hours finalization", "pytest": ["skills/project-watchdog/tests/test_single_cron_owner.py"]},
+    {"name": "terminal transition beats replayed progress", "pytest": ["skills/project-watchdog/tests/test_notify_receipt_replay.py::test_terminal_transition_beats_replayed_progress"]},
+    {"name": "restart recovers committed unregistered receipt", "pytest": ["skills/project-watchdog/tests/test_notify_receipt_replay.py::test_restart_recovers_committed_unregistered_receipt"]},
+    {"name": "bounded delivery drain", "pytest": ["skills/project-watchdog/tests/test_notify_receipt_replay.py::test_drain_budget_and_acknowledgment_status"]},
+    {"name": "human alert retry source-first", "pytest": ["skills/project-watchdog/tests/test_notify_receipt_replay.py::test_idle_tick_retries_human_alert_after_source_commit"]},
+    {"name": "old-cursor receipt recovery", "pytest": ["skills/project-watchdog/tests/test_notify_receipt_replay.py::test_restart_recovers_unregistered_receipt_at_or_before_cursor"]},
+    {"name": "quiet owner finalizes without dispatch", "pytest": ["skills/project-watchdog/tests/test_single_cron_owner.py::test_quiet_owner_finalizes_without_dispatch"]},
+    {"name": "finalization preserves receipt on fault", "pytest": ["skills/project-watchdog/tests/test_single_cron_owner.py::test_finalization_fault_preserves_receipt_and_records_degradation"]},
     {"name": "cron installer singleton", "pytest": ["skills/project-watchdog/tests/test_single_cron_installer.py"]},
+    {"name": "historical UI cron removal", "pytest": ["skills/project-watchdog/tests/test_single_cron_installer.py::test_installer_removes_original_watchdog_ui_snapshot_job"]},
 ]
+
+
+def _junit_summary(path: Path) -> dict[str, int]:
+    try:
+        root = ET.parse(path).getroot()
+    except (OSError, ET.ParseError):
+        return {"tests": 0, "failures": 0, "errors": 1, "skipped": 0}
+    suites = [root] if root.tag == "testsuite" else list(root.findall("testsuite"))
+    return {
+        "tests": sum(int(suite.attrib.get("tests", "0")) for suite in suites),
+        "failures": sum(int(suite.attrib.get("failures", "0")) for suite in suites),
+        "errors": sum(int(suite.attrib.get("errors", "0")) for suite in suites),
+        "skipped": sum(int(suite.attrib.get("skipped", "0")) for suite in suites),
+    }
 
 
 def sha256_text(text: str) -> str:
@@ -162,11 +190,14 @@ def collect_proof_results(repo: Path, output_dir: Path, candidate_digest: str) -
     gates = []
     registry_names = {str(gate.get("name")) for gate in REQUIRED_PROOF_GATES if gate.get("name")}
     for index, gate_spec in enumerate(REQUIRED_PROOF_GATES, start=1):
-        command = ["uv", "run", "--project", "skills/project-watchdog", "pytest", "-q", *list(gate_spec["pytest"])]
+        junit_path = output_dir / f"candidate-bound-gate-{index}.xml"
+        command = ["uv", "run", "--project", "skills/project-watchdog", "pytest", "-q", f"--junitxml={junit_path}", *list(gate_spec["pytest"])]
         result = run_cmd(command, cwd=repo, timeout=240, output_limit=None)
         log_text = result["stdout"] + result["stderr"]
         log_path = output_dir / f"candidate-bound-gate-{index}.log"
         log_path.write_text(log_text, encoding="utf-8")
+        junit = _junit_summary(junit_path)
+        passed = result["returncode"] == 0 and junit["tests"] > 0 and junit["failures"] == 0 and junit["errors"] == 0 and junit["skipped"] == 0
         gates.append({
             "name": gate_spec["name"],
             "candidate_digest": candidate_digest,
@@ -174,9 +205,12 @@ def collect_proof_results(repo: Path, output_dir: Path, candidate_digest: str) -
             "returncode": result["returncode"],
             "duration_seconds": result["duration_seconds"],
             "log_sha256": sha256_file(log_path),
+            "junit_path": str(junit_path),
+            "junit_sha256": sha256_file(junit_path) if junit_path.is_file() else None,
+            "junit": junit,
             "stdout_tail": result["stdout"][-4000:],
             "stderr_tail": result["stderr"][-4000:],
-            "passed": result["returncode"] == 0 and " passed" in log_text,
+            "passed": passed,
         })
     after_digest = candidate_manifest(repo)["candidate_digest"]
     missing = sorted(registry_names - {str(gate.get("name")) for gate in gates})
@@ -196,7 +230,7 @@ def collect_proof_results(repo: Path, output_dir: Path, candidate_digest: str) -
 def build_packet(repo: Path, *, prior_response: Path | None, output: Path) -> tuple[Path, str, bool]:
     output.parent.mkdir(parents=True, exist_ok=True)
     manifest = candidate_manifest(repo)
-    diff = run_cmd(["git", "diff", "--", "skills/project-watchdog"], cwd=repo, timeout=120)
+    diff = run_cmd(["git", "diff", "--", "skills/project-watchdog"], cwd=repo, timeout=120, output_limit=None)
     stat = run_cmd(["git", "diff", "--stat=200", "origin/main", "--", "skills/project-watchdog"], cwd=repo, timeout=120)
     tests = collect_proof_results(repo, output.parent, manifest["candidate_digest"])
     cron = run_cmd(["crontab", "-l"], cwd=repo, timeout=60)
@@ -234,7 +268,7 @@ def build_packet(repo: Path, *, prior_response: Path | None, output: Path) -> tu
     ]
     if prior_response and prior_response.is_file():
         body.extend(["", "## Previous WebGPT response to close", "```text", browser_safe(prior_response.read_text(errors="replace")[-12000:]), "```"])
-    output.write_text(browser_safe("\n".join(body)) + "\n", encoding="utf-8")
+    output.write_text("\n".join(body) + "\n", encoding="utf-8")
     return output, manifest["candidate_digest"], bool(tests.get("qualifies_candidate"))
 
 
@@ -272,6 +306,11 @@ def latest_webgpt_response(ask_json: Path, output_root: Path) -> Path | None:
     node_receipt_path = Path(str(webgpt_entry.get("path") or ""))
     response_path = Path(str(webgpt_entry.get("response_path") or ""))
     if not node_receipt_path.is_file() or not response_path.is_file() or output_root not in response_path.parents:
+        return None
+    try:
+        if response_path.stat().st_mtime < ask_json.stat().st_mtime:
+            return None
+    except OSError:
         return None
     try:
         node_receipt = json.loads(node_receipt_path.read_text())
@@ -354,7 +393,9 @@ def main(argv: list[str] | None = None) -> int:
         result = ask_webgpt(repo, packet, project=args.project, output_root=args.output_root, iteration=iteration, candidate_digest=candidate_digest)
         receipt["steps"].append({"iteration": iteration, "ask": result})
         verdict = result.get("verdict") or {}
-        if proof_qualified and verdict.get("ready_to_deploy"):
+        post_review_digest = candidate_manifest(repo)["candidate_digest"]
+        receipt["steps"].append({"iteration": iteration, "post_review_candidate_digest": post_review_digest, "candidate_stable_after_review": post_review_digest == candidate_digest})
+        if proof_qualified and post_review_digest == candidate_digest and verdict.get("ready_to_deploy"):
             receipt["ready_to_deploy"] = True
             receipt["response"] = result.get("response")
             break

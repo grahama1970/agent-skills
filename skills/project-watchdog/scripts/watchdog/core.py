@@ -448,36 +448,11 @@ def finish(
     validation = receipt_schema.validate_receipt(receipt)
     if persist is None:
         persist = receipt.get("status") not in UNEVENTFUL_STATUSES
-    # Human alerting is composed from $ops-discord at this single receipt
-    # boundary. It records its outcome on the receipt and never raises, so a
-    # webhook outage cannot fail or block a tick.
-    from . import alerts
-
     if any(
         isinstance(handled, dict) and handled.get("requires_human_input") is True
         for handled in receipt.get("handled_issues") or []
     ):
         receipt["requires_human_input"] = True
-    alerts.maybe_alert(receipt)
-    alert_status = str((receipt.get("alert") or {}).get("status") or "SKIPPED")
-    for handled in receipt.get("handled_issues") or []:
-        if not isinstance(handled, dict):
-            continue
-        phases = handled.setdefault("workflow_phases", [])
-        existing = next((p for p in phases if isinstance(p, dict) and p.get("id") == "ops_discord_alert"), None)
-        phase = existing if existing is not None else {"id": "ops_discord_alert", "depends_on": ["watchdog_receipt"]}
-        phase.update({
-            "agent": "ops-discord",
-            "skill": "ops-discord notify",
-            "executor": "watchdog alert at core.finish",
-            "status": alert_status,
-            "details": ["ops-discord alerts only for explicit human-input BLOCKED, NEEDS_ATTENTION, or idle_streak_exceeded receipts; machine-actionable failures and COMPLETED receipts stay agent-owned"],
-        })
-        if existing is None:
-            phases.append(phase)
-    # Re-validate the FINAL shape after alerting mutated the receipt, so
-    # schema_validation describes what is actually persisted, not a
-    # pre-mutation snapshot (gpt-5.6-sol review finding 2, 2026-09-03).
     if validation.get("valid"):
         validation = receipt_schema.validate_receipt(receipt)
     if not validation.get("valid"):
@@ -517,6 +492,38 @@ def finish(
         receipt["receipt_path"] = None
         receipt["receipt_persisted"] = False
         _discard_empty_dir(receipt_dir)
+
+    # Human alerting is composed from $ops-discord after the source receipt is
+    # durable. Its ack is separate so transport failure/retry state never rewrites
+    # execution evidence.
+    from . import alerts
+
+    alerts.maybe_alert(receipt)
+    alert_status = str((receipt.get("alert") or {}).get("status") or "SKIPPED")
+    for handled in receipt.get("handled_issues") or []:
+        if not isinstance(handled, dict):
+            continue
+        phases = handled.setdefault("workflow_phases", [])
+        existing = next((p for p in phases if isinstance(p, dict) and p.get("id") == "ops_discord_alert"), None)
+        phase = existing if existing is not None else {"id": "ops_discord_alert", "depends_on": ["watchdog_receipt"]}
+        phase.update({
+            "agent": "ops-discord",
+            "skill": "ops-discord notify",
+            "executor": "watchdog alert at core.finish",
+            "status": alert_status,
+            "details": ["ops-discord alerts only for explicit human-input BLOCKED, NEEDS_ATTENTION, or idle_streak_exceeded receipts; machine-actionable failures and COMPLETED receipts stay agent-owned"],
+        })
+        if existing is None:
+            phases.append(phase)
+    if persist:
+        write_json(receipt_dir / "alert-delivery.json", {
+            "schema": "agent_skills.project_watchdog.alert_delivery.v1",
+            "run_id": run_id,
+            "source_receipt_path": receipt.get("receipt_path"),
+            "source_receipt_sha256": "sha256:" + hashlib.sha256((receipt_dir / "receipt.json").read_bytes()).hexdigest(),
+            "alert": receipt.get("alert"),
+            "workflow_phase_status": alert_status,
+        })
     log_event(
         run_id,
         "tick_finish",

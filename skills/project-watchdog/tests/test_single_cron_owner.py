@@ -42,24 +42,23 @@ def test_quiet_owner_finalizes_without_dispatch(tmp_path: Path, monkeypatch) -> 
 
 
 def test_finalization_fault_preserves_receipt_and_records_degradation(tmp_path: Path, monkeypatch) -> None:
-    calls: list[str] = []
+    receipt_dir = tmp_path / "run"
+    receipt_dir.mkdir()
+    receipt_path = receipt_dir / "receipt.json"
+    receipt_path.write_text(json.dumps({"run_id": "run", "status": "COMPLETED", "ok": True}), encoding="utf-8")
+    before = receipt_path.read_bytes()
 
-    monkeypatch.setattr(config, "receipt_root", lambda: tmp_path)
-    monkeypatch.setattr(config, "tick_would_enter_quiet_hours", lambda: True)
-    monkeypatch.setattr(config, "quiet_window", lambda: (2, 6))
-    monkeypatch.setattr(commands, "acquire_lock", lambda run_id: True)
-    monkeypatch.setattr(commands, "release_lock", lambda: calls.append("release"))
-    monkeypatch.setattr(commands, "_test_hold_lock_if_requested", lambda run_id: None)
-    monkeypatch.setattr(commands, "_deliver_tick_notifications", lambda run_id, receipt_dir: (_ for _ in ()).throw(RuntimeError("bridge down")))
-    monkeypatch.setattr(commands, "_publish_ui_snapshot", lambda run_id: (_ for _ in ()).throw(RuntimeError("ui down")))
-    monkeypatch.setattr(commands, "finish", _fake_finish)
+    bridge = types.SimpleNamespace(deliver_due=lambda current=None: (_ for _ in ()).throw(RuntimeError("bridge down")))
+    monkeypatch.setitem(sys.modules, "watchdog_notify_bridge", bridge)
     monkeypatch.setattr(commands, "log_event", lambda *a, **k: None)
 
-    assert commands.tick(apply=True, project_id="all", max_tickets=3) == 0
-    assert calls == ["release"]
-    receipts = list(tmp_path.glob("*/receipt.json"))
-    assert len(receipts) == 1
-    assert json.loads(receipts[0].read_text())["stop_reason"] == "quiet_hours"
+    result = commands._deliver_tick_notifications("run", receipt_dir)
+
+    assert result["status"] == "DELIVERY_FAILED"
+    assert receipt_path.read_bytes() == before
+    delivery = json.loads((receipt_dir / "notification-delivery.json").read_text())
+    assert delivery["source_receipt_sha256"]
+    assert delivery["notification_delivery"]["status"] == "DELIVERY_FAILED"
 
 
 def test_quiet_delivery_replays_pending_without_delivering_current_receipt(tmp_path: Path, monkeypatch) -> None:
@@ -72,8 +71,11 @@ def test_quiet_delivery_replays_pending_without_delivering_current_receipt(tmp_p
     monkeypatch.setitem(sys.modules, "watchdog_notify_bridge", bridge)
     monkeypatch.setattr(commands, "log_event", lambda *a, **k: None)
 
+    before = (receipt_dir / "receipt.json").read_bytes()
     result = commands._deliver_tick_notifications("run", receipt_dir)
     assert result["status"] == "IDLE"
     assert seen == [None]
-    saved = json.loads((receipt_dir / "receipt.json").read_text())
-    assert saved["notification_delivery"]["status"] == "IDLE"
+    assert (receipt_dir / "receipt.json").read_bytes() == before
+    delivery = json.loads((receipt_dir / "notification-delivery.json").read_text())
+    assert delivery["notification_delivery"]["status"] == "IDLE"
+    assert delivery["source_receipt_path"].endswith("receipt.json")

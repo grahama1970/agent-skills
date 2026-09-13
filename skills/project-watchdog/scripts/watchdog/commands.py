@@ -24,6 +24,7 @@ Failure modes
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import shlex
@@ -126,6 +127,13 @@ def _as_scoped_contention_skip(result: dict[str, Any]) -> dict[str, Any]:
 def _creator_admission(result: dict[str, Any], *, apply: bool) -> str:
     if not apply:
         return "preview"
+    native = result.get("native_admission")
+    if native in {"started", "not_started", "indeterminate", "retained"}:
+        return "not_started" if native == "retained" else str(native)
+    if result.get("creator_started") is True or result.get("dispatched_at") is not None:
+        return "started"
+    if result.get("retained_operation") is True:
+        return "not_started"
     if result.get("status") == "SKIPPED" and result.get("stop_reason") in _CONFIRMED_NO_START_REASONS:
         return "not_started"
     if result.get("ok") is True:
@@ -147,11 +155,24 @@ def _deliver_tick_notifications(run_id: str, receipt_dir: Path) -> dict[str, Any
             pass
         result = bridge.deliver_due(current_dir)
         if receipt_path.is_file():
-            receipt = load_json(receipt_path)
-            receipt["notification_delivery"] = result
-            write_json(receipt_path, receipt)
+            (receipt_dir / "notification-delivery.json").write_text(json.dumps({
+                "schema": "agent_skills.project_watchdog.notification_delivery.v1",
+                "run_id": run_id,
+                "source_receipt_path": str(receipt_path),
+                "source_receipt_sha256": "sha256:" + hashlib.sha256(receipt_path.read_bytes()).hexdigest(),
+                "notification_delivery": result,
+            }, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     except Exception as exc:  # noqa: BLE001 - notification delivery never blocks cleanup
         result = {"status": "DELIVERY_FAILED", "dir": receipt_dir.name, "error": str(exc)[:300]}
+        receipt_path = receipt_dir / "receipt.json"
+        if receipt_path.is_file():
+            (receipt_dir / "notification-delivery.json").write_text(json.dumps({
+                "schema": "agent_skills.project_watchdog.notification_delivery.v1",
+                "run_id": run_id,
+                "source_receipt_path": str(receipt_path),
+                "source_receipt_sha256": "sha256:" + hashlib.sha256(receipt_path.read_bytes()).hexdigest(),
+                "notification_delivery": result,
+            }, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     try:
         log_event(run_id, "notification_delivery", **result)
     except Exception:  # noqa: BLE001 - finalizer logging must not prevent unlock
@@ -1292,6 +1313,8 @@ def _owned_project_watchdog_cron_line(line: str) -> bool:
         or "/skills/project-watchdog/scripts/watchdog_notify_bridge.py" in text
         or "project-watchdog-notify-bridge" in text
         or "project-watchdog-ui-snapshot" in text
+        or "watchdog-ui-snapshot" in text
+        or "/skills/project-watchdog/run.sh ui-data" in text
     )
 
 

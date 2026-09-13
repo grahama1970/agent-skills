@@ -141,8 +141,13 @@ def test_declared_required_gate_failure_blocks_positive_reviewer(tmp_path: Path,
     monkeypatch.setattr(loop, "candidate_manifest", lambda repo: {"candidate_digest": candidate, "files": []})
 
     def fake_run(argv, *, cwd, timeout=600, output_limit=4000):
+        junit = next((Path(str(part).split("=", 1)[1]) for part in argv if str(part).startswith("--junitxml=")), None)
         if any("test_missing_gate.py" in str(part) for part in argv):
+            if junit:
+                junit.write_text('<testsuite tests="0" failures="0" errors="1" skipped="0"></testsuite>')
             return {"returncode": 4, "stdout": "", "stderr": "ERROR: not found", "duration_seconds": 0.01}
+        if junit:
+            junit.write_text('<testsuite tests="1" failures="0" errors="0" skipped="0"></testsuite>')
         return {"returncode": 0, "stdout": "1 passed in 0.01s", "stderr": "", "duration_seconds": 0.01}
 
     monkeypatch.setattr(loop, "run_cmd", fake_run)
@@ -165,6 +170,31 @@ def test_declared_required_gate_failure_blocks_positive_reviewer(tmp_path: Path,
     assert proof["candidate_bound_tests"]["qualifies_candidate"] is False
 
 
+def test_skipped_required_case_blocks_qualification(tmp_path: Path, monkeypatch) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    out = tmp_path / "out"
+    out.mkdir()
+    candidate = "sha256:" + "a" * 64
+    monkeypatch.setattr(loop, "REQUIRED_PROOF_GATES", [
+        {"name": "skipped-case", "pytest": ["skills/project-watchdog/tests/test_x.py::test_y"]},
+    ])
+    monkeypatch.setattr(loop, "candidate_manifest", lambda repo: {"candidate_digest": candidate, "files": []})
+
+    def fake_run(argv, *, cwd, timeout=600, output_limit=4000):
+        junit = next(Path(str(part).split("=", 1)[1]) for part in argv if str(part).startswith("--junitxml="))
+        junit.write_text('<testsuite tests="1" failures="0" errors="0" skipped="1"></testsuite>')
+        return {"returncode": 0, "stdout": "1 skipped in 0.01s", "stderr": "", "duration_seconds": 0.01}
+
+    monkeypatch.setattr(loop, "run_cmd", fake_run)
+
+    proof = loop.collect_proof_results(repo, out, candidate)
+
+    assert proof["qualifies_candidate"] is False
+    assert proof["failed_mandatory_gates"] == ["skipped-case"]
+    assert proof["gates"][0]["junit"]["skipped"] == 1
+
+
 def test_main_refuses_failed_required_proofs_even_with_positive_reviewer(tmp_path: Path, monkeypatch, capsys) -> None:
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -181,6 +211,7 @@ def test_main_refuses_failed_required_proofs_even_with_positive_reviewer(tmp_pat
         "verdict": {"ready_to_deploy": True},
     }
     monkeypatch.setattr(loop, "build_packet", lambda *a, **k: (packet, candidate, False))
+    monkeypatch.setattr(loop, "candidate_manifest", lambda repo: {"candidate_digest": candidate, "files": []})
     monkeypatch.setattr(loop, "ask_webgpt", lambda *a, **k: positive)
 
     rc = loop.main(["--repo", str(repo), "--output-root", str(tmp_path / "out"), "--execute"])
@@ -188,6 +219,80 @@ def test_main_refuses_failed_required_proofs_even_with_positive_reviewer(tmp_pat
     out = json.loads(capsys.readouterr().out)
     assert rc == 1
     assert out["ready_to_deploy"] is False
+
+
+def test_old_valid_provider_receipt_cannot_authorize_current_review(tmp_path: Path) -> None:
+    root = tmp_path / "out"
+    old = root / "ask-tau-old/node-artifacts/handler-webgpt"
+    old.mkdir(parents=True)
+    response = old / "response.md"
+    receipt = old / "node-receipt.json"
+    response.write_text("body", encoding="utf-8")
+    receipt.write_text(json.dumps({"ok": True, "status": "PASS", "node_id": "handler-webgpt", "response_path": str(response)}), encoding="utf-8")
+    ask_json = root / "current.json"
+    ask_json.write_text(json.dumps({"execution": {"node_provider_receipts": [{"node_id": "handler-webgpt", "ok": True, "status": "PASS", "path": str(receipt), "response_path": str(response)}]}}), encoding="utf-8")
+    future = ask_json.stat().st_mtime + 10
+    __import__("os").utime(ask_json, (future, future))
+
+    assert loop.latest_webgpt_response(ask_json, root) is None
+
+
+def test_candidate_change_during_review_invalidates_approval(tmp_path: Path, monkeypatch, capsys) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    packet = tmp_path / "out" / "packet-1.md"
+    packet.parent.mkdir()
+    packet.write_text("packet", encoding="utf-8")
+    before = "sha256:" + "a" * 64
+    after = "sha256:" + "b" * 64
+    packet_digest = "sha256:" + "c" * 64
+    calls = {"manifest": 0}
+
+    def fake_manifest(repo):
+        calls["manifest"] += 1
+        return {"candidate_digest": after, "files": []}
+
+    monkeypatch.setattr(loop, "build_packet", lambda *a, **k: (packet, before, True))
+    monkeypatch.setattr(loop, "candidate_manifest", fake_manifest)
+    monkeypatch.setattr(loop, "ask_webgpt", lambda *a, **k: {
+        "status": "OK", "response": "response.md", "packet_digest": packet_digest,
+        "candidate_digest": before, "verdict": {"ready_to_deploy": True},
+    })
+
+    rc = loop.main(["--repo", str(repo), "--output-root", str(tmp_path / "out"), "--execute"])
+
+    out = json.loads(capsys.readouterr().out)
+    assert rc == 1
+    assert out["ready_to_deploy"] is False
+    assert out["steps"][-1]["candidate_stable_after_review"] is False
+
+
+def test_packet_roundtrip_preserves_schema_paths_and_digest(tmp_path: Path, monkeypatch) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    subprocess.run(["git", "init"], cwd=repo, check=True, capture_output=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=repo, check=True)
+    p = repo / "skills/project-watchdog/scripts/x.py"
+    p.parent.mkdir(parents=True)
+    p.write_text("print('x')\n", encoding="utf-8")
+    subprocess.run(["git", "add", "skills/project-watchdog/scripts/x.py"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-m", "base"], cwd=repo, check=True, capture_output=True)
+    subprocess.run(["git", "update-ref", "refs/remotes/origin/main", "HEAD"], cwd=repo, check=True)
+    p.write_text("print('changed')\n", encoding="utf-8")
+    monkeypatch.setattr(loop, "collect_proof_results", lambda repo, output_dir, candidate_digest: {"candidate_digest": candidate_digest, "qualifies_candidate": True})
+    real_run = loop.run_cmd
+    monkeypatch.setattr(loop, "run_cmd", lambda argv, **kw: {"returncode": 0, "stdout": "", "stderr": "", "duration_seconds": 0} if argv[:2] == ["crontab", "-l"] else real_run(argv, **kw))
+
+    packet, digest, qualified = loop.build_packet(repo, prior_response=None, output=tmp_path / "packet.md")
+    text = packet.read_text(encoding="utf-8")
+    manifest = json.loads(text.split("```json\n", 1)[1].split("\n```", 1)[0])
+
+    assert qualified is True
+    assert manifest["candidate_digest"] == digest
+    assert manifest["files"][0]["repo_path"] == "skills > project-watchdog > scripts > x.py"
+    assert "0o100fc" not in text
+    assert loop.sha256_file(packet).startswith("sha256:")
 
 
 def test_main_plan_only_writes_receipt(tmp_path: Path, monkeypatch, capsys) -> None:

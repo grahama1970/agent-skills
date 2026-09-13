@@ -150,3 +150,104 @@ def test_restart_recovers_committed_unregistered_receipt(tmp_path, monkeypatch):
     event_row = json.loads((tmp_path / "events.jsonl").read_text().splitlines()[0])
     assert event_row["issue"] == "99"
     assert event_row["phase"] == "ticket_repair"
+
+
+def test_idle_tick_retries_human_alert_after_source_commit(tmp_path, monkeypatch):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+    from watchdog import alerts, core
+
+    sent: list[bool] = []
+
+    def fake_alert(receipt):
+        receipt_path = Path(receipt["receipt_path"])
+        assert receipt_path.is_file(), "source receipt must be committed before human send"
+        assert "alert" not in json.loads(receipt_path.read_text())
+        sent.append(True)
+        receipt["alert"] = {"status": "ALERT_DELIVERY_FAILED", "delivered": False}
+
+    monkeypatch.setattr(alerts, "maybe_alert", fake_alert)
+    receipt_dir = tmp_path / "receipt"
+    receipt = core.base_receipt("run-r6", receipt_dir, True)
+    receipt.update({
+        "status": "NEEDS_ATTENTION", "ok": False,
+        "handled_issues": [{"issue_number": 1, "repo": "acme/api", "status": "NEEDS_ATTENTION", "requires_human_input": True}],
+    })
+
+    assert core.finish("run-r6", receipt_dir, receipt, 1, persist=True) == 1
+    assert sent == [True]
+    assert (receipt_dir / "receipt.json").is_file()
+    assert json.loads((receipt_dir / "alert-delivery.json").read_text())["alert"]["status"] == "ALERT_DELIVERY_FAILED"
+
+
+def test_drain_budget_and_acknowledgment_status(tmp_path, monkeypatch):
+    bridge = b
+    monkeypatch.setenv("PROJECT_WATCHDOG_NOTIFY_DRAIN_MAX_ATTEMPTS", "2")
+    monkeypatch.setenv("PROJECT_WATCHDOG_NOTIFY_DRAIN_MAX_SECONDS", "60")
+    monkeypatch.setattr(bridge, "STATE_ROOT", tmp_path)
+    monkeypatch.setattr(bridge, "RECEIPTS", tmp_path / "receipts")
+    monkeypatch.setattr(bridge, "CURSOR", tmp_path / "notify-bridge-cursor.json")
+    monkeypatch.setattr(bridge, "CHECKPOINTS", tmp_path / "notify-bridge-checkpoints.json")
+    monkeypatch.setattr(bridge, "BRIDGE_LOCK", tmp_path / "notify-bridge.lock")
+    monkeypatch.setattr(bridge, "SWITCHBOARD_DEDUP", tmp_path / "notify-bridge-dedup.json")
+    sent: list[str] = []
+
+    def fake_push(ev):
+        sent.append(ev["event_id"])
+        return {"status": "AGENT_PUSH_FAILED", "error": "network down"}
+
+    monkeypatch.setattr(bridge, "push_switchboard", fake_push)
+    monkeypatch.setattr(bridge, "_write_agent_action_receipt", lambda *a, **k: None)
+    bridge.RECEIPTS.mkdir(parents=True)
+    for i in range(4):
+        d = bridge.RECEIPTS / f"project-watchdog-{i}"
+        d.mkdir()
+        (d / "receipt.json").write_text(json.dumps({
+            "run_id": f"project-watchdog-{i}",
+            "status": "NEEDS_ATTENTION",
+            "handled_issues": [{
+                "repo": "grahama1970/agent-skills", "issue_number": i,
+                "action": "ticket_repair", "status": "NEEDS_ATTENTION",
+                "requires_human_input": False, "summary": "machine retry",
+            }],
+        }))
+
+    result = bridge.deliver_due()
+
+    assert result["attempts"] == 2
+    assert result["status"] == "PARTIAL"
+    assert len(sent) == 2
+    checkpoint = bridge._load_checkpoint()
+    assert checkpoint.pending or checkpoint.pending_dirs
+
+
+def test_restart_recovers_unregistered_receipt_at_or_before_cursor(tmp_path, monkeypatch):
+    bridge = b
+    monkeypatch.setattr(bridge, "STATE_ROOT", tmp_path)
+    monkeypatch.setattr(bridge, "RECEIPTS", tmp_path / "receipts")
+    monkeypatch.setattr(bridge, "CURSOR", tmp_path / "notify-bridge-cursor.json")
+    monkeypatch.setattr(bridge, "CHECKPOINTS", tmp_path / "notify-bridge-checkpoints.json")
+    monkeypatch.setattr(bridge, "BRIDGE_LOCK", tmp_path / "notify-bridge.lock")
+    monkeypatch.setattr(bridge, "SWITCHBOARD_DEDUP", tmp_path / "notify-bridge-dedup.json")
+    monkeypatch.setattr(bridge, "push_switchboard", lambda ev: {"status": "SENT", "message_id": f"m{ev['issue']}"})
+    monkeypatch.setattr(bridge, "_write_agent_action_receipt", lambda *a, **k: None)
+    bridge.RECEIPTS.mkdir(parents=True)
+    receipt_dir = bridge.RECEIPTS / "project-watchdog-old-cursor"
+    receipt_dir.mkdir()
+    (receipt_dir / "receipt.json").write_text(json.dumps({
+        "run_id": "project-watchdog-old-cursor",
+        "status": "NEEDS_ATTENTION",
+        "handled_issues": [{
+            "repo": "grahama1970/agent-skills", "issue_number": 123,
+            "action": "ticket_repair", "status": "NEEDS_ATTENTION",
+            "requires_human_input": False, "summary": "machine retry",
+        }],
+    }))
+    old = time.time() - 1000
+    __import__("os").utime(receipt_dir, (old, old))
+    bridge.CURSOR.write_text(json.dumps({"last_mtime": time.time()}))
+
+    result = bridge.deliver_due()
+
+    assert result["status"] == "DELIVERED"
+    assert result["pushed"][0]["switchboard"]["status"] == "SENT"
+    assert "123" in (tmp_path / "events.jsonl").read_text()

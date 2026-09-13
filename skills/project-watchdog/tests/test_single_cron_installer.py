@@ -64,3 +64,28 @@ def test_install_cron_consolidates_owned_jobs_and_is_idempotent(tmp_path: Path, 
     assert commands.install_cron(apply=True, minute="*/5") == 0
     assert crontab["text"] == once
     assert captured["receipt"]["ok"] is True
+
+
+def test_installer_removes_original_watchdog_ui_snapshot_job(tmp_path: Path, monkeypatch) -> None:
+    legacy_ui = "*/5 * * * * /repo/skills/project-watchdog/run.sh ui-data --receipt-limit 100 --output /repo/skills/project-watchdog/ui/dist/project-watchdog-snapshot.json # watchdog-ui-snapshot\n"
+    crontab = {"text": legacy_ui + "MAILTO=project-watchdog-ops@example.com\n"}
+    captured: dict = {}
+
+    def fake_run(cmd, input_text=None, timeout_s=None):
+        if cmd == ["crontab", "-l"]:
+            return {"exit_code": 0, "stdout": crontab["text"], "stderr": ""}
+        if cmd == ["crontab", "-"]:
+            crontab["text"] = input_text or ""
+            return {"exit_code": 0, "stdout": "", "stderr": ""}
+        return {"exit_code": 0, "stdout": "", "stderr": ""}
+
+    monkeypatch.setattr(commands, "run_cmd", fake_run)
+    monkeypatch.setattr(config, "receipt_root", lambda: tmp_path)
+    monkeypatch.setattr(config, "cron_log_path", lambda: tmp_path / "cron.log")
+    monkeypatch.setattr(commands, "finish", lambda run_id, d, receipt, code, **k: captured.update(receipt=receipt, code=code) or code)
+
+    assert commands.install_cron(apply=True, minute="*/5") == 0
+    owned = [line for line in crontab["text"].splitlines() if commands._owned_project_watchdog_cron_line(line)]
+    assert owned == [captured["receipt"]["cron_line"]]
+    assert "run.sh ui-data" not in crontab["text"]
+    assert "MAILTO=project-watchdog-ops@example.com" in crontab["text"]

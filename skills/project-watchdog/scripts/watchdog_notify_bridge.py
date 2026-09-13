@@ -1044,23 +1044,36 @@ def _candidate_dirs(checkpoint: BridgeCheckpoint, replay_last: bool) -> list[Pat
     if replay_last:
         return sorted(RECEIPTS.iterdir(), key=lambda p: p.stat().st_mtime)[-1:]
     pending = [RECEIPTS / name for name in checkpoint.pending_dirs]
-    new_dirs = [
-        d
-        for d in RECEIPTS.iterdir()
-        if d.is_dir() and d.stat().st_mtime > checkpoint.last_mtime
-    ]
+    # Re-scan receipt dirs independent of mtime cursor; the bounded drain below
+    # prevents old backlog from monopolizing the tick while still recovering
+    # committed-but-unregistered receipts restored at or behind last_mtime.
+    new_dirs = [d for d in RECEIPTS.iterdir() if d.is_dir()]
     by_name = {p.name: p for p in pending + new_dirs if p.exists() and p.is_dir()}
     return sorted(by_name.values(), key=lambda p: p.stat().st_mtime)
 
 
-def _delivery_status(results: list[dict[str, Any]]) -> str:
+def _delivery_status(results: list[dict[str, Any]], checkpoint: BridgeCheckpoint | None = None) -> str:
+    if checkpoint and (checkpoint.pending or checkpoint.pending_dirs):
+        return "PARTIAL" if results else "PENDING"
     if not results:
         return "IDLE"
     if any(r.get("switchboard", {}).get("status", "").endswith("FAILED") for r in results):
         return "PENDING"
-    if any(r.get("status") in {"PENDING", "DELIVERY_FAILED", "LOCKED"} for r in results):
+    if any(r.get("status") in {"PENDING", "DELIVERY_FAILED", "LOCKED", "BUDGET_EXHAUSTED"} for r in results):
         return "PENDING"
     return "DELIVERED"
+
+
+def _drain_limits() -> tuple[int, float]:
+    try:
+        max_attempts = int(os.environ.get("PROJECT_WATCHDOG_NOTIFY_DRAIN_MAX_ATTEMPTS") or 50)
+    except ValueError:
+        max_attempts = 50
+    try:
+        max_seconds = float(os.environ.get("PROJECT_WATCHDOG_NOTIFY_DRAIN_MAX_SECONDS") or 25)
+    except ValueError:
+        max_seconds = 25.0
+    return max(1, max_attempts), max(0.1, max_seconds)
 
 
 def deliver_due(receipt_dir: Path | None = None) -> dict[str, Any]:
@@ -1077,14 +1090,33 @@ def deliver_due(receipt_dir: Path | None = None) -> dict[str, Any]:
         checkpoint = _load_checkpoint()
         results: list[dict[str, Any]] = []
         pending_dirs = set(checkpoint.pending_dirs)
+        max_attempts, max_seconds = _drain_limits()
+        deadline = time.monotonic() + max_seconds
+        attempts = 0
+        attempted_event_ids: set[str] = set()
+
+        def budget_left() -> bool:
+            return attempts < max_attempts and time.monotonic() <= deadline
+
         for ev in list(checkpoint.pending.values()):
+            if not budget_left():
+                results.append({"status": "BUDGET_EXHAUSTED", "reason": "pending_event_budget", "remaining_pending_events": len(checkpoint.pending)})
+                break
+            event_id = str(ev.get("event_id") or "")
+            if event_id in attempted_event_ids:
+                continue
+            attempted_event_ids.add(event_id)
+            attempts += 1
             results.append(deliver(ev, checkpoint, fresh=True))
-        dirs = _candidate_dirs(checkpoint, replay_last=False)
-        if receipt_dir is not None:
-            dirs.append(receipt_dir)
-        for d in sorted({p for p in dirs if p.exists() and p.is_dir()}, key=lambda p: p.stat().st_mtime):
+        dirs = sorted({p for p in (_candidate_dirs(checkpoint, replay_last=False) + ([receipt_dir] if receipt_dir is not None else [])) if p.exists() and p.is_dir()}, key=lambda p: p.stat().st_mtime)
+        for index, d in enumerate(dirs):
+            if not budget_left():
+                pending_dirs.update(p.name for p in dirs[index:])
+                results.append({"status": "BUDGET_EXHAUSTED", "reason": "receipt_dir_budget", "remaining_dirs": len(dirs) - index})
+                break
             events = summarize_events(d)
             if not events:
+                checkpoint.last_mtime = max(checkpoint.last_mtime, d.stat().st_mtime)
                 continue
             if events[0].get("kind") == "pending_receipt":
                 pending_dirs.add(d.name)
@@ -1094,7 +1126,16 @@ def deliver_due(receipt_dir: Path | None = None) -> dict[str, Any]:
             for ev in events:
                 if ev.get("kind") != "tick":
                     continue
-                results.append(deliver(ev, checkpoint, fresh=(time.time() - d.stat().st_mtime) < 900))
+                if not budget_left():
+                    pending_dirs.add(d.name)
+                    results.append({"status": "BUDGET_EXHAUSTED", "reason": "event_budget", "dir": d.name})
+                    break
+                event_id = str(ev.get("event_id") or "")
+                if event_id in attempted_event_ids:
+                    continue
+                attempted_event_ids.add(event_id)
+                attempts += 1
+                results.append(deliver(ev, checkpoint, fresh=True))
             checkpoint.last_mtime = max(checkpoint.last_mtime, d.stat().st_mtime)
         if not results:
             stream = STATE_ROOT / "events.jsonl"
@@ -1107,7 +1148,7 @@ def deliver_due(receipt_dir: Path | None = None) -> dict[str, Any]:
                 }, sort_keys=True) + "\n")
         checkpoint.pending_dirs = sorted(pending_dirs)
         _save_checkpoint(checkpoint)
-        return {"status": _delivery_status(results), "dir": receipt_dir.name if receipt_dir else None, "pushed": results}
+        return {"status": _delivery_status(results, checkpoint), "dir": receipt_dir.name if receipt_dir else None, "pushed": results, "attempts": attempts}
     except Exception as exc:  # noqa: BLE001 - delivery failure never blocks a tick
         return {"status": "DELIVERY_FAILED", "dir": receipt_dir.name if receipt_dir else None, "error": str(exc)[:300]}
     finally:
