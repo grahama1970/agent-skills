@@ -376,6 +376,32 @@ def test_old_statusless_dead_monitor_does_not_latch_heartbeat(tmp_path, monkeypa
     assert got["state"] in ("NO_ACTIVE_PROCESS", "observer_fresh_no_active_run")
 
 
+def test_ticket_events_do_not_inherit_aggregate_human_exit_or_node(tmp_path, monkeypatch):
+    bridge = load_bridge()
+    monkeypatch.setattr(bridge, "RECEIPTS", tmp_path)
+    receipt_dir = tmp_path / "project-watchdog-r7-inheritance"
+    receipt_dir.mkdir()
+    (receipt_dir / "receipt.json").write_text(json.dumps({
+        "run_id": "project-watchdog-r7-inheritance",
+        "status": "NEEDS_ATTENTION",
+        "requires_human_input": True,
+        "exit_code": 7,
+        "handled_issues": [
+            {"repo": "grahama1970/agent-skills", "issue_number": 10, "status": "COMPLETED", "ok": True, "exit_code": 0, "requires_human_input": False, "node": "creator-a"},
+            {"repo": "grahama1970/agent-skills", "issue_number": 11, "status": "NEEDS_ATTENTION", "ok": False, "requires_human_input": True, "node": "reviewer-b"},
+            {"repo": "grahama1970/agent-skills", "issue_number": 12, "status": "COMPLETED", "ok": True},
+        ],
+    }))
+
+    events = bridge.summarize_events(receipt_dir)
+
+    assert [(ev["issue"], ev["node"], ev["exit_code"], ev["requires_human_input"]) for ev in events] == [
+        ("10", "creator-a", 0, False),
+        ("11", "reviewer-b", None, True),
+        ("12", "UNKNOWN(node:not_recorded)", None, None),
+    ]
+
+
 def test_mixed_ticket_outcomes_keep_identity_status_and_proof(tmp_path, monkeypatch):
     bridge = load_bridge()
     monkeypatch.setattr(bridge, "RECEIPTS", tmp_path)

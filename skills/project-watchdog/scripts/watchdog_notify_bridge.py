@@ -480,7 +480,6 @@ def summarize_events(receipt_dir: Path) -> list[dict]:
     out = []
     op = _active_operation(r)
     run_id = base["run_id"]
-    node = base["node"]
     source_time = base["source_time"]
     for handled in ticket_items:
         triage = handled.get("triage") or r.get("triage") or {}
@@ -488,6 +487,7 @@ def summarize_events(receipt_dir: Path) -> list[dict]:
         issue = _identity_value(handled.get("issue_number") or op.get("issue_number"), "issue", "receipt_missing_issue_number")
         attempt = _identity_value(handled.get("attempt") or op.get("attempt"), "attempt", "not_recorded")
         status = _identity_value(handled.get("status") or r.get("status"), "status", "receipt_missing_status")
+        node = _identity_value(handled.get("node") or handled.get("selected_agent"), "node", "not_recorded")
         event_key = {
             "run_id": run_id,
             "repo": repo,
@@ -504,6 +504,7 @@ def summarize_events(receipt_dir: Path) -> list[dict]:
             "event_id": event_id,
             "repo": repo,
             "issue": issue,
+            "node": node,
             "attempt": attempt,
             "status": status,
             "stop_reason": handled.get("stop_reason") or r.get("stop_reason"),
@@ -511,14 +512,14 @@ def summarize_events(receipt_dir: Path) -> list[dict]:
             "phase": handled.get("action") or op.get("phase") or r.get("stop_reason") or "receipt",
             "action": handled.get("action") or op.get("action"),
             "summary": (handled.get("summary") or r.get("summary") or r.get("reason") or r.get("stop_reason") or "")[:300],
-            "requires_human_input": True if handled.get("requires_human_input") is True else handled.get("requires_human_input", r.get("requires_human_input")),
+            "requires_human_input": handled.get("requires_human_input") if "requires_human_input" in handled else None,
             "triage_code": triage.get("code"),
             "triage_cause": (triage.get("cause") or "")[:200],
             "seats": _seats(handled),
-            "exit_code": handled.get("exit_code") or r.get("exit_code") or op.get("exit_code"),
-            "retry_budget": handled.get("retry_budget") or r.get("retry_budget"),
-            "not_before": handled.get("not_before") or r.get("not_before"),
-            "resolution_ref": handled.get("resolution_ref") or r.get("resolution_ref"),
+            "exit_code": handled["exit_code"] if "exit_code" in handled else None,
+            "retry_budget": handled.get("retry_budget"),
+            "not_before": handled.get("not_before"),
+            "resolution_ref": handled.get("resolution_ref"),
             "next_steps": _agent_next_steps(r, handled),
             "ticket": _issue_card(str(repo), str(issue)),
             "agents": _role_summary(handled),
@@ -527,7 +528,7 @@ def summarize_events(receipt_dir: Path) -> list[dict]:
                 "run_id": run_id,
                 "repo": repo,
                 "issue": issue,
-                "node": _identity_value(node if node != "-" else None, "node", "not_recorded"),
+                "node": node,
                 "attempt": attempt,
             },
         })
