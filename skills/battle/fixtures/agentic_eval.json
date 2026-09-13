@@ -598,6 +598,15 @@
         "deterministic": true
       },
       "claim_semantics": "control_flow"
+    },
+    {
+      "id": "reference_judges.functional_exact_numeric_slot_matching",
+      "description": "Battle functional reference Judge matches numeric policy slots with exact decimal semantics instead of lossy float aliases, so large neighboring integers stay distinct, approved exponent-equivalent numeric forms match, and booleans remain nonnumeric.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "control_flow"
     }
   ],
   "seams": [
@@ -3330,6 +3339,41 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/battle-b21-preserve-identity-metadata-when-ordering-policy-values.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 400
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-b22-remove-lossy-numeric-aliases-from-functional-slot-matching",
+      "category": "battle-b22-remove-lossy-numeric-aliases-from-functional-slot-matching",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "reference_judges.functional_exact_numeric_slot_matching"
+      ],
+      "seams": [
+        "functional_judge.numeric_slot_matching",
+        "policy.large_integer_precision",
+        "json_numeric_equivalence"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b22-remove-lossy-numeric-aliases-from-functional-slot-matching --summary /tmp/battle-agentic-evals/battle-b22-remove-lossy-numeric-aliases-from-functional-slot-matching.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b22-remove-lossy-numeric-aliases-from-functional-slot-matching"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-b22-remove-lossy-numeric-aliases-from-functional-slot-matching.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 400

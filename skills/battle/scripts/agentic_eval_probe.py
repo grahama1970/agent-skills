@@ -4768,6 +4768,12 @@ def main() -> int:
                 suite=args.suite,
                 tests=["test_functional_policy_record_alignment.py"],
             )
+        if args.suite == "battle-b22-remove-lossy-numeric-aliases-from-functional-slot-matching":
+            return probe_pytest_contracts(
+                args.summary,
+                suite=args.suite,
+                tests=["test_functional_exact_numeric_slots.py"],
+            )
         if args.suite == "battle-functional-judge":
             return probe_battle_functional_judge(args.summary)
         if args.suite == "battle-commentary-causality":

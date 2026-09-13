@@ -21,8 +21,10 @@ from __future__ import annotations
 import csv
 import io
 import json
+import math
 import sqlite3
 import unicodedata
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 
@@ -35,21 +37,22 @@ def _aliases(text: str) -> set[str]:
     return {digits} if len(digits) >= 7 and digits != text else set()
 
 
-def _num_forms(text: str):
-    forms = {text}
-    try:
-        i = int(text)
-        forms.add(i)
-        forms.add(float(i))
-    except ValueError:
+def _numeric_form(value) -> Decimal | None:
+    if isinstance(value, bool) or value is None:
+        return None
+    if isinstance(value, int):
+        return Decimal(value)
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            return None
+        return Decimal(str(value))
+    if isinstance(value, str):
         try:
-            f = float(text)
-            forms.add(f)
-            if f.is_integer():
-                forms.add(int(f))
-        except ValueError:
-            pass
-    return forms
+            numeric = Decimal(value)
+        except InvalidOperation:
+            return None
+        return numeric if numeric.is_finite() else None
+    return None
 
 
 def _is_slot(scalar, value: str) -> bool:
@@ -57,7 +60,9 @@ def _is_slot(scalar, value: str) -> bool:
         return False
     if isinstance(scalar, str):
         return unicodedata.normalize("NFC", scalar) == unicodedata.normalize("NFC", value)
-    return scalar in _num_forms(value)
+    scalar_number = _numeric_form(scalar)
+    value_number = _numeric_form(value)
+    return scalar_number is not None and value_number is not None and scalar_number == value_number
 
 
 class _Comparator:
