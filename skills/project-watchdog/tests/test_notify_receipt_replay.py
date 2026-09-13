@@ -122,7 +122,7 @@ def test_restart_recovers_committed_unregistered_receipt(tmp_path, monkeypatch):
     monkeypatch.setattr(bridge, "CHECKPOINTS", tmp_path / "notify-bridge-checkpoints.json")
     monkeypatch.setattr(bridge, "BRIDGE_LOCK", tmp_path / "notify-bridge.lock")
     monkeypatch.setattr(bridge, "SWITCHBOARD_DEDUP", tmp_path / "notify-bridge-dedup.json")
-    monkeypatch.setattr(bridge, "push_switchboard", lambda ev: {"status": "SENT", "message_id": "m1"})
+    monkeypatch.setattr(bridge, "push_switchboard", lambda ev, **k: {"status": "SENT", "message_id": "m1"})
     monkeypatch.setattr(bridge, "_write_agent_action_receipt", lambda *a, **k: None)
     bridge.RECEIPTS.mkdir(parents=True)
     old = bridge.RECEIPTS / "project-watchdog-old"
@@ -157,17 +157,25 @@ def test_idle_tick_retries_human_alert_after_source_commit(tmp_path, monkeypatch
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
     from watchdog import alerts, core
 
-    sent: list[bool] = []
+    bridge = b
+    monkeypatch.setattr(bridge, "STATE_ROOT", tmp_path)
+    monkeypatch.setattr(bridge, "RECEIPTS", tmp_path / "receipts")
+    monkeypatch.setattr(bridge, "CURSOR", tmp_path / "notify-bridge-cursor.json")
+    monkeypatch.setattr(bridge, "CHECKPOINTS", tmp_path / "notify-bridge-checkpoints.json")
+    monkeypatch.setattr(bridge, "BRIDGE_LOCK", tmp_path / "notify-bridge.lock")
+    monkeypatch.setattr(bridge, "SWITCHBOARD_DEDUP", tmp_path / "notify-bridge-dedup.json")
+    bridge.RECEIPTS.mkdir(parents=True)
+    first_attempts: list[bool] = []
 
     def fake_alert(receipt):
         receipt_path = Path(receipt["receipt_path"])
         assert receipt_path.is_file(), "source receipt must be committed before human send"
         assert "alert" not in json.loads(receipt_path.read_text())
-        sent.append(True)
+        first_attempts.append(True)
         receipt["alert"] = {"status": "ALERT_DELIVERY_FAILED", "delivered": False}
 
     monkeypatch.setattr(alerts, "maybe_alert", fake_alert)
-    receipt_dir = tmp_path / "receipt"
+    receipt_dir = bridge.RECEIPTS / "run-r6"
     receipt = core.base_receipt("run-r6", receipt_dir, True)
     receipt.update({
         "status": "NEEDS_ATTENTION", "ok": False,
@@ -175,9 +183,28 @@ def test_idle_tick_retries_human_alert_after_source_commit(tmp_path, monkeypatch
     })
 
     assert core.finish("run-r6", receipt_dir, receipt, 1, persist=True) == 1
-    assert sent == [True]
-    assert (receipt_dir / "receipt.json").is_file()
+    source_bytes = (receipt_dir / "receipt.json").read_bytes()
+    assert first_attempts == [True]
     assert json.loads((receipt_dir / "alert-delivery.json").read_text())["alert"]["status"] == "ALERT_DELIVERY_FAILED"
+
+    agent_pushes: list[str] = []
+    human_pushes: list[str] = []
+    monkeypatch.setattr(bridge, "push_switchboard", lambda ev, **k: agent_pushes.append(ev["event_id"]) or {"status": "SENT", "message_id": "agent"})
+    monkeypatch.setattr(bridge, "push_webhook", lambda ev, **k: human_pushes.append(ev["event_id"]) or {"status": "SENT", "message_id": "human"})
+    monkeypatch.setattr(bridge, "_write_agent_action_receipt", lambda *a, **k: None)
+
+    retried = bridge.deliver_due()
+    assert retried["status"] == "DELIVERED"
+    assert len(agent_pushes) == 1
+    assert len(human_pushes) == 1
+    assert (receipt_dir / "receipt.json").read_bytes() == source_bytes
+    checkpoint = bridge._load_checkpoint()
+    event_id = human_pushes[0]
+    assert event_id in checkpoint.destinations["ops_discord"]["delivered_event_ids"]
+
+    again = bridge.deliver_due()
+    assert again["attempts"] == 0
+    assert len(human_pushes) == 1
 
 
 def test_drain_budget_and_acknowledgment_status(tmp_path, monkeypatch):
@@ -192,7 +219,7 @@ def test_drain_budget_and_acknowledgment_status(tmp_path, monkeypatch):
     monkeypatch.setattr(bridge, "SWITCHBOARD_DEDUP", tmp_path / "notify-bridge-dedup.json")
     sent: list[str] = []
 
-    def fake_push(ev):
+    def fake_push(ev, **k):
         sent.append(ev["event_id"])
         return {"status": "AGENT_PUSH_FAILED", "error": "network down"}
 
@@ -221,6 +248,76 @@ def test_drain_budget_and_acknowledgment_status(tmp_path, monkeypatch):
     assert checkpoint.pending or checkpoint.pending_dirs
 
 
+def test_acknowledged_history_cannot_starve_new_receipt(tmp_path, monkeypatch):
+    bridge = b
+    monkeypatch.setenv("PROJECT_WATCHDOG_NOTIFY_DRAIN_MAX_ATTEMPTS", "2")
+    monkeypatch.setenv("PROJECT_WATCHDOG_NOTIFY_DRAIN_MAX_SECONDS", "60")
+    monkeypatch.setattr(bridge, "STATE_ROOT", tmp_path)
+    monkeypatch.setattr(bridge, "RECEIPTS", tmp_path / "receipts")
+    monkeypatch.setattr(bridge, "CURSOR", tmp_path / "notify-bridge-cursor.json")
+    monkeypatch.setattr(bridge, "CHECKPOINTS", tmp_path / "notify-bridge-checkpoints.json")
+    monkeypatch.setattr(bridge, "BRIDGE_LOCK", tmp_path / "notify-bridge.lock")
+    monkeypatch.setattr(bridge, "SWITCHBOARD_DEDUP", tmp_path / "notify-bridge-dedup.json")
+    monkeypatch.setattr(bridge, "_write_agent_action_receipt", lambda *a, **k: None)
+    bridge.RECEIPTS.mkdir(parents=True)
+    dirs = []
+    for i in range(1, 4):
+        d = bridge.RECEIPTS / f"project-watchdog-{i}"
+        d.mkdir()
+        (d / "receipt.json").write_text(json.dumps({
+            "run_id": f"project-watchdog-{i}",
+            "status": "NEEDS_ATTENTION",
+            "handled_issues": [{
+                "repo": "grahama1970/agent-skills", "issue_number": i,
+                "action": "ticket_repair", "status": "NEEDS_ATTENTION",
+                "requires_human_input": False, "summary": "machine retry",
+            }],
+        }))
+        dirs.append(d)
+    checkpoint = bridge.BridgeCheckpoint(last_mtime=0)
+    for d in dirs[:2]:
+        ev = bridge.summarize_events(d)[0]
+        bridge._mark_delivered(checkpoint, "terminal", ev["event_id"], {"status": "ACK"})
+        bridge._mark_delivered(checkpoint, "pi_agent", ev["event_id"], {"status": "SENT"})
+    bridge._save_checkpoint(checkpoint)
+    sent: list[str] = []
+    monkeypatch.setattr(bridge, "push_switchboard", lambda ev, **k: sent.append(str(ev["issue"])) or {"status": "SENT", "message_id": ev["issue"]})
+
+    result = bridge.deliver_due()
+
+    assert result["attempts"] == 1
+    assert sent == ["3"]
+    assert result["status"] == "DELIVERED"
+
+
+def test_drain_deadline_includes_discovery_and_transport(tmp_path, monkeypatch):
+    bridge = b
+    monkeypatch.setenv("PROJECT_WATCHDOG_NOTIFY_DRAIN_MAX_ATTEMPTS", "1")
+    monkeypatch.setenv("PROJECT_WATCHDOG_NOTIFY_DRAIN_MAX_SECONDS", "0.5")
+    monkeypatch.setattr(bridge, "STATE_ROOT", tmp_path)
+    monkeypatch.setattr(bridge, "RECEIPTS", tmp_path / "receipts")
+    monkeypatch.setattr(bridge, "CURSOR", tmp_path / "notify-bridge-cursor.json")
+    monkeypatch.setattr(bridge, "CHECKPOINTS", tmp_path / "notify-bridge-checkpoints.json")
+    monkeypatch.setattr(bridge, "BRIDGE_LOCK", tmp_path / "notify-bridge.lock")
+    monkeypatch.setattr(bridge, "SWITCHBOARD_DEDUP", tmp_path / "notify-bridge-dedup.json")
+    monkeypatch.setattr(bridge, "_write_agent_action_receipt", lambda *a, **k: None)
+    bridge.RECEIPTS.mkdir(parents=True)
+    d = bridge.RECEIPTS / "project-watchdog-deadline"
+    d.mkdir()
+    (d / "receipt.json").write_text(json.dumps({
+        "run_id": "project-watchdog-deadline",
+        "status": "NEEDS_ATTENTION",
+        "handled_issues": [{"repo": "grahama1970/agent-skills", "issue_number": 7, "action": "ticket_repair", "status": "NEEDS_ATTENTION", "requires_human_input": False}],
+    }))
+    timeouts: list[float] = []
+    monkeypatch.setattr(bridge, "push_switchboard", lambda ev, **k: timeouts.append(k["timeout_s"]) or {"status": "AGENT_PUSH_FAILED"})
+
+    result = bridge.deliver_due()
+
+    assert result["attempts"] == 1
+    assert timeouts and 0 < timeouts[0] <= 0.5
+
+
 def test_restart_recovers_unregistered_receipt_at_or_before_cursor(tmp_path, monkeypatch):
     bridge = b
     monkeypatch.setattr(bridge, "STATE_ROOT", tmp_path)
@@ -229,7 +326,7 @@ def test_restart_recovers_unregistered_receipt_at_or_before_cursor(tmp_path, mon
     monkeypatch.setattr(bridge, "CHECKPOINTS", tmp_path / "notify-bridge-checkpoints.json")
     monkeypatch.setattr(bridge, "BRIDGE_LOCK", tmp_path / "notify-bridge.lock")
     monkeypatch.setattr(bridge, "SWITCHBOARD_DEDUP", tmp_path / "notify-bridge-dedup.json")
-    monkeypatch.setattr(bridge, "push_switchboard", lambda ev: {"status": "SENT", "message_id": f"m{ev['issue']}"})
+    monkeypatch.setattr(bridge, "push_switchboard", lambda ev, **k: {"status": "SENT", "message_id": f"m{ev['issue']}"})
     monkeypatch.setattr(bridge, "_write_agent_action_receipt", lambda *a, **k: None)
     bridge.RECEIPTS.mkdir(parents=True)
     receipt_dir = bridge.RECEIPTS / "project-watchdog-old-cursor"

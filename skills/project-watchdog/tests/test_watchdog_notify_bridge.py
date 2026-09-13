@@ -161,7 +161,7 @@ def test_switchboard_push_dedupes_same_fingerprint_across_receipts(tmp_path, mon
     checkpoint = bridge.BridgeCheckpoint()
     sent: list[dict] = []
 
-    def fake_push(ev):
+    def fake_push(ev, **k):
         sent.append(ev)
         return {"status": "SENT"}
 
@@ -235,7 +235,7 @@ def test_deliver_due_retries_pending_without_resending_acknowledged(tmp_path, mo
     bridge._mark_delivered(checkpoint, "terminal", "evt", {"status": "ACK"})
     bridge._save_checkpoint(checkpoint)
     sent = []
-    monkeypatch.setattr(bridge, "push_switchboard", lambda ev: sent.append(ev) or {"status": "SENT"})
+    monkeypatch.setattr(bridge, "push_switchboard", lambda ev, **k: sent.append(ev) or {"status": "SENT"})
 
     result = bridge.deliver_due()
 
@@ -301,11 +301,12 @@ def test_dead_run_reports_terminal_status_not_stale_progress(tmp_path, monkeypat
     # Superseded contract (2026-09-11): a terminal dead run does not drive the
     # fleet heartbeat AT ALL (not STALE_PROGRESS, not a forever-BLOCKED latch).
     assert hb["state"] == "observer_fresh_no_active_run", hb
-    # a stale monitor, even one claiming RUNNING, no longer latches fleet progress forever
+    # a stale monitor that still claims a live process remains visible as stalled,
+    # not as verified absence.
     mon.write_text(json.dumps({"process_running": True, "current_status": "RUNNING",
                                "latest_event": {}, "elapsed_seconds": 1}))
     os_utime(mon, (old, old))
-    assert b._heartbeat_payload()["state"] == "observer_fresh_no_active_run"
+    assert b._heartbeat_payload()["state"] == "STALE_PROGRESS"
 
 
 def test_heartbeat_skips_terminal_runs_and_latches_nothing_forever(tmp_path, monkeypatch):
@@ -321,11 +322,12 @@ def test_heartbeat_skips_terminal_runs_and_latches_nothing_forever(tmp_path, mon
     old = time.time() - 4000; os_utime = __import__("os").utime; os_utime(mon, (old, old))
     monkeypatch.setattr(b, "RECEIPTS", tmp_path)
     assert b._heartbeat_payload()["state"] == "observer_fresh_no_active_run"
-    # a stale monitor, even one claiming RUNNING, no longer latches fleet progress forever
+    # a stale monitor that still claims a live process remains visible as stalled,
+    # not as verified absence.
     mon.write_text(json.dumps({"process_running": True, "current_status": "RUNNING",
                                "latest_event": {}, "elapsed_seconds": 1}))
     os_utime(mon, (old, old))
-    assert b._heartbeat_payload()["state"] == "observer_fresh_no_active_run"
+    assert b._heartbeat_payload()["state"] == "STALE_PROGRESS"
 
 
 def test_closed_issue_rewrites_stale_alert_to_show_closure(monkeypatch):
@@ -358,7 +360,7 @@ def test_all_clear_fires_once_for_previously_alerted_issue(tmp_path, monkeypatch
     fp = b._all_clear_fingerprint(ev)
     assert fp is not None, "live fingerprint for this issue must be found"
     pushed = {}
-    monkeypatch.setattr(b, "push_switchboard", lambda cleared: pushed.update(cleared) or {"status": "SENT"})
+    monkeypatch.setattr(b, "push_switchboard", lambda cleared, **k: pushed.update(cleared) or {"status": "SENT"})
     out = b._push_all_clear(ev, fp)
     assert out["status"] == "SENT" and pushed.get("status") == "CLEARED"
     assert "all-clear" in pushed["summary"]
@@ -378,7 +380,7 @@ def test_old_statusless_dead_monitor_does_not_latch_heartbeat(tmp_path, monkeypa
     old = time.time() - 100000; os_utime = __import__("os").utime; os_utime(mon, (old, old))
     monkeypatch.setattr(b, "RECEIPTS", tmp_path)
     hb = b._heartbeat_payload()
-    assert hb["state"] == "observer_fresh_no_active_run", hb  # the #1641 case
+    assert hb["state"] == "UNRECONCILED_OPERATION", hb  # stale statusless run is unknown, not absent
     # a freshly-dead statusless run is still reported briefly
     os_utime(mon, (time.time(), time.time()))
     got = b._heartbeat_payload()
@@ -435,3 +437,42 @@ def test_mixed_ticket_outcomes_keep_identity_status_and_proof(tmp_path, monkeypa
     ]
     assert events[1]["requires_human_input"] is False
     assert len({ev["event_id"] for ev in events}) == 3
+
+
+def test_stale_monitor_does_not_hide_live_or_unreconciled_operation(tmp_path, monkeypatch):
+    import time
+    b = load_bridge()
+
+    monkeypatch.setattr(b, "RECEIPTS", tmp_path)
+    old = time.time() - 4000
+    os_utime = __import__("os").utime
+
+    live = tmp_path / "run-live"
+    live.mkdir()
+    (live / "dispatch-issue.json").write_text(json.dumps({"issue": 7}))
+    live_mon = live / "tau-stream-monitor.json"
+    live_mon.write_text(json.dumps({"process_running": True, "current_status": "RUNNING", "current_node": "creator", "elapsed_seconds": 10}))
+    os_utime(live_mon, (old, old))
+    hb = b._heartbeat_payload()
+    assert hb["state"] == "STALE_PROGRESS"
+    assert hb["issue"] == "7"
+
+    live_mon.unlink()
+    terminal = tmp_path / "run-terminal"
+    terminal.mkdir()
+    terminal_mon = terminal / "tau-stream-monitor.json"
+    terminal_mon.write_text(json.dumps({"process_running": False, "current_status": "BLOCKED", "elapsed_seconds": 1}))
+    os_utime(terminal_mon, (old, old))
+    assert b._heartbeat_payload()["state"] == "observer_fresh_no_active_run"
+
+    terminal_mon.unlink()
+    unresolved = tmp_path / "run-unresolved"
+    unresolved.mkdir()
+    (unresolved / "dispatch-issue.json").write_text(json.dumps({"issue": 8}))
+    unresolved_mon = unresolved / "tau-stream-monitor.json"
+    unresolved_mon.write_text(json.dumps({"process_running": False, "current_status": None, "elapsed_seconds": 1}))
+    os_utime(unresolved_mon, (old, old))
+    hb = b._heartbeat_payload()
+    assert hb["state"] == "UNRECONCILED_OPERATION"
+    assert hb["issue"] == "8"
+    assert hb["requires_human_input"] is False

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import importlib.util
 import json
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -104,20 +103,22 @@ def test_missing_expected_digests_cannot_approve() -> None:
     assert loop.classify_response(text)["ready_to_deploy"] is False
 
 
-def test_ask_requires_verified_current_run_not_just_response_path(tmp_path: Path) -> None:
+def test_current_review_survives_post_completion_stdout_capture(tmp_path: Path) -> None:
     root = tmp_path / "out"
     run = root / "ask-tau-current"
     response = run / "node-artifacts/handler-webgpt/response.md"
     response.parent.mkdir(parents=True)
     response.write_text("body", encoding="utf-8")
     missing = run / "node-artifacts/handler-webgpt/node-receipt.json"
+    run_receipt = run / "tau-receipts/dag-receipt.json"
+    run_receipt.parent.mkdir(parents=True)
+    run_receipt.write_text("{}", encoding="utf-8")
     ask_json = root / "ask.json"
     ask_json.parent.mkdir(parents=True, exist_ok=True)
-    ask_json.write_text(json.dumps({"execution": {"node_provider_receipts": [{"node_id": "handler-webgpt", "ok": True, "status": "PASS", "path": str(missing), "response_path": str(response)}]}}), encoding="utf-8")
+    ask_json.write_text(json.dumps({"execution": {"receipt_path": str(run_receipt), "node_provider_receipts": [{"node_id": "handler-webgpt", "ok": True, "status": "PASS", "path": str(missing), "response_path": str(response)}]}}), encoding="utf-8")
     assert loop.latest_webgpt_response(ask_json, root) is None
     missing.write_text(json.dumps({"ok": True, "status": "PASS", "node_id": "handler-webgpt", "response_path": str(response)}), encoding="utf-8")
-    newer = ask_json.stat().st_mtime + 2
-    os.utime(response, (newer, newer))
+    assert response.stat().st_mtime <= ask_json.stat().st_mtime
     assert loop.latest_webgpt_response(ask_json, root) == response
 
 

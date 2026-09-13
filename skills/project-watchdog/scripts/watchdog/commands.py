@@ -136,8 +136,6 @@ def _creator_admission(result: dict[str, Any], *, apply: bool) -> str:
         return "not_started"
     if result.get("status") == "SKIPPED" and result.get("stop_reason") in _CONFIRMED_NO_START_REASONS:
         return "not_started"
-    if result.get("ok") is True:
-        return "started"
     return "indeterminate"
 
 
@@ -180,7 +178,7 @@ def _deliver_tick_notifications(run_id: str, receipt_dir: Path) -> dict[str, Any
     return result
 
 
-def _publish_ui_snapshot(run_id: str) -> dict[str, Any]:
+def _publish_ui_snapshot(run_id: str, receipt_dir: Path) -> dict[str, Any]:
     """Atomically write the static UI snapshot as a tick finalizer."""
     output = config.SKILL_DIR / "ui" / "dist" / "project-watchdog-snapshot.json"
     tmp = output.with_name(f".{output.name}.{run_id}.tmp")
@@ -192,13 +190,27 @@ def _publish_ui_snapshot(run_id: str) -> dict[str, Any]:
             fh.flush()
             os.fsync(fh.fileno())
         os.replace(tmp, output)
-        result = {"status": "OK", "output": str(output), "bytes": len(text)}
+        result = {"status": "OK", "output": str(output), "bytes": len(text), "snapshot_sha256": "sha256:" + hashlib.sha256(output.read_bytes()).hexdigest()}
     except Exception as exc:  # noqa: BLE001 - UI publication never blocks cleanup
         result = {"status": "UI_SNAPSHOT_FAILED", "output": str(output), "error": str(exc)[:300]}
+        if output.is_file():
+            result.update(previous_snapshot_sha256="sha256:" + hashlib.sha256(output.read_bytes()).hexdigest(), previous_snapshot_age_s=int(time.time() - output.stat().st_mtime))
         try:
             tmp.unlink()
         except OSError:
             pass
+    receipt_path = receipt_dir / "receipt.json"
+    sidecar = {
+        "schema": "agent_skills.project_watchdog.ui_publication.v1",
+        "run_id": run_id,
+        "source_receipt_path": str(receipt_path) if receipt_path.is_file() else None,
+        "source_receipt_sha256": ("sha256:" + hashlib.sha256(receipt_path.read_bytes()).hexdigest()) if receipt_path.is_file() else None,
+        "ui_publication": result,
+    }
+    try:
+        write_json(receipt_dir / "ui-publication.json", sidecar)
+    except Exception as exc:  # noqa: BLE001 - logging sidecar must not block unlock
+        result.setdefault("sidecar_error", str(exc)[:300])
     try:
         log_event(run_id, "ui_snapshot", **result)
     except Exception:  # noqa: BLE001 - finalizer logging must not prevent unlock
@@ -316,7 +328,7 @@ def tick(*, apply: bool, project_id: str, max_tickets: int, only_issue: int | No
                 except Exception as exc:  # noqa: BLE001 - finalization must still unlock
                     logger.error("notification finalizer crashed for {}: {}", run_id, exc)
                 try:
-                    _publish_ui_snapshot(run_id)
+                    _publish_ui_snapshot(run_id, receipt_dir)
                 except Exception as exc:  # noqa: BLE001 - finalization must still unlock
                     logger.error("ui finalizer crashed for {}: {}", run_id, exc)
         finally:

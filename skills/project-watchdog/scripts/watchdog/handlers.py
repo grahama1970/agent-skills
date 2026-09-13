@@ -1458,7 +1458,9 @@ def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[
     command.extend(["--topology", "sequential", "--run-output-root", str(ask_dir), "--execute",
                "--execution-timeout-seconds", str(_ticket_repair_execution_timeout(project)),
                "--allow-provider-calls", "--json"])
-    primary.checkpoint("launching", ask_run_dir=str(ask_dir), dispatched_at=time.time())
+    dispatched_at = time.time()
+    primary.checkpoint("launching", ask_run_dir=str(ask_dir), dispatched_at=dispatched_at)
+    result.update(native_admission="started", creator_started=True, dispatched_at=dispatched_at)
     execution = run_ask_tau_dag_with_stream_monitor(command, cwd=config.ask_run_sh().parent,
         timeout_s=int(project.get("ticket_repair_timeout_s", 1800)), ask_run_dir=ask_dir,
         monitor_path=receipt_dir / "tau-stream-monitor.json")

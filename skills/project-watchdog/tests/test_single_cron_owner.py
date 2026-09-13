@@ -30,7 +30,7 @@ def test_quiet_owner_finalizes_without_dispatch(tmp_path: Path, monkeypatch) -> 
     monkeypatch.setattr(commands, "_test_hold_lock_if_requested", lambda run_id: None)
     monkeypatch.setattr(commands, "_tick_locked", lambda *a, **k: (_ for _ in ()).throw(AssertionError("repair dispatched during quiet hours")))
     monkeypatch.setattr(commands, "_deliver_tick_notifications", lambda run_id, receipt_dir: calls.append("deliver") or {"status": "IDLE"})
-    monkeypatch.setattr(commands, "_publish_ui_snapshot", lambda run_id: calls.append("ui") or {"status": "OK"})
+    monkeypatch.setattr(commands, "_publish_ui_snapshot", lambda run_id, receipt_dir: calls.append("ui") or {"status": "OK"})
     monkeypatch.setattr(commands, "finish", _fake_finish)
     monkeypatch.setattr(commands, "log_event", lambda *a, **k: None)
 
@@ -79,3 +79,90 @@ def test_quiet_delivery_replays_pending_without_delivering_current_receipt(tmp_p
     delivery = json.loads((receipt_dir / "notification-delivery.json").read_text())
     assert delivery["notification_delivery"]["status"] == "IDLE"
     assert delivery["source_receipt_path"].endswith("receipt.json")
+
+
+def test_ui_publication_failure_has_durable_source_bound_outcome(tmp_path: Path, monkeypatch) -> None:
+    receipt_dir = tmp_path / "run"
+    receipt_dir.mkdir()
+    receipt_path = receipt_dir / "receipt.json"
+    receipt_path.write_text(json.dumps({"run_id": "run", "status": "COMPLETED", "ok": True}), encoding="utf-8")
+    snapshot = tmp_path / "ui" / "dist" / "project-watchdog-snapshot.json"
+    snapshot.parent.mkdir(parents=True)
+    snapshot.write_text('{"previous": true}\n', encoding="utf-8")
+    old = 1000
+    __import__("os").utime(snapshot, (old, old))
+    source_sha = "sha256:" + __import__("hashlib").sha256(receipt_path.read_bytes()).hexdigest()
+
+    monkeypatch.setattr(config, "SKILL_DIR", tmp_path)
+    monkeypatch.setattr(commands, "ui_payload", lambda receipt_limit=100: {"new": True})
+    real_replace = commands.os.replace
+    def fail_snapshot_only(src, dst):
+        if Path(dst) == snapshot:
+            raise OSError("replace denied")
+        return real_replace(src, dst)
+    monkeypatch.setattr(commands.os, "replace", fail_snapshot_only)
+    monkeypatch.setattr(commands, "log_event", lambda *a, **k: None)
+
+    result = commands._publish_ui_snapshot("run", receipt_dir)
+
+    assert result["status"] == "UI_SNAPSHOT_FAILED"
+    assert snapshot.read_text(encoding="utf-8") == '{"previous": true}\n'
+    sidecar = json.loads((receipt_dir / "ui-publication.json").read_text())
+    assert sidecar["source_receipt_sha256"] == source_sha
+    assert sidecar["ui_publication"]["previous_snapshot_sha256"]
+    assert sidecar["ui_publication"]["previous_snapshot_age_s"] >= 0
+
+
+def test_native_singleton_excludes_second_process_through_all_phases(tmp_path: Path) -> None:
+    import os
+    import subprocess
+    import textwrap
+    import time
+
+    env = {**os.environ, "PROJECT_WATCHDOG_STATE_ROOT": str(tmp_path)}
+    scripts = str(ROOT / "scripts")
+    owner_ready = tmp_path / "owner-ready"
+    owner = subprocess.Popen([
+        sys.executable,
+        "-c",
+        textwrap.dedent(f"""
+            import pathlib, sys, time
+            sys.path.insert(0, {scripts!r})
+            from watchdog import core
+            assert core.acquire_lock('owner') is True
+            pathlib.Path({str(owner_ready)!r}).write_text('ready')
+            time.sleep(1.5)
+            core.release_lock()
+        """),
+    ], env=env)
+    try:
+        for _ in range(50):
+            if owner_ready.exists():
+                break
+            time.sleep(0.05)
+        assert owner_ready.exists()
+        blocked = subprocess.run([
+            sys.executable,
+            "-c",
+            textwrap.dedent(f"""
+                import sys
+                sys.path.insert(0, {scripts!r})
+                from watchdog import core
+                print(core.acquire_lock('second'))
+            """),
+        ], env=env, capture_output=True, text=True, check=False)
+        assert blocked.stdout.strip() == "False"
+    finally:
+        owner.wait(timeout=5)
+    acquired = subprocess.run([
+        sys.executable,
+        "-c",
+        textwrap.dedent(f"""
+            import sys
+            sys.path.insert(0, {scripts!r})
+            from watchdog import core
+            print(core.acquire_lock('third'))
+            core.release_lock()
+        """),
+    ], env=env, capture_output=True, text=True, check=False)
+    assert acquired.stdout.strip() == "True"

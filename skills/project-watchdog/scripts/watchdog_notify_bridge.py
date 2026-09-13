@@ -672,7 +672,7 @@ def requires_agent_push(ev: dict) -> bool:
     return True
 
 
-def push_webhook(ev: dict) -> dict[str, Any]:
+def push_webhook(ev: dict, *, timeout_s: float = 60) -> dict[str, Any]:
     if not requires_human_push(ev):
         return {"status": "SKIPPED", "reason": "not_human_only_blocker"}
     title = f"project-watchdog {ev.get('status')} — {_subject_target(ev)}"
@@ -690,7 +690,7 @@ def push_webhook(ev: dict) -> dict[str, Any]:
                 _fmt(ev),
                 "--json",
             ],
-            capture_output=True, text=True, timeout=60,
+            capture_output=True, text=True, timeout=max(0.1, timeout_s),
         )
         try:
             receipt = json.loads(p.stdout)
@@ -776,14 +776,14 @@ def switchboard_payload(ev: dict) -> dict[str, Any]:
     }
 
 
-def push_switchboard(ev: dict) -> dict[str, Any]:
+def push_switchboard(ev: dict, *, timeout_s: float = 10) -> dict[str, Any]:
     if not requires_agent_push(ev):
         return {"status": "SKIPPED", "reason": "no_agent_action"}
     body = json.dumps(switchboard_payload(ev)).encode()
     req = urllib.request.Request(f"{SWITCHBOARD}/emit", data=body,
                                  headers={"Content-Type": "application/json"}, method="POST")
     try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
+        with urllib.request.urlopen(req, timeout=max(0.1, timeout_s)) as resp:
             raw = resp.read().decode("utf-8", errors="replace")
             try:
                 parsed = json.loads(raw) if raw else {}
@@ -863,11 +863,30 @@ def write_stream_event(ev: dict[str, Any]) -> dict[str, Any]:
     return {"status": "ACK", "path": str(stream), "offset": offset}
 
 
+def _alert_delivery_path(ev: dict[str, Any]) -> Path:
+    return RECEIPTS / str(ev["dir"]) / "alert-delivery.json"
+
+
+def _human_alert_retry_required(ev: dict[str, Any]) -> bool:
+    if not requires_human_push(ev):
+        return False
+    try:
+        sidecar = json.loads(_alert_delivery_path(ev).read_text())
+    except (OSError, ValueError):
+        return False
+    alert = sidecar.get("alert") or {}
+    if alert.get("delivered") is True or alert.get("status") in {"SENT", "DEDUPED", "SUPPRESSED"}:
+        return False
+    return str(alert.get("status") or "").endswith("FAILED") or alert.get("delivered") is False
+
+
 def _event_complete(checkpoint: BridgeCheckpoint, ev: dict[str, Any]) -> bool:
     event_id = ev["event_id"]
     required = ["terminal"]
     if requires_agent_push(ev):
         required.append("pi_agent")
+    if _human_alert_retry_required(ev):
+        required.append("ops_discord")
     return all(_delivered(checkpoint, dest, event_id) for dest in required)
 
 
@@ -908,7 +927,7 @@ def _all_clear_fingerprint(ev: dict) -> str | None:
     return None
 
 
-def deliver(ev: dict[str, Any], checkpoint: BridgeCheckpoint, *, fresh: bool) -> dict[str, Any]:
+def deliver(ev: dict[str, Any], checkpoint: BridgeCheckpoint, *, fresh: bool, transport_timeout_s: float = 60) -> dict[str, Any]:
     ev = apply_live_issue_state(ev)  # log shows closure: closed issues never alert as open failures
     # Deliberate parks are quiet in the LOG too (operator 2026-09-12): a
     # SKIPPED creator_transport_outage tick every 5 minutes wrote the same
@@ -941,7 +960,7 @@ def deliver(ev: dict[str, Any], checkpoint: BridgeCheckpoint, *, fresh: bool) ->
             result["switchboard"] = receipt
             _mark_delivered(checkpoint, "pi_agent", event_id, receipt)
         else:
-            receipt = push_switchboard(ev)
+            receipt = push_switchboard(ev, timeout_s=min(10, transport_timeout_s))
             result["switchboard"] = receipt
             if receipt.get("status") == "SENT":
                 # Only a real delivery advances the dedupe clock (alerts.py rule).
@@ -957,7 +976,16 @@ def deliver(ev: dict[str, Any], checkpoint: BridgeCheckpoint, *, fresh: bool) ->
             state = _load_dedup_state()
             state.pop(all_clear_fp, None)
             _write_text_durable(SWITCHBOARD_DEDUP, json.dumps(state, sort_keys=True) + "\n")
-    result["ops_discord"] = {"status": "SKIPPED", "reason": "owned_by_core_alerts"}
+    if _human_alert_retry_required(ev):
+        if _delivered(checkpoint, "ops_discord", event_id):
+            result["ops_discord"] = {"status": "DEDUPED"}
+        else:
+            receipt = push_webhook(ev, timeout_s=min(30, transport_timeout_s))
+            result["ops_discord"] = receipt
+            if receipt.get("status") == "SENT":
+                _mark_delivered(checkpoint, "ops_discord", event_id, receipt)
+    else:
+        result["ops_discord"] = {"status": "SKIPPED", "reason": "owned_by_core_alerts"}
     if _event_complete(checkpoint, ev):
         checkpoint.pending.pop(event_id, None)
     else:
@@ -983,6 +1011,7 @@ def _heartbeat_payload() -> dict[str, Any]:
     # describes an in-flight (or unknown-state) run.
     monitor_path = None
     m = None
+    unreconciled: tuple[Path, dict[str, Any]] | None = None
     for candidate in mons:
         try:
             doc = json.loads(Path(candidate).read_text())
@@ -999,16 +1028,22 @@ def _heartbeat_payload() -> dict[str, Any]:
         except OSError:
             age = 0
         fresh_enough = age <= 900
-        # A monitor untouched for 15+ min is not current state, PERIOD -- even
-        # one claiming process_running=True (#1606: process died without the
-        # flag clearing; a 17h-old 'running' monitor latched STALE_PROGRESS
-        # forever). The heartbeat only reports monitors touched inside the
-        # freshness window; anything older means no active run to observe.
-        if fresh_enough and (doc.get("process_running") or status not in _TERMINAL_RUN_STATUSES):
+        if doc.get("process_running") or (fresh_enough and status not in _TERMINAL_RUN_STATUSES):
             monitor_path = Path(candidate)
             m = doc
             break
+        if not fresh_enough and status not in _TERMINAL_RUN_STATUSES and unreconciled is None:
+            unreconciled = (Path(candidate), doc)
     if m is None or monitor_path is None:
+        if unreconciled is not None:
+            run_dir, doc = unreconciled
+            return {
+                "state": "UNRECONCILED_OPERATION",
+                "observer_fresh": True,
+                "progress_age_s": int(time.time() - run_dir.stat().st_mtime),
+                "issue": _dispatched_issue(run_dir.parent),
+                "requires_human_input": False,
+            }
         return {"state": "observer_fresh_no_active_run"}
     try:
         ev = m.get("latest_event") or {}
@@ -1040,15 +1075,25 @@ def _heartbeat_payload() -> dict[str, Any]:
         return {"state": "observer_fresh_monitor_unreadable", "observer_fresh": True, "error": str(exc)[:200]}
 
 
+def _recovery_scan_limit() -> int:
+    try:
+        return int(os.environ.get("PROJECT_WATCHDOG_NOTIFY_RECOVERY_SCAN_LIMIT") or 100)
+    except ValueError:
+        return 100
+
+
 def _candidate_dirs(checkpoint: BridgeCheckpoint, replay_last: bool) -> list[Path]:
     if replay_last:
         return sorted(RECEIPTS.iterdir(), key=lambda p: p.stat().st_mtime)[-1:]
     pending = [RECEIPTS / name for name in checkpoint.pending_dirs]
-    # Re-scan receipt dirs independent of mtime cursor; the bounded drain below
-    # prevents old backlog from monopolizing the tick while still recovering
-    # committed-but-unregistered receipts restored at or behind last_mtime.
-    new_dirs = [d for d in RECEIPTS.iterdir() if d.is_dir()]
-    by_name = {p.name: p for p in pending + new_dirs if p.exists() and p.is_dir()}
+    all_dirs = [d for d in RECEIPTS.iterdir() if d.is_dir()]
+    new_dirs = [d for d in all_dirs if d.stat().st_mtime >= checkpoint.last_mtime]
+    # Bounded old-history recovery preserves committed-but-unregistered receipts
+    # behind a bad cursor without letting years of acknowledged history starve
+    # fresh work every tick.
+    old_dirs = [d for d in all_dirs if d.stat().st_mtime < checkpoint.last_mtime]
+    recovery_dirs = sorted(old_dirs, key=lambda p: p.stat().st_mtime, reverse=True)[:max(0, _recovery_scan_limit())]
+    by_name = {p.name: p for p in pending + new_dirs + recovery_dirs if p.exists() and p.is_dir()}
     return sorted(by_name.values(), key=lambda p: p.stat().st_mtime)
 
 
@@ -1098,16 +1143,19 @@ def deliver_due(receipt_dir: Path | None = None) -> dict[str, Any]:
         def budget_left() -> bool:
             return attempts < max_attempts and time.monotonic() <= deadline
 
+        def transport_timeout() -> float:
+            return max(0.1, deadline - time.monotonic())
+
         for ev in list(checkpoint.pending.values()):
             if not budget_left():
                 results.append({"status": "BUDGET_EXHAUSTED", "reason": "pending_event_budget", "remaining_pending_events": len(checkpoint.pending)})
                 break
             event_id = str(ev.get("event_id") or "")
-            if event_id in attempted_event_ids:
+            if event_id in attempted_event_ids or _event_complete(checkpoint, ev):
                 continue
             attempted_event_ids.add(event_id)
             attempts += 1
-            results.append(deliver(ev, checkpoint, fresh=True))
+            results.append(deliver(ev, checkpoint, fresh=True, transport_timeout_s=transport_timeout()))
         dirs = sorted({p for p in (_candidate_dirs(checkpoint, replay_last=False) + ([receipt_dir] if receipt_dir is not None else [])) if p.exists() and p.is_dir()}, key=lambda p: p.stat().st_mtime)
         for index, d in enumerate(dirs):
             if not budget_left():
@@ -1131,11 +1179,11 @@ def deliver_due(receipt_dir: Path | None = None) -> dict[str, Any]:
                     results.append({"status": "BUDGET_EXHAUSTED", "reason": "event_budget", "dir": d.name})
                     break
                 event_id = str(ev.get("event_id") or "")
-                if event_id in attempted_event_ids:
+                if event_id in attempted_event_ids or _event_complete(checkpoint, ev):
                     continue
                 attempted_event_ids.add(event_id)
                 attempts += 1
-                results.append(deliver(ev, checkpoint, fresh=True))
+                results.append(deliver(ev, checkpoint, fresh=True, transport_timeout_s=transport_timeout()))
             checkpoint.last_mtime = max(checkpoint.last_mtime, d.stat().st_mtime)
         if not results:
             stream = STATE_ROOT / "events.jsonl"
