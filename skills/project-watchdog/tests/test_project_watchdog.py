@@ -418,6 +418,16 @@ def test_finish_promotes_handled_human_blocker_to_receipt(tmp_path, monkeypatch,
     assert written["requires_human_input"] is True
 
 
+def test_tick_finalizer_writes_ui_snapshot(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(commands.config, "SKILL_DIR", tmp_path)
+    monkeypatch.setattr(commands, "ui_payload", lambda receipt_limit=100: {"schema": "snapshot", "limit": receipt_limit})
+    result = commands._publish_ui_snapshot("run-ui")
+
+    written = json.loads((tmp_path / "ui" / "dist" / "project-watchdog-snapshot.json").read_text())
+    assert result["status"] == "OK"
+    assert written == {"schema": "snapshot", "limit": 100}
+
+
 def test_finish_delivers_persisted_receipt_inline(tmp_path, monkeypatch, capsys) -> None:
     monkeypatch.setenv("PROJECT_WATCHDOG_STATE_ROOT", str(tmp_path))
     calls = []

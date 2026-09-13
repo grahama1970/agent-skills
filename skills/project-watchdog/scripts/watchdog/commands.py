@@ -97,6 +97,20 @@ def _record_agent_authorization(receipt: dict[str, Any], result: dict[str, Any])
     receipt["agent_action_required"] = True
 
 
+def _publish_ui_snapshot(run_id: str) -> dict[str, Any]:
+    """Write the static UI snapshot as a tick finalizer, best effort."""
+    output = config.SKILL_DIR / "ui" / "dist" / "project-watchdog-snapshot.json"
+    try:
+        text = json.dumps(ui_payload(receipt_limit=100), indent=2, sort_keys=True)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(text + "\n", encoding="utf-8")
+        result = {"status": "OK", "output": str(output), "bytes": len(text) + 1}
+    except Exception as exc:  # noqa: BLE001 - UI publication never blocks a repair tick
+        result = {"status": "UI_SNAPSHOT_FAILED", "output": str(output), "error": str(exc)[:300]}
+    log_event(run_id, "ui_snapshot", **result)
+    return result
+
+
 def _record_fleet_stall(receipt: dict[str, Any], skipped: list[dict[str, Any]]) -> None:
     """Mark a tick that serviced no project, and say whether it can recover.
 
@@ -200,6 +214,7 @@ def tick(*, apply: bool, project_id: str, max_tickets: int, only_issue: int | No
             only_issue=only_issue, release_scheduler_lock=release_scheduler_lock,
         )
     finally:
+        _publish_ui_snapshot(run_id)
         release_scheduler_lock()
 
 
