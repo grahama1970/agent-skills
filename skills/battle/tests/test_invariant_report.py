@@ -158,3 +158,71 @@ def test_invariant_report_marks_adaptive_lineage_rows(tmp_path: Path) -> None:
     assert "adaptive_lineage_rows=1" in json.dumps(report)
     assert any(item["kind"] == "battle-adaptive-lineage" and item["path"] == str(lineage) for item in report["source_of_truth_inventory"])
     assert "yes: adaptive Red win fixed/replayed for oai-trial" in out_md.read_text(encoding="utf-8")
+
+
+def test_invariant_report_terminal_summary_is_plain_battle_story(tmp_path: Path) -> None:
+    contract = tmp_path / "contract-floor-campaign.json"
+    beyond = tmp_path / "beyond-contract-campaign.json"
+    project_state = tmp_path / "project-state.json"
+    out_json = tmp_path / "report.json"
+    out_md = tmp_path / "report.md"
+    _campaign(contract, passed=True, case_log=[
+        {
+            "case": "adv-formatted-phone-json-integer",
+            "expectation": "MUST_ACCEPT",
+            "passed": True,
+            "execution": {"kind": "ACCEPT", "exit_code": 0},
+        },
+        {
+            "case": "adv-leading-zero-json-integer",
+            "expectation": "MUST_REJECT",
+            "passed": True,
+            "execution": {"kind": "REJECT", "exit_code": 1},
+        },
+    ])
+    _campaign(beyond, passed=False, case_log=[
+        {
+            "case": "bb-json-object-key",
+            "expectation": "MUST_REJECT",
+            "passed": True,
+            "execution": {"kind": "REJECT", "exit_code": 1},
+        },
+        {
+            "case": "bb-filename-value",
+            "expectation": "MUST_REJECT",
+            "passed": False,
+            "violations": ["policy value survives in filename: Alice"],
+        },
+    ])
+    project_state.write_text("# Project State\ncurrent\n", encoding="utf-8")
+
+    proc = subprocess.run([
+        str(BATTLE / "run.sh"), "invariant-report",
+        "--campaign", str(contract),
+        "--campaign", str(beyond),
+        "--project-state", str(project_state),
+        "--target", "oai-trial",
+        "--out-json", str(out_json),
+        "--out-md", str(out_md),
+        "--terminal-summary",
+    ], cwd=REPO, capture_output=True, text=True, check=False)
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    json.loads(proc.stdout)
+    terminal = proc.stderr
+    assert "Battle report: oai-trial" in terminal
+    assert "Contract floor:" in terminal
+    assert "2 acceptance-floor cases: 1 accepted clean, 1 fail-closed, 0 RED_WIN." in terminal
+    assert "Red pressure:" in terminal
+    assert "2 beyond-contract probes: 0 accepted clean, 1 fail-closed, 1 RED_WIN." in terminal
+    assert "Scorekeeper call:" in terminal
+    assert "4 total cases; 1 accepted clean; 2 stopped fail-closed; 1 RED_WIN." in terminal
+    assert "RED_WIN blocks release until Blue patches and Judge replay passes." in terminal
+    assert "Highlight plays:" in terminal
+    assert "bb-filename-value: Red tried policy value hidden in the released filename; result RED_WIN" in terminal
+    assert "Next playbook:" in terminal
+    assert "research similar exploit families, freeze deterministic variants, patch, and replay" in terminal
+    assert "Caveats:" in terminal
+    assert "This is bounded Battle evidence, not proof that every possible exploit is absent." in terminal
+    assert "project-state JSON artifact" not in terminal
+    assert "Judge passed; no policy value survived." not in terminal

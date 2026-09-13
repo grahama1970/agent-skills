@@ -190,6 +190,77 @@ def _markdown_table(rows: list[dict[str, str]]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _row_counts(rows: list[dict[str, str]]) -> dict[str, int]:
+    return {
+        "total": len(rows),
+        "accepted_clean": sum(1 for row in rows if row["result"] == "ACCEPTED_CLEAN"),
+        "fail_closed": sum(1 for row in rows if row["result"] == "BLOCKED_FAIL_CLOSED"),
+        "red_wins": sum(1 for row in rows if row["result"] == "RED_WIN"),
+    }
+
+
+def _terminal_evidence(row: dict[str, str]) -> str:
+    if row["result"] == "RED_WIN":
+        return row["evidence"]
+    if row["result"] == "BLOCKED_FAIL_CLOSED":
+        return "target rejected this attack; Judge found no released policy value"
+    return "target processed the case; Judge found no released policy value"
+
+
+def _terminal_summary(target: str, rows: list[dict[str, str]]) -> str:
+    contract = [row for row in rows if row["scope"] == "contractual"]
+    beyond = [row for row in rows if row["scope"] == "beyond-contract"]
+    other = [row for row in rows if row["scope"] not in {"contractual", "beyond-contract"}]
+    total = _row_counts(rows)
+    contract_counts = _row_counts(contract)
+    beyond_counts = _row_counts(beyond)
+    highlights = [row for row in rows if row["result"] == "RED_WIN"]
+    highlights += [row for row in rows if row["case"] in {
+        "adv-formatted-phone-json-integer",
+        "adv-cross-format-same-identity-trap",
+        "adv-leading-zero-json-integer",
+        "bb-json-object-key",
+        "bb-sqlite-generated-reconstruction",
+        "bb-filename-value",
+    } and row not in highlights]
+    highlights = highlights[:6]
+
+    lines = [
+        f"Battle report: {target}",
+        "",
+        "Contract floor:",
+        f"  {contract_counts['total']} acceptance-floor cases: {contract_counts['accepted_clean']} accepted clean, {contract_counts['fail_closed']} fail-closed, {contract_counts['red_wins']} RED_WIN.",
+        "Red pressure:",
+        f"  {beyond_counts['total']} beyond-contract probes: {beyond_counts['accepted_clean']} accepted clean, {beyond_counts['fail_closed']} fail-closed, {beyond_counts['red_wins']} RED_WIN.",
+    ]
+    if other:
+        other_counts = _row_counts(other)
+        lines.append(f"  {other_counts['total']} other campaign cases: {other_counts['accepted_clean']} accepted clean, {other_counts['fail_closed']} fail-closed, {other_counts['red_wins']} RED_WIN.")
+    lines += [
+        "Scorekeeper call:",
+        f"  {total['total']} total cases; {total['accepted_clean']} accepted clean; {total['fail_closed']} stopped fail-closed; {total['red_wins']} RED_WIN.",
+    ]
+    if total["red_wins"]:
+        lines.append("  RED_WIN blocks release until Blue patches and Judge replay passes.")
+    else:
+        lines.append("  No RED_WIN rows in this bounded report.")
+    lines.append("Highlight plays:")
+    if highlights:
+        for row in highlights:
+            lines.append(f"  - {row['case']}: Red tried {row['description']}; result {row['result']}; Judge evidence: {_terminal_evidence(row)}")
+    else:
+        lines.append("  - No named case rows were recorded.")
+    lines += [
+        "Next playbook:",
+        "  If Red wins, research similar exploit families, freeze deterministic variants, patch, and replay with the independent Judge.",
+        "Caveats:",
+        "  This is bounded Battle evidence, not proof that every possible exploit is absent.",
+        "  Dogpile/Ask research is design input until selected cases are frozen and run.",
+        "  Adaptive lineage is shown only when a Red win was fixed and replayed.",
+    ]
+    return "\n".join(lines) + "\n"
+
+
 def build_report(*, campaigns: list[Path], project_state: Path, target: str, adaptive_lineage: list[Path] | None = None) -> tuple[dict[str, Any], str]:
     loaded = [(path, _load_campaign(path)) for path in campaigns]
     lineage_paths = adaptive_lineage or []
@@ -295,8 +366,12 @@ def main() -> int:
     parser.add_argument("--target", default="target")
     parser.add_argument("--out-json", required=True, type=Path)
     parser.add_argument("--out-md", required=True, type=Path)
+    parser.add_argument("--terminal-summary", action="store_true", help="Also print a plain-spoken Battle story to stderr; JSON stdout stays stable.")
     args = parser.parse_args()
 
+    loaded = [(path, _load_campaign(path)) for path in args.campaign]
+    lineage = _lineage_cases(args.adaptive_lineage)
+    attack_rows = _attack_rows(loaded, lineage)
     report, exploits_table = build_report(campaigns=args.campaign, project_state=args.project_state, target=args.target, adaptive_lineage=args.adaptive_lineage)
     args.out_json.parent.mkdir(parents=True, exist_ok=True)
     args.out_md.parent.mkdir(parents=True, exist_ok=True)
@@ -312,6 +387,8 @@ def main() -> int:
         return render.returncode
     with args.out_md.open("a", encoding="utf-8") as handle:
         handle.write("\n" + exploits_table)
+    if args.terminal_summary:
+        sys.stderr.write(_terminal_summary(args.target, attack_rows))
     print(json.dumps({"schema": "battle.invariant_report_result.v1", "status": "PASS", "report_json": str(args.out_json), "report_md": str(args.out_md), "campaigns": len(args.campaign)}, sort_keys=True))
     return 0
 
