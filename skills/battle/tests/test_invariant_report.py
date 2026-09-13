@@ -218,6 +218,14 @@ def test_invariant_report_terminal_summary_is_plain_battle_story(tmp_path: Path)
     assert "Scorekeeper call:" in terminal
     assert "4 total cases; 1 accepted clean; 2 stopped fail-closed; 1 RED_WIN." in terminal
     assert "RED_WIN blocks release until Blue patches and Judge replay passes." in terminal
+    assert "Case table:" in terminal
+    assert "Scope" in terminal and "Case" in terminal and "Expect" in terminal and "Result" in terminal and "Attack" in terminal and "Evidence" in terminal
+    assert "contractual     adv-formatted-phone-json-integer" in terminal
+    assert "MUST_ACCEPT" in terminal and "ACCEPTED_CLEAN" in terminal
+    assert "beyond-contract bb-json-object-key" in terminal
+    assert "BLOCKED_FAIL_CLOSED" in terminal
+    assert "beyond-contract bb-filename-value" in terminal
+    assert "MUST_REJECT" in terminal and "RED_WIN" in terminal and "policy value survives in filename: Alice" in terminal
     assert "Highlight plays:" in terminal
     assert "bb-filename-value: Red tried policy value hidden in the released filename; result RED_WIN" in terminal
     assert "Next playbook:" in terminal

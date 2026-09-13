@@ -207,6 +207,46 @@ def _terminal_evidence(row: dict[str, str]) -> str:
     return "target processed the case; Judge found no released policy value"
 
 
+def _clip(value: str, width: int) -> str:
+    clean = " ".join(value.split())
+    if len(clean) <= width:
+        return clean
+    return clean[:max(0, width - 1)] + "…"
+
+
+def _terminal_table(rows: list[dict[str, str]]) -> list[str]:
+    widths = {
+        "scope": 15,
+        "case": 35,
+        "expectation": 11,
+        "result": 18,
+        "description": 44,
+        "evidence": 54,
+    }
+    header = (
+        f"{'Scope':<{widths['scope']}} "
+        f"{'Case':<{widths['case']}} "
+        f"{'Expect':<{widths['expectation']}} "
+        f"{'Result':<{widths['result']}} "
+        f"{'Attack':<{widths['description']}} "
+        "Evidence"
+    )
+    separator = "-" * len(header)
+    if not rows:
+        return [header, separator, "NO_CASES_RECORDED"]
+    lines = [header, separator]
+    for row in rows:
+        lines.append(
+            f"{_clip(row['scope'], widths['scope']):<{widths['scope']}} "
+            f"{_clip(row['case'], widths['case']):<{widths['case']}} "
+            f"{_clip(row['expectation'], widths['expectation']):<{widths['expectation']}} "
+            f"{_clip(row['result'], widths['result']):<{widths['result']}} "
+            f"{_clip(row['description'], widths['description']):<{widths['description']}} "
+            f"{_clip(_terminal_evidence(row), widths['evidence'])}"
+        )
+    return lines
+
+
 def _terminal_summary(target: str, rows: list[dict[str, str]]) -> str:
     contract = [row for row in rows if row["scope"] == "contractual"]
     beyond = [row for row in rows if row["scope"] == "beyond-contract"]
@@ -244,6 +284,7 @@ def _terminal_summary(target: str, rows: list[dict[str, str]]) -> str:
         lines.append("  RED_WIN blocks release until Blue patches and Judge replay passes.")
     else:
         lines.append("  No RED_WIN rows in this bounded report.")
+    lines += ["", "Case table:", *_terminal_table(rows), ""]
     lines.append("Highlight plays:")
     if highlights:
         for row in highlights:
