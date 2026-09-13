@@ -383,7 +383,8 @@ def summarize(receipt_dir: Path) -> dict | None:
             "status": "NEEDS_ATTENTION",
             "error": str(exc)[:200],
         }
-    handled = (r.get("handled_issues") or [{}])[0]
+    handled_items = [h for h in r.get("handled_issues") or [] if isinstance(h, dict)]
+    handled = next((h for h in handled_items if h.get("status") not in {"SKIPPED", "DRY_RUN"}), handled_items[0] if handled_items else {})
     op = _active_operation(r)
     triage = handled.get("triage") or r.get("triage") or {}
     repo = _identity_value(handled.get("repo") or op.get("repo"), "repo", "receipt_missing_repo")
@@ -790,8 +791,6 @@ def _event_complete(checkpoint: BridgeCheckpoint, ev: dict[str, Any]) -> bool:
     required = ["terminal"]
     if requires_agent_push(ev):
         required.append("pi_agent")
-    if requires_human_push(ev):
-        required.append("ops_discord")
     return all(_delivered(checkpoint, dest, event_id) for dest in required)
 
 
@@ -881,16 +880,7 @@ def deliver(ev: dict[str, Any], checkpoint: BridgeCheckpoint, *, fresh: bool) ->
             state = _load_dedup_state()
             state.pop(all_clear_fp, None)
             _write_text_durable(SWITCHBOARD_DEDUP, json.dumps(state, sort_keys=True) + "\n")
-    if not requires_human_push(ev):
-        result["ops_discord"] = {"status": "SKIPPED", "reason": "not_human_only_blocker"}
-    elif not _delivered(checkpoint, "ops_discord", event_id):
-        receipt = push_webhook(ev)
-        result["ops_discord"] = receipt
-        message_ref = receipt.get("message_id") or receipt.get("message_url") or receipt.get("discord_message_id")
-        if receipt.get("status") == "SENT" and message_ref:
-            _mark_delivered(checkpoint, "ops_discord", event_id, receipt)
-    else:
-        result["ops_discord"] = {"status": "DEDUPED"}
+    result["ops_discord"] = {"status": "SKIPPED", "reason": "owned_by_core_alerts"}
     if _event_complete(checkpoint, ev):
         checkpoint.pending.pop(event_id, None)
     else:
@@ -986,12 +976,18 @@ def _candidate_dirs(checkpoint: BridgeCheckpoint, replay_last: bool) -> list[Pat
     return sorted(by_name.values(), key=lambda p: p.stat().st_mtime)
 
 
-def deliver_receipt_dir(receipt_dir: Path) -> dict[str, Any]:
-    """Deliver one just-persisted receipt under the bridge checkpoint.
+def _delivery_status(results: list[dict[str, Any]]) -> str:
+    if not results:
+        return "IDLE"
+    if any(r.get("switchboard", {}).get("status", "").endswith("FAILED") for r in results):
+        return "PENDING"
+    if any(r.get("status") in {"PENDING", "DELIVERY_FAILED", "LOCKED"} for r in results):
+        return "PENDING"
+    return "DELIVERED"
 
-    Used by the tick finalizer so the tick that owns the scheduler lock also
-    owns operator/Pi/UI delivery. Best effort: failure is returned, never raised.
-    """
+
+def deliver_due(receipt_dir: Path | None = None) -> dict[str, Any]:
+    """Drain pending bridge work and optionally deliver the current receipt."""
     STATE_ROOT.mkdir(parents=True, exist_ok=True)
     RECEIPTS.mkdir(parents=True, exist_ok=True)
     lock_fd = os.open(BRIDGE_LOCK, os.O_CREAT | os.O_RDWR, 0o600)
@@ -999,27 +995,50 @@ def deliver_receipt_dir(receipt_dir: Path) -> dict[str, Any]:
         fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except BlockingIOError:
         os.close(lock_fd)
-        return {"status": "LOCKED", "dir": receipt_dir.name}
+        return {"status": "LOCKED", "dir": receipt_dir.name if receipt_dir else None}
     try:
         checkpoint = _load_checkpoint()
-        ev = summarize(receipt_dir)
-        if ev is None:
-            return {"status": "SKIPPED", "reason": "not_eventful", "dir": receipt_dir.name}
-        if ev.get("kind") == "pending_receipt":
-            checkpoint.pending_dirs = sorted(set(checkpoint.pending_dirs + [receipt_dir.name]))
-            _save_checkpoint(checkpoint)
-            return {"status": "PENDING", "dir": receipt_dir.name, "reason": ev.get("reason")}
-        if ev.get("kind") != "tick":
-            return {"status": "SKIPPED", "reason": "not_tick", "dir": receipt_dir.name}
-        result = deliver(ev, checkpoint, fresh=(time.time() - receipt_dir.stat().st_mtime) < 900)
-        checkpoint.pending_dirs = [name for name in checkpoint.pending_dirs if name != receipt_dir.name]
-        checkpoint.last_mtime = max(checkpoint.last_mtime, receipt_dir.stat().st_mtime)
+        results: list[dict[str, Any]] = []
+        pending_dirs = set(checkpoint.pending_dirs)
+        for ev in list(checkpoint.pending.values()):
+            results.append(deliver(ev, checkpoint, fresh=True))
+        dirs = [RECEIPTS / name for name in checkpoint.pending_dirs]
+        if receipt_dir is not None:
+            dirs.append(receipt_dir)
+        for d in sorted({p for p in dirs if p.exists() and p.is_dir()}, key=lambda p: p.stat().st_mtime):
+            ev = summarize(d)
+            if ev is None:
+                continue
+            if ev.get("kind") == "pending_receipt":
+                pending_dirs.add(d.name)
+                results.append({"status": "PENDING", "dir": d.name, "reason": ev.get("reason")})
+                continue
+            pending_dirs.discard(d.name)
+            if ev.get("kind") != "tick":
+                continue
+            results.append(deliver(ev, checkpoint, fresh=(time.time() - d.stat().st_mtime) < 900))
+            checkpoint.last_mtime = max(checkpoint.last_mtime, d.stat().st_mtime)
+        if not results:
+            stream = STATE_ROOT / "events.jsonl"
+            with stream.open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps({
+                    "schema": "project_watchdog.terminal_event.v1",
+                    "ts": _now_iso(),
+                    "kind": "heartbeat",
+                    **_heartbeat_payload(),
+                }, sort_keys=True) + "\n")
+        checkpoint.pending_dirs = sorted(pending_dirs)
         _save_checkpoint(checkpoint)
-        return {"status": "OK", "dir": receipt_dir.name, "pushed": [result]}
+        return {"status": _delivery_status(results), "dir": receipt_dir.name if receipt_dir else None, "pushed": results}
     except Exception as exc:  # noqa: BLE001 - delivery failure never blocks a tick
-        return {"status": "DELIVERY_FAILED", "dir": receipt_dir.name, "error": str(exc)[:300]}
+        return {"status": "DELIVERY_FAILED", "dir": receipt_dir.name if receipt_dir else None, "error": str(exc)[:300]}
     finally:
         os.close(lock_fd)
+
+
+def deliver_receipt_dir(receipt_dir: Path) -> dict[str, Any]:
+    """Backward-compatible one-receipt entrypoint."""
+    return deliver_due(receipt_dir)
 
 
 def main() -> None:

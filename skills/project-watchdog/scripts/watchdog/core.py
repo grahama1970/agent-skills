@@ -513,17 +513,6 @@ def finish(
                           key=_ev.get("key"))
         except Exception:  # noqa: BLE001 - the log boundary never blocks a tick
             pass
-        try:
-            import watchdog_notify_bridge as _bridge
-
-            delivery = _bridge.deliver_receipt_dir(receipt_dir)
-            receipt["notification_delivery"] = delivery
-            write_json(receipt_path, receipt)
-            log_event(run_id, "notification_delivery", **delivery)
-        except Exception as exc:  # noqa: BLE001 - notification delivery never blocks a tick
-            receipt["notification_delivery"] = {"status": "DELIVERY_FAILED", "error": str(exc)[:300]}
-            write_json(receipt_path, receipt)
-            log_event(run_id, "notification_delivery", status="DELIVERY_FAILED", error=str(exc)[:300])
     else:
         receipt["receipt_path"] = None
         receipt["receipt_persisted"] = False

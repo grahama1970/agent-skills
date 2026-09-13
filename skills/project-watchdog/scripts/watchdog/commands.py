@@ -97,17 +97,49 @@ def _record_agent_authorization(receipt: dict[str, Any], result: dict[str, Any])
     receipt["agent_action_required"] = True
 
 
-def _publish_ui_snapshot(run_id: str) -> dict[str, Any]:
-    """Write the static UI snapshot as a tick finalizer, best effort."""
-    output = config.SKILL_DIR / "ui" / "dist" / "project-watchdog-snapshot.json"
+def _deliver_tick_notifications(run_id: str, receipt_dir: Path) -> dict[str, Any]:
+    """Deliver pending bridge work while this applying tick owns the singleton."""
     try:
-        text = json.dumps(ui_payload(receipt_limit=100), indent=2, sort_keys=True)
+        import watchdog_notify_bridge as bridge
+
+        result = bridge.deliver_due(receipt_dir)
+        receipt_path = receipt_dir / "receipt.json"
+        if receipt_path.is_file():
+            receipt = load_json(receipt_path)
+            receipt["notification_delivery"] = result
+            write_json(receipt_path, receipt)
+    except Exception as exc:  # noqa: BLE001 - notification delivery never blocks cleanup
+        result = {"status": "DELIVERY_FAILED", "dir": receipt_dir.name, "error": str(exc)[:300]}
+    try:
+        log_event(run_id, "notification_delivery", **result)
+    except Exception:  # noqa: BLE001 - finalizer logging must not prevent unlock
+        pass
+    return result
+
+
+def _publish_ui_snapshot(run_id: str) -> dict[str, Any]:
+    """Atomically write the static UI snapshot as a tick finalizer."""
+    output = config.SKILL_DIR / "ui" / "dist" / "project-watchdog-snapshot.json"
+    tmp = output.with_name(f".{output.name}.{run_id}.tmp")
+    try:
+        text = json.dumps(ui_payload(receipt_limit=100), indent=2, sort_keys=True) + "\n"
         output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(text + "\n", encoding="utf-8")
-        result = {"status": "OK", "output": str(output), "bytes": len(text) + 1}
-    except Exception as exc:  # noqa: BLE001 - UI publication never blocks a repair tick
+        with tmp.open("w", encoding="utf-8") as fh:
+            fh.write(text)
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.replace(tmp, output)
+        result = {"status": "OK", "output": str(output), "bytes": len(text)}
+    except Exception as exc:  # noqa: BLE001 - UI publication never blocks cleanup
         result = {"status": "UI_SNAPSHOT_FAILED", "output": str(output), "error": str(exc)[:300]}
-    log_event(run_id, "ui_snapshot", **result)
+        try:
+            tmp.unlink()
+        except OSError:
+            pass
+    try:
+        log_event(run_id, "ui_snapshot", **result)
+    except Exception:  # noqa: BLE001 - finalizer logging must not prevent unlock
+        pass
     return result
 
 
@@ -214,8 +246,18 @@ def tick(*, apply: bool, project_id: str, max_tickets: int, only_issue: int | No
             only_issue=only_issue, release_scheduler_lock=release_scheduler_lock,
         )
     finally:
-        _publish_ui_snapshot(run_id)
-        release_scheduler_lock()
+        try:
+            if apply:
+                try:
+                    _deliver_tick_notifications(run_id, receipt_dir)
+                except Exception as exc:  # noqa: BLE001 - finalization must still unlock
+                    logger.error("notification finalizer crashed for {}: {}", run_id, exc)
+                try:
+                    _publish_ui_snapshot(run_id)
+                except Exception as exc:  # noqa: BLE001 - finalization must still unlock
+                    logger.error("ui finalizer crashed for {}: {}", run_id, exc)
+        finally:
+            release_scheduler_lock()
 
 
 #: State keys a tick owns. Everything else in the document belongs to the

@@ -428,7 +428,24 @@ def test_tick_finalizer_writes_ui_snapshot(tmp_path, monkeypatch) -> None:
     assert written == {"schema": "snapshot", "limit": 100}
 
 
-def test_finish_delivers_persisted_receipt_inline(tmp_path, monkeypatch, capsys) -> None:
+def test_tick_releases_lock_even_when_ui_publication_logging_fails(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("PROJECT_WATCHDOG_STATE_ROOT", str(tmp_path))
+    released = []
+
+    monkeypatch.setattr(commands, "acquire_lock", lambda run_id: True)
+    monkeypatch.setattr(commands, "release_lock", lambda: released.append(True))
+    monkeypatch.setattr(commands, "_test_hold_lock_if_requested", lambda run_id: None)
+    monkeypatch.setattr(commands, "_deliver_tick_notifications", lambda run_id, receipt_dir: {"status": "DELIVERED"})
+    monkeypatch.setattr(commands, "_publish_ui_snapshot", mock.Mock(side_effect=RuntimeError("log sink down")))
+    monkeypatch.setattr(commands, "_tick_locked", mock.Mock(side_effect=RuntimeError("handler blew up")))
+
+    with pytest.raises(RuntimeError, match="handler blew up"):
+        commands.tick(apply=True, project_id="all", max_tickets=1)
+
+    assert released == [True]
+
+
+def test_finish_does_not_run_tick_delivery_pipeline(tmp_path, monkeypatch, capsys) -> None:
     monkeypatch.setenv("PROJECT_WATCHDOG_STATE_ROOT", str(tmp_path))
     calls = []
 
@@ -446,8 +463,8 @@ def test_finish_delivers_persisted_receipt_inline(tmp_path, monkeypatch, capsys)
 
     capsys.readouterr()
     written = json.loads((receipt_dir / "receipt.json").read_text(encoding="utf-8"))
-    assert calls == [receipt_dir]
-    assert written["notification_delivery"]["status"] == "OK"
+    assert calls == []
+    assert "notification_delivery" not in written
 
 
 # --------------------------------------------------------------------------- #

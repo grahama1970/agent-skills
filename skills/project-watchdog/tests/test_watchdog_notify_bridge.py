@@ -162,6 +162,67 @@ def test_switchboard_push_dedupes_same_fingerprint_across_receipts(tmp_path, mon
     assert later["switchboard"]["status"] == "SENT" and len(sent) == 2
 
 
+def test_receipt_with_skipped_then_completed_issue_reports_completed_issue_not_first_issue(tmp_path, monkeypatch):
+    bridge = load_bridge()
+    monkeypatch.setattr(bridge, "RECEIPTS", tmp_path)
+    receipt_dir = tmp_path / "project-watchdog-test"
+    receipt_dir.mkdir()
+    (receipt_dir / "receipt.json").write_text(json.dumps({
+        "run_id": "project-watchdog-test",
+        "status": "COMPLETED",
+        "handled_issues": [
+            {"repo": "grahama1970/agent-skills", "issue_number": 41, "status": "SKIPPED", "stop_reason": "execution_lock_held"},
+            {"repo": "grahama1970/agent-skills", "issue_number": 42, "status": "COMPLETED", "summary": "fixed real ticket"},
+        ],
+    }))
+
+    ev = bridge.summarize(receipt_dir)
+
+    assert ev["issue"] == "42"
+    assert ev["summary"] == "fixed real ticket"
+
+
+def test_deliver_due_retries_pending_without_resending_acknowledged(tmp_path, monkeypatch):
+    bridge = load_bridge()
+    monkeypatch.setattr(bridge, "STATE_ROOT", tmp_path)
+    monkeypatch.setattr(bridge, "RECEIPTS", tmp_path / "receipts")
+    monkeypatch.setattr(bridge, "CURSOR", tmp_path / "cursor.json")
+    monkeypatch.setattr(bridge, "CHECKPOINTS", tmp_path / "checkpoint.json")
+    monkeypatch.setattr(bridge, "BRIDGE_LOCK", tmp_path / "bridge.lock")
+    monkeypatch.setattr(bridge, "SWITCHBOARD_DEDUP", tmp_path / "dedup.json")
+    bridge.RECEIPTS.mkdir(parents=True)
+    checkpoint = bridge.BridgeCheckpoint(pending={
+        "evt": {
+            "schema": "project_watchdog.delivery_event.v1",
+            "kind": "tick",
+            "event_id": "evt",
+            "dir": "old",
+            "status": "NEEDS_ATTENTION",
+            "repo": "grahama1970/agent-skills",
+            "issue": "44",
+            "run_id": "run-old",
+            "node": "n",
+            "attempt": "1",
+            "phase": "ticket_repair",
+            "source_time": "t",
+            "observed_at": "t",
+            "receipt": "x",
+            "identity": {"repo": "grahama1970/agent-skills", "issue": "44"},
+        }
+    })
+    bridge._mark_delivered(checkpoint, "terminal", "evt", {"status": "ACK"})
+    bridge._save_checkpoint(checkpoint)
+    sent = []
+    monkeypatch.setattr(bridge, "push_switchboard", lambda ev: sent.append(ev) or {"status": "SENT"})
+
+    result = bridge.deliver_due()
+
+    assert result["status"] == "DELIVERED"
+    assert [ev["event_id"] for ev in sent] == ["evt"]
+    saved = bridge._load_checkpoint()
+    assert "evt" not in saved.pending
+
+
 def test_non_ticket_receipts_do_not_push_unknown_alerts():
     """#1648: install/state/fleet-scan receipts have no repo/issue and were
     rendered as UNKNOWN(repo:receipt_missing_repo) NEEDS_ATTENTION pushes."""
