@@ -52,10 +52,10 @@ def generate(work_dir, params):
     # case where anonymize-and-pass or safe rejection are both acceptable.
     yield _bundle(root, "bb-json-object-key", NAME,
                   lambda c: (c / "d.json").write_text(json.dumps({NAME: "x"})),
-                  "MAY_REJECT")
+                  "MUST_REJECT")
     yield _bundle(root, "bb-json-object-key-uescape", NAME,
                   lambda c: (c / "d.json").write_text('{"M\\u0061ra Ellison": "x"}'),
-                  "MAY_REJECT")
+                  "MUST_REJECT")
     yield _bundle(root, "bb-json-object-key-numeric-alias", FORMATTED_PHONE,
                   lambda c: (c / "d.json").write_text(json.dumps({PHONE: "x"})),
                   "MUST_REJECT")
@@ -67,7 +67,7 @@ def generate(work_dir, params):
                   "MUST_REJECT")
     yield _bundle(root, "bb-csv-header-cell", NAME,
                   lambda c: (c / "d.csv").write_text(f"id,{NAME},note\n1,2,3\n"),
-                  "MAY_REJECT")
+                  "MUST_REJECT")
     yield _bundle(root, "bb-csv-header-numeric-alias", FORMATTED_PHONE,
                   lambda c: (c / "d.csv").write_text(f"id,{PHONE},note\n1,2,3\n"),
                   "MUST_REJECT")
@@ -92,7 +92,7 @@ def generate(work_dir, params):
 
     # -- SQLite schema positions --
     yield _bundle(root, "bb-sqlite-table-identifier", PHONE,
-                  lambda c: _sql_ident(c, PHONE), "MAY_REJECT")
+                  lambda c: _sql_ident(c, PHONE), "MUST_REJECT")
     yield _bundle(root, "bb-sqlite-column-identifier-numeric-alias", FORMATTED_PHONE,
                   lambda c: _sql_column_ident(c, PHONE), "MUST_REJECT")
     yield _bundle(root, "bb-sqlite-default-numeric-alias", FORMATTED_PHONE,
@@ -102,14 +102,14 @@ def generate(work_dir, params):
     yield _bundle(root, "bb-sqlite-partial-index", "SECRET",
                   lambda c: _sql_partial_index(c), "MUST_REJECT")
     yield _bundle(root, "bb-sqlite-trigger-literal", PHONE,
-                  lambda c: _sql_trigger(c, PHONE), "MAY_REJECT")
+                  lambda c: _sql_trigger(c, PHONE), "MUST_REJECT")
 
     # -- encoding / transport --
     yield _bundle(root, "bb-utf16le-text", NAME, _utf16_text(NAME), "MUST_REJECT")
     yield _bundle(root, "bb-utf16le-bomless-text", NAME, _utf16_bomless_text(NAME), "MUST_REJECT")
     yield _bundle(root, "bb-filename-value", NAME,
                   lambda c: (c / f"{NAME}.txt").write_text("clean contents\n"),
-                  "MAY_REJECT")
+                  "MUST_REJECT")
     yield _bundle(root, "bb-filename-numeric-alias", FORMATTED_PHONE,
                   lambda c: (c / f"{PHONE}.txt").write_text("clean contents\n"),
                   "MUST_REJECT")
