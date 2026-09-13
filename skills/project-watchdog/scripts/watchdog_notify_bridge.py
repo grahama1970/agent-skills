@@ -15,8 +15,8 @@ rendered as ``UNKNOWN(field:reason)``, never as ``None#None``. Heartbeats prove
 observer freshness separately from execution progress and never report stale Tau
 progress as ``LIVE``.
 
-Run from cron every 5 minutes. Delivery failure never raises; it prints a
-JSON result and exits 0 so the cron line stays quiet unless truly broken.
+A watchdog tick can also call ``deliver_receipt_dir()`` for the receipt it just
+wrote. Delivery failure never raises; the result is a receipt/log field.
 
 # ponytail: one sequential scanner with per-destination checkpoints; receipts arrive ~1/5min, no need for parallelism.
 """
@@ -500,10 +500,10 @@ def _fmt(ev: dict) -> str:
 
 
 def requires_human_push(ev: dict) -> bool:
-    """Only page humans for human decisions, not machine-actionable repair receipts."""
-    if ev.get("requires_human_input") is True:
-        return True
-    return False
+    """Only page humans for ticket-bound human decisions."""
+    if _is_non_ticket_event(ev):
+        return False
+    return ev.get("requires_human_input") is True
 
 
 def _is_non_ticket_event(ev: dict) -> bool:
@@ -517,9 +517,9 @@ def _is_non_ticket_event(ev: dict) -> bool:
     repo, issue = str(ev.get("repo") or ""), str(ev.get("issue") or "")
     if "receipt_missing_repo" in repo and "receipt_missing_issue" in issue:
         return True
-    # A receipt with neither repo nor issue cannot be ticket work; render as
-    # lifecycle rather than None#None (#1660 canary).
-    return not repo and not issue
+    # summarize() maps missing receipt identity to UNKNOWN(...) sentinels; direct
+    # unit calls without repo/issue are treated as generic ticket-action events.
+    return False
 
 
 def _subject_target(ev: dict) -> str:
@@ -530,7 +530,7 @@ def _subject_target(ev: dict) -> str:
     the cryptic ``UNKNOWN(repo:receipt_missing_repo)#UNKNOWN(...)`` sentinel we
     render a plain lifecycle label derived from the run_id.
     """
-    if not _is_non_ticket_event(ev):
+    if not _is_non_ticket_event(ev) and (ev.get("repo") or ev.get("issue")):
         return f"{ev.get('repo')}#{ev.get('issue')}"
     run_id = str(ev.get("run_id") or "")
     if "-install" in run_id:
@@ -984,6 +984,42 @@ def _candidate_dirs(checkpoint: BridgeCheckpoint, replay_last: bool) -> list[Pat
     ]
     by_name = {p.name: p for p in pending + new_dirs if p.exists() and p.is_dir()}
     return sorted(by_name.values(), key=lambda p: p.stat().st_mtime)
+
+
+def deliver_receipt_dir(receipt_dir: Path) -> dict[str, Any]:
+    """Deliver one just-persisted receipt under the bridge checkpoint.
+
+    Used by the tick finalizer so the tick that owns the scheduler lock also
+    owns operator/Pi/UI delivery. Best effort: failure is returned, never raised.
+    """
+    STATE_ROOT.mkdir(parents=True, exist_ok=True)
+    RECEIPTS.mkdir(parents=True, exist_ok=True)
+    lock_fd = os.open(BRIDGE_LOCK, os.O_CREAT | os.O_RDWR, 0o600)
+    try:
+        fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        os.close(lock_fd)
+        return {"status": "LOCKED", "dir": receipt_dir.name}
+    try:
+        checkpoint = _load_checkpoint()
+        ev = summarize(receipt_dir)
+        if ev is None:
+            return {"status": "SKIPPED", "reason": "not_eventful", "dir": receipt_dir.name}
+        if ev.get("kind") == "pending_receipt":
+            checkpoint.pending_dirs = sorted(set(checkpoint.pending_dirs + [receipt_dir.name]))
+            _save_checkpoint(checkpoint)
+            return {"status": "PENDING", "dir": receipt_dir.name, "reason": ev.get("reason")}
+        if ev.get("kind") != "tick":
+            return {"status": "SKIPPED", "reason": "not_tick", "dir": receipt_dir.name}
+        result = deliver(ev, checkpoint, fresh=(time.time() - receipt_dir.stat().st_mtime) < 900)
+        checkpoint.pending_dirs = [name for name in checkpoint.pending_dirs if name != receipt_dir.name]
+        checkpoint.last_mtime = max(checkpoint.last_mtime, receipt_dir.stat().st_mtime)
+        _save_checkpoint(checkpoint)
+        return {"status": "OK", "dir": receipt_dir.name, "pushed": [result]}
+    except Exception as exc:  # noqa: BLE001 - delivery failure never blocks a tick
+        return {"status": "DELIVERY_FAILED", "dir": receipt_dir.name, "error": str(exc)[:300]}
+    finally:
+        os.close(lock_fd)
 
 
 def main() -> None:

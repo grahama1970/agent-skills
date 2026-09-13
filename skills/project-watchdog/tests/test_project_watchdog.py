@@ -418,6 +418,28 @@ def test_finish_promotes_handled_human_blocker_to_receipt(tmp_path, monkeypatch,
     assert written["requires_human_input"] is True
 
 
+def test_finish_delivers_persisted_receipt_inline(tmp_path, monkeypatch, capsys) -> None:
+    monkeypatch.setenv("PROJECT_WATCHDOG_STATE_ROOT", str(tmp_path))
+    calls = []
+
+    def fake_deliver(path: Path) -> dict[str, object]:
+        calls.append(path)
+        return {"status": "OK", "dir": path.name, "pushed": []}
+
+    monkeypatch.setitem(sys.modules, "watchdog_notify_bridge", SimpleNamespace(deliver_receipt_dir=fake_deliver))
+    receipt_dir = config.receipt_root() / "run-inline-delivery"
+    receipt_dir.mkdir(parents=True)
+    receipt = core.base_receipt("run-inline-delivery", receipt_dir, True)
+    receipt.update({"status": "COMPLETED", "handled_issues": [{"repo": "owner/repo", "issue_number": 1}]})
+
+    core.finish("run-inline-delivery", receipt_dir, receipt, 0)
+
+    capsys.readouterr()
+    written = json.loads((receipt_dir / "receipt.json").read_text(encoding="utf-8"))
+    assert calls == [receipt_dir]
+    assert written["notification_delivery"]["status"] == "OK"
+
+
 # --------------------------------------------------------------------------- #
 # Idle-streak escalation — silence must not read as success
 # --------------------------------------------------------------------------- #
