@@ -61,10 +61,10 @@ def _is_slot(scalar, value: str) -> bool:
 
 
 class _Comparator:
-    def __init__(self, values: list[str], types: list[str], subjects: list[str]):
-        self.values = sorted(values, key=len, reverse=True)
-        self.types = types
-        self.subjects = subjects  # identity group per value (subject_id); aliases may converge
+    def __init__(self, records: list[dict[str, str]]):
+        self.records = sorted(records, key=lambda record: len(record["value"]), reverse=True)
+        self.values = [record["value"] for record in self.records]
+        self.record_by_value = {record["value"]: record for record in self.records}
         self.bindings: dict[str, str] = {}
         self.violations: list[str] = []
 
@@ -86,11 +86,11 @@ class _Comparator:
         # converge; distinct identity groups must not share a replacement).
         by_rep: dict[str, tuple[str, str]] = {}  # replacement -> (value, subject)
         for value, rep in self.bindings.items():
-            idx = self.values.index(value)
-            raw_subject = self.subjects[idx] if idx < len(self.subjects) else ""
+            record = self.record_by_value.get(value, {})
+            raw_subject = record.get("subject_id", "")
             # Rules sharing a subject group may converge; rules with no identity
             # info are distinct groups (fail-closed, per the brief).
-            subject = raw_subject or f"\x00distinct-{idx}"
+            subject = raw_subject or f"\x00distinct-{record.get('rule_id', value)}"
             other = by_rep.get(rep)
             if other is not None and other[1] != subject:
                 self.violations.append(f"functional:collapsed-identities: {other[0]!r} (subject {other[1]!r}) and {value!r} (subject {subject!r}) share replacement {rep!r}")
@@ -275,14 +275,17 @@ def judge(target_dir, params):
     out = Path(target_dir) / params.get("output_subdir", "corpus")
     policy = _strict_json_loads(Path(params["policy"]).read_text(encoding="utf-8"))
     entries = policy.get("sensitive_values", [])
-    values, types, subjects = [], [], []
+    records = []
     for entry in entries:
         value = str(entry["value"])
         for form in (value, *_aliases(value)):
-            values.append(form)
-            types.append(str(entry.get("type", "")))
-            subjects.append(str(entry.get("subject_id", entry.get("rule_id", ""))))
-    cmp_ = _Comparator(values, types, subjects)
+            records.append({
+                "rule_id": str(entry.get("rule_id", "")),
+                "subject_id": str(entry.get("subject_id", entry.get("rule_id", ""))),
+                "type": str(entry.get("type", "")),
+                "value": form,
+            })
+    cmp_ = _Comparator(records)
 
     in_files = sorted(str(p.relative_to(inp)) for p in inp.rglob("*") if p.is_file())
     out_files = sorted(str(p.relative_to(out)) for p in out.rglob("*") if p.is_file())
@@ -336,5 +339,5 @@ def judge(target_dir, params):
     return {"passed": not cmp_.violations,
             "violations": cmp_.violations,
             "evidence": {"files_compared": len(in_files),
-                         "values": len(values),
+                         "values": len(records),
                          "bindings": {k: v for k, v in cmp_.bindings.items()}}}

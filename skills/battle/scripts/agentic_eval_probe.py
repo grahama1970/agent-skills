@@ -4762,6 +4762,12 @@ def main() -> int:
                 suite=args.suite,
                 tests=["test_judge_json_ambiguity.py"],
             )
+        if args.suite == "battle-b21-preserve-identity-metadata-when-ordering-policy-values":
+            return probe_pytest_contracts(
+                args.summary,
+                suite=args.suite,
+                tests=["test_functional_policy_record_alignment.py"],
+            )
         if args.suite == "battle-functional-judge":
             return probe_battle_functional_judge(args.summary)
         if args.suite == "battle-commentary-causality":

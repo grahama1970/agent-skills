@@ -589,6 +589,15 @@
         "deterministic": true
       },
       "claim_semantics": "control_flow"
+    },
+    {
+      "id": "reference_judges.policy_record_identity_alignment",
+      "description": "Battle functional reference Judge preserves policy rule, type, value, and subject identity metadata while ordering values for longest-match comparison, so same-subject aliases may converge but distinct subjects cannot collapse due to sorting.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "control_flow"
     }
   ],
   "seams": [
@@ -3286,6 +3295,41 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/battle-b20-reject-ambiguous-json-in-judge-inputs-and-outputs.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 400
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-b21-preserve-identity-metadata-when-ordering-policy-values",
+      "category": "battle-b21-preserve-identity-metadata-when-ordering-policy-values",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "reference_judges.policy_record_identity_alignment"
+      ],
+      "seams": [
+        "policy.value_ordering",
+        "policy.subject_identity_alignment",
+        "functional_judge.alias_convergence"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b21-preserve-identity-metadata-when-ordering-policy-values --summary /tmp/battle-agentic-evals/battle-b21-preserve-identity-metadata-when-ordering-policy-values.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b21-preserve-identity-metadata-when-ordering-policy-values"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-b21-preserve-identity-metadata-when-ordering-policy-values.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 400
