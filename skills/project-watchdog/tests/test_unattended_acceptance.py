@@ -67,3 +67,17 @@ def test_dead_current_task_entry_is_stranded_work() -> None:
     checks = _scenario_checks(projection)
 
     assert checks["no_stranded_current_task_work"] is False
+
+
+def test_canary_requires_operator_authorization_and_scheduled_candidate_binding() -> None:
+    good = {
+        "run_id": "project-watchdog-20260913T120000Z-canary",
+        "operator_authorization": unattended_acceptance.ACCEPTANCE_SCOPE["operator_approved_by"],
+        "handled_issues": [{"repo": "grahama1970/agent-skills", "issue_number": 1641}],
+    }
+    cron = [{"line": "2026-09-13 12:00:00 tick_start run_id=project-watchdog-20260913T120000Z-canary"}]
+
+    assert unattended_acceptance.canary_has_operator_authorization_and_scheduled_binding(good, cron) is True
+    assert unattended_acceptance.canary_has_operator_authorization_and_scheduled_binding({**good, "operator_authorization": "manual"}, cron) is False
+    assert unattended_acceptance.canary_has_operator_authorization_and_scheduled_binding({**good, "run_id": "manual-run"}, cron) is False
+    assert unattended_acceptance.canary_has_operator_authorization_and_scheduled_binding({**good, "handled_issues": [{"repo": "grahama1970/agent-skills", "issue_number": 9999}]}, cron) is False

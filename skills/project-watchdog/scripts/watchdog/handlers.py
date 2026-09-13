@@ -772,6 +772,7 @@ def run_ask_tau_dag_with_stream_monitor(
     return {"command": command, "cwd": str(cwd), "exit_code": 124 if timed_out else proc.returncode,
             "stdout": out_path.read_text(errors="replace"), "stderr": err_path.read_text(errors="replace"),
             "timed_out": timed_out, "duration_seconds": round(time.monotonic() - started, 3),
+            "process_started": True, "process_id": proc.pid,
             "stream_monitor": str(monitor_path), "stdout_path": str(out_path), "stderr_path": str(err_path)}
 
 
@@ -1460,11 +1461,14 @@ def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[
                "--allow-provider-calls", "--json"])
     dispatched_at = time.time()
     primary.checkpoint("launching", ask_run_dir=str(ask_dir), dispatched_at=dispatched_at)
-    result.update(native_admission="started", creator_started=True, dispatched_at=dispatched_at)
+    result.update(native_admission="indeterminate", dispatched_at=dispatched_at)
     execution = run_ask_tau_dag_with_stream_monitor(command, cwd=config.ask_run_sh().parent,
         timeout_s=int(project.get("ticket_repair_timeout_s", 1800)), ask_run_dir=ask_dir,
         monitor_path=receipt_dir / "tau-stream-monitor.json")
     result["commands"].append(execution)
+    if execution.get("process_started") is True:
+        result.update(native_admission="started", creator_started=True,
+                      native_start_evidence={"process_id": execution.get("process_id"), "stream_monitor": execution.get("stream_monitor")})
     primary.checkpoint(primary.current().phase, result=result)
     stream = inspect_tau_stream(ask_dir)
     if not stream.get("terminal"):

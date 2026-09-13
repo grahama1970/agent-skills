@@ -70,6 +70,7 @@ class BridgeCheckpoint(BaseModel):
     pending_dirs: list[str] = Field(default_factory=list)
     pending: dict[str, dict[str, Any]] = Field(default_factory=dict)
     destinations: dict[str, dict[str, Any]] = Field(default_factory=dict)
+    recovery_before_mtime: float = 0.0
     updated_at: str | None = None
 
 
@@ -305,7 +306,7 @@ def _markdown_sections(body: str) -> dict[str, str]:
     return {k: "\n".join(v).strip() for k, v in sections.items() if "\n".join(v).strip()}
 
 
-def _issue_card(repo: str, issue: str) -> dict:
+def _issue_card(repo: str, issue: str, *, timeout_s: float = 20) -> dict:
     """Best-effort plain-English ticket card for operator/project-agent alerts."""
     if not repo or not issue or "UNKNOWN(" in repo or "UNKNOWN(" in str(issue):
         return {}
@@ -316,7 +317,7 @@ def _issue_card(repo: str, issue: str) -> dict:
         import subprocess
         out = subprocess.run(
             ["gh", "issue", "view", str(issue), "-R", repo, "--json", "title,body,labels"],
-            capture_output=True, text=True, timeout=20,
+            capture_output=True, text=True, timeout=max(0.1, min(20, timeout_s)),
         )
         if out.returncode != 0:
             return {}
@@ -363,7 +364,7 @@ def _clip(text: str, n: int = 240) -> str:
     return text if len(text) <= n else text[: n - 1] + "…"
 
 
-def summarize(receipt_dir: Path) -> dict | None:
+def summarize(receipt_dir: Path, *, lookup_timeout_s: float = 20) -> dict | None:
     rj = receipt_dir / "receipt.json"
     if not rj.is_file():
         return {"kind": "pending_receipt", "dir": receipt_dir.name, "reason": "missing_receipt_json"}
@@ -446,7 +447,7 @@ def summarize(receipt_dir: Path) -> dict | None:
         "not_before": handled.get("not_before") or r.get("not_before"),
         "resolution_ref": handled.get("resolution_ref") or r.get("resolution_ref"),
         "next_steps": _agent_next_steps(r, handled),
-        "ticket": _issue_card(str(repo), str(issue)),
+        "ticket": _issue_card(str(repo), str(issue), timeout_s=lookup_timeout_s),
         "agents": _role_summary(handled),
         "apply": r.get("apply"),
         "identity": {
@@ -460,9 +461,9 @@ def summarize(receipt_dir: Path) -> dict | None:
     }
 
 
-def summarize_events(receipt_dir: Path) -> list[dict]:
+def summarize_events(receipt_dir: Path, *, lookup_timeout_s: float = 20) -> list[dict]:
     """Return one delivery event per handled ticket, plus aggregate lifecycle fallback."""
-    base = summarize(receipt_dir)
+    base = summarize(receipt_dir, lookup_timeout_s=lookup_timeout_s)
     if base is None:
         return []
     if base.get("kind") != "tick":
@@ -521,7 +522,7 @@ def summarize_events(receipt_dir: Path) -> list[dict]:
             "not_before": handled.get("not_before"),
             "resolution_ref": handled.get("resolution_ref"),
             "next_steps": _agent_next_steps(r, handled),
-            "ticket": _issue_card(str(repo), str(issue)),
+            "ticket": _issue_card(str(repo), str(issue), timeout_s=lookup_timeout_s),
             "agents": _role_summary(handled),
             "identity": {
                 "event_id": event_id,
@@ -873,11 +874,11 @@ def _human_alert_retry_required(ev: dict[str, Any]) -> bool:
     try:
         sidecar = json.loads(_alert_delivery_path(ev).read_text())
     except (OSError, ValueError):
-        return False
+        return True
     alert = sidecar.get("alert") or {}
     if alert.get("delivered") is True or alert.get("status") in {"SENT", "DEDUPED", "SUPPRESSED"}:
         return False
-    return str(alert.get("status") or "").endswith("FAILED") or alert.get("delivered") is False
+    return True
 
 
 def _event_complete(checkpoint: BridgeCheckpoint, ev: dict[str, Any]) -> bool:
@@ -885,12 +886,28 @@ def _event_complete(checkpoint: BridgeCheckpoint, ev: dict[str, Any]) -> bool:
     required = ["terminal"]
     if requires_agent_push(ev):
         required.append("pi_agent")
-    if _human_alert_retry_required(ev):
+    if requires_human_push(ev):
         required.append("ops_discord")
     return all(_delivered(checkpoint, dest, event_id) for dest in required)
 
 
-def _push_all_clear(ev: dict, prior_fp: str) -> dict[str, Any]:
+def _write_human_replay_sidecar(ev: dict[str, Any], receipt: dict[str, Any]) -> None:
+    source = RECEIPTS / str(ev["dir"]) / "receipt.json"
+    try:
+        source_sha = "sha256:" + __import__("hashlib").sha256(source.read_bytes()).hexdigest()
+    except OSError:
+        source_sha = None
+    _write_text_durable(_alert_delivery_path(ev), json.dumps({
+        "schema": "agent_skills.project_watchdog.alert_delivery.v1",
+        "run_id": ev.get("run_id"),
+        "source_receipt_path": str(source),
+        "source_receipt_sha256": source_sha,
+        "alert": receipt,
+        "replayed_by_notify_bridge": True,
+    }, indent=2, sort_keys=True) + "\n")
+
+
+def _push_all_clear(ev: dict, prior_fp: str, *, timeout_s: float = 10) -> dict[str, Any]:
     """One-time CLEARED message for a previously-alerted condition (operator
     2026-09-11: the log's job includes the all-clear, not just the alarm --
     silence after an alert is indistinguishable from broken). Best effort."""
@@ -901,7 +918,7 @@ def _push_all_clear(ev: dict, prior_fp: str) -> dict[str, Any]:
                           f"(current status {ev.get('status')}); no further pushes for it")
     cleared["cleared_fingerprint"] = prior_fp
     cleared["requires_human_input"] = False
-    return push_switchboard(cleared)
+    return push_switchboard(cleared, timeout_s=timeout_s)
 
 
 def _all_clear_fingerprint(ev: dict) -> str | None:
@@ -927,7 +944,12 @@ def _all_clear_fingerprint(ev: dict) -> str | None:
     return None
 
 
-def deliver(ev: dict[str, Any], checkpoint: BridgeCheckpoint, *, fresh: bool, transport_timeout_s: float = 60) -> dict[str, Any]:
+def deliver(ev: dict[str, Any], checkpoint: BridgeCheckpoint, *, fresh: bool, transport_timeout_s: float = 60, deadline: float | None = None) -> dict[str, Any]:
+    def remaining_timeout(cap: float) -> float:
+        if deadline is None:
+            return min(cap, transport_timeout_s)
+        return max(0.1, min(cap, deadline - time.monotonic()))
+
     ev = apply_live_issue_state(ev)  # log shows closure: closed issues never alert as open failures
     # Deliberate parks are quiet in the LOG too (operator 2026-09-12): a
     # SKIPPED creator_transport_outage tick every 5 minutes wrote the same
@@ -960,7 +982,7 @@ def deliver(ev: dict[str, Any], checkpoint: BridgeCheckpoint, *, fresh: bool, tr
             result["switchboard"] = receipt
             _mark_delivered(checkpoint, "pi_agent", event_id, receipt)
         else:
-            receipt = push_switchboard(ev, timeout_s=min(10, transport_timeout_s))
+            receipt = push_switchboard(ev, timeout_s=remaining_timeout(10))
             result["switchboard"] = receipt
             if receipt.get("status") == "SENT":
                 # Only a real delivery advances the dedupe clock (alerts.py rule).
@@ -970,7 +992,7 @@ def deliver(ev: dict[str, Any], checkpoint: BridgeCheckpoint, *, fresh: bool, tr
     else:
         result["switchboard"] = {"status": "DEDUPED"}
     if all_clear_fp:
-        receipt = _push_all_clear(ev, all_clear_fp)
+        receipt = _push_all_clear(ev, all_clear_fp, timeout_s=remaining_timeout(10))
         result["all_clear"] = receipt
         if receipt.get("status") == "SENT":
             state = _load_dedup_state()
@@ -980,8 +1002,12 @@ def deliver(ev: dict[str, Any], checkpoint: BridgeCheckpoint, *, fresh: bool, tr
         if _delivered(checkpoint, "ops_discord", event_id):
             result["ops_discord"] = {"status": "DEDUPED"}
         else:
-            receipt = push_webhook(ev, timeout_s=min(30, transport_timeout_s))
+            receipt = push_webhook(ev, timeout_s=remaining_timeout(30))
             result["ops_discord"] = receipt
+            try:
+                _write_human_replay_sidecar(ev, receipt)
+            except OSError as exc:
+                result["ops_discord_sidecar"] = {"status": "WRITE_FAILED", "ambiguous_delivery": receipt.get("status") == "SENT", "error": str(exc)[:200]}
             if receipt.get("status") == "SENT":
                 _mark_delivered(checkpoint, "ops_discord", event_id, receipt)
     else:
@@ -1082,17 +1108,27 @@ def _recovery_scan_limit() -> int:
         return 100
 
 
-def _candidate_dirs(checkpoint: BridgeCheckpoint, replay_last: bool) -> list[Path]:
+def _candidate_dirs(checkpoint: BridgeCheckpoint, replay_last: bool, *, deadline: float | None = None) -> list[Path]:
     if replay_last:
         return sorted(RECEIPTS.iterdir(), key=lambda p: p.stat().st_mtime)[-1:]
     pending = [RECEIPTS / name for name in checkpoint.pending_dirs]
-    all_dirs = [d for d in RECEIPTS.iterdir() if d.is_dir()]
+    all_dirs: list[Path] = []
+    for d in RECEIPTS.iterdir():
+        if deadline is not None and time.monotonic() > deadline:
+            break
+        if d.is_dir():
+            all_dirs.append(d)
     new_dirs = [d for d in all_dirs if d.stat().st_mtime >= checkpoint.last_mtime]
-    # Bounded old-history recovery preserves committed-but-unregistered receipts
-    # behind a bad cursor without letting years of acknowledged history starve
-    # fresh work every tick.
-    old_dirs = [d for d in all_dirs if d.stat().st_mtime < checkpoint.last_mtime]
+    # Bounded old-history recovery walks backward through retained history across
+    # ticks. Rechecking the newest N old receipts forever starves older committed
+    # receipts after a bad cursor.
+    cursor = checkpoint.recovery_before_mtime or checkpoint.last_mtime
+    old_dirs = [d for d in all_dirs if d.stat().st_mtime < cursor]
     recovery_dirs = sorted(old_dirs, key=lambda p: p.stat().st_mtime, reverse=True)[:max(0, _recovery_scan_limit())]
+    if recovery_dirs:
+        checkpoint.recovery_before_mtime = min(p.stat().st_mtime for p in recovery_dirs)
+    else:
+        checkpoint.recovery_before_mtime = checkpoint.last_mtime
     by_name = {p.name: p for p in pending + new_dirs + recovery_dirs if p.exists() and p.is_dir()}
     return sorted(by_name.values(), key=lambda p: p.stat().st_mtime)
 
@@ -1146,23 +1182,27 @@ def deliver_due(receipt_dir: Path | None = None) -> dict[str, Any]:
         def transport_timeout() -> float:
             return max(0.1, deadline - time.monotonic())
 
-        for ev in list(checkpoint.pending.values()):
+        dirs = sorted({p for p in (_candidate_dirs(checkpoint, replay_last=False, deadline=deadline) + ([receipt_dir] if receipt_dir is not None else [])) if p.exists() and p.is_dir()}, key=lambda p: p.stat().st_mtime)
+        pending_items = [ev for ev in checkpoint.pending.values() if not _event_complete(checkpoint, ev)]
+        pending_budget = max_attempts if not dirs else max(1, max_attempts // 2)
+        for ev in pending_items[:pending_budget]:
             if not budget_left():
                 results.append({"status": "BUDGET_EXHAUSTED", "reason": "pending_event_budget", "remaining_pending_events": len(checkpoint.pending)})
                 break
             event_id = str(ev.get("event_id") or "")
-            if event_id in attempted_event_ids or _event_complete(checkpoint, ev):
+            if event_id in attempted_event_ids:
                 continue
             attempted_event_ids.add(event_id)
             attempts += 1
-            results.append(deliver(ev, checkpoint, fresh=True, transport_timeout_s=transport_timeout()))
-        dirs = sorted({p for p in (_candidate_dirs(checkpoint, replay_last=False) + ([receipt_dir] if receipt_dir is not None else [])) if p.exists() and p.is_dir()}, key=lambda p: p.stat().st_mtime)
+            results.append(deliver(ev, checkpoint, fresh=True, transport_timeout_s=transport_timeout(), deadline=deadline))
+        if len(pending_items) > pending_budget:
+            results.append({"status": "PENDING", "reason": "pending_retry_fairness", "deferred_pending_events": len(pending_items) - pending_budget})
         for index, d in enumerate(dirs):
             if not budget_left():
                 pending_dirs.update(p.name for p in dirs[index:])
                 results.append({"status": "BUDGET_EXHAUSTED", "reason": "receipt_dir_budget", "remaining_dirs": len(dirs) - index})
                 break
-            events = summarize_events(d)
+            events = summarize_events(d, lookup_timeout_s=transport_timeout())
             if not events:
                 checkpoint.last_mtime = max(checkpoint.last_mtime, d.stat().st_mtime)
                 continue
@@ -1179,11 +1219,11 @@ def deliver_due(receipt_dir: Path | None = None) -> dict[str, Any]:
                     results.append({"status": "BUDGET_EXHAUSTED", "reason": "event_budget", "dir": d.name})
                     break
                 event_id = str(ev.get("event_id") or "")
-                if event_id in attempted_event_ids or _event_complete(checkpoint, ev):
+                if event_id in attempted_event_ids or event_id in checkpoint.pending or _event_complete(checkpoint, ev):
                     continue
                 attempted_event_ids.add(event_id)
                 attempts += 1
-                results.append(deliver(ev, checkpoint, fresh=True, transport_timeout_s=transport_timeout()))
+                results.append(deliver(ev, checkpoint, fresh=True, transport_timeout_s=transport_timeout(), deadline=deadline))
             checkpoint.last_mtime = max(checkpoint.last_mtime, d.stat().st_mtime)
         if not results:
             stream = STATE_ROOT / "events.jsonl"

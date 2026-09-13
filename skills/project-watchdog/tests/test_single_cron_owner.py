@@ -121,39 +121,67 @@ def test_native_singleton_excludes_second_process_through_all_phases(tmp_path: P
 
     env = {**os.environ, "PROJECT_WATCHDOG_STATE_ROOT": str(tmp_path)}
     scripts = str(ROOT / "scripts")
-    owner_ready = tmp_path / "owner-ready"
+    phases = ["fixer", "reviewer", "receipt", "delivery", "publication"]
     owner = subprocess.Popen([
         sys.executable,
         "-c",
         textwrap.dedent(f"""
-            import pathlib, sys, time
+            import json, pathlib, sys, time
             sys.path.insert(0, {scripts!r})
-            from watchdog import core
-            assert core.acquire_lock('owner') is True
-            pathlib.Path({str(owner_ready)!r}).write_text('ready')
-            time.sleep(1.5)
-            core.release_lock()
+            from watchdog import commands, config
+            root = pathlib.Path({str(tmp_path)!r})
+            phase = root / 'phase'
+            def barrier(name):
+                phase.write_text(name)
+                resume = root / ('resume-' + name)
+                while not resume.exists():
+                    time.sleep(0.02)
+            config.receipt_root = lambda: root / 'receipts'
+            config.tick_would_enter_quiet_hours = lambda: False
+            commands.log_event = lambda *a, **k: None
+            commands._test_hold_lock_if_requested = lambda run_id: None
+            def fake_locked(run_id, receipt_dir, **kwargs):
+                barrier('fixer')
+                barrier('reviewer')
+                receipt_dir.mkdir(parents=True, exist_ok=True)
+                (receipt_dir / 'receipt.json').write_text(json.dumps({{'run_id': run_id, 'status': 'COMPLETED', 'ok': True}}))
+                barrier('receipt')
+                return 0
+            commands._tick_locked = fake_locked
+            commands._deliver_tick_notifications = lambda run_id, receipt_dir: barrier('delivery') or {{'status': 'DELIVERED'}}
+            commands._publish_ui_snapshot = lambda run_id, receipt_dir: barrier('publication') or {{'status': 'OK'}}
+            raise SystemExit(commands.tick(apply=True, project_id='all', max_tickets=1))
         """),
     ], env=env)
     try:
-        for _ in range(50):
-            if owner_ready.exists():
-                break
-            time.sleep(0.05)
-        assert owner_ready.exists()
-        blocked = subprocess.run([
-            sys.executable,
-            "-c",
-            textwrap.dedent(f"""
-                import sys
-                sys.path.insert(0, {scripts!r})
-                from watchdog import core
-                print(core.acquire_lock('second'))
-            """),
-        ], env=env, capture_output=True, text=True, check=False)
-        assert blocked.stdout.strip() == "False"
+        for phase in phases:
+            for _ in range(100):
+                if (tmp_path / "phase").exists() and (tmp_path / "phase").read_text() == phase:
+                    break
+                time.sleep(0.05)
+            assert (tmp_path / "phase").read_text() == phase
+            blocked = subprocess.run([
+                sys.executable,
+                "-c",
+                textwrap.dedent(f"""
+                    import pathlib, sys
+                    sys.path.insert(0, {scripts!r})
+                    from watchdog import commands, config
+                    root = pathlib.Path({str(tmp_path)!r})
+                    config.receipt_root = lambda: root / 'second-receipts'
+                    config.tick_would_enter_quiet_hours = lambda: False
+                    commands.log_event = lambda *a, **k: None
+                    print(commands.tick(apply=True, project_id='all', max_tickets=1))
+                """),
+            ], env=env, capture_output=True, text=True, check=False, timeout=5)
+            assert blocked.stdout.strip().endswith("0")
+            assert not list((tmp_path / "second-receipts").glob("*/receipt.json"))
+            (tmp_path / f"resume-{phase}").write_text("go")
+        owner.wait(timeout=10)
+        assert owner.returncode == 0
     finally:
-        owner.wait(timeout=5)
+        if owner.poll() is None:
+            owner.kill()
     acquired = subprocess.run([
         sys.executable,
         "-c",

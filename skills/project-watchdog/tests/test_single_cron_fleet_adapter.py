@@ -170,7 +170,7 @@ def test_started_creator_with_failed_review_is_charged_as_started(tmp_path: Path
 
     def fake_handle(run_id, receipt_dir, project, issue, *, apply):
         handled.append(int(issue["number"]))
-        return {"ok": False, "status": "NEEDS_ATTENTION", "dispatched_at": 123.0, "issue_number": int(issue["number"]), "repo": project["repo"]}
+        return {"ok": False, "status": "NEEDS_ATTENTION", "native_admission": "started", "creator_started": True, "dispatched_at": 123.0, "issue_number": int(issue["number"]), "repo": project["repo"]}
 
     monkeypatch.setattr(config, "projects_path", lambda: projects_path)
     monkeypatch.setattr(config, "state_path", lambda: state_path)
@@ -355,3 +355,41 @@ def test_native_handler_admission_evidence_reaches_tick_accounting(tmp_path: Pat
     assert rc == 0
     assert captured["receipt"]["handled_issues"][0]["creator_admission"] == "started"
     assert captured["receipt"]["rotation"]["admitted_creators"] == ["grahama1970/agent-skills#11"]
+
+
+def test_launch_intent_is_not_creator_start_evidence(tmp_path: Path, monkeypatch) -> None:
+    projects_path = tmp_path / "projects.json"
+    state_path = tmp_path / "state.json"
+    projects_path.write_text(json.dumps({"projects": [{"project_id": "agent-skills", "repo": "grahama1970/agent-skills", "worktree": str(tmp_path)}]}))
+    state_path.write_text(json.dumps({"global": {"state": "active"}, "projects": {"agent-skills": {"state": "active"}}}))
+    handled: list[int] = []
+    captured: dict = {}
+
+    def fake_list(run_id, candidate, busy, *, skip_issue_numbers=None, skip_issue_reasons=None, only_issue=None, apply=False):
+        registry.LAST_SCAN.clear(); registry.LAST_SCAN.update({"scanned": 2, "excluded": {}, "excluded_issues": {}, "dependency_unblocks": []})
+        return [_issue(1, "skills/a"), _issue(2, "skills/b")]
+
+    def fake_handle(run_id, receipt_dir, project, issue, *, apply):
+        handled.append(int(issue["number"]))
+        if int(issue["number"]) == 1:
+            return {"ok": False, "status": "NEEDS_ATTENTION", "native_admission": "indeterminate", "dispatched_at": 123.0, "issue_number": 1, "repo": project["repo"]}
+        return {"ok": True, "status": "COMPLETED", "native_admission": "started", "creator_started": True, "issue_number": 2, "repo": project["repo"]}
+
+    monkeypatch.setattr(config, "projects_path", lambda: projects_path)
+    monkeypatch.setattr(config, "state_path", lambda: state_path)
+    monkeypatch.setattr(commands.primary, "reconcile", lambda root: {})
+    monkeypatch.setattr(commands.registry, "lane_busy_issues", lambda *a, **k: [])
+    monkeypatch.setattr(commands, "list_routable_issues", fake_list)
+    monkeypatch.setattr(commands, "acquire_execution_lock", lambda run_id, targets: "+".join(sorted(targets)))
+    monkeypatch.setattr(commands, "release_execution_lock", lambda lock: None)
+    monkeypatch.setattr(commands, "handle_issue", fake_handle)
+    monkeypatch.setattr(commands.streaks, "clear_idle", lambda *a, **k: None)
+    monkeypatch.setattr(commands, "_persist_tick_state", lambda state: None)
+    monkeypatch.setattr(commands, "finish", lambda run_id, d, receipt, code, **k: captured.update(receipt=receipt, code=code) or code)
+
+    rc = commands._tick_locked("run", tmp_path / "receipt", apply=True, project_id="all", max_tickets=1)
+
+    assert rc == 1
+    assert handled == [1]
+    assert captured["receipt"]["handled_issues"][0]["creator_admission"] == "indeterminate"
+    assert captured["receipt"]["rotation"]["admitted_creators"] == []

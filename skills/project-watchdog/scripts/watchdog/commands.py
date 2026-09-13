@@ -130,7 +130,7 @@ def _creator_admission(result: dict[str, Any], *, apply: bool) -> str:
     native = result.get("native_admission")
     if native in {"started", "not_started", "indeterminate", "retained"}:
         return "not_started" if native == "retained" else str(native)
-    if result.get("creator_started") is True or result.get("dispatched_at") is not None:
+    if result.get("creator_started") is True:
         return "started"
     if result.get("retained_operation") is True:
         return "not_started"

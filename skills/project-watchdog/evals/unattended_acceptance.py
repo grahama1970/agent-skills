@@ -208,6 +208,21 @@ def is_canary(repo: str | None, issue: object) -> bool:
     return canary_ref(repo, issue) in set(ACCEPTANCE_SCOPE["canary_queue"])
 
 
+def canary_has_operator_authorization_and_scheduled_binding(receipt: dict[str, Any], cron_starts: list[dict[str, Any]]) -> bool:
+    """A manual or non-canary receipt cannot satisfy unattended acceptance."""
+    run_id = str(receipt.get("run_id") or "")
+    scheduled = any(run_id and run_id in str(row.get("line") or "") for row in cron_starts)
+    if not scheduled:
+        return False
+    if receipt.get("operator_authorization") != ACCEPTANCE_SCOPE["operator_approved_by"]:
+        return False
+    return any(
+        isinstance(handled, dict)
+        and is_canary(handled.get("repo"), handled.get("issue_number"))
+        for handled in receipt.get("handled_issues") or []
+    )
+
+
 def run_id_datetime(run_id: str | None) -> datetime | None:
     if not isinstance(run_id, str):
         return None

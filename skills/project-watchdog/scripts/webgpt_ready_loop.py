@@ -42,10 +42,11 @@ REQUIRED_PROOF_GATES = [
     {"name": "missing required case blocks qualification", "pytest": ["skills/project-watchdog/tests/test_webgpt_ready_loop.py::test_declared_required_gate_failure_blocks_positive_reviewer"]},
     {"name": "skipped required case blocks qualification", "pytest": ["skills/project-watchdog/tests/test_webgpt_ready_loop.py::test_skipped_required_case_blocks_qualification"]},
     {"name": "current review survives post-completion capture", "pytest": ["skills/project-watchdog/tests/test_webgpt_ready_loop.py::test_current_review_survives_post_completion_stdout_capture"]},
-    {"name": "old provider receipt rejected", "pytest": ["skills/project-watchdog/tests/test_webgpt_ready_loop.py::test_old_valid_provider_receipt_cannot_authorize_current_review"]},
+    {"name": "old provider receipt rejected", "pytest": ["skills/project-watchdog/tests/test_webgpt_ready_loop.py::test_complete_old_run_cannot_authorize_current_invocation"]},
     {"name": "post-review candidate stability", "pytest": ["skills/project-watchdog/tests/test_webgpt_ready_loop.py::test_candidate_change_during_review_invalidates_approval"]},
     {"name": "packet canonical roundtrip", "pytest": ["skills/project-watchdog/tests/test_webgpt_ready_loop.py::test_packet_roundtrip_preserves_schema_paths_and_digest"]},
     {"name": "serial fleet admission", "pytest": ["skills/project-watchdog/tests/test_single_cron_fleet_adapter.py"]},
+    {"name": "launch intent is not start evidence", "pytest": ["skills/project-watchdog/tests/test_single_cron_fleet_adapter.py::test_launch_intent_is_not_creator_start_evidence"]},
     {"name": "started creator charges slot", "pytest": ["skills/project-watchdog/tests/test_single_cron_fleet_adapter.py::test_started_creator_with_failed_review_is_charged_as_started"]},
     {"name": "success without start evidence is not counted", "pytest": ["skills/project-watchdog/tests/test_single_cron_fleet_adapter.py::test_success_without_start_evidence_is_not_counted_as_new_creator"]},
     {"name": "native handler admission evidence reaches accounting", "pytest": ["skills/project-watchdog/tests/test_single_cron_fleet_adapter.py::test_native_handler_admission_evidence_reaches_tick_accounting"]},
@@ -56,8 +57,13 @@ REQUIRED_PROOF_GATES = [
     {"name": "restart recovers committed unregistered receipt", "pytest": ["skills/project-watchdog/tests/test_notify_receipt_replay.py::test_restart_recovers_committed_unregistered_receipt"]},
     {"name": "bounded delivery drain", "pytest": ["skills/project-watchdog/tests/test_notify_receipt_replay.py::test_drain_budget_and_acknowledgment_status"]},
     {"name": "acknowledged history cannot starve new receipt", "pytest": ["skills/project-watchdog/tests/test_notify_receipt_replay.py::test_acknowledged_history_cannot_starve_new_receipt"]},
+    {"name": "recovery advances beyond acknowledged history window", "pytest": ["skills/project-watchdog/tests/test_notify_receipt_replay.py::test_recovery_advances_beyond_acknowledged_history_window"]},
+    {"name": "failed pending cannot starve current receipt", "pytest": ["skills/project-watchdog/tests/test_notify_receipt_replay.py::test_failed_pending_events_cannot_starve_current_receipt"]},
     {"name": "drain deadline includes transport", "pytest": ["skills/project-watchdog/tests/test_notify_receipt_replay.py::test_drain_deadline_includes_discovery_and_transport"]},
+    {"name": "successive destinations share one deadline", "pytest": ["skills/project-watchdog/tests/test_notify_receipt_replay.py::test_successive_destinations_share_one_deadline"]},
     {"name": "human alert retry source-first", "pytest": ["skills/project-watchdog/tests/test_notify_receipt_replay.py::test_idle_tick_retries_human_alert_after_source_commit"]},
+    {"name": "human delivery recovers missing sidecar", "pytest": ["skills/project-watchdog/tests/test_notify_receipt_replay.py::test_human_delivery_recovers_commit_before_sidecar_crash"]},
+    {"name": "human send ack crash records ambiguity", "pytest": ["skills/project-watchdog/tests/test_notify_receipt_replay.py::test_human_send_ack_crash_records_ambiguity"]},
     {"name": "old-cursor receipt recovery", "pytest": ["skills/project-watchdog/tests/test_notify_receipt_replay.py::test_restart_recovers_unregistered_receipt_at_or_before_cursor"]},
     {"name": "native singleton excludes second process", "pytest": ["skills/project-watchdog/tests/test_single_cron_owner.py::test_native_singleton_excludes_second_process_through_all_phases"]},
     {"name": "quiet owner finalizes without dispatch", "pytest": ["skills/project-watchdog/tests/test_single_cron_owner.py::test_quiet_owner_finalizes_without_dispatch"]},
@@ -65,6 +71,7 @@ REQUIRED_PROOF_GATES = [
     {"name": "ui publication failure has source-bound outcome", "pytest": ["skills/project-watchdog/tests/test_single_cron_owner.py::test_ui_publication_failure_has_durable_source_bound_outcome"]},
     {"name": "cron installer singleton", "pytest": ["skills/project-watchdog/tests/test_single_cron_installer.py"]},
     {"name": "historical UI cron removal", "pytest": ["skills/project-watchdog/tests/test_single_cron_installer.py::test_installer_removes_original_watchdog_ui_snapshot_job"]},
+    {"name": "unattended canary requires operator scheduled binding", "pytest": ["skills/project-watchdog/tests/test_unattended_acceptance.py::test_canary_requires_operator_authorization_and_scheduled_candidate_binding"]},
 ]
 
 
@@ -289,7 +296,7 @@ def _parse_ask_json(path: Path) -> dict[str, Any] | None:
         return None
 
 
-def latest_webgpt_response(ask_json: Path, output_root: Path) -> Path | None:
+def latest_webgpt_response(ask_json: Path, output_root: Path, *, started_after: float | None = None) -> Path | None:
     data = _parse_ask_json(ask_json)
     if not data:
         return None
@@ -316,6 +323,8 @@ def latest_webgpt_response(ask_json: Path, output_root: Path) -> Path | None:
     response_path = Path(str(webgpt_entry.get("response_path") or ""))
     run_receipt_path = Path(str(execution.get("receipt_path") or ""))
     if not node_receipt_path.is_file() or not response_path.is_file() or not run_receipt_path.is_file():
+        return None
+    if started_after is not None and run_receipt_path.stat().st_mtime < started_after:
         return None
     run_root = run_receipt_path.parents[1]
     if output_root not in response_path.parents or output_root not in node_receipt_path.parents or output_root not in run_receipt_path.parents:
@@ -369,9 +378,10 @@ def ask_webgpt(repo: Path, packet: Path, *, project: str, output_root: Path, ite
         "--poll-timeout-seconds", "3000",
         "--execute", "--json",
     ]
+    started_after = time.time()
     result = run_cmd(cmd, cwd=repo, timeout=3000, output_limit=None)
     ask_json.write_text(result["stdout"], encoding="utf-8")
-    response = latest_webgpt_response(ask_json, output_root)
+    response = latest_webgpt_response(ask_json, output_root, started_after=started_after)
     verdict = classify_response(response.read_text(errors="replace"), candidate_digest=candidate_digest, packet_digest=packet_digest) if response and response.is_file() else None
     return {"status": "OK" if verdict else "NO_RESPONSE", "command": result, "ask_json": str(ask_json), "response": str(response) if response else None, "candidate_digest": candidate_digest, "packet_digest": packet_digest, "verdict": verdict}
 

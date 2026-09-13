@@ -225,20 +225,25 @@ def test_main_refuses_failed_required_proofs_even_with_positive_reviewer(tmp_pat
     assert out["ready_to_deploy"] is False
 
 
-def test_old_valid_provider_receipt_cannot_authorize_current_review(tmp_path: Path) -> None:
+def test_complete_old_run_cannot_authorize_current_invocation(tmp_path: Path) -> None:
     root = tmp_path / "out"
-    old = root / "ask-tau-old/node-artifacts/handler-webgpt"
+    run = root / "ask-tau-old"
+    old = run / "node-artifacts/handler-webgpt"
     old.mkdir(parents=True)
     response = old / "response.md"
     receipt = old / "node-receipt.json"
+    run_receipt = run / "tau-receipts/dag-receipt.json"
+    run_receipt.parent.mkdir(parents=True)
     response.write_text("body", encoding="utf-8")
     receipt.write_text(json.dumps({"ok": True, "status": "PASS", "node_id": "handler-webgpt", "response_path": str(response)}), encoding="utf-8")
+    run_receipt.write_text(json.dumps({"ok": True, "run_id": "ask-tau-old"}), encoding="utf-8")
+    old_time = 1000
+    for path in (response, receipt, run_receipt):
+        __import__("os").utime(path, (old_time, old_time))
     ask_json = root / "current.json"
-    ask_json.write_text(json.dumps({"execution": {"node_provider_receipts": [{"node_id": "handler-webgpt", "ok": True, "status": "PASS", "path": str(receipt), "response_path": str(response)}]}}), encoding="utf-8")
-    future = ask_json.stat().st_mtime + 10
-    __import__("os").utime(ask_json, (future, future))
+    ask_json.write_text(json.dumps({"execution": {"receipt_path": str(run_receipt), "node_provider_receipts": [{"node_id": "handler-webgpt", "ok": True, "status": "PASS", "path": str(receipt), "response_path": str(response)}]}}), encoding="utf-8")
 
-    assert loop.latest_webgpt_response(ask_json, root) is None
+    assert loop.latest_webgpt_response(ask_json, root, started_after=old_time + 1) is None
 
 
 def test_candidate_change_during_review_invalidates_approval(tmp_path: Path, monkeypatch, capsys) -> None:
