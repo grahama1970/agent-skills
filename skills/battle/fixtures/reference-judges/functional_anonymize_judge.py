@@ -255,10 +255,25 @@ def _read_text(p: Path) -> str:
     return raw.decode("utf-8")
 
 
+def _strict_json_loads(text: str):
+    def reject_constant(value: str):
+        raise ValueError(f"non-finite json value {value}")
+
+    def reject_duplicates(pairs):
+        out = {}
+        for key, value in pairs:
+            if key in out:
+                raise ValueError(f"duplicate json key {key!r}")
+            out[key] = value
+        return out
+
+    return json.loads(text, parse_constant=reject_constant, object_pairs_hook=reject_duplicates)
+
+
 def judge(target_dir, params):
     inp = Path(params["input_dir"]) / "corpus"
     out = Path(target_dir) / params.get("output_subdir", "corpus")
-    policy = json.loads(Path(params["policy"]).read_text(encoding="utf-8"))
+    policy = _strict_json_loads(Path(params["policy"]).read_text(encoding="utf-8"))
     entries = policy.get("sensitive_values", [])
     values, types, subjects = [], [], []
     for entry in entries:
@@ -282,7 +297,17 @@ def judge(target_dir, params):
         suffix = a.suffix
         try:
             if suffix == ".json":
-                cmp_.json_walk(json.loads(_read_text(a)), json.loads(_read_text(b)), rel)
+                try:
+                    in_json = _strict_json_loads(_read_text(a))
+                except Exception as exc:
+                    cmp_.violations.append(f"functional:{rel}: unsupported-input-json ({type(exc).__name__}: {exc})")
+                    continue
+                try:
+                    out_json = _strict_json_loads(_read_text(b))
+                except Exception as exc:
+                    cmp_.violations.append(f"functional:{rel}: invalid-released-output-json ({type(exc).__name__}: {exc})")
+                    continue
+                cmp_.json_walk(in_json, out_json, rel)
             elif suffix == ".csv":
                 cmp_.csv_rows(list(csv.reader(io.StringIO(_read_text(a)))),
                               list(csv.reader(io.StringIO(_read_text(b)))), rel)
@@ -302,7 +327,7 @@ def judge(target_dir, params):
         cmp_.violations.append("functional:report-missing: successful release has no report.json")
     else:
         try:
-            rp = json.loads(report.read_text(encoding="utf-8"))
+            rp = _strict_json_loads(report.read_text(encoding="utf-8"))
             status = str(rp.get("status", ""))
             if status not in ("ready", "pass", "PASS", "ok"):
                 cmp_.violations.append(f"functional:report-status-incompatible: {status!r}")

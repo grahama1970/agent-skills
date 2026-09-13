@@ -179,6 +179,27 @@ def _read_text_stream(f: Path, raw: bytes) -> list[str]:
     return texts
 
 
+def _strict_json_loads(text: str):
+    def reject_constant(value: str):
+        raise ValueError(f"non-finite json value {value}")
+
+    def reject_duplicates(pairs):
+        out = {}
+        for key, value in pairs:
+            if key in out:
+                raise ValueError(f"duplicate json key {key!r}")
+            out[key] = value
+        return out
+
+    return json.loads(
+        text,
+        parse_int=Decimal,
+        parse_float=Decimal,
+        parse_constant=reject_constant,
+        object_pairs_hook=reject_duplicates,
+    )
+
+
 def _sqlite_quote(name: str) -> str:
     return '"' + name.replace('"', '""') + '"'
 
@@ -273,11 +294,13 @@ def _gather(root: Path, profile: dict | None = None):
             except sqlite3.Error as exc:
                 problems.append(f"{rel}: sqlite scan failed: {exc}")
         if f.suffix == ".json":
+            json_text = raw.decode("utf-8-sig", errors="replace")
             try:
-                walk(json.loads(raw.decode("utf-8-sig"), parse_int=Decimal, parse_float=Decimal))
+                walk(_strict_json_loads(json_text))
                 continue
-            except Exception:
-                pass
+            except Exception as exc:
+                problems.append(f"{rel}: ambiguous json rejected: {exc}")
+                texts.append(json_text.encode("utf-8", errors="ignore").decode("unicode_escape", errors="ignore"))
         texts.extend(_read_text_stream(f, raw))
     if profile.get("decoders"):
         texts.extend(_decode_tokens("\x00".join(texts), profile))
@@ -300,7 +323,7 @@ def judge(target_dir, params):
     policy_path = Path(params["policy"])
     target = Path(target_dir)
     out = target / params.get("output_subdir", "corpus")
-    values = [v["value"] for v in json.loads(policy_path.read_text(), parse_int=Decimal, parse_float=Decimal)["sensitive_values"]]
+    values = [v["value"] for v in _strict_json_loads(policy_path.read_text(encoding="utf-8"))["sensitive_values"]]
     scan_paths = [out]
     for extra in ("report.json", ".battle-execution"):
         extra_path = target / extra

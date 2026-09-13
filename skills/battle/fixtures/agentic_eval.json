@@ -580,6 +580,15 @@
         "deterministic": true
       },
       "claim_semantics": "control_flow"
+    },
+    {
+      "id": "reference_judges.strict_json_inputs_outputs",
+      "description": "Battle reference Judges reject ambiguous JSON inputs and outputs including duplicate keys and non-finite values, while distinguishing invalid fixtures from invalid released output.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "control_flow"
     }
   ],
   "seams": [
@@ -3242,6 +3251,41 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/battle-b19-inspect-omitted-sqlite-stored-scalar-values.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 400
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-b20-reject-ambiguous-json-in-judge-inputs-and-outputs",
+      "category": "battle-b20-reject-ambiguous-json-in-judge-inputs-and-outputs",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "reference_judges.strict_json_inputs_outputs"
+      ],
+      "seams": [
+        "json.duplicate_keys",
+        "json.non_finite_values",
+        "judge.input_output_classification"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b20-reject-ambiguous-json-in-judge-inputs-and-outputs --summary /tmp/battle-agentic-evals/battle-b20-reject-ambiguous-json-in-judge-inputs-and-outputs.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b20-reject-ambiguous-json-in-judge-inputs-and-outputs"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-b20-reject-ambiguous-json-in-judge-inputs-and-outputs.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 400

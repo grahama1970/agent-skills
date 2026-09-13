@@ -4756,6 +4756,12 @@ def main() -> int:
                 suite=args.suite,
                 tests=["test_sqlite_stored_scalar_coverage.py"],
             )
+        if args.suite == "battle-b20-reject-ambiguous-json-in-judge-inputs-and-outputs":
+            return probe_pytest_contracts(
+                args.summary,
+                suite=args.suite,
+                tests=["test_judge_json_ambiguity.py"],
+            )
         if args.suite == "battle-functional-judge":
             return probe_battle_functional_judge(args.summary)
         if args.suite == "battle-commentary-causality":
