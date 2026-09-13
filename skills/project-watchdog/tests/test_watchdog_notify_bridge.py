@@ -166,6 +166,7 @@ def test_switchboard_push_dedupes_same_fingerprint_across_receipts(tmp_path, mon
         return {"status": "SENT"}
 
     monkeypatch.setattr(bridge, "push_switchboard", fake_push)
+    monkeypatch.setattr(bridge, "_issue_closed_on_github", lambda ev: False)
     monkeypatch.setattr(bridge, "_write_agent_action_receipt", lambda *a, **k: None)
     base = {"event_id": "e1", "dir": "d1", "status": "NEEDS_ATTENTION", "repo": "grahama1970/tau",
             "issue": "343", "triage_code": "project_watchdog_target_ownership_conflict",
@@ -292,11 +293,11 @@ def test_dead_run_reports_terminal_status_not_stale_progress(tmp_path, monkeypat
     # Superseded contract (2026-09-11): a terminal dead run does not drive the
     # fleet heartbeat AT ALL (not STALE_PROGRESS, not a forever-BLOCKED latch).
     assert hb["state"] == "observer_fresh_no_active_run", hb
-    # a live-but-stalled run still flags STALE_PROGRESS
+    # a stale monitor, even one claiming RUNNING, no longer latches fleet progress forever
     mon.write_text(json.dumps({"process_running": True, "current_status": "RUNNING",
                                "latest_event": {}, "elapsed_seconds": 1}))
     os_utime(mon, (old, old))
-    assert b._heartbeat_payload()["state"] == "STALE_PROGRESS"
+    assert b._heartbeat_payload()["state"] == "observer_fresh_no_active_run"
 
 
 def test_heartbeat_skips_terminal_runs_and_latches_nothing_forever(tmp_path, monkeypatch):
@@ -312,11 +313,11 @@ def test_heartbeat_skips_terminal_runs_and_latches_nothing_forever(tmp_path, mon
     old = time.time() - 4000; os_utime = __import__("os").utime; os_utime(mon, (old, old))
     monkeypatch.setattr(b, "RECEIPTS", tmp_path)
     assert b._heartbeat_payload()["state"] == "observer_fresh_no_active_run"
-    # an in-flight stale run still flags STALE_PROGRESS
+    # a stale monitor, even one claiming RUNNING, no longer latches fleet progress forever
     mon.write_text(json.dumps({"process_running": True, "current_status": "RUNNING",
                                "latest_event": {}, "elapsed_seconds": 1}))
     os_utime(mon, (old, old))
-    assert b._heartbeat_payload()["state"] == "STALE_PROGRESS"
+    assert b._heartbeat_payload()["state"] == "observer_fresh_no_active_run"
 
 
 def test_closed_issue_rewrites_stale_alert_to_show_closure(monkeypatch):
