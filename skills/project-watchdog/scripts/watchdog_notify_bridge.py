@@ -1077,7 +1077,7 @@ def deliver_due(receipt_dir: Path | None = None) -> dict[str, Any]:
         pending_dirs = set(checkpoint.pending_dirs)
         for ev in list(checkpoint.pending.values()):
             results.append(deliver(ev, checkpoint, fresh=True))
-        dirs = [RECEIPTS / name for name in checkpoint.pending_dirs]
+        dirs = _candidate_dirs(checkpoint, replay_last=False)
         if receipt_dir is not None:
             dirs.append(receipt_dir)
         for d in sorted({p for p in dirs if p.exists() and p.is_dir()}, key=lambda p: p.stat().st_mtime):

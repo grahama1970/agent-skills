@@ -155,9 +155,9 @@ def collect_proof_results(repo: Path, output_dir: Path, candidate_digest: str) -
         ["skills/project-watchdog/tests/test_webgpt_ready_loop.py"],
         ["skills/project-watchdog/tests/test_single_cron_fleet_adapter.py"],
         ["skills/project-watchdog/tests/test_watchdog_notify_bridge.py::test_mixed_ticket_outcomes_keep_identity_status_and_proof"],
+        ["skills/project-watchdog/tests/test_notify_receipt_replay.py::test_restart_recovers_committed_unregistered_receipt"],
     ]
     required_missing = [
-        "skills/project-watchdog/tests/test_notify_receipt_replay.py::test_restart_recovers_committed_unregistered_receipt",
         "skills/project-watchdog/tests/test_notify_receipt_replay.py::test_drain_budget_and_acknowledgment_status",
         "skills/project-watchdog/tests/test_notify_receipt_replay.py::test_idle_tick_retries_human_alert_after_source_commit",
         "skills/project-watchdog/tests/test_single_cron_owner.py::test_quiet_owner_finalizes_without_dispatch",

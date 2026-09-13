@@ -10,6 +10,7 @@ from pathlib import Path
 BRIDGE = Path(__file__).resolve().parents[1] / "scripts" / "watchdog_notify_bridge.py"
 spec = importlib.util.spec_from_file_location("wd_bridge_replay", BRIDGE)
 b = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = b
 spec.loader.exec_module(b)
 
 
@@ -110,3 +111,42 @@ def test_human_blocker_message_names_required_action():
           "requires_human_input": True, "next_steps": ["approve canary queue then rerun watchdog eval"]}
     out = b._fmt(ev)
     assert "human needed: approve canary queue then rerun watchdog eval" in out
+
+
+def test_restart_recovers_committed_unregistered_receipt(tmp_path, monkeypatch):
+    bridge = b
+    monkeypatch.setattr(bridge, "STATE_ROOT", tmp_path)
+    monkeypatch.setattr(bridge, "RECEIPTS", tmp_path / "receipts")
+    monkeypatch.setattr(bridge, "CURSOR", tmp_path / "notify-bridge-cursor.json")
+    monkeypatch.setattr(bridge, "CHECKPOINTS", tmp_path / "notify-bridge-checkpoints.json")
+    monkeypatch.setattr(bridge, "BRIDGE_LOCK", tmp_path / "notify-bridge.lock")
+    monkeypatch.setattr(bridge, "SWITCHBOARD_DEDUP", tmp_path / "notify-bridge-dedup.json")
+    monkeypatch.setattr(bridge, "push_switchboard", lambda ev: {"status": "SENT", "message_id": "m1"})
+    monkeypatch.setattr(bridge, "_write_agent_action_receipt", lambda *a, **k: None)
+    bridge.RECEIPTS.mkdir(parents=True)
+    old = bridge.RECEIPTS / "project-watchdog-old"
+    old.mkdir()
+    (old / "receipt.json").write_text(json.dumps({
+        "run_id": "project-watchdog-old",
+        "status": "NEEDS_ATTENTION",
+        "handled_issues": [{
+            "repo": "grahama1970/agent-skills",
+            "issue_number": 99,
+            "action": "ticket_repair",
+            "status": "NEEDS_ATTENTION",
+            "requires_human_input": False,
+            "authorized_agent_next_steps": ["recover --apply"],
+            "summary": "machine retry needed",
+        }],
+    }))
+    bridge.CURSOR.write_text(json.dumps({"last_mtime": 0}))
+
+    result = bridge.deliver_due()
+
+    assert result["status"] == "DELIVERED"
+    assert result["pushed"][0]["switchboard"]["status"] == "SENT"
+    checkpoint = bridge._load_checkpoint()
+    assert checkpoint.pending_dirs == []
+    event_row = json.loads((tmp_path / "events.jsonl").read_text().splitlines()[0])
+    assert event_row["issue"] == "99"
+    assert event_row["phase"] == "ticket_repair"
