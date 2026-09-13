@@ -36,6 +36,7 @@ def test_install_cron_consolidates_owned_jobs_and_is_idempotent(tmp_path: Path, 
         "*/5 * * * * old tick # project-watchdog global issue cron\n"
         "*/5 * * * * old notify project-watchdog-notify-bridge\n"
         "*/5 * * * * old ui project-watchdog-ui-snapshot\n"
+        "15 4 * * * echo project-watchdog archival note # unrelated\n"
     )
     crontab = {"text": unrelated + legacy}
     captured: dict = {}
@@ -57,7 +58,8 @@ def test_install_cron_consolidates_owned_jobs_and_is_idempotent(tmp_path: Path, 
     once = crontab["text"]
     assert "MAILTO=ops@example.com" in once
     assert "# unrelated" in once
-    assert [line for line in once.splitlines() if "project-watchdog" in line] == [captured["receipt"]["cron_line"]]
+    assert "echo project-watchdog archival note" in once
+    assert [line for line in once.splitlines() if commands._owned_project_watchdog_cron_line(line)] == [captured["receipt"]["cron_line"]]
     assert "--max-tickets 3" in once
     assert commands.install_cron(apply=True, minute="*/5") == 0
     assert crontab["text"] == once

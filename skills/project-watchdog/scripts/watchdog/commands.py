@@ -1242,6 +1242,17 @@ def minute_field_period_seconds(minute: str) -> int | None:
     return min(gaps)
 
 
+def _owned_project_watchdog_cron_line(line: str) -> bool:
+    text = line.strip()
+    return (
+        config.CRON_MARKER in text
+        or "/skills/project-watchdog/run.sh tick" in text
+        or "/skills/project-watchdog/scripts/watchdog_notify_bridge.py" in text
+        or "project-watchdog-notify-bridge" in text
+        or "project-watchdog-ui-snapshot" in text
+    )
+
+
 def install_cron(*, apply: bool, minute: str, allow_every_minute: bool = False) -> int:
     """Install or dry-run the crontab line that drives the watchdog.
 
@@ -1317,7 +1328,7 @@ def install_cron(*, apply: bool, minute: str, allow_every_minute: bool = False) 
         receipt_dir.mkdir(parents=True, exist_ok=True)
         return finish(run_id, receipt_dir, receipt, 1, persist=True)
     existing = current["stdout"] if current["exit_code"] == 0 else ""
-    lines = [line for line in existing.splitlines() if "project-watchdog" not in line]
+    lines = [line for line in existing.splitlines() if not _owned_project_watchdog_cron_line(line)]
     lines.append(command)
     new_crontab = "\n".join(lines).rstrip() + "\n"
     receipt: dict[str, Any] = {
@@ -1333,7 +1344,7 @@ def install_cron(*, apply: bool, minute: str, allow_every_minute: bool = False) 
     if apply:
         install = run_cmd(["crontab", "-"], input_text=new_crontab)
         verify = run_cmd(["crontab", "-l"]) if install["exit_code"] == 0 else {"exit_code": 1, "stdout": "", "stderr": "install failed"}
-        installed_lines = [line for line in str(verify.get("stdout") or "").splitlines() if "project-watchdog" in line]
+        installed_lines = [line for line in str(verify.get("stdout") or "").splitlines() if _owned_project_watchdog_cron_line(line)]
         receipt["install_result"] = install
         receipt["verify_result"] = verify
         receipt["ok"] = install["exit_code"] == 0 and verify["exit_code"] == 0 and installed_lines == [command]

@@ -570,7 +570,8 @@ def _fmt(ev: dict) -> str:
         human = ev.get("next_steps") or []
         lines.append("human needed: " + ("; ".join(human) if human else "read the ticket's required human input, perform it, then let watchdog retry"))
     elif ev.get("next_steps"):
-        lines.append("agent next: " + "; ".join(ev["next_steps"]))
+        lines.append("scope: separate watchdog ticket; no action unless you are taking watchdog queue work")
+        lines.append("watchdog queue next: " + "; ".join(ev["next_steps"]))
     lines.append(f"receipt: {RECEIPTS / ev['dir']}")
     return "\n".join(lines)
 
@@ -767,7 +768,7 @@ def switchboard_payload(ev: dict) -> dict[str, Any]:
         "to": pi_inbox_for(ev),
         "type": "alert" if human else "info",
         "priority": "high" if human else "normal",
-        "subject": f"watchdog {ev.get('status')} {_subject_target(ev)}",
+        "subject": f"watchdog {'HUMAN' if human else 'QUEUE'} {ev.get('status')} {_subject_target(ev)}",
         "message": _fmt(ev),
         "event": ev,
         "owning_next_action": (ev.get("next_steps") or [None])[0],

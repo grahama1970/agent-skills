@@ -46,6 +46,27 @@ def test_machine_actionable_switchboard_push_is_not_high_alert():
     assert payload["type"] == "info"
     assert payload["priority"] == "normal"
     assert payload["owning_next_action"] == "recover --apply"
+    assert payload["subject"].startswith("watchdog QUEUE NEEDS_ATTENTION")
+    assert "scope: separate watchdog ticket; no action unless you are taking watchdog queue work" in payload["message"]
+    assert "watchdog queue next: recover --apply" in payload["message"]
+    assert "agent next:" not in payload["message"]
+
+
+def test_repo_contention_queue_alert_does_not_claim_current_lane_is_blocked():
+    bridge = load_bridge()
+    payload = bridge.switchboard_payload({
+        "status": "NEEDS_ATTENTION",
+        "requires_human_input": False,
+        "repo": "grahama1970/agent-skills",
+        "issue": "1688",
+        "summary": "primary Git operation in progress; retain it: ['/repo/.git/index.lock']",
+        "next_steps": ["recover_primary.py --root /repo --apply"],
+        "dir": "receipt-dir",
+    })
+    assert payload["type"] == "info"
+    assert payload["subject"].startswith("watchdog QUEUE NEEDS_ATTENTION")
+    assert "separate watchdog ticket" in payload["message"]
+    assert "watchdog queue next: recover_primary.py --root /repo --apply" in payload["message"]
 
 
 def test_switchboard_routes_to_the_events_own_project_inbox():
