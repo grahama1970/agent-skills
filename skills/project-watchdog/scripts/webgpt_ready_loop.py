@@ -48,7 +48,8 @@ def sha256_file(path: Path) -> str:
 
 def classify_response(text: str, *, candidate_digest: str | None = None, packet_digest: str | None = None) -> dict[str, Any]:
     """Return a conservative readiness verdict from WebGPT text."""
-    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    raw_lines = [line for line in text.splitlines() if line.strip()]
+    lines = [line.strip() for line in raw_lines]
     expected = [
         READY_LINE,
         f"CANDIDATE_DIGEST: {candidate_digest}",
@@ -56,7 +57,7 @@ def classify_response(text: str, *, candidate_digest: str | None = None, packet_
         NO_BLOCKERS_LINE,
     ]
     digest_inputs_present = bool(candidate_digest and packet_digest)
-    terminal_record = lines[-4:] if len(lines) >= 4 else []
+    terminal_record = lines if len(lines) == 4 else []
     field_lines = [line for line in lines if line.startswith(("VERDICT:", "CANDIDATE_DIGEST:", "PACKET_DIGEST:", "BLOCKING_FINDINGS:"))]
     unique_terminal_record = field_lines == expected
     candidate_bound = digest_inputs_present and f"CANDIDATE_DIGEST: {candidate_digest}" in terminal_record
@@ -150,24 +151,38 @@ def candidate_manifest(repo: Path) -> dict[str, Any]:
 
 
 def collect_proof_results(repo: Path, output_dir: Path, candidate_digest: str) -> dict[str, Any]:
-    command = ["uv", "run", "--project", "skills/project-watchdog", "pytest", "-q", "skills/project-watchdog/tests/test_webgpt_ready_loop.py"]
-    result = run_cmd(command, cwd=repo, timeout=240, output_limit=None)
-    log_text = result["stdout"] + result["stderr"]
-    log_path = output_dir / "candidate-bound-tests.log"
-    log_path.write_text(log_text, encoding="utf-8")
+    gate_specs = [
+        ["skills/project-watchdog/tests/test_webgpt_ready_loop.py"],
+    ]
+    gates = []
+    for index, spec in enumerate(gate_specs, start=1):
+        command = ["uv", "run", "--project", "skills/project-watchdog", "pytest", "-q", *spec]
+        result = run_cmd(command, cwd=repo, timeout=240, output_limit=None)
+        log_text = result["stdout"] + result["stderr"]
+        log_path = output_dir / f"candidate-bound-gate-{index}.log"
+        log_path.write_text(log_text, encoding="utf-8")
+        gates.append({
+            "name": " ".join(spec),
+            "candidate_digest": candidate_digest,
+            "command": command,
+            "returncode": result["returncode"],
+            "duration_seconds": result["duration_seconds"],
+            "log_sha256": sha256_file(log_path),
+            "stdout_tail": result["stdout"][-4000:],
+            "stderr_tail": result["stderr"][-4000:],
+            "passed": result["returncode"] == 0 and " passed" in log_text,
+        })
+    after_digest = candidate_manifest(repo)["candidate_digest"]
     return {
-        "candidate_digest": candidate_digest,
-        "command": command,
-        "returncode": result["returncode"],
-        "duration_seconds": result["duration_seconds"],
-        "log_sha256": sha256_file(log_path),
-        "stdout_tail": result["stdout"][-4000:],
-        "stderr_tail": result["stderr"][-4000:],
-        "qualifies_candidate": result["returncode"] == 0 and " passed" in log_text,
+        "candidate_digest_before": candidate_digest,
+        "candidate_digest_after": after_digest,
+        "candidate_stable": after_digest == candidate_digest,
+        "gates": gates,
+        "qualifies_candidate": after_digest == candidate_digest and bool(gates) and all(gate["passed"] for gate in gates),
     }
 
 
-def build_packet(repo: Path, *, prior_response: Path | None, output: Path) -> tuple[Path, str]:
+def build_packet(repo: Path, *, prior_response: Path | None, output: Path) -> tuple[Path, str, bool]:
     output.parent.mkdir(parents=True, exist_ok=True)
     manifest = candidate_manifest(repo)
     diff = run_cmd(["git", "diff", "--", "skills/project-watchdog"], cwd=repo, timeout=120)
@@ -209,7 +224,7 @@ def build_packet(repo: Path, *, prior_response: Path | None, output: Path) -> tu
     if prior_response and prior_response.is_file():
         body.extend(["", "## Previous WebGPT response to close", "```text", browser_safe(prior_response.read_text(errors="replace")[-12000:]), "```"])
     output.write_text(browser_safe("\n".join(body)) + "\n", encoding="utf-8")
-    return output, manifest["candidate_digest"]
+    return output, manifest["candidate_digest"], bool(tests.get("qualifies_candidate"))
 
 
 def _parse_ask_json(path: Path) -> dict[str, Any] | None:
@@ -239,10 +254,23 @@ def latest_webgpt_response(ask_json: Path, output_root: Path) -> Path | None:
         base = data.get(key)
         if base:
             candidates.append(Path(base) / "node-artifacts" / "handler-webgpt" / "response.md")
-    for candidate in candidates:
-        if candidate.is_file() and output_root in candidate.parents:
-            return candidate
-    return None
+    receipt_entries = (execution.get("node_provider_receipts") or []) if isinstance(execution, dict) else []
+    webgpt_entry = next((entry for entry in receipt_entries if entry.get("node_id") == "handler-webgpt"), None)
+    if not webgpt_entry or not webgpt_entry.get("ok") or webgpt_entry.get("status") != "PASS":
+        return None
+    node_receipt_path = Path(str(webgpt_entry.get("path") or ""))
+    response_path = Path(str(webgpt_entry.get("response_path") or ""))
+    if not node_receipt_path.is_file() or not response_path.is_file() or output_root not in response_path.parents:
+        return None
+    try:
+        node_receipt = json.loads(node_receipt_path.read_text())
+    except (OSError, ValueError):
+        return None
+    if not (node_receipt.get("ok") is True and node_receipt.get("status") == "PASS" and node_receipt.get("node_id") == "handler-webgpt"):
+        return None
+    if node_receipt.get("response_path") != str(response_path):
+        return None
+    return response_path
 
 
 def ask_webgpt(repo: Path, packet: Path, *, project: str, output_root: Path, iteration: int, candidate_digest: str) -> dict[str, Any]:
@@ -307,15 +335,15 @@ def main(argv: list[str] | None = None) -> int:
     receipt: dict[str, Any] = {"schema": "project_watchdog.webgpt_ready_loop.v1", "steps": [], "ready_to_deploy": False}
     prior = args.prior_response
     for iteration in range(1, args.max_iterations + 1):
-        packet, candidate_digest = build_packet(repo, prior_response=prior, output=args.output_root / f"packet-{iteration}.md")
-        receipt["steps"].append({"iteration": iteration, "packet": str(packet), "candidate_digest": candidate_digest})
+        packet, candidate_digest, proof_qualified = build_packet(repo, prior_response=prior, output=args.output_root / f"packet-{iteration}.md")
+        receipt["steps"].append({"iteration": iteration, "packet": str(packet), "candidate_digest": candidate_digest, "proof_qualified": proof_qualified})
         if not args.execute:
             receipt["next_command"] = "rerun with --execute after local fixes are ready for clean-room WebGPT review"
             break
         result = ask_webgpt(repo, packet, project=args.project, output_root=args.output_root, iteration=iteration, candidate_digest=candidate_digest)
         receipt["steps"].append({"iteration": iteration, "ask": result})
         verdict = result.get("verdict") or {}
-        if verdict.get("ready_to_deploy"):
+        if proof_qualified and verdict.get("ready_to_deploy"):
             receipt["ready_to_deploy"] = True
             receipt["response"] = result.get("response")
             break

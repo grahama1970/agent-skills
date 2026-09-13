@@ -83,9 +83,10 @@ def test_packet_binds_candidate_and_preserves_evidence(tmp_path: Path, monkeypat
 
     monkeypatch.setattr(loop, "run_cmd", fake_run)
     monkeypatch.setattr(loop, "collect_proof_results", lambda repo, output_dir, candidate_digest: {"candidate_digest": candidate_digest, "command": ["pytest"], "returncode": 0, "log_sha256": "sha256:" + "c" * 64, "qualifies_candidate": True})
-    packet, digest = loop.build_packet(repo, prior_response=prior, output=tmp_path / "packet.md")
+    packet, digest, qualified = loop.build_packet(repo, prior_response=prior, output=tmp_path / "packet.md")
     text = packet.read_text(encoding="utf-8")
 
+    assert qualified is True
     assert digest.startswith("sha256:")
     assert "candidate_digest" in text
     assert "skills > project-watchdog > scripts > webgpt_ready_loop.py" in text
@@ -102,6 +103,21 @@ def test_missing_expected_digests_cannot_approve() -> None:
     assert loop.classify_response(text)["ready_to_deploy"] is False
 
 
+def test_ask_requires_verified_current_run_not_just_response_path(tmp_path: Path) -> None:
+    root = tmp_path / "out"
+    run = root / "ask-tau-current"
+    response = run / "node-artifacts/handler-webgpt/response.md"
+    response.parent.mkdir(parents=True)
+    response.write_text("body", encoding="utf-8")
+    missing = run / "node-artifacts/handler-webgpt/node-receipt.json"
+    ask_json = root / "ask.json"
+    ask_json.parent.mkdir(parents=True, exist_ok=True)
+    ask_json.write_text(json.dumps({"execution": {"node_provider_receipts": [{"node_id": "handler-webgpt", "ok": True, "status": "PASS", "path": str(missing), "response_path": str(response)}]}}), encoding="utf-8")
+    assert loop.latest_webgpt_response(ask_json, root) is None
+    missing.write_text(json.dumps({"ok": True, "status": "PASS", "node_id": "handler-webgpt", "response_path": str(response)}), encoding="utf-8")
+    assert loop.latest_webgpt_response(ask_json, root) == response
+
+
 def test_failed_current_ask_cannot_reuse_old_response(tmp_path: Path) -> None:
     root = tmp_path / "out"
     old = root / "ask-tau-old/node-artifacts/handler-webgpt/response.md"
@@ -112,13 +128,38 @@ def test_failed_current_ask_cannot_reuse_old_response(tmp_path: Path) -> None:
     assert loop.latest_webgpt_response(current, root) is None
 
 
+def test_main_refuses_failed_required_proofs_even_with_positive_reviewer(tmp_path: Path, monkeypatch, capsys) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    packet = tmp_path / "out" / "packet-1.md"
+    packet.parent.mkdir()
+    packet.write_text("packet", encoding="utf-8")
+    candidate = "sha256:" + "a" * 64
+    packet_digest = "sha256:" + "b" * 64
+    positive = {
+        "status": "OK",
+        "response": "response.md",
+        "packet_digest": packet_digest,
+        "candidate_digest": candidate,
+        "verdict": {"ready_to_deploy": True},
+    }
+    monkeypatch.setattr(loop, "build_packet", lambda *a, **k: (packet, candidate, False))
+    monkeypatch.setattr(loop, "ask_webgpt", lambda *a, **k: positive)
+
+    rc = loop.main(["--repo", str(repo), "--output-root", str(tmp_path / "out"), "--execute"])
+
+    out = json.loads(capsys.readouterr().out)
+    assert rc == 1
+    assert out["ready_to_deploy"] is False
+
+
 def test_main_plan_only_writes_receipt(tmp_path: Path, monkeypatch, capsys) -> None:
     repo = tmp_path / "repo"
     repo.mkdir()
     packet = tmp_path / "out" / "packet-1.md"
     packet.parent.mkdir()
     packet.write_text("packet", encoding="utf-8")
-    monkeypatch.setattr(loop, "build_packet", lambda *a, **k: (packet, "sha256:" + "a" * 64))
+    monkeypatch.setattr(loop, "build_packet", lambda *a, **k: (packet, "sha256:" + "a" * 64, False))
 
     rc = loop.main(["--repo", str(repo), "--output-root", str(tmp_path / "out")])
 
