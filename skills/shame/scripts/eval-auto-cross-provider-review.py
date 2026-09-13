@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Stop-hook reviewer invocation writes a bound cross-provider receipt."""
+"""Shame accepts only a candidate-bound pi-subagents stop-review receipt."""
 from __future__ import annotations
 
 import json
-import os
 import subprocess
 import tempfile
 from pathlib import Path
 
+from review_receipt_fixture import attach_review
+
 ROOT = Path(__file__).resolve().parents[3]
-AUTO = ROOT / "extensions/pi/lazy-report-shame-shame-shame/auto-cross-provider-review.mjs"
 CHECKER = ROOT / "extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs"
 
 
@@ -17,144 +17,51 @@ def fenced(obj: dict) -> str:
     return "```json\n" + json.dumps(obj, indent=2) + "\n```\n"
 
 
-def call_checker(text: str) -> dict:
+def check(text: str) -> dict:
     run = subprocess.run(
-        ["node", str(CHECKER)],
-        input=text,
-        text=True,
-        capture_output=True,
-        timeout=20,
-        env={**os.environ, "LRSSS_FORCE_STATUS": "1", "LRSSS_AUTHOR_PROVIDER": "openai"},
-        check=False,
+        ["node", str(CHECKER)], input=text, text=True, capture_output=True,
+        env={"PATH": "/usr/bin:/bin", "LRSSS_FORCE_STATUS": "1", "LRSSS_AUTHOR_PROVIDER": "openai"},
+        check=False, timeout=20,
     )
-    payload = json.loads(run.stdout)
-    payload["exit_code"] = run.returncode
-    return payload
+    return json.loads(run.stdout)
 
 
 def main() -> None:
-    with tempfile.TemporaryDirectory(prefix="shame-auto-review-") as raw:
+    with tempfile.TemporaryDirectory(prefix="shame-pi-subagents-review-") as raw:
         work = Path(raw)
-        baseline = work / "baseline-proof.txt"
-        baseline.write_text("baseline proof ok\n", encoding="utf-8")
+        proof = work / "proof.txt"
+        proof.write_text("baseline proof ok\n", encoding="utf-8")
         status = {
             "schema": "pi.agent_status.v1",
-            "goal": "automatic cross-provider reviewer regression",
-            "answer": "Done only after hook-owned review.",
-            "plain_answer": "The hook must invoke the reviewer and attach its receipt before acceptance.",
+            "goal": "pi-subagents stop-review regression",
+            "answer": "Accepted only after the reviewer child passes.",
+            "plain_answer": "The Pi harness reviewer child must pass before stop.",
             "state": "done",
             "changed": ["no change: fixture"],
-            "verified": [{"command": f"read {baseline}", "result": "baseline proof ok"}],
-            "proof": [str(baseline)],
+            "verified": [{"command": f"read {proof}", "result": "baseline proof ok"}],
+            "proof": [str(proof)],
         }
-        before = call_checker(fenced(status))
-        assert before["decision"] == "reject" and "cross_family_review_required" in before["reason_codes"], before
+        unreviewed = check(fenced(status))
+        assert unreviewed["decision"] == "reject" and "cross_family_review_required" in unreviewed["reason_codes"], unreviewed
 
-        candidate = "Fixture terminal answer.\n\n" + fenced(status)
-        review = subprocess.run(
-            ["node", str(AUTO)],
-            input=json.dumps({"text": candidate, "status": status, "author_provider": "openai"}),
-            text=True,
-            capture_output=True,
-            timeout=30,
-            env={
-                **os.environ,
-                "LAZY_REPORT_SHAME_REVIEW_DIR": str(work / "reviews"),
-                "LAZY_REPORT_SHAME_REVIEWER_MODEL": "zai/glm-5.3:high",
-                "LAZY_REPORT_SHAME_REVIEWER_COMMAND": "printf 'VERDICT: PASS\\nCRITIQUE: fixture reviewer confirms proof boundary.\\n'",
-            },
-            check=False,
-        )
-        assert review.returncode == 0, review.stderr or review.stdout
-        review_payload = json.loads(review.stdout)
-        receipt = Path(review_payload["receipt_path"])
-        metadata = Path(review_payload["metadata_path"])
-        output = Path(review_payload["output_path"])
-        assert receipt.is_file() and metadata.is_file() and output.is_file(), review_payload
-        receipt_data = json.loads(receipt.read_text(encoding="utf-8"))
-        metadata_data = json.loads(metadata.read_text(encoding="utf-8"))
-        assert receipt_data["generated_by"] == "lazy-report-shame-shame-shame", receipt_data
-        assert metadata_data["generated_by"] == "lazy-report-shame-shame-shame", metadata_data
-        assert receipt_data["review_metadata_path"] == str(metadata), receipt_data
-        assert receipt_data["review_output_path"] == str(output), receipt_data
+        attach_review(work, status)
+        reviewed = check(fenced(status))
+        assert reviewed["decision"] == "pass", reviewed
+        assert reviewed["features"]["cross_family_review"] == {"status": "reviewed", "degraded": False}, reviewed
 
-        status["proof"].append(str(receipt))
-        status["verified"].append({"command": "cross-provider shame review", "result": "PASS"})
-        after = call_checker(fenced(status))
-        assert after["decision"] == "pass", after
-        assert after["features"]["cross_family_review"] == {"status": "reviewed", "degraded": False}, after
-
-        echoed_prompt_review = subprocess.run(
-            ["node", str(AUTO)],
-            input=json.dumps({"text": candidate, "status": status, "author_provider": "openai"}),
-            text=True,
-            capture_output=True,
-            timeout=30,
-            env={
-                **os.environ,
-                "LAZY_REPORT_SHAME_REVIEW_DIR": str(work / "echoed-prompt-reviews"),
-                "LAZY_REPORT_SHAME_REVIEWER_COMMAND": "python3 -c 'import sys; print(sys.stdin.read().splitlines()[4]); print(\"VERDICT: REJECT\\nCRITIQUE: anchored verdict wins.\")'",
-            },
-            check=False,
-        )
-        assert echoed_prompt_review.returncode == 0, echoed_prompt_review.stderr or echoed_prompt_review.stdout
-        echoed_prompt_payload = json.loads(echoed_prompt_review.stdout)
-        echoed_prompt_receipt = json.loads(Path(echoed_prompt_payload["receipt_path"]).read_text(encoding="utf-8"))
-        assert echoed_prompt_receipt["verdict"] == "REJECT", echoed_prompt_receipt
-
-        fallback_review = subprocess.run(
-            ["node", str(AUTO)],
-            input=json.dumps({"text": candidate, "status": status, "author_provider": "openai"}),
-            text=True,
-            capture_output=True,
-            timeout=30,
-            env={
-                **os.environ,
-                "LAZY_REPORT_SHAME_REVIEW_DIR": str(work / "fallback-reviews"),
-                "LAZY_REPORT_SHAME_REVIEWER_MODEL": "zai/glm-5.3-flash",
-                "LAZY_REPORT_SHAME_REVIEWER_FALLBACK_MODELS": "kimi/kimi-for-coding",
-                "LAZY_REPORT_SHAME_REVIEWER_COMMAND": "python3 -c 'import os; m=os.environ.get(\"LRSSS_REVIEWER_MODEL_ATTEMPT\", \"\"); print(\"VERDICT: PASS\\nCRITIQUE: fallback reviewer accepted.\" if \"kimi\" in m else \"NO EXPLICIT VERDICT\")'",
-            },
-            check=False,
-        )
-        assert fallback_review.returncode == 0, fallback_review.stderr or fallback_review.stdout
-        fallback_payload = json.loads(fallback_review.stdout)
-        fallback_receipt = json.loads(Path(fallback_payload["receipt_path"]).read_text(encoding="utf-8"))
-        fallback_meta = json.loads(Path(fallback_payload["metadata_path"]).read_text(encoding="utf-8"))
-        assert fallback_receipt["reviewer_provider"] == "kimi", fallback_receipt
-        assert [attempt["model"] for attempt in fallback_meta["attempts"]] == ["zai/glm-5.3-flash", "kimi/kimi-for-coding"], fallback_meta
-
-        zai_review = subprocess.run(
-            ["node", str(AUTO)],
-            input=json.dumps({"text": candidate, "status": status, "author_provider": "zai"}),
-            text=True,
-            capture_output=True,
-            timeout=30,
-            env={
-                **os.environ,
-                "LAZY_REPORT_SHAME_REVIEW_DIR": str(work / "zai-author-reviews"),
-                "LAZY_REPORT_SHAME_REVIEWER_MODEL": "zai/glm-5.3-flash",
-                "LAZY_REPORT_SHAME_REVIEWER_FALLBACK_MODELS": "kimi/kimi-for-coding",
-                "LAZY_REPORT_SHAME_REVIEWER_COMMAND": "printf 'VERDICT: PASS\\nCRITIQUE: fixture reviewer confirms proof boundary.\\n'",
-            },
-            check=False,
-        )
-        assert zai_review.returncode == 0, zai_review.stderr or zai_review.stdout
-        zai_payload = json.loads(zai_review.stdout)
-        zai_receipt = json.loads(Path(zai_payload["receipt_path"]).read_text(encoding="utf-8"))
-        assert zai_receipt["author_provider"] == "zai" and zai_receipt["reviewer_provider"] == "kimi", zai_receipt
+        receipt = json.loads(Path(status["proof"][-1]).read_text(encoding="utf-8"))
+        receipt["generated_by"] = "lazy-report-shame-shame-shame"
+        Path(status["proof"][-1]).write_text(json.dumps(receipt), encoding="utf-8")
+        legacy = check(fenced(status))
+        assert legacy["decision"] == "reject" and "cross_provider_review_not_hook_generated" in legacy["reason_codes"], legacy
 
     print(json.dumps({
-        "schema": "lazy_report_shame.auto_cross_provider_review_eval.v1",
+        "schema": "lazy_report_shame.pi_subagents_stop_review_eval.v1",
         "status": "PASS",
         "checked": [
-            "unreviewed guarded stop is rejected",
-            "auto-cross-provider-review invokes configured reviewer command",
-            "hook-owned receipt, metadata, and reviewer output are written",
-            "checker accepts the same stop after the generated receipt is attached",
-            "reviewer verdict parser ignores echoed prompt instructions",
-            "reviewer fallback switches model after missing explicit verdict",
-            "zai authors are assigned a Kimi-family reviewer by default",
+            "unreviewed terminal stop is rejected",
+            "candidate-bound pi-subagents reviewer receipt is accepted",
+            "legacy Shame-owned reviewer receipt is rejected",
         ],
     }, indent=2))
 

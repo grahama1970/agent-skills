@@ -15,7 +15,7 @@ const EXTENSION_DIR = dirname(fileURLToPath(import.meta.url));
 // JSON-first checker (2026-09-01): regex/prose classification is banned.
 // status-json-check.mjs validates a pi.agent_status.v1 block via pydantic.
 const REPORT_CHECK = join(EXTENSION_DIR, "status-json-check.mjs");
-const CROSS_PROVIDER_REVIEW = join(EXTENSION_DIR, "auto-cross-provider-review.mjs");
+const STOP_REVIEW_BRIDGE_KEY = Symbol.for("pi-subagents.stop-review");
 const SHAME_AUDIO = process.env.LAZY_REPORT_SHAME_AUDIO || join(EXTENSION_DIR, "shame.wav");
 const TRAINING_JSONL = process.env.LAZY_REPORT_SHAME_TRAINING_JSONL || "/mnt/storage12tb/skills/shame/training/classifier-feedback.jsonl";
 const PENDING_REVIEW_PACKET = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || "/mnt/storage12tb/skills/shame/training/pending-review-packet.json";
@@ -577,24 +577,28 @@ function authorProviderForMessage(message: any): string {
   return String(process.env.LRSSS_AUTHOR_PROVIDER || process.env.PI_PROVIDER || process.env.PI_MODEL || message?.provider || message?.model || "unknown");
 }
 
-function runStopReviewer(text: string, status: any, message: any): { text: string; receiptPath: string; verdict: string } | null {
-  if (!status || !existsSync(CROSS_PROVIDER_REVIEW)) return null;
+async function runStopReviewer(text: string, status: any, message: any, ctx: any): Promise<{ text: string; receiptPath: string; verdict: string } | null> {
+  if (!status) return null;
+  const bridge = (globalThis as Record<PropertyKey, unknown>)[STOP_REVIEW_BRIDGE_KEY];
+  if (typeof bridge !== "function") return null;
   const reviewStatus = withoutAgentAuthoredReviewProof(status);
   const reviewText = replaceTerminalStatusJson(text, reviewStatus) || text;
-  const proc = spawnSync("node", [CROSS_PROVIDER_REVIEW], {
-    input: JSON.stringify({ text: reviewText, status: reviewStatus, author_provider: authorProviderForMessage(message) }),
-    encoding: "utf8",
-    timeout: Number(process.env.LAZY_REPORT_SHAME_REVIEW_TIMEOUT_MS || 125000),
-    env: process.env,
-  });
-  if (proc.error) return null;
-  let payload: any = null;
-  try { payload = JSON.parse(String(proc.stdout || "{}")); } catch { return null; }
-  const receiptPath = String(payload?.receipt_path || "");
+  let decision: any = null;
+  try {
+    decision = await (bridge as (input: any) => Promise<any>)({
+      text: reviewText,
+      status: reviewStatus,
+      authorProvider: authorProviderForMessage(message),
+      ctx,
+    });
+  } catch {
+    return null;
+  }
+  const receiptPath = String(decision?.receiptPath || "");
   if (!receiptPath || !existsSync(receiptPath)) return null;
   const patched = appendProofToStatusText(reviewText, reviewStatus, receiptPath);
   if (!patched) return null;
-  return { text: patched, receiptPath, verdict: String(payload?.verdict || "") };
+  return { text: patched, receiptPath, verdict: String(decision?.verdict || "") };
 }
 
 function compileStatusCommand(status: unknown): { command: string | null; reason: string } | null {
@@ -1552,7 +1556,7 @@ export default function lazyReportShameShameShame(pi: any) {
       && (check.decision !== "reject" || crossProviderReviewHarnessOwns(check));
     if (mustRunHarnessReview) {
       const reviewText = replaceTerminalStatusJson(text, withoutAgentAuthoredReviewProof(statusForReview)) || text;
-      const reviewed = runStopReviewer(reviewText, statusForReview, event.message);
+      const reviewed = await runStopReviewer(reviewText, statusForReview, event.message, ctx);
       if (reviewed) {
         text = reviewed.text;
         autoReviewContent = [textBlock(text)];

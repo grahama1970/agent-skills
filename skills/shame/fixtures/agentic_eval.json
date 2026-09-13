@@ -1137,7 +1137,7 @@
       "proves": "The Shame checker rejects guarded terminal reports unless a lazy_report_shame.cross_provider_review.v1 proof binds a different reviewer provider and a successful reviewer metadata file."
     },
     {
-      "name": "auto-cross-provider-review",
+      "name": "pi-subagents-stop-review-receipt",
       "type": "adversarial",
       "evidence_class": "deterministic",
       "mocked": false,
@@ -1152,13 +1152,12 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "lazy_report_shame.auto_cross_provider_review_eval.v1",
-          "auto-cross-provider-review invokes configured reviewer command",
-          "hook-owned receipt, metadata, and reviewer output are written",
-          "zai authors are assigned a Kimi-family reviewer by default"
+          "lazy_report_shame.pi_subagents_stop_review_eval.v1",
+          "candidate-bound pi-subagents reviewer receipt is accepted",
+          "legacy Shame-owned reviewer receipt is rejected"
         ]
       },
-      "proves": "The Shame reviewer invocation path calls a configured different-provider reviewer command, writes hook-owned lazy_report_shame.cross_provider_review.v1 metadata/output, and turns a previously rejected guarded stop into an accepted one."
+      "proves": "Shame accepts only a candidate-bound pi-subagents reviewer receipt and rejects the retired Shame-owned subprocess receipt provenance."
     },
     {
       "name": "cross-provider-review-harness-owned",

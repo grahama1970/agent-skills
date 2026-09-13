@@ -12,10 +12,10 @@ import os
 from pathlib import Path
 
 DEFAULT_REVIEWER = "zai"
-DEFAULT_MODEL = "zai/glm-5.3:high"
+DEFAULT_MODEL = "zai/glm-5.3-flash"
 
 
-GENERATOR = "lazy-report-shame-shame-shame"
+GENERATOR = "pi-subagents"
 
 
 def status_review_hash(status: dict) -> str:
@@ -33,8 +33,8 @@ def status_review_hash(status: dict) -> str:
 def write_review(work: Path, status: dict, *, author: str = "openai",
                  reviewer: str = DEFAULT_REVIEWER, model: str = DEFAULT_MODEL,
                  verdict: str = "PASS", critique: str | None = None) -> Path:
-    # Same shape the Shame stop hook (auto-cross-provider-review.mjs) emits;
-    # the checker rejects receipts without this provenance.
+    # Same shape the pi-subagents stop-review bridge emits; the checker rejects
+    # receipts without this harness-owned provenance.
     output = work / f"output-{reviewer}.md"
     output.write_text(f"VERDICT: {verdict}\nCRITIQUE: {critique or 'fixture reviewer'}\n", encoding="utf-8")
     metadata = work / f"meta-{reviewer}.json"
