@@ -608,6 +608,8 @@ def _tick_locked(
     issues: list[dict[str, Any]] = []
     issue_scans: list[dict[str, Any]] = []
     repair_admissions: list[dict[str, Any]] = []
+    service_count = 0
+    stop_admission = False
     deadline = tick_deadline_seconds()
     started = time.monotonic()
 
@@ -760,7 +762,7 @@ def _tick_locked(
                 "leases": registry.LAST_LEASE_SCAN.get("active", []),
             }
         for index, issue in enumerate(found):
-            if len(repair_admissions) >= max_tickets:
+            if service_count >= max_tickets:
                 break
             if defer_for_deadline(index, time.monotonic() - started, deadline):
                 receipt["deadline_deferred"] = [int(i["number"]) for i in found[index:]]
@@ -785,8 +787,27 @@ def _tick_locked(
                     }
                 )
                 continue
-            repair_admissions.append({"project": candidate, "issue": issue, "targets": sorted(targets), "lock": execution_lock})
-        if rotation_mode == "strict" or len(repair_admissions) >= max_tickets:
+            try:
+                result = handle_issue(run_id, receipt_dir, candidate, issue, apply=apply)
+                _record_agent_authorization(receipt, result)
+                result.setdefault("execution_lock_targets", sorted(targets))
+                if execution_lock is not None:
+                    result.setdefault("execution_lock", str(execution_lock))
+                receipt["handled_issues"].append(result)
+                if not (apply and result.get("ok") is True and result.get("status") == "SKIPPED"):
+                    service_count += 1
+                    repair_admissions.append({"project": candidate, "issue": issue, "targets": sorted(targets), "lock": None})
+                    if apply:
+                        state.setdefault("last_served_project", None)
+                        state["last_served_project"] = cid
+                        _persist_tick_state(state)
+                        streaks.clear_idle(cid)
+                if result.get("ok") is not True:
+                    stop_admission = True
+                    break
+            finally:
+                release_execution_lock(execution_lock)
+        if rotation_mode == "strict" or service_count >= max_tickets or stop_admission:
             break
 
     receipt["rotation"] = {
@@ -798,10 +819,14 @@ def _tick_locked(
     }
     receipt.setdefault("issue_scans", issue_scans)
 
-    if project is None and receipt["handled_issues"]:
+    if receipt["handled_issues"]:
         receipt["handled_count"] = len(receipt["handled_issues"])
-        receipt.update(ok=all(item.get("ok") for item in receipt["handled_issues"]),
-                       status="SKIPPED", stop_reason="execution_lock_held")
+        receipt["ok"] = all(item.get("ok") for item in receipt["handled_issues"]) and not receipt["errors"]
+        statuses = {item.get("status") for item in receipt["handled_issues"]}
+        receipt["status"] = ("NEEDS_ATTENTION" if not receipt["ok"] else
+                             "DRY_RUN" if statuses == {"DRY_RUN"} else
+                             "SKIPPED" if statuses <= {"SKIPPED"} else
+                             "COMPLETED")
         return finish(run_id, receipt_dir, receipt, 0 if receipt["ok"] else 1, persist=apply)
 
     if project is None and receipt["errors"]:
