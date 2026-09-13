@@ -593,7 +593,7 @@ def _is_non_ticket_event(ev: dict) -> bool:
     sentinels so a genuinely malformed ticket receipt still surfaces.
     """
     repo, issue = str(ev.get("repo") or ""), str(ev.get("issue") or "")
-    if "receipt_missing_repo" in repo and "receipt_missing_issue" in issue:
+    if "receipt_missing_repo" in repo or "receipt_missing_issue" in issue:
         return True
     # summarize() maps missing receipt identity to UNKNOWN(...) sentinels; direct
     # unit calls without repo/issue are treated as generic ticket-action events.

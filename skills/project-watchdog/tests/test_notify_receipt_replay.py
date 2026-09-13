@@ -26,13 +26,14 @@ def test_malformed_receipts_never_render_none_subject():
         assert "None" not in s, f"subject {s!r} rendered None for {ev}"
 
 
-def test_terminal_transition_beats_replayed_progress():
-    # A COMPLETED ticket event must classify as non-progress regardless of
-    # replayed older STALE_PROGRESS receipts: replay is idempotent because
-    # deliver routes by the event itself, not history.
-    done = {"repo": "acme/api", "issue": "42", "status": "COMPLETED", "triage": "resolved"}
-    assert b._all_clear_fingerprint(done) is not None or True  # no prior alert -> None is correct
-    assert done["status"] in {"COMPLETED", "CLOSED_ON_GITHUB"}  # terminal set membership
+def test_terminal_transition_beats_replayed_progress(tmp_path, monkeypatch):
+    # A COMPLETED ticket event must clear a prior alert fingerprint for the same
+    # ticket instead of inheriting old progress/blocker state.
+    monkeypatch.setattr(b, "SWITCHBOARD_DEDUP", tmp_path / "dedup.json")
+    prior = json.dumps(["acme/api", "42", "STALE_PROGRESS", "stalled"], sort_keys=True)
+    b.SWITCHBOARD_DEDUP.write_text(json.dumps({prior: time.time()}))
+    done = {"repo": "acme/api", "issue": "42", "status": "COMPLETED", "triage_code": "resolved"}
+    assert b._all_clear_fingerprint(done) == prior
 
 
 def test_all_clear_requires_ticket_shape():
@@ -198,7 +199,7 @@ def test_drain_budget_and_acknowledgment_status(tmp_path, monkeypatch):
     monkeypatch.setattr(bridge, "push_switchboard", fake_push)
     monkeypatch.setattr(bridge, "_write_agent_action_receipt", lambda *a, **k: None)
     bridge.RECEIPTS.mkdir(parents=True)
-    for i in range(4):
+    for i in range(1, 5):
         d = bridge.RECEIPTS / f"project-watchdog-{i}"
         d.mkdir()
         (d / "receipt.json").write_text(json.dumps({

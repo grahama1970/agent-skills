@@ -245,6 +245,14 @@ def test_deliver_due_retries_pending_without_resending_acknowledged(tmp_path, mo
     assert "evt" not in saved.pending
 
 
+def test_malformed_legacy_ticket_without_repo_does_not_push_unknown_queue_alert():
+    bridge = load_bridge()
+    ev = {"repo": "UNKNOWN(repo:receipt_missing_repo)", "issue": "3", "status": "NEEDS_ATTENTION", "run_id": "old"}
+    assert bridge._is_non_ticket_event(ev) is True
+    assert bridge.requires_agent_push(ev) is False
+    assert "UNKNOWN" not in bridge._subject_target(ev)
+
+
 def test_non_ticket_receipts_do_not_push_unknown_alerts():
     """#1648: install/state/fleet-scan receipts have no repo/issue and were
     rendered as UNKNOWN(repo:receipt_missing_repo) NEEDS_ATTENTION pushes."""
@@ -256,7 +264,7 @@ def test_non_ticket_receipts_do_not_push_unknown_alerts():
     real = {"status": "NEEDS_ATTENTION", "repo": "grahama1970/tau", "issue": "343"}
     assert bridge.requires_agent_push(real) is True
     malformed = {"status": "NEEDS_ATTENTION", "repo": "UNKNOWN(repo:receipt_missing_repo)", "issue": "343"}
-    assert bridge.requires_agent_push(malformed) is True
+    assert bridge.requires_agent_push(malformed) is False
 
 
 def test_non_ticket_lifecycle_subject_is_human_readable():
