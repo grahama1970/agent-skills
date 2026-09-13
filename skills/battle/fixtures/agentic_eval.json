@@ -571,6 +571,15 @@
         "deterministic": true
       },
       "claim_semantics": "control_flow"
+    },
+    {
+      "id": "no_data_leak_judge.sqlite_stored_scalar_coverage",
+      "description": "No-data-leak Judge inspects SQLite hidden rowids and internal scalar stores such as sqlite_sequence, handles quoted identifiers and WITHOUT ROWID tables, and fails closed when rowid storage cannot be inspected.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "control_flow"
     }
   ],
   "seams": [
@@ -3200,6 +3209,39 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/battle-b18-complete-sqlite-header-integer-coverage.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 400
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-b19-inspect-omitted-sqlite-stored-scalar-values",
+      "category": "battle-b19-inspect-omitted-sqlite-stored-scalar-values",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "no_data_leak_judge.sqlite_stored_scalar_coverage"
+      ],
+      "seams": [
+        "sqlite.stored_scalar_coverage"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b19-inspect-omitted-sqlite-stored-scalar-values --summary /tmp/battle-agentic-evals/battle-b19-inspect-omitted-sqlite-stored-scalar-values.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b19-inspect-omitted-sqlite-stored-scalar-values"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-b19-inspect-omitted-sqlite-stored-scalar-values.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 400

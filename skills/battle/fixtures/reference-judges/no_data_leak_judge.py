@@ -179,6 +179,20 @@ def _read_text_stream(f: Path, raw: bytes) -> list[str]:
     return texts
 
 
+def _sqlite_quote(name: str) -> str:
+    return '"' + name.replace('"', '""') + '"'
+
+
+def _sqlite_rowid_alias(con: sqlite3.Connection, table: str, ddl: str | None) -> str | None:
+    if ddl and "WITHOUT ROWID" in ddl.upper():
+        return None
+    columns = {str(row[1]).lower() for row in con.execute(f"PRAGMA table_info({_sqlite_quote(table)})")}
+    for alias in ("rowid", "_rowid_", "oid"):
+        if alias not in columns:
+            return alias
+    raise sqlite3.Error(f"all rowid aliases are shadowed for table {table!r}")
+
+
 def _gather(root: Path, profile: dict | None = None):
     profile = profile or {}
     texts, nums, problems, inventory = [], set(), [], []
@@ -235,10 +249,16 @@ def _gather(root: Path, profile: dict | None = None):
                 con = sqlite3.connect(f"file:{f}?mode=ro", uri=True)
                 for row in con.execute("SELECT type,name,tbl_name,sql FROM sqlite_master"):
                     texts.extend(x for x in row if isinstance(x, str))
-                tbls = [r[0] for r in con.execute(
-                    "SELECT name FROM sqlite_master WHERE type IN ('table','view') AND name NOT GLOB 'sqlite_*'")]
-                for t in tbls:
-                    for row in con.execute(f'SELECT * FROM "{t}"'):
+                objects = list(con.execute(
+                    "SELECT type,name,sql FROM sqlite_master WHERE type IN ('table','view')"
+                ))
+                for object_type, t, ddl in objects:
+                    columns = "*"
+                    if object_type == "table":
+                        rowid_alias = _sqlite_rowid_alias(con, t, ddl)
+                        if rowid_alias:
+                            columns = f"*, {_sqlite_quote(rowid_alias)}"
+                    for row in con.execute(f"SELECT {columns} FROM {_sqlite_quote(t)}"):
                         for c in row:
                             if isinstance(c, str):
                                 texts.append(c)
@@ -250,8 +270,8 @@ def _gather(root: Path, profile: dict | None = None):
                             texts.extend(_adjacent_recon(row))
                 con.close()
                 continue
-            except sqlite3.Error:
-                pass
+            except sqlite3.Error as exc:
+                problems.append(f"{rel}: sqlite scan failed: {exc}")
         if f.suffix == ".json":
             try:
                 walk(json.loads(raw.decode("utf-8-sig"), parse_int=Decimal, parse_float=Decimal))
