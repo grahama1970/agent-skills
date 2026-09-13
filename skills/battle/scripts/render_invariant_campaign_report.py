@@ -154,22 +154,45 @@ def _md(value: str) -> str:
     return value.replace("|", "/").replace("\n", " ")
 
 
-def _attack_rows(campaigns: list[tuple[Path, dict[str, Any]]], lineage: dict[str, str]) -> list[dict[str, str]]:
-    rows: list[dict[str, str]] = []
+def _format_refs(value: Any) -> str:
+    if isinstance(value, list):
+        refs = []
+        for item in value:
+            if isinstance(item, dict):
+                label = item.get("title") or item.get("name") or item.get("source") or item.get("url") or item.get("id")
+                url = item.get("url")
+                refs.append(f"{label} ({url})" if label and url and label != url else str(label or item))
+            else:
+                refs.append(str(item))
+        return "; ".join(ref for ref in refs if ref) or "not recorded in case receipt"
+    if value:
+        return str(value)
+    return "not recorded in case receipt"
+
+
+def _case_example(case: str, description: str) -> str:
+    return f"{case}: {description}"
+
+
+def _attack_rows(campaigns: list[tuple[Path, dict[str, Any]]], lineage: dict[str, str]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
     for path, campaign in campaigns:
         cases = campaign.get("case_receipts") or campaign.get("case_log") or campaign.get("failures") or []
         for item in cases:
             case = item.get("case_id") or item.get("case") or "campaign-level"
             violations = item.get("violations") or []
             scope = _scope(path)
+            description = str(item.get("description") or _case_description(str(case)))
             rows.append({
                 "scope": scope,
                 "contractual": "yes" if scope == "contractual" else "no",
                 "adaptive_lineage": lineage.get(str(case), "no"),
                 "campaign": path.name,
                 "case": str(case),
-                "description": str(item.get("description") or _case_description(str(case))),
-                "why_chosen": str(item.get("why_chosen") or _why_chosen(scope, str(case))),
+                "description": description,
+                "example": str(item.get("example") or _case_example(str(case), description)),
+                "why_chosen": str(item.get("why_chosen") or item.get("rationale") or _why_chosen(scope, str(case))),
+                "related_research": _format_refs(item.get("research_refs") or item.get("source_refs") or item.get("sources")),
                 "expectation": str(item.get("expectation") or "unknown"),
                 "result": _row_result(item),
                 "evidence": "; ".join(str(v) for v in violations) or "Judge passed; no policy value survived.",
@@ -177,7 +200,7 @@ def _attack_rows(campaigns: list[tuple[Path, dict[str, Any]]], lineage: dict[str
     return rows
 
 
-def _markdown_table(rows: list[dict[str, str]]) -> str:
+def _markdown_table(rows: list[dict[str, Any]]) -> str:
     lines = [
         "## Exploits Table",
         "",
@@ -196,7 +219,7 @@ def _markdown_table(rows: list[dict[str, str]]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _row_counts(rows: list[dict[str, str]]) -> dict[str, int]:
+def _row_counts(rows: list[dict[str, Any]]) -> dict[str, int]:
     return {
         "total": len(rows),
         "accepted_clean": sum(1 for row in rows if row["result"] == "ACCEPTED_CLEAN"),
@@ -205,7 +228,7 @@ def _row_counts(rows: list[dict[str, str]]) -> dict[str, int]:
     }
 
 
-def _terminal_evidence(row: dict[str, str]) -> str:
+def _terminal_evidence(row: dict[str, Any]) -> str:
     if row["result"] == "RED_WIN":
         return row["evidence"]
     if row["result"] == "BLOCKED_FAIL_CLOSED":
@@ -220,7 +243,7 @@ def _clip(value: str, width: int) -> str:
     return clean[:max(0, width - 1)] + "…"
 
 
-def _terminal_table(rows: list[dict[str, str]]) -> list[str]:
+def _terminal_table(rows: list[dict[str, Any]]) -> list[str]:
     widths = {
         "scope": 15,
         "case": 35,
@@ -257,7 +280,7 @@ def _color_enabled_stderr() -> bool:
     return sys.stderr.isatty() and not os.environ.get("NO_COLOR")
 
 
-def _print_rich_terminal_summary(target: str, rows: list[dict[str, str]]) -> None:
+def _print_rich_terminal_summary(target: str, rows: list[dict[str, Any]]) -> None:
     summary = _terminal_summary(target, rows)
     console = Console(stderr=True)
     table = Table(title="Case table", box=box.SIMPLE_HEAVY, row_styles=["", "dim"])
@@ -288,7 +311,7 @@ def _print_rich_terminal_summary(target: str, rows: list[dict[str, str]]) -> Non
         console.print("[bold]Highlight plays:[/bold]" + tail)
     sys.stderr.write(capture.get())
 
-def _terminal_summary(target: str, rows: list[dict[str, str]]) -> str:
+def _terminal_summary(target: str, rows: list[dict[str, Any]]) -> str:
     contract = [row for row in rows if row["scope"] == "contractual"]
     beyond = [row for row in rows if row["scope"] == "beyond-contract"]
     other = [row for row in rows if row["scope"] not in {"contractual", "beyond-contract"}]
@@ -342,6 +365,30 @@ def _terminal_summary(target: str, rows: list[dict[str, str]]) -> str:
     ]
     return "\n".join(lines) + "\n"
 
+
+
+def _terminal_cards(target: str, rows: list[dict[str, Any]]) -> str:
+    counts = _row_counts(rows)
+    lines = [
+        f"Battle case cards: {target}",
+        f"Scorekeeper call: {counts['total']} total cases; {counts['accepted_clean']} accepted clean; {counts['fail_closed']} stopped fail-closed; {counts['red_wins']} RED_WIN.",
+    ]
+    if not rows:
+        lines += ["==============", "Case: NO_CASES_RECORDED", "Judge evidence: Campaign had no case rows."]
+        return "\n".join(lines) + "\n"
+    for row in rows:
+        lines += [
+            "==============",
+            f"Scope: {row['scope']}",
+            f"Case: {row['case']}",
+            f"Expect: {row['expectation']}",
+            f"Result: {row['result']}",
+            f"Example: {row['example']}",
+            f"Why Battle checks this: {row['why_chosen']}",
+            f"Related research: {row['related_research']}",
+            f"Judge evidence: {_terminal_evidence(row)}",
+        ]
+    return "\n".join(lines) + "\n"
 
 def build_report(*, campaigns: list[Path], project_state: Path, target: str, adaptive_lineage: list[Path] | None = None) -> tuple[dict[str, Any], str]:
     loaded = [(path, _load_campaign(path)) for path in campaigns]
@@ -450,6 +497,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out-md", required=True, type=Path)
     parser.add_argument("--terminal-summary", action="store_true", help="Also print a plain-spoken Battle story with a case table to stderr; JSON stdout stays stable.")
     parser.add_argument("--terminal-table", action="store_true", help="Alias for --terminal-summary; prints the project-agent-friendly terminal table/report to stderr.")
+    parser.add_argument("--terminal-cards", action="store_true", help="Print one long-form case card per separator block to stderr; JSON stdout stays stable.")
     args = parser.parse_args(argv)
 
     loaded = [(path, _load_campaign(path)) for path in args.campaign]
@@ -470,7 +518,9 @@ def main(argv: list[str] | None = None) -> int:
         return render.returncode
     with args.out_md.open("a", encoding="utf-8") as handle:
         handle.write("\n" + exploits_table)
-    if args.terminal_summary or args.terminal_table:
+    if args.terminal_cards:
+        sys.stderr.write(_terminal_cards(args.target, attack_rows))
+    elif args.terminal_summary or args.terminal_table:
         if _color_enabled_stderr():
             try:
                 _print_rich_terminal_summary(args.target, attack_rows)

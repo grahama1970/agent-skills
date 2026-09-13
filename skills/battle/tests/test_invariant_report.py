@@ -279,6 +279,86 @@ def test_invariant_report_typer_terminal_table_alias_keeps_stdout_json(tmp_path:
     assert "\u001b[" not in proc.stderr
 
 
+def test_invariant_report_terminal_cards_render_long_case_blocks(tmp_path: Path) -> None:
+    campaign = tmp_path / "beyond-contract-campaign.json"
+    project_state = tmp_path / "project-state.json"
+    out_json = tmp_path / "report.json"
+    out_md = tmp_path / "report.md"
+    _campaign(campaign, passed=False, case_log=[{
+        "case": "bb-filename-value",
+        "expectation": "MUST_REJECT",
+        "passed": False,
+        "violations": ["policy value survives in filename: Alice"],
+    }])
+    project_state.write_text("# Project State\ncurrent\n", encoding="utf-8")
+
+    proc = subprocess.run([
+        str(BATTLE / "run.sh"), "invariant-report",
+        "--campaign", str(campaign),
+        "--project-state", str(project_state),
+        "--target", "oai-trial",
+        "--out-json", str(out_json),
+        "--out-md", str(out_md),
+        "--terminal-cards",
+    ], cwd=REPO, capture_output=True, text=True, check=False)
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert json.loads(proc.stdout)["schema"] == "battle.invariant_report_result.v1"
+    terminal = proc.stderr
+    assert "==============" in terminal
+    assert "Scope: beyond-contract" in terminal
+    assert "Case: bb-filename-value" in terminal
+    assert "Expect: MUST_REJECT" in terminal
+    assert "Result: RED_WIN" in terminal
+    assert "Example: bb-filename-value: policy value hidden in the released filename" in terminal
+    assert "Why Battle checks this: release artifacts can leak through encoding or path surfaces" in terminal
+    assert "Related research: not recorded in case receipt" in terminal
+    assert "Judge evidence: policy value survives in filename: Alice" in terminal
+
+
+def test_invariant_report_terminal_cards_preserve_typed_receipt_fields(tmp_path: Path) -> None:
+    campaign = tmp_path / "brief-cases.json"
+    project_state = tmp_path / "project-state.json"
+    out_json = tmp_path / "report.json"
+    out_md = tmp_path / "report.md"
+    campaign.write_text(json.dumps({
+        "schema": "battle.invariant_campaign_result.v1",
+        "passed": True,
+        "cases_total": 1,
+        "cases_passed": 1,
+        "case_receipts": [{
+            "schema": "battle.case_receipt.v1",
+            "case_id": "typed-case",
+            "description": "typed description",
+            "example": "typed example from receipt",
+            "why_chosen": "typed rationale from receipt",
+            "research_refs": [{"title": "Brave result", "url": "https://example.test/research"}],
+            "expectation": "MUST_ACCEPT",
+            "verdict": "PASS",
+            "execution": {"kind": "ACCEPT", "exit_code": 0},
+            "violations": [],
+        }],
+    }), encoding="utf-8")
+    project_state.write_text("# Project State\ncurrent\n", encoding="utf-8")
+
+    proc = subprocess.run([
+        str(BATTLE / "run.sh"), "invariant-report",
+        "--campaign", str(campaign),
+        "--project-state", str(project_state),
+        "--target", "oai-trial",
+        "--out-json", str(out_json),
+        "--out-md", str(out_md),
+        "--terminal-cards",
+    ], cwd=REPO, capture_output=True, text=True, check=False)
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    terminal = proc.stderr
+    assert "Example: typed example from receipt" in terminal
+    assert "Why Battle checks this: typed rationale from receipt" in terminal
+    assert "Related research: Brave result (https://example.test/research)" in terminal
+    assert "Judge evidence: target processed the case; Judge found no released policy value" in terminal
+
+
 def test_invariant_report_rich_terminal_table_path_renders_colored_rows(monkeypatch, capsys) -> None:
     module = _report_module()
     monkeypatch.setattr(

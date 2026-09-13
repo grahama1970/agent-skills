@@ -218,7 +218,7 @@ PROJECT_STATE_ROOT=/path/to/target ../project-state/run.sh report --json --outpu
   --out-md /tmp/battle-report.md
 ```
 
-For project-agent terminal review, add `--terminal-table`:
+For project-agent terminal review, use cards when cases have long evidence:
 
 ```bash
 ./run.sh invariant-report \
@@ -228,16 +228,24 @@ For project-agent terminal review, add `--terminal-table`:
   --target oai-trial \
   --out-json /tmp/battle-report.json \
   --out-md /tmp/battle-report.md \
-  --terminal-table
+  --terminal-cards
 ```
 
 `invariant-report` is a Typer CLI command. It writes machine JSON to stdout and
-keeps the human Battle table/report on stderr. `--terminal-table` is the easy
-alias for `--terminal-summary`: both print contract floor, Red pressure,
-Scorekeeper call, and one case-table row per attack. In an interactive terminal
-Battle uses Rich's terminal-aware colored table (`RED_WIN` red, clean passes
-green, fail-closed stops yellow) and honors `NO_COLOR`; under capture/CI it falls
-back to deterministic plain text so logs and tests stay stable.
+keeps the human Battle report on stderr. Use `--terminal-cards` for normal
+project-agent review of Battle evidence: it prints one `==============` block per
+case with `Scope`, `Case`, `Expect`, `Result`, `Example`, `Why Battle checks
+this`, `Related research`, and `Judge evidence`. If a receipt has `example`,
+`why_chosen`, `research_refs`, or `source_refs`, cards show those exact fields;
+otherwise examples/rationales are deterministic from the case id and research is
+reported as `not recorded in case receipt`.
+
+`--terminal-table` remains the compact overview alias for `--terminal-summary`:
+both print contract floor, Red pressure, Scorekeeper call, and one case-table row
+per attack. In an interactive terminal Battle uses Rich's terminal-aware colored
+table (`RED_WIN` red, clean passes green, fail-closed stops yellow) and honors
+`NO_COLOR`; under capture/CI it falls back to deterministic plain text so logs
+and tests stay stable.
 
 `invariant-report` writes `create_report.report.v1`, validates it through
 `skills/create-report/run.sh validate`, renders Markdown through

@@ -114,8 +114,9 @@ def invariant_report(
     out_md: Path = typer.Option(..., "--out-md", help="Markdown report output path."),
     terminal_summary: bool = typer.Option(False, "--terminal-summary", help="Print the plain Battle report and case table to stderr; stdout remains JSON."),
     terminal_table: bool = typer.Option(False, "--terminal-table", help="Alias for --terminal-summary; optimized for project-agent terminal review."),
+    terminal_cards: bool = typer.Option(False, "--terminal-cards", help="Print one long-form case card per separator block to stderr; stdout remains JSON."),
 ) -> None:
-    """Render a Battle invariant report, with optional terminal table on stderr."""
+    """Render a Battle invariant report, with optional terminal table/cards on stderr."""
     argv: list[str] = []
     for path in campaign:
         argv += ["--campaign", str(path)]
@@ -131,6 +132,8 @@ def invariant_report(
         argv.append("--terminal-summary")
     if terminal_table:
         argv.append("--terminal-table")
+    if terminal_cards:
+        argv.append("--terminal-cards")
     exit_code = _render_invariant_report_module().main(argv)
     if exit_code:
         raise typer.Exit(exit_code)
