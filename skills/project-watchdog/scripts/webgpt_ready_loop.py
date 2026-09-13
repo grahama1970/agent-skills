@@ -23,7 +23,9 @@ Failure modes
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import re
 import subprocess
 import sys
 import time
@@ -31,25 +33,36 @@ from pathlib import Path
 from typing import Any
 
 READY_PHRASE = "ready-to-deploy"
-NEGATIONS = (
-    "not ready-to-deploy",
-    "not yet ready-to-deploy",
-    "no ready-to-deploy",
-    "without a ready-to-deploy",
-    "until ready-to-deploy",
-)
+READY_LINE = "VERDICT: ready-to-deploy"
+NO_BLOCKERS_LINE = "BLOCKING_FINDINGS: none"
 
 
-def classify_response(text: str) -> dict[str, Any]:
+def sha256_text(text: str) -> str:
+    return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def sha256_file(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def classify_response(text: str, *, candidate_digest: str | None = None, packet_digest: str | None = None) -> dict[str, Any]:
     """Return a conservative readiness verdict from WebGPT text."""
-    lower = text.lower()
-    ready = READY_PHRASE in lower and not any(neg in lower for neg in NEGATIONS)
     lines = [line.strip() for line in text.splitlines()]
-    findings = [line for line in lines if line.startswith(("### ", "## ", "- P", "P1", "P2", "P0"))][:40]
+    has_ready_line = READY_LINE in lines
+    has_no_blockers = NO_BLOCKERS_LINE in lines
+    candidate_bound = candidate_digest is None or f"CANDIDATE_DIGEST: {candidate_digest}" in lines
+    packet_bound = packet_digest is None or f"PACKET_DIGEST: {packet_digest}" in lines
+    blockers = [line for line in lines if line.startswith(("P0", "P1", "P2", "R1", "R2", "R3", "### R", "### P"))]
+    ready = has_ready_line and has_no_blockers and candidate_bound and packet_bound and not blockers
+    findings = [line for line in lines if line.startswith(("### ", "## ", "- P", "P1", "P2", "P0", "R1", "R2", "R3"))][:40]
     return {
         "schema": "project_watchdog.webgpt_ready_verdict.v1",
         "ready_to_deploy": ready,
         "required_phrase": READY_PHRASE,
+        "required_lines": [READY_LINE, NO_BLOCKERS_LINE],
+        "candidate_bound": candidate_bound,
+        "packet_bound": packet_bound,
+        "blocking_findings": blockers[:20],
         "summary": "ready-to-deploy" if ready else "not_ready",
         "findings": findings,
     }
@@ -68,63 +81,104 @@ def run_cmd(argv: list[str], *, cwd: Path, timeout: int = 600) -> dict[str, Any]
 
 
 def browser_safe(text: str) -> str:
-    """Keep packets free of local path-shaped tokens that browser preflight rejects."""
-    out: list[str] = []
-    markers = ("/home/", "/mnt/", "/tmp/", "/usr/", "/dev/")
-    for token in text.replace("~/", "home slash ").split():
-        if token.startswith("/") or any(marker in token for marker in markers):
-            out.append("<local-path>")
+    """Redact absolute local paths while preserving Markdown and repo-relative paths."""
+    text = text.replace("~/", "home slash ")
+    text = text.replace("skills/project-watchdog/", "skills > project-watchdog > ")
+    text = text.replace("../", "parent > ")
+    text = text.replace("a/skills >", "a > skills >").replace("b/skills >", "b > skills >")
+    return re.sub(r"(?<![A-Za-z0-9])/(home|mnt|tmp|usr|dev)/[^\s)>'\"]+", "<local-path>", text)
+
+
+def display_path(path: str) -> str:
+    return path.replace("/", " > ")
+
+
+def candidate_manifest(repo: Path) -> dict[str, Any]:
+    status = run_cmd(["git", "status", "--porcelain", "--", "skills/project-watchdog"], cwd=repo, timeout=60)
+    files = []
+    for line in status["stdout"].splitlines():
+        path = line[3:].strip()
+        if not path or path.endswith("/"):
+            continue
+        p = repo / path
+        if p.is_file():
+            text = p.read_text(errors="replace")
+            files.append({"repo_path": display_path(path), "status": line[:2], "sha256": sha256_text(text), "bytes": len(text.encode())})
         else:
-            out.append(token)
-    return " ".join(out)
+            files.append({"repo_path": display_path(path), "status": line[:2], "missing": True})
+    commits = run_cmd(["git", "log", "--oneline", "--max-count", "8", "origin/main", "--", "skills/project-watchdog"], cwd=repo, timeout=60)
+    manifest = {"status_returncode": status["returncode"], "files": files, "recent_origin_main_commits": commits["stdout"].splitlines()}
+    manifest["candidate_digest"] = sha256_text(json.dumps(manifest, sort_keys=True))
+    return manifest
 
 
-def build_packet(repo: Path, *, prior_response: Path | None, output: Path) -> Path:
-    status = run_cmd(["git", "status", "--short", "--", "skills/project-watchdog"], cwd=repo, timeout=60)
-    cron = run_cmd(["bash", "-lc", "crontab -l 2>/dev/null | grep -F project-watchdog || true"], cwd=repo, timeout=60)
+def build_packet(repo: Path, *, prior_response: Path | None, output: Path) -> tuple[Path, str]:
+    manifest = candidate_manifest(repo)
+    diff = run_cmd(["git", "diff", "--", "skills/project-watchdog"], cwd=repo, timeout=120)
+    stat = run_cmd(["git", "diff", "--stat", "origin/main", "--", "skills/project-watchdog"], cwd=repo, timeout=120)
+    tests = run_cmd(["bash", "-lc", "tail -1 /tmp/pw-webgpt-loop-tests.txt /tmp/pw-webgpt-loop-sanitize-tests.txt 2>&1"], cwd=repo, timeout=60)
+    cron = run_cmd(["crontab", "-l"], cwd=repo, timeout=60)
+    cron_lines = [line for line in cron["stdout"].splitlines() if "project-watchdog" in line]
     body = [
         "# project-watchdog WebGPT readiness iteration",
         "",
-        "Required terminal verdict: ready-to-deploy.",
+        "Required terminal verdict lines if and only if deployable:",
+        READY_LINE,
+        f"CANDIDATE_DIGEST: {manifest['candidate_digest']}",
+        "PACKET_DIGEST: provided in the prompt that accompanies this packet",
+        NO_BLOCKERS_LINE,
+        "",
         "If not ready, return focused ticket-sized findings with severity, target area, acceptance gate, and next proof command.",
         "",
-        "## Current local signals",
+        "## Candidate manifest",
+        "```json",
+        json.dumps(manifest, indent=2, sort_keys=True),
+        "```",
+        "",
+        "## Relevant diff stat",
         "```text",
-        "git status for project-watchdog:",
-        status["stdout"],
-        "project-watchdog crontab lines:",
-        cron["stdout"],
+        stat["stdout"] or "no working-tree diff against origin main for project-watchdog",
+        "```",
+        "",
+        "## Relevant working-tree diff bytes",
+        "```diff",
+        browser_safe(diff["stdout"][-20000:]) or "no uncommitted project-watchdog diff",
+        "```",
+        "",
+        "## Proof command results",
+        "```json",
+        json.dumps({"tests_tail": tests, "crontab_returncode": cron["returncode"], "project_watchdog_cron_line_count": len(cron_lines)}, indent=2, sort_keys=True),
         "```",
     ]
     if prior_response and prior_response.is_file():
-        body.extend(["", "## Previous WebGPT response to close", "```text", prior_response.read_text(errors="replace")[-12000:], "```"])
+        body.extend(["", "## Previous WebGPT response to close", "```text", browser_safe(prior_response.read_text(errors="replace")[-12000:]), "```"])
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(browser_safe("\n".join(body)) + "\n", encoding="utf-8")
-    return output
+    return output, manifest["candidate_digest"]
 
 
-def latest_webgpt_response(ask_json: Path) -> Path | None:
+def latest_webgpt_response(ask_json: Path, output_root: Path) -> Path | None:
     try:
         data = json.loads(ask_json.read_text())
     except (OSError, ValueError):
-        return None
-    base = data.get("run_dir") or data.get("ask_run_dir") or data.get("artifact_dir")
-    if not base:
-        text = json.dumps(data)
-        marker = "/node-artifacts/handler-webgpt/response.md"
-        idx = text.find(marker)
-        if idx < 0:
-            return None
-        start = text.rfind('"', 0, idx)
-        return Path(text[start + 1:idx + len(marker)]) if start >= 0 else None
-    candidate = Path(base) / "node-artifacts" / "handler-webgpt" / "response.md"
-    return candidate if candidate.is_file() else None
+        data = {}
+    for key in ("run_dir", "ask_run_dir", "artifact_dir"):
+        base = data.get(key)
+        if base:
+            candidate = Path(base) / "node-artifacts" / "handler-webgpt" / "response.md"
+            if candidate.is_file():
+                return candidate
+    responses = sorted(output_root.glob("ask-tau-*/node-artifacts/handler-webgpt/response.md"), key=lambda p: p.stat().st_mtime)
+    return responses[-1] if responses else None
 
 
-def ask_webgpt(repo: Path, packet: Path, *, project: str, output_root: Path, iteration: int) -> dict[str, Any]:
+def ask_webgpt(repo: Path, packet: Path, *, project: str, output_root: Path, iteration: int, candidate_digest: str) -> dict[str, Any]:
+    packet_digest = sha256_file(packet)
     prompt = (
         "Clean-room review this project-watchdog readiness packet against your prior single-cron recommendations. "
-        "If the implementation is finished, include the exact phrase ready-to-deploy. "
+        f"Candidate digest is {candidate_digest}. Packet digest is {packet_digest}. "
+        "If and only if the implementation is deployable, include these exact lines: "
+        f"{READY_LINE}; CANDIDATE_DIGEST: {candidate_digest}; PACKET_DIGEST: {packet_digest}; {NO_BLOCKERS_LINE}. "
         "If not, return focused ticket-sized findings with severity and concrete next proof commands."
     )
     preflight = run_cmd([
@@ -154,9 +208,9 @@ def ask_webgpt(repo: Path, packet: Path, *, project: str, output_root: Path, ite
     ]
     result = run_cmd(cmd, cwd=repo, timeout=3000)
     ask_json.write_text(result["stdout"], encoding="utf-8")
-    response = latest_webgpt_response(ask_json)
-    verdict = classify_response(response.read_text(errors="replace")) if response and response.is_file() else None
-    return {"status": "OK" if verdict else "NO_RESPONSE", "command": result, "ask_json": str(ask_json), "response": str(response) if response else None, "verdict": verdict}
+    response = latest_webgpt_response(ask_json, output_root)
+    verdict = classify_response(response.read_text(errors="replace"), candidate_digest=candidate_digest, packet_digest=packet_digest) if response and response.is_file() else None
+    return {"status": "OK" if verdict else "NO_RESPONSE", "command": result, "ask_json": str(ask_json), "response": str(response) if response else None, "candidate_digest": candidate_digest, "packet_digest": packet_digest, "verdict": verdict}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -180,12 +234,12 @@ def main(argv: list[str] | None = None) -> int:
     receipt: dict[str, Any] = {"schema": "project_watchdog.webgpt_ready_loop.v1", "steps": [], "ready_to_deploy": False}
     prior = args.prior_response
     for iteration in range(1, args.max_iterations + 1):
-        packet = build_packet(repo, prior_response=prior, output=args.output_root / f"packet-{iteration}.md")
-        receipt["steps"].append({"iteration": iteration, "packet": str(packet)})
+        packet, candidate_digest = build_packet(repo, prior_response=prior, output=args.output_root / f"packet-{iteration}.md")
+        receipt["steps"].append({"iteration": iteration, "packet": str(packet), "candidate_digest": candidate_digest})
         if not args.execute:
             receipt["next_command"] = "rerun with --execute after local fixes are ready for clean-room WebGPT review"
             break
-        result = ask_webgpt(repo, packet, project=args.project, output_root=args.output_root, iteration=iteration)
+        result = ask_webgpt(repo, packet, project=args.project, output_root=args.output_root, iteration=iteration, candidate_digest=candidate_digest)
         receipt["steps"].append({"iteration": iteration, "ask": result})
         verdict = result.get("verdict") or {}
         if verdict.get("ready_to_deploy"):
