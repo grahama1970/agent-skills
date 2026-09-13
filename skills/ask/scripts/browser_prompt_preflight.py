@@ -19,8 +19,10 @@ Exit: 0 clean, 2 offending tokens found, 1 usage error.
 """
 from __future__ import annotations
 
+import os
 import re
 import sys
+import zipfile
 
 # Absolute local roots surf rejects when the path exists on disk, plus ~ home
 # refs and the `~<digits>` path-preflight trap.
@@ -61,8 +63,6 @@ def _is_binary(path: str) -> bool:
     Checked by suffix first, then by sniffing for a NUL byte, so an unlisted
     binary format is still skipped rather than mis-scanned as text.
     """
-    import os
-
     if os.path.splitext(path)[1].lower() in _BINARY_SUFFIXES:
         return True
     try:
@@ -70,6 +70,23 @@ def _is_binary(path: str) -> bool:
             return b"\x00" in handle.read(4096)
     except OSError:
         return False
+
+
+def _zip_file_count_error(path: str) -> str | None:
+    """Return Surf/WebGPT-compatible zip shape failure text, if any."""
+    if os.path.splitext(path)[1].lower() != ".zip":
+        return None
+    max_files = int(os.environ.get("SURF_WEBGPT_MAX_ZIP_FILES", "5"))
+    try:
+        with zipfile.ZipFile(path) as archive:
+            files = [info.filename for info in archive.infolist() if not info.is_dir()]
+    except Exception as exc:
+        return f"could not read zip archive: {exc}"
+    if not files:
+        return "zip archive is empty"
+    if len(files) > max_files:
+        return f"zip contains {len(files)} files; maximum is {max_files}"
+    return None
 
 
 def main(argv: list[str]) -> int:
@@ -94,7 +111,12 @@ def main(argv: list[str]) -> int:
     hits: list[tuple[str, str, str]] = []
     if prompt:
         hits += scan("<prompt>", prompt)
+    zip_errors: list[tuple[str, str]] = []
     for f in files:
+        zip_error = _zip_file_count_error(f)
+        if zip_error:
+            zip_errors.append((f, zip_error))
+            continue
         # Binary attachments carry no prose to reject. Scanning a JPEG's bytes
         # found "~4", "~5", "~2" and failed the submit as tilde_digits, which
         # blocked EVERY image attachment: a six-seat vision roundtable could not
@@ -107,6 +129,22 @@ def main(argv: list[str]) -> int:
         except OSError as exc:
             print(f"ERROR: cannot read {f}: {exc}", file=sys.stderr)
             return 1
+
+    if zip_errors:
+        print(
+            "browser-prompt-preflight: FAIL — attachment bundle rejected before browser submit "
+            "(browser_submit_not_accepted).",
+            file=sys.stderr,
+        )
+        for label, reason in zip_errors:
+            print(f"  [zip_file_count] {reason}   (in {label})", file=sys.stderr)
+        print(
+            "\nFix: preserve the SAME review content in one provider-compatible attachment: "
+            "concatenate readable files into one Markdown file, or rebuild the zip at or below "
+            "the provider file-count limit. Do not drop context to fit the limit.",
+            file=sys.stderr,
+        )
+        return 2
 
     if not hits:
         print("browser-prompt-preflight: OK (no local paths / ~<digits>)")

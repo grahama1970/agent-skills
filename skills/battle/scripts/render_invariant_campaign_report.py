@@ -301,6 +301,20 @@ def _campaign_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [row for row in rows if row.get("row_kind") != "lineage"]
 
 
+_GENERIC_ACCEPTANCE_ASSERTION = "Frozen acceptance-contract predicate is covered by these Battle campaign case receipts."
+
+
+def _generic_acceptance_ids(floor: dict[str, Any]) -> list[str]:
+    case_map = floor.get("case_map")
+    if not isinstance(case_map, dict):
+        return []
+    ids: list[str] = []
+    for acceptance_id, spec in case_map.items():
+        if isinstance(spec, dict) and spec.get("assertion") == _GENERIC_ACCEPTANCE_ASSERTION:
+            ids.append(str(acceptance_id))
+    return ids
+
+
 def _acceptance_gate_problems(campaigns: list[tuple[Path, dict[str, Any]]]) -> list[str]:
     problems: list[str] = []
     for path, campaign in campaigns:
@@ -311,6 +325,10 @@ def _acceptance_gate_problems(campaigns: list[tuple[Path, dict[str, Any]]]) -> l
             continue
         if not isinstance(floor, dict) or floor.get("status") != "PASS":
             problems.append(f"{path}: acceptance floor did not pass")
+        elif generic_ids := _generic_acceptance_ids(floor):
+            sample = ", ".join(generic_ids[:5])
+            suffix = "..." if len(generic_ids) > 5 else ""
+            problems.append(f"{path}: acceptance floor has generic, non-predicate-specific coverage assertions for {sample}{suffix}")
         executed = campaign.get("_source_executed_acceptance_floor")
         if not isinstance(executed, dict):
             problems.append(f"{path}: executed acceptance-floor coverage ledger missing")

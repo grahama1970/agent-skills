@@ -1,0 +1,48 @@
+{
+  "version": 2,
+  "skill": "ask",
+  "trials": 3,
+  "proof_scope": "Ask browser submit preflight rejects WebGPT-incompatible zip bundles before Tau DAG dispatch, preserving review context instead of encouraging manual file drops.",
+  "claims": {
+    "proves": "Over-limit zip attachments are rejected by the Ask preflight script and by the tau-dag browser entrypoint before a DAG receipt is produced.",
+    "does_not_prove": "Live browser provider availability, semantic review quality, or that a user-built replacement bundle contains every omitted source byte."
+  },
+  "cases": [
+    {
+      "name": "webgpt-zip-over-limit-preflight-direct",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "real_world": true,
+      "readback": true,
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "set -euo pipefail; cd ..; tmp=$(mktemp -d); python3 - <<'PY' \"$tmp\"\nimport sys, zipfile\nfrom pathlib import Path\nroot=Path(sys.argv[1])\nwith zipfile.ZipFile(root/'six.zip','w') as zf:\n    for i in range(6):\n        zf.writestr(f'file-{i}.txt', 'payload\\n')\nPY\nset +e; python3 scripts/browser_prompt_preflight.py --prompt 'review bundle' \"$tmp/six.zip\" >\"$tmp/out\" 2>\"$tmp/err\"; rc=$?; set -e; test \"$rc\" -eq 2; grep -q 'zip contains 6 files; maximum is 5' \"$tmp/err\"; grep -q 'Do not drop context' \"$tmp/err\"; echo ASK_ZIP_PREFLIGHT_DIRECT_PASS"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["ASK_ZIP_PREFLIGHT_DIRECT_PASS"]
+      },
+      "proves": "The reusable browser_prompt_preflight boundary fails closed on a WebGPT-incompatible zip and tells the caller not to drop context."
+    },
+    {
+      "name": "webgpt-zip-over-limit-blocks-tau-before-dag",
+      "type": "adversarial",
+      "evidence_class": "live_e2e",
+      "real_world": true,
+      "readback": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "set -euo pipefail; cd ..; tmp=$(mktemp -d); python3 - <<'PY' \"$tmp\"\nimport sys, zipfile\nfrom pathlib import Path\nroot=Path(sys.argv[1])\nwith zipfile.ZipFile(root/'six.zip','w') as zf:\n    for i in range(6):\n        zf.writestr(f'file-{i}.txt', 'payload\\n')\nPY\nset +e; ./run.sh tau-dag 'Review the attached bundle.' --repo grahama1970/agent-skills --target preflight-zip-overlimit --immutable-goal 'Reject over-limit browser attachment before DAG dispatch.' --handler webgpt --attach-file \"$tmp/six.zip\" --execute --json --run-output-root \"$tmp/out\" >\"$tmp/cli.out\" 2>\"$tmp/cli.err\"; rc=$?; set -e; test \"$rc\" -eq 2; grep -q 'zip contains 6 files; maximum is 5' \"$tmp/cli.err\"; if find \"$tmp/out\" -name dag-receipt.json -print -quit 2>/dev/null | grep -q .; then echo UNEXPECTED_DAG_RECEIPT; exit 1; fi; echo ASK_ZIP_PREFLIGHT_CLI_PASS"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["ASK_ZIP_PREFLIGHT_CLI_PASS"]
+      },
+      "proves": "The public Ask tau-dag browser entrypoint rejects the incompatible zip before Tau dispatch writes a DAG receipt."
+    }
+  ]
+}

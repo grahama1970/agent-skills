@@ -474,6 +474,53 @@ def test_invariant_report_acceptance_floor_ready_requires_executed_ledger(tmp_pa
     assert "acceptance_floor_complete=PASS" in json.dumps(report)
 
 
+def test_invariant_report_rejects_generic_acceptance_floor_assertions(tmp_path: Path) -> None:
+    contract = tmp_path / "production-adapter-receipt.json"
+    project_state = tmp_path / "project-state.md"
+    out_json = tmp_path / "report.json"
+    out_md = tmp_path / "report.md"
+    campaign = {
+        "schema": "battle.campaign_contract_receipt.v1",
+        "verdict": "PASS",
+        "aggregation": {"cases_total": 1, "cases_passed": 1},
+        "case_receipts": [{
+            "schema": "battle.case_receipt.v1",
+            "case_id": "json-string",
+            "expectation": "MUST_ACCEPT",
+            "verdict": "PASS",
+            "execution": {"kind": "ACCEPT", "exit_code": 0},
+            "violations": [],
+        }],
+    }
+    contract.write_text(json.dumps({
+        "schema": "battle.production_adapter_round.v1",
+        "status": "PASS",
+        "acceptance_floor": {"status": "PASS", "case_map": {"AC-001": {
+            "case_ids": ["json-string"],
+            "assertion": "Frozen acceptance-contract predicate is covered by these Battle campaign case receipts.",
+            "evidence_extractors": ["case_results.passed"],
+        }}},
+        "executed_acceptance_floor": {"schema": "battle.executed_acceptance_floor_receipt.v1", "status": "PASS", "problems": []},
+        "campaign": campaign,
+    }), encoding="utf-8")
+    project_state.write_text("# Project State\ncurrent\n", encoding="utf-8")
+
+    proc = subprocess.run([
+        str(BATTLE / "run.sh"), "invariant-report",
+        "--campaign", str(contract),
+        "--project-state", str(project_state),
+        "--target", "oai-trial",
+        "--out-json", str(out_json),
+        "--out-md", str(out_md),
+    ], cwd=REPO, capture_output=True, text=True, check=False)
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    report = json.loads(out_json.read_text(encoding="utf-8"))
+    assert report["overall_finding"] == "Needs Changes"
+    assert "generic, non-predicate-specific coverage assertions" in json.dumps(report)
+    assert "acceptance_floor_complete=PASS" not in json.dumps(report)
+
+
 def test_invariant_report_terminal_cards_do_not_count_lineage_only_as_attack_case(tmp_path: Path) -> None:
     campaign = tmp_path / "beyond-contract-campaign.json"
     lineage = tmp_path / "lineage.json"
