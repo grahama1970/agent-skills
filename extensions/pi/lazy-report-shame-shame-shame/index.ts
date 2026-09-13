@@ -584,15 +584,30 @@ async function runStopReviewer(text: string, status: any, message: any, ctx: any
   const reviewStatus = withoutAgentAuthoredReviewProof(status);
   const reviewText = replaceTerminalStatusJson(text, reviewStatus) || text;
   let decision: any = null;
-  try {
-    decision = await (bridge as (input: any) => Promise<any>)({
-      text: reviewText,
-      status: reviewStatus,
-      authorProvider: authorProviderForMessage(message),
-      ctx,
+  if (typeof bridge === "function") {
+    try {
+      decision = await (bridge as (input: any) => Promise<any>)({
+        text: reviewText,
+        status: reviewStatus,
+        authorProvider: authorProviderForMessage(message),
+        ctx,
+      });
+    } catch {
+      decision = null;
+    }
+  }
+  if (!decision || !String(decision?.receiptPath || "")) {
+    // Bridge absent or produced no receipt: fall back to the hook-owned
+    // subprocess reviewer (--no-extensions => the reviewer's own stop is
+    // never gated; recursion impossible by construction). Restored 2026-09-13.
+    const proc = spawnSync("node", [join(EXTENSION_DIR, "auto-cross-provider-review.mjs")], {
+      input: JSON.stringify({ text: reviewText, status: reviewStatus, author_provider: authorProviderForMessage(message) }),
+      encoding: "utf8",
+      timeout: Number(process.env.LAZY_REPORT_SHAME_REVIEW_TIMEOUT_MS || 125000),
+      env: process.env,
     });
-  } catch {
-    return null;
+    if (proc.error || proc.status !== 0) return null;
+    try { decision = JSON.parse(String(proc.stdout || "{}")); } catch { return null; }
   }
   const receiptPath = String(decision?.receiptPath || "");
   if (!receiptPath || !existsSync(receiptPath)) return null;
@@ -772,12 +787,12 @@ function crossProviderReviewRejected(check: CheckResult): boolean {
   return check.reason_codes.includes("cross_family_review_rejected");
 }
 
-function harnessReviewUnavailableNotice(candidate: Candidate, check: CheckResult, reviewPacketPath: string): string {
+function harnessReviewUnavailableCourseCorrection(reviewPacketPath: string): string {
   return [
-    "Shame guard blocked this terminal stop before delivery.",
-    "The cross-provider reviewer is owned by the Pi harness and did not produce a valid receipt; GPT cannot fix this by attaching or writing review proof.",
-    `Review packet: ${reviewPacketPath}`,
-    `Reason codes: ${check.reason_codes.join(", ")}`,
+    "SHAME_HARNESS_COURSE_CORRECTION",
+    "The harness-owned cross-provider reviewer did not run. Continue the original task and return its useful result; do not create, attach, or discuss review proof.",
+    "At the next natural stop, emit the normal pi.agent_status.v1 block. The harness will retry its reviewer.",
+    `Harness review packet: ${reviewPacketPath}`,
   ].join("\n");
 }
 
@@ -1628,8 +1643,20 @@ export default function lazyReportShameShameShame(pi: any) {
         catch (error) { ctx?.ui?.notify?.(`lazy-report-shame-shame-shame could not write review packet: ${error instanceof Error ? error.message : String(error)}`, "warning"); }
         recordFailure(ctx, { kind: "harness_cross_provider_review_unavailable", candidate_hash: lastCandidate.response_sha256,
           reason_codes: check.reason_codes, checker_version: check.checker_version, review_packet: reviewPacketPath });
-        playShameAudio(lastAudioPlayedAt);
-        return { message: { ...event.message, content: [textBlock(harnessReviewUnavailableNotice(lastCandidate, check, reviewPacketPath))] } };
+        claimGuardFollowUp({
+          guard: "shame-harness-review",
+          messageId: String(event.message.id || event.id || lastCandidate.turn_id),
+          assistantText: text,
+          userText: currentUserText,
+          reason: "harness_cross_provider_review_unavailable",
+          continuation: true,
+          message: event.message,
+        });
+        // Fail closed: never expose an unreviewed terminal answer and never
+        // exhaust into a terminal notice. The harness owns retrying its reviewer.
+        pendingFollowUp = harnessReviewUnavailableCourseCorrection(reviewPacketPath);
+        ctx?.ui?.notify?.("Cross-provider review did not run; continuing with harness-owned course correction.", "warning");
+        return { message: { ...event.message, content: [] } };
       }
       if (check.decision !== "reject") {
         if (statusState === "failed") recordFailure(ctx, { kind: "agent_reported_failure", ...statusFailureJournalFields(status),

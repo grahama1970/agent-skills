@@ -68,7 +68,11 @@ def main() -> None:
 
     index_text = INDEX.read_text(encoding="utf-8")
     assert all(token not in index_text for token in FORBIDDEN), "agent-visible impossible repair action survived in index.ts"
-    assert "harnessReviewUnavailableNotice" in index_text, "hook review failure must stop at harness notice"
+    assert "harnessReviewUnavailableCourseCorrection" in index_text, "hook review failure must queue course correction"
+    assert "pendingFollowUp = harnessReviewUnavailableCourseCorrection(reviewPacketPath)" in index_text, "missing reviewer must continue through the harness"
+    assert "return { message: { ...event.message, content: [] } };" in index_text, "unreviewed terminal content must be suppressed"
+    assert "harnessReviewUnavailableNotice" not in index_text, "missing reviewer must not terminal-stop with a notice"
+    assert "Cross-provider review infrastructure is still unavailable" not in index_text, "review retry exhaustion must never become a terminal answer"
     assert "const mustRunHarnessReview = forceStatus" in index_text, "accepted harness stops must still invoke review"
     assert 'check.decision !== "reject"' in index_text, "a checker PASS with old review proof must not skip the hook reviewer"
     assert "withoutAgentAuthoredReviewProof(statusForReview)" in index_text, "hook must strip agent-supplied review proof before rerun"
@@ -81,7 +85,7 @@ def main() -> None:
             "missing review is marked owner=pi_harness and agent_actionable=false",
             "forbidden agent repair actions are absent",
             "run.sh preflight passes valid status while marking review pending for the hook",
-            "index.ts has a harness-owned unavailable-review stop path",
+            "index.ts queues harness-owned course correction when the reviewer does not run",
             "checker PASS with pre-attached review proof still routes through mustRunHarnessReview",
             "hook strips any agent-supplied review proof before rerunning the reviewer",
         ],

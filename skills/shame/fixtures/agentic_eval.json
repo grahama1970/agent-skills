@@ -1183,6 +1183,31 @@
       "proves": "The Shame checker and stop hook keep cross-provider review as a Pi-harness-owned obligation; missing review never tells the agent to synthesize or attach proof, and preflight can pass a valid status while leaving final review to the hook."
     },
     {
+      "name": "review-unavailable-course-correction",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "mocked": false,
+      "timeout_seconds": 60,
+      "supports_claims": [
+        "shame.cross_provider_review_required"
+      ],
+      "command": [
+        "node",
+        "--experimental-strip-types",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-review-unavailable-course-correction.mjs"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "lazy_report_shame.review_unavailable_course_correction_eval.v1",
+          "\"unreviewed_terminal_suppressed\": true",
+          "\"harness_course_correction_queued\": true",
+          "\"agent_review_repair_forbidden\": true"
+        ]
+      },
+      "proves": "The production extension callback path suppresses an unreviewed terminal response and queues harness-owned course correction when the Pi-subagents review bridge does not return a receipt."
+    },
+    {
       "name": "vague-status-report-concrete-anchors",
       "type": "adversarial",
       "real_world": true,
