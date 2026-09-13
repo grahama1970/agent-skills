@@ -97,6 +97,24 @@ def _record_agent_authorization(receipt: dict[str, Any], result: dict[str, Any])
     receipt["agent_action_required"] = True
 
 
+def _as_scoped_contention_skip(result: dict[str, Any]) -> dict[str, Any]:
+    triage = result.get("triage") if isinstance(result.get("triage"), dict) else {}
+    if triage.get("code") != "project_watchdog_target_ownership_conflict":
+        return result
+    skipped = dict(result)
+    skipped.update(
+        ok=True,
+        status="SKIPPED",
+        stop_reason="target_ownership_conflict",
+        requires_human_input=False,
+        summary=(
+            "target path is already under separate work; skipped this ticket and continued "
+            "other non-overlapping watchdog queue work"
+        ),
+    )
+    return skipped
+
+
 def _deliver_tick_notifications(run_id: str, receipt_dir: Path) -> dict[str, Any]:
     """Deliver pending bridge work while this applying tick owns the singleton."""
     try:
@@ -794,7 +812,7 @@ def _tick_locked(
                 )
                 continue
             try:
-                result = handle_issue(run_id, receipt_dir, candidate, issue, apply=apply)
+                result = _as_scoped_contention_skip(handle_issue(run_id, receipt_dir, candidate, issue, apply=apply))
                 _record_agent_authorization(receipt, result)
                 result.setdefault("execution_lock_targets", sorted(targets))
                 if execution_lock is not None:
