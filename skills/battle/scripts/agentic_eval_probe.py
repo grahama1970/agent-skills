@@ -1176,6 +1176,14 @@ def probe_pytest_contracts(summary_path: Path, *, suite: str, tests: list[str]) 
     )
 
 
+def probe_b25_tau_authoring_route(summary_path: Path) -> int:
+    return probe_pytest_contracts(
+        summary_path,
+        suite="battle-b25-route-red-and-blue-authoring-through-tau",
+        tests=["test_b25_tau_authoring_route.py"],
+    )
+
+
 def probe_b06_verify_evaluator_locks(summary_path: Path) -> int:
     return probe_pytest_contracts(
         summary_path,
@@ -2299,6 +2307,187 @@ def probe_adaptive_lineage_live_exact_chain(summary_path: Path, *, proof_root: s
             ],
         ),
     )
+
+
+def probe_invariant_terminal_cards_live_e2e(summary_path: Path, *, proof_root: str | None) -> int:
+    suite = "battle-invariant-report-terminal-cards-live"
+    out = summary_path.parent / "invariant-report-terminal-cards-live"
+    if out.exists():
+        shutil.rmtree(out)
+    out.mkdir(parents=True)
+    oai = REPO_ROOT.parent / "oai-trial"
+    gate = oai / "security" / "invariant_campaign_gate.sh"
+    if not gate.is_file() or not os.access(gate, os.X_OK):
+        return _emit_blocked(summary_path, suite=suite, reason="missing_executable_oai_trial_gate", candidates=[str(gate)])
+
+    live_gate = _run_in(
+        [str(gate), "anonymization-trial", "0"],
+        cwd=oai,
+        timeout=600,
+    )
+    (out / "live-gate.stdout.txt").write_text(live_gate.stdout, encoding="utf-8")
+    (out / "live-gate.stderr.txt").write_text(live_gate.stderr, encoding="utf-8")
+    if live_gate.returncode != 0:
+        return _emit_blocked(summary_path, suite=suite, reason="oai_trial_live_gate_failed", candidates=[str(out / "live-gate.stderr.txt")])
+
+    accept = oai / "security" / "battle" / "runs" / "acceptance-floor-latest" / "production-adapter-receipt.json"
+    beyond = oai / "security" / "battle" / "runs" / "latest" / "receipt.json"
+    qual = oai / "security" / "battle" / "qualification" / "receipt.json"
+    for path in [accept, beyond, qual]:
+        if not path.is_file():
+            return _emit_blocked(summary_path, suite=suite, reason="missing_oai_trial_battle_receipt", candidates=[str(path)])
+    accept_data = _read_json(accept)
+    beyond_data = _read_json(beyond)
+    qual_data = _read_json(qual)
+    if accept_data.get("status") != "PASS" or (accept_data.get("campaign") or {}).get("verdict") != "PASS":
+        raise AssertionError(f"acceptance floor did not pass: {accept}")
+    if beyond_data.get("verdict") != "PASS":
+        raise AssertionError(f"beyond-contract campaign did not pass: {beyond}")
+    if qual_data.get("passed") is not True:
+        raise AssertionError(f"judge qualification did not pass: {qual}")
+
+    adaptive_root = _adaptive_lineage_proof_root(proof_root)
+    if adaptive_root is None:
+        adaptive_root = _regenerate_adaptive_lineage_proof_root(summary_path)
+    if adaptive_root is None:
+        return _emit_blocked(summary_path, suite=suite, reason="missing_live_adaptive_lineage_proof", candidates=[str(BATTLE_DIR / "local/**/adaptive-lineage-qualification.json")])
+    qualification_path = adaptive_root / "adaptive-lineage-qualification.json"
+    verification_path = adaptive_root / "adaptive-lineage-verification.json"
+    if not qualification_path.is_file() or not verification_path.is_file():
+        return _emit_blocked(summary_path, suite=suite, reason="missing_adaptive_lineage_receipts", candidates=[str(adaptive_root)])
+    adaptive_qualification = _read_json(qualification_path)
+    adaptive_verification = _read_json(verification_path)
+    if adaptive_qualification.get("status") != "PASS" or adaptive_qualification.get("live") is not True or adaptive_qualification.get("mocked") is not False:
+        raise AssertionError(f"adaptive lineage qualification is not live PASS/non-mocked: {qualification_path}")
+    if adaptive_verification.get("status") != "PASS" or adaptive_verification.get("live") is not True or adaptive_verification.get("mocked") is not False:
+        raise AssertionError(f"adaptive lineage verification is not live PASS/non-mocked: {verification_path}")
+
+    lineage_receipt = out / "derived-adaptive-lineage-receipt.json"
+    lineage_receipt.write_text(json.dumps({
+        "schema": "battle.invariant_adaptive_lineage.v1",
+        "status": "PASS",
+        "target": str(adaptive_qualification.get("battle_id") or "battle-004"),
+        "red_campaign": str(adaptive_qualification.get("source_run_dir") or ""),
+        "replay_campaign": str(verification_path),
+        "red_wins": [{
+            "case": "battle-004-adaptive-lineage",
+            "violations": ["live adaptive-lineage exact-chain proof supplied to terminal-card renderer"],
+        }],
+        "fixed_cases": ["battle-004-adaptive-lineage"],
+        "replay_passed": True,
+        "source_receipts": {
+            "qualification": str(qualification_path),
+            "verification": str(verification_path),
+        },
+    }, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    report = _run(
+        [
+            str(RUN_SH),
+            "invariant-report",
+            "--campaign",
+            str(accept),
+            "--campaign",
+            str(beyond),
+            "--adaptive-lineage",
+            str(lineage_receipt),
+            "--project-state",
+            str(oai / "TRIAL_BRIEF.md"),
+            "--target",
+            "oai-trial",
+            "--out-json",
+            str(out / "report.json"),
+            "--out-md",
+            str(out / "report.md"),
+            "--terminal-cards",
+        ],
+        timeout=240,
+    )
+    (out / "stdout.json").write_text(report.stdout, encoding="utf-8")
+    (out / "terminal-cards.stderr.txt").write_text(report.stderr, encoding="utf-8")
+    if report.returncode != 0:
+        raise AssertionError(report.stdout + report.stderr)
+
+    validate = _run([str(REPO_ROOT / "skills" / "create-report" / "run.sh"), "validate", str(out / "report.json")], timeout=120)
+    (out / "create-report-validate.json").write_text(validate.stdout, encoding="utf-8")
+    if validate.returncode != 0:
+        raise AssertionError(validate.stdout + validate.stderr)
+
+    stdout = _read_json(out / "stdout.json")
+    create_report = _read_json(out / "create-report-validate.json")
+    terminal = (out / "terminal-cards.stderr.txt").read_text(encoding="utf-8")
+    summary = _summary(
+        suite=suite,
+        live="oai_trial_live_gate_plus_live_adaptive_lineage_receipt_render",
+        checks=[],
+        artifacts={
+            "live_gate_stdout": str(out / "live-gate.stdout.txt"),
+            "live_gate_stderr": str(out / "live-gate.stderr.txt"),
+            "terminal_cards": str(out / "terminal-cards.stderr.txt"),
+            "lineage_receipt": str(lineage_receipt),
+            "adaptive_qualification": str(qualification_path),
+            "adaptive_verification": str(verification_path),
+            "report_json": str(out / "report.json"),
+            "report_md": str(out / "report.md"),
+        },
+        claims_proves=[
+            "terminal cards render acceptance-contract, beyond-contract, and adaptive-lineage sections from live Battle receipts",
+            "Scope: campaign is rejected by independent terminal readback",
+        ],
+        claims_does_not_prove=[
+            "research_refs are present in oai-trial receipts",
+            "adaptive lineage occurred in the oai-trial anonymization target itself",
+        ],
+    )
+    summary.update({
+        "acceptance_adapter_status": accept_data.get("status"),
+        "acceptance_campaign_verdict": (accept_data.get("campaign") or {}).get("verdict"),
+        "acceptance_cases_total": ((accept_data.get("campaign") or {}).get("aggregation") or {}).get("cases_total"),
+        "beyond_campaign_verdict": beyond_data.get("verdict"),
+        "beyond_cases_total": (beyond_data.get("aggregation") or {}).get("cases_total"),
+        "judge_qualification_passed": qual_data.get("passed"),
+        "adaptive_qualification_status": adaptive_qualification.get("status"),
+        "adaptive_qualification_live": adaptive_qualification.get("live"),
+        "adaptive_qualification_mocked": adaptive_qualification.get("mocked"),
+        "adaptive_verification_status": adaptive_verification.get("status"),
+        "adaptive_verification_live": adaptive_verification.get("live"),
+        "adaptive_verification_mocked": adaptive_verification.get("mocked"),
+        "report_stdout_schema": stdout.get("schema"),
+        "report_stdout_status": stdout.get("status"),
+        "create_report_valid": create_report.get("valid"),
+        "separator_count": terminal.count("=============="),
+        "has_acceptance_section": "## Acceptance contract floor" in terminal,
+        "has_beyond_section": "## Beyond-contract exploits" in terminal,
+        "has_adaptive_section": "## Adaptive lineage" in terminal,
+        "has_campaign_scope": "Scope: campaign" in terminal,
+        "has_contractual_scope": "Scope: contractual" in terminal,
+        "has_beyond_scope": "Scope: beyond-contract" in terminal,
+        "has_adaptive_scope": "Scope: adaptive-lineage" in terminal,
+        "has_acceptance_parent": "Acceptance parent:" in terminal,
+        "has_adaptive_case": "Case: battle-004-adaptive-lineage" in terminal,
+        "has_case_table": "Case table:" in terminal,
+    })
+    summary["checks"] = [
+        {"name": name, "status": "PASS" if ok else "FAIL"}
+        for name, ok in [
+            ("acceptance_floor_passed", summary["acceptance_adapter_status"] == "PASS" and summary["acceptance_campaign_verdict"] == "PASS"),
+            ("beyond_campaign_passed", summary["beyond_campaign_verdict"] == "PASS"),
+            ("judge_qualification_passed", summary["judge_qualification_passed"] is True),
+            ("adaptive_lineage_live_non_mocked", summary["adaptive_qualification_live"] is True and summary["adaptive_qualification_mocked"] is False and summary["adaptive_verification_live"] is True and summary["adaptive_verification_mocked"] is False),
+            ("create_report_valid", summary["create_report_valid"] is True),
+            ("terminal_has_three_sections", summary["has_acceptance_section"] and summary["has_beyond_section"] and summary["has_adaptive_section"]),
+            ("terminal_has_scopes", summary["has_contractual_scope"] and summary["has_beyond_scope"] and summary["has_adaptive_scope"]),
+            ("terminal_rejects_campaign_scope", not summary["has_campaign_scope"]),
+            ("terminal_has_acceptance_parent", summary["has_acceptance_parent"]),
+            ("terminal_has_adaptive_case", summary["has_adaptive_case"]),
+            ("terminal_cards_not_table", not summary["has_case_table"]),
+        ]
+    ]
+    if any(check["status"] != "PASS" for check in summary["checks"]):
+        summary["status"] = "FAIL"
+        _write_json(summary_path, summary)
+        raise AssertionError(json.dumps(summary, indent=2, sort_keys=True))
+    return _emit(summary_path, summary)
 
 
 def probe_provider_tau_seeded_lineage_spawn(summary_path: Path, *, proof_root: str | None) -> int:
@@ -4687,6 +4876,8 @@ def main() -> int:
             )
         if args.suite == "adaptive-lineage-live-exact-chain":
             return probe_adaptive_lineage_live_exact_chain(args.summary, proof_root=args.proof_root)
+        if args.suite == "battle-invariant-report-terminal-cards-live":
+            return probe_invariant_terminal_cards_live_e2e(args.summary, proof_root=args.proof_root)
         if args.suite == "provider-tau-seeded-lineage-spawn":
             return probe_provider_tau_seeded_lineage_spawn(args.summary, proof_root=args.proof_root)
         if args.suite == "review-selection-reporting":
@@ -4793,6 +4984,8 @@ def main() -> int:
             return probe_b23_judge_qualification_gate(args.summary)
         if args.suite == "battle-b24-extract-an-arena-protocol-independent-of-anonymization":
             return probe_b24_arena_protocol(args.summary)
+        if args.suite == "battle-b25-route-red-and-blue-authoring-through-tau":
+            return probe_b25_tau_authoring_route(args.summary)
         if args.suite == "battle-functional-judge":
             return probe_battle_functional_judge(args.summary)
         if args.suite == "battle-commentary-causality":

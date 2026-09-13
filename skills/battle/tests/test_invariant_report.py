@@ -464,6 +464,44 @@ def test_invariant_report_terminal_cards_group_adaptive_lineage(tmp_path: Path) 
     assert "Adaptive lineage: yes: adaptive Red win fixed/replayed for oai-trial" in proc.stderr
 
 
+def test_invariant_report_terminal_cards_render_lineage_only_receipt(tmp_path: Path) -> None:
+    campaign = tmp_path / "beyond-contract-campaign.json"
+    lineage = tmp_path / "lineage.json"
+    project_state = tmp_path / "project-state.md"
+    out_json = tmp_path / "report.json"
+    out_md = tmp_path / "report.md"
+    _campaign(campaign, passed=True, case_log=[{
+        "case": "bb-filename-value",
+        "expectation": "MUST_REJECT",
+        "passed": True,
+        "execution": {"kind": "REJECT", "exit_code": 1},
+    }])
+    lineage.write_text(json.dumps({
+        "schema": "battle.invariant_adaptive_lineage.v1",
+        "target": "battle-004",
+        "red_wins": [{"case": "battle-004-adaptive-lineage"}],
+        "fixed_cases": ["battle-004-adaptive-lineage"],
+    }), encoding="utf-8")
+    project_state.write_text("# Project State\ncurrent\n", encoding="utf-8")
+
+    proc = subprocess.run([
+        str(BATTLE / "run.sh"), "invariant-report",
+        "--campaign", str(campaign),
+        "--adaptive-lineage", str(lineage),
+        "--project-state", str(project_state),
+        "--target", "oai-trial",
+        "--out-json", str(out_json),
+        "--out-md", str(out_md),
+        "--terminal-cards",
+    ], cwd=REPO, capture_output=True, text=True, check=False)
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "## Adaptive lineage" in proc.stderr
+    assert "Scope: adaptive-lineage" in proc.stderr
+    assert "Case: battle-004-adaptive-lineage" in proc.stderr
+    assert "Why Battle checks this: adaptive lineage receipt supplied with live Red/Blue replay proof" in proc.stderr
+
+
 def test_invariant_report_rich_terminal_table_path_renders_colored_rows(monkeypatch, capsys) -> None:
     module = _report_module()
     monkeypatch.setattr(
