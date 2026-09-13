@@ -15,7 +15,7 @@ CHECKER = ROOT / "extensions/pi/lazy-report-shame-shame-shame/status-json-check.
 
 
 def call(cmd: list[str], text: str) -> dict:
-    env = {**os.environ, "LRSSS_FORCE_STATUS": "1"}
+    env = {**os.environ, "LRSSS_FORCE_STATUS": "1", "LRSSS_AUTHOR_PROVIDER": "openai"}
     run = subprocess.run(cmd, input=text, text=True, capture_output=True, timeout=20, env=env)
     out = json.loads(run.stdout)
     out["exit_code"] = run.returncode
@@ -28,6 +28,9 @@ def preflight(text: str) -> dict:
 
 def stop_check(text: str) -> dict:
     return call(["node", str(CHECKER)], text)
+
+
+from review_receipt_fixture import attach_review
 
 
 def rendered(status: dict) -> str:
@@ -66,11 +69,13 @@ def main() -> None:
         status = {
             "schema": "pi.agent_status.v1",
             "goal": "preflight parity",
+            "plain_answer": "The ticket closure is verified and this stop passed cross-family review.",
             "state": "done",
             "changed": ["no change: parity fixture"],
             "verified": [{"command": "close grahama1970/agent-skills#1622", "result": "CLOSED"}],
             "proof": [str(closure)],
         }
+        attach_review(work, status)
         passed = compare("valid", rendered(status))
         assert passed["decision"] == "pass", passed
 

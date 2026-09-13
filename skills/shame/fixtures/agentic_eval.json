@@ -1161,6 +1161,29 @@
       "proves": "The Shame reviewer invocation path calls a configured different-provider reviewer command, writes hook-owned lazy_report_shame.cross_provider_review.v1 metadata/output, and turns a previously rejected guarded stop into an accepted one."
     },
     {
+      "name": "cross-provider-review-harness-owned",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "mocked": false,
+      "timeout_seconds": 60,
+      "supports_claims": [
+        "shame.cross_provider_review_required"
+      ],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-cross-provider-review-harness-owned.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "lazy_report_shame.cross_provider_review_harness_owned_eval.v1",
+          "missing review is marked owner=pi_harness and agent_actionable=false",
+          "forbidden agent repair actions are absent"
+        ]
+      },
+      "proves": "The Shame checker and stop hook keep cross-provider review as a Pi-harness-owned obligation; missing review never tells the agent to synthesize or attach proof, and preflight can pass a valid status while leaving final review to the hook."
+    },
+    {
       "name": "vague-status-report-concrete-anchors",
       "type": "adversarial",
       "real_world": true,

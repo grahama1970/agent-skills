@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { beginGuardTurn, claimGuardFollowUp, isAssistantStop, resetGuardRepairBudget } from "../_shared/guard-pipeline-shared.ts";
 import { installTaskBudget } from "./task-budget.ts";
 import { failureLogPath, historyOptions, readFailureHistory, recordFailure } from "./failure-history.mjs";
-import { stripTerminalStatusFrame } from "./terminal-status-frame.mjs";
+import { selectTerminalStatusFrame, stripTerminalStatusFrame } from "./terminal-status-frame.mjs";
 
 const EXTENSION_DIR = dirname(fileURLToPath(import.meta.url));
 // JSON-first checker (2026-09-01): regex/prose classification is banned.
@@ -434,7 +434,22 @@ function trustedGoalIdentity(status: any): string | null {
   return null;
 }
 
-function failedOperationIdentity(status: any, triage: any): string | null {
+function failedNodeIdentity(status: any): string | null {
+  const nodes = Array.isArray(status?.nodes) ? status.nodes : [];
+  for (const node of nodes) {
+    const nodeId = normalizeTriageCode(node?.id);
+    if (!nodeId) continue;
+    const nodeStatus = normalizeTriageCode(node?.status);
+    if (nodeStatus && PASSING_GATE_STATUSES.has(nodeStatus)) continue;
+    return [
+      `failed_node:${nodeId}`,
+      nodeStatus ? `node_status:${nodeStatus}` : null,
+    ].filter(Boolean).join("\n");
+  }
+  return null;
+}
+
+function failedOperationIdentity(status: any, triage: any): string {
   const verified = Array.isArray(status?.verified) ? status.verified : [];
   for (const item of verified) {
     const command = stableCommandIdentity("verified_command", item?.command);
@@ -442,7 +457,9 @@ function failedOperationIdentity(status: any, triage: any): string | null {
   }
   const nextCommand = stableCommandIdentity("triage_next_command", triage?.next_command);
   if (nextCommand) return nextCommand;
-  return null;
+  const failedNode = failedNodeIdentity(status);
+  if (failedNode) return failedNode;
+  return "failed_operation:unspecified";
 }
 
 function ownerNormalizedTriageIdentity(triage: any): string | null {
@@ -519,8 +536,36 @@ function replaceTerminalStatusJson(text: string, status: any): string | null {
   return `${text.slice(0, fenceStart)}\`\`\`json\n${JSON.stringify(status, null, 2)}\n\`\`\`${text.slice(fenceEnd + 3)}`;
 }
 
-function appendProofToStatusText(text: string, status: any, proofPath: string): string | null {
+function localProofPath(value: unknown): string | null {
+  const raw = String(value || "").trim();
+  if (!raw || raw.startsWith("http://") || raw.startsWith("https://") || raw.startsWith("sha256:")) return null;
+  return raw.startsWith("/") ? raw : join(process.cwd(), raw);
+}
+
+function readJsonProof(path: string): any | null {
+  try { return JSON.parse(readFileSync(path, "utf8")); } catch { return null; }
+}
+
+function withoutAgentAuthoredReviewProof(status: any): any {
   const nextStatus = { ...(status || {}) };
+  const proof = Array.isArray(nextStatus.proof) ? nextStatus.proof : [];
+  nextStatus.proof = proof.filter((item: unknown) => {
+    const path = localProofPath(item);
+    if (!path || !existsSync(path)) return true;
+    return readJsonProof(path)?.schema !== "lazy_report_shame.cross_provider_review.v1";
+  });
+  if (Array.isArray(nextStatus.verified)) {
+    nextStatus.verified = nextStatus.verified.filter((item: any) => String(item?.command || "").trim() !== "cross-provider shame review");
+  }
+  return nextStatus;
+}
+
+function terminalStatusFromText(text: string): any | null {
+  try { return selectTerminalStatusFrame(text).status || null; } catch { return null; }
+}
+
+function appendProofToStatusText(text: string, status: any, proofPath: string): string | null {
+  const nextStatus = withoutAgentAuthoredReviewProof(status);
   const proof = Array.isArray(nextStatus.proof) ? [...nextStatus.proof] : [];
   if (!proof.includes(proofPath)) proof.push(proofPath);
   nextStatus.proof = proof;
@@ -533,8 +578,10 @@ function authorProviderForMessage(message: any): string {
 
 function runStopReviewer(text: string, status: any, message: any): { text: string; receiptPath: string; verdict: string } | null {
   if (!status || !existsSync(CROSS_PROVIDER_REVIEW)) return null;
+  const reviewStatus = withoutAgentAuthoredReviewProof(status);
+  const reviewText = replaceTerminalStatusJson(text, reviewStatus) || text;
   const proc = spawnSync("node", [CROSS_PROVIDER_REVIEW], {
-    input: JSON.stringify({ text, status, author_provider: authorProviderForMessage(message) }),
+    input: JSON.stringify({ text: reviewText, status: reviewStatus, author_provider: authorProviderForMessage(message) }),
     encoding: "utf8",
     timeout: Number(process.env.LAZY_REPORT_SHAME_REVIEW_TIMEOUT_MS || 125000),
     env: process.env,
@@ -544,7 +591,7 @@ function runStopReviewer(text: string, status: any, message: any): { text: strin
   try { payload = JSON.parse(String(proc.stdout || "{}")); } catch { return null; }
   const receiptPath = String(payload?.receipt_path || "");
   if (!receiptPath || !existsSync(receiptPath)) return null;
-  const patched = appendProofToStatusText(text, status, receiptPath);
+  const patched = appendProofToStatusText(reviewText, reviewStatus, receiptPath);
   if (!patched) return null;
   return { text: patched, receiptPath, verdict: String(payload?.verdict || "") };
 }
@@ -670,7 +717,7 @@ function statusFailureFingerprint(status: any): string | null {
   const goalIdentity = trustedGoalIdentity(status);
   const triageIdentity = ownerNormalizedTriageIdentity(triage);
   const operationIdentity = failedOperationIdentity(status, triage);
-  if (!goalIdentity || !triageIdentity || !operationIdentity) return null;
+  if (!goalIdentity || !triageIdentity) return null;
   return sha256([
     goalIdentity,
     triageIdentity,
@@ -709,6 +756,24 @@ function recoveryJournalCheckId(status: any, decision: Record<string, unknown>, 
   const checkIdentity = stableReasonCodesIdentity(check?.reason_codes);
   if (checkIdentity) pieces.push(checkIdentity);
   return pieces.join("\n");
+}
+
+function crossProviderReviewHarnessOwns(check: CheckResult): boolean {
+  if (check.decision !== "reject") return false;
+  return check.reason_codes.some((code) => code === "cross_family_review_required" || code.startsWith("cross_provider_review_"));
+}
+
+function crossProviderReviewRejected(check: CheckResult): boolean {
+  return check.reason_codes.includes("cross_family_review_rejected");
+}
+
+function harnessReviewUnavailableNotice(candidate: Candidate, check: CheckResult, reviewPacketPath: string): string {
+  return [
+    "Shame guard blocked this terminal stop before delivery.",
+    "The cross-provider reviewer is owned by the Pi harness and did not produce a valid receipt; GPT cannot fix this by attaching or writing review proof.",
+    `Review packet: ${reviewPacketPath}`,
+    `Reason codes: ${check.reason_codes.join(", ")}`,
+  ].join("\n");
 }
 
 function readJsonFile(path: unknown): any | null {
@@ -1481,8 +1546,8 @@ export default function lazyReportShameShameShame(pi: any) {
     // by forceStatus above.
     const strictStatus = formatRepairTurn;
     let check = checkReport(text, forceStatus, mutatingTurn, strictStatus, currentUserText, formatRepairTurn);
-    if (check.decision === "reject" && check.reason_codes.includes("cross_family_review_required")) {
-      const candidateStatus = (check as any)?.features?.status;
+    if (crossProviderReviewHarnessOwns(check) && !crossProviderReviewRejected(check)) {
+      const candidateStatus = (check as any)?.features?.status || terminalStatusFromText(text);
       const reviewed = runStopReviewer(text, candidateStatus, event.message);
       if (reviewed) {
         text = reviewed.text;
@@ -1545,6 +1610,15 @@ export default function lazyReportShameShameShame(pi: any) {
           footer_failures: ["checker_error_fail_closed", ...check.footer_failures],
         };
         lastCandidate = makeCandidate(ctx, currentUserText, String(event.message.id || event.id || "unknown"), text, check, forceStatus);
+      }
+      if (crossProviderReviewHarnessOwns(check) && !crossProviderReviewRejected(check)) {
+        let reviewPacketPath = PENDING_REVIEW_PACKET;
+        try { reviewPacketPath = writePendingReviewPacket(lastCandidate, check, true); }
+        catch (error) { ctx?.ui?.notify?.(`lazy-report-shame-shame-shame could not write review packet: ${error instanceof Error ? error.message : String(error)}`, "warning"); }
+        recordFailure(ctx, { kind: "harness_cross_provider_review_unavailable", candidate_hash: lastCandidate.response_sha256,
+          reason_codes: check.reason_codes, checker_version: check.checker_version, review_packet: reviewPacketPath });
+        playShameAudio(lastAudioPlayedAt);
+        return { message: { ...event.message, content: [textBlock(harnessReviewUnavailableNotice(lastCandidate, check, reviewPacketPath))] } };
       }
       if (check.decision !== "reject") {
         if (statusState === "failed") recordFailure(ctx, { kind: "agent_reported_failure", ...statusFailureJournalFields(status),

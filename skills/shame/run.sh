@@ -20,10 +20,10 @@ case "$cmd" in
     if [[ ! -f "$checker" ]]; then checker="$HOME/.pi/agent/extensions/lazy-report-shame-shame-shame/status-json-check.mjs"; fi
     input="${1:--}"
     if [[ "$input" == "-" ]]; then
-      LRSSS_FORCE_STATUS=1 node "$checker"
+      LRSSS_FORCE_STATUS=1 LRSSS_PREFLIGHT=1 node "$checker"
     else
       [[ -f "$input" ]] || { echo "preflight input file not found: $input" >&2; exit 2; }
-      LRSSS_FORCE_STATUS=1 node "$checker" < "$input"
+      LRSSS_FORCE_STATUS=1 LRSSS_PREFLIGHT=1 node "$checker" < "$input"
     fi
     ;;
   failures)

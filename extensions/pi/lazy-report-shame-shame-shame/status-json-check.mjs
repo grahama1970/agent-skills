@@ -26,6 +26,7 @@ const MUTATING_TURN = flagEnabled(process.env.LRSSS_MUTATING_TURN);
 const FORCE_STATUS = flagEnabled(process.env.LRSSS_FORCE_STATUS);
 const STRICT_STATUS = flagEnabled(process.env.LRSSS_STRICT_STATUS);
 const FORMAT_ONLY_RETRY = flagEnabled(process.env.LRSSS_FORMAT_ONLY_RETRY);
+const PREFLIGHT = flagEnabled(process.env.LRSSS_PREFLIGHT);
 
 const VALIDATOR = process.env.LRSSS_VALIDATOR || join(
   homedir(),
@@ -928,25 +929,25 @@ function crossProviderReviewReason(status) {
 
 // Zero-trust stop gate: EVERY guarded harness stop/final response (any state,
 // no exceptions: no read-only, needs_human, failed, no-op, or advisory
-// carve-outs) requires a cross-family pi-subagent review receipt. A reviewer
-// rejection restarts with the critique as steering. If review cannot run, the
-// stop is rejected as unreviewed/degraded — never silently accepted as clean.
+// carve-outs) requires a cross-family Pi-harness review receipt. A reviewer
+// rejection restarts with the critique as steering. Missing or invalid review
+// is harness-owned: agents are never instructed to obtain or attach receipts.
 const guardedStopReport = MUTATING_TURN || FORCE_STATUS || STRICT_STATUS;
 let crossFamilyReviewFeature = null;
 if (guardedStopReport) {
   const review = crossProviderReviewReason(parsedStatus);
   if (!review) {
     crossFamilyReviewFeature = { status: 'reviewed', degraded: false };
+  } else if (PREFLIGHT && review.kind === 'unavailable') {
+    crossFamilyReviewFeature = { status: 'pending_harness_review', degraded: false };
   } else {
     const action = review.kind === 'rejected'
       ? 'restart_with_reviewer_critique'
-      : review.kind === 'unavailable'
-        ? 'obtain_cross_family_review_then_resubmit'
-        : 'attach_valid_cross_family_review_receipt';
+      : 'await_harness_cross_provider_review';
     const kind = review.kind === 'rejected' ? 'rejected' : review.kind === 'unavailable' ? 'unreviewed' : 'invalid';
     emit('reject', review.kind === 'rejected' ? ['cross_family_review_rejected'] : ['cross_family_review_required'], {
       status: parsedStatus,
-      cross_family_review: { status: kind, degraded: true, reason: review.reason },
+      cross_family_review: { status: kind, degraded: true, reason: review.reason, owner: 'pi_harness' },
       diagnostics_sha256: sha256(`cross_family_review:${review.kind}:${review.reason}`),
       validation_result: {
         schema: 'pi.agent_status.validation_result.v1',
@@ -954,14 +955,16 @@ if (guardedStopReport) {
         errors: [{
           type: review.kind === 'rejected' ? 'cross_family_review_rejected' : 'cross_family_review_required',
           loc: ['proof'],
-          msg: 'EVERY guarded harness stop requires a PASS review receipt from a different model family. No exceptions. Rejections restart with the reviewer critique; unavailable review means unreviewed/degraded, never clean acceptance.',
-          ctx: { reason: review.reason, required_schema: 'lazy_report_shame.cross_provider_review.v1' },
+          msg: 'EVERY guarded harness stop requires a PASS review receipt from a different model family. Missing or invalid review proof is Pi-harness-owned; an agent-authored receipt cannot satisfy it.',
+          ctx: { reason: review.reason, required_schema: 'lazy_report_shame.cross_provider_review.v1', owner: 'pi_harness', agent_actionable: false },
         }],
         steering: [{
           code: review.kind === 'rejected' ? 'cross_family_review_rejected' : 'cross_family_review_required',
           loc: ['proof'],
           action,
           required_schema: 'lazy_report_shame.cross_provider_review.v1',
+          owner: 'pi_harness',
+          agent_actionable: review.kind === 'rejected',
           reviewer_critique: review.critique || null,
           restart: review.kind === 'rejected',
           unreviewed: review.kind === 'unavailable',

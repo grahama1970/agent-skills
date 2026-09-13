@@ -180,8 +180,12 @@ def main() -> None:
         assert degraded["features"]["cross_family_review"] == {
             "status": "unreviewed", "degraded": True,
             "reason": "missing lazy_report_shame.cross_provider_review.v1 proof",
+            "owner": "pi_harness",
         }, degraded
-        assert degraded["features"]["validation_result"]["steering"][0]["unreviewed"] is True, degraded
+        degraded_steering = degraded["features"]["validation_result"]["steering"][0]
+        assert degraded_steering["unreviewed"] is True, degraded
+        assert degraded_steering["action"] == "await_harness_cross_provider_review", degraded_steering
+        assert degraded_steering["agent_actionable"] is False, degraded_steering
 
         # With a valid cross-family receipt, the same honest no-work needs_human
         # passes cleanly, still without fabricated scratch-file changed[] filler.
@@ -231,7 +235,7 @@ def main() -> None:
             "different-family review receipt with pi-subagents metadata is accepted",
             "missing/nonzero/mismatched pi-subagents metadata rejects the receipt",
             "reviewer REJECT verdict rejects with restart_with_reviewer_critique steering carrying the critique",
-            "honest no-work needs_human WITHOUT review is rejected unreviewed/degraded (no exceptions)",
+            "honest no-work needs_human WITHOUT review is rejected as harness-owned/unreviewed, not delegated to the agent",
             "honest no-work needs_human WITH cross-family receipt passes cleanly, no fabricated changed[] filler",
             "state=continuing cannot dodge the review gate",
         ],

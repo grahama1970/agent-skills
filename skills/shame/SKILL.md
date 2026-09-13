@@ -144,9 +144,12 @@ block yourself.
 - Every guarded stop report must carry a hook-generated
   `lazy_report_shame.cross_provider_review.v1` proof from a different model
   provider, backed by reviewer metadata and reviewer output written by the Shame
-  stop hook. Same-provider self-review, agent-supplied review prose, and
-  synthetic/local receipt claims are rejected; if the reviewer rejects, the guard
-  restarts with the reviewer critique.
+  stop hook. The agent does not obtain, attach, or synthesize this proof; the Pi
+  harness runs the reviewer and appends the receipt at the stop boundary.
+  Same-provider self-review, agent-supplied review prose, and synthetic/local
+  receipt claims are rejected; if the reviewer rejects, the guard restarts with
+  the reviewer critique. If the reviewer cannot run, the hook fails closed to a
+  harness notice instead of asking the agent to fabricate review proof.
 - A guarded `done` answer that names an `$agentic-evals` gate as READY, green,
   passing, verified, or proof-bearing must cite a fresh local
   `agentic_evals.report.v2` proof with `readiness=READY` and zero failing
