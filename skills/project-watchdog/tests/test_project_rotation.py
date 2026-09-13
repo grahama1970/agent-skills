@@ -1302,3 +1302,63 @@ def test_an_operator_change_does_not_revert_tick_cooldowns(tmp_path, monkeypatch
     after = _json.loads(path.read_text())
     assert after["projects"]["tau"]["state"] == "paused"
     assert after["closure_audit_attempts"] == {"o/r#7": 123.0}, "cooldowns survive"
+
+
+def test_dependency_unblock_does_not_stop_all_project_repair_tick(tmp_path, monkeypatch):
+    """Dependency label cleanup is maintenance, not the repair slot.
+
+    Regression: cron selected a project for dependency_unblocked_this_tick and
+    ended SKIPPED instead of continuing to the next eligible repair ticket.
+    """
+    import json
+    from watchdog import primary
+
+    receipts = tmp_path / "receipts"
+    alpha = tmp_path / "alpha"
+    beta = tmp_path / "beta"
+    alpha.mkdir(); beta.mkdir(); receipts.mkdir()
+    projects = {
+        "projects": [
+            {"project_id": "alpha", "repo": "o/alpha", "worktree": str(alpha)},
+            {"project_id": "beta", "repo": "o/beta", "worktree": str(beta)},
+        ]
+    }
+    state = {"global": {"state": "active"}, "projects": {"alpha": {"state": "active"}, "beta": {"state": "active"}}}
+    state_path, projects_path = receipts / "state.json", receipts / "projects.json"
+    state_path.write_text(json.dumps(state)); projects_path.write_text(json.dumps(projects))
+    monkeypatch.setattr(config, "state_path", lambda: state_path)
+    monkeypatch.setattr(config, "projects_path", lambda: projects_path)
+    monkeypatch.setattr(config, "execution_lock_root", lambda: receipts / "execution-locks")
+    monkeypatch.setattr(config, "receipt_root", lambda: receipts)
+    monkeypatch.setattr(config, "event_log_path", lambda: receipts / "events.jsonl")
+    monkeypatch.setattr(commands, "tick_deadline_seconds", lambda: 240)
+    monkeypatch.setattr(primary, "reconcile", lambda root: None)
+    monkeypatch.setattr(registry, "lane_busy_issues", lambda run_id, project: [])
+    monkeypatch.setattr(commands.streaks, "clear_idle", lambda *a: None)
+
+    def list_issues(run_id, project, busy=None, skip_issue_numbers=None, skip_issue_reasons=None,
+                    only_issue=None, apply=False):
+        if project["project_id"] == "alpha":
+            registry.LAST_SCAN = {
+                "scanned": 1, "excluded": {"dependency_unblocked_this_tick": 1},
+                "excluded_issues": {"dependency_unblocked_this_tick": [31]},
+                "dependency_unblocks": [{"issue_number": 31, "repo": "o/alpha", "status": "unblocked"}],
+            }
+            return []
+        registry.LAST_SCAN = {"scanned": 1, "excluded": {}, "excluded_issues": {}, "dependency_unblocks": []}
+        return [_issue(1620, "skills/project-watchdog")]
+
+    dispatched, captured = [], {}
+    monkeypatch.setattr(commands, "list_routable_issues", list_issues)
+    monkeypatch.setattr(commands, "handle_issue", lambda run_id, receipt_dir, project, issue, *, apply: dispatched.append(issue["number"]) or {
+        "issue_number": issue["number"], "repo": project["repo"], "ok": True,
+        "status": "COMPLETED", "summary": "fixed", "ticket_closed": True})
+    monkeypatch.setattr(commands, "finish", lambda run, directory, receipt, code, **kw: captured.update(receipt=receipt, code=code) or code)
+
+    rc = commands._tick_locked("fleet-run", receipts, apply=True, project_id="all", max_tickets=1,
+                               release_scheduler_lock=lambda: (_ for _ in ()).throw(AssertionError("released early")))
+
+    assert rc == 0
+    assert dispatched == [1620]
+    assert captured["receipt"]["dependency_unblocks"][0]["issue_number"] == 31
+    assert captured["receipt"]["handled_issues"][0]["issue_number"] == 1620

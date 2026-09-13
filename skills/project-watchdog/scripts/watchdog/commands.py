@@ -659,23 +659,9 @@ def _tick_locked(
                 })
                 continue
         if dependency_unblocks and apply:
-            project, issues = candidate, []
-            receipt["issue_scans"] = issue_scans
-            receipt["excluded_counts"] = scan["excluded"]
-            receipt["excluded_issues"] = scan["excluded_issues"]
-            receipt["excluded_issue_refs"] = {
-                reason: [f"{scan['repo']}#{number}" for number in numbers]
-                for reason, numbers in scan["excluded_issues"].items()
-            }
-            receipt["dependency_unblocks"] = dependency_unblocks
-            receipt["lease_staleness"] = candidate_staleness
-            receipt["reclaimed_leases"] = reclaimed
-            receipt["in_flight"] = {
-                "issues": [int(i["number"]) for i in in_flight],
-                "targets": sorted(busy),
-                "leases": registry.LAST_LEASE_SCAN.get("active", []),
-            }
-            break
+            # Dependency cleanup is maintenance, not repair service. Record it,
+            # but keep scanning the fleet for a ticket fixer/reviewer slot.
+            receipt.setdefault("dependency_unblocks", []).extend(dependency_unblocks)
         if not found:
             skipped.append(
                 {
@@ -967,10 +953,6 @@ def _tick_locked(
             )
             continue
         dispatch_plan.append({"issue": issue, "targets": sorted(targets), "lock": execution_lock})
-
-    if dispatch_plan and release_scheduler_lock is not None:
-        receipt["scheduler_lock_released_before_dispatch"] = True
-        release_scheduler_lock()
 
     for entry in dispatch_plan:
         issue = entry["issue"]

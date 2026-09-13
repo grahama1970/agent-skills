@@ -286,14 +286,16 @@ def test_actual_tick_routes_unrelated_issue_despite_foreign_lease(repository, mo
     monkeypatch.setattr(github, "issue_comments", lambda *a, **k: [])
     monkeypatch.setattr(registry, "dependency_gate", lambda *a, **k: {"status": "none"})
     monkeypatch.setattr(commands.streaks, "clear_idle", lambda *a: None)
-    dispatched, captured = [], {}
+    dispatched, captured, released = [], {}, []
     def handle(run_id, receipt_dir, entry, selected, *, apply):
+        assert released == [], "scheduler singleton released before dispatch finished"
         dispatched.append(selected["number"])
         return {"issue_number": selected["number"], "ok": True, "status": "COMPLETED", "ticket_closed": True}
     monkeypatch.setattr(commands, "handle_issue", handle)
     monkeypatch.setattr(commands, "finish", lambda run, directory, receipt, code, **kw: captured.update(receipt=receipt, code=code) or code)
     commands._tick_locked("fixture-run", receipts, apply=True, project_id="fixture", max_tickets=1,
-                          release_scheduler_lock=lambda: None)
+                          release_scheduler_lock=lambda: released.append("released"))
+    assert released == []
     assert dispatched == [42]
     assert captured["receipt"]["handled_issues"][0]["issue_number"] == 42
     assert "maintainer-active" in {x["name"] for x in foreign["labels"]}
