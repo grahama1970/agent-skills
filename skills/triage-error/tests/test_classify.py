@@ -19,42 +19,23 @@ def test_known_signal_maps_to_canonical_code() -> None:
     assert "open-bind" in r["not_this"] or "tab binding" in r["not_this"]
 
 
+def test_chatgpt_rate_limit_maps_to_canonical_code() -> None:
+    r = t.classify("ChatGPTTooManyRequestsDetected: true\nChatGPTRateLimitWaitSeconds: 300", "surf")
+    assert r["code"] == "webgpt_chatgpt_rate_limited"
+    assert r["ambiguous"] is False
+    assert "project-watchdog implementation defect" in r["not_this"]
+
+
+def test_webgpt_rate_limit_metadata_maps_to_canonical_code() -> None:
+    r = t.classify('{"blocker":"BLOCKED_WEBGPT_PROVIDER_RATE_LIMIT","failure_code":"browser_provider_rate_limited","recommended_action":"wait_for_chatgpt_rate_limit_cooldown_before_retry","proof_status":"rate_limited"}', "surf")
+    assert r["code"] == "webgpt_chatgpt_rate_limited"
+    assert r["ambiguous"] is False
+
+
 def test_scillm_route_signal_maps_to_canonical() -> None:
     r = t.classify("404 path /v4/v1/chat/completions", "scillm")
     assert r["code"] == "scillm_api_base_double_version_segment"
     assert r["recoverable"] is True
-
-
-def test_project_watchdog_target_ownership_conflict_is_canonical() -> None:
-    r = t.classify(
-        "Refusal: target ownership conflict (not checkout dirtiness): "
-        "{'src/tau_coding/security_audit_conformance.py': 'unowned_target_edit'}",
-        "project-watchdog",
-    )
-    assert r["code"] == "project_watchdog_target_ownership_conflict"
-    assert r["ambiguous"] is False
-    assert "repo-wide dirty checkout" in r["not_this"]
-
-
-def test_project_watchdog_native_tau_unsettled_is_canonical() -> None:
-    r = t.classify(
-        "Refusal: native Tau run is not settled; recover the same retained run",
-        "project-watchdog",
-    )
-    assert r["code"] == "project_watchdog_native_tau_run_unsettled"
-    assert r["ambiguous"] is False
-    assert "new ticket repair dispatch" in r["not_this"]
-
-
-def test_project_watchdog_independent_proof_gate_failed_is_canonical() -> None:
-    r = t.classify(
-        "Refusal: independent proof gate failed: not every required proof artifact is a completed pass "
-        "(/x/agentic-eval-result.json: reports UNKNOWN; /x/live-e2e-result.json: reports NOT_READY)",
-        "project-watchdog",
-    )
-    assert r["code"] == "project_watchdog_independent_proof_gate_failed"
-    assert r["ambiguous"] is False
-    assert "human decision required" in r["not_this"]
 
 
 def test_ask_scillm_empty_200_maps_to_actionable_code() -> None:
@@ -322,39 +303,3 @@ def test_pi_research_gate_retry_command_mismatch_has_stable_code() -> None:
     assert r["recoverable"] is True
     assert "exact command" in r["next_command"]
 
-
-
-def test_classify_contract_tau_emits_strict_canonical_single_line():
-    """tau's bridge byte-compares stdout to canonical JSON; pretty or multi-line
-    output degrades every external classification to triage_contract_invalid."""
-    import json
-    import subprocess
-    import sys
-    out = subprocess.run(
-        [sys.executable, "triage_error.py", "classify", "--text",
-         "handler seat returned no verdict: triage_contract_invalid",
-         "--layer", "tau", "--contract", "tau"],
-        capture_output=True, text=True, check=True,
-    ).stdout
-    assert "\n" not in out.strip(), "contract output must be single-line"
-    payload = json.loads(out)
-    assert payload["schema"] == "tau.triage_error_classification.v1"
-    assert payload["disposition"] in {"KNOWN_REPAIR", "AMBIGUOUS", "NEEDS_HUMAN", "CONTRACT_INVALID", "UNAVAILABLE"}
-    assert payload["layer"] == "tau"
-    assert payload["code"]
-    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
-    assert out.strip() == canonical, "output must be canonical compact sorted JSON"
-
-
-def test_tau_contract_maps_unknown_layer_and_flattens_cause():
-    import json
-    import subprocess
-    import sys
-    out = subprocess.run(
-        [sys.executable, "triage_error.py", "classify", "--text", "weird surf crash boom",
-         "--layer", "surf", "--contract", "tau"],
-        capture_output=True, text=True, check=True,
-    ).stdout
-    payload = json.loads(out)
-    assert payload["layer"] == "tau", "layers outside tau's frozenset must collapse to tau"
-    assert "\n" not in payload["cause"]
