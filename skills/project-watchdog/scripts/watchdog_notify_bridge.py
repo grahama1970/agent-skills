@@ -476,6 +476,8 @@ def _fmt(ev: dict) -> str:
         lines.append(f"status: {_clip(ev.get('summary'))}")
     if ev.get("status") == "DRY_RUN" or ev.get("apply") is False:
         lines.append("dispatch: no work was started; this was a dry-run preview")
+    if ev.get("resolution_ref"):
+        lines.append(f"proof/result: {_clip(ev['resolution_ref'])}")
     if ticket.get("required_proof"):
         lines.append(f"proof needed: {_clip(ticket['required_proof'])}")
     if ev.get("agents"):
