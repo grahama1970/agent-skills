@@ -69,14 +69,14 @@ def run_cmd(argv: list[str], *, cwd: Path, timeout: int = 600) -> dict[str, Any]
 
 def browser_safe(text: str) -> str:
     """Keep packets free of local path-shaped tokens that browser preflight rejects."""
-    replacements = {
-        "/home/graham/workspace/experiments/agent-skills/": "repo root slash ",
-        "/mnt/storage12tb/": "storage artifact root slash ",
-        "/tmp/": "temporary artifact root slash ",
-    }
-    for old, new in replacements.items():
-        text = text.replace(old, new)
-    return text.replace("~/", "home slash ")
+    out: list[str] = []
+    markers = ("/home/", "/mnt/", "/tmp/", "/usr/", "/dev/")
+    for token in text.replace("~/", "home slash ").split():
+        if token.startswith("/") or any(marker in token for marker in markers):
+            out.append("<local-path>")
+        else:
+            out.append(token)
+    return " ".join(out)
 
 
 def build_packet(repo: Path, *, prior_response: Path | None, output: Path) -> Path:
