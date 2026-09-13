@@ -36,6 +36,14 @@ from typing import Any
 READY_PHRASE = "ready-to-deploy"
 READY_LINE = "VERDICT: ready-to-deploy"
 NO_BLOCKERS_LINE = "BLOCKING_FINDINGS: none"
+REQUIRED_PROOF_GATES = [
+    {"name": "ready-loop contract", "pytest": ["skills/project-watchdog/tests/test_webgpt_ready_loop.py"]},
+    {"name": "serial fleet admission", "pytest": ["skills/project-watchdog/tests/test_single_cron_fleet_adapter.py"]},
+    {"name": "per-ticket notification scoping", "pytest": ["skills/project-watchdog/tests/test_watchdog_notify_bridge.py"]},
+    {"name": "notification receipt replay", "pytest": ["skills/project-watchdog/tests/test_notify_receipt_replay.py"]},
+    {"name": "quiet-hours finalization", "pytest": ["skills/project-watchdog/tests/test_single_cron_owner.py"]},
+    {"name": "cron installer singleton", "pytest": ["skills/project-watchdog/tests/test_single_cron_installer.py"]},
+]
 
 
 def sha256_text(text: str) -> str:
@@ -151,28 +159,16 @@ def candidate_manifest(repo: Path) -> dict[str, Any]:
 
 
 def collect_proof_results(repo: Path, output_dir: Path, candidate_digest: str) -> dict[str, Any]:
-    gate_specs = [
-        ["skills/project-watchdog/tests/test_webgpt_ready_loop.py"],
-        ["skills/project-watchdog/tests/test_single_cron_fleet_adapter.py"],
-        ["skills/project-watchdog/tests/test_watchdog_notify_bridge.py::test_mixed_ticket_outcomes_keep_identity_status_and_proof"],
-        ["skills/project-watchdog/tests/test_notify_receipt_replay.py::test_restart_recovers_committed_unregistered_receipt"],
-    ]
-    required_missing = [
-        "skills/project-watchdog/tests/test_notify_receipt_replay.py::test_drain_budget_and_acknowledgment_status",
-        "skills/project-watchdog/tests/test_notify_receipt_replay.py::test_idle_tick_retries_human_alert_after_source_commit",
-        "skills/project-watchdog/tests/test_single_cron_owner.py::test_quiet_owner_finalizes_without_dispatch",
-        "skills/project-watchdog/tests/test_single_cron_owner.py::test_finalization_fault_preserves_receipt_and_records_degradation",
-        "skills/project-watchdog/tests/test_single_cron_installer.py",
-    ]
     gates = []
-    for index, spec in enumerate(gate_specs, start=1):
-        command = ["uv", "run", "--project", "skills/project-watchdog", "pytest", "-q", *spec]
+    registry_names = {str(gate.get("name")) for gate in REQUIRED_PROOF_GATES if gate.get("name")}
+    for index, gate_spec in enumerate(REQUIRED_PROOF_GATES, start=1):
+        command = ["uv", "run", "--project", "skills/project-watchdog", "pytest", "-q", *list(gate_spec["pytest"])]
         result = run_cmd(command, cwd=repo, timeout=240, output_limit=None)
         log_text = result["stdout"] + result["stderr"]
         log_path = output_dir / f"candidate-bound-gate-{index}.log"
         log_path.write_text(log_text, encoding="utf-8")
         gates.append({
-            "name": " ".join(spec),
+            "name": gate_spec["name"],
             "candidate_digest": candidate_digest,
             "command": command,
             "returncode": result["returncode"],
@@ -183,13 +179,17 @@ def collect_proof_results(repo: Path, output_dir: Path, candidate_digest: str) -
             "passed": result["returncode"] == 0 and " passed" in log_text,
         })
     after_digest = candidate_manifest(repo)["candidate_digest"]
+    missing = sorted(registry_names - {str(gate.get("name")) for gate in gates})
+    failed = [gate["name"] for gate in gates if not gate["passed"]]
     return {
         "candidate_digest_before": candidate_digest,
         "candidate_digest_after": after_digest,
         "candidate_stable": after_digest == candidate_digest,
+        "declared_required_gates": sorted(registry_names),
         "gates": gates,
-        "missing_mandatory_gates": required_missing,
-        "qualifies_candidate": False if required_missing else after_digest == candidate_digest and bool(gates) and all(gate["passed"] for gate in gates),
+        "missing_mandatory_gates": missing,
+        "failed_mandatory_gates": failed,
+        "qualifies_candidate": after_digest == candidate_digest and bool(registry_names) and not missing and not failed,
     }
 
 

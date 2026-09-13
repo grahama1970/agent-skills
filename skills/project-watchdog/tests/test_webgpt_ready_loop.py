@@ -128,6 +128,43 @@ def test_failed_current_ask_cannot_reuse_old_response(tmp_path: Path) -> None:
     assert loop.latest_webgpt_response(current, root) is None
 
 
+def test_declared_required_gate_failure_blocks_positive_reviewer(tmp_path: Path, monkeypatch, capsys) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    output_root = tmp_path / "out"
+    candidate = "sha256:" + "a" * 64
+    packet_digest = "sha256:" + "b" * 64
+    monkeypatch.setattr(loop, "REQUIRED_PROOF_GATES", [
+        {"name": "still-present", "pytest": ["skills/project-watchdog/tests/test_webgpt_ready_loop.py::test_classify_requires_evidence_bound_ready_verdict"]},
+        {"name": "drifted-or-deleted", "pytest": ["skills/project-watchdog/tests/test_missing_gate.py::test_missing"]},
+    ])
+    monkeypatch.setattr(loop, "candidate_manifest", lambda repo: {"candidate_digest": candidate, "files": []})
+
+    def fake_run(argv, *, cwd, timeout=600, output_limit=4000):
+        if any("test_missing_gate.py" in str(part) for part in argv):
+            return {"returncode": 4, "stdout": "", "stderr": "ERROR: not found", "duration_seconds": 0.01}
+        return {"returncode": 0, "stdout": "1 passed in 0.01s", "stderr": "", "duration_seconds": 0.01}
+
+    monkeypatch.setattr(loop, "run_cmd", fake_run)
+    monkeypatch.setattr(loop, "ask_webgpt", lambda *a, **k: {
+        "status": "OK",
+        "response": "response.md",
+        "packet_digest": packet_digest,
+        "candidate_digest": candidate,
+        "verdict": {"ready_to_deploy": True},
+    })
+
+    rc = loop.main(["--repo", str(repo), "--output-root", str(output_root), "--execute"])
+
+    out = json.loads(capsys.readouterr().out)
+    json_blocks = (output_root / "packet-1.md").read_text().split("```json\n")
+    proof = json.loads(json_blocks[2].split("\n```", 1)[0])
+    assert rc == 1
+    assert out["ready_to_deploy"] is False
+    assert proof["candidate_bound_tests"]["failed_mandatory_gates"] == ["drifted-or-deleted"]
+    assert proof["candidate_bound_tests"]["qualifies_candidate"] is False
+
+
 def test_main_refuses_failed_required_proofs_even_with_positive_reviewer(tmp_path: Path, monkeypatch, capsys) -> None:
     repo = tmp_path / "repo"
     repo.mkdir()
