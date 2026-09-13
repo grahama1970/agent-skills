@@ -1248,6 +1248,13 @@ def probe_b23_judge_qualification_gate(summary_path: Path) -> int:
     )
 
 
+def probe_b24_arena_protocol(summary_path: Path) -> int:
+    return probe_pytest_contracts(
+        summary_path,
+        suite="battle-b24-extract-an-arena-protocol-independent-of-anonymization",
+        tests=["test_generic_arena_protocol.py"],
+    )
+
 
 def probe_b05_strict_campaign_acceptance_envelopes(summary_path: Path) -> int:
     return probe_pytest_contracts(
@@ -4784,6 +4791,8 @@ def main() -> int:
             )
         if args.suite == "battle-b23-require-qualification-for-the-exact-judge-configuration":
             return probe_b23_judge_qualification_gate(args.summary)
+        if args.suite == "battle-b24-extract-an-arena-protocol-independent-of-anonymization":
+            return probe_b24_arena_protocol(args.summary)
         if args.suite == "battle-functional-judge":
             return probe_battle_functional_judge(args.summary)
         if args.suite == "battle-commentary-causality":

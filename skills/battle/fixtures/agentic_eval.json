@@ -616,6 +616,15 @@
         "adversarial_live_e2e": true
       },
       "claim_semantics": "control_flow"
+    },
+    {
+      "id": "battle.arena_protocol.generic_non_anonymization",
+      "description": "Battle campaign and production adapter execution use an arena protocol for fixture validation, observations, applicable Judges, expectations, and reset behavior so a deterministic containerized HTTP authorization arena can run without corpus or policy.json.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "control_flow"
     }
   ],
   "seams": [
@@ -3416,6 +3425,40 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/battle-b23-require-qualification-for-the-exact-judge-configuration.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 400
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-b24-extract-an-arena-protocol-independent-of-anonymization",
+      "category": "battle-b24-extract-an-arena-protocol-independent-of-anonymization",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.arena_protocol.generic_non_anonymization"
+      ],
+      "seams": [
+        "campaign_contract.arena_protocol",
+        "production_adapter.generic_arena"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b24-extract-an-arena-protocol-independent-of-anonymization --summary /tmp/battle-agentic-evals/battle-b24-extract-an-arena-protocol-independent-of-anonymization.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b24-extract-an-arena-protocol-independent-of-anonymization"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-b24-extract-an-arena-protocol-independent-of-anonymization.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 400

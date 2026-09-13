@@ -28,7 +28,7 @@ from typing import Any
 
 from .docker_runtime import extract_docker_run_image
 from .evaluator_lock import verify_evaluator_lock
-from .invariant_campaign import _aggregate, _materialize_case_snapshot, _regular_files, load_profile, run_campaign, verify_execution_attestation
+from .invariant_campaign import _aggregate, _materialize_case_snapshot, _regular_files, load_arena_protocol, load_profile, run_campaign, verify_execution_attestation
 from .invariant_judge import run_judge
 from .strict_json import finite_json_values, load_path
 
@@ -96,6 +96,7 @@ def validate_request(request: dict[str, Any]) -> None:
         "gen_params",
         "judge_params",
         "output_subdir",
+        "arena_protocol_path",
         "lineage",
         "authorization_receipt",
         "evaluator_lock_receipt",
@@ -112,6 +113,9 @@ def validate_request(request: dict[str, Any]) -> None:
     _require(isinstance(request.get("judge_params", {}), dict), "judge_params must be an object")
     if "output_subdir" in request:
         _require(isinstance(request["output_subdir"], str) and request["output_subdir"].strip(), "output_subdir must be a non-empty string")
+    if "arena_protocol_path" in request:
+        _require(isinstance(request["arena_protocol_path"], str) and request["arena_protocol_path"].strip(), "arena_protocol_path must be a non-empty string")
+        load_arena_protocol(request["arena_protocol_path"])
     if "lineage" in request:
         _require(isinstance(request["lineage"], dict), "lineage must be an object")
     _validate_execution_authorization(request)
@@ -146,6 +150,7 @@ def resolve_plan(request: dict[str, Any]) -> dict[str, Any]:
         declared = case[2].upper() if len(case) == 3 else "MAY_REJECT"
         cases.append({"id": name, "input_dir": str(snap), "declared_expectation": declared})
     profile = load_profile(request["profile_path"])
+    arena_protocol = load_arena_protocol(request.get("arena_protocol_path"))
     overrides = profile.get("expectation_overrides") or {}
     for c in cases:
         c["effective_expectation"] = overrides.get(c["id"], c["declared_expectation"]) \
@@ -162,6 +167,16 @@ def resolve_plan(request: dict[str, Any]) -> dict[str, Any]:
         "generator_sha256": _sha256_file(Path(request["generator"])),
         "judge_sha256": _sha256_file(Path(request["judge"])),
         "functional_judge_sha256": _sha256_file(Path(request["functional_judge"])),
+        "arena_protocol": {
+            "arena_id": arena_protocol["arena_id"],
+            "arena_protocol_sha256": _sha256_file(Path(request["arena_protocol_path"])) if request.get("arena_protocol_path") else None,
+            "fixture_validation": arena_protocol["fixture_validation"],
+            "observations": arena_protocol["observations"],
+            "applicable_judges": arena_protocol["applicable_judges"],
+            "expectations": arena_protocol["expectations"],
+            "reset_behavior": arena_protocol["reset_behavior"],
+            "expectation_semantics": arena_protocol["expectation_semantics"],
+        },
         "required_judges": profile.get("required_judges") or [],
         "cases": cases,
         "input_manifest": [{"id": c["id"], "files": _manifest_tree(Path(c["input_dir"]))}
@@ -175,6 +190,7 @@ def run_contract_campaign(request: dict[str, Any]) -> dict[str, Any]:
     work = Path(request["work_root"])
     plan = resolve_plan(request)
     profile = load_profile(request["profile_path"])
+    arena_protocol = load_arena_protocol(request.get("arena_protocol_path"))
     result = run_campaign(
         "", request["target_run_cmd"], request["judge"],
         gen_params={},
@@ -188,6 +204,7 @@ def run_contract_campaign(request: dict[str, Any]) -> dict[str, Any]:
             "authorization_manifest_sha256": (request.get("authorization_receipt") or {}).get("manifest_sha256"),
             "resolved_image": extract_docker_run_image(request["target_run_cmd"]),
         },
+        arena_protocol=arena_protocol,
     )
     out_root = work / "out"
     receipt = {

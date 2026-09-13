@@ -41,6 +41,63 @@ from .invariant_judge import run_judge
 from .strict_json import finite_json_values, load_path
 
 PROFILE_SCHEMA = "battle.campaign_profile.v1"
+ARENA_PROTOCOL_SCHEMA = "battle.arena_protocol.v1"
+DEFAULT_ARENA_PROTOCOL = {
+    "schema": ARENA_PROTOCOL_SCHEMA,
+    "arena_id": "anonymization-policy-value.v1",
+    "fixture_validation": {"kind": "anonymization_policy_value"},
+    "observations": {"output_subdir": "corpus"},
+    "applicable_judges": ["security", "functional"],
+    "expectations": ["MUST_ACCEPT", "MUST_REJECT", "MAY_REJECT"],
+    "reset_behavior": {"mode": "fresh_output_dir_per_case"},
+    "expectation_semantics": {"MUST_REJECT": "contract_reject"},
+}
+
+
+def load_arena_protocol(path: str | None) -> dict[str, Any]:
+    """Load the arena protocol that tells Campaign how to validate fixtures.
+
+    The default preserves the original anonymization arena. Non-anonymization
+    arenas can declare required fixture files and observation location without
+    adding branches to the campaign controller.
+    """
+    data = dict(DEFAULT_ARENA_PROTOCOL) if path is None else load_path(path)
+    if not isinstance(data, dict):
+        raise ValueError("arena protocol must be a JSON object")
+    allowed = {"schema", "arena_id", "fixture_validation", "observations", "applicable_judges", "expectations", "reset_behavior", "expectation_semantics"}
+    extra = sorted(set(data) - allowed)
+    if extra:
+        raise ValueError(f"arena protocol contains unknown fields: {extra}")
+    if data.get("schema") != ARENA_PROTOCOL_SCHEMA:
+        raise ValueError(f"arena protocol schema must be {ARENA_PROTOCOL_SCHEMA}")
+    if not isinstance(data.get("arena_id"), str) or not data["arena_id"].strip():
+        raise ValueError("arena protocol must declare non-empty arena_id")
+    fixture = data.get("fixture_validation")
+    if not isinstance(fixture, dict):
+        raise ValueError("arena protocol fixture_validation must be an object")
+    kind = fixture.get("kind")
+    if kind not in {"anonymization_policy_value", "json_files"}:
+        raise ValueError("arena protocol fixture_validation.kind must be anonymization_policy_value or json_files")
+    if kind == "json_files":
+        files = fixture.get("required_files")
+        if not isinstance(files, list) or not files or any(not isinstance(item, str) or not item.strip() or Path(item).is_absolute() or ".." in Path(item).parts for item in files):
+            raise ValueError("arena protocol json_files required_files must be safe relative paths")
+    observations = data.get("observations")
+    if not isinstance(observations, dict) or not isinstance(observations.get("output_subdir"), str) or not observations["output_subdir"].strip():
+        raise ValueError("arena protocol observations.output_subdir must be a non-empty string")
+    judges = data.get("applicable_judges")
+    if not isinstance(judges, list) or any(item not in {"security", "functional"} for item in judges) or len(set(judges)) != len(judges):
+        raise ValueError("arena protocol applicable_judges must be a duplicate-free list of security/functional")
+    expectations = data.get("expectations")
+    if not isinstance(expectations, list) or any(item not in VALID_EXPECTATIONS for item in expectations):
+        raise ValueError("arena protocol expectations must use valid campaign expectations")
+    reset = data.get("reset_behavior")
+    if not isinstance(reset, dict) or reset.get("mode") != "fresh_output_dir_per_case":
+        raise ValueError("arena protocol reset_behavior.mode must be fresh_output_dir_per_case")
+    semantics = data.setdefault("expectation_semantics", {"MUST_REJECT": "contract_reject"})
+    if not isinstance(semantics, dict) or semantics.get("MUST_REJECT") not in {"contract_reject", "judge_observation"}:
+        raise ValueError("arena protocol expectation_semantics.MUST_REJECT must be contract_reject or judge_observation")
+    return data
 
 
 def load_profile(path: str) -> dict[str, Any]:
@@ -291,6 +348,35 @@ def _fixture_precheck(input_dir: Path, judge_path: str, judge_params: dict[str, 
     return {"status": "PASS", "evidence_sha256": evidence_sha, "violations": [], "witness": witness}
 
 
+def _arena_fixture_precheck(input_dir: Path, judge_path: str, judge_params: dict[str, Any], expectation: str, arena_protocol: dict[str, Any]) -> dict[str, Any]:
+    fixture = arena_protocol.get("fixture_validation") or {}
+    if fixture.get("kind") == "anonymization_policy_value":
+        return _fixture_precheck(input_dir, judge_path, judge_params, expectation)
+    evidence_sha = _manifest_sha256(input_dir)
+    parsed: list[str] = []
+    for rel in fixture.get("required_files") or []:
+        path = input_dir / rel
+        if not path.is_file():
+            return {"status": "INVALID_CASE", "evidence_sha256": evidence_sha, "violations": [f"fixture_precheck:missing_required_file:{rel}"]}
+        try:
+            load_path(path)
+        except Exception as exc:
+            return {"status": "INVALID_CASE", "evidence_sha256": evidence_sha, "violations": [f"fixture_precheck:invalid_json_file:{rel}:{type(exc).__name__}"]}
+        parsed.append(rel)
+    return {
+        "status": "PASS",
+        "evidence_sha256": evidence_sha,
+        "violations": [],
+        "witness": {
+            "schema": "battle.fixture_witness.v1",
+            "kind": "ARENA_PROTOCOL_FIXTURE",
+            "arena_id": arena_protocol["arena_id"],
+            "validated_files": parsed,
+            "input_manifest_sha256": evidence_sha,
+        },
+    }
+
+
 SAFE_REJECTION_MARKER = "BATTLE_CONTRACT_REJECT"
 
 
@@ -394,9 +480,12 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
                  functional_judge: str | None = None,
                  work_root: Path | None = None,
                  frozen_cases: list[dict[str, Any]] | None = None,
-                 attestation_context: dict[str, Any] | None = None) -> CampaignResult:
+                 attestation_context: dict[str, Any] | None = None,
+                 arena_protocol: dict[str, Any] | None = None) -> CampaignResult:
     gen_params = gen_params or {}
     judge_params = dict(judge_params or {})
+    arena_protocol = arena_protocol or dict(DEFAULT_ARENA_PROTOCOL)
+    output_subdir = (arena_protocol.get("observations") or {}).get("output_subdir") or output_subdir
     result = CampaignResult()
     if profile is not None:
         result.profile_id = profile.get("profile_id")
@@ -473,7 +562,7 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
             if policy_sentinel is not None and "policy" not in jp:
                 jp["policy"] = str(policy_sentinel)
             jp.setdefault("input_dir", str(input_path))
-            fixture_precheck = _fixture_precheck(input_path, judge, jp, expectation)
+            fixture_precheck = _arena_fixture_precheck(input_path, judge, jp, expectation, arena_protocol)
             if fixture_precheck["status"] != "PASS":
                 verdict = {"case": name, "expectation": expectation, "expectation_source": expectation_source,
                            "judged": False, "passed": False, "violations": fixture_precheck["violations"],
@@ -556,7 +645,8 @@ def run_campaign(generator: str, target_run_cmd: str, judge: str,
                     fr = run_judge(functional_judge, str(out_dir), jp)
                     functional = {"status": "PASS" if fr.passed else "FAIL", "violations": fr.violations}
                     verdict["functional"] = functional
-                if jr.passed and functional["status"] == "PASS" and expectation != "MUST_REJECT":
+                must_reject_observed = (arena_protocol.get("expectation_semantics") or {}).get("MUST_REJECT") == "judge_observation"
+                if jr.passed and functional["status"] == "PASS" and (expectation != "MUST_REJECT" or must_reject_observed):
                     result.cases_passed += 1
                 else:
                     verdict["passed"] = False
