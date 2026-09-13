@@ -31,8 +31,17 @@ def _load_campaign(path: Path) -> dict[str, Any]:
     if start < 0 or end < start:
         raise ValueError(f"campaign JSON not found: {path}")
     data = json.loads(text[start:end + 1])
-    if data.get("schema") != "battle.invariant_campaign_result.v1":
-        raise ValueError(f"not battle.invariant_campaign_result.v1: {path}")
+    schema = data.get("schema")
+    if schema == "battle.production_adapter_round.v1":
+        campaign = data.get("campaign")
+        if not isinstance(campaign, dict):
+            raise ValueError(f"production adapter receipt has no campaign: {path}")
+        campaign = dict(campaign)
+        campaign["_source_schema"] = schema
+        campaign["_source_status"] = data.get("status")
+        return campaign
+    if schema not in {"battle.invariant_campaign_result.v1", "battle.campaign_contract_receipt.v1"}:
+        raise ValueError(f"not a Battle campaign receipt: {path}")
     return data
 
 

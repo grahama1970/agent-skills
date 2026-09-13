@@ -359,6 +359,47 @@ def test_invariant_report_terminal_cards_preserve_typed_receipt_fields(tmp_path:
     assert "Judge evidence: target processed the case; Judge found no released policy value" in terminal
 
 
+def test_invariant_report_terminal_cards_accept_live_receipt_shapes(tmp_path: Path) -> None:
+    contract = tmp_path / "production-adapter-receipt.json"
+    beyond = tmp_path / "campaign-contract-receipt.json"
+    project_state = tmp_path / "project-state.md"
+    out_json = tmp_path / "report.json"
+    out_md = tmp_path / "report.md"
+    campaign_body = {
+        "schema": "battle.campaign_contract_receipt.v1",
+        "verdict": "PASS",
+        "aggregation": {"cases_total": 1, "cases_passed": 1},
+        "case_receipts": [{
+            "schema": "battle.case_receipt.v1",
+            "case_id": "bb-json-object-key",
+            "expectation": "MUST_REJECT",
+            "verdict": "PASS",
+            "execution": {"kind": "REJECT", "exit_code": 1},
+            "violations": [],
+        }],
+    }
+    contract.write_text(json.dumps({"schema": "battle.production_adapter_round.v1", "status": "PASS", "campaign": campaign_body}), encoding="utf-8")
+    beyond.write_text(json.dumps(campaign_body), encoding="utf-8")
+    project_state.write_text("# Project State\ncurrent\n", encoding="utf-8")
+
+    proc = subprocess.run([
+        str(BATTLE / "run.sh"), "invariant-report",
+        "--campaign", str(contract),
+        "--campaign", str(beyond),
+        "--project-state", str(project_state),
+        "--target", "oai-trial",
+        "--out-json", str(out_json),
+        "--out-md", str(out_md),
+        "--terminal-cards",
+    ], cwd=REPO, capture_output=True, text=True, check=False)
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert json.loads(proc.stdout)["status"] == "PASS"
+    assert proc.stderr.count("==============") == 2
+    assert "Case: bb-json-object-key" in proc.stderr
+    assert "Related research: not recorded in case receipt" in proc.stderr
+
+
 def test_invariant_report_rich_terminal_table_path_renders_colored_rows(monkeypatch, capsys) -> None:
     module = _report_module()
     monkeypatch.setattr(
