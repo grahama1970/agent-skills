@@ -77,9 +77,13 @@ function reviewerModelChain(authorProvider) {
 
 function explicitVerdict(stdout) {
   const text = String(stdout || '').trim();
+  for (const line of text.split(/\r?\n/)) {
+    const match = line.trim().toUpperCase().match(/^VERDICT:\s*(PASS|REJECT|FAIL)\b/);
+    if (match) return match[1] === 'PASS' ? 'PASS' : 'REJECT';
+  }
   const upper = text.toUpperCase();
-  if (upper.includes('VERDICT: PASS') || upper.startsWith('PASS')) return 'PASS';
-  if (upper.includes('VERDICT: REJECT') || upper.includes('VERDICT: FAIL') || upper.startsWith('FAIL') || upper.startsWith('REJECT')) return 'REJECT';
+  if (upper.startsWith('PASS')) return 'PASS';
+  if (upper.startsWith('FAIL') || upper.startsWith('REJECT')) return 'REJECT';
   return null;
 }
 

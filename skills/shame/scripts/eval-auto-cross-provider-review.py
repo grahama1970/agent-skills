@@ -84,6 +84,24 @@ def main() -> None:
         assert after["decision"] == "pass", after
         assert after["features"]["cross_family_review"] == {"status": "reviewed", "degraded": False}, after
 
+        echoed_prompt_review = subprocess.run(
+            ["node", str(AUTO)],
+            input=json.dumps({"text": candidate, "status": status, "author_provider": "openai"}),
+            text=True,
+            capture_output=True,
+            timeout=30,
+            env={
+                **os.environ,
+                "LAZY_REPORT_SHAME_REVIEW_DIR": str(work / "echoed-prompt-reviews"),
+                "LAZY_REPORT_SHAME_REVIEWER_COMMAND": "python3 -c 'import sys; print(sys.stdin.read().splitlines()[4]); print(\"VERDICT: REJECT\\nCRITIQUE: anchored verdict wins.\")'",
+            },
+            check=False,
+        )
+        assert echoed_prompt_review.returncode == 0, echoed_prompt_review.stderr or echoed_prompt_review.stdout
+        echoed_prompt_payload = json.loads(echoed_prompt_review.stdout)
+        echoed_prompt_receipt = json.loads(Path(echoed_prompt_payload["receipt_path"]).read_text(encoding="utf-8"))
+        assert echoed_prompt_receipt["verdict"] == "REJECT", echoed_prompt_receipt
+
         fallback_review = subprocess.run(
             ["node", str(AUTO)],
             input=json.dumps({"text": candidate, "status": status, "author_provider": "openai"}),
@@ -115,6 +133,8 @@ def main() -> None:
             env={
                 **os.environ,
                 "LAZY_REPORT_SHAME_REVIEW_DIR": str(work / "zai-author-reviews"),
+                "LAZY_REPORT_SHAME_REVIEWER_MODEL": "zai/glm-5.3-flash",
+                "LAZY_REPORT_SHAME_REVIEWER_FALLBACK_MODELS": "kimi/kimi-for-coding",
                 "LAZY_REPORT_SHAME_REVIEWER_COMMAND": "printf 'VERDICT: PASS\\nCRITIQUE: fixture reviewer confirms proof boundary.\\n'",
             },
             check=False,
@@ -132,6 +152,7 @@ def main() -> None:
             "auto-cross-provider-review invokes configured reviewer command",
             "hook-owned receipt, metadata, and reviewer output are written",
             "checker accepts the same stop after the generated receipt is attached",
+            "reviewer verdict parser ignores echoed prompt instructions",
             "reviewer fallback switches model after missing explicit verdict",
             "zai authors are assigned a Kimi-family reviewer by default",
         ],
