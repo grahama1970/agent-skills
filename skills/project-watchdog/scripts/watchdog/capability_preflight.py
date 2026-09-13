@@ -44,8 +44,15 @@ def _probe_gh() -> tuple[bool, str]:
 
 
 def _probe_triage_runner() -> tuple[bool, str]:
-    runner = Path.home() / ".pi" / "agent" / "skills" / "triage-error" / "run.sh"
-    if not runner.is_file():
+    # Skills tree relocated to ~/.agents/skills (2026-09); probe the moved
+    # canonical location first, then the legacy ~/.pi path, so a tree move
+    # cannot silently park every repair dispatch.
+    candidates = [
+        Path.home() / ".agents" / "skills" / "triage-error" / "run.sh",
+        Path.home() / ".pi" / "agent" / "skills" / "triage-error" / "run.sh",
+    ]
+    runner = next((p for p in candidates if p.is_file()), None)
+    if runner is None:
         return False, "triage_runner_not_discoverable"
     p = _run([str(runner), "classify", "--text", "probe", "--layer", "tau", "--contract", "tau"])
     return (p.returncode == 0, "contract_ok" if p.returncode == 0 else "triage_contract_probe_failed")
