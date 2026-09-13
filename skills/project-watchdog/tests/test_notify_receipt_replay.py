@@ -80,3 +80,33 @@ def test_park_on_quota_carries_backlog_snapshot():
     assert res["parked_backlog"]["routable_count"] == 25
     assert res["parked_backlog"]["issue_refs"] == ["agent-skills#1658"]
     assert th.park_on_quota("codex", "unrelated hard failure")["parked"] is False
+
+
+def test_ticket_card_renders_plain_spoken_dry_run(monkeypatch):
+    monkeypatch.setattr(b, "_issue_card", lambda repo, issue: {
+        "title": "Share one terminal-status parser with the renderer",
+        "target": "extensions/pi/lazy-report-shame-shame-shame",
+        "current_state": "Checker can skip an invalid final status.",
+        "requested_outcome": "A single terminal JSON control-frame selector.",
+        "required_proof": "skills/agentic-evals/run.sh run skills/shame/fixtures/agentic_eval.json",
+    })
+    ev = {
+        "repo": "grahama1970/agent-skills", "issue": 1620,
+        "status": "DRY_RUN", "action": "ticket_repair", "summary": "would reserve primary/main",
+        "dir": "project-watchdog-test", "apply": False,
+        "ticket": b._issue_card("grahama1970/agent-skills", "1620"),
+        "agents": "classifier=project-watchdog router; fixer=$ask tau-dag; reviewer=Tau reviewer",
+    }
+    out = b._fmt(ev)
+    assert "ticket: Share one terminal-status parser with the renderer" in out
+    assert "problem: Checker can skip an invalid final status." in out
+    assert "dispatch: no work was started; this was a dry-run preview" in out
+    assert "agents: classifier=project-watchdog router; fixer=$ask tau-dag; reviewer=Tau reviewer" in out
+
+
+def test_human_blocker_message_names_required_action():
+    ev = {"repo": "acme/api", "issue": 7, "status": "NEEDS_ATTENTION", "action": "ticket_repair",
+          "summary": "operator approval required", "dir": "project-watchdog-test",
+          "requires_human_input": True, "next_steps": ["approve canary queue then rerun watchdog eval"]}
+    out = b._fmt(ev)
+    assert "human needed: approve canary queue then rerun watchdog eval" in out

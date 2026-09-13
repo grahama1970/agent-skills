@@ -289,6 +289,80 @@ def _agent_next_steps(r: dict, handled: dict) -> list[str]:
     return []
 
 
+_ISSUE_CARD_CACHE: dict[tuple[str, str], dict] = {}
+
+
+def _markdown_sections(body: str) -> dict[str, str]:
+    sections: dict[str, list[str]] = {}
+    current = ""
+    for line in (body or "").splitlines():
+        if line.startswith("## "):
+            current = line[3:].strip().lower()
+            sections.setdefault(current, [])
+            continue
+        if current:
+            sections.setdefault(current, []).append(line)
+    return {k: "\n".join(v).strip() for k, v in sections.items() if "\n".join(v).strip()}
+
+
+def _issue_card(repo: str, issue: str) -> dict:
+    """Best-effort plain-English ticket card for operator/project-agent alerts."""
+    if not repo or not issue or "UNKNOWN(" in repo or "UNKNOWN(" in str(issue):
+        return {}
+    key = (repo, str(issue))
+    if key in _ISSUE_CARD_CACHE:
+        return _ISSUE_CARD_CACHE[key]
+    try:
+        import subprocess
+        out = subprocess.run(
+            ["gh", "issue", "view", str(issue), "-R", repo, "--json", "title,body,labels"],
+            capture_output=True, text=True, timeout=20,
+        )
+        if out.returncode != 0:
+            return {}
+        raw = json.loads(out.stdout or "{}")
+    except Exception:
+        return {}
+    sec = _markdown_sections(raw.get("body") or "")
+    card = {
+        "title": raw.get("title") or "",
+        "target": sec.get("target") or "",
+        "current_state": sec.get("current state") or sec.get("observed failure") or "",
+        "requested_outcome": sec.get("requested outcome") or sec.get("expected behavior") or "",
+        "required_proof": sec.get("required proof") or "",
+        "labels": [x.get("name") for x in raw.get("labels", []) if x.get("name")],
+    }
+    _ISSUE_CARD_CACHE[key] = card
+    return card
+
+
+def _role_summary(handled: dict) -> str:
+    phases = handled.get("workflow_phases") or []
+    classifier = next((p.get("agent") for p in phases if "classif" in " ".join([
+        str(p.get("agent", "")), str(p.get("executor", "")), str(p.get("id", ""))]).lower()), None)
+    fixer = handled.get("selected_agent") or next((p.get("agent") for p in phases if p.get("id") in {
+        "creator", "ticket_repair", "repair", "native_tau_dispatch"}), None)
+    reviewer = next((p.get("agent") for p in phases if "review" in " ".join([
+        str(p.get("agent", "")), str(p.get("executor", "")), str(p.get("id", ""))]).lower()), None)
+    if handled.get("action") == "ticket_repair":
+        classifier = classifier or "project-watchdog router"
+        fixer = fixer or "$ask tau-dag creator"
+        reviewer = reviewer or "$ask tau-dag reviewer"
+    bits = []
+    if classifier:
+        bits.append(f"classifier={classifier}")
+    if fixer:
+        bits.append(f"fixer={fixer}")
+    if reviewer:
+        bits.append(f"reviewer={reviewer}")
+    return "; ".join(bits)
+
+
+def _clip(text: str, n: int = 240) -> str:
+    text = " ".join(str(text or "").split())
+    return text if len(text) <= n else text[: n - 1] + "…"
+
+
 def summarize(receipt_dir: Path) -> dict | None:
     rj = receipt_dir / "receipt.json"
     if not rj.is_file():
@@ -371,6 +445,9 @@ def summarize(receipt_dir: Path) -> dict | None:
         "not_before": handled.get("not_before") or r.get("not_before"),
         "resolution_ref": handled.get("resolution_ref") or r.get("resolution_ref"),
         "next_steps": _agent_next_steps(r, handled),
+        "ticket": _issue_card(str(repo), str(issue)),
+        "agents": _role_summary(handled),
+        "apply": r.get("apply"),
         "identity": {
             "event_id": event_id,
             "run_id": run_id,
@@ -383,10 +460,26 @@ def summarize(receipt_dir: Path) -> dict | None:
 
 
 def _fmt(ev: dict) -> str:
+    ticket = ev.get("ticket") or {}
     lines = [
         f"[{ev.get('status')}] issue {ev.get('repo')}#{ev.get('issue')} ({ev.get('action')})",
-        f"summary: {ev.get('summary')}",
     ]
+    if ticket.get("title"):
+        lines.append(f"ticket: {ticket['title']}")
+    if ticket.get("target"):
+        lines.append(f"target: {_clip(ticket['target'], 180)}")
+    if ticket.get("current_state"):
+        lines.append(f"problem: {_clip(ticket['current_state'])}")
+    if ticket.get("requested_outcome"):
+        lines.append(f"wanted: {_clip(ticket['requested_outcome'])}")
+    if ev.get("summary"):
+        lines.append(f"status: {_clip(ev.get('summary'))}")
+    if ev.get("status") == "DRY_RUN" or ev.get("apply") is False:
+        lines.append("dispatch: no work was started; this was a dry-run preview")
+    if ticket.get("required_proof"):
+        lines.append(f"proof needed: {_clip(ticket['required_proof'])}")
+    if ev.get("agents"):
+        lines.append(f"agents: {ev['agents']}")
     if ev.get("triage_code"):
         lines.append(f"triage-error: {ev['triage_code']} — {ev.get('triage_cause')}")
     if ev.get("seats"):
@@ -396,7 +489,8 @@ def _fmt(ev: dict) -> str:
     if ev.get("pydantic_violations"):
         lines.append("PYDANTIC VIOLATIONS: " + " | ".join(ev["pydantic_violations"]))
     if ev.get("requires_human_input"):
-        lines.append("NEEDS HUMAN INPUT")
+        human = ev.get("next_steps") or []
+        lines.append("human needed: " + ("; ".join(human) if human else "read the ticket's required human input, perform it, then let watchdog retry"))
     elif ev.get("next_steps"):
         lines.append("agent next: " + "; ".join(ev["next_steps"]))
     lines.append(f"receipt: {RECEIPTS / ev['dir']}")
