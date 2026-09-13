@@ -27,6 +27,7 @@ from .acceptance_floor import (
 from .campaign_contract import run_contract_campaign, validate_request
 from .docker_runtime import extract_docker_run_image, validate_docker_run_command
 from .invariant_campaign import load_profile
+from .qualify_judges import validate_qualification_receipt
 
 _ADAPTER_PATH = Path(__file__).resolve()
 for _candidate in (_ADAPTER_PATH.parents[3],):
@@ -36,6 +37,39 @@ for _candidate in (_ADAPTER_PATH.parents[3],):
 from common.security_authorization import validate_target_authorization  # noqa: E402
 
 ADAPTER_SCHEMA = "battle.production_adapter_request.v1"
+
+
+def _evaluator_image_from_lock(lock_path: str) -> str:
+    lock = json.loads(Path(lock_path).read_text(encoding="utf-8"))
+    if isinstance(lock.get("evaluator_image"), str) and lock["evaluator_image"].strip():
+        return lock["evaluator_image"]
+    commit = lock.get("commit", "unknown")
+    digest = lock.get("bundle_manifest_sha256") or lock.get("sha256")
+    if not isinstance(digest, str) or not digest.startswith("sha256:"):
+        raise ValueError("ranked campaign lock missing evaluator digest")
+    return f"{lock.get('source_repo', 'local-evaluator')}@{commit}:{digest}"
+
+
+def _validate_ranked_judge_qualification(adapter_request: dict[str, Any], request: dict[str, Any]) -> dict[str, Any]:
+    qualification = adapter_request.get("judge_qualification")
+    if not isinstance(qualification, dict):
+        return {"schema": "battle.ranked_judge_qualification_gate.v1", "status": "BLOCKED", "problems": ["judge-qualification-missing"]}
+    receipt_path = qualification.get("receipt_path")
+    suite_digest = qualification.get("qualification_suite_sha256")
+    if not isinstance(receipt_path, str) or not isinstance(suite_digest, str):
+        return {"schema": "battle.ranked_judge_qualification_gate.v1", "status": "BLOCKED", "problems": ["judge-qualification-fields-missing"]}
+    try:
+        validation = validate_qualification_receipt(
+            receipt_path,
+            judge_paths={"security": request["judge"], "functional": request["functional_judge"]},
+            evaluator_image=_evaluator_image_from_lock(request["lock_path"]),
+            qualification_suite_sha256=suite_digest,
+            interpretation_config=dict(request.get("judge_params") or {}),
+        )
+    except Exception as exc:
+        return {"schema": "battle.ranked_judge_qualification_gate.v1", "status": "BLOCKED", "problems": [f"judge-qualification-invalid:{exc}"]}
+    validation["schema"] = "battle.ranked_judge_qualification_gate.v1"
+    return validation
 
 
 def build_contract_request(adapter_request: dict[str, Any]) -> dict[str, Any]:
@@ -52,6 +86,10 @@ def build_contract_request(adapter_request: dict[str, Any]) -> dict[str, Any]:
                         trusted enrollment record selects the exact bundle bytes
       candidate_cases: optional list of extra retained case dirs (advisory adds;
                        they appear in lineage only — case admission is plan-level)
+      ranked_campaign: true requires judge_qualification before launch
+      judge_qualification: {receipt_path, qualification_suite_sha256}; the
+                       receipt must match the locked evaluator image, suite
+                       digest, Judge file digests, and base_request.judge_params
       post_acceptance_research: optional Phase 2 knobs. After Phase 1 passes,
                        Battle emits a generic contract variation plan whose
                        Phase 2 is project-state + Dogpile + Ask one-shot and
@@ -167,6 +205,19 @@ def run_production_round(adapter_request: dict[str, Any]) -> dict[str, Any]:
                     "retained_acceptance_bundle": retained_bundle,
                     "acceptance_floor": floor_receipt,
                     "target_launches": 0}
+    qualification_receipt = None
+    if adapter_request.get("ranked_campaign") is True:
+        qualification_receipt = _validate_ranked_judge_qualification(adapter_request, request)
+        if qualification_receipt["status"] != "PASS":
+            return {"schema": "battle.production_adapter_round.v1",
+                    "status": "BLOCKED",
+                    "failure_code": "judge-qualification-invalid",
+                    "authorization_receipt": receipt,
+                    "docker_boundary": docker_receipt,
+                    "project_contract_enrollment": enrollment_receipt,
+                    "acceptance_floor": floor_receipt,
+                    "judge_qualification": qualification_receipt,
+                    "target_launches": 0}
     try:
         campaign = run_contract_campaign(request)
     except ValueError as exc:
@@ -176,6 +227,7 @@ def run_production_round(adapter_request: dict[str, Any]) -> dict[str, Any]:
                 "authorization_receipt": receipt,
                 "docker_boundary": docker_receipt,
                 "project_contract_enrollment": enrollment_receipt,
+                "judge_qualification": qualification_receipt,
                 "problems": [str(exc)],
                 "target_launches": 0}
     executed_floor_receipt = None
@@ -193,6 +245,7 @@ def run_production_round(adapter_request: dict[str, Any]) -> dict[str, Any]:
                     "project_contract_enrollment": enrollment_receipt,
                     "retained_acceptance_bundle": retained_bundle,
                     "acceptance_floor": floor_receipt,
+                    "judge_qualification": qualification_receipt,
                     "executed_acceptance_floor": executed_floor_receipt,
                     "target_launches": campaign["aggregation"].get("observed_target_launch_count", campaign["aggregation"]["cases_total"]),
                     "campaign": campaign}
@@ -221,6 +274,7 @@ def run_production_round(adapter_request: dict[str, Any]) -> dict[str, Any]:
             "project_contract_enrollment": enrollment_receipt,
             "retained_acceptance_bundle": retained_bundle,
             "acceptance_floor": floor_receipt,
+            "judge_qualification": qualification_receipt,
             "executed_acceptance_floor": executed_floor_receipt,
             "post_acceptance_phase_plan": phase_plan,
             "target_launches": campaign["aggregation"].get("observed_target_launch_count", campaign["aggregation"]["cases_total"]),

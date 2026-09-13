@@ -1240,6 +1240,14 @@ def probe_b13_receipt_store_crash_recovery(summary_path: Path) -> int:
     )
 
 
+def probe_b23_judge_qualification_gate(summary_path: Path) -> int:
+    return probe_pytest_contracts(
+        summary_path,
+        suite="battle-b23-require-qualification-for-the-exact-judge-configuration",
+        tests=["test_judge_qualification_gate.py"],
+    )
+
+
 
 def probe_b05_strict_campaign_acceptance_envelopes(summary_path: Path) -> int:
     return probe_pytest_contracts(
@@ -4774,6 +4782,8 @@ def main() -> int:
                 suite=args.suite,
                 tests=["test_functional_exact_numeric_slots.py"],
             )
+        if args.suite == "battle-b23-require-qualification-for-the-exact-judge-configuration":
+            return probe_b23_judge_qualification_gate(args.summary)
         if args.suite == "battle-functional-judge":
             return probe_battle_functional_judge(args.summary)
         if args.suite == "battle-commentary-causality":

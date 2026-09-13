@@ -607,6 +607,15 @@
         "deterministic": true
       },
       "claim_semantics": "control_flow"
+    },
+    {
+      "id": "battle.judge_qualification.exact_configuration",
+      "description": "Ranked Battle production campaigns require a passing Judge qualification receipt keyed by evaluator image, qualification-suite digest, Judge file digests, and interpretation configuration before target launch.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      },
+      "claim_semantics": "control_flow"
     }
   ],
   "seams": [
@@ -3374,6 +3383,39 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/battle-b22-remove-lossy-numeric-aliases-from-functional-slot-matching.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 400
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-b23-require-qualification-for-the-exact-judge-configuration",
+      "category": "battle-b23-require-qualification-for-the-exact-judge-configuration",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.judge_qualification.exact_configuration"
+      ],
+      "seams": [
+        "judge_qualification.production_adapter"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b23-require-qualification-for-the-exact-judge-configuration --summary /tmp/battle-agentic-evals/battle-b23-require-qualification-for-the-exact-judge-configuration.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b23-require-qualification-for-the-exact-judge-configuration"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/battle-b23-require-qualification-for-the-exact-judge-configuration.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 400
