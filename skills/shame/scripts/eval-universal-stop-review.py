@@ -42,6 +42,7 @@ def main() -> None:
     source = INDEX.read_text(encoding="utf-8")
     assert 'const UNIVERSAL_STOP_REVIEW = !flagDisabled(process.env.LAZY_REPORT_SHAME_UNIVERSAL_STOP_REVIEW ?? "1");' in source
     assert 'const forceStatus = UNIVERSAL_STOP_REVIEW || Boolean(budget.current)' in source
+    assert 'bindings?.["pi-subagents.stop-review/1"]?.reviewer === true' in source
 
     missing = call_checker("Paris.\n")
     assert missing["decision"] == "reject", missing
@@ -72,6 +73,7 @@ def main() -> None:
             "extension defaults universal stop review on",
             "terminal stops are forced into the status contract",
             "unreviewed terminal status is rejected as pi_harness-owned cross-family review work",
+            "the designated pi-subagents stop reviewer bypasses recursive Shame terminal rewriting",
         ],
     }, indent=2))
 

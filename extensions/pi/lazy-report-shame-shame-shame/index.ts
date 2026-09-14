@@ -578,9 +578,10 @@ function authorProviderForMessage(message: any): string {
 }
 
 async function runStopReviewer(text: string, status: any, message: any, ctx: any): Promise<{ text: string; receiptPath: string; verdict: string } | null> {
-  if (!status) return null;
+  const dbg = (line: string) => { try { appendFileSync("/tmp/stop-reviewer-debug.log", `${new Date().toISOString()} ${line}\n`); } catch {} };
+  if (!status) { dbg("no status"); return null; }
+  dbg(`status state=${String(status?.state)} bridge=${typeof (globalThis as Record<PropertyKey, unknown>)[STOP_REVIEW_BRIDGE_KEY]}`);
   const bridge = (globalThis as Record<PropertyKey, unknown>)[STOP_REVIEW_BRIDGE_KEY];
-  if (typeof bridge !== "function") return null;
   const reviewStatus = withoutAgentAuthoredReviewProof(status);
   const reviewText = replaceTerminalStatusJson(text, reviewStatus) || text;
   let decision: any = null;
@@ -606,11 +607,19 @@ async function runStopReviewer(text: string, status: any, message: any, ctx: any
       timeout: Number(process.env.LAZY_REPORT_SHAME_REVIEW_TIMEOUT_MS || 125000),
       env: process.env,
     });
-    if (proc.error || proc.status !== 0) return null;
-    try { decision = JSON.parse(String(proc.stdout || "{}")); } catch { return null; }
+    if (proc.error || proc.status !== 0) {
+      dbg(`fallback spawn failed: status=${proc.status} error=${proc.error ? String(proc.error) : "none"} stderr=${String(proc.stderr || "").slice(0, 400)}`);
+      return null;
+    }
+    dbg("fallback spawn ok, parsing stdout");
+    try { decision = JSON.parse(String(proc.stdout || "{}")); } catch (parseError) {
+      dbg(`fallback stdout parse failed: ${String(parseError).slice(0, 200)} stdout=${String(proc.stdout || "").slice(0, 300)}`);
+      return null;
+    }
+    dbg(`fallback decision receipt=${String(decision?.receiptPath || "")}`);
   }
   const receiptPath = String(decision?.receiptPath || "");
-  if (!receiptPath || !existsSync(receiptPath)) return null;
+  if (!receiptPath || !existsSync(receiptPath)) { dbg(`no receiptPath or missing file: ${receiptPath}`); return null; }
   const patched = appendProofToStatusText(reviewText, reviewStatus, receiptPath);
   if (!patched) return null;
   return { text: patched, receiptPath, verdict: String(decision?.verdict || "") };
@@ -1413,6 +1422,14 @@ function makeCandidate(ctx: any, userText: string, assistantEntryId: string, ass
 }
 
 export default function lazyReportShameShameShame(pi: any) {
+  if (process.env.PI_SUBAGENT_CHILD === "1") {
+    try {
+      const bindings = JSON.parse(process.env.PI_SUBAGENT_EXTENSION_BINDINGS || "{}");
+      if (bindings?.["pi-subagents.stop-review/1"]?.reviewer === true) return;
+    } catch {
+      // Malformed bindings are not authority to bypass the guard.
+    }
+  }
   let budget: ReturnType<typeof installTaskBudget>;
   let sessionGuardActive = false;
   let turnGuardActive = false;
