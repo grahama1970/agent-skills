@@ -35,8 +35,13 @@ def main() -> None:
     assert "agent-work" not in labels
 
     run("git", "fetch", "origin", "main", "--quiet")
-    routing = json.loads(run("git", "show", "origin/main:skills/project-watchdog/config/seat-routing.json"))
-    assert "opencode_author" not in routing["routes"]
+    obsolete = subprocess.run(
+        ["git", "cat-file", "-e", "origin/main:skills/project-watchdog/config/seat-routing.json"],
+        cwd=ROOT,
+        capture_output=True,
+        check=False,
+    )
+    assert obsolete.returncode != 0
     print("PROJECT_WATCHDOG_V2_LIVE_TICKET_OK")
 
 
