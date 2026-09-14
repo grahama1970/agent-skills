@@ -578,48 +578,24 @@ function authorProviderForMessage(message: any): string {
 }
 
 async function runStopReviewer(text: string, status: any, message: any, ctx: any): Promise<{ text: string; receiptPath: string; verdict: string } | null> {
-  const dbg = (line: string) => { try { appendFileSync("/tmp/stop-reviewer-debug.log", `${new Date().toISOString()} ${line}\n`); } catch {} };
-  if (!status) { dbg("no status"); return null; }
-  dbg(`status state=${String(status?.state)} bridge=${typeof (globalThis as Record<PropertyKey, unknown>)[STOP_REVIEW_BRIDGE_KEY]}`);
+  if (!status) return null;
   const bridge = (globalThis as Record<PropertyKey, unknown>)[STOP_REVIEW_BRIDGE_KEY];
+  if (typeof bridge !== "function") return null;
   const reviewStatus = withoutAgentAuthoredReviewProof(status);
   const reviewText = replaceTerminalStatusJson(text, reviewStatus) || text;
-  let decision: any = null;
-  if (typeof bridge === "function") {
-    try {
-      decision = await (bridge as (input: any) => Promise<any>)({
-        text: reviewText,
-        status: reviewStatus,
-        authorProvider: authorProviderForMessage(message),
-        ctx,
-      });
-    } catch {
-      decision = null;
-    }
-  }
-  if (!decision || !String(decision?.receiptPath || "")) {
-    // Bridge absent or produced no receipt: fall back to the hook-owned
-    // subprocess reviewer (--no-extensions => the reviewer's own stop is
-    // never gated; recursion impossible by construction). Restored 2026-09-13.
-    const proc = spawnSync("node", [join(EXTENSION_DIR, "auto-cross-provider-review.mjs")], {
-      input: JSON.stringify({ text: reviewText, status: reviewStatus, author_provider: authorProviderForMessage(message) }),
-      encoding: "utf8",
-      timeout: Number(process.env.LAZY_REPORT_SHAME_REVIEW_TIMEOUT_MS || 125000),
-      env: process.env,
+  let decision: any;
+  try {
+    decision = await (bridge as (input: any) => Promise<any>)({
+      text: reviewText,
+      status: reviewStatus,
+      authorProvider: authorProviderForMessage(message),
+      ctx,
     });
-    if (proc.error || proc.status !== 0) {
-      dbg(`fallback spawn failed: status=${proc.status} error=${proc.error ? String(proc.error) : "none"} stderr=${String(proc.stderr || "").slice(0, 400)}`);
-      return null;
-    }
-    dbg("fallback spawn ok, parsing stdout");
-    try { decision = JSON.parse(String(proc.stdout || "{}")); } catch (parseError) {
-      dbg(`fallback stdout parse failed: ${String(parseError).slice(0, 200)} stdout=${String(proc.stdout || "").slice(0, 300)}`);
-      return null;
-    }
-    dbg(`fallback decision receipt=${String(decision?.receiptPath || "")}`);
+  } catch {
+    return null;
   }
   const receiptPath = String(decision?.receiptPath || "");
-  if (!receiptPath || !existsSync(receiptPath)) { dbg(`no receiptPath or missing file: ${receiptPath}`); return null; }
+  if (!receiptPath || !existsSync(receiptPath)) return null;
   const patched = appendProofToStatusText(reviewText, reviewStatus, receiptPath);
   if (!patched) return null;
   return { text: patched, receiptPath, verdict: String(decision?.verdict || "") };

@@ -43,6 +43,7 @@ def main() -> None:
     assert 'const UNIVERSAL_STOP_REVIEW = !flagDisabled(process.env.LAZY_REPORT_SHAME_UNIVERSAL_STOP_REVIEW ?? "1");' in source
     assert 'const forceStatus = UNIVERSAL_STOP_REVIEW || Boolean(budget.current)' in source
     assert 'bindings?.["pi-subagents.stop-review/1"]?.reviewer === true' in source
+    assert 'auto-cross-provider-review.mjs' not in source
 
     missing = call_checker("Paris.\n")
     assert missing["decision"] == "reject", missing
