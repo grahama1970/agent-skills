@@ -71,10 +71,24 @@ if (followUps.length !== 1 || !followUps[0].text.startsWith("SHAME_HARNESS_COURS
 if (!followUps[0].text.includes("do not create, attach, or discuss review proof")) {
   throw new Error("review repair was delegated to the agent");
 }
+
+for (const fn of handlers.input ?? []) await fn({ text: followUps[0].text, source: "extension" }, ctx);
+const repeatedEvent = { ...event, id: "assistant-eval-retry", message: { ...event.message, id: "assistant-eval-retry" } };
+let repeatedReplacement;
+for (const fn of handlers.message_end ?? []) repeatedReplacement = await fn(repeatedEvent, ctx);
+for (const fn of handlers.agent_end ?? []) await fn({}, ctx);
+if (!repeatedReplacement || repeatedReplacement.message?.content?.length !== 0) {
+  throw new Error("repeated unreviewed terminal response was not suppressed");
+}
+if (followUps.length !== 1) {
+  throw new Error("missing reviewer caused an infinite harness course-correction loop");
+}
+
 console.log(JSON.stringify({
   schema: "lazy_report_shame.review_unavailable_course_correction_eval.v1",
   status: "PASS",
   unreviewed_terminal_suppressed: true,
   harness_course_correction_queued: true,
+  repeat_course_correction_suppressed: true,
   agent_review_repair_forbidden: true,
 }, null, 2));

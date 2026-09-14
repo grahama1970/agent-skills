@@ -1423,6 +1423,7 @@ export default function lazyReportShameShameShame(pi: any) {
   let shameSkillContractRead = false;
   let currentUserText = "";
   let pendingFollowUp: string | null = null;
+  let harnessReviewCorrectionIssuedForTurn = false;
   // Feature 1 (from ponytail): session-persisted guard mode via custom entries.
   // off = no enforcement; normal = mutating turns need status JSON; strict = every substantive turn.
   let sessionMode: string = DEFAULT_SHAME_MODE;
@@ -1456,7 +1457,10 @@ export default function lazyReportShameShameShame(pi: any) {
     beginGuardTurn(text, event.source);
     // Preserve the human's original question across guard-injected follow-ups;
     // overwriting it with CONTINUE/RETRY text silently disabled the answer gate.
-    if (event.source !== "extension") currentUserText = text;
+    if (event.source !== "extension") {
+      currentUserText = text;
+      harnessReviewCorrectionIssuedForTurn = false;
+    }
     pendingFollowUp = null;
     mutatingTurn = false;
     // Derive turn state anew. A previous correction must not contaminate a
@@ -1652,10 +1656,16 @@ export default function lazyReportShameShameShame(pi: any) {
           continuation: true,
           message: event.message,
         });
-        // Fail closed: never expose an unreviewed terminal answer and never
-        // exhaust into a terminal notice. The harness owns retrying its reviewer.
-        pendingFollowUp = harnessReviewUnavailableCourseCorrection(reviewPacketPath);
-        ctx?.ui?.notify?.("Cross-provider review did not run; continuing with harness-owned course correction.", "warning");
+        // Fail closed without an infinite model loop: one harness-owned
+        // continuation is allowed per human turn. If its reviewer retry also
+        // fails, keep the answer suppressed and return control to the operator.
+        if (!harnessReviewCorrectionIssuedForTurn) {
+          harnessReviewCorrectionIssuedForTurn = true;
+          pendingFollowUp = harnessReviewUnavailableCourseCorrection(reviewPacketPath);
+          ctx?.ui?.notify?.("Cross-provider review did not run; continuing with harness-owned course correction.", "warning");
+        } else {
+          ctx?.ui?.notify?.("Cross-provider review is still unavailable; the unreviewed response remains suppressed.", "warning");
+        }
         return { message: { ...event.message, content: [] } };
       }
       if (check.decision !== "reject") {

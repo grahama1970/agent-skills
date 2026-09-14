@@ -1202,10 +1202,11 @@
           "lazy_report_shame.review_unavailable_course_correction_eval.v1",
           "\"unreviewed_terminal_suppressed\": true",
           "\"harness_course_correction_queued\": true",
+          "\"repeat_course_correction_suppressed\": true",
           "\"agent_review_repair_forbidden\": true"
         ]
       },
-      "proves": "The production extension callback path suppresses an unreviewed terminal response and queues harness-owned course correction when the Pi-subagents review bridge does not return a receipt."
+      "proves": "The production extension callback path suppresses an unreviewed terminal response, queues one harness-owned course correction, and does not loop when the Pi-subagents review bridge remains unavailable."
     },
     {
       "name": "vague-status-report-concrete-anchors",

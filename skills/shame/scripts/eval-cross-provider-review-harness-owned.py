@@ -70,6 +70,7 @@ def main() -> None:
     assert all(token not in index_text for token in FORBIDDEN), "agent-visible impossible repair action survived in index.ts"
     assert "harnessReviewUnavailableCourseCorrection" in index_text, "hook review failure must queue course correction"
     assert "pendingFollowUp = harnessReviewUnavailableCourseCorrection(reviewPacketPath)" in index_text, "missing reviewer must continue through the harness"
+    assert "if (!harnessReviewCorrectionIssuedForTurn)" in index_text, "course correction must be bounded to one per human turn"
     assert "return { message: { ...event.message, content: [] } };" in index_text, "unreviewed terminal content must be suppressed"
     assert "harnessReviewUnavailableNotice" not in index_text, "missing reviewer must not terminal-stop with a notice"
     assert "Cross-provider review infrastructure is still unavailable" not in index_text, "review retry exhaustion must never become a terminal answer"
@@ -85,7 +86,7 @@ def main() -> None:
             "missing review is marked owner=pi_harness and agent_actionable=false",
             "forbidden agent repair actions are absent",
             "run.sh preflight passes valid status while marking review pending for the hook",
-            "index.ts queues harness-owned course correction when the reviewer does not run",
+            "index.ts queues at most one harness-owned course correction per human turn",
             "checker PASS with pre-attached review proof still routes through mustRunHarnessReview",
             "hook strips any agent-supplied review proof before rerunning the reviewer",
         ],

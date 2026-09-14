@@ -149,8 +149,9 @@ block yourself.
   Same-provider self-review, agent-supplied review prose, and synthetic/local
   receipt claims are rejected; if the reviewer rejects, the guard restarts with
   the reviewer critique. If the reviewer cannot run, the hook suppresses the
-  unreviewed terminal response and queues harness-owned course correction; it
-  never stops or asks the agent to fabricate review proof.
+  unreviewed terminal response and queues at most one harness-owned course
+  correction per human turn; a repeated failure stays suppressed without
+  looping the model or asking it to fabricate review proof.
 - A guarded `done` answer that names an `$agentic-evals` gate as READY, green,
   passing, verified, or proof-bearing must cite a fresh local
   `agentic_evals.report.v2` proof with `readiness=READY` and zero failing
