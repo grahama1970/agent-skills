@@ -26,15 +26,6 @@
         "review",
         "chat"
       ]
-    },
-    "opencode_author": {
-      "executor": "opencode.serve",
-      "model": "oc-author",
-      "capabilities": [
-        "repo_workspace_author",
-        "review",
-        "chat"
-      ]
     }
   },
   "seat_profiles": {
