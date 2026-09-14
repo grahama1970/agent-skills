@@ -181,6 +181,7 @@ def dispatch_text_reasoning(
     model: str | None = None,
     timeout_s: float = 240.0,
     tau_repo: Path | None = None,
+    exact_model: bool = False,
 ) -> tuple[dict[str, Any] | None, dict[str, Any]]:
     """Route one text-reasoning prompt through the Tau node with model fallback.
 
@@ -188,9 +189,10 @@ def dispatch_text_reasoning(
     override with ``PERSONA_DREAM_SCILLM_MODEL_CHAIN``). A quota/rate-limited
     model (429 / exhausted groups) falls through to the next funded lane;
     ``TauRoutingError`` still raises. Returns ``(parsed_json, tau_receipt)``;
-    the receipt carries ``model_chain`` and ``model_fallback_attempts``.
+    the receipt carries ``model_chain`` and ``model_fallback_attempts``. Set
+    ``exact_model=True`` when provider identity is part of the proof contract.
     """
-    chain = _model_chain(model)
+    chain = [model] if exact_model and model else _model_chain(model)
     attempts: list[dict[str, Any]] = []
     last_receipt: dict[str, Any] = {}
     for candidate in chain:

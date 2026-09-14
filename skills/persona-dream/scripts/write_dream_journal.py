@@ -120,6 +120,45 @@ def traverse_memory_web(seed_ids, docs, profile=None, entity_index=None,
     return web[:max_nodes]
 
 
+def load_journal_memory_selection(cyc: Path) -> dict:
+    """Load project-agent-selected journal memory context, if present."""
+    for name in ("journal_memory_selection.json", "journal_memory_selection.v1.json"):
+        path = cyc / name
+        if path.is_file():
+            try:
+                payload = json.loads(path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                return {"status": "BLOCKED", "error": f"invalid_json:{name}"}
+            return payload if isinstance(payload, dict) else {"status": "BLOCKED", "error": f"non_object:{name}"}
+    return {}
+
+
+def format_journal_memory_selection(selection: dict) -> str:
+    if not selection:
+        return ""
+    rows = selection.get("selected") if isinstance(selection.get("selected"), list) else []
+    if not rows:
+        return ""
+    lines = [
+        "PROJECT-AGENT MEMORY SELECTION — additional journal source context.",
+        f"- Query: {selection.get('query', '')}",
+        f"- Selection mode: {selection.get('selection_mode', 'unspecified')}",
+        "- Use: dream fuel and source boundaries, not a report outline.",
+    ]
+    for row in rows[:12]:
+        if not isinstance(row, dict):
+            continue
+        intensity = row.get("intensity") if isinstance(row.get("intensity"), dict) else {}
+        lines.append(
+            "- "
+            f"{row.get('source_role', 'supporting_context')} "
+            f"from {row.get('source_collection', 'unknown')} "
+            f"[{intensity.get('bucket', 'unknown')}]: "
+            f"{str(row.get('text') or '').strip()[:420]}"
+        )
+    return "\n".join(lines)
+
+
 def _continuity_lines(ledger: dict | None) -> str:
     """Inject WHO the persona is (durable core, persistent conflicts) and WHERE
     it is now (recent arc_state) so the reflection builds on the continuing,
@@ -162,6 +201,8 @@ def build_prompt(cyc: Path, docs: dict, profile=None, persona_name: str = "Embry
         entity_index = idx
     web = traverse_memory_web(seed_ids, docs, profile=profile,
                               entity_index=entity_index, hops=2)
+    journal_selection = load_journal_memory_selection(cyc)
+    journal_selection_lines = format_journal_memory_selection(journal_selection)
     tags = [(x["emotional_tag"], x["weight"]) for x in w]
     states = "\n".join(f"- {t.get('tom_state_type')}: {t.get('statement')}" for t in tom[:5])
     competing = ", ".join(f"{t}({round(v,2)})" for t, v in tags)
@@ -180,7 +221,8 @@ def build_prompt(cyc: Path, docs: dict, profile=None, persona_name: str = "Embry
         "objects you carry, and what you felt about each). Let your reflection "
         "MOVE across this web; ground it in these specific people/places/objects, "
         "not abstractions:\n" + (web_lines or "(no linked web)") + "\n\n"
-        "RULES — this is self-reflection that DEEPENS the conflict, not resolves it:\n"
+        + (journal_selection_lines + "\n\n" if journal_selection_lines else "")
+        + "RULES — this is self-reflection that DEEPENS the conflict, not resolves it:\n"
         "- REINFORCE and EXPAND the conflict. These feelings pull against each "
         "other (e.g. wanting closeness AND keeping a boundary). Turn the tension "
         "over; find a NEW facet of it, or a further question inside it, or what it "
@@ -213,7 +255,7 @@ def build_prompt(cyc: Path, docs: dict, profile=None, persona_name: str = "Embry
     return {"prompt": prompt, "emphasis": sel.get("valence_emphasis"),
             "tags": tags, "cycle": cyc.name, "seed_ids": seed_ids,
             "web_entities": web_entities, "tom_summary": tom_summary,
-            "web_size": len(web)}
+            "web_size": len(web), "journal_memory_selection": journal_selection}
 
 
 def persist_persona_journal(entry: dict, cyc: Path, persona: str) -> dict:
@@ -282,11 +324,20 @@ def main():
     ledger = continuity_ledger.read_ledger(persona, persona_docs)
     meta = build_prompt(cyc, docs, profile=profile, persona_name=persona_name,
                         ledger=ledger)
-    parsed, _ = adapter.dispatch_text_reasoning(
-        meta["prompt"], "persona-dream-journal",
-        output_contract={"journal": "string", "unresolved_tension": "string",
-                         "expanded_understanding": "string",
-                         "mood_label": "string", "mood_description": "string"})
+    authoring = _load("dialogue_authoring")
+    parsed, journal_authoring_validation = authoring.load_authored_journal(cyc)
+    if journal_authoring_validation:
+        (cyc / "journal_authoring_validation.json").write_text(
+            json.dumps(journal_authoring_validation, indent=2, sort_keys=True) + "\n")
+        if not str(journal_authoring_validation.get("status") or "").startswith("PASS_JOURNAL_AUTHORING_"):
+            raise SystemExit(f"BLOCKED_JOURNAL_AUTHORING_RECEIPTS: {journal_authoring_validation.get('failed_gates')}")
+    if parsed is None:
+        parsed, _ = adapter.dispatch_text_reasoning(
+            meta["prompt"], "persona-dream-journal",
+            output_contract={"journal": "string", "unresolved_tension": "string",
+                             "expanded_understanding": "string",
+                             "mood_label": "string", "mood_description": "string"})
+    journal_authoring_plan = parsed.pop("journal_authoring", None) if isinstance(parsed, dict) else None
     # Pydantic FIRST on the model output: no entry building, persistence, or
     # ledger mutation may read an unvalidated LLM dict (deal-killing rule).
     gate = sys.modules.get("pydantic_step_gate") or _load("pydantic_step_gate")
@@ -338,6 +389,19 @@ def main():
     if errs:
         raise SystemExit(f"BLOCKED_JOURNAL_SCHEMA_INVALID: {errs}")
     (cyc / "dream_journal.v1.json").write_text(json.dumps(entry, indent=2) + "\n")
+    if meta.get("journal_memory_selection"):
+        (cyc / "journal_source_provenance.json").write_text(json.dumps({
+            "schema": "persona_dream.journal_source_provenance.v1",
+            "query": (meta.get("journal_memory_selection") or {}).get("query"),
+            "selection_mode": (meta.get("journal_memory_selection") or {}).get("selection_mode"),
+            "selected_count": (meta.get("journal_memory_selection") or {}).get("selected_count"),
+        }, indent=2, sort_keys=True) + "\n")
+    if isinstance(journal_authoring_plan, dict):
+        (cyc / "journal_speech_plan.json").write_text(json.dumps({
+            "schema": "persona_dream.journal_speech_plan.v1",
+            "source": "journal_authoring.json",
+            **journal_authoring_plan,
+        }, indent=2, sort_keys=True) + "\n")
     (cyc / "dream_journal.md").write_text(
         f"# {persona_name}'s journal — {meta['cycle']} "
         f"({meta['emphasis']} emphasis)\n\n"

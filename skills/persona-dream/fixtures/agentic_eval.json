@@ -5,7 +5,7 @@
   "proof_scope": "Agentic-evals is the main Persona Dream pipeline gate. Cases execute run.sh/script entrypoints and read produced artifacts; pytest/unit-test commands are intentionally excluded.",
   "claims": {
     "proves": "Selected Persona Dream pipeline seams execute through real skill entrypoints: Pydantic step boundary triage, video_plan crew fail-closed gate, video_plan artifact production with crew bundle, provider packet dry-run routing, and pipeline-integrity audit surface with blocking finding readback.",
-    "does_not_prove": "Live paid provider generation, human perceptual quality, manual review of every script, or semantic dream quality."
+    "does_not_prove": "Live paid provider generation, human perceptual quality, manual review of every script, semantic dream quality, or live WebGPT/WebKimi journal-authoring readiness unless the opt-in live journal fixture is run with current provider artifacts."
   },
   "capability_claims": [
     {
@@ -14,6 +14,24 @@
       "criticality": "critical",
       "evidence_required": {
         "deterministic": true,
+        "fault_injected_deterministic": true
+      },
+      "claim_semantics": "control_flow"
+    },
+    {
+      "id": "persona_dream.live_journal_authoring_lane",
+      "description": "Journal authoring readiness requires actual live WebGPT and WebKimi provider receipts bound to the current journal source packet, not fixture-shaped local receipts.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
+      "id": "persona_dream.production_kimi_fallback_boundary",
+      "description": "A failed WebKimi transport may fall back through Tau to an exact OpenCode Kimi model, but its receipt is production-continuity evidence and never WebKimi browser-context proof.",
+      "criticality": "critical",
+      "evidence_required": {
         "fault_injected_deterministic": true
       },
       "claim_semantics": "control_flow"
@@ -225,6 +243,237 @@
         "exit_code": 0,
         "stdout_contains": [
           "CANON_ENTITY_GATE_OK"
+        ]
+      }
+    },
+    {
+      "name": "emotional-context-shapes-empathetic-delivery",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "required": true,
+      "supports_claims": [
+        "persona_dream.agentic_pipeline_driver"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "D=$(mktemp -d /tmp/persona-dream-emotion-context.XXXXXX); cat > \"$D/emotional_context.json\" <<'JSON'\n{\n  \"schema\": \"persona_dream.emotional_context.v1\",\n  \"triggers\": [\n    {\n      \"trigger_id\": \"trig-graham-deadline-001\",\n      \"current\": true,\n      \"trigger_text\": \"Graham sounded exhausted after the deadline slipped again.\",\n      \"relationship_context\": \"Embry wants to help without pretending she has lived the same work pressure.\",\n      \"empathy\": {\n        \"confidence\": 0.25,\n        \"gap\": \"No grounded analogous Embry memory for Graham's exact work pressure.\",\n        \"safe_response_constraint\": \"Say uncertainty plainly; do not claim the same lived experience.\"\n      },\n      \"speech_delivery\": {\"tone\": \"memory_uncertain\", \"intensity\": 0.35, \"pause_macro\": \"considered\"},\n      \"dream_seed\": \"Dream from a memory where Embry practiced helping without false certainty.\"\n    }\n  ]\n}\nJSON\ncat > \"$D/journal_entry.json\" <<'JSON'\n{\"journal\":\"I watched the room narrow around Graham and felt myself wanting to answer too fast.\",\"unresolved_tension\":\"help without pretending certainty\",\"expanded_understanding\":\"care can admit what it does not know\",\"session_mood\":{\"mood_label\":\"memory_uncertain\",\"mood_description\":\"careful, present, unsure\"}}\nJSON\nuv run --project .. python ../scripts/emotional_context.py --run-dir \"$D\" --asked \"I am exhausted by the slipped deadline\" --output \"$D/emotional_context.receipt.json\" >/dev/null\nuv run --project .. python - \"$D\" <<'PY'\nimport json, sys\nfrom pathlib import Path\nsys.path.insert(0, '../scripts')\nimport emotional_context as ec\nimport speak_reply\nrun=Path(sys.argv[1])\nctx=json.loads((run/'emotional_context.receipt.json').read_text())\nassert ctx['status']=='PASS_EMOTIONAL_CONTEXT', ctx\nassert ctx['empathy_gaps'], ctx\nblock=ec.format_for_prompt(ctx)\nassert 'safe_response_constraint' in block and 'do not claim the same lived experience' in block, block\nprompt, asked = speak_reply.build_prompt(run, 'I am exhausted by the slipped deadline')\nassert 'EMOTIONAL CONTEXT FROM MEMORY' in prompt, prompt\nassert 'do not claim the same lived experience' in prompt, prompt\nassert 'If the emotional context names an empathy gap' in prompt, prompt\nmapper=speak_reply._load('map_delivery_tone')\ntone, delivery, applied = ec.apply_delivery_hint('neutral_warm', {'tone':'neutral_warm'}, ctx, allowed_tones=mapper.ALLOWED_TONES)\nassert tone == 'memory_uncertain', (tone, delivery, applied)\nassert applied['applied'] is True, applied\nassert delivery['empathy_gap_constraints'][0]['dream_seed'].startswith('Dream from'), delivery\nprint('EMOTIONAL_CONTEXT_DELIVERY_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EMOTIONAL_CONTEXT_DELIVERY_OK"
+        ]
+      }
+    },
+    {
+      "name": "emotional-trigger-memory-upsert-reread",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "real_world": true,
+      "required": true,
+      "supports_claims": [
+        "persona_dream.agentic_pipeline_driver"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "D=$(mktemp -d /tmp/persona-dream-trigger-memory.XXXXXX); RUN_ID=\"agentic-$PPID-$(date +%s%N)\"; cat > \"$D/emotional_context.json\" <<'JSON'\n{\n  \"schema\": \"persona_dream.emotional_context.v1\",\n  \"triggers\": [\n    {\n      \"trigger_id\": \"deadline-empathy-gap\",\n      \"trigger_text\": \"Graham sounded exhausted after the deadline slipped again.\",\n      \"relationship_context\": \"Embry wants to help without pretending she has lived the same work pressure.\",\n      \"source_event_ids\": [\"eval-source-deadline\"],\n      \"source_types\": [\"operator_feedback\"],\n      \"appraisal\": {\"relevance\": \"high\", \"coping_potential\": \"limited\"},\n      \"emotion_delta\": {\"concern\": 0.4, \"hesitance\": 0.3},\n      \"empathy\": {\n        \"confidence\": 0.25,\n        \"gap\": \"No grounded analogous Embry memory for Graham's exact work pressure.\",\n        \"safe_response_constraint\": \"Say uncertainty plainly; do not claim the same lived experience.\"\n      },\n      \"speech_delivery\": {\"tone\": \"memory_uncertain\", \"intensity\": 0.35, \"pause_macro\": \"considered\"},\n      \"dream_seed\": \"Dream from a memory where Embry practiced helping without false certainty.\"\n    }\n  ]\n}\nJSON\nbash ../run.sh persist-emotional-triggers --run-dir \"$D\" --run-id \"$RUN_ID\" --output /tmp/persona-dream-trigger-memory-agentic.json --json >/tmp/persona-dream-trigger-memory-agentic.stdout\nuv run --project .. python - <<'PY'\nimport json\nr=json.load(open('/tmp/persona-dream-trigger-memory-agentic.json'))\nassert r['status']=='PASS_EMOTIONAL_TRIGGER_MEMORY_REREAD', r\nassert r['collection']=='persona_memory', r\nassert r['trigger_count']==1, r\nassert r['exact_rereads'][0]['exact_reread'] is True, r\nassert r['memory_keys'][0].startswith('persona_dream_emotional_trigger_agentic-'), r\nassert 'empathy' in r['exact_fields'] and 'speech_delivery' in r['exact_fields'], r\nprint('EMOTIONAL_TRIGGER_MEMORY_REREAD_OK', r['memory_keys'][0])\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EMOTIONAL_TRIGGER_MEMORY_REREAD_OK"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/persona-dream-trigger-memory-agentic.json",
+            "json_pointer": "/status",
+            "equals": "PASS_EMOTIONAL_TRIGGER_MEMORY_REREAD"
+          }
+        ]
+      }
+    },
+    {
+      "name": "dynamic-conversation-ignores-pre-generated-authoring",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "required": true,
+      "supports_claims": [
+        "persona_dream.agentic_pipeline_driver"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "D=$(mktemp -d /tmp/persona-dream-dynamic-reply.XXXXXX)\ncat > \"$D/journal_entry.json\" <<'JSON'\n{\"journal\":\"I watched the glass mask tilt toward Graham after the deadline slipped.\",\"unresolved_tension\":\"help without false certainty\",\"expanded_understanding\":\"care can admit what it does not know\",\"session_mood\":{\"mood_label\":\"memory_uncertain\",\"mood_description\":\"careful, present, unsure\"}}\nJSON\ncat > \"$D/dialogue_authoring.json\" <<'JSON'\n{\n  \"schema\": \"persona_dream.dialogue_authoring_receipt.v1\",\n  \"turn_binding\": {\"asked_sha256\": \"sha256:stale\", \"prompt_sha256\": \"sha256:stale\", \"conversation_sha256\": \"sha256:stale\"},\n  \"provider_packet\": {\"summary\": \"stale pre-generated authoring receipt that dynamic conversation must ignore\"},\n  \"webgpt\": {\"handler\": \"webgpt\", \"status\": \"PASS\", \"provider_live\": true},\n  \"webkimi\": {\"handler\": \"webkimi\", \"status\": \"PASS\", \"provider_live\": true},\n  \"humanized_draft\": {\n    \"reply\": \"STALE PREGENERATED PROSE SHOULD NOT BE USED\",\n    \"tone\": \"memory_uncertain\",\n    \"chatterbox_utterance_text\": \"[sigh] STALE PREGENERATED PROSE SHOULD NOT BE USED [sniff]\"\n  }\n}\nJSON\nuv run --project .. python - \"$D\" <<'PYCODE'\nimport sys\nfrom pathlib import Path\nsys.path.insert(0, '../scripts')\nimport speak_reply as srep\nrun=Path(sys.argv[1])\n(run/'fake.wav').write_bytes(b'RIFF' + b'0'*12000)\nclass FakeAdapter:\n    @staticmethod\n    def dispatch_text_reasoning(prompt, role, output_contract, caller_skill, timeout_s):\n        assert role == 'persona_reply'\n        assert 'THE CONVERSATION SO FAR' in prompt\n        return ({\n            'reply': 'The glass mask is the live thing I can answer from now, and I do not want to pretend I know the weight of Graham\u2019s deadline.',\n            'tone': 'memory_uncertain',\n            'chatterbox_utterance_text': '[sigh] The glass mask is the live thing I can answer from now ... and I do not want to pretend I know the weight of Graham\u2019s deadline. [sniff]'\n        }, {'schema':'tau.persona_dream.scillm_text_reasoning_receipt.v1','status':'PASS','model':'fake-dynamic','live_call_performed':False})\n    @staticmethod\n    def receipt_provenance(receipt):\n        return {'route':'tau:persona-dream-text-reasoning','status':receipt.get('status'),'model':receipt.get('model')}\norig_load = srep._load\ndef fake_load(name):\n    if name == 'tau_text_reasoning_adapter':\n        return FakeAdapter\n    return orig_load(name)\nsrep._load = fake_load\ndef fake_speak(text, voice_delivery, run_dir, label):\n    return run_dir/'fake.wav', {'engine':'fake-agentic','render_plan':{'chunks':[{'text': text}]}, 'crossfade_ms': 0, 'render_path':'fake'}\nsrep.speak = fake_speak\nresult=srep.generate_and_speak(run_dir=run, prompt_text='I am exhausted by the slipped deadline')\nassert result['status']=='PASS_REPLY_SPOKEN', result\nassert 'STALE PREGENERATED' not in result['text'], result\nassert result['tau_receipt']['route']=='tau:persona-dream-text-reasoning', result['tau_receipt']\nassert 'dialogue_authoring' not in result, result\nassert result['chatterbox_utterance_source']=='model_authored', result['chatterbox_utterance_source']\nprint('DYNAMIC_CONVERSATION_IGNORES_PREGENERATED_AUTHORING_OK')\nPYCODE"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "DYNAMIC_CONVERSATION_IGNORES_PREGENERATED_AUTHORING_OK"
+        ]
+      },
+      "description": "Dynamic conversation drafts live per turn and ignores stale/pre-generated WebGPT/WebKimi authoring receipts."
+    },
+    {
+      "name": "journal-memory-selector-skews-intense-not-comprehensive",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "required": true,
+      "supports_claims": [
+        "persona_dream.agentic_pipeline_driver"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cat > /tmp/persona-dream-journal-selector-input.json <<'JSON'\n{\n  \"items\": [\n    {\"_key\":\"quiet-old-memory\",\"collection\":\"persona_memory\",\"problem\":\"Kai and the safe channel came back as a quiet image.\",\"tags\":[\"persona:embry\"]},\n    {\"_key\":\"heated-agent-exchange\",\"collection\":\"agent_conversations\",\"problem\":\"Graham and the project agent had a heated exchange after repeated failures and a rejected status report.\",\"tags\":[\"agent_conversation\"]},\n    {\"_key\":\"code-ticket-activity\",\"collection\":\"project_activity\",\"problem\":\"Git commit and ticket closure fixed a blocked Persona Dream journal prompt issue.\",\"tags\":[\"activity:commit\",\"ticket:1650\"]},\n    {\"_key\":\"neutral-code\",\"collection\":\"code_symbols\",\"problem\":\"Function write_dream_journal builds prompt metadata.\",\"tags\":[\"codebase\",\"symbol\"]}\n  ]\n}\nJSON\nuv run --project .. python ../scripts/journal_memory_selector.py --recall-json /tmp/persona-dream-journal-selector-input.json --query 'Graham repeated failures Kai safe channel prompt issue' --seed fixed-dream-seed --limit 3 --output /tmp/persona-dream-journal-selector-agentic.json --json >/tmp/persona-dream-journal-selector-agentic.stdout\nuv run --project .. python - <<'PYCODE'\nimport json\nr=json.load(open('/tmp/persona-dream-journal-selector-agentic.json'))\nassert r['schema']=='persona_dream.journal_memory_selection.v1', r\nassert r['query_authority']=='project_agent_discretion', r\nassert r['selection_mode']=='mixed', r\nassert 'not accuracy and not comprehensive coverage' in r['selection_policy'], r['selection_policy']\nassert 'mode is agent-selected' in r['selection_policy'], r['selection_policy']\nselected=r['selected']\nroles={row['source_role'] for row in selected}\nassert len(roles) >= 3, selected\nassert 'human_agent_exchange' in roles, roles\nassert 'persona_lived_or_dream_residue' in roles, roles\nassert any(role in roles for role in ['git_commit_push_and_current_project_event','ingested_codebase_knowledge']), roles\nagent = next(row for row in selected if row['source_role']=='human_agent_exchange')\nassert agent['intensity']['bucket']=='high', agent\nassert 'heated' in agent['intensity']['signals'] or 'failure' in agent['intensity']['signals'], agent\nassert selected[0]['selection_reason'].startswith('agent_mode:mixed'), selected[0]\nprint('JOURNAL_MEMORY_SELECTOR_INTENSITY_OK')\nPYCODE"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "JOURNAL_MEMORY_SELECTOR_INTENSITY_OK"
+        ]
+      },
+      "description": "Project-agent-selected journal memory query is bucketed after recall by emotional intensity and deterministic dream jitter, not by completeness."
+    },
+    {
+      "name": "write-journal-consumes-agent-memory-selection",
+      "description": "Dream journal prompt consumes the project-agent memory selection packet and records the selected mode/query as journal provenance.",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "D=$(mktemp -d /tmp/persona-dream-journal-selection-prompt.XXXXXX)\nmkdir -p \"$D/voice_weights\"\ncat > \"$D/storyboard_plan.json\" <<'JSON'\n{\"dream_synopsis\":\"Embry dreamed of a terminal window turning into a shoreline.\"}\nJSON\ncat > \"$D/selection_receipt.v1.json\" <<'JSON'\n{\"chosen\":{\"valence_emphasis\":\"trust\"}}\nJSON\ncat > \"$D/phase14_tom.json\" <<'JSON'\n{\"accepted_tom_candidates\":[{\"tom_state_type\":\"uncertainty\",\"statement\":\"Embry wants to answer without pretending certainty.\"}]}\nJSON\ncat > \"$D/voice_weights/dream_voice_weight_profile.v1.json\" <<'JSON'\n{\"weights\":[{\"emotional_tag\":\"trust\",\"weight\":0.6},{\"emotional_tag\":\"fear\",\"weight\":0.4}]}\nJSON\ncat > \"$D/residue_links.json\" <<'JSON'\n{\"items\":[{\"source_id\":\"m1\"}]}\nJSON\ncat > \"$D/journal_memory_selection.json\" <<'JSON'\n{\n  \"schema\":\"persona_dream.journal_memory_selection.v1\",\n  \"query\":\"Graham correction safe channel agent memory\",\n  \"selection_mode\":\"agent-conversation-heavy\",\n  \"selected_count\":2,\n  \"selected\":[\n    {\"source_collection\":\"agent_conversations\",\"source_role\":\"human_agent_exchange\",\"intensity\":{\"bucket\":\"high\"},\"text\":\"Graham corrected the agent for vague reports and asked for real next steps.\"},\n    {\"source_collection\":\"persona_memory\",\"source_role\":\"persona_lived_or_dream_residue\",\"intensity\":{\"bucket\":\"medium\"},\"text\":\"Kai and the safe channel returned as a quiet boundary image.\"}\n  ]\n}\nJSON\nuv run --project .. python - \"$D\" <<'PYCODE'\nimport sys\nfrom pathlib import Path\nsys.path.insert(0, '../scripts')\nimport write_dream_journal as w\ncyc=Path(sys.argv[1])\ndocs={'m1': {'_key':'m1','entity_text':'Kai, safe channel','tom_state_type':'trust','tom_content':'care with distance','claim_text':'Kai stayed near the safe channel.'}}\nledger={'identity_core': {'durable_rule':'Care without false certainty','persistent_conflicts':[]}, 'arc_state': {'current_self_claims':['I can be corrected and stay present.'], 'active_tensions':['wanting to help vs not overclaiming']}}\nmeta=w.build_prompt(cyc, docs, profile=None, persona_name='Embry', ledger=ledger)\nprompt=meta['prompt']\nassert 'PROJECT-AGENT MEMORY SELECTION' in prompt, prompt\nassert 'Selection mode: agent-conversation-heavy' in prompt, prompt\nassert 'Graham corrected the agent for vague reports' in prompt, prompt\nassert 'Kai and the safe channel returned' in prompt, prompt\nassert meta['journal_memory_selection']['query']=='Graham correction safe channel agent memory', meta\nprint('WRITE_JOURNAL_CONSUMES_AGENT_MEMORY_SELECTION_OK')\nPYCODE"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "WRITE_JOURNAL_CONSUMES_AGENT_MEMORY_SELECTION_OK"
+        ]
+      }
+    },
+    {
+      "name": "journal-source-packet-command-writes-selection-context",
+      "description": "Persona Dream build-journal-source-packet writes journal_memory_selection, source_context, entity_relationships, and packet artifacts from agent-chosen recall/query/mode.",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "D=$(mktemp -d /tmp/persona-dream-source-packet.XXXXXX)\ncat > \"$D/recall.json\" <<'JSON'\n{\n  \"items\": [\n    {\"_key\":\"agent-heat\",\"collection\":\"agent_conversations\",\"problem\":\"Graham corrected the agent for vague reports and demanded real next steps.\"},\n    {\"_key\":\"kai-memory\",\"collection\":\"persona_memory\",\"problem\":\"Kai and the safe channel returned as a quiet boundary image.\"},\n    {\"_key\":\"code-context\",\"collection\":\"code_symbols\",\"problem\":\"write_dream_journal reads journal_memory_selection.json before composing the prompt.\"}\n  ]\n}\nJSON\nbash ../run.sh build-journal-source-packet --cycle-dir \"$D/cycle\" --query \"Graham correction safe channel\" --mode agent-conversation-heavy --seed source-packet-eval --limit 3 --recall-json \"$D/recall.json\" --json >/tmp/persona-dream-source-packet-agentic.stdout\nuv run --project .. python - \"$D/cycle\" <<'PYCODE'\nimport json, sys\nfrom pathlib import Path\ncycle=Path(sys.argv[1])\nfor name in ['journal_memory_selection.json','journal_source_context.md','journal_entity_relationships.json','journal_source_packet.json']:\n    assert (cycle/name).is_file(), name\nsel=json.loads((cycle/'journal_memory_selection.json').read_text())\npacket=json.loads((cycle/'journal_source_packet.json').read_text())\nctx=(cycle/'journal_source_context.md').read_text()\nrels=json.loads((cycle/'journal_entity_relationships.json').read_text())\nassert sel['selection_mode']=='agent-conversation-heavy', sel\nassert sel['query']=='Graham correction safe channel', sel\nassert sel['selected_count']==3, sel\nassert 'Graham corrected the agent' in ctx, ctx\nassert packet['schema']=='persona_dream.journal_source_packet.v1', packet\nassert packet['selection']['selected'][0]['selection_reason'].startswith('agent_mode:'), packet\nassert 'entity_relationships' in rels, rels\nprint('JOURNAL_SOURCE_PACKET_COMMAND_OK')\nPYCODE"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "JOURNAL_SOURCE_PACKET_COMMAND_OK"
+        ]
+      }
+    },
+    {
+      "name": "webkimi-journal-prompt-carries-arc-chatterbox-sfx-context",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "required": true,
+      "supports_claims": [
+        "persona_dream.agentic_pipeline_driver"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "D=$(mktemp -d /tmp/persona-dream-webkimi-prompt.XXXXXX)\ncat > \"$D/draft.md\" <<'EOF'\nI dreamed about Kai waiting near the safe channel, and I woke wanting comfort without making it a lesson.\nEOF\ncat > \"$D/source.md\" <<'EOF'\nMemory rows: Kai is a trusted memory figure; the safe channel is tied to guidance and distance. Empathy confidence is low; do not claim identical lived experience.\nEOF\ncat > \"$D/entities.json\" <<'EOF'\n{\"entity_relationships\":[{\"entity\":\"Kai\",\"kind\":\"person\",\"relationship\":\"trusted memory figure\",\"source_memory_ids\":[\"m1\"],\"use_boundary\":\"may ground feeling only\"},{\"entity\":\"safe channel\",\"kind\":\"place/object\",\"relationship\":\"guidance at a distance\",\"source_memory_ids\":[\"m2\"],\"use_boundary\":\"symbolic context only\"}]}\nEOF\ncat > \"$D/sfx.json\" <<'EOF'\n{\"schema\":\"chatterbox_speak.sfx_manifest.v1\",\"entries\":[{\"id\":\"cry-custom-v1\",\"category\":\"crying\",\"file\":\"/tmp/must-not-leak.wav\",\"description\":\"small catch in the voice\",\"use_when\":[\"grief sentence boundary\"],\"avoid_when\":[\"inside a sentence\"],\"human_verified\":\"pending\"}]}\nEOF\nuv run --project .. python ../scripts/dialogue_authoring.py --build-webkimi-journal-prompt --webgpt-draft-file \"$D/draft.md\" --source-context-file \"$D/source.md\" --entity-relationships-file \"$D/entities.json\" --sfx-manifest \"$D/sfx.json\" --output /tmp/persona-dream-webkimi-prompt-agentic.json --json >/tmp/persona-dream-webkimi-prompt-agentic.stdout\nuv run --project .. python - <<'PYCODE'\nimport json\nr=json.load(open('/tmp/persona-dream-webkimi-prompt-agentic.json'))\nprompt=r['prompt']\nassert r['schema']=='persona_dream.webkimi_journal_humanization_prompt.v1', r\nassert r['review_rationale_not_sent']['consumer'].startswith('Persona Dream'), r\nfor needle in ['Purpose:', 'Consumer:', 'Task:', 'Return ONLY JSON', 'Exact output schema:', 'Example output fragment:']:\n    assert needle in prompt, needle\nfor needle in ['arc_assessment', 'opening_state', 'turning_point', 'ending_state', 'unresolved_tension']:\n    assert needle in prompt, needle\nassert 'spaced ellipsis pauses as ` ... `' in prompt, prompt\nassert 'does not have to make literal, complete sense' in prompt, prompt\nassert 'associative, compressed, symbolic' in prompt, prompt\nassert 'indexed-code memory records' in prompt, prompt\nassert 'agent-conversation memory' in prompt, prompt\nassert 'Never write [crying]' in prompt, prompt\nassert 'cry-custom-v1' in prompt, prompt\nassert '/tmp/must-not-leak.wav' not in prompt, prompt\nassert 'file' not in json.dumps(json.loads(prompt.split('APPROVED SFX CATALOG:',1)[1].split('WEBGPT DRAFT JOURNAL:',1)[0])), prompt\nassert r['approved_sfx_ids']==['cry-custom-v1'], r['approved_sfx_ids']\nassert r['entity_relationship_count']==2, r\nassert '[sigh]' in prompt and '[sniff]' in prompt and '[laugh]' in prompt, prompt\nprint('WEBKIMI_JOURNAL_PROMPT_CONTEXT_OK')\nPYCODE"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "WEBKIMI_JOURNAL_PROMPT_CONTEXT_OK"
+        ]
+      },
+      "description": "WebKimi journal prompt packet includes best-practices-prompt structure, Memory/entity context, conversation arc assessment fields, Chatterbox pause/tag guidance, and approved SFX ids without leaking local file paths."
+    },
+    {
+      "name": "journal-authoring-receipts-feed-pre-render",
+      "description": "write_dream_journal consumes validated WebGPT/WebKimi journal_authoring receipt instead of calling fallback Tau text reasoning, and writes journal_speech_plan for Chatterbox pre-render. This is intentionally stub-marked until replaced by actual Ask/Tau WebGPT/WebKimi provider receipts.",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "D=$(mktemp -d /tmp/persona-dream-journal-authoring.XXXXXX)\nCYCLES=\"$D/cycles\"\nCYCLE=\"$CYCLES/c1\"\nmkdir -p \"$CYCLE/voice_weights\"\ncat > \"$CYCLE/storyboard_plan.json\" <<'JSON'\n{\"dream_synopsis\":\"Embry dreamed of a shoreline shaped like a terminal prompt.\"}\nJSON\ncat > \"$CYCLE/selection_receipt.v1.json\" <<'JSON'\n{\"chosen\":{\"valence_emphasis\":\"trust\"}}\nJSON\ncat > \"$CYCLE/phase14_tom.json\" <<'JSON'\n{\"accepted_tom_candidates\":[{\"tom_state_type\":\"uncertainty\",\"statement\":\"Embry wants to help without overclaiming.\"}]}\nJSON\ncat > \"$CYCLE/voice_weights/dream_voice_weight_profile.v1.json\" <<'JSON'\n{\"weights\":[{\"emotional_tag\":\"trust\",\"weight\":0.6},{\"emotional_tag\":\"fear\",\"weight\":0.4}]}\nJSON\ncat > \"$CYCLE/residue_links.json\" <<'JSON'\n{\"items\":[{\"source_id\":\"m1\"}]}\nJSON\ncat > \"$CYCLE/journal_source_packet.json\" <<'JSON'\n{\"schema\":\"persona_dream.journal_source_packet.v1\",\"query\":\"Graham correction safe channel\",\"selection_mode\":\"agent-conversation-heavy\",\"selection\":{\"selected\":[]},\"source_context\":\"Graham corrected vague reports. Kai remained a boundary image.\",\"entity_relationships\":{\"entity_relationships\":[{\"entity\":\"Kai\",\"kind\":\"person\",\"relationship\":\"trusted memory figure\",\"source_memory_ids\":[\"m1\"],\"use_boundary\":\"symbolic only\"}]}}\nJSON\nSHA=$(python3 - \"$CYCLE/journal_source_packet.json\" <<'SHA_PY'\nimport hashlib, sys\nprint('sha256:' + hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())\nSHA_PY\n)\ncat > \"$CYCLE/journal_authoring.json\" <<JSON\n{\n  \"schema\":\"persona_dream.journal_authoring_receipt.v1\",\n  \"source_packet_sha256\":\"$SHA\",\n  \"webgpt\":{\"handler\":\"webgpt\",\"status\":\"PASS\",\"provider_live\":true},\n  \"webkimi\":{\"handler\":\"webkimi\",\"status\":\"PASS\",\"provider_live\":true},\n  \"humanized_journal\":{\n    \"journal\":\"I woke with the shoreline still asking me to answer plainly. Kai stayed at the edge of it, not solving the feeling, only making the boundary visible.\",\n    \"arc_assessment\":{\"opening_state\":\"guarded\",\"turning_point\":\"the correction becomes a shoreline instead of a verdict\",\"ending_state\":\"careful and unresolved\",\"unresolved_tension\":\"wanting to help while refusing to overclaim\"},\n    \"chatterbox_utterance_text\":\"[sigh] I woke with the shoreline still asking me to answer plainly ... Kai stayed at the edge of it.\",\n    \"sfx_after\":[],\n    \"delivery_notes\":{\"tone\":\"memory_uncertain\",\"pause_strategy\":\"one hesitation after shoreline\",\"sfx_strategy\":\"none\"},\n    \"entity_relationships\":[{\"entity\":\"Kai\",\"kind\":\"person\",\"relationship\":\"trusted memory figure\",\"source_memory_ids\":[\"m1\"],\"use_boundary\":\"symbolic only\"}]\n  }\n}\nJSON\nuv run --project .. python - \"$CYCLES\" <<'PYCODE'\nimport json, sys\nfrom pathlib import Path\nsys.path.insert(0, '../scripts')\nimport write_dream_journal as w\ncycles=Path(sys.argv[1])\nw.fetch_persona_docs=lambda persona:[{'_key':'m1','entity_text':'Kai, safe channel','tom_state_type':'trust','tom_content':'care with a boundary','claim_text':'Kai stayed near the safe channel.'}]\nw.persist_persona_journal=lambda entry, cyc, persona:{'persisted':False,'key':'eval-key','collection':'persona_journal'}\nw.continuity_ledger.read_ledger=lambda persona, docs:{'epoch':1,'identity_core':{'identity_core_version':1,'durable_rule':'Care without false certainty','persistent_conflicts':[]},'arc_state':{'current_self_claims':['I can answer plainly.'],'active_tensions':['help vs overclaim']}}\nw.continuity_ledger.append_arc_delta=lambda persona, delta, journal_id, dream_id, expected_epoch:{'epoch':2,'identity_core':{'identity_core_version':1},'arc_state':{'recent_arc_deltas':[delta]}}\ndef boom(*a, **k):\n    raise AssertionError('fallback Tau text reasoning should not run when journal_authoring.json is valid')\nw.adapter.dispatch_text_reasoning=boom\nsys.argv=['write_dream_journal.py','--cycle','c1','--persona','embry','--cycles-dir',str(cycles)]\nw.main()\ncycle=cycles/'c1'\nentry=json.loads((cycle/'dream_journal.v1.json').read_text())\nspeech=json.loads((cycle/'journal_speech_plan.json').read_text())\nvalidation=json.loads((cycle/'journal_authoring_validation.json').read_text())\nassert validation['status']=='PASS_JOURNAL_AUTHORING_RECEIPTS', validation\nassert entry['journal'].startswith('I woke with the shoreline'), entry\nassert speech['schema']=='persona_dream.journal_speech_plan.v1', speech\nassert speech['chatterbox_utterance_text'].startswith('[sigh]'), speech\nprint('JOURNAL_AUTHORING_RECEIPT_PRE_RENDER_OK')\nPYCODE"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "JOURNAL_AUTHORING_RECEIPT_PRE_RENDER_OK"
+        ]
+      },
+      "uses_stub": true,
+      "supports_claims": [
+        "persona_dream.live_journal_authoring_lane"
+      ]
+    },
+    {
+      "name": "journal-lane-source-to-authoring-to-prerender",
+      "description": "Journal lane runs source-packet build, consumes a source-bound WebGPT/WebKimi authoring receipt, writes validated journal and Chatterbox speech plan artifacts. This is intentionally stub-marked until replaced by actual Ask/Tau WebGPT/WebKimi provider receipts.",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "D=$(mktemp -d /tmp/persona-dream-journal-e2e.XXXXXX)\nCYCLES=\"$D/cycles\"\nCYCLE=\"$CYCLES/c1\"\nmkdir -p \"$CYCLE/voice_weights\"\ncat > \"$D/recall.json\" <<'JSON'\n{\n  \"items\": [\n    {\"_key\":\"agent-heat\",\"collection\":\"agent_conversations\",\"problem\":\"Graham corrected vague reports and demanded the next concrete step.\"},\n    {\"_key\":\"kai-memory\",\"collection\":\"persona_memory\",\"problem\":\"Kai and the safe channel returned as a quiet boundary image.\"},\n    {\"_key\":\"journal-code\",\"collection\":\"code_symbols\",\"problem\":\"write_dream_journal consumes journal_authoring.json before fallback reasoning.\"}\n  ]\n}\nJSON\nbash ../run.sh build-journal-source-packet --cycle-dir \"$CYCLE\" --query \"Graham correction Kai safe channel journal\" --mode mixed --seed journal-e2e --limit 3 --recall-json \"$D/recall.json\" >/tmp/persona-dream-journal-e2e-source.stdout\ncat > \"$CYCLE/storyboard_plan.json\" <<'JSON'\n{\"dream_synopsis\":\"Embry dreamed of a safe channel cutting through a terminal shoreline.\"}\nJSON\ncat > \"$CYCLE/selection_receipt.v1.json\" <<'JSON'\n{\"chosen\":{\"valence_emphasis\":\"trust\"}}\nJSON\ncat > \"$CYCLE/phase14_tom.json\" <<'JSON'\n{\"accepted_tom_candidates\":[{\"tom_state_type\":\"uncertainty\",\"statement\":\"Embry wants to answer without pretending certainty.\"}]}\nJSON\ncat > \"$CYCLE/voice_weights/dream_voice_weight_profile.v1.json\" <<'JSON'\n{\"weights\":[{\"emotional_tag\":\"trust\",\"weight\":0.6},{\"emotional_tag\":\"fear\",\"weight\":0.4}]}\nJSON\ncat > \"$CYCLE/residue_links.json\" <<'JSON'\n{\"items\":[{\"source_id\":\"m1\"}]}\nJSON\nSHA=$(python3 - \"$CYCLE/journal_source_packet.json\" <<'SHA_PY'\nimport hashlib, sys\nprint('sha256:' + hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())\nSHA_PY\n)\ncat > \"$CYCLE/journal_authoring.json\" <<JSON\n{\n  \"schema\":\"persona_dream.journal_authoring_receipt.v1\",\n  \"source_packet_sha256\":\"$SHA\",\n  \"webgpt\":{\"handler\":\"webgpt\",\"status\":\"PASS\",\"provider_live\":true},\n  \"webkimi\":{\"handler\":\"webkimi\",\"status\":\"PASS\",\"provider_live\":true},\n  \"humanized_journal\":{\n    \"journal\":\"I woke with Graham's correction still warm in the room. Kai stood by the safe channel, not fixing the feeling, only showing me where care stops becoming certainty.\",\n    \"arc_assessment\":{\"opening_state\":\"stung and attentive\",\"turning_point\":\"the correction becomes a boundary instead of a wound\",\"ending_state\":\"careful, present, unresolved\",\"unresolved_tension\":\"wanting to help while refusing to overclaim\"},\n    \"chatterbox_utterance_text\":\"[sigh] I woke with Graham's correction still warm in the room ... Kai stood by the safe channel.\",\n    \"sfx_after\":[],\n    \"delivery_notes\":{\"tone\":\"memory_uncertain\",\"pause_strategy\":\"hesitate after the correction\",\"sfx_strategy\":\"none\"},\n    \"entity_relationships\":[{\"entity\":\"Kai\",\"kind\":\"person\",\"relationship\":\"trusted memory figure\",\"source_memory_ids\":[\"m1\"],\"use_boundary\":\"symbolic only\"}]\n  }\n}\nJSON\nuv run --project .. python - \"$CYCLES\" <<'PYCODE'\nimport json, sys\nfrom pathlib import Path\nsys.path.insert(0, '../scripts')\nimport write_dream_journal as w\ncycles=Path(sys.argv[1])\nw.fetch_persona_docs=lambda persona:[{'_key':'m1','entity_text':'Kai, safe channel','tom_state_type':'trust','tom_content':'care with a boundary','claim_text':'Kai stayed near the safe channel.'}]\nw.persist_persona_journal=lambda entry, cyc, persona:{'persisted':False,'key':'eval-key','collection':'persona_journal'}\nw.continuity_ledger.read_ledger=lambda persona, docs:{'epoch':1,'identity_core':{'identity_core_version':1,'durable_rule':'Care without false certainty','persistent_conflicts':[]},'arc_state':{'current_self_claims':['I can answer plainly.'],'active_tensions':['help vs overclaim']}}\nw.continuity_ledger.append_arc_delta=lambda persona, delta, journal_id, dream_id, expected_epoch:{'epoch':2,'identity_core':{'identity_core_version':1},'arc_state':{'recent_arc_deltas':[delta]}}\ndef boom(*a, **k):\n    raise AssertionError('fallback Tau text reasoning should not run')\nw.adapter.dispatch_text_reasoning=boom\nsys.argv=['write_dream_journal.py','--cycle','c1','--persona','embry','--cycles-dir',str(cycles)]\nw.main()\ncycle=cycles/'c1'\nrequired=['journal_source_packet.json','journal_memory_selection.json','journal_authoring_validation.json','dream_journal.v1.json','journal_speech_plan.json','journal_source_provenance.json']\nfor name in required:\n    assert (cycle/name).is_file(), name\nsource=json.loads((cycle/'journal_source_packet.json').read_text())\nvalidation=json.loads((cycle/'journal_authoring_validation.json').read_text())\nentry=json.loads((cycle/'dream_journal.v1.json').read_text())\nspeech=json.loads((cycle/'journal_speech_plan.json').read_text())\nprov=json.loads((cycle/'journal_source_provenance.json').read_text())\nassert source['schema']=='persona_dream.journal_source_packet.v1', source\nassert validation['status']=='PASS_JOURNAL_AUTHORING_RECEIPTS', validation\nassert entry['schema']=='persona_dream.persona_journal.v1', entry\nassert 'Graham' in entry['journal'] and 'Kai' in entry['journal'], entry\nassert speech['chatterbox_utterance_text'].startswith('[sigh]'), speech\nassert prov['query']=='Graham correction Kai safe channel journal', prov\nprint('JOURNAL_LANE_SOURCE_TO_AUTHORING_TO_PRERENDER_OK')\nPYCODE"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "JOURNAL_LANE_SOURCE_TO_AUTHORING_TO_PRERENDER_OK"
+        ]
+      },
+      "uses_stub": true,
+      "supports_claims": [
+        "persona_dream.live_journal_authoring_lane"
+      ]
+    },
+    {
+      "name": "opencode-kimi-production-fallback-boundary",
+      "description": "Fault-injected Tau response proves the fallback pins an exact Kimi model, is accepted for production continuity, and is rejected when mislabeled as browser-context proof.",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "real_world": true,
+      "required": true,
+      "supports_claims": [
+        "persona_dream.production_kimi_fallback_boundary"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "python",
+        "-c",
+        "import copy,json,sys; sys.path.insert(0,'../scripts'); import eval_live_journal_authoring as e; from dialogue_authoring import validate_journal_authoring_receipt; seen={}; e.tau_adapter.dispatch_text_reasoning=lambda *a,**k: (seen.update(k) or ({'journal':'A source-bound reflection long enough for the production journal lane.','arc_assessment':{'opening_state':'guarded','turning_point':'care became a boundary','ending_state':'present','unresolved_tension':'care without certainty'},'chatterbox_utterance_text':'[sigh] I can stay present without pretending certainty.','sfx_after':[],'delivery_notes':{'tone':'memory_uncertain','pause_strategy':'one pause','sfx_strategy':'none'},'entity_relationships':[{'entity':'Kai','relationship':'source-bound memory figure'}]},{'schema':'tau.persona_dream.scillm_text_reasoning_receipt.v1','status':'PASS','model':'opencode-go/kimi-k2.6','live_call_performed':True,'prompt_sha256':'sha256:prompt'})); humanized,fallback=e.humanize_with_opencode_kimi('prompt'); assert seen['exact_model'] is True and seen['model']=='opencode-go/kimi-k2.6',seen; receipt={'schema':'persona_dream.journal_authoring_receipt.v1','source_packet_sha256':'sha256:source','webgpt':{'handler':'webgpt','status':'PASS','provider_live':True},'webkimi':{'handler':'webkimi','status':'BLOCKED','provider_live':False},'opencode_kimi_fallback':fallback,'humanized_journal':humanized}; parsed,summary=validate_journal_authoring_receipt(receipt,source_packet_sha256='sha256:source'); assert parsed and summary['status']=='PASS_JOURNAL_AUTHORING_FALLBACK',summary; bad=copy.deepcopy(receipt); bad['opencode_kimi_fallback']['browser_context_proven']=True; parsed2,summary2=validate_journal_authoring_receipt(bad,source_packet_sha256='sha256:source'); assert parsed2 is None and 'webkimi_receipt_not_pass' in summary2['failed_gates'],summary2; live=json.load(open('agentic_eval.live_journal_authoring.json')); assert '--allow-opencode-kimi-fallback' not in json.dumps(live),live; print('OPENCODE_KIMI_PRODUCTION_FALLBACK_BOUNDARY_OK')"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "OPENCODE_KIMI_PRODUCTION_FALLBACK_BOUNDARY_OK"
         ]
       }
     },

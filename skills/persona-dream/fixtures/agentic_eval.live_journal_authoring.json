@@ -1,0 +1,81 @@
+{
+  "version": 2,
+  "skill": "persona-dream",
+  "trials": 2,
+  "proof_scope": "Opt-in live provider proof for Persona Dream journal authoring. This fixture may submit to live browser providers and is intentionally separate from the default retained suite.",
+  "claims": {
+    "proves": "The Persona Dream journal authoring lane can run through current live WebGPT and WebKimi provider receipts, validate journal_authoring, write dream_journal.v1.json, and produce journal_speech_plan.json.",
+    "does_not_prove": "Default retained readiness; provider availability outside the current browser session; paid media generation; human perceptual quality."
+  },
+  "capability_claims": [
+    {
+      "id": "persona_dream.live_journal_authoring_lane",
+      "description": "Journal authoring readiness requires actual live WebGPT and WebKimi provider receipts bound to the current journal source packet, not fixture-shaped local receipts.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      },
+      "claim_semantics": "protocol"
+    }
+  ],
+  "cases": [
+    {
+      "name": "live-webgpt-webkimi-journal-authoring-e2e",
+      "description": "Runs the actual live Persona Dream journal authoring lane on verified browser-oracle tab bindings: live Memory source packet, WebGPT browser draft, WebKimi browser humanization from the inline sanitized bundle, journal_authoring validation, journal write, and speech plan readback.",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "required": true,
+      "supports_claims": [
+        "persona_dream.live_journal_authoring_lane"
+      ],
+      "timeout_seconds": 2400,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "python",
+        "../scripts/eval_live_journal_authoring.py",
+        "--output",
+        "/tmp/persona-dream-live-journal-authoring-e2e.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PERSONA_DREAM_LIVE_JOURNAL_E2E_OK"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/persona-dream-live-journal-authoring-e2e.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          }
+        ]
+      }
+    },
+    {
+      "name": "journal-authoring-rejects-missing-webkimi-live-proof",
+      "description": "Fails closed when a journal_authoring receipt is missing a passing live WebKimi receipt.",
+      "type": "negative",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "required": true,
+      "supports_claims": [
+        "persona_dream.live_journal_authoring_lane"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "uv run --project .. python - <<'PYCODE'\nimport sys\nsys.path.insert(0, '../scripts')\nfrom dialogue_authoring import validate_journal_authoring_receipt\nreceipt={\n  'schema':'persona_dream.journal_authoring_receipt.v1',\n  'source_packet_sha256':'sha256:source',\n  'webgpt':{'handler':'webgpt','status':'PASS','provider_live':True},\n  'webkimi':{'handler':'webkimi','status':'NEEDS_ATTENTION','provider_live':False},\n  'humanized_journal':{\n    'journal':'A source-bound journal.',\n    'arc_assessment':{'opening_state':'careful','turning_point':'receipt gate','ending_state':'blocked','unresolved_tension':'missing proof'},\n    'chatterbox_utterance_text':'[sigh] A source-bound journal.',\n    'sfx_after':[],\n    'delivery_notes':{'tone':'careful'},\n    'entity_relationships':[]\n  }\n}\nparsed, summary = validate_journal_authoring_receipt(receipt, source_packet_sha256='sha256:source')\nassert parsed is None, parsed\nassert summary['status']=='BLOCKED_JOURNAL_AUTHORING_RECEIPTS', summary\nassert 'webkimi_receipt_not_pass' in summary['failed_gates'], summary\nprint('JOURNAL_AUTHORING_MISSING_WEBKIMI_LIVE_PROOF_REJECTED_OK')\nPYCODE"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "JOURNAL_AUTHORING_MISSING_WEBKIMI_LIVE_PROOF_REJECTED_OK"
+        ]
+      }
+    }
+  ]
+}

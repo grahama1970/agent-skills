@@ -208,6 +208,43 @@ renders that carried no audible affect, and unnormalized canon names). The
 journal lane applies the same pronunciation + temperature contract on its
 ASR-verified direct service call until its full CLI reroute lands.
 
+Conversation replies also consume `persona_dream.emotional_context.v1` when a
+run provides it. This context may shape empathy, pacing, and delivery, but it is
+not new fact evidence: low-confidence empathy must produce humble uncertainty
+and a dream seed, not a performed claim that Embry has lived the same thing.
+
+Journal writing may use a pre-generated Ask/Tau WebGPT -> WebKimi handoff:
+WebGPT drafts from the context packet, then WebKimi receives the WebGPT draft,
+the multi-hop Memory/entity relationship table, conversation-arc task fields,
+valid Chatterbox tag/pause rules, and approved SFX ids/intensity guidance. WebKimi
+may humanize journal prose, assess the arc, add spaced ` ... ` pauses, and
+suggest boundary-only SFX intent. `./run.sh author-journal` tries that bound
+WebKimi conversation first; if its transport cannot pass, production may use
+Tau-routed `opencode-go/kimi-k2.6`. The fallback receipt is labeled
+`production_continuity_only` with `browser_context_proven: false`, so it cannot
+satisfy the WebKimi browser-context proof gate. A valid `journal_authoring.json`
+receipt writes `journal_speech_plan.json` for the Chatterbox pre-render handoff.
+The journal may be associative, compressed,
+symbolic, and not fully literal — dreams and journals braid sources rather than
+summarizing them — but named entities and relationships must stay source-bound.
+The project agent chooses the journal memory query and selection mode by judgment;
+that expert use of `$memory` is the point. This is not an accuracy or
+comprehensive-coverage retrieval task. Run the chosen query across the selected
+journal-relevant `$memory` collections, then select with the agent-chosen mode:
+`mixed`, `intense`, `weird`, `persona-heavy`, `code-heavy`,
+`agent-conversation-heavy`, or `project-heavy`. Seeded randomness is a knob, not
+a hidden policy. See `docs/journal-creation-walkthrough.md` for the plainspoken
+journal path. Indexed-code context from `$ingest-code` is expected to arrive through `$memory`
+collections/source_context, not by asking WebGPT to run code indexing. Persona
+Dream validates the JSON, preserves the entity table as provenance, and
+lets `$chatterbox-speak` own final render chunks and SFX mechanics. The live
+WebGPT/WebKimi browser-provider proof is opt-in at
+`fixtures/agentic_eval.live_journal_authoring.json`; the default retained fixture
+must not submit to live browser providers during ordinary local readiness checks.
+Dynamic conversation must not use pre-generated
+`dialogue_authoring.json`; `speak_reply.py` drafts live per turn from the current
+conversation state, Memory/emotional context, and Tau routing.
+
 ### External ownership
 
 | Owner | Owns | Persona Dream's role |

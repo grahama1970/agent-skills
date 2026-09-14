@@ -19,6 +19,8 @@ Commands:
   dream-spec           Compile the DAG spec without executing it
   autonomous-dream-cycle  One full autonomous dream cycle (spine step 1)
   write-dream-journal  Write the persona_journal.v1 entry (spine step 2)
+  author-journal       Live WebGPT -> WebKimi authoring, with Tau/OpenCode Kimi production fallback
+  build-journal-source-packet  Run/consume project-agent Memory recall and write journal source context
   read                 Print PROJECT_KNOWLEDGE.md before running pipeline phases
   doctor               Preflight the whole dream chain (tau nodes, insightface, scillm, GMO, anchors); fails loud with fixes
   check-pctom-measurement-validity-v2  Gate: PCTOM-R measurement must be falsifiable before live spend
@@ -194,6 +196,7 @@ Commands:
   run-causal-replay  Validate PCTOM-R Gate 9 causal replay and failure localization
   live-chain-reliability  Run the five-cycle live continuity-chain repeatability pilot
   curate-transcript-context Curate $mine-transcripts output into conversation grounding context
+  persist-emotional-triggers Persist persona_dream.emotional_trigger.v1 records to Memory with exact reread
   converse-dynamic        Run dynamic voiced Horus/Embry conversation for a dream run
   chatterbox-conversation Alias for converse-dynamic; terminal dream-spine speech step
   render-blinded-listener-rater-page Render the static blinded listener-study rater page
@@ -399,6 +402,12 @@ case "$COMMAND" in
     # pipeline terminates at. That gap is why journal writing got bespoked.
     require_spine_executor "write-dream-journal"
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_dream_journal.py" "$@"
+    ;;
+  author-journal)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/eval_live_journal_authoring.py" --allow-opencode-kimi-fallback "$@"
+    ;;
+  build-journal-source-packet)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/build_journal_source_packet.py" "$@"
     ;;
   pipeline-loop-run)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/pipeline_loop_run.py" "$@"
@@ -864,6 +873,9 @@ case "$COMMAND" in
     ;;
   curate-transcript-context)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/curate_transcript_context.py" "$@"
+    ;;
+  persist-emotional-triggers)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/persist_emotional_trigger_memory.py" "$@"
     ;;
   converse-dynamic|chatterbox-conversation)
     require_spine_executor "chatterbox-conversation"
