@@ -11,7 +11,7 @@ echo "project-watchdog V2 events: $log" >&2
 if command -v jq >/dev/null 2>&1; then
   tail -n "$lines" -F "$log" | jq --unbuffered -r '
     [.at, (.ticket // .project // "-"), .stage, .status,
-     (.reason // .command // (.triage.code // ""))]
+     (.reason // (if (.command | type) == "array" then (.command | join(" ")) else .command end) // (.triage.code // ""))]
     | @tsv'
 else
   tail -n "$lines" -F "$log"
