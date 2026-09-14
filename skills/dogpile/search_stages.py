@@ -244,6 +244,7 @@ class PartialResultsPublisher:
         self.output_dir = (output_dir or (_SCRIPT_DIR / "local" / "search-runs" / run_id)).resolve()
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.path = self.output_dir / "dogpile_partial_results.json"
+        self._write_lock = threading.Lock()
         request_context = request_context or {}
         self.state: Dict[str, Any] = {
             "run_id": run_id,
@@ -272,17 +273,20 @@ class PartialResultsPublisher:
         )
 
     def _write(self) -> None:
-        self.state["updated_at"] = time.time()
-        tmp_path = self.path.with_suffix(".tmp")
-        tmp_path.write_text(json.dumps(self.state, indent=2, ensure_ascii=False))
-        tmp_path.replace(self.path)
-        if self.path != PARTIAL_RESULTS_PATH:
-            latest = {
-                "latest_run_id": self.state.get("run_id"),
-                "partial_results_path": str(self.path),
-                "updated_at": self.state["updated_at"],
-            }
-            PARTIAL_RESULTS_PATH.write_text(json.dumps(latest, indent=2, sort_keys=True) + "\n")
+        with self._write_lock:
+            self.state["updated_at"] = time.time()
+            tmp_path = self.path.with_suffix(f".{threading.get_ident()}.tmp")
+            tmp_path.write_text(json.dumps(self.state, indent=2, ensure_ascii=False))
+            tmp_path.replace(self.path)
+            if self.path != PARTIAL_RESULTS_PATH:
+                latest = {
+                    "latest_run_id": self.state.get("run_id"),
+                    "partial_results_path": str(self.path),
+                    "updated_at": self.state["updated_at"],
+                }
+                latest_tmp = PARTIAL_RESULTS_PATH.with_suffix(f".{threading.get_ident()}.tmp")
+                latest_tmp.write_text(json.dumps(latest, indent=2, sort_keys=True) + "\n")
+                latest_tmp.replace(PARTIAL_RESULTS_PATH)
 
     def emit(self, event: Dict[str, Any]) -> None:
         payload = {**event, "partial_results_path": str(self.path), "ts": time.time()}

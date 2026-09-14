@@ -6,6 +6,7 @@ Handles downloading PDFs from arXiv and HTML from ar5iv.org.
 """
 from __future__ import annotations
 
+import re
 import tempfile
 import shutil
 import urllib.request
@@ -25,12 +26,46 @@ from loguru import logger
 # HTML Download (ar5iv)
 # =============================================================================
 
-def download_html(arxiv_id: str, output_dir: Path | None = None) -> str | None:
+def _safe_title_filename(title: str, fallback: str, suffix: str) -> str:
+    """Return a filesystem-safe title-based paper filename."""
+    name = re.sub(r"[^\w\s.-]+", "", title or "", flags=re.UNICODE).strip()
+    name = re.sub(r"\s+", "_", name).strip("._")
+    return f"{name or fallback}.{suffix.lstrip('.')}"
+
+
+def _unique(values: list[str]) -> list[str]:
+    """Return non-empty strings in order without duplicates."""
+    seen: set[str] = set()
+    out: list[str] = []
+    for value in values:
+        if value and value not in seen:
+            seen.add(value)
+            out.append(value)
+    return out
+
+
+def _download_first_available(urls: list[str], output_path: Path) -> tuple[bool, list[str]]:
+    """Download the first reachable URL, writing only after a full response is read."""
+    errors: list[str] = []
+    for url in _unique(urls):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "arxiv-learn/1.0"})
+            with urllib.request.urlopen(req, timeout=AR5IV_TIMEOUT) as resp:
+                raw = resp.read()
+            output_path.write_bytes(raw)
+            return True, errors
+        except Exception as exc:
+            errors.append(f"{url}: {exc}")
+    return False, errors
+
+
+def download_html(arxiv_id: str, output_dir: Path | None = None, title: str = "") -> str | None:
     """Download HTML from ar5iv.org.
 
     Args:
         arxiv_id: arXiv paper ID
         output_dir: Directory to save HTML (default: PAPERS_DIR)
+        title: Paper title for the output filename
 
     Returns:
         Path to downloaded HTML file, or None if failed
@@ -42,23 +77,24 @@ def download_html(arxiv_id: str, output_dir: Path | None = None) -> str | None:
     # Strip version suffix if present (e.g., 2501.15355v1 -> 2501.15355)
     base_id = arxiv_id.split("v")[0] if "v" in arxiv_id else arxiv_id
 
-    url = f"{AR5IV_BASE_URL}/{base_id}"
-    output_path = output_dir / f"{base_id}.html"
+    output_path = output_dir / _safe_title_filename(title, base_id.replace(".", "_"), "html")
 
     # Check cache first
     if output_path.exists() and output_path.stat().st_size > 100:
         log(f"HTML cache hit: {output_path.name}", style="dim")
         return str(output_path)
 
-    try:
-        req = urllib.request.Request(url, headers={"User-Agent": "arxiv-learn/1.0"})
-        with urllib.request.urlopen(req, timeout=AR5IV_TIMEOUT) as resp:
-            raw = resp.read()
-            output_path.write_bytes(raw)
-            return str(output_path)
-    except Exception as e:
-        log(f"HTML download failed: {e}", style="yellow")
-        return None
+    urls = [
+        f"https://arxiv.org/html/{arxiv_id}",
+        f"https://arxiv.org/html/{base_id}",
+        f"{AR5IV_BASE_URL}/{base_id}",
+        f"https://ar5iv.labs.arxiv.org/html/{base_id}",
+    ]
+    ok, errors = _download_first_available(urls, output_path)
+    if ok:
+        return str(output_path)
+    log(f"HTML download failed: {'; '.join(errors)}", style="yellow")
+    return None
 
 # =============================================================================
 # PDF Download (via arxiv skill)
@@ -209,7 +245,7 @@ def download_paper(
 
     # Download HTML if requested
     if include_html and not force_pdf:
-        html_path = download_html(arxiv_id)
+        html_path = download_html(arxiv_id, title=paper.title)
         if html_path:
             paper.html_path = html_path
             log("HTML: Downloaded from ar5iv", style="dim")

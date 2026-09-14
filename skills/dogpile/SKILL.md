@@ -1028,3 +1028,17 @@ curl http://localhost:8765/tasks/dogpile-search
 # → dogpile returns suggested follow-up searches, agent ignores them
 # RIGHT: Check response["agentic_handoff"] for recommended next steps
 ```
+
+## QRA-training failure recovery note (2026-09-14)
+
+Observed during qra-training exhaustive research: provider results were useful
+but final report assembly could fail after concurrent partial writes, and
+source-filtered runs could omit providers that later synthesis assumed existed.
+Dogpile should now preserve `dogpile_partial_results.json` with thread-unique
+atomic temp files and treat omitted providers as `skipped` instead of raising
+`KeyError`.
+
+Operational rule: for exhaustive research, run Dogpile for broad multi-source
+coverage, but consume the partial JSON as the durable receipt even if final
+report synthesis degrades. Follow-up questions created by the results should be
+queued for another pass rather than hidden in a one-shot summary.

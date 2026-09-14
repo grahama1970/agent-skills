@@ -244,17 +244,20 @@ def _run_search(
                 console.print(f"  [red]{name}:[/red] {err_msg}")
         console.print("[dim]Continuing with partial results...[/dim]\n")
 
-    brave_res = stage1_results["brave"]
-    brave_questions_res = stage1_results.get("brave_questions", {})
-    perp_res = stage1_results["perplexity"]
-    github_res = stage1_results["github"]
-    arxiv_res = stage1_results["arxiv"]
-    youtube_res = stage1_results["youtube"]
-    readarr_res = stage1_results["readarr"]
-    wayback_res = stage1_results["wayback"]
-    feeds_res = stage1_results["feeds"]
-    context7_res = stage1_results["context7"]
-    codex_src_res = stage1_results["codex_knowledge"]
+    def _provider_result(name: str) -> Any:
+        return stage1_results.get(name, {"skipped": "provider not selected for this run"})
+
+    brave_res = _provider_result("brave")
+    brave_questions_res = _provider_result("brave_questions")
+    perp_res = _provider_result("perplexity")
+    github_res = _provider_result("github")
+    arxiv_res = _provider_result("arxiv")
+    youtube_res = _provider_result("youtube")
+    readarr_res = _provider_result("readarr")
+    wayback_res = _provider_result("wayback")
+    feeds_res = _provider_result("feeds")
+    context7_res = _provider_result("context7")
+    codex_src_res = _provider_result("codex_knowledge")
 
     github_stage2 = stage2_results.get("github", {})
     if not isinstance(github_stage2, dict) or "error" in github_stage2:

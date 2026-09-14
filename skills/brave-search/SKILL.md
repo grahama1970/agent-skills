@@ -151,3 +151,11 @@ python .pi/skills/brave-search/brave_search.py local "restaurants near Pike Plac
 - Use `--freshness pw` for pages from the last 7 days, or a custom
   `YYYY-MM-DDtoYYYY-MM-DD` freshness range when the date window matters.
 - Local search falls back to web if no locations are found
+
+## Concurrent research note (2026-09-14)
+
+For exhaustive research, run independent Brave web queries concurrently rather
+than serially. In Pi, use parallel tool calls or Dogpile's Brave question lanes
+for query families such as method papers, datasets, code benchmarks, and
+enterprise training cost gates. Preserve each raw result set separately; do not
+merge them into an uncited summary before triage.

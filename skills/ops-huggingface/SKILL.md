@@ -58,17 +58,24 @@ token. No token is ever echoed.
 `huggingface_hub` in the active environment. If absent, every command fails
 closed with a clear `Missing dependency: huggingface_hub` message.
 
-## References (retrieve on demand — do not vendor)
+## QRA/code-training dataset scout note (2026-09-14)
 
-External docs drift; cite the canonical URLs and fetch them when needed
-with `/context7` (library docs) or `/fetcher` (any URL/PDF) rather than
-caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
+For qra-training and code-slop grader preparation, search dataset families in
+parallel and inspect candidates with `repo-info` before any snapshot. Useful
+query families observed:
 
-- huggingface_hub documentation: <https://huggingface.co/docs/huggingface_hub/index>
-- llms.txt (LLM-friendly doc index): <https://huggingface.co/docs/huggingface_hub/llms.txt>
-- llms-full.txt (expanded LLM index): <https://huggingface.co/docs/huggingface_hub/llms-full.txt>
+- `code preference`
+- `rewardbench code`
+- `LiveCodeBench`
+- `BigCodeBench`
+- `HumanEval`
+- `MBPP code`
+- `APPS code`
+- `CodeContests`
+- `SWE-bench`
 
-```bash
-skills/context7/run.sh "huggingface_hub upload snapshot repo"
-skills/fetcher/run.sh "https://huggingface.co/docs/huggingface_hub/index"
-```
+High-priority candidate IDs from the scout: `Vezora/Code-Preference-Pairs`,
+`SWE-bench/SWE-bench_Verified`, `livecodebench/code_generation_lite`, and
+`bigcode/bigcodebench`. Treat public datasets as comparison/eval baselines; the
+enterprise training unit should still be typed QRA/git/CI/human-label receipts,
+not raw benchmark rows.

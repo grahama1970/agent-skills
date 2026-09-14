@@ -240,6 +240,13 @@ def _parse_atom(data: bytes, include_html: bool = True) -> list[dict]:
     return out
 
 
+def _safe_title_filename(title: str, fallback: str, suffix: str) -> str:
+    """Return a filesystem-safe title-based paper filename."""
+    name = re.sub(r"[^\w\s.-]+", "", title or "", flags=re.UNICODE).strip()
+    name = re.sub(r"\s+", "_", name).strip("._")
+    return f"{name or fallback}.{suffix.lstrip('.')}"
+
+
 def _extract_arxiv_id(text: str) -> tuple[str | None, str | None]:
     """Extract arXiv ID from text/URL. Returns (base_id, full_id_with_version)."""
     s = (text or "").strip()
@@ -256,6 +263,51 @@ def _extract_arxiv_id(text: str) -> tuple[str | None, str | None]:
     base = m.group("base")
     v = m.group("v")
     return base, (base + v) if v else base
+
+
+def _unique(values: list[str]) -> list[str]:
+    """Return non-empty strings in order without duplicates."""
+    seen: set[str] = set()
+    out: list[str] = []
+    for value in values:
+        if value and value not in seen:
+            seen.add(value)
+            out.append(value)
+    return out
+
+
+def _fallback_paper_info(base_id: str, full_id: str | None = None) -> dict:
+    """Build enough paper metadata to download when the arXiv API is unavailable."""
+    paper_id = full_id or base_id
+    return {
+        "id": paper_id,
+        "title": "",
+        "abstract": "",
+        "authors": [],
+        "published": "",
+        "updated": "",
+        "pdf_url": f"https://arxiv.org/pdf/{paper_id}.pdf",
+        "abs_url": f"https://arxiv.org/abs/{paper_id}",
+        "html_url": f"https://arxiv.org/html/{paper_id}",
+        "categories": [],
+        "primary_category": "",
+    }
+
+
+def _download_first_available(urls: list[str], filename: Path, timeout: int = 60) -> tuple[str | None, list[str]]:
+    """Download the first reachable URL, writing only after a full response is read."""
+    errors: list[str] = []
+    for url in _unique(urls):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "ArxivSkill/1.0"})
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                raw = resp.read()
+            filename.parent.mkdir(parents=True, exist_ok=True)
+            filename.write_bytes(raw)
+            return url, errors
+        except Exception as exc:
+            errors.append(f"{url}: {exc}")
+    return None, errors
 
 
 def _parse_date(date_str: str) -> Optional[datetime]:
@@ -492,66 +544,69 @@ def get(
 def download(
     paper_id: str = typer.Option(..., "--paper-id", "-i", help="arXiv paper ID"),
     output: Path = typer.Option(Path("."), "--output", "-o", help="Output directory"),
-    format: str = typer.Option("pdf", "--format", "-f", help="Download format: pdf or html (ar5iv)"),
+    format: str = typer.Option("html", "--format", "-f", help="Download format: html (ar5iv) or pdf"),
 ):
-    """Download PDF or HTML for a paper.
+    """Download HTML or PDF for a paper.
 
     Examples:
         python arxiv_cli.py download -i 2301.00001 -o ./papers/
-        python arxiv_cli.py download -i 2301.00001 -o ./papers/ --format html
+        python arxiv_cli.py download -i 2301.00001 -o ./papers/ --format pdf
     """
     t0 = time.time()
     errors: list[str] = []
+    warnings: list[str] = []
     downloaded: Optional[str] = None
 
-    base_id, _ = _extract_arxiv_id(paper_id)
+    base_id, full_id = _extract_arxiv_id(paper_id)
     if not base_id:
         base_id = paper_id
+        full_id = paper_id
 
     try:
-        # Get paper info first
         data = _query_arxiv(None, 0, 1, id_list=base_id)
         items = _parse_atom(data)
-
+        paper = items[0] if items else _fallback_paper_info(base_id, full_id)
         if not items:
-            errors.append("Paper not found")
-        elif format.lower() == "html":
-            # Download HTML from ar5iv.org
-            html_url = items[0].get("html_url") or f"https://ar5iv.org/abs/{base_id}"
-            output.mkdir(parents=True, exist_ok=True)
-            filename = output / f"{base_id.replace('.', '_')}.html"
+            warnings.append("metadata_lookup_empty: using direct arxiv URLs")
+    except Exception as exc:
+        paper = _fallback_paper_info(base_id, full_id)
+        warnings.append(f"metadata_lookup_failed: {exc}")
 
-            req = urllib.request.Request(
-                html_url,
-                headers={"User-Agent": "ArxivSkill/1.0"},
-            )
-            with urllib.request.urlopen(req, timeout=60) as resp:
-                with open(filename, "wb") as f:
-                    f.write(resp.read())
-            downloaded = str(filename)
-        elif items[0].get("pdf_url"):
-            # Download PDF (default)
-            pdf_url = items[0]["pdf_url"]
-            output.mkdir(parents=True, exist_ok=True)
-            filename = output / f"{base_id.replace('.', '_')}.pdf"
-
-            req = urllib.request.Request(
-                pdf_url,
-                headers={"User-Agent": "ArxivSkill/1.0"},
-            )
-            with urllib.request.urlopen(req, timeout=60) as resp:
-                with open(filename, "wb") as f:
-                    f.write(resp.read())
-            downloaded = str(filename)
+    output.mkdir(parents=True, exist_ok=True)
+    fmt = format.lower()
+    suffix = "html" if fmt == "html" else "pdf" if fmt == "pdf" else ""
+    if not suffix:
+        errors.append(f"Unsupported format '{format}'. Use html or pdf.")
+    else:
+        filename = output / _safe_title_filename(paper.get("title", ""), base_id.replace(".", "_"), suffix)
+        paper_id_for_url = paper.get("id") or full_id or base_id
+        if fmt == "html":
+            urls = [
+                paper.get("html_url", ""),
+                f"https://arxiv.org/html/{paper_id_for_url}",
+                f"https://arxiv.org/html/{base_id}",
+                f"https://ar5iv.org/abs/{base_id}",
+                f"https://ar5iv.labs.arxiv.org/html/{base_id}",
+            ]
         else:
-            errors.append("No PDF URL found")
-    except Exception as e:
-        errors.append(str(e))
+            urls = [
+                paper.get("pdf_url", ""),
+                f"https://arxiv.org/pdf/{paper_id_for_url}.pdf",
+                f"https://arxiv.org/pdf/{base_id}.pdf",
+            ]
+        used_url, download_errors = _download_first_available(urls, filename)
+        if used_url:
+            downloaded = str(filename)
+            if download_errors:
+                warnings.extend(download_errors)
+        else:
+            errors.extend(download_errors or [f"No reachable {fmt} URL found"])
 
     took_ms = int((time.time() - t0) * 1000)
     out = {
-        "meta": {"paper_id": paper_id, "format": format, "took_ms": took_ms},
+        "meta": {"paper_id": paper_id, "format": fmt or format, "took_ms": took_ms},
         "downloaded": downloaded,
+        "warnings": warnings,
         "errors": errors,
     }
     print(json.dumps(out, ensure_ascii=False, indent=2))

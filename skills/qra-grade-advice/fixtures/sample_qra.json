@@ -1,0 +1,21 @@
+{
+  "schema": "qra_pool.item.v1",
+  "id": "fixture-qra-001",
+  "question": "How does access control policy enforcement reduce unauthorized access risk?",
+  "reasoning": "The control objective requires consistent policy enforcement at the decision point, so the rationale should connect policy rules to denied unauthorized requests.",
+  "answer": "Access control policy enforcement reduces unauthorized access by checking each request against defined rules before granting access. Requests that do not satisfy policy are denied or escalated, which limits accidental or malicious access outside the approved boundary.",
+  "sources": [
+    {
+      "id": "fixture-source-1",
+      "title": "Fixture control text",
+      "quote": "Enforce approved authorizations for logical access to information and system resources."
+    }
+  ],
+  "constraints": {
+    "human_final_required": true
+  },
+  "provider_restrictions": [],
+  "metadata": {
+    "fixture": true
+  }
+}

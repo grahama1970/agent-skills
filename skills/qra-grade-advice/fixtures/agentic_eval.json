@@ -1,0 +1,25 @@
+{
+  "schema": "agentic_eval.fixture.v1",
+  "skill": "qra-grade-advice",
+  "trials": 3,
+  "proof_scope": {
+    "proves": ["typed qra_pool.item.v1 input validation", "typed qra_grade_advice.v1 output validation", "browser advisor default is value-gated"],
+    "does_not_prove": ["live Pi subagent fanout", "live WebGPT usefulness", "real pool lease/update API"]
+  },
+  "cases": [
+    {
+      "id": "positive-fixture",
+      "command": "./run.sh fixture fixtures/sample_qra.json --out /tmp/qra-grade-advice-positive.json",
+      "assertions": ["exit_code == 0", "json.schema == qra_grade_advice.v1", "json.browser_advisor_decision in ['skip','escalate','calibration']"]
+    },
+    {
+      "id": "negative-missing-answer",
+      "input_patch": {"answer": ""},
+      "assertions": ["validation rejects empty answer"]
+    },
+    {
+      "id": "adversarial-browser-latency",
+      "assertions": ["WebGPT is not required unless value gate triggers", "lane_receipts record latency_seconds and usefulness"]
+    }
+  ]
+}

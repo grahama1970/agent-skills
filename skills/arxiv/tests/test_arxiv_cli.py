@@ -34,10 +34,10 @@ class TestDownload:
     """Tests for arxiv download command."""
 
     def test_download_pdf_format(self):
-        """Test downloading PDF (default format)."""
+        """Test explicit PDF download."""
         with tempfile.TemporaryDirectory() as tmpdir:
             result = run_arxiv_cmd([
-                "download", "-i", TEST_ARXIV_ID, "-o", tmpdir
+                "download", "-i", TEST_ARXIV_ID, "-o", tmpdir, "--format", "pdf"
             ])
 
             assert result.get("errors") == [], f"Errors: {result.get('errors')}"
@@ -46,13 +46,14 @@ class TestDownload:
             downloaded_path = Path(result["downloaded"])
             assert downloaded_path.exists()
             assert downloaded_path.suffix == ".pdf"
+            assert "2501_15355" not in downloaded_path.name
             assert downloaded_path.stat().st_size > 100_000  # >100KB
 
     def test_download_html_format(self):
-        """Test downloading HTML from ar5iv (Task 2 Definition of Done)."""
+        """Test default HTML download from ar5iv with title-based filename."""
         with tempfile.TemporaryDirectory() as tmpdir:
             result = run_arxiv_cmd([
-                "download", "-i", TEST_ARXIV_ID, "-o", tmpdir, "--format", "html"
+                "download", "-i", TEST_ARXIV_ID, "-o", tmpdir
             ])
 
             assert result.get("errors") == [], f"Errors: {result.get('errors')}"
@@ -62,6 +63,7 @@ class TestDownload:
             downloaded_path = Path(result["downloaded"])
             assert downloaded_path.exists(), f"File not found: {downloaded_path}"
             assert downloaded_path.suffix == ".html"
+            assert "2501_15355" not in downloaded_path.name
             assert downloaded_path.stat().st_size > 50_000  # >50KB for real paper
 
             # Verify content is valid HTML

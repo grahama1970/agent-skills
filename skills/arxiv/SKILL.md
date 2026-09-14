@@ -41,6 +41,7 @@ Search arXiv and extract knowledge into memory.
 |---------|-------------|
 | `search` | Find papers (returns abstracts for triage) |
 | `learn` | Extract knowledge into memory |
+| `download` | Download paper HTML by default; output files are named from the paper title |
 
 ---
 
@@ -293,8 +294,11 @@ Profile: 12 figures, 4 tables → Using HTML extraction (fast mode)
 
 ### Download HTML Only
 ```bash
-# Download ar5iv HTML for manual inspection
-./run.sh download -i 2501.15355 --format html
+# Download ar5iv HTML for manual inspection (default; title-based filename)
+./run.sh download -i 2501.15355
+
+# Download PDF only when needed
+./run.sh download -i 2501.15355 --format pdf
 ```
 
 ### Batch Processing (Parallel)
@@ -366,3 +370,18 @@ Profile: 12 figures, 4 tables → Using HTML extraction (fast mode)
 | ar5iv.org | https://ar5iv.org | LaTeX to HTML conversion for arxiv papers |
 | extractor skill | (sibling skill) | HTML/PDF content extraction |
 | qra skill | (sibling skill) | Q&A pair generation from text |
+
+## QRA-training failure recovery note (2026-09-14)
+
+Observed during qra-training research: `download --format html` failed when the
+arXiv metadata API returned 429 or timed out before the HTML/PDF download step.
+The CLI now treats metadata lookup as optional for direct paper IDs. If metadata
+fails, it builds direct fallback URLs and tries, in order:
+
+1. `https://arxiv.org/html/<id-with-version>`
+2. `https://arxiv.org/html/<base-id>`
+3. `https://ar5iv.org/abs/<base-id>`
+4. `https://ar5iv.labs.arxiv.org/html/<base-id>`
+
+A metadata failure should appear in `warnings[]`, not `errors[]`, when one of
+those content URLs succeeds.
