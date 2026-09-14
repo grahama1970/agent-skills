@@ -100,9 +100,9 @@ def run_eval() -> dict[str, Any]:
     cases.append(_case(
         "legacy_scillm_marked_migration",
         "tau_model_orchestration",
-        "legacy migration work" in skill_md and "Do not extend direct SciLLM usage" in skill_md,
-        "Existing direct SciLLM code is explicitly labeled as legacy migration work.",
-        "Removal of every legacy direct SciLLM call from implementation.",
+        "legacy migration work" in skill_md and "disabled by default" in skill_md and "DOGPILE_ENABLE_LEGACY_SCILLM=1" in skill_md,
+        "Existing direct SciLLM code is explicitly labeled as legacy migration work and disabled by default.",
+        "Full replacement with Tau-backed model execution.",
     ))
 
     cases.append(_case(

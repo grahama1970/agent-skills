@@ -188,6 +188,9 @@ def _check_legacy_scillm(checks: list[dict[str, Any]], timeout_s: int) -> None:
     if isinstance(data, str) and not data.startswith("Error:") and data.strip():
         status = "passed"
         error = None
+    elif isinstance(data, str) and "legacy direct SciLLM lane disabled" in data:
+        status = "skipped"
+        error = data
     else:
         status = "failed"
         error = error or str(data)

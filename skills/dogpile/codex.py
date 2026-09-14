@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-"""scillm integration for Dogpile.
+"""Legacy model adapter for Dogpile.
 
-Provides high-reasoning analysis capabilities:
-- search_codex: General reasoning/extraction through /scillm
-- search_codex_knowledge: Technical overview queries
-- tailor_queries_for_services: Generate service-specific search queries
-- analyze_query: Analyze query for ambiguity and code-related intent
+Dogpile's contract puts model orchestration behind Tau. This module now keeps
+its old SciLLM helpers disabled by default so retrieval runs degrade cleanly
+instead of calling localhost:4001 directly. Set DOGPILE_ENABLE_LEGACY_SCILLM=1
+only for explicit migration/debug work.
 """
 import json
 import os
@@ -31,12 +30,18 @@ SCILLM_API_KEY = os.environ.get("SCILLM_API_KEY", "sk-dev-proxy-123")
 SCILLM_MODEL = os.environ.get("DOGPILE_SCILLM_MODEL", "gpt-5.5")
 
 
-def _call_scillm(prompt: str, schema: Optional[Path] = None, timeout_s: float = 120.0) -> str:
-    """Call Dogpile's single active LLM lane.
+def _legacy_scillm_enabled() -> bool:
+    return os.environ.get("DOGPILE_ENABLE_LEGACY_SCILLM") == "1"
 
-    Dogpile deliberately does not set max_tokens. scillm owns provider routing,
-    model-specific token controls, and upstream fallback behavior.
-    """
+
+def _legacy_disabled_error() -> str:
+    return "Error: legacy direct SciLLM lane disabled; Dogpile model work must route through Tau"
+
+
+def _call_scillm(prompt: str, schema: Optional[Path] = None, timeout_s: float = 120.0) -> str:
+    """Call the legacy SciLLM lane only when explicitly enabled."""
+    if not _legacy_scillm_enabled():
+        return _legacy_disabled_error()
     effective_prompt = prompt
     payload: Dict[str, Any] = {
         "model": SCILLM_MODEL,

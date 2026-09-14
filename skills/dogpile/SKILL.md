@@ -114,9 +114,10 @@ Dogpile should have exactly one model-orchestration boundary: Tau.
 
 Implementation note: older Dogpile modules still contain a direct SciLLM adapter
 for query tailoring and synthesis. Treat that adapter as legacy migration work,
-not as the desired project-agent contract. Do not extend direct SciLLM usage;
-move model-backed Dogpile steps behind Tau when a stable Tau adapter is
-available for the target workflow.
+not as the desired project-agent contract. It is disabled by default; set
+`DOGPILE_ENABLE_LEGACY_SCILLM=1` only for explicit migration/debug work. Do not
+extend direct SciLLM usage; move model-backed Dogpile steps behind Tau when a
+stable Tau adapter is available for the target workflow.
 
 ## Orchestration Boundary
 
