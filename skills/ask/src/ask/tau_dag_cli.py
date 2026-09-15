@@ -2260,7 +2260,7 @@ def _reap_stale_ask_windows(surf_run: Path, *, timeout_seconds: int = 60) -> dic
 # the human asked for, so they belong on the reviewer desktop rather than on
 # top of whatever is being worked on. ASK_REVIEWER_DESKTOP overrides; empty
 # disables placement entirely.
-DEFAULT_REVIEWER_DESKTOP = "1"  # wmctrl index 1 == Desktop 2
+DEFAULT_REVIEWER_DESKTOP = "auto"  # current desktop + 1 (browser-oracle computes); numeric index to pin; empty disables
 
 
 def _reviewer_desktop() -> str:

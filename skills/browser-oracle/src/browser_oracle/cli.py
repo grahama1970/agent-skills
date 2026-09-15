@@ -293,12 +293,27 @@ def _extract_new_tab_id(payload: object) -> str:
     return ""
 
 
+def _wmctrl_env() -> dict[str, str]:
+    """Env for wmctrl that works from headless callers.
+
+    Agent shells, scheduler jobs, and workflow children are tty processes with
+    no DISPLAY, so every wmctrl call silently failed and ask windows landed on
+    whatever desktop the operator was using (observed live 2026-09-16).
+    The graphical session is :0 on this machine.
+    """
+    env = dict(os.environ)
+    env.setdefault("DISPLAY", ":0")
+    return env
+
+
 def _wmctrl_chrome_windows() -> list[str]:
     wmctrl = shutil.which("wmctrl")
     if not wmctrl:
         return []
     try:
-        listing = subprocess.run([wmctrl, "-lx"], capture_output=True, text=True, timeout=5)
+        listing = subprocess.run(
+            [wmctrl, "-lx"], capture_output=True, text=True, timeout=5, env=_wmctrl_env()
+        )
     except Exception:
         return []
     return [
@@ -306,6 +321,26 @@ def _wmctrl_chrome_windows() -> list[str]:
         for line in listing.stdout.splitlines()
         if "google-chrome" in line.lower() or "chromium" in line.lower()
     ]
+
+
+def _next_desktop(wmctrl: str) -> int | None:
+    """Current desktop + 1, wrapped by desktop count, from `wmctrl -d`."""
+    try:
+        listing = subprocess.run(
+            [wmctrl, "-d"], capture_output=True, text=True, timeout=5, env=_wmctrl_env()
+        )
+    except Exception:
+        return None
+    current, count = None, 0
+    for line in listing.stdout.splitlines():
+        parts = line.split()
+        if len(parts) >= 2:
+            count += 1
+            if parts[1] == "*":
+                current = int(parts[0])
+    if current is None or count == 0:
+        return None
+    return (current + 1) % count
 
 
 def _move_new_window_to_reviewer_desktop(
@@ -319,16 +354,26 @@ def _move_new_window_to_reviewer_desktop(
     override, empty value to disable. Never fails the bind — placement is a
     courtesy to the user's workspace, not a proof boundary (#1222).
     """
-    raw = desktop_override if desktop_override is not None else os.environ.get("BROWSER_ORACLE_REVIEWER_DESKTOP", "1")
+    raw = desktop_override if desktop_override is not None else os.environ.get("BROWSER_ORACLE_REVIEWER_DESKTOP", "auto")
     if raw == "":
         return None
-    try:
-        desktop = int(raw)
-    except ValueError:
-        return {"status": "skipped", "reason": f"bad desktop index {raw!r}"}
     wmctrl = shutil.which("wmctrl")
     if not wmctrl:
         return {"status": "skipped", "reason": "wmctrl not installed"}
+    if raw == "auto":
+        # Relative placement: the desktop AFTER the operator's current one, so
+        # reviewer windows never land on top of whatever is being worked on
+        # regardless of which desktop that is (operator 2026-09-16). Wraps at
+        # the desktop count.
+        auto = _next_desktop(wmctrl)
+        if auto is None:
+            return {"status": "skipped", "reason": "could not read current desktop for auto placement"}
+        desktop = auto
+    else:
+        try:
+            desktop = int(raw)
+        except ValueError:
+            return {"status": "skipped", "reason": f"bad desktop index {raw!r}"}
     try:
         # The reliable identity is the diff against the pre-open snapshot;
         # position in wmctrl output is NOT creation order (verified live:
@@ -351,7 +396,9 @@ def _move_new_window_to_reviewer_desktop(
         target = new_windows[0]
 
         def _current_desktop() -> str | None:
-            listing = subprocess.run([wmctrl, "-lx"], capture_output=True, text=True, timeout=5)
+            listing = subprocess.run(
+                [wmctrl, "-lx"], capture_output=True, text=True, timeout=5, env=_wmctrl_env()
+            )
             for line in listing.stdout.splitlines():
                 if line.lower().startswith(target.lower()):
                     return line.split()[1]
@@ -367,6 +414,7 @@ def _move_new_window_to_reviewer_desktop(
                 capture_output=True,
                 text=True,
                 timeout=5,
+                env=_wmctrl_env(),
             )
             last_stderr = move.stderr.strip() or None
             _time.sleep(0.4)

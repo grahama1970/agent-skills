@@ -12,6 +12,11 @@
 # Always cleans up the window it creates, including on failure.
 set -uo pipefail
 
+# Headless callers (agent shells, scheduler, workflow children) have no
+# DISPLAY; the graphical session is :0. Without this every wmctrl call in the
+# probe fails and the probe FAILs on empty readback even when placement worked.
+export DISPLAY="${DISPLAY:-:0}"
+
 # One stable result line on every exit path. Without it a graceful SKIP (exit 0,
 # no PASS text) is indistinguishable from a failure to an eval asserting on
 # output, which is exactly how three green probes read as red when herdr was
