@@ -1,8 +1,16 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-09-02 UTC (Persona Dream closure reconciliation: agent listening signoff passed before human collection; #1008 now has scoped deterministic held-out benefit plus one live Tau held-out bridge; human perception remains unmeasured) by Codex
-**Status:** Active development
-**Current phase:** `P2_LIVE_CONTINUITY_CHAIN` with closure dispositions reconciled in `DISPOSITION_REGISTRY.json`
+**Last updated:** 2026-09-15 UTC (operator clarified that Persona Dream continuously evolves Chatterbox persona personality from experience) by Pi
+**Status:** Active continuous experience-consolidation program
+**Current phase:** `CONTINUOUS_RESEARCH_AND_TRANSFER`; `$memory` recalls emotional experience, Persona Dream consolidates it into bounded persona-memory personality/emotion deltas, and `$chatterbox-speak` expresses the evolved state on later turns. Dream generation and emotion-conditioned speech are already proven system capabilities. The active proof target is repeated durable evolution across cycles. A change is an improvement only after a preregistered metric beats its baseline while safety gates hold.
+
+**Current trigger seam:** `run.sh recall-emotional-triggers` now turns live,
+question-shaped, persona-scoped `$memory` recall into emotional triggers only
+after exact `persona_memory` reread and structured emotion/intensity checks. A
+fresh live run produced three Embry triggers and the existing
+`persist-emotional-triggers` path wrote and exactly reread all three. This proves
+the recall-to-trigger bridge, not the later durable personality delta or future
+behavioral effect.
 **Active successor issues and proof boundaries (see `CURRENT_STATUS.json` `current_claims`):**
 #1126/#1127/#1179 listener-study technical prerequisites CLOSED — the current
 v2 stimuli pass the frozen technical screen, refreshed rater-page validation,

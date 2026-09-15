@@ -96,6 +96,15 @@ def validate_registry(
 
     if doc.get("schema") != "persona_dream.disposition_registry.v1":
         fail("registry_schema")
+    program = doc.get("program") or {}
+    if program.get("status") != "ACTIVE_CONTINUOUS":
+        fail("continuous_program_not_active")
+    if doc.get("immutable_goal_completion_claimed") is True:
+        fail("continuous_program_claimed_complete")
+    claim_policy = program.get("claim_policy") or {}
+    for claim in ("memory_trigger_causality", "improvement", "felt_or_perceived_emotion"):
+        if not claim_policy.get(claim):
+            fail("program_claim_policy_missing", detail=claim)
     required = set(doc.get("required_hypotheses") or [])
     records = {str(row.get("id")): row for row in doc.get("hypotheses") or []}
     for hyp in sorted(required):
@@ -213,11 +222,11 @@ def validate_registry(
         if row.get("status", "").startswith("TERMINAL") and decision == "DEFER_WITH_EXPLICIT_REASON":
             fail("terminal_status_with_defer_decision", hyp_id)
 
-    if doc.get("immutable_goal_completion_claimed") is True:
+    if doc.get("disposition_cycle_complete") is True:
         for hyp in sorted(required):
             row = records.get(hyp) or {}
             if row.get("result_class") in {"NOT_RUN", "APPARATUS_VALID_ONLY"}:
-                fail("immutable_goal_completion_claimed_with_nonterminal_hypothesis", hyp)
+                fail("disposition_cycle_complete_with_nonterminal_hypothesis", hyp)
 
     status = "PASS_DISPOSITION_REGISTRY" if not failures else "BLOCKED_DISPOSITION_REGISTRY"
     terminal = [
@@ -241,14 +250,17 @@ def validate_registry(
         "hypothesis_count": len(records),
         "terminal_hypotheses": sorted(terminal),
         "nonterminal_hypotheses": sorted(nonterminal),
+        "program_status": program.get("status"),
+        "disposition_cycle_complete": doc.get("disposition_cycle_complete") is True,
         "immutable_goal_completion_claimed": doc.get("immutable_goal_completion_claimed") is True,
         "failures": failures,
         "claims": {
             "proves": [
                 "disposition registry hashes and result/product/transfer combinations are internally consistent",
-                "immutable-goal completion is claimed only when no required hypothesis remains nonterminal"
-                if doc.get("immutable_goal_completion_claimed") is True
-                else "immutable-goal completion is not claimed while required hypotheses remain nonterminal",
+                "the continuous Persona Dream program is active and is not claimed complete",
+                "the current disposition cycle is complete only when no required hypothesis remains nonterminal"
+                if doc.get("disposition_cycle_complete") is True
+                else "the current disposition cycle is still open",
             ],
             "does_not_prove": [
                 "any new experimental result",

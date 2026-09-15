@@ -1,8 +1,52 @@
 {
   "active_blockers": [
-    "#1058 human listener collection remains open for human-perception wording only: 0/20 valid rows and SIGNED_INTERPRETATION.json missing; not an immutable-goal blocker under GOAL.md completion rule.",
-    "Production-scale reliability and deployed SPARTA production operation remain non-claims; not required for GOAL.md disposition closure."
+    "#1058 human listener collection remains open for human-perception wording only: 0/20 valid rows and SIGNED_INTERPRETATION.json missing; not an experiment-cycle disposition blocker.",
+    "Production-scale reliability and deployed SPARTA production operation remain non-claims; not required for the completed disposition cycle."
   ],
+  "research_program": {
+    "status": "ACTIVE_CONTINUOUS",
+    "purpose": "Continuously evolve the personality and emotion state of Chatterbox personas from provenance-bound experience.",
+    "established_capabilities": {
+      "synthetic_dreaming": "PROVEN",
+      "emotion_conditioned_chatterbox_speech": "PROVEN_WITH_MACHINE_MEASURED_DELIVERY_CHANGE",
+      "answer_content_preservation_in_paired_run": "PROVEN"
+    },
+    "active_proof_target": "Repeated experience changes bounded persona-memory personality/emotion state; the independently reread state affects later behavior and $chatterbox-speak delivery; the later outcome becomes trigger evidence for another cycle without factual, identity, or synthetic-memory drift.",
+    "trigger_bridge": {
+      "status": "PASS_MEMORY_RECALL_EMOTIONAL_TRIGGERS",
+      "capability": "PROVEN",
+      "live_trigger_count": 3,
+      "agentic_eval_report": "skills/persona-dream/local/proofs/memory-recall-emotional-triggers-20260915/agentic_eval_report.json",
+      "agentic_eval_report_sha256": "sha256:48863de38cc730623622a593e41cb20ef24656731f8d800fcf4d507357986b10",
+      "live_recall_receipt": "skills/persona-dream/local/proofs/memory-recall-emotional-triggers-20260915/live_recall_trigger_receipt.json",
+      "live_recall_receipt_sha256": "sha256:6d55ebb62470d3f9a223235816a3c0d2ad6b9808aa8bf26521bfed64e5339d0f",
+      "live_persist_receipt": "skills/persona-dream/local/proofs/memory-recall-emotional-triggers-20260915/live_trigger_persist_receipt.json",
+      "live_persist_receipt_sha256": "sha256:1c9a6e75310d806ad2d46faeb667637c08258ee253d48079a17b5f078dbb4f60",
+      "does_not_prove": "a durable personality delta or later behavioral effect"
+    },
+    "completion_policy": "Individual experiments and hypothesis sets terminate with scoped dispositions; the Persona Dream experience-consolidation program does not terminate.",
+    "claim_policy": {
+      "memory_trigger_causality": "Requires a matched intervention that changes the provenance-bound memory trigger alone and hash-binds the downstream persona-state and audio effects.",
+      "improvement": "Requires a preregistered target metric, a baseline win with uncertainty reported, and preserved identity, factuality, provenance, answer-content, and synthetic-memory boundaries.",
+      "system_emotion_state": "May be measured as typed state transitions and delivery parameters; this does not prove felt emotion.",
+      "human_perception": "Emotion, naturalness, identity, and preference claims require blinded human evidence."
+    },
+    "loop": [
+      "capture real interactions and events as provenance-bound $memory evidence",
+      "recall experience-linked emotion triggers",
+      "consolidate those triggers through explicitly synthetic dreams and reflections",
+      "accept or reject bounded personality and emotion deltas",
+      "persist accepted deltas to persona-memory and independently reread them",
+      "apply the evolved persona-memory state to a later $chatterbox-speak turn",
+      "capture the later conversation outcome as evidence for the next cycle"
+    ],
+    "improvement_targets": [
+      "$memory",
+      "$chatterbox-speak",
+      "persona-memory personality and emotion state"
+    ],
+    "operator_clarified_at": "2026-09-15T03:17:03Z"
+  },
   "canonical_create_kling_scene": {
     "boundary": "Proves one canonical scene-table -> create-kling-scene -> paid Kling submission produced a decodable MP4. Does not prove visual fidelity, human preference, or provider reliability.",
     "live": true,
@@ -240,9 +284,10 @@
   "controlling_goal": {
     "registered_source": "human_prompt",
     "registered_with": "skills/goal-drift/run.sh goal --project persona-dream",
-    "sha256": "sha256:3914e022fdf9c283a623b801dc3f7914f97be5496808115c1db1360d82a24ec2",
+    "sha256": "sha256:d13ba48ed912ecf05d14b6220a33b697afe5c3acc6c602102bfd4d4f8141ff97",
     "source": "skills/persona-dream/GOAL.md",
-    "summary": "Determine through preregistered, falsifiable, fail-closed experiments whether provenance-bound synthetic dreaming adds measurable value over direct memory and structured reflection, while preserving identity, factual competence, answer content, and synthetic-versus-literal boundaries; transfer validated mechanisms and failure modes into Graph Memory Operator, Tau, SPARTA, and Chatterbox, and retire or simplify components that fail controlled ablation.",
+    "summary": "Continuously evolve Chatterbox persona personality and emotion state from experience: $memory supplies provenance-bound emotion triggers, Persona Dream consolidates them into accepted bounded persona-memory deltas, and $chatterbox-speak expresses the evolved state on later turns while identity, factual competence, answer content, provenance, and synthetic-versus-literal boundaries remain preserved.",
+    "operator_clarification": "Persona Dream is not meant to finish. Completion applies only to bounded experiments and hypothesis sets.",
     "superseded_goal_note": "The prior 'build and verify Embry' objective is demoted to the Persistent-Persona Safety Hypothesis in GOAL.md; it is a safety constraint, not the research conclusion."
   },
   "corrected_goal_pair_proof": {
@@ -459,13 +504,13 @@
       "status": "PASS_RETURN_ARC_CLOSED"
     }
   },
-  "current_phase": "IMMUTABLE_GOAL_FULL_E2E_CLOSURE",
+  "current_phase": "CONTINUOUS_RESEARCH_AND_TRANSFER",
   "immutable_goal_completion": {
-    "boundary": "Fresh live full-cycle run plus fresh sealed paired C0/C1 evaluator run satisfy GOAL.md goal-helper primary proof; production reliability and human preference remain non-claims.",
-    "headline": "IMMUTABLE_GOAL: COMPLETE",
+    "boundary": "Historical field retained for compatibility. The receipt closes the bounded PD-CORRECTED-GOAL-V1 full-cycle and paired-proof experiment only; it does not complete the continuous Persona Dream program.",
+    "headline": "PD-CORRECTED-GOAL-V1: EXPERIMENT COMPLETE; PERSONA DREAM PROGRAM ACTIVE",
     "receipt": "skills/persona-dream/local/proofs/immutable-goal-full-e2e-20260907T141200Z/proof.json",
     "receipt_sha256": "sha256:cf1f76b510f7d608350e3a2107486559d9dabdd12711f051db13ea63b8bbb39b",
-    "status": "PASS_IMMUTABLE_GOAL_FULL_E2E"
+    "status": "PASS_BOUNDED_EXPERIMENT_CYCLE"
   },
   "latest_accepted_dream_cycle": {
     "evidence_boundary": "One accepted canonical dream persistence path is meaningful history, not repeated pipeline reliability.",
@@ -571,12 +616,15 @@
     ]
   },
   "next_step": {
-    "default": "Post-proof: #1058 human listener collection and production reliability remain separately scoped future goals.",
+    "default": "Prove the closed experiential evolution loop; do not rerun dream-generation or emotional-speech capability demos already established.",
     "ordered_steps": [
-      "Do not claim human preference/perception without 20 valid listener rows plus SIGNED_INTERPRETATION.json (#1058).",
-      "Commit/push only scoped Persona Dream closure artifacts and code."
+      "Inspect recent real experience, emotion triggers, and current persona-memory personality/emotion state through $memory.",
+      "Choose one bounded experience-conditioned persona-memory delta and declare the metric required to call its effect an improvement.",
+      "Run control/treatment evidence without changing factual answer content or treating dreams as literal memory.",
+      "Transfer an accepted finding to the owning skill, or record an explicit no-adoption disposition.",
+      "Do not claim human preference/perception without 20 valid listener rows plus SIGNED_INTERPRETATION.json (#1058)."
     ],
-    "receipt_target": "skills/persona-dream/local/proofs/canonical-create-kling-scene-20260915T015300Z/CANONICAL_KLING_RECEIPT.json"
+    "receipt_target": "the next experiment-specific disposition and transfer receipt"
   },
   "pctom_r_workstream": {
     "latest_goal_coverage_receipt": "reports/goal_v5/closure/pctom_final/20260902T165849Z/PCTOM_GOAL_COVERAGE_RECEIPT.json",
@@ -782,5 +830,5 @@
   },
   "schema": "persona_dream.current_status.v1",
   "transfer_ledger": "skills/persona-dream/TRANSFER_LEDGER.md",
-  "updated_at": "2026-09-10T17:22:58Z"
+  "updated_at": "2026-09-15T03:24:00Z"
 }

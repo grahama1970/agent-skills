@@ -1,0 +1,77 @@
+{
+  "version": 2,
+  "skill": "persona-dream",
+  "trials": 3,
+  "proof_scope": "Live $memory persona_memory recall creates source-bound emotional triggers for Persona Dream consolidation.",
+  "claims": {
+    "proves": "A natural-language persona-scoped live $memory recall can select emotional experience records, exactly reread their source documents, and create hash-bound Persona Dream emotional triggers.",
+    "does_not_prove": "That a trigger was accepted as a personality delta, changed future behavior, or was perceived by a human listener."
+  },
+  "capability_claims": [
+    {
+      "id": "persona_dream.memory_recall_emotional_triggers",
+      "description": "Persona Dream creates emotional triggers from live persona_memory recall with exact source reread and hash lineage.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true,
+        "fault_injected_deterministic": true
+      },
+      "claim_semantics": "protocol"
+    }
+  ],
+  "cases": [
+    {
+      "name": "live-persona-memory-recall-creates-emotional-triggers",
+      "description": "Recalls Embry experience through live $memory, exactly rereads selected persona_memory documents, and emits source-bound emotional triggers.",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "required": true,
+      "supports_claims": [
+        "persona_dream.memory_recall_emotional_triggers"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "D=/tmp/persona-dream-agentic-memory-trigger; rm -rf \"$D\"; mkdir -p \"$D\"; bash ../run.sh recall-emotional-triggers --persona embry --query 'What remembered experiences carry the strongest emotion for Embry Lawson and could shape how she responds in a later conversation?' --output \"$D/emotional_context.json\" --receipt \"$D/receipt.json\" --json >/dev/null && python - <<'PY'\nimport json\nr=json.load(open('/tmp/persona-dream-agentic-memory-trigger/receipt.json'))\np=json.load(open('/tmp/persona-dream-agentic-memory-trigger/emotional_context.json'))\nassert r['status']=='PASS_MEMORY_RECALL_EMOTIONAL_TRIGGERS', r\nassert r['live'] is True and r['mocked'] is False, r\nassert r['collection']=='persona_memory' and r['persona_tag']=='persona:embry', r\nassert r['trigger_count'] > 0 and all(x['exact_reread'] for x in r['source_rows']), r\nassert all(t['provenance']['source_collection']=='persona_memory' for t in p['triggers']), p\nassert all(t['appraisal']['emotions'] and t['appraisal']['intensity'] is not None for t in p['triggers']), p\nprint('PASS_LIVE_MEMORY_RECALL_EMOTIONAL_TRIGGERS')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_LIVE_MEMORY_RECALL_EMOTIONAL_TRIGGERS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/persona-dream-agentic-memory-trigger/receipt.json",
+            "json_pointer": "/status",
+            "equals": "PASS_MEMORY_RECALL_EMOTIONAL_TRIGGERS"
+          }
+        ]
+      }
+    },
+    {
+      "name": "reject-non-question-persona-memory-trigger-query",
+      "description": "Rejects a keyword pile before memory recall because persona-memory proof queries must be natural-language questions.",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "required": true,
+      "supports_claims": [
+        "persona_dream.memory_recall_emotional_triggers"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "set +e; out=$(bash ../run.sh recall-emotional-triggers --persona embry --query 'Embry emotional strongest memories' --output /tmp/should-not-exist-trigger.json --receipt /tmp/should-not-exist-trigger-receipt.json --json 2>&1); rc=$?; set -e; test \"$rc\" -ne 0; printf '%s' \"$out\" | grep -q 'BLOCKED_TRIGGER_RECALL_QUERY_NOT_QUESTION_SHAPED'; echo PASS_NON_QUESTION_TRIGGER_RECALL_REJECTED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_NON_QUESTION_TRIGGER_RECALL_REJECTED"
+        ]
+      }
+    }
+  ]
+}

@@ -7,7 +7,14 @@ downstream PR or an explicit no-adoption decision. This ledger satisfies the
 `$goal-drift` on 2026-08-03.
 
 A negative, null, or blocking result is a completed result. Nothing in this
-ledger is required to be positive.
+ledger is required to be positive. `Completed` applies only to the named
+experiment: Persona Dream remains a continuous research-and-transfer program.
+Every disposition must either transfer an evidence-bounded change or constraint
+to `$memory`, `$chatterbox-speak`, or bounded personality/emotion state in
+persona-memory, or record why no adoption is warranted, before the next
+experiment begins. The ledger may call a change an improvement only when a
+preregistered target metric beats its baseline while identity, factuality,
+provenance, and synthetic-memory boundaries hold.
 
 The machine-readable source for current research dispositions is
 `DISPOSITION_REGISTRY.json`. This prose ledger is historical context; the strict
@@ -27,7 +34,9 @@ closed:
 - `scripts/check_dispositions.py` — every major hypothesis has a bounded
   result class, product decision, transfer/no-adoption outcome, and recomputed
   receipt hash where terminal evidence exists. Apparatus-validity and technical
-  screens cannot be promoted into benefit/perceptual results.
+  screens cannot be promoted into benefit/perceptual results. Terminal
+  hypotheses close a disposition cycle; they never mark the continuous program
+  finished.
 - `scripts/audit_readme_proof_claims.py` — every proof row on the evidence
   surface must bind to a named receipt whose status matches the claimed one, and
   no unproven row may use positive language. One receipt cannot earn two claims.
@@ -37,6 +46,34 @@ closed:
 
 Claims are written in `CURRENT_STATUS.json` with an explicit `proves` and
 `does_not_prove` pair. The second field is the load-bearing one.
+
+---
+
+## 2026-09-15 — Live persona-memory recall now creates emotional triggers
+
+```text
+Finding:
+The missing trigger seam was real: Persona Dream could recall persona_memory and
+could persist prebuilt triggers, but there was no receipt proving recall output
+became an emotional trigger.
+
+Decision:
+ADOPT. `recall-emotional-triggers` now recalls a persona-scoped experience,
+exactly rereads the selected source document, requires structured emotion and
+intensity, and emits a source/hash-bound trigger for dream consolidation.
+```
+
+- **Evidence:** `local/proofs/memory-recall-emotional-triggers-20260915/live_recall_trigger_receipt.json`
+  = `PASS_MEMORY_RECALL_EMOTIONAL_TRIGGERS`; its output was consumed by
+  `persist-emotional-triggers`, whose exact reread receipt is
+  `local/proofs/memory-recall-emotional-triggers-20260915/live_trigger_persist_receipt.json`.
+  The retained three-trial live/fault-injected evaluation is
+  `local/proofs/memory-recall-emotional-triggers-20260915/agentic_eval_report.json`
+  with capability verdict `PROVEN`.
+- **Destination:** `$memory` `persona_memory` -> `$persona-dream` emotional
+  trigger input. No Chatterbox render is needed to prove this seam.
+- **Does not prove:** durable personality evolution or a later behavioral effect;
+  those are the next closed-loop gates.
 
 ---
 

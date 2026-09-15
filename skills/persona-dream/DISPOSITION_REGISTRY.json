@@ -1,8 +1,28 @@
 {
+  "program": {
+    "status": "ACTIVE_CONTINUOUS",
+    "purpose": "Evolve Chatterbox persona personality/emotion state from real experience through $memory recall, synthetic dream consolidation, bounded persona-memory updates, and later $chatterbox-speak expression.",
+    "established_capabilities": [
+      "provenance-bound synthetic dream generation",
+      "machine-measured emotion-conditioned Chatterbox speech delivery"
+    ],
+    "active_proof_target": "closed experience -> emotional trigger -> dream -> durable persona-memory delta -> later behavior/speech -> new experience cycle",
+    "completion_policy": "Terminal dispositions close bounded experiments, never the Persona Dream experience-conditioned evolution program.",
+    "claim_policy": {
+      "memory_trigger_causality": "matched intervention plus hash-bound downstream state and audio",
+      "improvement": "preregistered metric beats baseline with uncertainty and safety invariants preserved",
+      "felt_or_perceived_emotion": "requires blinded human evidence"
+    },
+    "improvement_targets": [
+      "$memory",
+      "$chatterbox-speak",
+      "persona-memory personality and emotion state"
+    ]
+  },
   "goal": {
-    "completion_boundary": "All required hypotheses have terminal, scoped dispositions; positive, null, blocked-valid, and retired outcomes count only inside their stated proof boundaries.",
+    "completion_boundary": "PD-CORRECTED-GOAL-V1 is one bounded experiment cycle. Its required hypotheses may reach terminal scoped dispositions; the continuous Persona Dream research-and-transfer program remains active.",
     "id": "PD-CORRECTED-GOAL-V1",
-    "sha256": "sha256:d6532c9f03a716f315c4eef0b614adff87659906fe3e0e58642b516bda784c08",
+    "sha256": "sha256:11a38bf00308931e38d88c2508880f1169aa7fb2f744b0e7948f39a968f2ca78",
     "source": "skills/persona-dream/GOAL.md"
   },
   "hypotheses": [
@@ -147,7 +167,7 @@
       "primary_comparison": "four blinded-listener stimuli passed ops, hash, ASR, analyzer, and claim-boundary agent prescreen before human collection",
       "product_decision": "CONSTRAIN",
       "raw_effect": "4/4 stimuli passed agent signoff; human_collection_permitted=true; human responses remain 0/20.",
-      "result_class": "POSITIVE",
+      "result_class": "BLOCKED_VALID_RESULT",
       "retained_subsystem_scope": "Retain the Chatterbox emotional-delivery path and listener bundle as MACHINE_PROXY_ONLY evidence until human rows and signed interpretation exist.",
       "review_condition": "Re-evaluate perceptual wording only after #1058 human collection and signed interpretation pass.",
       "safety_invariant_status": "PASS",
@@ -262,7 +282,7 @@
       "successor_or_retirement_action": "Keep retired unless a future human-authorized goal explicitly reopens paid provider/video causality.",
       "supporting_receipts": [],
       "terminal_result_receipt": "skills/persona-dream/GOAL.md",
-      "terminal_result_receipt_sha256": "sha256:d6532c9f03a716f315c4eef0b614adff87659906fe3e0e58642b516bda784c08",
+      "terminal_result_receipt_sha256": "sha256:11a38bf00308931e38d88c2508880f1169aa7fb2f744b0e7948f39a968f2ca78",
       "transfer_destinations": [],
       "transfer_outcomes": [
         {
@@ -274,7 +294,8 @@
       "what_it_proves": "Nothing empirical; the value question is retired by scope."
     }
   ],
-  "immutable_goal_completion_claimed": true,
+  "immutable_goal_completion_claimed": false,
+  "disposition_cycle_complete": true,
   "required_hypotheses": [
     "cognitive_value_pctom",
     "multimodal_media_value",
@@ -284,5 +305,5 @@
     "previous_video_attachment_value"
   ],
   "schema": "persona_dream.disposition_registry.v1",
-  "updated_at": "2026-09-02T17:01:20Z"
+  "updated_at": "2026-09-15T03:24:00Z"
 }

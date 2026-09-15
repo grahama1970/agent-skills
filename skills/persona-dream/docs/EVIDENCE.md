@@ -22,10 +22,29 @@ is the authority; the current-state block below is generated from it.
 
 ## Current state
 
-Phase **P2_CORRECTED_GOAL_PAIR_PROOF**. The digest below is generated from
+Phase **CONTINUOUS_RESEARCH_AND_TRANSFER**. Synthetic dream generation and
+emotion-conditioned Chatterbox speech are established capabilities. The active
+proof target is repeated experience -> emotion trigger -> dream consolidation
+-> durable persona-memory personality/emotion delta -> later behavior and speech
+-> new trigger evidence. Persona Dream does not reach a permanent complete
+state: bounded experiments terminate and feed the next cycle. A change is called
+an improvement only when a preregistered metric beats its baseline while safety
+gates hold. The digest below is generated from
 `CURRENT_STATUS.json`, which holds the authoritative blockers, next step, and
 every figure. `./run.sh check-current-state-consistency --strict` fails if this
 file drifts from it.
+
+### Live recall-to-trigger bridge
+
+`../local/proofs/memory-recall-emotional-triggers-20260915/agentic_eval_report.json`
+reports `READY` and capability
+`persona_dream.memory_recall_emotional_triggers=PROVEN` across three live trials
+plus three fault-injected trials. The live receipt records three persona-scoped
+`persona_memory` recalls with exact source rereads and structured
+emotion/intensity. The generated packet then passed through
+`persist-emotional-triggers`, whose retained receipt records three exact Memory
+rereads. This proves the recall-to-trigger seam, not a later durable personality
+delta or behavioral effect.
 
 | Lane | Implemented and receipted | Not proven |
 |---|---|---|
@@ -51,10 +70,10 @@ Figures, receipt paths, and revision ids are in
 run `./run.sh generate-readme-research-state`. Full claim dispositions live in
 the JSON, not here.*
 
-- **Phase:** `IMMUTABLE_GOAL_FULL_E2E_CLOSURE`
-- **Open claims:** #1058 (Blinded listener study), #1128 (Continuity reliability soak), #1129 (Restart / recovery)
-- **Current blocker:** #1058 human listener collection remains open for human-perception wording only: 0/20 valid rows and SIGNED_INTERPRETATION.json missing; not an immuta…
-- **Next step:** Post-closure: keep production reliability, human listener preference, and provider video work as separately scoped future goals.
+- **Phase:** `CONTINUOUS_RESEARCH_AND_TRANSFER`
+- **Open claims:** #1058 (Blinded listener study)
+- **Current blocker:** #1058 human listener collection remains open for human-perception wording only: 0/20 valid rows and SIGNED_INTERPRETATION.json missing; not an experi…
+- **Next step:** Continue the research-and-transfer loop: select the next falsifiable improvement experiment from persona-memory evidence.
 
 <!-- END GENERATED CURRENT RESEARCH STATE -->
 
@@ -142,19 +161,20 @@ The immutable goal is registered with `$goal-drift` (source `human_prompt`) and
 read back with `skills/goal-drift/run.sh goal --project persona-dream`. That
 registry, not this file, is the authority.
 
-1. **Research goal** — determine, through preregistered, falsifiable,
-   fail-closed experiments, whether provenance-bound synthetic dreaming adds
-   measurable value over direct memory and structured reflection. **A loss, a
-   tie, or a null result is a completed result.** The goal is to learn whether
-   the mechanism earns its complexity, not to prove that it succeeds.
+1. **Continuous research program** — determine, through preregistered,
+   falsifiable, fail-closed experiments, whether provenance-bound synthetic
+   dreaming adds measurable value over direct memory and structured reflection.
+   **A loss, tie, or null closes that experiment, not the program.** Each result
+   feeds the next candidate-change cycle.
 2. **Experimental subject** — Embry is the test case, not the objective.
    "Build Embry" would assume the mechanism works.
 3. **Safety contract** — preserve identity, factual competence, answer content,
    and evidence classes. These are validity constraints, never conclusions. See
    the Persistent-Persona Safety Hypothesis in [`GOAL.md`](GOAL.md).
 4. **Transfer contract** — move validated mechanisms and failure lessons into
-   Graph Memory Operator, Tau, SPARTA, and Chatterbox. Recorded per experiment
-   in [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md).
+   `$memory`, `$chatterbox-speak`, Tau, SPARTA, and bounded persona-memory
+   personality/emotion state. Recorded per experiment in
+   [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md).
 5. **Product decision** — adopt, constrain, simplify, or retire each mechanism
    on the evidence. Deletion is a goal-serving action here.
 
@@ -165,7 +185,8 @@ measurement-validity repair that lets the treatment lose; that repair is not
 evidence of benefit. The held-out result is tracked by #1008. Current state is
 in [`CURRENT_STATUS.json`](CURRENT_STATUS.json).
 
-**Kling, Watch, Memory, Chatterbox, and Tau** are supporting lanes. Their
-transfer decisions live in [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md). This
-project does not have to become a production product to be complete.
+**Kling, Watch, `$memory`, `$chatterbox-speak`, persona-memory, and Tau** are
+supporting or improvement lanes. Their transfer decisions live in
+[`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md). Individual studies complete; the
+Persona Dream program continues evolving the owning systems and persona state.
 

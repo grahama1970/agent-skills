@@ -1,0 +1,45 @@
+{
+  "collection": "persona_memory",
+  "context_path": "/tmp/persona-dream-memory-recall-trigger-live/emotional_context.json",
+  "context_sha256": "sha256:30b4599d5820dd14b022365d1646d1fb67146c450ca2d91d8ebb6b0002931b27",
+  "exact_fields": [
+    "_key",
+    "schema",
+    "persona_id",
+    "user_id",
+    "trigger_text",
+    "empathy",
+    "speech_delivery"
+  ],
+  "exact_rereads": [
+    {
+      "_key": "persona_dream_emotional_trigger_recall-bridge-1789443561_recall-embry-age15-19-b01-memory-012",
+      "exact_reread": true,
+      "semantic_sync_state": "synced"
+    },
+    {
+      "_key": "persona_dream_emotional_trigger_recall-bridge-1789443561_recall-embry-age23-current-b01-memory-003",
+      "exact_reread": true,
+      "semantic_sync_state": "synced"
+    },
+    {
+      "_key": "persona_dream_emotional_trigger_recall-bridge-1789443561_recall-embry-age19-23-b01-memory-036",
+      "exact_reread": true,
+      "semantic_sync_state": "synced"
+    }
+  ],
+  "failed_gates": [],
+  "live": true,
+  "memory_keys": [
+    "persona_dream_emotional_trigger_recall-bridge-1789443561_recall-embry-age15-19-b01-memory-012",
+    "persona_dream_emotional_trigger_recall-bridge-1789443561_recall-embry-age23-current-b01-memory-003",
+    "persona_dream_emotional_trigger_recall-bridge-1789443561_recall-embry-age19-23-b01-memory-036"
+  ],
+  "mocked": false,
+  "persona_id": "embry",
+  "run_id": "recall-bridge-1789443561",
+  "schema": "persona_dream.emotional_trigger_memory_receipt.v1",
+  "status": "PASS_EMOTIONAL_TRIGGER_MEMORY_REREAD",
+  "trigger_count": 3,
+  "user_id": "graham"
+}

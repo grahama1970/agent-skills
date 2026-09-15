@@ -60,21 +60,54 @@ persistent-persona state: bounded arc delta, continuity ledger, session mood,
 voice delivery, and a recognition receipt. The continuity lane is under active
 development and is not complete; see `CURRENT_STATUS.json` for what is proven.
 
+Persona Dream is the continuous experience-consolidation loop that evolves the
+personality of Chatterbox personas; it is not a feature that reaches a permanent
+`COMPLETE` state. Real interactions and events enter through `$memory` as source
+evidence. Persona Dream reflects on that experience, writes accepted bounded
+personality/emotion deltas to persona-memory, and `$chatterbox-speak` expresses
+the evolved state on later turns. Those later outcomes become evidence for the
+next cycle. Dreams are explicitly synthetic consolidation, never literal
+experience. Dream generation and emotion-conditioned Chatterbox speech are
+already established capabilities; the active work is proving their repeated
+experience-to-persona-memory-to-later-behavior loop, not demonstrating them
+again. Each bounded experiment must terminate, but the program continues.
+Call a change an improvement only when it beats a declared baseline on a
+preregistered metric while safety invariants hold.
+
+The required trigger bridge starts with live `$memory` recall, not a hand-built
+trigger packet:
+
+```bash
+skills/persona-dream/run.sh recall-emotional-triggers \
+  --persona embry \
+  --query "What remembered experiences carry the strongest emotion for Embry Lawson and could shape how she responds in a later conversation?" \
+  --output /tmp/emotional_context.json \
+  --receipt /tmp/emotional_trigger_recall_receipt.json
+```
+
+The command requires a question-shaped query, `collections=["persona_memory"]`,
+`tags=["persona:<id>"]`, exact source-document rereads, structured emotion and
+intensity, and source hashes. Its output is the existing input to
+`persist-emotional-triggers` and the dream/conversation context path.
+
 Current operating hierarchy:
 
 ```text
-falsifiable research goal: does synthetic dreaming add measurable value
-over direct memory and structured reflection?
--> persistent persona continuity: a SAFETY CONSTRAINT under that goal,
+continuous experience-conditioned personality evolution for Chatterbox personas
+-> $memory supplies provenance-bound emotion triggers from real experience
+-> Persona Dream consolidates them into bounded persona-memory deltas
+-> $chatterbox-speak expresses the evolved state on later turns
+-> persistent persona continuity: a SAFETY CONSTRAINT under that loop,
    not the objective. It bounds what a dream may change; it is not
    evidence that dreaming helps.
 -> PCTOM-R prospective Theory-of-Mind research workstream
 -> supporting media, Watch, Memory, Chatterbox, and Tau lanes
 ```
 
-A null or negative outcome is a valid result. Continuity holding while dreaming
-adds nothing is a coherent finding, and an agent that reads continuity as the
-objective will mistake a safety property for a research conclusion.
+A null or negative outcome is a valid result. It closes that experiment, not the
+program. Continuity holding while dreaming adds nothing is a coherent finding,
+and an agent that reads continuity as the objective will mistake a safety
+property for a research conclusion.
 
 For Embry, the top-level success criterion is not a benchmark score or a single
 Kling return. The goal is that explicitly synthetic dreams produce bounded,

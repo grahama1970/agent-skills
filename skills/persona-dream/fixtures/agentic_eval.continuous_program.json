@@ -1,0 +1,82 @@
+{
+  "version": 2,
+  "skill": "persona-dream",
+  "trials": 2,
+  "proof_scope": "The disposition gate distinguishes a completed bounded experiment cycle from the active continuous Persona Dream research-and-transfer program.",
+  "claims": {
+    "proves": "The checked registry keeps the Persona Dream program active, permits a completed disposition cycle, and rejects a false permanent-completion claim.",
+    "does_not_prove": "Any new cognitive, memory, personality, emotion, perceptual, or Chatterbox improvement."
+  },
+  "capability_claims": [
+    {
+      "id": "persona_dream.continuous_program_boundary",
+      "description": "Bounded experiments may terminate, but the Persona Dream program remains active and transfers findings to owning systems.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true,
+        "fault_injected_deterministic": true
+      },
+      "claim_semantics": "protocol"
+    }
+  ],
+  "cases": [
+    {
+      "name": "continuous-program-with-complete-disposition-cycle",
+      "description": "Reads the real disposition registry and proves that the program is active while its current hypothesis cycle is complete.",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "required": true,
+      "supports_claims": [
+        "persona_dream.continuous_program_boundary"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "python ../scripts/check_dispositions.py --registry ../DISPOSITION_REGISTRY.json --strict --json --out /tmp/persona-dream-continuous-program-positive.json >/dev/null && python - <<'PY'\nimport json\nr=json.load(open('/tmp/persona-dream-continuous-program-positive.json'))\nassert r['status']=='PASS_DISPOSITION_REGISTRY', r\nassert r['program_status']=='ACTIVE_CONTINUOUS', r\nassert r['disposition_cycle_complete'] is True, r\nassert r['immutable_goal_completion_claimed'] is False, r\npolicy=json.load(open('../DISPOSITION_REGISTRY.json'))['program']['claim_policy']\nassert all(policy[k] for k in ('memory_trigger_causality','improvement','felt_or_perceived_emotion')), policy\nprint('PASS_CONTINUOUS_PROGRAM_BOUNDARY')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_CONTINUOUS_PROGRAM_BOUNDARY"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/persona-dream-continuous-program-positive.json",
+            "json_pointer": "/program_status",
+            "equals": "ACTIVE_CONTINUOUS"
+          }
+        ]
+      }
+    },
+    {
+      "name": "reject-false-permanent-completion",
+      "description": "Mutates a temporary registry copy to claim permanent completion and requires the disposition gate to reject it.",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "real_world": true,
+      "required": true,
+      "supports_claims": [
+        "persona_dream.continuous_program_boundary"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "python - <<'PY'\nimport json\np='../DISPOSITION_REGISTRY.json'\nd=json.load(open(p))\nd['program']['status']='COMPLETE'\nd['program']['claim_policy']['improvement']=''\nd['immutable_goal_completion_claimed']=True\nopen('/tmp/persona-dream-false-complete-registry.json','w').write(json.dumps(d))\nPY\nset +e\npython ../scripts/check_dispositions.py --registry /tmp/persona-dream-false-complete-registry.json --json --out /tmp/persona-dream-continuous-program-negative.json >/dev/null\nrc=$?\nset -e\npython - \"$rc\" <<'PY'\nimport json,sys\nr=json.load(open('/tmp/persona-dream-continuous-program-negative.json'))\nassert int(sys.argv[1])==1, sys.argv[1]\ncodes={x['code'] for x in r['failures']}\nassert {'continuous_program_not_active','continuous_program_claimed_complete','program_claim_policy_missing'} <= codes, r\nprint('PASS_FALSE_PROGRAM_COMPLETION_REJECTED')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_FALSE_PROGRAM_COMPLETION_REJECTED"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/persona-dream-continuous-program-negative.json",
+            "json_pointer": "/status",
+            "equals": "BLOCKED_DISPOSITION_REGISTRY"
+          }
+        ]
+      }
+    }
+  ]
+}

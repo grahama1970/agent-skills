@@ -1,6 +1,6 @@
 # Persona Dream Immutable Goal
 
-Last updated: 2026-07-27 UTC
+Last updated: 2026-09-15 UTC
 
 ## Immutable Goal Evidence
 
@@ -17,7 +17,29 @@ or a benchmark-only goal. It is also not a goal to prove that dreaming works.
 
 ## Controlling Goal
 
-Registered with `$goal-drift` on 2026-08-03, source `human_prompt`:
+Clarified by the operator on 2026-09-15:
+
+```text
+Use emotion triggers recalled by $memory to continuously evolve bounded
+personality and emotion state in persona-memory, and have $chatterbox-speak
+express that evolving state. Conversation outcomes become new trigger evidence
+for the next Persona Dream cycle.
+```
+
+The loop must preserve identity, factual competence, answer content, provenance,
+and the synthetic-versus-literal boundary. Synthetic dream generation and
+emotion-conditioned Chatterbox speech are established capabilities; do not
+reopen them as the next milestone. The active proof target is the closed loop:
+experience trigger -> dream consolidation -> durable bounded persona-memory
+change -> later personality/behavior and speech effect -> new experience
+trigger. We can prove trigger lineage, state transition, durable reread, future
+behavioral use, and speech-delivery effects. We cannot claim sentience or felt
+emotion. Human evidence is required only for claims about what listeners
+perceive.
+
+The earlier preregistered ablation goal remains the measurement contract for
+whether a particular change earns the word `improvement`; it is not the program's
+finish line:
 
 ```text
 Determine through preregistered, falsifiable, fail-closed experiments whether
@@ -30,8 +52,44 @@ SPARTA, and Chatterbox, and retire or simplify components that fail controlled
 ablation.
 ```
 
-Read it back with `skills/goal-drift/run.sh goal --project persona-dream`; that
-registry, not this file, is the authority.
+Read the full human-prompt revision chain with
+`skills/goal-drift/run.sh goal --project persona-dream`; that registry, not this
+file, is the authority.
+
+## Continuous Program Contract
+
+Operator clarification, 2026-09-15: Persona Dream is not meant to finish. It is
+the continuous experimental loop that improves `$memory`, `$chatterbox-speak`,
+and the bounded personality and emotion state held in persona-memory.
+
+```text
+persona-memory recall
+-> provenance-bound synthetic dream and reflection
+-> bounded personality/emotion update proposal
+-> dynamic conversation and Chatterbox delivery
+-> factual, identity, perceptual, and operational measurement
+-> accepted lessons transferred to $memory and $chatterbox-speak
+-> explicitly authorized persona-memory update
+-> next experiment
+```
+
+Individual experiments and hypothesis sets MUST reach terminal dispositions so
+the loop can learn instead of retrying forever. Their completion never means
+the Persona Dream research program is complete. `$memory` remains the factual
+and durable-state authority; dreams remain explicitly synthetic. An accepted,
+provenance-bound personality/emotion delta produced under this operator-authorized
+program MUST enter persona-memory, be independently reread, and influence a
+future cycle; rejected deltas MUST NOT write. `$chatterbox-speak` remains the
+speech-rendering authority and receives the resulting delivery state rather than
+a parallel renderer here.
+
+A memory trigger and its downstream effect are objective only when a matched
+control/treatment run changes that memory input alone and hash-binds the resulting
+persona state and rendered audio. This proves causal system behavior, not felt
+emotion or improvement. An `IMPROVEMENT` claim additionally requires a
+preregistered target metric, a baseline win, uncertainty reporting, and preserved
+identity/factual/synthetic-boundary gates. Human-perceived emotion, naturalness,
+identity, and preference require blinded human evidence.
 
 ## Corrected Operational Goal: PD-CORRECTED-GOAL-V1
 
@@ -178,12 +236,14 @@ fail-closed evidence
 no hidden duplicate effects
 ```
 
-## Completion Rule
+## Experiment-Cycle Completion Rule
 
-The goal is met when the project has produced an honest DISPOSITION for its
-major hypotheses -- not only when they are positive. A loss, a tie, or a null
-result is a completed result. Persona Dream itself does not have to become a
-production product.
+A bounded experiment cycle is met when the project has produced an honest
+DISPOSITION for its registered hypotheses -- not only when they are positive.
+A loss, a tie, or a null result is a completed result. That closes the cycle,
+not Persona Dream: the continuous program uses each disposition to change,
+improve, or constrain `$memory`, `$chatterbox-speak`, and persona-memory only as
+its evidence permits, then selects the next falsifiable experiment.
 
 The goal explicitly does NOT require:
 
@@ -203,9 +263,12 @@ retained only as a creative interface. Deletion is a goal-serving action.
 
 ## Supporting technology lanes
 
-PCTOM-R, Kling visual externalization, Watch observation, Memory persistence,
-Chatterbox voice expression, and Tau orchestration are supporting lanes with
-their own receipts and boundaries.
+PCTOM-R, Kling visual externalization, Watch observation, `$memory` persistence,
+`$chatterbox-speak` voice expression, persona-memory evolution, and Tau
+orchestration are supporting lanes with their own receipts and boundaries.
+They are also the program's improvement destinations: validated findings must
+transfer to the owning lane or record an explicit no-adoption decision before
+the next cycle.
 
 PCTOM-R remains a critical research workstream, but it is no longer the whole
 project identity. Its question is prospective and fault-aware:
@@ -1973,11 +2036,15 @@ media-spine context. It is not the next task for this goal. The active PCTOM-R
 task is to move from fixture-backed gates to live text-first receipts while
 preserving the same fail-closed invariants.
 
-## Active Acceptance Bar
+## Historical PCTOM-R Acceptance Bar — Superseded As Program Status
 
-The active goal is not satisfied by a coherent dream, a passing mock, a local
-commit, a pushed branch, or a reviewer opinion. It remains open until local
-receipt-backed evidence covers both sides of the PCTOM-R question:
+This section records the acceptance bar for the bounded PCTOM-R study cycle. It
+must not be read as the status or finish line of the continuous Persona Dream
+program. That program remains active under the Continuous Program Contract.
+
+The PCTOM-R study cycle was not satisfied by a coherent dream, a passing mock,
+a local commit, a pushed branch, or a reviewer opinion. It remained open until
+local receipt-backed evidence covered both sides of the PCTOM-R question:
 
 1. **Prospective benefit:** CD counterfactual dreaming is compared against M,
    R, and D on sealed future-facing predictions and action choices, with the
@@ -1998,9 +2065,9 @@ supports bounded idempotence and fail-closed retry/fault handling over the same
 full64 root. The planning non-generalization audit now hash-binds the full64
 statistical-confidence, full64 planning diagnostic, full64 action-policy
 sensitivity, and expanded repeated trust/commitment receipts into one explicit
-null/generalization-boundary receipt. The goal remains open because
-confidence-bounded planning-regret benefit and broader/non-identical planning
-behavior are not proven by local receipts. The expanded
+null/generalization-boundary receipt. At the time of this historical snapshot, the PCTOM-R study cycle remained open
+because confidence-bounded planning-regret benefit and broader/non-identical
+planning behavior were not proven by local receipts. The expanded
 deterministic trust/commitment receipts add 24 variants per family, a filtered
 8-episode trust/commitment slice over variants 17-24, and an empty-filter
 blocked receipt; this improves corpus coverage and filter-boundary discipline

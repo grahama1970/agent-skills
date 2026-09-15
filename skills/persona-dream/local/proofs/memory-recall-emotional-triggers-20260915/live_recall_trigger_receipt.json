@@ -1,0 +1,36 @@
+{
+  "collection": "persona_memory",
+  "failed_gates": [],
+  "live": true,
+  "mocked": false,
+  "packet_sha256": "sha256:ccea7b8e0dbf0ce3a627996253682e4400a530def3f5fe55f6ead23f1953daa9",
+  "persona_id": "embry",
+  "persona_tag": "persona:embry",
+  "query": "What remembered experiences carry the strongest emotion for Embry Lawson and could shape how she responds in a later conversation?",
+  "recall_count": 10,
+  "recall_found": true,
+  "recall_response_sha256": "sha256:9ad723c3ab72bba2cae72660db8eb049e2169b8fdd08adb633438ee8451a599b",
+  "schema": "persona_dream.memory_recall_emotional_trigger_receipt.v1",
+  "source_rows": [
+    {
+      "_key": "embry_age15_19_b01_memory_012",
+      "exact_reread": true,
+      "recall_rank": 2,
+      "source_document_sha256": "sha256:f5e16e507f6ce194f185cfcd28db82ee11c9b76eeb05ae0d57120cbf19f8484d"
+    },
+    {
+      "_key": "embry_age23_current_b01_memory_003",
+      "exact_reread": true,
+      "recall_rank": 3,
+      "source_document_sha256": "sha256:e88f5514ef3c302af3e0ba9564513929201987a380cd506f9b383b99d01fae52"
+    },
+    {
+      "_key": "embry_age19_23_b01_memory_036",
+      "exact_reread": true,
+      "recall_rank": 4,
+      "source_document_sha256": "sha256:c9e1a8e5e397d6c58775998638554132299f203ecb87725ab34e6e0a8ec1e25c"
+    }
+  ],
+  "status": "PASS_MEMORY_RECALL_EMOTIONAL_TRIGGERS",
+  "trigger_count": 3
+}

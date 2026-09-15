@@ -196,6 +196,7 @@ Commands:
   run-causal-replay  Validate PCTOM-R Gate 9 causal replay and failure localization
   live-chain-reliability  Run the five-cycle live continuity-chain repeatability pilot
   curate-transcript-context Curate $mine-transcripts output into conversation grounding context
+  recall-emotional-triggers Create source-bound emotional triggers from live $memory persona_memory recall
   persist-emotional-triggers Persist persona_dream.emotional_trigger.v1 records to Memory with exact reread
   converse-dynamic        Run dynamic voiced Horus/Embry conversation for a dream run
   chatterbox-conversation Alias for converse-dynamic; terminal dream-spine speech step
@@ -873,6 +874,9 @@ case "$COMMAND" in
     ;;
   curate-transcript-context)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/curate_transcript_context.py" "$@"
+    ;;
+  recall-emotional-triggers)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/recall_emotional_triggers.py" "$@"
     ;;
   persist-emotional-triggers)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/persist_emotional_trigger_memory.py" "$@"
