@@ -204,6 +204,14 @@ separate pair-construction gate passes.
 
 ## Rule 5 — Scoring and audit mechanics
 
+**Fallback ladder (operator, 2026-09-15):** when a lane hits rate limits, fall
+back in order — (1) same model via alternate provider, (2) different provider,
+(3) web models via `$ask` if necessary. HARD CONSTRAINT: an adjudication lane
+must NEVER fall back onto the scorer's model family; if the independent
+adjudicator is rate-limited, fall back to a web model (different org, browser
+transport) rather than same-family self-review. Family-independence outranks
+latency.
+
 Literal quote verification is DETERMINISTIC code, never a model call. An exact
 quote does not establish that it supports the assigned feature ("I found the
 root cause" is a quote, not root-cause evidence) — contextual support is the
