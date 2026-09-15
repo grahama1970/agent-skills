@@ -132,6 +132,13 @@ Runtime artifacts default under `.ask_artifacts/runs/<ask_id>` or the provided
 root such as `/mnt/storage12tb/skills/ask/outputs/...`. Do not commit generated
 ask artifacts.
 
+Every executed handler call (success or failure) is recorded to the
+`ask_call_log` collection in `$memory` at the execution choke point, with
+handler, status, failure_code, and `controlled_tab_id`/conversation URL when
+present. Check a seat before relying on it:
+`python3 skills/ask/scripts/ask_call_history.py --handler webgemini` prints
+the last successful call and recent failures.
+
 
 ## Deep-Dive References (read on demand)
 
