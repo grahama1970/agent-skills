@@ -160,6 +160,7 @@ a separate history lookup after consuming a run.
 | --- | --- |
 | `team-plan` with a plan file; `status --run --projection` | `references/plans-and-status.md` |
 | Explicit Pi-native subagent target | `references/pi-subagents.md` |
+| Turning ask output (one-shot/roundtable/compete/clean-room) into subagent lanes | `references/lane-handoff.md` |
 | `herdr list/who/send` to another agent's pane | `references/herdr.md` |
 | Choosing one-shot vs roundtable vs compete; model/effort selectors | `references/modes.md` |
 | Panel audits, seat roster, rate-limited seats, webclaude policy | `references/seats-and-audits.md` |
