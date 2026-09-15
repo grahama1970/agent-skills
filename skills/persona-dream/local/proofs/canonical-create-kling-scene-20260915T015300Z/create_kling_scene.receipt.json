@@ -1,0 +1,74 @@
+{
+ "schema": "create_kling_scene.receipt.v1",
+ "stages": [
+  {
+   "stage": "scene_table_gate",
+   "result": {
+    "status": "PASS",
+    "elements": 3
+   },
+   "characters": null,
+   "refs": null,
+   "missing": null,
+   "prompt_chars": null,
+   "packet": null
+  },
+  {
+   "stage": "reference_check",
+   "result": null,
+   "characters": [
+    "character_embry",
+    "character_horus"
+   ],
+   "refs": {
+    "embry": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/assets/element_packs/embry/embry_q1_front.png",
+    "horus": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/assets/element_packs/horus/horus_q1_front.png"
+   },
+   "missing": [],
+   "prompt_chars": null,
+   "packet": null
+  },
+  {
+   "stage": "instructions_gate",
+   "result": {
+    "status": "PASS"
+   },
+   "characters": null,
+   "refs": null,
+   "missing": null,
+   "prompt_chars": null,
+   "packet": "/mnt/storage12tb/skills/create-kling-scene/outputs/persona-dream-canonical-20260915T015300Z/kling_instructions.json"
+  },
+  {
+   "stage": "compile",
+   "result": null,
+   "characters": null,
+   "refs": null,
+   "missing": null,
+   "prompt_chars": 579,
+   "packet": "/mnt/storage12tb/skills/create-kling-scene/outputs/persona-dream-canonical-20260915T015300Z/kling_request.json"
+  },
+  {
+   "stage": "kling_packet_gate",
+   "result": {
+    "status": "PASS"
+   },
+   "characters": null,
+   "refs": null,
+   "missing": null,
+   "prompt_chars": null,
+   "packet": null
+  }
+ ],
+ "status": "PASS",
+ "failed_stage": null,
+ "errors": null,
+ "triage": null,
+ "needs_attention": null,
+ "packet": "/mnt/storage12tb/skills/create-kling-scene/outputs/persona-dream-canonical-20260915T015300Z/kling_request.json",
+ "next_command": "/home/graham/workspace/experiments/agent-skills/skills/best-practices-kling-video/run.sh submit /mnt/storage12tb/skills/create-kling-scene/outputs/persona-dream-canonical-20260915T015300Z/kling_request.json --out-dir /mnt/storage12tb/skills/create-kling-scene/outputs/persona-dream-canonical-20260915T015300Z  # PAID; uploads local refs first",
+ "seam_validation": {
+  "kind": "create_kling_scene.receipt.v1",
+  "status": "PASS"
+ }
+}

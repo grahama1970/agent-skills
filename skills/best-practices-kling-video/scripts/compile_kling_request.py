@@ -153,10 +153,11 @@ def submit(packet_path: Path, out_dir: Path = typer.Option(...)):
     req = packet["request"]
 
     def _up(u: str) -> str:
-        return fal_client.upload_file(u[len("file://"):]) if u.startswith("file://") else u
+        local = u[len("file://"):] if u.startswith("file://") else u
+        return fal_client.upload_file(local) if Path(local).is_file() else u
 
     for el in req.get("elements", []):
-        if el.get("frontal_image_url", "").startswith("file://"):
+        if el.get("frontal_image_url"):
             el["frontal_image_url"] = _up(el["frontal_image_url"])
         if el.get("reference_image_urls"):
             el["reference_image_urls"] = [_up(u) for u in el["reference_image_urls"]]

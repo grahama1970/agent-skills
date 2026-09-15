@@ -1,0 +1,34 @@
+{
+  "agentic_eval_readiness": "READY",
+  "agentic_eval_report": "skills/persona-dream/local/proofs/canonical-create-kling-scene-20260915T015300Z/agentic_eval_report.json",
+  "agentic_eval_report_sha256": "sha256:1e5b8d969fb717831c19437b4d83c151b164d87c98f40b3f558a448c7e5727aa",
+  "agentic_eval_trials": "6/6 PASS",
+  "all_submitted_references_public_https": true,
+  "boundary": "Proves one canonical scene-table -> create-kling-scene -> paid Kling submission produced a decodable MP4. Does not prove visual fidelity, human preference, or provider reliability.",
+  "compiler": "create-kling-scene",
+  "created_at": "2026-09-15T02:04:13.643130+00:00",
+  "element_count": 2,
+  "ffprobe": {
+    "duration": "5.041667",
+    "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+    "size": "4580252"
+  },
+  "live": true,
+  "mocked": false,
+  "model_id": "fal-ai/kling-video/o3/standard/reference-to-video",
+  "paid_provider_call": true,
+  "provider_video_url": "https://v3b.fal.media/files/b/0aaa7714/wYMfOjVoMO7Bkq90qTiAv_output.mp4",
+  "retained_artifacts": {
+    "agentic_eval_report.json": "sha256:1e5b8d969fb717831c19437b4d83c151b164d87c98f40b3f558a448c7e5727aa",
+    "create_kling_scene.receipt.json": "sha256:a254c22ab7c0454327d35cee043352eb410e1054dab160d01177507018c33ef5",
+    "kling_instructions.json": "sha256:dcc4e72334daa7705598cc22d82606dd809e38c87a9300071e21310d68e9f59d",
+    "kling_request.json": "sha256:21db7fd0d8c4c72924d2b913614abd8f76502925b271bf662686e280acb7c85c",
+    "kling_response.json": "sha256:f577c1cd848cc40ae8c76e40e3a6d13a232cc8fa6112df342f2c650e426f347a",
+    "scene.json": "sha256:d60803766fbcf3613dfc157398d784e49cbe42d5ab8c8e92d775623a8d28b9da"
+  },
+  "schema": "persona_dream.canonical_create_kling_scene_receipt.v1",
+  "status": "PASS_CANONICAL_CREATE_KLING_SCENE_LIVE",
+  "video_bytes": 4580252,
+  "video_path": "/mnt/storage12tb/skills/create-kling-scene/outputs/persona-dream-canonical-20260915T015300Z/kling_dream.mp4",
+  "video_sha256": "sha256:abf7dc0a3a74e734259e6d66e29a168b9f257e565a2f589f2bfdbc49d5c358bc"
+}

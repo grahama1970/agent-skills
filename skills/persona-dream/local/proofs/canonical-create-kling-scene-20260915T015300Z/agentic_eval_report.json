@@ -1,0 +1,645 @@
+{
+  "schema": "agentic_evals.report.v2",
+  "source": "skills/best-practices-kling-video/fixtures/agentic_eval.json",
+  "run_id": "8a5b72f35c91",
+  "fixture_sha256": "sha256:46ba08b2571bc7c245b25f44329943e4ed79f940cd880660c35589c82c287bf8",
+  "repo": {
+    "sha": "bbdf834aed7ed680f8e252592be32d8593345500",
+    "ref": "main"
+  },
+  "mocked": false,
+  "fixture_backed": true,
+  "live": true,
+  "proof_scope": "Offline compile/fail-closed checks plus read-back of a canonical live Kling render produced through create-kling-scene; the eval itself does not make a paid call.",
+  "claims": {
+    "proves": "Kling packets compile with bounded prompts and element bindings, reject known endpoint/element/binding failures, rewrite raw local references before submit validation, and retain a decodable live video produced from the rewritten canonical packet.",
+    "does_not_prove": "Live Kling rendering fidelity, current provider availability, or remote schema stability."
+  },
+  "what_was_exercised": "local commands declared in the fixture manifest",
+  "what_remains_unverified": "semantic correctness, live services, LLM judge behavior, and release readiness",
+  "readiness": "READY",
+  "case_readiness": "READY",
+  "capability_readiness": {
+    "aggregate_readiness": "READY",
+    "critical_claim_count": 1,
+    "critical_claims_proven": 1,
+    "claims": [
+      {
+        "id": "kling_video.packet_and_submit_boundary",
+        "description": "The compile/validate path fails closed and the submit boundary uploads compiler-emitted local references before provider validation.",
+        "criticality": "critical",
+        "required_evidence": [
+          "fault_injected_deterministic",
+          "live_e2e"
+        ],
+        "verdict": "PROVEN",
+        "per_class": {
+          "fault_injected_deterministic": {
+            "status": "PROVEN",
+            "cases": [
+              "kling-packet-and-submit-boundary"
+            ]
+          },
+          "live_e2e": {
+            "status": "PROVEN",
+            "cases": [
+              "canonical-live-render-readback"
+            ]
+          }
+        },
+        "missing_evidence": [],
+        "blocked_evidence": [],
+        "exempt_evidence": [],
+        "exemptions": [],
+        "unqualified_live_cases": [],
+        "ineligible_supporting_cases": [],
+        "supporting_cases": [
+          "kling-packet-and-submit-boundary",
+          "canonical-live-render-readback"
+        ]
+      }
+    ]
+  },
+  "claims_coverage": "manifest-spanning",
+  "focused_cases": [],
+  "generated_at": "2026-09-15T02:03:31.485675+00:00",
+  "case_count": 2,
+  "required_case_count": 2,
+  "outcome_counts": {
+    "PASS": 2,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "NOT_TESTED": 0
+  },
+  "trial_count": 6,
+  "cases": [
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "kling-packet-and-submit-boundary",
+      "type": "adversarial",
+      "case_id": "8a5b72f35c91-c000",
+      "required": true,
+      "outcome": "PASS",
+      "observed_outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "../sanity.sh"
+      ],
+      "execution_mode": "regression_replay",
+      "execution_provenance": {
+        "execution_mode": "regression_replay",
+        "fixture_sha256": "sha256:46ba08b2571bc7c245b25f44329943e4ed79f940cd880660c35589c82c287bf8",
+        "test_source_sha256": "sha256:e13a1753274b5e81a53fb82553c222a7b858833f92c68650870b42b33f15bfac",
+        "oracle_sha256": "sha256:104b6fe7e87042738dee76dc54fe334e9e5680cabb9f11fbd7fd7e42cfb185e6",
+        "generated_test_lineage": null,
+        "generation_id": "sha256:e014ebdd3b3d602f630bb344e",
+        "prior_test_source_sha256": null,
+        "prior_oracle_sha256": null,
+        "application_identity": {
+          "repo": {
+            "sha": "bbdf834aed7ed680f8e252592be32d8593345500",
+            "ref": "main"
+          }
+        },
+        "mutation_provenance": {
+          "flags": {
+            "assertion_changed": false,
+            "case_ownership_changed": false,
+            "category_map_changed": false,
+            "evidence_requirement_changed": false,
+            "exclusion_changed": false,
+            "expected_output_changed": false,
+            "fixture_changed": false,
+            "fixture_input_changed": false,
+            "locator_changed": false,
+            "locator_healed": false,
+            "oracle_changed": false,
+            "proof_command_changed": false,
+            "protected_surface_changed": false,
+            "readiness_logic_changed": false,
+            "step_changed": false,
+            "test_exclusion_changed": false,
+            "test_mutated": false
+          },
+          "declared": false,
+          "test_hash_changed": false,
+          "oracle_hash_changed": false,
+          "changed_between_failure_and_observed_pass": false,
+          "protected_surface_changed": false,
+          "external_result": null
+        },
+        "evidence_eligibility": {
+          "eligible": true,
+          "eligible_for_existing_claim": true,
+          "requires_requalification": false,
+          "reason_codes": [],
+          "integrity_errors": []
+        }
+      },
+      "test_source_sha256": "sha256:e13a1753274b5e81a53fb82553c222a7b858833f92c68650870b42b33f15bfac",
+      "oracle_sha256": "sha256:104b6fe7e87042738dee76dc54fe334e9e5680cabb9f11fbd7fd7e42cfb185e6",
+      "application_identity": {
+        "repo": {
+          "sha": "bbdf834aed7ed680f8e252592be32d8593345500",
+          "ref": "main"
+        }
+      },
+      "generated_test_lineage": null,
+      "evidence_eligibility": {
+        "eligible": true,
+        "eligible_for_existing_claim": true,
+        "requires_requalification": false,
+        "reason_codes": [],
+        "integrity_errors": []
+      },
+      "declared_evidence_class": "fault_injected_deterministic",
+      "effective_evidence_class": "fault_injected_deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "kling_video.packet_and_submit_boundary"
+      ],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 1779.952,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "PASS positive-control\nPASS negative-control-t2v\nPASS negative-control-element\nPASS negative-control-binding\n{\"status\": \"PASS\", \"video\": \"/tmp/tmp.hU6csybg5g/submitted/kling_dream.mp4\", \"bytes\": 5}\nPASS raw-local-submit-upload\nALL SANITY PASS\n",
+          "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `/home/graham/workspace/experiments/agent-skills/skills/intent-mapper/pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `/home/graham/workspace/experiments/agent-skills/skills/intent-mapper/pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `/home/graham/workspace/experiments/agent-skills/skills/intent-mapper/pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
+          "duration_ms": 2055.027,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "8a5b72f35c91-c000-t00",
+          "outcome": "PASS",
+          "problems": [],
+          "execution_provenance": {
+            "execution_mode": "regression_replay",
+            "fixture_sha256": "sha256:46ba08b2571bc7c245b25f44329943e4ed79f940cd880660c35589c82c287bf8",
+            "test_source_sha256": "sha256:e13a1753274b5e81a53fb82553c222a7b858833f92c68650870b42b33f15bfac",
+            "oracle_sha256": "sha256:104b6fe7e87042738dee76dc54fe334e9e5680cabb9f11fbd7fd7e42cfb185e6",
+            "generation_id": "sha256:e014ebdd3b3d602f630bb344e",
+            "generated_test_lineage": null,
+            "prior_test_source_sha256": null,
+            "prior_oracle_sha256": null,
+            "application_identity": {
+              "repo": {
+                "sha": "bbdf834aed7ed680f8e252592be32d8593345500",
+                "ref": "main"
+              }
+            },
+            "mutation_provenance": {
+              "flags": {
+                "assertion_changed": false,
+                "case_ownership_changed": false,
+                "category_map_changed": false,
+                "evidence_requirement_changed": false,
+                "exclusion_changed": false,
+                "expected_output_changed": false,
+                "fixture_changed": false,
+                "fixture_input_changed": false,
+                "locator_changed": false,
+                "locator_healed": false,
+                "oracle_changed": false,
+                "proof_command_changed": false,
+                "protected_surface_changed": false,
+                "readiness_logic_changed": false,
+                "step_changed": false,
+                "test_exclusion_changed": false,
+                "test_mutated": false
+              },
+              "declared": false,
+              "test_hash_changed": false,
+              "oracle_hash_changed": false,
+              "changed_between_failure_and_observed_pass": false,
+              "protected_surface_changed": false,
+              "external_result": null
+            },
+            "evidence_eligibility": {
+              "eligible": true,
+              "eligible_for_existing_claim": true,
+              "requires_requalification": false,
+              "reason_codes": [],
+              "integrity_errors": []
+            }
+          }
+        },
+        {
+          "exit_code": 0,
+          "stdout": "PASS positive-control\nPASS negative-control-t2v\nPASS negative-control-element\nPASS negative-control-binding\n{\"status\": \"PASS\", \"video\": \"/tmp/tmp.bzTQDVLEoj/submitted/kling_dream.mp4\", \"bytes\": 5}\nPASS raw-local-submit-upload\nALL SANITY PASS\n",
+          "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `/home/graham/workspace/experiments/agent-skills/skills/intent-mapper/pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `/home/graham/workspace/experiments/agent-skills/skills/intent-mapper/pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `/home/graham/workspace/experiments/agent-skills/skills/intent-mapper/pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
+          "duration_ms": 1646.007,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "8a5b72f35c91-c000-t01",
+          "outcome": "PASS",
+          "problems": [],
+          "execution_provenance": {
+            "execution_mode": "regression_replay",
+            "fixture_sha256": "sha256:46ba08b2571bc7c245b25f44329943e4ed79f940cd880660c35589c82c287bf8",
+            "test_source_sha256": "sha256:e13a1753274b5e81a53fb82553c222a7b858833f92c68650870b42b33f15bfac",
+            "oracle_sha256": "sha256:104b6fe7e87042738dee76dc54fe334e9e5680cabb9f11fbd7fd7e42cfb185e6",
+            "generation_id": "sha256:e014ebdd3b3d602f630bb344e",
+            "generated_test_lineage": null,
+            "prior_test_source_sha256": null,
+            "prior_oracle_sha256": null,
+            "application_identity": {
+              "repo": {
+                "sha": "bbdf834aed7ed680f8e252592be32d8593345500",
+                "ref": "main"
+              }
+            },
+            "mutation_provenance": {
+              "flags": {
+                "assertion_changed": false,
+                "case_ownership_changed": false,
+                "category_map_changed": false,
+                "evidence_requirement_changed": false,
+                "exclusion_changed": false,
+                "expected_output_changed": false,
+                "fixture_changed": false,
+                "fixture_input_changed": false,
+                "locator_changed": false,
+                "locator_healed": false,
+                "oracle_changed": false,
+                "proof_command_changed": false,
+                "protected_surface_changed": false,
+                "readiness_logic_changed": false,
+                "step_changed": false,
+                "test_exclusion_changed": false,
+                "test_mutated": false
+              },
+              "declared": false,
+              "test_hash_changed": false,
+              "oracle_hash_changed": false,
+              "changed_between_failure_and_observed_pass": false,
+              "protected_surface_changed": false,
+              "external_result": null
+            },
+            "evidence_eligibility": {
+              "eligible": true,
+              "eligible_for_existing_claim": true,
+              "requires_requalification": false,
+              "reason_codes": [],
+              "integrity_errors": []
+            }
+          }
+        },
+        {
+          "exit_code": 0,
+          "stdout": "PASS positive-control\nPASS negative-control-t2v\nPASS negative-control-element\nPASS negative-control-binding\n{\"status\": \"PASS\", \"video\": \"/tmp/tmp.GCtNYlSiJM/submitted/kling_dream.mp4\", \"bytes\": 5}\nPASS raw-local-submit-upload\nALL SANITY PASS\n",
+          "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `/home/graham/workspace/experiments/agent-skills/skills/intent-mapper/pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `/home/graham/workspace/experiments/agent-skills/skills/intent-mapper/pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `/home/graham/workspace/experiments/agent-skills/skills/intent-mapper/pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
+          "duration_ms": 1638.822,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "8a5b72f35c91-c000-t02",
+          "outcome": "PASS",
+          "problems": [],
+          "execution_provenance": {
+            "execution_mode": "regression_replay",
+            "fixture_sha256": "sha256:46ba08b2571bc7c245b25f44329943e4ed79f940cd880660c35589c82c287bf8",
+            "test_source_sha256": "sha256:e13a1753274b5e81a53fb82553c222a7b858833f92c68650870b42b33f15bfac",
+            "oracle_sha256": "sha256:104b6fe7e87042738dee76dc54fe334e9e5680cabb9f11fbd7fd7e42cfb185e6",
+            "generation_id": "sha256:e014ebdd3b3d602f630bb344e",
+            "generated_test_lineage": null,
+            "prior_test_source_sha256": null,
+            "prior_oracle_sha256": null,
+            "application_identity": {
+              "repo": {
+                "sha": "bbdf834aed7ed680f8e252592be32d8593345500",
+                "ref": "main"
+              }
+            },
+            "mutation_provenance": {
+              "flags": {
+                "assertion_changed": false,
+                "case_ownership_changed": false,
+                "category_map_changed": false,
+                "evidence_requirement_changed": false,
+                "exclusion_changed": false,
+                "expected_output_changed": false,
+                "fixture_changed": false,
+                "fixture_input_changed": false,
+                "locator_changed": false,
+                "locator_healed": false,
+                "oracle_changed": false,
+                "proof_command_changed": false,
+                "protected_surface_changed": false,
+                "readiness_logic_changed": false,
+                "step_changed": false,
+                "test_exclusion_changed": false,
+                "test_mutated": false
+              },
+              "declared": false,
+              "test_hash_changed": false,
+              "oracle_hash_changed": false,
+              "changed_between_failure_and_observed_pass": false,
+              "protected_surface_changed": false,
+              "external_result": null
+            },
+            "evidence_eligibility": {
+              "eligible": true,
+              "eligible_for_existing_claim": true,
+              "requires_requalification": false,
+              "reason_codes": [],
+              "integrity_errors": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "canonical-live-render-readback",
+      "type": "positive",
+      "case_id": "8a5b72f35c91-c001",
+      "required": true,
+      "outcome": "PASS",
+      "observed_outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "set -euo pipefail\nRUN=/mnt/storage12tb/skills/create-kling-scene/outputs/persona-dream-canonical-20260915T015300Z\n../run.sh validate \"$RUN/kling_request.json\" | grep -q '\"status\": \"PASS\"'\nffprobe -v error -show_entries format=duration,size -of json \"$RUN/kling_dream.mp4\" > /tmp/kling-live-ffprobe.json\npython - \"$RUN\" <<'PY2'\nimport json,sys\nfrom pathlib import Path\np=Path(sys.argv[1]); req=json.loads((p/'kling_request.json').read_text()); resp=json.loads((p/'kling_response.json').read_text()); probe=json.loads(Path('/tmp/kling-live-ffprobe.json').read_text())['format']\nassert all(e['frontal_image_url'].startswith('https://') and all(u.startswith('https://') for u in e['reference_image_urls']) for e in req['request']['elements'])\nassert resp['video']['url'].startswith('https://')\nassert float(probe['duration']) > 4 and int(probe['size']) > 100000\nprint('PASS canonical-live-render-readback')\nPY2"
+      ],
+      "execution_mode": "regression_replay",
+      "execution_provenance": {
+        "execution_mode": "regression_replay",
+        "fixture_sha256": "sha256:46ba08b2571bc7c245b25f44329943e4ed79f940cd880660c35589c82c287bf8",
+        "test_source_sha256": "sha256:6c65c1bb296be7215c6cf88d5f07d7cf7f8c0b4a6621bfe60d098a8b7246526d",
+        "oracle_sha256": "sha256:4553427e28754c386658e784f7b76991d7d3e8754976323a35a71cfa9eceb24c",
+        "generated_test_lineage": null,
+        "generation_id": "sha256:b150666bd6a0f5817c009dd59",
+        "prior_test_source_sha256": null,
+        "prior_oracle_sha256": null,
+        "application_identity": {
+          "repo": {
+            "sha": "bbdf834aed7ed680f8e252592be32d8593345500",
+            "ref": "main"
+          }
+        },
+        "mutation_provenance": {
+          "flags": {
+            "assertion_changed": false,
+            "case_ownership_changed": false,
+            "category_map_changed": false,
+            "evidence_requirement_changed": false,
+            "exclusion_changed": false,
+            "expected_output_changed": false,
+            "fixture_changed": false,
+            "fixture_input_changed": false,
+            "locator_changed": false,
+            "locator_healed": false,
+            "oracle_changed": false,
+            "proof_command_changed": false,
+            "protected_surface_changed": false,
+            "readiness_logic_changed": false,
+            "step_changed": false,
+            "test_exclusion_changed": false,
+            "test_mutated": false
+          },
+          "declared": false,
+          "test_hash_changed": false,
+          "oracle_hash_changed": false,
+          "changed_between_failure_and_observed_pass": false,
+          "protected_surface_changed": false,
+          "external_result": null
+        },
+        "evidence_eligibility": {
+          "eligible": true,
+          "eligible_for_existing_claim": true,
+          "requires_requalification": false,
+          "reason_codes": [],
+          "integrity_errors": []
+        }
+      },
+      "test_source_sha256": "sha256:6c65c1bb296be7215c6cf88d5f07d7cf7f8c0b4a6621bfe60d098a8b7246526d",
+      "oracle_sha256": "sha256:4553427e28754c386658e784f7b76991d7d3e8754976323a35a71cfa9eceb24c",
+      "application_identity": {
+        "repo": {
+          "sha": "bbdf834aed7ed680f8e252592be32d8593345500",
+          "ref": "main"
+        }
+      },
+      "generated_test_lineage": null,
+      "evidence_eligibility": {
+        "eligible": true,
+        "eligible_for_existing_claim": true,
+        "requires_requalification": false,
+        "reason_codes": [],
+        "integrity_errors": []
+      },
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "live_e2e",
+      "live_qualified": true,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "kling_video.packet_and_submit_boundary"
+      ],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 389.338,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "PASS canonical-live-render-readback\n",
+          "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `/home/graham/workspace/experiments/agent-skills/skills/intent-mapper/pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
+          "duration_ms": 411.899,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "8a5b72f35c91-c001-t00",
+          "artifact_hashes": {
+            "/tmp/kling-live-ffprobe.json": "sha256:7cb7fbaadc97c4da45a4aab41f70db900b120e383235828f509a8bf220f77505"
+          },
+          "outcome": "PASS",
+          "problems": [],
+          "execution_provenance": {
+            "execution_mode": "regression_replay",
+            "fixture_sha256": "sha256:46ba08b2571bc7c245b25f44329943e4ed79f940cd880660c35589c82c287bf8",
+            "test_source_sha256": "sha256:6c65c1bb296be7215c6cf88d5f07d7cf7f8c0b4a6621bfe60d098a8b7246526d",
+            "oracle_sha256": "sha256:4553427e28754c386658e784f7b76991d7d3e8754976323a35a71cfa9eceb24c",
+            "generation_id": "sha256:b150666bd6a0f5817c009dd59",
+            "generated_test_lineage": null,
+            "prior_test_source_sha256": null,
+            "prior_oracle_sha256": null,
+            "application_identity": {
+              "repo": {
+                "sha": "bbdf834aed7ed680f8e252592be32d8593345500",
+                "ref": "main"
+              }
+            },
+            "mutation_provenance": {
+              "flags": {
+                "assertion_changed": false,
+                "case_ownership_changed": false,
+                "category_map_changed": false,
+                "evidence_requirement_changed": false,
+                "exclusion_changed": false,
+                "expected_output_changed": false,
+                "fixture_changed": false,
+                "fixture_input_changed": false,
+                "locator_changed": false,
+                "locator_healed": false,
+                "oracle_changed": false,
+                "proof_command_changed": false,
+                "protected_surface_changed": false,
+                "readiness_logic_changed": false,
+                "step_changed": false,
+                "test_exclusion_changed": false,
+                "test_mutated": false
+              },
+              "declared": false,
+              "test_hash_changed": false,
+              "oracle_hash_changed": false,
+              "changed_between_failure_and_observed_pass": false,
+              "protected_surface_changed": false,
+              "external_result": null
+            },
+            "evidence_eligibility": {
+              "eligible": true,
+              "eligible_for_existing_claim": true,
+              "requires_requalification": false,
+              "reason_codes": [],
+              "integrity_errors": []
+            }
+          }
+        },
+        {
+          "exit_code": 0,
+          "stdout": "PASS canonical-live-render-readback\n",
+          "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `/home/graham/workspace/experiments/agent-skills/skills/intent-mapper/pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
+          "duration_ms": 396.271,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "8a5b72f35c91-c001-t01",
+          "artifact_hashes": {
+            "/tmp/kling-live-ffprobe.json": "sha256:7cb7fbaadc97c4da45a4aab41f70db900b120e383235828f509a8bf220f77505"
+          },
+          "outcome": "PASS",
+          "problems": [],
+          "execution_provenance": {
+            "execution_mode": "regression_replay",
+            "fixture_sha256": "sha256:46ba08b2571bc7c245b25f44329943e4ed79f940cd880660c35589c82c287bf8",
+            "test_source_sha256": "sha256:6c65c1bb296be7215c6cf88d5f07d7cf7f8c0b4a6621bfe60d098a8b7246526d",
+            "oracle_sha256": "sha256:4553427e28754c386658e784f7b76991d7d3e8754976323a35a71cfa9eceb24c",
+            "generation_id": "sha256:b150666bd6a0f5817c009dd59",
+            "generated_test_lineage": null,
+            "prior_test_source_sha256": null,
+            "prior_oracle_sha256": null,
+            "application_identity": {
+              "repo": {
+                "sha": "bbdf834aed7ed680f8e252592be32d8593345500",
+                "ref": "main"
+              }
+            },
+            "mutation_provenance": {
+              "flags": {
+                "assertion_changed": false,
+                "case_ownership_changed": false,
+                "category_map_changed": false,
+                "evidence_requirement_changed": false,
+                "exclusion_changed": false,
+                "expected_output_changed": false,
+                "fixture_changed": false,
+                "fixture_input_changed": false,
+                "locator_changed": false,
+                "locator_healed": false,
+                "oracle_changed": false,
+                "proof_command_changed": false,
+                "protected_surface_changed": false,
+                "readiness_logic_changed": false,
+                "step_changed": false,
+                "test_exclusion_changed": false,
+                "test_mutated": false
+              },
+              "declared": false,
+              "test_hash_changed": false,
+              "oracle_hash_changed": false,
+              "changed_between_failure_and_observed_pass": false,
+              "protected_surface_changed": false,
+              "external_result": null
+            },
+            "evidence_eligibility": {
+              "eligible": true,
+              "eligible_for_existing_claim": true,
+              "requires_requalification": false,
+              "reason_codes": [],
+              "integrity_errors": []
+            }
+          }
+        },
+        {
+          "exit_code": 0,
+          "stdout": "PASS canonical-live-render-readback\n",
+          "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `/home/graham/workspace/experiments/agent-skills/skills/intent-mapper/pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
+          "duration_ms": 359.845,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "8a5b72f35c91-c001-t02",
+          "artifact_hashes": {
+            "/tmp/kling-live-ffprobe.json": "sha256:7cb7fbaadc97c4da45a4aab41f70db900b120e383235828f509a8bf220f77505"
+          },
+          "outcome": "PASS",
+          "problems": [],
+          "execution_provenance": {
+            "execution_mode": "regression_replay",
+            "fixture_sha256": "sha256:46ba08b2571bc7c245b25f44329943e4ed79f940cd880660c35589c82c287bf8",
+            "test_source_sha256": "sha256:6c65c1bb296be7215c6cf88d5f07d7cf7f8c0b4a6621bfe60d098a8b7246526d",
+            "oracle_sha256": "sha256:4553427e28754c386658e784f7b76991d7d3e8754976323a35a71cfa9eceb24c",
+            "generation_id": "sha256:b150666bd6a0f5817c009dd59",
+            "generated_test_lineage": null,
+            "prior_test_source_sha256": null,
+            "prior_oracle_sha256": null,
+            "application_identity": {
+              "repo": {
+                "sha": "bbdf834aed7ed680f8e252592be32d8593345500",
+                "ref": "main"
+              }
+            },
+            "mutation_provenance": {
+              "flags": {
+                "assertion_changed": false,
+                "case_ownership_changed": false,
+                "category_map_changed": false,
+                "evidence_requirement_changed": false,
+                "exclusion_changed": false,
+                "expected_output_changed": false,
+                "fixture_changed": false,
+                "fixture_input_changed": false,
+                "locator_changed": false,
+                "locator_healed": false,
+                "oracle_changed": false,
+                "proof_command_changed": false,
+                "protected_surface_changed": false,
+                "readiness_logic_changed": false,
+                "step_changed": false,
+                "test_exclusion_changed": false,
+                "test_mutated": false
+              },
+              "declared": false,
+              "test_hash_changed": false,
+              "oracle_hash_changed": false,
+              "changed_between_failure_and_observed_pass": false,
+              "protected_surface_changed": false,
+              "external_result": null
+            },
+            "evidence_eligibility": {
+              "eligible": true,
+              "eligible_for_existing_claim": true,
+              "requires_requalification": false,
+              "reason_codes": [],
+              "integrity_errors": []
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

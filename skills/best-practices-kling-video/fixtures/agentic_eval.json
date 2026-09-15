@@ -1,44 +1,81 @@
 {
-  "schema": "agentic_eval.fixture.v1",
+  "version": 2,
   "skill": "best-practices-kling-video",
   "trials": 3,
-  "cases": [
+  "proof_scope": "Offline compile/fail-closed checks plus read-back of a canonical live Kling render produced through create-kling-scene; the eval itself does not make a paid call.",
+  "claims": {
+    "proves": "Kling packets compile with bounded prompts and element bindings, reject known endpoint/element/binding failures, rewrite raw local references before submit validation, and retain a decodable live video produced from the rewritten canonical packet.",
+    "does_not_prove": "Live Kling rendering fidelity, current provider availability, or remote schema stability."
+  },
+  "capability_claims": [
     {
-      "id": "compile-condenses-and-binds",
-      "case_type": "positive",
-      "real_world": true,
-      "command": "bash sanity.sh",
-      "assert": ["exit_code == 0", "stdout contains 'ALL SANITY PASS'"],
-      "notes": "Real persona-dream storyboard shape compiled to bounded reference-to-video packet with element bindings."
-    },
-    {
-      "id": "t2v-with-references-fails-closed",
-      "case_type": "negative-control",
-      "real_world": true,
-      "command": "bash sanity.sh",
-      "assert": ["stdout contains 'PASS negative-control-t2v'"],
-      "notes": "Guards the 2026-09-07 bug class: references silently dropped by a no-image endpoint."
-    },
-    {
-      "id": "incomplete-element-fails-closed",
-      "case_type": "adversarial",
-      "real_world": true,
-      "command": "bash sanity.sh",
-      "assert": ["stdout contains 'PASS negative-control-element'"],
-      "notes": "Guards the live fal 422: frontal_image_url without reference_image_urls."
+      "id": "kling_video.packet_and_submit_boundary",
+      "description": "The compile/validate path fails closed and the submit boundary uploads compiler-emitted local references before provider validation.",
+      "criticality": "critical",
+      "evidence_required": {
+        "fault_injected_deterministic": true,
+        "live_e2e": true
+      },
+      "claim_semantics": "protocol"
     }
   ],
-  "claims": {
-    "proves": [
-      "compile produces validated, budget-bounded packets from pipeline artifacts",
-      "validator rejects the three known live failure classes"
-    ],
-    "does_not_prove": [
-      "live Kling rendering fidelity (requires paid submit)",
-      "fal schema has not drifted since 2026-09-07"
-    ]
-  },
-  "proof_scope": "offline deterministic; submit path not exercised",
-  "mocked": false,
-  "live": false
+  "cases": [
+    {
+      "name": "kling-packet-and-submit-boundary",
+      "description": "Runs positive compilation, three negative packet controls, and a fake-provider submit seam proving raw absolute references are uploaded and rewritten without making a network or paid call.",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "required": true,
+      "supports_claims": [
+        "kling_video.packet_and_submit_boundary"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "../sanity.sh"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS positive-control",
+          "PASS negative-control-t2v",
+          "PASS negative-control-element",
+          "PASS negative-control-binding",
+          "PASS raw-local-submit-upload",
+          "ALL SANITY PASS"
+        ]
+      }
+    },
+    {
+      "name": "canonical-live-render-readback",
+      "description": "Validates the submitted canonical packet, public rewritten references, provider response, and nontrivial decodable MP4 produced by the live Kling request.",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "required": true,
+      "supports_claims": [
+        "kling_video.packet_and_submit_boundary"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail\nRUN=/mnt/storage12tb/skills/create-kling-scene/outputs/persona-dream-canonical-20260915T015300Z\n../run.sh validate \"$RUN/kling_request.json\" | grep -q '\"status\": \"PASS\"'\nffprobe -v error -show_entries format=duration,size -of json \"$RUN/kling_dream.mp4\" > /tmp/kling-live-ffprobe.json\npython - \"$RUN\" <<'PY2'\nimport json,sys\nfrom pathlib import Path\np=Path(sys.argv[1]); req=json.loads((p/'kling_request.json').read_text()); resp=json.loads((p/'kling_response.json').read_text()); probe=json.loads(Path('/tmp/kling-live-ffprobe.json').read_text())['format']\nassert all(e['frontal_image_url'].startswith('https://') and all(u.startswith('https://') for u in e['reference_image_urls']) for e in req['request']['elements'])\nassert resp['video']['url'].startswith('https://')\nassert float(probe['duration']) > 4 and int(probe['size']) > 100000\nprint('PASS canonical-live-render-readback')\nPY2"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS canonical-live-render-readback"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/kling-live-ffprobe.json",
+            "json_pointer": "/format/size",
+            "min_value": 100000
+          }
+        ]
+      }
+    }
+  ]
 }

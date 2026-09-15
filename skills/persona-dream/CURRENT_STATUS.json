@@ -1,9 +1,20 @@
 {
   "active_blockers": [
     "#1058 human listener collection remains open for human-perception wording only: 0/20 valid rows and SIGNED_INTERPRETATION.json missing; not an immutable-goal blocker under GOAL.md completion rule.",
-    "Production-scale reliability and deployed SPARTA production operation remain non-claims; not required for GOAL.md disposition closure.",
-    "Clarified-bar V2 Kling E2E is a direct provider smoke; the canonical scene-table/create-kling-scene compiler path remains unproven and separately scoped."
+    "Production-scale reliability and deployed SPARTA production operation remain non-claims; not required for GOAL.md disposition closure."
   ],
+  "canonical_create_kling_scene": {
+    "boundary": "Proves one canonical scene-table -> create-kling-scene -> paid Kling submission produced a decodable MP4. Does not prove visual fidelity, human preference, or provider reliability.",
+    "live": true,
+    "mocked": false,
+    "model_id": "fal-ai/kling-video/o3/standard/reference-to-video",
+    "receipt": "skills/persona-dream/local/proofs/canonical-create-kling-scene-20260915T015300Z/CANONICAL_KLING_RECEIPT.json",
+    "receipt_sha256": "sha256:08c9e732f1f871bb9d0841d632f0993e6961403fa767e68acfa6dfed47ba934d",
+    "status": "PASS_CANONICAL_CREATE_KLING_SCENE_LIVE",
+    "video_bytes": 4580252,
+    "video_path": "/mnt/storage12tb/skills/create-kling-scene/outputs/persona-dream-canonical-20260915T015300Z/kling_dream.mp4",
+    "video_sha256": "sha256:abf7dc0a3a74e734259e6d66e29a168b9f257e565a2f589f2bfdbc49d5c358bc"
+  },
   "clarified_bar_v2": {
     "boundary": "Live 3-clip reference-bound Kling dream E2E with cinematography coverage, Embry journal, Chatterbox journal audio, and a dynamic voiced Horus/Embry conversation, plus explain-project records/cockpit/debugger proof. Direct provider smoke, NOT the canonical scene-table/create-kling-scene compiler path; human perception, production reliability, and provider reliability remain non-claims.",
     "captured_at": "2026-09-10T17:05:00Z",
@@ -560,13 +571,12 @@
     ]
   },
   "next_step": {
-    "default": "Post-clarified-bar: canonical create-kling-scene compiler E2E, #1058 human listener collection, and production reliability remain separately scoped future goals.",
+    "default": "Post-proof: #1058 human listener collection and production reliability remain separately scoped future goals.",
     "ordered_steps": [
-      "Do not claim canonical compiler path from the direct-smoke E2E receipt.",
       "Do not claim human preference/perception without 20 valid listener rows plus SIGNED_INTERPRETATION.json (#1058).",
       "Commit/push only scoped Persona Dream closure artifacts and code."
     ],
-    "receipt_target": "skills/persona-dream/local/proofs/clarified-bar-kling-e2e-20260910T170000Z/KlingTeaE2E.RECEIPT.json"
+    "receipt_target": "skills/persona-dream/local/proofs/canonical-create-kling-scene-20260915T015300Z/CANONICAL_KLING_RECEIPT.json"
   },
   "pctom_r_workstream": {
     "latest_goal_coverage_receipt": "reports/goal_v5/closure/pctom_final/20260902T165849Z/PCTOM_GOAL_COVERAGE_RECEIPT.json",

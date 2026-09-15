@@ -1,0 +1,22 @@
+{
+  "schema": "kling_video.request.v1",
+  "model_id": "fal-ai/kling-video/o3/standard/reference-to-video",
+  "request": {
+    "prompt": "@Element1 is embry. @Element2 is horus. windy stone terrace on a violet void world, dusk. dry electrical storm; steady left-to-right wind. embry: holds a warm teacup, exhales, then looks from the synthetic dream map to Horus with a careful relieved expression; Embry Lawson, brown-haired woman in a p windy stone terrace on a violet void world, dusk. dry electrical storm; steady left-to-right wind. Lit by violet lightning, glowing evidence map, small table lantern: violet lightning flickers across faces while the evidence map gives stea exactly 2 people, no one else present.",
+    "negative_prompt": "extra person, third person, crowd, text overlays, back of head only, face hidden",
+    "elements": [
+      {
+        "frontal_image_url": "https://v3b.fal.media/files/b/0aaa76e9/LD_AhSOoiAEbgKLVwgQjp_embry_q1_front.png",
+        "reference_image_urls": [
+          "https://v3b.fal.media/files/b/0aaa76e9/a9XyCJ_89Y7ptIp0IMuSt_embry_q1_front.png"
+        ]
+      },
+      {
+        "frontal_image_url": "https://v3b.fal.media/files/b/0aaa76e9/S41CexJFH6Db5g7PkGbfq_horus_q1_front.png",
+        "reference_image_urls": [
+          "https://v3b.fal.media/files/b/0aaa76e9/W7oUdy93vIl6WycQf1n-D_horus_q1_front.png"
+        ]
+      }
+    ]
+  }
+}

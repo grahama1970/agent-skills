@@ -1,0 +1,61 @@
+{
+ "schema": "create_kling_scene.instructions.v1",
+ "scene_id": "persona-dream-corrected-goal-canonical",
+ "model_id": "fal-ai/kling-video/o3/standard/reference-to-video",
+ "characters": [
+  "character_embry",
+  "character_horus"
+ ],
+ "references": [
+  {
+   "name": "embry",
+   "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/assets/element_packs/embry/embry_q1_front.png",
+   "sha256": "sha256:39e86c78e2750bf9dca6c17ff6705e9dbee9a2dcf9dc1fc0f784b6345cdc99d6",
+   "bytes": 614654
+  },
+  {
+   "name": "horus",
+   "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/assets/element_packs/horus/horus_q1_front.png",
+   "sha256": "sha256:adcd1960ce7fcb434d6d264b597f537a3332b5213c503b11cfeec3505274489c",
+   "bytes": 558075
+  }
+ ],
+ "voices": [],
+ "slots": {
+  "bindings": "@Element1 is embry. @Element2 is horus.",
+  "action": "windy stone terrace on a violet void world, dusk. dry electrical storm; steady left-to-right wind. embry: holds a warm teacup, exhales, then looks from the synthetic dream map to Horus with a careful relieved expression; Embry Lawson, brown-haired woman in a p",
+  "environment": "windy stone terrace on a violet void world, dusk. dry electrical storm; steady left-to-right wind.",
+  "lighting": "Lit by violet lightning, glowing evidence map, small table lantern: violet lightning flickers across faces while the evidence map gives stea",
+  "cast_guard": "exactly 2 people, no one else present.",
+  "negative": "extra person, third person, crowd, text overlays, back of head only, face hidden"
+ },
+ "required_fact_ids": [
+  "environment.location",
+  "environment.time_of_day",
+  "environment.weather",
+  "environment.temperature",
+  "environment.humidity",
+  "environment.wind",
+  "environment.light_sources",
+  "environment.light_behavior",
+  "environment.ambient_sound",
+  "character_embry",
+  "character_horus",
+  "prop_tea"
+ ],
+ "covered_fact_ids": [
+  "environment.location",
+  "environment.time_of_day",
+  "environment.weather",
+  "environment.temperature",
+  "environment.humidity",
+  "environment.wind",
+  "environment.light_sources",
+  "environment.light_behavior",
+  "environment.ambient_sound",
+  "character_embry",
+  "character_horus",
+  "prop_tea"
+ ],
+ "dropped_desired_fact_ids": []
+}

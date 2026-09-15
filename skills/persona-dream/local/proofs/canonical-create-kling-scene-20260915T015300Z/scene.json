@@ -1,0 +1,38 @@
+{
+  "schema": "scene_script.scene_table.v1",
+  "scene_id": "persona-dream-corrected-goal-canonical",
+  "environment": {
+    "location": "windy stone terrace on a violet void world",
+    "time_of_day": "dusk",
+    "weather": "dry electrical storm",
+    "temperature": "cold air",
+    "humidity": "arid air",
+    "wind": "steady left-to-right wind",
+    "light_sources": ["violet lightning", "glowing evidence map", "small table lantern"],
+    "light_behavior": "violet lightning flickers across faces while the evidence map gives steady under-light",
+    "ambient_sound": "wind moving across stone"
+  },
+  "elements": [
+    {
+      "element_id": "character_embry",
+      "element_type": "character",
+      "description": "Embry Lawson, brown-haired woman in a practical gray jacket",
+      "environment_interaction": "wind moves loose hair strands and map light reflects in her eyes",
+      "action": "holds a warm teacup, exhales, then looks from the synthetic dream map to Horus with a careful relieved expression"
+    },
+    {
+      "element_id": "character_horus",
+      "element_type": "character",
+      "description": "Horus Lupercal, bald armored giant seated calmly across the table",
+      "environment_interaction": "lantern light traces the gold armor edges while violet lightning crosses one cheek",
+      "action": "listens without interrupting and turns one teacup gently toward Embry"
+    },
+    {
+      "element_id": "prop_tea",
+      "element_type": "prop",
+      "description": "white porcelain tea service beside a glowing evidence map",
+      "environment_interaction": "steam bends sideways in the wind and map light glows through it",
+      "action": "remains centered between Embry and Horus as a visual anchor"
+    }
+  ]
+}
