@@ -137,7 +137,10 @@ Every executed handler call (success or failure) is recorded to the
 handler, status, failure_code, and `controlled_tab_id`/conversation URL when
 present, plus the proven method of the last successful call (reasoning
 selection, tab binding, lifecycle mode, dispatch command with secrets
-redacted). Check a seat before relying on it:
+redacted). Model ids are validated against the live SciLLM catalog at
+compile (`invalid_scillm_model_id` BLOCKED with nearest valid alternatives);
+a browser seat with 3+ consecutive recorded failures is flagged as known-bad
+before dispatch with its failure codes. Check a seat before relying on it:
 `python3 skills/ask/scripts/ask_call_history.py --handler webgemini` prints
 the last successful call and recent failures; add `--recommend` for the exact
 proven method to reuse. A handler with no recorded success is a blind guess —

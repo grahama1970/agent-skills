@@ -209,6 +209,48 @@ def call_history(handler: str, *, limit: int = 50) -> dict[str, Any]:
     }
 
 
+def seat_health(handler: str, *, docs: list[dict[str, Any]] | None = None, threshold: int = 3) -> dict[str, Any]:
+    """Consecutive-failure health for one browser seat, from ask_call_log.
+
+    A seat that failed N calls in a row with no success since is a known-bad
+    seat: including it in a live run burns timeouts and provider cooldowns on
+    a lane we already have evidence against.
+    """
+    if docs is None:
+        try:
+            response = httpx.post(
+                f"{MEMORY_URL}/list",
+                json={"collection": COLLECTION, "limit": 200, "filters": {"handler": handler}},
+                timeout=10.0,
+                headers={"x-caller-skill": "ask"},
+            )
+            response.raise_for_status()
+            docs = response.json().get("documents") or []
+        except (httpx.HTTPError, OSError):
+            return {"handler": handler, "consecutive_failures": 0, "known_bad": False, "unavailable": True}
+    ordered = sorted(docs, key=lambda d: str(d.get("ts") or ""), reverse=True)
+    consecutive = 0
+    codes: list[str] = []
+    for doc in ordered:
+        if doc.get("ok") is True:
+            break
+        if doc.get("status") == "retracted_fixture":
+            continue
+        consecutive += 1
+        code = str(doc.get("failure_code") or "").strip()
+        if code and code not in codes:
+            codes.append(code)
+    last_success = next((d.get("ts") for d in ordered if d.get("ok") is True), None)
+    return {
+        "handler": handler,
+        "consecutive_failures": consecutive,
+        "failure_codes": codes,
+        "last_success_ts": last_success,
+        "known_bad": consecutive >= threshold,
+        "unavailable": False,
+    }
+
+
 def recommendation(handler: str, *, limit: int = 50) -> dict[str, Any]:
     """Non-blind starting point for the next call to this handler.
 

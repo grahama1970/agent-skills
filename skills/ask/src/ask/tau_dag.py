@@ -557,6 +557,82 @@ def missing_dag_fields(input: TauDagCompileInput) -> list[dict[str, Any]]:
     return missing
 
 
+def _scillm_catalog_ids(base_url: str = DEFAULT_SCILLM_BASE_URL, timeout_seconds: float = 8.0) -> list[str] | None:
+    """Live SciLLM catalog ids, or None when the proxy is unreachable.
+
+    Model ids come from the live catalog, never from memory or a guess
+    (operator 2026-08-16). Compile stays offline-capable: unreachable catalog
+    means no id check, not a blocked compile.
+    """
+    try:
+        response = httpx.get(
+            f"{base_url.rstrip('/')}/v1/models",
+            headers={"Authorization": f"Bearer {default_scillm_api_key()}", "X-Caller-Skill": "ask"},
+            timeout=timeout_seconds,
+        )
+        response.raise_for_status()
+        return sorted({str(item.get("id")) for item in response.json().get("data", []) if item.get("id")})
+    except (httpx.HTTPError, OSError):
+        return None
+
+
+def unknown_scillm_model_ids(
+    models: list[str], *, catalog_ids: list[str] | None = None
+) -> list[dict[str, Any]]:
+    """Requested scillm-backed models whose routed base id is not in the catalog.
+
+    `fable-5:high` reached a live lane and died at the provider with "valid id:
+    claude-fable-5" — the catalog knew all along. This fails it at compile with
+    the nearest valid alternatives instead.
+    """
+    import difflib
+
+    if catalog_ids is None:
+        catalog_ids = _scillm_catalog_ids()
+    if not catalog_ids:
+        return []
+    unknown: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for model in models:
+        if not model or _is_browser_handler(model) or model in seen:
+            continue
+        seen.add(model)
+        route = resolve_scillm_model_route(model)
+        base = str(route.model).lower()
+        if base in {str(item).lower() for item in catalog_ids}:
+            continue
+        unknown.append(
+            {
+                "requested_model": model,
+                "routed_model": route.model,
+                "alternatives": difflib.get_close_matches(base, catalog_ids, n=3, cutoff=0.3),
+            }
+        )
+    return unknown
+
+
+def _invalid_model_id_blocker(input: TauDagCompileInput) -> dict[str, Any] | None:
+    models = [
+        model
+        for model in [*input.handlers, *input.solver_models, input.reviewer_model]
+        if model and not _is_browser_handler(model)
+    ]
+    unknown = unknown_scillm_model_ids(models)
+    if not unknown:
+        return None
+    return {
+        "schema": "ask.tau_dag_compile_blocked.v1",
+        "status": "BLOCKED",
+        "blocked_reason": "invalid_scillm_model_id",
+        "message": (
+            "Requested SciLLM model id(s) are not in the live catalog. Use a listed "
+            "alternative; model ids come from the catalog, never a guess."
+        ),
+        "unknown_models": unknown,
+        "next_command": "skills/ask/run.sh tau-dag ... --handler <catalog-valid-id>",
+    }
+
+
 def unsupported_model_routes(input: TauDagCompileInput) -> list[str]:
     unsupported: list[str] = []
     for model in [*input.solver_models, input.reviewer_model]:
@@ -746,6 +822,14 @@ def compile_tau_dag_bundle(input: TauDagCompileInput) -> dict[str, Any]:
         _write_json(run_dir / "attachment-contract-blocked.json", attachment_blocker)
         _write_json(run_dir / "compile-status.json", attachment_blocker)
         return attachment_blocker
+
+    model_id_blocker = _invalid_model_id_blocker(input)
+    if model_id_blocker:
+        model_id_blocker["run_dir"] = str(run_dir)
+        model_id_blocker["request_path"] = str(request_path)
+        _write_json(run_dir / "invalid-model-id-blocked.json", model_id_blocker)
+        _write_json(run_dir / "compile-status.json", model_id_blocker)
+        return model_id_blocker
 
     binding_errors = []
     for index, handler in enumerate(input.handlers):
@@ -988,6 +1072,31 @@ def run_tau_dag_bundle(
     run_dir = Path(str(bundle["run_dir"]))
     receipt_dir = run_dir / "tau-receipts"
     dag_path = Path(str(bundle["dag_path"]))
+    # Seat health before dispatch: a browser seat with consecutive recorded
+    # failures is a known-bad lane; say so BEFORE burning live timeouts on it,
+    # with the pointer to what worked last.
+    browser_seat_health: list[dict[str, Any]] = []
+    try:
+        from . import call_log
+
+        dag = bundle.get("dag") if isinstance(bundle.get("dag"), dict) else {}
+        for handler in sorted(
+            {
+                str(value)
+                for value in _roundtable_handler_map_from_dag(dag).values()
+                if _is_browser_handler(str(value))
+            }
+        ):
+            health = call_log.seat_health(handler)
+            browser_seat_health.append(health)
+            if health.get("known_bad"):
+                sys.stderr.write(
+                    f"ask seat health: {handler} failed {health['consecutive_failures']} consecutive calls "
+                    f"({', '.join(health.get('failure_codes') or [])}); last success {health.get('last_success_ts') or 'never'}. "
+                    f"Check skills/ask/scripts/ask_call_history.py --handler {handler} --recommend before relying on this seat.\n"
+                )
+    except Exception:
+        pass
     command = [
         "uv",
         "run",
@@ -1152,6 +1261,7 @@ def run_tau_dag_bundle(
         "degraded_join": degraded_join,
         "polls": polls,
         "viewer": viewer,
+        "browser_seat_health": browser_seat_health or None,
         "proof_scope": {
             "proves": [
                 "Tau's real CLI was invoked against the emitted DAG artifact.",

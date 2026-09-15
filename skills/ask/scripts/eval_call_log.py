@@ -11,6 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from ask import call_log  # noqa: E402
+from ask import tau_dag  # noqa: E402
 
 
 def main() -> int:
@@ -91,6 +92,33 @@ def main() -> int:
     redacted = call_log._redact_command(["--scillm-api-key", "sk-local-abc", "--handler", "webgpt"])
     assert redacted[1] == "<redacted>" and redacted[3] == "webgpt", redacted
 
+    # Model ids come from the catalog, never a guess: an invented id is
+    # rejected at compile with the nearest valid alternative.
+    unknown = tau_dag.unknown_scillm_model_ids(
+        ["fable-5:high", "gpt-5.5-high", "claude-fable-5", "webgemini"],
+        catalog_ids=["claude-fable-5", "gpt-5.5"],
+    )
+    assert len(unknown) == 1 and unknown[0]["requested_model"] == "fable-5:high", unknown
+    assert "claude-fable-5" in unknown[0]["alternatives"], unknown
+    # Effort-suffixed selectors route to their catalog base id and must pass.
+    assert not tau_dag.unknown_scillm_model_ids(
+        ["gpt-5.5-high"], catalog_ids=["claude-fable-5", "gpt-5.5"]
+    )
+
+    # Seat health: three consecutive recorded failures mark a known-bad seat
+    # with the exact failure codes, so a run warns before burning it again.
+    docs = [
+        {"ts": "2026-09-15T02:00:00Z", "ok": False, "failure_code": "browser_provider_setup_failed"},
+        {"ts": "2026-09-15T01:00:00Z", "ok": False, "failure_code": "browser_submit_not_accepted"},
+        {"ts": "2026-09-15T00:30:00Z", "ok": False, "failure_code": "browser_provider_setup_failed"},
+        {"ts": "2026-09-14T00:00:00Z", "ok": True},
+    ]
+    health = call_log.seat_health("webkimi", docs=docs)
+    assert health["known_bad"] is True and health["consecutive_failures"] == 3, health
+    assert set(health["failure_codes"]) == {"browser_provider_setup_failed", "browser_submit_not_accepted"}, health
+    healthy = call_log.seat_health("webgpt", docs=[{"ts": "2026-09-15T00:00:00Z", "ok": True}])
+    assert healthy["known_bad"] is False, healthy
+
     print(
         json.dumps(
             {
@@ -102,6 +130,8 @@ def main() -> int:
                     "no embedding vectors written into Arango documents",
                     f"memory url normalized to http: {env_url}",
                     "method denormalization: reasoning, tab lifecycle, dispatch command, conversation url",
+                    "invented scillm model ids rejected at compile with catalog alternatives",
+                    "browser seat health marks consecutive failures before dispatch",
                 ],
                 "memory_url": env_url,
             },
