@@ -2821,6 +2821,11 @@ def _looks_browser_provider_rate_limited(text: str, meta: dict[str, Any]) -> boo
         "blocked_grok_provider_rate_limit",
         "limit is gone",
         "upgrade to supergrok",
+        "free quota is used up",
+        "quota refreshes at",
+        "credits used up",
+        "upgrade modal blocks submission",
+        "paid-feature modal blocks submission",
     )
     return any(marker in text for marker in markers)
 
@@ -4332,6 +4337,11 @@ def _attempt_lane_recovery(
         or (heartbeat.get("sentinel") if isinstance(heartbeat, dict) else "")
         or ""
     ).strip()
+    packet_next_command = list(recovery_packet.get("next_command") or [])
+    lifecycle = _read_optional_json(artifact_dir.parent.parent / "browser-tab-lifecycle.json")
+    if lifecycle.get("mode") == "reuse-bound" and "open-bind" in packet_next_command:
+        receipt["skipped_packet_action"] = "reuse_bound_forbids_open_bind"
+        packet_next_command = []
     actions = _lane_recovery_actions(
         args,
         failure_code=failure_code,
@@ -4340,7 +4350,7 @@ def _attempt_lane_recovery(
         response_path=response_path,
         raw_path=raw_path,
         meta_path=meta_path,
-        packet_next_command=list(recovery_packet.get("next_command") or []),
+        packet_next_command=packet_next_command,
     )
     if not actions:
         receipt["skipped_reason"] = "no evidence-derived recovery action available"

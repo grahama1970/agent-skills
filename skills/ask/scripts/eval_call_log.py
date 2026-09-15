@@ -119,6 +119,20 @@ def main() -> int:
     healthy = call_log.seat_health("webgpt", docs=[{"ts": "2026-09-15T00:00:00Z", "ok": True}])
     assert healthy["known_bad"] is False, healthy
 
+    # Kimi entitlement walls (quota exhausted / plan upsell modal) classify as
+    # provider rate-limited with cooldown, not setup failure: the seat is
+    # provider-blocked, and seat health must say so.
+    sys.path.insert(0, str(Path(__file__).resolve().parent / ".." / "scripts"))
+    import tau_roundtable_worker as worker  # noqa: E402
+
+    for text in (
+        "Error: Kimi upgrade modal blocks submission",
+        "Kimi credits used up block submission",
+        "Your free quota is used up. Refreshes at 10-07.",
+    ):
+        assert worker._looks_browser_provider_rate_limited(text, {}), text
+        assert not worker._looks_browser_provider_setup_failed(text, {}), text
+
     # Backfill: undated run dirs get their timestamp from the node receipt's
     # mtime so history ordering reflects when runs actually happened.
     import importlib.util
