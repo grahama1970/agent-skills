@@ -369,22 +369,26 @@
       "surface_token": "#1128"
     },
     "p2_continuity_reliability_soak": {
-      "does_not_prove": "anything; the campaign has not started",
-      "proves": "nothing yet",
-      "sample_count": 0,
-      "scope": "35+ consecutive no-restart live P2 continuity cycles against long-lived Memory and Chatterbox instances",
-      "status": "PLANNED_NOT_RUN",
+      "does_not_prove": "production reliability, cloud deployment reliability, or full Phase 01-16 media-pipeline reliability",
+      "proves": "35/35 local no-restart cycles passed with Wilson 95% lower bound 0.901096.",
+      "receipt": "reports/goal_v5/continuity/reliability/soak35_after_1130/AGGREGATE_RECEIPT.json",
+      "receipt_sha256": "sha256:aaee5b251a7f311d1be99fb91c1289e7d2b9c4cec1fd3ffe0c9ccb7983864878",
+      "sample_count": 35,
+      "scope": "35 consecutive no-restart live P2 continuity cycles against long-lived local Memory and Chatterbox instances",
+      "status": "PASS_LOCAL_NO_RESTART_SOAK_35_OF_35",
       "successor_issue": "grahama1970/agent-skills#1128",
-      "successor_resolved": false
+      "successor_resolved": true
     },
     "p2_restart_recovery": {
-      "does_not_prove": "anything; the campaign has not started",
-      "proves": "nothing yet",
-      "sample_count": 0,
-      "scope": "deterministic restart/partial-receipt/stale-session fault campaign, separate from the reliability soak denominator",
-      "status": "PLANNED_NOT_RUN",
+      "does_not_prove": "production disaster recovery, cloud failover, or provider-video recovery",
+      "proves": "7/7 local recovery scenarios passed with six live service restarts and zero duplicate accepted effects.",
+      "receipt": "reports/goal_v5/continuity/recovery/AGGREGATE_RECEIPT.json",
+      "receipt_sha256": "sha256:3d4d556d3a29fb2e9ca69697cc6ac41ecab7c0e29e64a4efbc4f80356bdf3e4f",
+      "sample_count": 7,
+      "scope": "seven preregistered local restart, partial-receipt, and stale-session recovery scenarios",
+      "status": "PASS_LOCAL_RESTART_RECOVERY_7_OF_7",
       "successor_issue": "grahama1970/agent-skills#1129",
-      "successor_resolved": false
+      "successor_resolved": true
     },
     "pctom_apparatus_integrity": {
       "does_not_prove": "measurement validity or held-out benefit; #1056 proved the benefit estimator degenerate",
