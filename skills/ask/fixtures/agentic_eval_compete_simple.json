@@ -172,7 +172,11 @@
       ],
       "timeout_seconds": 60,
       "command": [
-        "python3",
+        "uv",
+        "run",
+        "--project",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask",
+        "python",
         "/home/graham/workspace/experiments/agent-skills/skills/ask/scripts/eval_compose_pipeline.py"
       ],
       "expected": {
