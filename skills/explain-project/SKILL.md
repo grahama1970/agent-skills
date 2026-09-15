@@ -17,6 +17,7 @@ provides:
   - post-agent-explainability
 composes:
   - best-practices-explain-project
+  - acceptance-contract
   - debugger
   - create-architecture
   - create-svg
@@ -54,9 +55,9 @@ prose, which presenters prefer over composed teleprompter fragments.
 skills/explain-project/run.sh validate docs/explain/explainers.jsonl
 skills/explain-project/run.sh list docs/explain/explainers.jsonl
 skills/explain-project/run.sh ask docs/explain/explainers.jsonl --question "What breaks first at scale?"
-skills/explain-project/run.sh answer-question --repo <project> --question "Why does publish wait?" --out /tmp/explain-project-answer --debug-command "python app.py"
+skills/explain-project/run.sh answer-question --repo <project> --question "Why does publish wait?" --out /tmp/explain-project-answer --debug-command "python app.py" --acceptance-bundle artifacts/acceptance/acceptance_bundle.json
 skills/explain-project/run.sh sample --output docs/explain/explainers.jsonl
-skills/explain-project/run.sh scaffold --repo <project> --entrypoint <path> --run-project-state
+skills/explain-project/run.sh scaffold --repo <project> --entrypoint <path> --run-project-state --acceptance-bundle artifacts/acceptance/acceptance_bundle.json
 skills/explain-project/run.sh eval-interview-cockpit-path --out-dir /tmp/explain-project-first-question
 skills/explain-project/run.sh eval-browser-sync --out-dir /tmp/explain-project-browser-sync
 skills/explain-project/run.sh bridge --repo <workspace> --base-url http://127.0.0.1:15174 --out-dir <artifacts> --execute
@@ -69,8 +70,14 @@ skills/explain-project/run.sh eval-bridge-execution --out-dir /tmp/explain-proje
 A record maps a question to what the cockpit should show:
 
 ```text
-question -> teleprompter notes -> Excalidraw/SVG node -> VS Code range -> optional debugger stop
+question -> acceptance-contract ref -> teleprompter notes -> Excalidraw/SVG node -> VS Code range -> optional debugger stop
 ```
+
+When a source brief exists, run `$acceptance-contract` first and pass the
+resulting `acceptance_bundle.json` with `--acceptance-bundle`. Explain-project
+stores only a bounded reference (`path`, `sha256`, project name, and counts). It
+uses that bundle as acceptance context; it does not create or approve immutable
+goals.
 
 Use Excalidraw as the default editable architecture source. Use SVG as a rendered
 portable artifact when stable or when `$create-svg` verification has produced a
@@ -139,10 +146,11 @@ Imported explainer `runtime_launch` commands are never executed.
 ## Current scope
 
 The current implementation validates/list/searches explainer JSONL, scaffolds a
-starter explainer from any project entrypoint, runs a headless cockpit proof,
-serves a loopback cockpit API, and ships a React cockpit harness under `ui/`. It
-ingests typed Live Evidence question candidates, debugger source/proof receipts,
-and ops-excalidraw proposal receipts. It does not claim live microphone
+starter explainer from any project entrypoint, optionally binds a
+`$acceptance-contract` bundle, runs a headless cockpit proof, serves a loopback
+cockpit API, and ships a React cockpit harness under `ui/`. It ingests typed
+Live Evidence question candidates, debugger source/proof receipts, and
+ops-excalidraw proposal receipts. It does not claim live microphone
 transcription, arbitrary visible VS Code control, debugger execution from
-navigation, or accepted Excalidraw board mutation without the owning skill
-receipts.
+navigation, accepted Excalidraw board mutation, or approved immutable goals
+without the owning skill receipts.

@@ -1,6 +1,6 @@
 # Project Knowledge: explain-project
 
-**Last updated:** 2026-09-08 by agent
+**Last updated:** 2026-09-11 07:50 by agent
 **Status:** Active development; cockpit immutable goal locally complete with proof-bound live-integration gaps.
 
 ## Current Understanding
@@ -13,6 +13,7 @@
 - `$debugger` integration ingests source reveal and runtime proof receipts; proof files are `/tmp/explain-project-live-debugger-source-reveal-receipt.json` and `/tmp/explain-project-live-debugger-runtime-proof-receipt.json`.
 - `$live-evidence` integration is typed intake/deduplication only unless a consented listener receipt exists. Live microphone transcription is not part of the current cockpit completion claim.
 - README now links helper skill contracts (`live-evidence`, `debugger`, `ops-excalidraw`, `create-svg`, `test-interactions`, `surf`, `agentic-evals`) and includes `assets/readme/cockpit-screenshot.png` plus `assets/readme/cockpit-flow.svg`.
+- v2 goal CLOSED 2026-09-10: all 14 criteria hold (Diagrams Explorer pane built + live-exercised; milestone bundle with computed stale-diagram findings; docstring links proposed+applied incl. source-range owners). Full synchronized presentation proven: real question in -> Embry speaks walkthrough aloud (--play) -> real debugger stop flips live cockpit to PROOF_RECEIVED per step -> whiteboard tab 837436448 bound throughout. Persistent tabs: cockpit 837436340, whiteboard 837436448. Known ops lesson: killed mid-js evals leak chrome.debugger sessions; one clean extension.reload releases them (self-heal wired into eval_live_cockpit_ui.sh).
 
 ## Recent Decisions
 

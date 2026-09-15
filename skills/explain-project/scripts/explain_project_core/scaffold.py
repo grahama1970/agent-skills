@@ -147,6 +147,44 @@ def _project_state_boundary(project_state: Path | None) -> str:
     return f"Project-state receipt: {project_state} sha256:{digest}."
 
 
+def _load_acceptance_contract(repo: Path, path: Path | None) -> dict[str, Any] | None:
+    if path is None:
+        for candidate in (
+            repo / "acceptance_bundle.json",
+            repo / "docs/acceptance/acceptance_bundle.json",
+            repo / "artifacts/acceptance/acceptance_bundle.json",
+        ):
+            if candidate.is_file():
+                path = candidate
+                break
+    if path is None:
+        return None
+    resolved = path if path.is_absolute() else repo / path
+    data = json.loads(resolved.read_text(encoding="utf-8"))
+    if data.get("schema") != "acceptance_contract.bundle.v1":
+        raise ValueError(f"not an acceptance-contract bundle: {resolved}")
+    return {
+        "schema": "explain_project.acceptance_contract_ref.v1",
+        "path": _rel(repo, resolved),
+        "sha256": hashlib.sha256(resolved.read_bytes()).hexdigest(),
+        "project_name": data.get("project_name") or repo.name,
+        "requirements": len(data.get("requirements") or []),
+        "acceptance_cases": len(data.get("acceptance_cases") or []),
+        "open_questions": len(data.get("open_questions") or []),
+    }
+
+
+def _acceptance_boundary(ref: dict[str, Any] | None) -> str:
+    if ref is None:
+        return "No $acceptance-contract bundle was bound; acceptance criteria are outside this explainer."
+    return (
+        "$acceptance-contract bundle: "
+        f"{ref['path']} sha256:{ref['sha256']} "
+        f"requirements:{ref['requirements']} acceptance_cases:{ref['acceptance_cases']} "
+        f"open_questions:{ref['open_questions']}."
+    )
+
+
 def run_project_state(repo: Path, output: Path) -> Path:
     output.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(
@@ -160,8 +198,14 @@ def run_project_state(repo: Path, output: Path) -> Path:
     return output
 
 
-def scaffold_record(repo: Path, entrypoint: Path, project_state: Path | None = None) -> FeatureExplainer:
+def scaffold_record(
+    repo: Path,
+    entrypoint: Path,
+    project_state: Path | None = None,
+    acceptance_bundle: Path | None = None,
+) -> FeatureExplainer:
     target = _first_code_target(repo, entrypoint)
+    acceptance_ref = _load_acceptance_contract(repo, acceptance_bundle)
     diagrams = find_diagrams(repo, entrypoint)
     diagram = diagrams[0] if diagrams else DiagramRef(
         "docs/explain/boards/project-overview.excalidraw",
@@ -180,6 +224,7 @@ def scaffold_record(repo: Path, entrypoint: Path, project_state: Path | None = N
         "teleprompter_points": [
             f"Start at `{target.file}`.",
             "Use `$project-state` as the current health/context receipt.",
+            "Use `$acceptance-contract` as the source of acceptance criteria when bound.",
             f"Diagram source discovered from `{diagram.found_in}`: `{diagram.source}`.",
             "Use `$debugger` breakpoints only where runtime state answers the human's question.",
         ],
@@ -203,7 +248,10 @@ def scaffold_record(repo: Path, entrypoint: Path, project_state: Path | None = N
             "Scaffolded from local files. It identifies a starting point, diagram references, "
             "and breakpoint targets; it does not prove architecture completeness. "
             + _project_state_boundary(project_state)
+            + " "
+            + _acceptance_boundary(acceptance_ref)
         ),
+        "acceptance_contract": acceptance_ref,
         "debugger_stops": [],
         "confidence": "low",
         "steps": [
@@ -263,8 +311,14 @@ def scaffold_record(repo: Path, entrypoint: Path, project_state: Path | None = N
     return FeatureExplainer.model_validate(record)
 
 
-def write_scaffold(repo: Path, entrypoint: Path, output: Path, project_state: Path | None) -> dict[str, Any]:
-    record = scaffold_record(repo, entrypoint, project_state)
+def write_scaffold(
+    repo: Path,
+    entrypoint: Path,
+    output: Path,
+    project_state: Path | None,
+    acceptance_bundle: Path | None = None,
+) -> dict[str, Any]:
+    record = scaffold_record(repo, entrypoint, project_state, acceptance_bundle)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(record.model_dump_json(by_alias=True) + "\n", encoding="utf-8")
     return {
@@ -277,6 +331,7 @@ def write_scaffold(repo: Path, entrypoint: Path, output: Path, project_state: Pa
         "diagram": record.diagram.model_dump(by_alias=True, mode="json"),
         "debugger_stops": [stop.model_dump(by_alias=True, mode="json") for stop in record.debugger_stops],
         "project_state": str(project_state) if project_state else None,
+        "acceptance_contract": record.acceptance_contract.model_dump(by_alias=True, mode="json") if record.acceptance_contract else None,
     }
 
 
@@ -479,7 +534,14 @@ def _ensure_question_diagram(repo: Path, question: str, target: SourceTarget, ou
     return diagram, json.loads(register.stdout)
 
 
-def _question_record(question: str, repo: Path, target: SourceTarget, diagram: DiagramRef, project_state: Path) -> FeatureExplainer:
+def _question_record(
+    question: str,
+    repo: Path,
+    target: SourceTarget,
+    diagram: DiagramRef,
+    project_state: Path,
+    acceptance_ref: dict[str, Any] | None = None,
+) -> FeatureExplainer:
     bp_index = 0 if target.breakpoint_line else None
     record: dict[str, Any] = {
         "schema": "project.feature_explainer.v1",
@@ -491,7 +553,7 @@ def _question_record(question: str, repo: Path, target: SourceTarget, diagram: D
             "Here is the short version in plain English.",
             f"The answer is in `{target.file}`.",
             "We will connect the code, diagram, and runtime proof one step at a time.",
-            "Anything not proven by the shown source or receipts stays a non-claim.",
+            "Anything not proven by the shown source, acceptance bundle, or receipts stays a non-claim.",
         ],
         "source_ranges": [{"file": target.file, "start_line": target.start_line, "end_line": target.end_line, "symbol": target.symbol}],
         "diagram": {
@@ -502,7 +564,8 @@ def _question_record(question: str, repo: Path, target: SourceTarget, diagram: D
             "editable": diagram.editable,
             "compiled_by": "ops-excalidraw registry",
         },
-        "proof_boundary": f"Question-first scaffold from local source plus project-state receipt {project_state}. Teaching tone is plain, spoken, and concise; architecture completeness is not claimed.",
+        "proof_boundary": f"Question-first scaffold from local source plus project-state receipt {project_state}. {_acceptance_boundary(acceptance_ref)} Teaching tone is plain, spoken, and concise; architecture completeness is not claimed.",
+        "acceptance_contract": acceptance_ref,
         "debugger_stops": [],
         "confidence": "medium",
         "steps": [
@@ -516,12 +579,20 @@ def _question_record(question: str, repo: Path, target: SourceTarget, diagram: D
     return FeatureExplainer.model_validate(record)
 
 
-def answer_question(repo: Path, question: str, out: Path, entrypoint: Path | None = None, debug_command: str | None = None) -> dict[str, Any]:
+def answer_question(
+    repo: Path,
+    question: str,
+    out: Path,
+    entrypoint: Path | None = None,
+    debug_command: str | None = None,
+    acceptance_bundle: Path | None = None,
+) -> dict[str, Any]:
     out.mkdir(parents=True, exist_ok=True)
     project_state = run_project_state(repo, out / "project-state.quick.json")
+    acceptance_ref = _load_acceptance_contract(repo, acceptance_bundle)
     target = _select_question_target(repo, question, entrypoint)
     diagram, diagram_receipt = _ensure_question_diagram(repo, question, target, out)
-    record = _question_record(question, repo, target, diagram, project_state)
+    record = _question_record(question, repo, target, diagram, project_state, acceptance_ref)
     explainers = out / "explainers.jsonl"
     explainers.write_text(record.model_dump_json(by_alias=True) + "\n", encoding="utf-8")
     breakpoints = [{"file": stop.file, "line": stop.line, "proves": stop.proves} for stop in record.debugger_stops]
@@ -541,6 +612,7 @@ def answer_question(repo: Path, question: str, out: Path, entrypoint: Path | Non
         "out": str(out),
         "explainers": str(explainers),
         "project_state": str(project_state),
+        "acceptance_contract": record.acceptance_contract.model_dump(by_alias=True, mode="json") if record.acceptance_contract else None,
         "selected_source": target.__dict__,
         "breakpoints": breakpoints,
         "debugger_proof": debugger_proof,

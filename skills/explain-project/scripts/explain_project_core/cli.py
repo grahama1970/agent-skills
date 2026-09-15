@@ -267,6 +267,11 @@ def scaffold_command(
         "--run-project-state",
         help="Run a quick $project-state JSON report before writing the scaffold.",
     ),
+    acceptance_bundle: Path | None = typer.Option(
+        None,
+        "--acceptance-bundle",
+        help="Optional $acceptance-contract acceptance_bundle.json to bind.",
+    ),
 ) -> None:
     """Create a starter explainer for any project from its entrypoint."""
 
@@ -292,12 +297,17 @@ def scaffold_command(
             resolved_output.parent / "project-state.quick.json",
         )
 
+    resolved_acceptance_bundle = acceptance_bundle
+    if resolved_acceptance_bundle is not None and not resolved_acceptance_bundle.is_absolute():
+        resolved_acceptance_bundle = resolved_repo / resolved_acceptance_bundle
+
     _emit(
         write_scaffold(
             resolved_repo,
             resolved_entrypoint,
             resolved_output,
             resolved_project_state,
+            resolved_acceptance_bundle,
         )
     )
 
@@ -357,6 +367,11 @@ def answer_question_command(
         "--debug-command",
         help="Optional command to run under $debugger from --repo.",
     ),
+    acceptance_bundle: Path | None = typer.Option(
+        None,
+        "--acceptance-bundle",
+        help="Optional $acceptance-contract acceptance_bundle.json to bind.",
+    ),
 ) -> None:
     """Create a question-first cockpit bundle for a project question."""
 
@@ -367,6 +382,10 @@ def answer_question_command(
             resolved_repo,
             entrypoint,
         ).resolve()
+    resolved_acceptance_bundle = acceptance_bundle
+    if resolved_acceptance_bundle is not None and not resolved_acceptance_bundle.is_absolute():
+        resolved_acceptance_bundle = resolved_repo / resolved_acceptance_bundle
+
     _emit(
         answer_question(
             resolved_repo,
@@ -374,6 +393,7 @@ def answer_question_command(
             out.resolve(),
             resolved_entrypoint,
             debug_command,
+            resolved_acceptance_bundle,
         )
     )
 
