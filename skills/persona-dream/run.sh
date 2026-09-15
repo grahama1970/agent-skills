@@ -198,6 +198,9 @@ Commands:
   curate-transcript-context Curate $mine-transcripts output into conversation grounding context
   recall-emotional-triggers Create source-bound emotional triggers from live $memory persona_memory recall
   persist-emotional-triggers Persist persona_dream.emotional_trigger.v1 records to Memory with exact reread
+  seed-c0c1-eval-memory      Seed literal C0/C1 evaluation memory records into persona_memory (idempotent upsert)
+  admit-persona-state-delta  Deterministic C0/C1 persona-state admission over an emotional-trigger packet
+  fold-persona-state         Independent baseline+accepted-deltas state fold with exact rereads
   converse-dynamic        Run dynamic voiced Horus/Embry conversation for a dream run
   chatterbox-conversation Alias for converse-dynamic; terminal dream-spine speech step
   render-blinded-listener-rater-page Render the static blinded listener-study rater page
@@ -877,6 +880,15 @@ case "$COMMAND" in
     ;;
   recall-emotional-triggers)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/recall_emotional_triggers.py" "$@"
+    ;;
+  seed-c0c1-eval-memory)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/seed_c0c1_eval_memory.py" "$@"
+    ;;
+  admit-persona-state-delta)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/admit_persona_state_delta.py" "$@"
+    ;;
+  fold-persona-state)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/fold_persona_state.py" "$@"
     ;;
   persist-emotional-triggers)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/persist_emotional_trigger_memory.py" "$@"

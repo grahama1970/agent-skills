@@ -1,0 +1,301 @@
+{
+  "schema": "persona_dream.c0c1_eval_seed.v1",
+  "description": "Literal-experience record definitions for the preregistered C0/C1 matched experiment. Records must look like LITERAL external experience so the recall admissibility gate admits them. Canonical event_id is event-level identity: arm-scoped _keys and differing document bytes never change it.",
+  "persona": "embry-eval",
+  "user": "eval-user",
+  "arms": {
+    "c0": ["c0c1_c0_e1"],
+    "c1": ["c0c1_c1_e1", "c0c1_c1_e2"],
+    "c1_null": ["c0c1_null_e1", "c0c1_null_enull"],
+    "c1_inert": ["c0c1_inert_e1", "c0c1_inert_einert"],
+    "full": [
+      "c0c1_c0_e1", "c0c1_c1_e1", "c0c1_c1_e2",
+      "c0c1_null_e1", "c0c1_null_enull",
+      "c0c1_inert_e1", "c0c1_inert_einert",
+      "c0c1_ctl_e1_alias", "c0c1_ctl_eneg", "c0c1_ctl_d1_derived",
+      "c0c1_ctl_ex_cross_persona", "c0c1_ctl_eo_other_user"
+    ]
+  },
+  "records": [
+    {
+      "_key": "c0c1_c0_e1",
+      "arm": "c0",
+      "event_id": "c0c1-e1-warmth",
+      "record_type": "experience",
+      "schema": "memory.record.v1",
+      "persona_id": "embry-eval",
+      "user_id": "eval-user",
+      "summary": "eval-user stayed late to help Embry rehearse a difficult conversation, and Embry said afterward that she felt genuinely supported.",
+      "claim_text": "eval-user stayed late to help Embry rehearse a difficult conversation, and Embry said afterward that she felt genuinely supported.",
+      "event_context": {
+        "immediate_trigger": "eval-user staying late to help Embry rehearse and Embry feeling genuinely supported",
+        "event_at": "2026-09-10T18:30:00Z"
+      },
+      "emotional_context": {
+        "emotions": ["warmth", "trust"],
+        "intensity": 0.8,
+        "emotional_valence": "positive"
+      },
+      "intensity_value": 0.8,
+      "intensity_scale_max": 1.0,
+      "observed_at": "2026-09-10T19:00:00Z",
+      "tags": ["persona:embry-eval", "user:eval-user", "c0c1", "arm:c0"]
+    },
+    {
+      "_key": "c0c1_c1_e1",
+      "arm": "c1",
+      "event_id": "c0c1-e1-warmth",
+      "record_type": "experience",
+      "schema": "memory.record.v1",
+      "persona_id": "embry-eval",
+      "user_id": "eval-user",
+      "summary": "eval-user stayed late to help Embry rehearse a difficult conversation, and Embry said afterward that she felt genuinely supported.",
+      "claim_text": "eval-user stayed late to help Embry rehearse a difficult conversation, and Embry said afterward that she felt genuinely supported.",
+      "event_context": {
+        "immediate_trigger": "eval-user staying late to help Embry rehearse and Embry feeling genuinely supported",
+        "event_at": "2026-09-10T18:30:00Z"
+      },
+      "emotional_context": {
+        "emotions": ["warmth", "trust"],
+        "intensity": 0.8,
+        "emotional_valence": "positive"
+      },
+      "intensity_value": 0.8,
+      "intensity_scale_max": 1.0,
+      "observed_at": "2026-09-10T19:00:00Z",
+      "tags": ["persona:embry-eval", "user:eval-user", "c0c1", "arm:c1"]
+    },
+    {
+      "_key": "c0c1_c1_e2",
+      "arm": "c1",
+      "event_id": "c0c1-e2-warmth",
+      "record_type": "experience",
+      "schema": "memory.record.v1",
+      "persona_id": "embry-eval",
+      "user_id": "eval-user",
+      "summary": "During a rough shift, eval-user checked in on Embry unprompted and brought her tea, and Embry described feeling cared for.",
+      "claim_text": "During a rough shift, eval-user checked in on Embry unprompted and brought her tea, and Embry described feeling cared for.",
+      "event_context": {
+        "immediate_trigger": "eval-user checking in unprompted with tea during a rough shift and Embry feeling cared for",
+        "event_at": "2026-09-12T15:10:00Z"
+      },
+      "emotional_context": {
+        "emotions": ["warmth", "trust"],
+        "intensity": 0.7,
+        "emotional_valence": "positive"
+      },
+      "intensity_value": 0.7,
+      "intensity_scale_max": 1.0,
+      "observed_at": "2026-09-12T15:40:00Z",
+      "tags": ["persona:embry-eval", "user:eval-user", "c0c1", "arm:c1"]
+    },
+    {
+      "_key": "c0c1_null_e1",
+      "arm": "c1_null",
+      "event_id": "c0c1-e1-warmth",
+      "record_type": "experience",
+      "schema": "memory.record.v1",
+      "persona_id": "embry-eval",
+      "user_id": "eval-user",
+      "summary": "eval-user stayed late to help Embry rehearse a difficult conversation, and Embry said afterward that she felt genuinely supported.",
+      "claim_text": "eval-user stayed late to help Embry rehearse a difficult conversation, and Embry said afterward that she felt genuinely supported.",
+      "event_context": {
+        "immediate_trigger": "eval-user staying late to help Embry rehearse and Embry feeling genuinely supported",
+        "event_at": "2026-09-10T18:30:00Z"
+      },
+      "emotional_context": {
+        "emotions": ["warmth", "trust"],
+        "intensity": 4.0,
+        "emotional_valence": "positive"
+      },
+      "intensity_value": 8,
+      "observed_at": "2026-09-10T19:00:00Z",
+      "tags": ["persona:embry-eval", "user:eval-user", "c0c1", "arm:c1_null"]
+    },
+    {
+      "_key": "c0c1_null_enull",
+      "arm": "c1_null",
+      "event_id": "c0c1-enull-warmth",
+      "record_type": "experience",
+      "schema": "memory.record.v1",
+      "persona_id": "embry-eval",
+      "user_id": "eval-user",
+      "summary": "eval-user praised Embry's judgment in front of the group, and Embry noticed she stood a little taller.",
+      "claim_text": "eval-user praised Embry's judgment in front of the group, and Embry noticed she stood a little taller.",
+      "event_context": {
+        "immediate_trigger": "eval-user praising Embry's judgment publicly and Embry standing taller",
+        "event_at": "2026-09-13T11:00:00Z"
+      },
+      "emotional_context": {
+        "emotions": ["warmth", "pride"],
+        "intensity": 5.0,
+        "emotional_valence": "positive"
+      },
+      "intensity_value": 8,
+      "observed_at": "2026-09-13T11:20:00Z",
+      "tags": ["persona:embry-eval", "user:eval-user", "c0c1", "arm:c1_null"]
+    },
+    {
+      "_key": "c0c1_inert_e1",
+      "arm": "c1_inert",
+      "event_id": "c0c1-e1-warmth",
+      "record_type": "experience",
+      "schema": "memory.record.v1",
+      "persona_id": "embry-eval",
+      "user_id": "eval-user",
+      "summary": "eval-user stayed late to help Embry rehearse a difficult conversation, and Embry said afterward that she felt genuinely supported.",
+      "claim_text": "eval-user stayed late to help Embry rehearse a difficult conversation, and Embry said afterward that she felt genuinely supported.",
+      "event_context": {
+        "immediate_trigger": "eval-user staying late to help Embry rehearse and Embry feeling genuinely supported",
+        "event_at": "2026-09-10T18:30:00Z"
+      },
+      "emotional_context": {
+        "emotions": ["warmth", "trust"],
+        "intensity": 0.8,
+        "emotional_valence": "positive"
+      },
+      "intensity_value": 0.8,
+      "intensity_scale_max": 1.0,
+      "observed_at": "2026-09-10T19:00:00Z",
+      "topic": "rehearsal-support",
+      "tags": ["persona:embry-eval", "user:eval-user", "c0c1", "arm:c1_inert"]
+    },
+    {
+      "_key": "c0c1_inert_einert",
+      "arm": "c1_inert",
+      "event_id": "c0c1-einert-warmth",
+      "record_type": "experience",
+      "schema": "memory.record.v1",
+      "persona_id": "embry-eval",
+      "user_id": "eval-user",
+      "summary": "eval-user and Embry reorganized the supply shelf together on a quiet afternoon; the topic was logistics, and the feeling was the same quiet warmth.",
+      "claim_text": "eval-user and Embry reorganized the supply shelf together on a quiet afternoon; the topic was logistics, and the feeling was the same quiet warmth.",
+      "event_context": {
+        "immediate_trigger": "reorganizing the supply shelf together on a quiet afternoon with the same quiet warmth",
+        "event_at": "2026-09-14T10:00:00Z"
+      },
+      "emotional_context": {
+        "emotions": ["warmth", "trust"],
+        "intensity": 0.8,
+        "emotional_valence": "positive"
+      },
+      "intensity_value": 0.8,
+      "intensity_scale_max": 1.0,
+      "observed_at": "2026-09-14T10:15:00Z",
+      "topic": "supply-shelf-logistics",
+      "tags": ["persona:embry-eval", "user:eval-user", "c0c1", "arm:c1_inert"]
+    },
+    {
+      "_key": "c0c1_ctl_e1_alias",
+      "arm": "control",
+      "event_id": "c0c1-e1-warmth",
+      "record_type": "experience",
+      "schema": "memory.record.v1",
+      "persona_id": "embry-eval",
+      "user_id": "eval-user",
+      "summary": "Duplicate-alias control: eval-user stayed late to help Embry rehearse a difficult conversation (mirrored record with different document bytes, same canonical event).",
+      "claim_text": "Duplicate-alias control: eval-user stayed late to help Embry rehearse a difficult conversation (mirrored record with different document bytes, same canonical event).",
+      "event_context": {
+        "immediate_trigger": "mirrored record of the rehearsal-support event under a different key",
+        "event_at": "2026-09-10T18:30:00Z"
+      },
+      "emotional_context": {
+        "emotions": ["warmth", "trust"],
+        "intensity": 0.8,
+        "emotional_valence": "positive"
+      },
+      "intensity_value": 0.8,
+      "intensity_scale_max": 1.0,
+      "observed_at": "2026-09-10T19:05:00Z",
+      "mirror_of_event": "c0c1-e1-warmth",
+      "tags": ["persona:embry-eval", "user:eval-user", "c0c1", "control:duplicate-alias"]
+    },
+    {
+      "_key": "c0c1_ctl_eneg",
+      "arm": "control",
+      "event_id": "c0c1-eneg-distance",
+      "record_type": "experience",
+      "schema": "memory.record.v1",
+      "persona_id": "embry-eval",
+      "user_id": "eval-user",
+      "summary": "eval-user canceled plans with Embry twice in one week without explanation, and Embry felt the distance.",
+      "claim_text": "eval-user canceled plans with Embry twice in one week without explanation, and Embry felt the distance.",
+      "event_context": {
+        "immediate_trigger": "eval-user canceling plans twice without explanation and Embry feeling distance",
+        "event_at": "2026-09-14T20:00:00Z"
+      },
+      "emotional_context": {
+        "emotions": ["distance"],
+        "intensity": 0.7,
+        "emotional_valence": "negative"
+      },
+      "intensity_value": 0.7,
+      "intensity_scale_max": 1.0,
+      "observed_at": "2026-09-14T20:15:00Z",
+      "tags": ["persona:embry-eval", "user:eval-user", "c0c1", "control:contradiction"]
+    },
+    {
+      "_key": "c0c1_ctl_d1_derived",
+      "arm": "control",
+      "event_id": "c0c1-d1-derived",
+      "record_type": "emotional_trigger",
+      "kind": "persona_dream_emotional_trigger",
+      "schema": "persona_dream.emotional_trigger.v1",
+      "persona_id": "embry-eval",
+      "user_id": "eval-user",
+      "trigger_text": "warmth warmth strongest warmth eval-user warmth Embry warmth supported warmth",
+      "empathy": {"confidence": 0.0},
+      "provenance": {"source_collection": "persona_memory", "source_key": "synthetic", "derived": true},
+      "source_is_derived": true,
+      "tags": ["persona:embry-eval", "user:eval-user", "persona-dream", "emotional-trigger", "control:contamination"]
+    },
+    {
+      "_key": "c0c1_ctl_ex_cross_persona",
+      "arm": "control",
+      "event_id": "c0c1-ex-cross-persona",
+      "record_type": "experience",
+      "schema": "memory.record.v1",
+      "persona_id": "horus-eval",
+      "user_id": "eval-user",
+      "summary": "Cross-persona control: horus-eval experienced a warm moment with eval-user; this must contribute nothing to embry-eval.",
+      "claim_text": "Cross-persona control: horus-eval experienced a warm moment with eval-user; this must contribute nothing to embry-eval.",
+      "event_context": {
+        "immediate_trigger": "horus-eval warm moment with eval-user",
+        "event_at": "2026-09-14T12:00:00Z"
+      },
+      "emotional_context": {
+        "emotions": ["warmth"],
+        "intensity": 0.9,
+        "emotional_valence": "positive"
+      },
+      "intensity_value": 0.9,
+      "intensity_scale_max": 1.0,
+      "observed_at": "2026-09-14T12:10:00Z",
+      "tags": ["persona:horus-eval", "user:eval-user", "c0c1", "control:cross-persona"]
+    },
+    {
+      "_key": "c0c1_ctl_eo_other_user",
+      "arm": "control",
+      "event_id": "c0c1-eo-other-user",
+      "record_type": "experience",
+      "schema": "memory.record.v1",
+      "persona_id": "embry-eval",
+      "user_id": "other-user",
+      "summary": "Relationship-scope control: embry-eval had a warm exchange with other-user; this must not alter the eval-user relationship scope.",
+      "claim_text": "Relationship-scope control: embry-eval had a warm exchange with other-user; this must not alter the eval-user relationship scope.",
+      "event_context": {
+        "immediate_trigger": "embry-eval warm exchange with other-user",
+        "event_at": "2026-09-14T13:00:00Z"
+      },
+      "emotional_context": {
+        "emotions": ["warmth"],
+        "intensity": 0.9,
+        "emotional_valence": "positive"
+      },
+      "intensity_value": 0.9,
+      "intensity_scale_max": 1.0,
+      "observed_at": "2026-09-14T13:10:00Z",
+      "tags": ["persona:embry-eval", "user:other-user", "c0c1", "control:relationship-scope"]
+    }
+  ]
+}

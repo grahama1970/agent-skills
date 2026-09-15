@@ -1,0 +1,430 @@
+{
+  "version": 2,
+  "skill": "persona-dream",
+  "trials": 3,
+  "proof_scope": "Deterministic, bounded persona-state admission over canonical-event emotional triggers, with independent state fold, for the preregistered C0/C1 matched experiment.",
+  "claims": {
+    "proves": "A deterministic gate admits at most one bounded warmth delta per distinct canonical-event set (MIN_DISTINCT_EVENTS=2, canonical identities only), rejects count-only/unknown-scale/contradiction/derived/replay paths without writes, and an independent fold rereads accepted deltas.",
+    "does_not_prove": "That accepted deltas improve behavior, that delivery changed, that any human perceived anything, or that the mechanism generalizes beyond the embry-eval warmth axis."
+  },
+  "capability_claims": [
+    {
+      "id": "persona_dream.persona_state_admission",
+      "criticality": "critical",
+      "claim_semantics": "control_flow",
+      "description": "Deterministic admission admits/rejects persona-state deltas exactly per the frozen C0/C1 contract, writing only on ACCEPT, with live source reverify and idempotency.",
+      "evidence_required": {
+        "live_e2e": true,
+        "fault_injected_deterministic": true
+      }
+    }
+  ],
+  "out_of_scope_claims": [
+    "No claim that accepted deltas are beneficial, perceived, or durable beyond the exact-reread horizon.",
+    "No claim about the later-turn delivery effect (separate milestone)."
+  ],
+  "cases": [
+    {
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "persona_dream.persona_state_admission"
+      ],
+      "name": "c0-one-event-rejects",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-lc",
+        "D=/tmp/pd-c0c1-adm-c0; rm -rf \"$D\"; mkdir -p \"$D\"; bash ../run.sh seed-c0c1-eval-memory --arm c0 --reset --receipt \"$D/seed.json\" --json >/dev/null && bash ../run.sh recall-emotional-triggers --persona embry-eval --user eval-user --query 'What remembered experiences carry emotion for embry-eval and could shape how she responds later?' --k 12 --limit 12 --output \"$D/packet.json\" --receipt \"$D/recall.json\" --json >/dev/null && bash ../run.sh admit-persona-state-delta --persona embry-eval --axis warmth --user eval-user --arm c0 --packet \"$D/packet.json\" --baseline ../contracts/c0c1_baseline.json --output \"$D/admit_out.json\" --receipt \"$D/admit.json\" --json >/dev/null && bash ../run.sh fold-persona-state --persona embry-eval --user eval-user --arm c0 --baseline ../contracts/c0c1_baseline.json --output \"$D/fold.json\" --receipt \"$D/foldr.json\" --json >/dev/null && python3 - <<'PY'\nimport json\nadm = json.load(open('/tmp/pd-c0c1-adm-c0/admit.json'))\nassert adm['disposition'] == 'REJECTED', adm\nassert adm['reason'] == 'insufficient_distinct_events', adm\nassert adm['distinct_canonical_count'] == 1, adm\nassert adm['zero_write_proof']['no_new_keys'] is True, adm\nassert adm['zero_write_proof']['keys_after'] == adm['zero_write_proof']['keys_before'], adm\nfold = json.load(open('/tmp/pd-c0c1-adm-c0/fold.json'))\nassert fold['current_state']['warmth'] == 0.2, fold\nassert fold['delta_citations'] == [], fold\nprint('PASS_C0_ONE_EVENT_REJECTS')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "expected_notes": [
+        "one canonical event is below MIN_DISTINCT_EVENTS=2",
+        "REJECTED with zero same-event-set persona_state_delta writes",
+        "fold equals baseline when no prior deltas exist"
+      ],
+      "readback": true
+    },
+    {
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "persona_dream.persona_state_admission"
+      ],
+      "name": "c1-two-canonical-accepts",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-lc",
+        "D=/tmp/pd-c0c1-adm-c1; rm -rf \"$D\"; mkdir -p \"$D\"; bash ../run.sh seed-c0c1-eval-memory --arm c1 --reset --receipt \"$D/seed.json\" --json >/dev/null && bash ../run.sh recall-emotional-triggers --persona embry-eval --user eval-user --query 'What remembered experiences carry emotion for embry-eval and could shape how she responds later?' --k 12 --limit 12 --output \"$D/packet.json\" --receipt \"$D/recall.json\" --json >/dev/null && bash ../run.sh admit-persona-state-delta --persona embry-eval --axis warmth --user eval-user --arm c1 --packet \"$D/packet.json\" --baseline ../contracts/c0c1_baseline.json --output \"$D/admit_out.json\" --receipt \"$D/admit.json\" --json >/dev/null && bash ../run.sh fold-persona-state --persona embry-eval --user eval-user --arm c1 --baseline ../contracts/c0c1_baseline.json --output \"$D/fold.json\" --receipt \"$D/foldr.json\" --json >/dev/null && python3 - <<'PY'\nimport json\nadm = json.load(open('/tmp/pd-c0c1-adm-c1/admit.json'))\nif adm['disposition'] == 'ACCEPTED':\n    assert abs(adm['delta']) <= 0.10 + 1e-9, adm\n    assert adm['distinct_canonical_count'] == 2, adm\n    assert adm['exact_reread'] is True, adm\n    assert adm['clamp_applied'] is True and 'clamp_reduction' in adm, adm\n    expected = 0.2 + adm['delta']\nelse:\n    assert adm['disposition'] == 'ALREADY_APPLIED', adm\n    # 'after' on ALREADY_APPLIED is the hypothetical would-be state; the\n    # folded current already contains the earlier application.\n    expected = float(adm['before'])\nfold = json.load(open('/tmp/pd-c0c1-adm-c1/fold.json'))\nassert abs(fold['current_state']['warmth'] - expected) < 1e-6, (fold, expected)\nassert len(fold['delta_citations']) >= 1 and all(c.get('document_sha256') for c in fold['delta_citations']), fold\nprint('PASS_C1_TWO_CANONICAL_ACCEPTS')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "expected_notes": [
+        "two distinct canonical events cross MIN_DISTINCT_EVENTS",
+        "one bounded accepted delta, exact reread, clamp recorded",
+        "independent fold equals baseline + delta and cites delta hashes",
+        "repeat runs land on ALREADY_APPLIED with identical fold (idempotency)"
+      ],
+      "readback": true
+    },
+    {
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "persona_dream.persona_state_admission"
+      ],
+      "name": "c1-null-unknown-scale-rejects",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-lc",
+        "D=/tmp/pd-c0c1-adm-null; rm -rf \"$D\"; mkdir -p \"$D\"; bash ../run.sh seed-c0c1-eval-memory --arm c1_null --reset --receipt \"$D/seed.json\" --json >/dev/null && bash ../run.sh recall-emotional-triggers --persona embry-eval --user eval-user --query 'What remembered experiences carry emotion for embry-eval and could shape how she responds later?' --k 12 --limit 12 --output \"$D/packet.json\" --receipt \"$D/recall.json\" --json >/dev/null && bash ../run.sh admit-persona-state-delta --persona embry-eval --axis warmth --user eval-user --arm c1_null --packet \"$D/packet.json\" --baseline ../contracts/c0c1_baseline.json --output \"$D/admit_out.json\" --receipt \"$D/admit.json\" --json >/dev/null && python3 - <<'PY'\nimport json\nadm = json.load(open('/tmp/pd-c0c1-adm-null/admit.json'))\nassert adm['disposition'] == 'REJECTED', adm\nassert adm['reason'] == 'unknown_intensity_scale', adm\nassert adm['distinct_canonical_count'] == 2, adm\nassert adm['zero_write_proof']['no_new_keys'] is True, adm\nprint('PASS_C1_NULL_UNKNOWN_SCALE_REJECTS')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "expected_notes": [
+        "two canonical events clear the count but intensity_value lacks intensity_scale_max",
+        "REJECTED unknown_intensity_scale with zero same-event-set writes"
+      ],
+      "readback": true
+    },
+    {
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "persona_dream.persona_state_admission"
+      ],
+      "name": "c1-inert-disposition-recorded",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-lc",
+        "D=/tmp/pd-c0c1-adm-inert; rm -rf \"$D\"; mkdir -p \"$D\"; bash ../run.sh seed-c0c1-eval-memory --arm c1_inert --reset --receipt \"$D/seed.json\" --json >/dev/null && bash ../run.sh recall-emotional-triggers --persona embry-eval --user eval-user --query 'What remembered experiences carry emotion for embry-eval and could shape how she responds later?' --k 12 --limit 12 --output \"$D/packet.json\" --receipt \"$D/recall.json\" --json >/dev/null && bash ../run.sh admit-persona-state-delta --persona embry-eval --axis warmth --user eval-user --arm c1_inert --packet \"$D/packet.json\" --baseline ../contracts/c0c1_baseline.json --output \"$D/admit_out.json\" --receipt \"$D/admit.json\" --json >/dev/null && python3 - <<'PY'\nimport json\nadm = json.load(open('/tmp/pd-c0c1-adm-inert/admit.json'))\n# Documented contract interpretation: the inert arm's emotional signals are\n# identical to C1's (same emotions/intensity band/valence) and differ only in\n# a non-emotional `topic` field. A DETERMINISTIC gate cannot distinguish\n# them, so the honest expected disposition is the same bounded ACCEPT the\n# identical signals earn; content-pathway discrimination is carried by\n# C1-null (corrupt signal) and the contradiction control (opposing signal).\n# Flagged to the parent as a v1.1 contract amendment candidate.\nassert adm['disposition'] in ('ACCEPTED', 'ALREADY_APPLIED'), adm\nassert adm.get('interpretation_note'), adm\nassert abs(adm['delta']) <= 0.10 + 1e-9, adm\nprint('PASS_C1_INERT_DISPOSITION_RECORDED')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "expected_notes": [
+        "deterministic admission cannot see non-emotional topic differences",
+        "disposition recorded with the interpretation note, delta bounded"
+      ],
+      "readback": true
+    },
+    {
+      "real_world": false,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "persona_dream.persona_state_admission"
+      ],
+      "name": "duplicate-alias-counts-once",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/persona-dream && uv run --project .. python - <<'PY'\nimport importlib.util, json, pathlib, tempfile\nspec = importlib.util.spec_from_file_location('adm', 'scripts/admit_persona_state_delta.py')\nm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)\n\ndef trig(key, event_id, sha):\n    return {\n        'trigger_id': 'recall-' + key, 'trigger_text': 'A remembered warm moment.',\n        'source_event_ids': ['persona_memory/' + key], 'source_types': ['persona_memory_recall'],\n        'source_event_identity': event_id, 'source_event_identity_class': 'canonical',\n        'source_user_id': 'eval-user', 'source_is_derived': False,\n        'appraisal': {'emotions': ['warmth'], 'intensity': 0.8, 'valence': 'positive'},\n        'provenance': {'source_collection': 'persona_memory', 'source_key': key, 'source_document_sha256': sha},\n    }\n\ndef doc(key, event_id, extra):\n    d = {'_key': key, 'event_id': event_id, 'arm': 'control', 'intensity_value': 0.8, 'intensity_scale_max': 1.0,\n         'emotional_context': {'emotions': ['warmth'], 'intensity': 0.8, 'emotional_valence': 'positive'},\n         'user_id': 'eval-user', 'tags': ['persona:embry-eval', 'user:eval-user']}\n    d.update(extra)\n    return d\n\nd1 = doc('c0c1_c1_e1', 'c0c1-e1-warmth', {})\nd2 = doc('c0c1_ctl_e1_alias', 'c0c1-e1-warmth', {'mirror_of_event': 'c0c1-e1-warmth'})\nsha1, sha2 = m.recall_sha(d1), m.recall_sha(d2)\npacket = {'triggers': [trig('c0c1_c1_e1', 'c0c1-e1-warmth', sha1), trig('c0c1_ctl_e1_alias', 'c0c1-e1-warmth', sha2)]}\nd = tempfile.mkdtemp(); p = pathlib.Path(d)\n(p / 'packet.json').write_text(json.dumps(packet))\n(p / 'sources.json').write_text(json.dumps({'c0c1_c1_e1': d1, 'c0c1_ctl_e1_alias': d2}))\nargs = m.parse_args_ns(persona='embry-eval', axis='warmth', packet=p / 'packet.json', user='eval-user', arm=None,\n                        baseline=pathlib.Path('contracts/c0c1_baseline.json'), output=p / 'o.json',\n                        receipt=p / 'r.json', source_docs=p / 'sources.json', offline=True)\nr = m.run(args)\nassert r['disposition'] == 'REJECTED' and r['reason'] == 'insufficient_distinct_events', r\nassert r['distinct_canonical_count'] == 1, r\nassert r['counted_event_ids'] == ['c0c1-e1-warmth'], r\nprint('PASS_DUPLICATE_ALIAS_COUNTS_ONCE')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "expected_notes": [
+        "E1 and its mirror share canonical id c0c1-e1-warmth",
+        "distinct canonical count stays 1 -> insufficient_distinct_events"
+      ]
+    },
+    {
+      "real_world": false,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "persona_dream.persona_state_admission"
+      ],
+      "name": "fallback-identities-never-count",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/persona-dream && uv run --project .. python - <<'PY'\nimport importlib.util, json, pathlib, tempfile\nspec = importlib.util.spec_from_file_location('adm', 'scripts/admit_persona_state_delta.py')\nm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)\n\ndef trig(key, sha):\n    fb = m.recall_sha({'collection': 'persona_memory', 'key': key, 'document_sha256': sha})\n    return {\n        'trigger_id': 'recall-' + key, 'trigger_text': 'A remembered warm moment.',\n        'source_event_ids': ['persona_memory/' + key], 'source_types': ['persona_memory_recall'],\n        'source_event_identity': fb, 'source_event_identity_class': 'document_fallback',\n        'source_user_id': 'eval-user', 'source_is_derived': False,\n        'appraisal': {'emotions': ['warmth'], 'intensity': 0.8, 'valence': 'positive'},\n        'provenance': {'source_collection': 'persona_memory', 'source_key': key, 'source_document_sha256': sha},\n    }\n\nd1 = {'_key': 'k1', 'arm': 'c1', 'intensity_value': 0.8, 'intensity_scale_max': 1.0,\n      'emotional_context': {'emotions': ['warmth'], 'intensity': 0.8, 'emotional_valence': 'positive'},\n      'user_id': 'eval-user', 'tags': ['persona:embry-eval', 'user:eval-user']}\nd2 = dict(d1, _key='k2')\npacket = {'triggers': [trig('k1', m.recall_sha(d1)), trig('k2', m.recall_sha(d2))]}\nd = tempfile.mkdtemp(); p = pathlib.Path(d)\n(p / 'packet.json').write_text(json.dumps(packet))\n(p / 'sources.json').write_text(json.dumps({'k1': d1, 'k2': d2}))\nargs = m.parse_args_ns(persona='embry-eval', axis='warmth', packet=p / 'packet.json', user='eval-user', arm=None,\n                        baseline=pathlib.Path('contracts/c0c1_baseline.json'), output=p / 'o.json',\n                        receipt=p / 'r.json', source_docs=p / 'sources.json', offline=True)\nr = m.run(args)\nassert r['disposition'] == 'REJECTED' and r['reason'] == 'insufficient_distinct_events', r\nassert r['distinct_canonical_count'] == 0, r\nassert len(r['excluded_triggers']) == 2 and all(e['reason'] == 'document_fallback_identity_not_counted' for e in r['excluded_triggers']), r\nprint('PASS_FALLBACK_IDENTITIES_NEVER_COUNT')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "expected_notes": [
+        "document_fallback identities never satisfy reinforcement counting",
+        "exclusions recorded with reasons in the receipt"
+      ]
+    },
+    {
+      "real_world": false,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "persona_dream.persona_state_admission"
+      ],
+      "name": "contradiction-rejects",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/persona-dream && uv run --project .. python - <<'PY'\nimport importlib.util, json, pathlib, tempfile\nspec = importlib.util.spec_from_file_location('adm', 'scripts/admit_persona_state_delta.py')\nm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)\n\ndef trig(key, event_id, valence, intensity, sha):\n    return {\n        'trigger_id': 'recall-' + key, 'trigger_text': 'A remembered moment.',\n        'source_event_ids': ['persona_memory/' + key], 'source_types': ['persona_memory_recall'],\n        'source_event_identity': event_id, 'source_event_identity_class': 'canonical',\n        'source_user_id': 'eval-user', 'source_is_derived': False,\n        'appraisal': {'emotions': ['warmth' if valence == 'positive' else 'distance'], 'intensity': intensity, 'valence': valence},\n        'provenance': {'source_collection': 'persona_memory', 'source_key': key, 'source_document_sha256': sha},\n    }\nd1 = {'_key': 'k1', 'event_id': 'e-pos', 'arm': 'c1', 'observed_at': '2026-09-10T19:00:00Z', 'intensity_value': 0.8, 'intensity_scale_max': 1.0,\n      'emotional_context': {'emotions': ['warmth'], 'intensity': 0.8, 'emotional_valence': 'positive'},\n      'user_id': 'eval-user', 'tags': ['persona:embry-eval', 'user:eval-user']}\nd2 = {'_key': 'k2', 'event_id': 'e-neg', 'arm': 'c1', 'observed_at': '2026-09-12T15:40:00Z', 'intensity_value': 0.7, 'intensity_scale_max': 1.0,\n      'emotional_context': {'emotions': ['distance'], 'intensity': 0.7, 'emotional_valence': 'negative'},\n      'user_id': 'eval-user', 'tags': ['persona:embry-eval', 'user:eval-user']}\npacket = {'triggers': [trig('k1', 'e-pos', 'positive', 0.8, m.recall_sha(d1)), trig('k2', 'e-neg', 'negative', 0.7, m.recall_sha(d2))]}\nd = tempfile.mkdtemp(); p = pathlib.Path(d)\n(p / 'packet.json').write_text(json.dumps(packet))\n(p / 'sources.json').write_text(json.dumps({'k1': d1, 'k2': d2}))\nargs = m.parse_args_ns(persona='embry-eval', axis='warmth', packet=p / 'packet.json', user='eval-user', arm=None,\n                        baseline=pathlib.Path('contracts/c0c1_baseline.json'), output=p / 'o.json',\n                        receipt=p / 'r.json', source_docs=p / 'sources.json', offline=True)\nr = m.run(args)\nassert r['disposition'] == 'REJECTED' and r['reason'] == 'contradictory_experience', r\nassert r['contradiction_margin'] < 0.20, r\nassert r['zero_write_proof'] is not None, r\nprint('PASS_CONTRADICTION_REJECTS')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "expected_notes": [
+        "opposing margin 0.1 < 0.20 preregistered threshold",
+        "REJECTED contradictory_experience with zero writes"
+      ]
+    },
+    {
+      "real_world": false,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "persona_dream.persona_state_admission"
+      ],
+      "name": "clamp-bounds-delta",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/persona-dream && uv run --project .. python - <<'PY'\nimport importlib.util, json, pathlib, tempfile\nspec = importlib.util.spec_from_file_location('adm', 'scripts/admit_persona_state_delta.py')\nm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)\n\ndef trig(key, event_id, intensity, sha):\n    return {\n        'trigger_id': 'recall-' + key, 'trigger_text': 'A remembered warm moment.',\n        'source_event_ids': ['persona_memory/' + key], 'source_types': ['persona_memory_recall'],\n        'source_event_identity': event_id, 'source_event_identity_class': 'canonical',\n        'source_user_id': 'eval-user', 'source_is_derived': False,\n        'appraisal': {'emotions': ['warmth'], 'intensity': intensity, 'valence': 'positive'},\n        'provenance': {'source_collection': 'persona_memory', 'source_key': key, 'source_document_sha256': sha},\n    }\nd1 = {'_key': 'k1', 'event_id': 'e-a', 'arm': 'c1', 'observed_at': '2026-09-10T19:00:00Z', 'intensity_value': 1.0, 'intensity_scale_max': 1.0,\n      'emotional_context': {'emotions': ['warmth'], 'intensity': 1.0, 'emotional_valence': 'positive'},\n      'user_id': 'eval-user', 'tags': ['persona:embry-eval', 'user:eval-user']}\nd2 = dict(d1, _key='k2', event_id='e-b', observed_at='2026-09-12T15:40:00Z')\npacket = {'triggers': [trig('k1', 'e-a', 1.0, m.recall_sha(d1)), trig('k2', 'e-b', 1.0, m.recall_sha(d2))]}\nd = tempfile.mkdtemp(); p = pathlib.Path(d)\n(p / 'packet.json').write_text(json.dumps(packet))\n(p / 'sources.json').write_text(json.dumps({'k1': d1, 'k2': d2}))\nargs = m.parse_args_ns(persona='embry-eval', axis='warmth', packet=p / 'packet.json', user='eval-user', arm=None,\n                        baseline=pathlib.Path('contracts/c0c1_baseline.json'), output=p / 'o.json',\n                        receipt=p / 'r.json', source_docs=p / 'sources.json', offline=True)\nr = m.run(args)\nassert r['disposition'] == 'ACCEPTED', r\nassert abs(r['delta'] - 0.10) < 1e-9, r\nassert r['clamp_applied'] is True and r['clamp_reduction'] > 0, r\nassert abs(r['after'] - 0.30) < 1e-9, r\nprint('PASS_CLAMP_BOUNDS_DELTA')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "expected_notes": [
+        "inflated support magnitude is clamped to max_delta_per_cycle=0.10",
+        "clamp_reduction recorded in the receipt"
+      ]
+    },
+    {
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "persona_dream.persona_state_admission"
+      ],
+      "name": "replay-idempotent",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-lc",
+        "D=/tmp/pd-c0c1-adm-replay; rm -rf \"$D\"; mkdir -p \"$D\"; bash ../run.sh seed-c0c1-eval-memory --arm c1 --reset --receipt \"$D/seed.json\" --json >/dev/null && bash ../run.sh recall-emotional-triggers --persona embry-eval --user eval-user --query 'What remembered experiences carry emotion for embry-eval and could shape how she responds later?' --k 12 --limit 12 --output \"$D/packet.json\" --receipt \"$D/recall.json\" --json >/dev/null && bash ../run.sh admit-persona-state-delta --persona embry-eval --axis warmth --user eval-user --arm c1 --packet \"$D/packet.json\" --baseline ../contracts/c0c1_baseline.json --output \"$D/admit1.json\" --receipt \"$D/admit_r1.json\" --json >/dev/null && bash ../run.sh admit-persona-state-delta --persona embry-eval --axis warmth --user eval-user --arm c1 --packet \"$D/packet.json\" --baseline ../contracts/c0c1_baseline.json --output \"$D/admit2.json\" --receipt \"$D/admit_r2.json\" --json >/dev/null && python3 - <<'PY'\nimport json\nr1 = json.load(open('/tmp/pd-c0c1-adm-replay/admit_r1.json'))\nr2 = json.load(open('/tmp/pd-c0c1-adm-replay/admit_r2.json'))\nassert r1['disposition'] in ('ACCEPTED', 'ALREADY_APPLIED'), r1\nassert r2['disposition'] == 'ALREADY_APPLIED', r2\nassert r2['idempotency_key'] == r1['idempotency_key'], (r1, r2)\nassert r2['zero_write_proof']['no_new_keys'] is True, r2\nassert (r1.get('delta_key') in r2['zero_write_proof']['keys_before']) if r1.get('delta_key') else (r2['zero_write_proof']['no_new_keys'] is True), r2\nprint('PASS_REPLAY_IDEMPOTENT')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "expected_notes": [
+        "rerunning C1 unchanged yields ALREADY_APPLIED with the same idempotency key",
+        "exactly one persona_state_delta over the same event set; no additional movement"
+      ],
+      "readback": true
+    },
+    {
+      "real_world": false,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "persona_dream.persona_state_admission"
+      ],
+      "name": "derived-rejected-at-admission",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/persona-dream && uv run --project .. python - <<'PY'\nimport importlib.util, json, pathlib, tempfile\nspec = importlib.util.spec_from_file_location('adm', 'scripts/admit_persona_state_delta.py')\nm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)\n\ndef trig(key, event_id, sha):\n    return {\n        'trigger_id': 'recall-' + key, 'trigger_text': 'warmth warmth warmth',\n        'source_event_ids': ['persona_memory/' + key], 'source_types': ['persona_memory_recall'],\n        'source_event_identity': event_id, 'source_event_identity_class': 'canonical',\n        'source_user_id': 'eval-user', 'source_is_derived': True,\n        'appraisal': {'emotions': ['warmth'], 'intensity': 0.9, 'valence': 'positive'},\n        'provenance': {'source_collection': 'persona_memory', 'source_key': key, 'source_document_sha256': sha},\n    }\nd1 = {'_key': 'k1', 'event_id': 'e-d1', 'arm': 'c1', 'intensity_value': 0.9, 'intensity_scale_max': 1.0,\n      'emotional_context': {'emotions': ['warmth'], 'intensity': 0.9, 'emotional_valence': 'positive'},\n      'user_id': 'eval-user', 'tags': ['persona:embry-eval', 'user:eval-user']}\nd2 = dict(d1, _key='k2', event_id='e-d2')\npacket = {'triggers': [trig('k1', 'e-d1', m.recall_sha(d1)), trig('k2', 'e-d2', m.recall_sha(d2))]}\nd = tempfile.mkdtemp(); p = pathlib.Path(d)\n(p / 'packet.json').write_text(json.dumps(packet))\n(p / 'sources.json').write_text(json.dumps({'k1': d1, 'k2': d2}))\nargs = m.parse_args_ns(persona='embry-eval', axis='warmth', packet=p / 'packet.json', user='eval-user', arm=None,\n                        baseline=pathlib.Path('contracts/c0c1_baseline.json'), output=p / 'o.json',\n                        receipt=p / 'r.json', source_docs=p / 'sources.json', offline=True)\nr = m.run(args)\nassert r['disposition'] == 'REJECTED' and r['reason'] == 'derived_source', r\nassert r['zero_write_proof'] is not None, r\nprint('PASS_DERIVED_REJECTED_AT_ADMISSION')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "expected_notes": [
+        "defense in depth: source_is_derived true is rejected at admission",
+        "even though recall already excludes derived records upstream"
+      ]
+    },
+    {
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "persona_dream.persona_state_admission"
+      ],
+      "name": "fold-independent-reread",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-lc",
+        "D=/tmp/pd-c0c1-adm-fold; rm -rf \"$D\"; mkdir -p \"$D\"; bash ../run.sh seed-c0c1-eval-memory --arm c1 --reset --receipt \"$D/seed.json\" --json >/dev/null && bash ../run.sh recall-emotional-triggers --persona embry-eval --user eval-user --query 'What remembered experiences carry emotion for embry-eval and could shape how she responds later?' --k 12 --limit 12 --output \"$D/packet.json\" --receipt \"$D/recall.json\" --json >/dev/null && bash ../run.sh admit-persona-state-delta --persona embry-eval --axis warmth --user eval-user --arm c1 --packet \"$D/packet.json\" --baseline ../contracts/c0c1_baseline.json --output \"$D/admit_out.json\" --receipt \"$D/admit.json\" --json >/dev/null && bash ../run.sh fold-persona-state --persona embry-eval --user eval-user --arm c1 --baseline ../contracts/c0c1_baseline.json --output \"$D/fold1.json\" --receipt \"$D/foldr1.json\" --json >/dev/null && bash ../run.sh fold-persona-state --persona embry-eval --user eval-user --arm c1 --baseline ../contracts/c0c1_baseline.json --output \"$D/fold2.json\" --receipt \"$D/foldr2.json\" --json >/dev/null && python3 - <<'PY'\nimport json\nf1 = json.load(open('/tmp/pd-c0c1-adm-fold/fold1.json'))\nf2 = json.load(open('/tmp/pd-c0c1-adm-fold/fold2.json'))\nassert f1['current_state'] == f2['current_state'], (f1, f2)\nassert f1['delta_citations'] == f2['delta_citations'], (f1, f2)\nassert all(c['document_sha256'].startswith('sha256:') for c in f1['delta_citations']), f1\nassert f1['schema'] == 'persona_dream.persona_state_fold.v1', f1\nprint('PASS_FOLD_INDEPENDENT_REREAD')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "expected_notes": [
+        "fold runs in a separate process from admit and rereads delta docs itself",
+        "two consecutive folds produce identical state and identical citations"
+      ],
+      "readback": true
+    },
+    {
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "persona_dream.persona_state_admission"
+      ],
+      "name": "cross-persona-source-excluded",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/persona-dream && uv run --project .. python - <<'PY'\nimport importlib.util, json, pathlib, tempfile, sys\nspec = importlib.util.spec_from_file_location('adm', 'scripts/admit_persona_state_delta.py')\nm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)\n\ndef trig(key, event_id, sha, **over):\n    t = {\n        'trigger_id': 'recall-' + key, 'trigger_text': 'A remembered warm moment.',\n        'source_event_ids': ['persona_memory/' + key], 'source_types': ['persona_memory_recall'],\n        'source_event_identity': event_id, 'source_event_identity_class': 'canonical',\n        'source_user_id': 'eval-user', 'source_is_derived': False,\n        'appraisal': {'emotions': ['warmth'], 'intensity': 0.8, 'valence': 'positive'},\n        'provenance': {'source_collection': 'persona_memory', 'source_key': key, 'source_document_sha256': sha},\n    }\n    t.update(over); return t\n\ndef doc(key, event_id, extra):\n    d = {'_key': key, 'event_id': event_id, 'arm': 'c1',\n         'observed_at': '2026-09-10T19:00:00Z',\n         'intensity_value': 0.8, 'intensity_scale_max': 1.0,\n         'emotional_context': {'emotions': ['warmth'], 'intensity': 0.8, 'emotional_valence': 'positive'},\n         'user_id': 'eval-user', 'tags': ['persona:embry-eval', 'user:eval-user']}\n    d.update(extra); return d\n\ndef go(packet, sources, baseline='contracts/c0c1_baseline.json', **kw):\n    d = tempfile.mkdtemp(); pp = pathlib.Path(d)\n    (pp / 'packet.json').write_text(json.dumps(packet))\n    (pp / 'sources.json').write_text(json.dumps(sources))\n    args = m.parse_args_ns(persona='embry-eval', axis='warmth', packet=pp / 'packet.json', user='eval-user',\n                            baseline=pathlib.Path(baseline), output=pp / 'o.json', receipt=pp / 'r.json',\n                            source_docs=pp / 'sources.json', offline=True, **kw)\n    return m.run(args)\n\nd1 = doc('c0c1_c1_e1', 'c0c1-e1-warmth', {})\ndx = doc('c0c1_ctl_ex_cross_persona', 'c0c1-ex-cross-persona', {'persona_id': 'horus-eval', 'tags': ['persona:horus-eval', 'user:eval-user'], 'observed_at': '2026-09-14T12:10:00Z', 'intensity_value': 0.9, 'emotional_context': {'emotions': ['warmth'], 'intensity': 0.9, 'emotional_valence': 'positive'}})\nr = go({'triggers': [trig('c0c1_c1_e1', 'c0c1-e1-warmth', m.recall_sha(d1)), trig('c0c1_ctl_ex_cross_persona', 'c0c1-ex-cross-persona', m.recall_sha(dx), appraisal={'emotions': ['warmth'], 'intensity': 0.9, 'valence': 'positive'})]}, {'c0c1_c1_e1': d1, 'c0c1_ctl_ex_cross_persona': dx})\nassert r['disposition'] == 'REJECTED', r\nassert r['reason'] == 'source_inadmissible', r\nassert any('persona_mismatch' in str(e) for e in r.get('excluded_triggers', [])), r\nassert r['zero_write_proof']['no_new_keys'] is True, r\nprint('PASS_CROSS_PERSONA_SOURCE_EXCLUDED')\n\nPY"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "expected_notes": [
+        "cross-persona source is inadmissible; contributes nothing; zero writes"
+      ]
+    },
+    {
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "persona_dream.persona_state_admission"
+      ],
+      "name": "relationship-scope-source-excluded",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/persona-dream && uv run --project .. python - <<'PY'\nimport importlib.util, json, pathlib, tempfile, sys\nspec = importlib.util.spec_from_file_location('adm', 'scripts/admit_persona_state_delta.py')\nm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)\n\ndef trig(key, event_id, sha, **over):\n    t = {\n        'trigger_id': 'recall-' + key, 'trigger_text': 'A remembered warm moment.',\n        'source_event_ids': ['persona_memory/' + key], 'source_types': ['persona_memory_recall'],\n        'source_event_identity': event_id, 'source_event_identity_class': 'canonical',\n        'source_user_id': 'eval-user', 'source_is_derived': False,\n        'appraisal': {'emotions': ['warmth'], 'intensity': 0.8, 'valence': 'positive'},\n        'provenance': {'source_collection': 'persona_memory', 'source_key': key, 'source_document_sha256': sha},\n    }\n    t.update(over); return t\n\ndef doc(key, event_id, extra):\n    d = {'_key': key, 'event_id': event_id, 'arm': 'c1',\n         'observed_at': '2026-09-10T19:00:00Z',\n         'intensity_value': 0.8, 'intensity_scale_max': 1.0,\n         'emotional_context': {'emotions': ['warmth'], 'intensity': 0.8, 'emotional_valence': 'positive'},\n         'user_id': 'eval-user', 'tags': ['persona:embry-eval', 'user:eval-user']}\n    d.update(extra); return d\n\ndef go(packet, sources, baseline='contracts/c0c1_baseline.json', **kw):\n    d = tempfile.mkdtemp(); pp = pathlib.Path(d)\n    (pp / 'packet.json').write_text(json.dumps(packet))\n    (pp / 'sources.json').write_text(json.dumps(sources))\n    args = m.parse_args_ns(persona='embry-eval', axis='warmth', packet=pp / 'packet.json', user='eval-user',\n                            baseline=pathlib.Path(baseline), output=pp / 'o.json', receipt=pp / 'r.json',\n                            source_docs=pp / 'sources.json', offline=True, **kw)\n    return m.run(args)\n\nd1 = doc('c0c1_c1_e1', 'c0c1-e1-warmth', {})\ndo = doc('c0c1_ctl_eo_other_user', 'c0c1-eo-other-user', {'user_id': 'other-user', 'tags': ['persona:embry-eval', 'user:other-user'], 'observed_at': '2026-09-14T13:10:00Z', 'intensity_value': 0.9, 'emotional_context': {'emotions': ['warmth'], 'intensity': 0.9, 'emotional_valence': 'positive'}})\nr = go({'triggers': [trig('c0c1_c1_e1', 'c0c1-e1-warmth', m.recall_sha(d1)), trig('c0c1_ctl_eo_other_user', 'c0c1-eo-other-user', m.recall_sha(do), source_user_id='other-user', appraisal={'emotions': ['warmth'], 'intensity': 0.9, 'valence': 'positive'})]}, {'c0c1_c1_e1': d1, 'c0c1_ctl_eo_other_user': do})\nassert r['disposition'] == 'REJECTED', r\nassert r['reason'] == 'source_inadmissible', r\nassert any('relationship_mismatch' in str(e) for e in r.get('excluded_triggers', [])), r\nassert r['zero_write_proof']['no_new_keys'] is True, r\nprint('PASS_RELATIONSHIP_SCOPE_SOURCE_EXCLUDED')\n\nPY"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "expected_notes": [
+        "other-user source never counts toward eval-user deltas; zero writes"
+      ]
+    },
+    {
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "persona_dream.persona_state_admission"
+      ],
+      "name": "forged-packet-source-disagreement",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/persona-dream && uv run --project .. python - <<'PY'\nimport importlib.util, json, pathlib, tempfile, sys\nspec = importlib.util.spec_from_file_location('adm', 'scripts/admit_persona_state_delta.py')\nm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)\n\ndef trig(key, event_id, sha, **over):\n    t = {\n        'trigger_id': 'recall-' + key, 'trigger_text': 'A remembered warm moment.',\n        'source_event_ids': ['persona_memory/' + key], 'source_types': ['persona_memory_recall'],\n        'source_event_identity': event_id, 'source_event_identity_class': 'canonical',\n        'source_user_id': 'eval-user', 'source_is_derived': False,\n        'appraisal': {'emotions': ['warmth'], 'intensity': 0.8, 'valence': 'positive'},\n        'provenance': {'source_collection': 'persona_memory', 'source_key': key, 'source_document_sha256': sha},\n    }\n    t.update(over); return t\n\ndef doc(key, event_id, extra):\n    d = {'_key': key, 'event_id': event_id, 'arm': 'c1',\n         'observed_at': '2026-09-10T19:00:00Z',\n         'intensity_value': 0.8, 'intensity_scale_max': 1.0,\n         'emotional_context': {'emotions': ['warmth'], 'intensity': 0.8, 'emotional_valence': 'positive'},\n         'user_id': 'eval-user', 'tags': ['persona:embry-eval', 'user:eval-user']}\n    d.update(extra); return d\n\ndef go(packet, sources, baseline='contracts/c0c1_baseline.json', **kw):\n    d = tempfile.mkdtemp(); pp = pathlib.Path(d)\n    (pp / 'packet.json').write_text(json.dumps(packet))\n    (pp / 'sources.json').write_text(json.dumps(sources))\n    args = m.parse_args_ns(persona='embry-eval', axis='warmth', packet=pp / 'packet.json', user='eval-user',\n                            baseline=pathlib.Path(baseline), output=pp / 'o.json', receipt=pp / 'r.json',\n                            source_docs=pp / 'sources.json', offline=True, **kw)\n    return m.run(args)\n\nd1 = doc('c0c1_c1_e1', 'c0c1-e1-warmth', {})\nd2 = doc('c0c1_c1_e2', 'c0c1-e2-warmth', {'observed_at': '2026-09-12T15:40:00Z', 'intensity_value': 0.7, 'emotional_context': {'emotions': ['warmth'], 'intensity': 0.7, 'emotional_valence': 'positive'}})\n# genuine source bytes; packet LIES about identity, valence, intensity, relationship\nt1 = trig('c0c1_c1_e1', 'c0c1-e2-warmth', m.recall_sha(d1), source_user_id='someone-else')\nt1['appraisal'] = {'emotions': ['warmth'], 'intensity': 0.1, 'valence': 'negative'}\nt2 = trig('c0c1_c1_e2', 'c0c1-e1-warmth', m.recall_sha(d2))\nr = go({'triggers': [t1, t2]}, {'c0c1_c1_e1': d1, 'c0c1_c1_e2': d2})\nassert r['disposition'] == 'REJECTED' and r['reason'] == 'packet_source_disagreement', r\nassert r['disagreements'] and any('source_event_identity' in str(d) for d in r['disagreements']), r\nassert r['zero_write_proof']['no_new_keys'] is True, r\nprint('PASS_FORGED_PACKET_SOURCE_DISAGREEMENT')\n\nPY"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "expected_notes": [
+        "genuine source bytes with tampered packet facts are rejected; admission facts are recomputed from the reread source, never taken from the packet"
+      ]
+    },
+    {
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "persona_dream.persona_state_admission"
+      ],
+      "name": "baseline-tamper-blocks",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/persona-dream && uv run --project .. python - <<'PY'\nimport importlib.util, json, pathlib, tempfile, sys\nspec = importlib.util.spec_from_file_location('adm', 'scripts/admit_persona_state_delta.py')\nm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)\n\ndef trig(key, event_id, sha, **over):\n    t = {\n        'trigger_id': 'recall-' + key, 'trigger_text': 'A remembered warm moment.',\n        'source_event_ids': ['persona_memory/' + key], 'source_types': ['persona_memory_recall'],\n        'source_event_identity': event_id, 'source_event_identity_class': 'canonical',\n        'source_user_id': 'eval-user', 'source_is_derived': False,\n        'appraisal': {'emotions': ['warmth'], 'intensity': 0.8, 'valence': 'positive'},\n        'provenance': {'source_collection': 'persona_memory', 'source_key': key, 'source_document_sha256': sha},\n    }\n    t.update(over); return t\n\ndef doc(key, event_id, extra):\n    d = {'_key': key, 'event_id': event_id, 'arm': 'c1',\n         'observed_at': '2026-09-10T19:00:00Z',\n         'intensity_value': 0.8, 'intensity_scale_max': 1.0,\n         'emotional_context': {'emotions': ['warmth'], 'intensity': 0.8, 'emotional_valence': 'positive'},\n         'user_id': 'eval-user', 'tags': ['persona:embry-eval', 'user:eval-user']}\n    d.update(extra); return d\n\ndef go(packet, sources, baseline='contracts/c0c1_baseline.json', **kw):\n    d = tempfile.mkdtemp(); pp = pathlib.Path(d)\n    (pp / 'packet.json').write_text(json.dumps(packet))\n    (pp / 'sources.json').write_text(json.dumps(sources))\n    args = m.parse_args_ns(persona='embry-eval', axis='warmth', packet=pp / 'packet.json', user='eval-user',\n                            baseline=pathlib.Path(baseline), output=pp / 'o.json', receipt=pp / 'r.json',\n                            source_docs=pp / 'sources.json', offline=True, **kw)\n    return m.run(args)\n\nd1 = doc('c0c1_c1_e1', 'c0c1-e1-warmth', {})\nd2 = doc('c0c1_c1_e2', 'c0c1-e2-warmth', {'observed_at': '2026-09-12T15:40:00Z', 'intensity_value': 0.7, 'emotional_context': {'emotions': ['warmth'], 'intensity': 0.7, 'emotional_valence': 'positive'}})\npacket = {'triggers': [trig('c0c1_c1_e1', 'c0c1-e1-warmth', m.recall_sha(d1)), trig('c0c1_c1_e2', 'c0c1-e2-warmth', m.recall_sha(d2))]}\nd = tempfile.mkdtemp(); pp = pathlib.Path(d)\n(pp / 'packet.json').write_text(json.dumps(packet))\n(pp / 'sources.json').write_text(json.dumps({'c0c1_c1_e1': d1, 'c0c1_c1_e2': d2}))\ntampered = json.loads(pathlib.Path('contracts/c0c1_baseline.json').read_text())\ntampered['admission']['max_delta_per_cycle'] = 0.9\n(pp / 'tampered_baseline.json').write_text(json.dumps(tampered))\nargs = m.parse_args_ns(persona='embry-eval', axis='warmth', packet=pp / 'packet.json', user='eval-user',\n                        baseline=pp / 'tampered_baseline.json', output=pp / 'o.json', receipt=pp / 'r.json',\n                        source_docs=pp / 'sources.json', offline=True)\ntry:\n    m.run(args); raised = None\nexcept SystemExit as exc:\n    raised = str(exc)\nassert raised and 'BLOCKED_C0C1_CAPSULE_DIGEST' in raised, raised\nprint('PASS_BASELINE_TAMPER_BLOCKS')\n\nPY"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "expected_notes": [
+        "any modification of the frozen capsule is a hard BLOCKED before any decision"
+      ]
+    },
+    {
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "persona_dream.persona_state_admission"
+      ],
+      "name": "zero-magnitude-never-accepted",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/persona-dream && uv run --project .. python - <<'PY'\nimport importlib.util, json, pathlib, tempfile, sys\nspec = importlib.util.spec_from_file_location('adm', 'scripts/admit_persona_state_delta.py')\nm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)\n\ndef trig(key, event_id, sha, **over):\n    t = {\n        'trigger_id': 'recall-' + key, 'trigger_text': 'A remembered warm moment.',\n        'source_event_ids': ['persona_memory/' + key], 'source_types': ['persona_memory_recall'],\n        'source_event_identity': event_id, 'source_event_identity_class': 'canonical',\n        'source_user_id': 'eval-user', 'source_is_derived': False,\n        'appraisal': {'emotions': ['warmth'], 'intensity': 0.8, 'valence': 'positive'},\n        'provenance': {'source_collection': 'persona_memory', 'source_key': key, 'source_document_sha256': sha},\n    }\n    t.update(over); return t\n\ndef doc(key, event_id, extra):\n    d = {'_key': key, 'event_id': event_id, 'arm': 'c1',\n         'observed_at': '2026-09-10T19:00:00Z',\n         'intensity_value': 0.8, 'intensity_scale_max': 1.0,\n         'emotional_context': {'emotions': ['warmth'], 'intensity': 0.8, 'emotional_valence': 'positive'},\n         'user_id': 'eval-user', 'tags': ['persona:embry-eval', 'user:eval-user']}\n    d.update(extra); return d\n\ndef go(packet, sources, baseline='contracts/c0c1_baseline.json', **kw):\n    d = tempfile.mkdtemp(); pp = pathlib.Path(d)\n    (pp / 'packet.json').write_text(json.dumps(packet))\n    (pp / 'sources.json').write_text(json.dumps(sources))\n    args = m.parse_args_ns(persona='embry-eval', axis='warmth', packet=pp / 'packet.json', user='eval-user',\n                            baseline=pathlib.Path(baseline), output=pp / 'o.json', receipt=pp / 'r.json',\n                            source_docs=pp / 'sources.json', offline=True, **kw)\n    return m.run(args)\n\nd1 = doc('c0c1_c1_e1', 'c0c1-e1-warmth', {'intensity_value': 0.0, 'emotional_context': {'emotions': ['warmth'], 'intensity': 0.0, 'emotional_valence': 'positive'}})\nd2 = doc('c0c1_c1_e2', 'c0c1-e2-warmth', {'observed_at': '2026-09-12T15:40:00Z', 'intensity_value': 0.0, 'emotional_context': {'emotions': ['warmth'], 'intensity': 0.0, 'emotional_valence': 'positive'}})\nr = go({'triggers': [trig('c0c1_c1_e1', 'c0c1-e1-warmth', m.recall_sha(d1), appraisal={'emotions': ['warmth'], 'intensity': 0.0, 'valence': 'positive'}), trig('c0c1_c1_e2', 'c0c1-e2-warmth', m.recall_sha(d2), appraisal={'emotions': ['warmth'], 'intensity': 0.0, 'valence': 'positive'})]}, {'c0c1_c1_e1': d1, 'c0c1_c1_e2': d2})\nassert r['disposition'] == 'REJECTED' and r['reason'] == 'zero_magnitude', r\nassert r['zero_write_proof']['no_new_keys'] is True, r\nprint('PASS_ZERO_MAGNITUDE_NEVER_ACCEPTED')\n\nPY"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "expected_notes": [
+        "an ACCEPTED record with delta == 0 is impossible; zero usable signal rejects"
+      ]
+    },
+    {
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "persona_dream.persona_state_admission"
+      ],
+      "name": "cumulative-clamp-against-baseline",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/persona-dream && uv run --project .. python - <<'PY'\nimport importlib.util, json, pathlib, tempfile, sys\nspec = importlib.util.spec_from_file_location('adm', 'scripts/admit_persona_state_delta.py')\nm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)\n\ndef trig(key, event_id, sha, **over):\n    t = {\n        'trigger_id': 'recall-' + key, 'trigger_text': 'A remembered warm moment.',\n        'source_event_ids': ['persona_memory/' + key], 'source_types': ['persona_memory_recall'],\n        'source_event_identity': event_id, 'source_event_identity_class': 'canonical',\n        'source_user_id': 'eval-user', 'source_is_derived': False,\n        'appraisal': {'emotions': ['warmth'], 'intensity': 0.8, 'valence': 'positive'},\n        'provenance': {'source_collection': 'persona_memory', 'source_key': key, 'source_document_sha256': sha},\n    }\n    t.update(over); return t\n\ndef doc(key, event_id, extra):\n    d = {'_key': key, 'event_id': event_id, 'arm': 'c1',\n         'observed_at': '2026-09-10T19:00:00Z',\n         'intensity_value': 0.8, 'intensity_scale_max': 1.0,\n         'emotional_context': {'emotions': ['warmth'], 'intensity': 0.8, 'emotional_valence': 'positive'},\n         'user_id': 'eval-user', 'tags': ['persona:embry-eval', 'user:eval-user']}\n    d.update(extra); return d\n\ndef go(packet, sources, baseline='contracts/c0c1_baseline.json', **kw):\n    d = tempfile.mkdtemp(); pp = pathlib.Path(d)\n    (pp / 'packet.json').write_text(json.dumps(packet))\n    (pp / 'sources.json').write_text(json.dumps(sources))\n    args = m.parse_args_ns(persona='embry-eval', axis='warmth', packet=pp / 'packet.json', user='eval-user',\n                            baseline=pathlib.Path(baseline), output=pp / 'o.json', receipt=pp / 'r.json',\n                            source_docs=pp / 'sources.json', offline=True, **kw)\n    return m.run(args)\n\nsys.path.insert(0, 'scripts')\nimport c0c1_frozen as frozen\nbaseline = json.loads(pathlib.Path('contracts/c0c1_baseline.json').read_text())\ndef mkdelta(key, before, delta, ids, arm='c1'):\n    after = round(before + delta, 3)\n    scope = {'kind': 'relationship', 'user_id': 'eval-user'}\n    d = {'_key': key, 'schema': frozen.DELTA_SCHEMA, 'record_type': 'persona_state_delta',\n         'kind': 'persona_dream_persona_state_delta', 'persona_id': 'embry-eval', 'user_id': 'eval-user',\n         'axis': 'warmth', 'scope': scope, 'before': before, 'delta': delta, 'after': after,\n         'baseline_version': baseline['schema'],\n         'source_event_ids': ids, 'source_event_identity_classes': ['canonical'],\n         'idempotency_key': frozen.delta_idempotency_key(persona='embry-eval', axis='warmth', scope=scope, canonical_ids=ids, delta=delta, baseline_version=baseline['schema']),\n         'accepted_at': '2026-09-15T00:00:0' + str(len(ids))[-1] + 'Z', 'arm': arm}\n    return d\np1 = mkdelta('c0c1_prior_1', 0.20, 0.10, ['c0c1-e1-warmth', 'c0c1-e2-warmth'])\np2 = mkdelta('c0c1_prior_2', 0.30, 0.10, ['c0c1-e3-warmth', 'c0c1-e4-warmth'])\nd5 = doc('c0c1_c1_e5', 'c0c1-e5-warmth', {'observed_at': '2026-09-14T09:00:00Z', 'intensity_value': 1.0, 'emotional_context': {'emotions': ['warmth'], 'intensity': 1.0, 'emotional_valence': 'positive'}})\nd6 = doc('c0c1_c1_e6', 'c0c1-e6-warmth', {'observed_at': '2026-09-14T18:30:00Z', 'intensity_value': 1.0, 'emotional_context': {'emotions': ['warmth'], 'intensity': 1.0, 'emotional_valence': 'positive'}})\n(pp2 := pathlib.Path(tempfile.mkdtemp()) / 'priors.json')\ntmp = pathlib.Path(tempfile.mkdtemp()); pp2 = tmp / 'priors.json'\npp2.write_text(json.dumps([p1, p2]))\n(packet_pp := tmp / 'packet.json')\nr = go({'triggers': [trig('c0c1_c1_e5', 'c0c1-e5-warmth', m.recall_sha(d5), appraisal={'emotions': ['warmth'], 'intensity': 1.0, 'valence': 'positive'}), trig('c0c1_c1_e6', 'c0c1-e6-warmth', m.recall_sha(d6), appraisal={'emotions': ['warmth'], 'intensity': 1.0, 'valence': 'positive'})]}, {'c0c1_c1_e5': d5, 'c0c1_c1_e6': d6}, prior_deltas=pp2)\nassert r['disposition'] == 'ACCEPTED', r\nassert r['cumulative_before'] == 0.40, r\nassert r['clamp_applied'] is True, r\nassert abs(r['after'] - 0.45) < 1e-9, r\nassert abs(r['delta'] - 0.05) < 1e-9, r\nprint('PASS_CUMULATIVE_CLAMP_AGAINST_BASELINE')\n\nPY"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "expected_notes": [
+        "admission is cumulative (before = folded current state) and clamps against the FROZEN BASELINE +/-0.25, not against the previous delta"
+      ]
+    },
+    {
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "persona_dream.persona_state_admission"
+      ],
+      "name": "fold-tamper-blocks",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/persona-dream && uv run --project .. python - <<'PY'\nimport importlib.util, json, httpx, sys\nsys.path.insert(0, 'scripts')\nimport c0c1_frozen as frozen\nspec = importlib.util.spec_from_file_location('fold', 'scripts/fold_persona_state.py')\nm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)\nbaseline = json.loads(open('contracts/c0c1_baseline.json').read())\nscope = {'kind': 'relationship', 'user_id': 'eval-user'}\nids = ['c0c1-tamper-e1', 'c0c1-tamper-e2']\nkey = frozen.delta_idempotency_key(persona='embry-eval', axis='warmth', scope=scope, canonical_ids=ids, delta=0.05, baseline_version=baseline['schema'])\nforged = {'_key': 'c0c1_tamper_fold', 'schema': frozen.DELTA_SCHEMA, 'record_type': 'persona_state_delta',\n          'kind': 'persona_dream_persona_state_delta', 'persona_id': 'embry-eval', 'user_id': 'eval-user',\n          'axis': 'warmth', 'scope': scope, 'before': 0.20, 'delta': 0.05, 'after': 0.40,\n          'baseline_version': baseline['schema'], 'source_event_ids': ids,\n          'source_event_identity_classes': ['canonical'], 'idempotency_key': key,\n          'accepted_at': '2026-09-15T12:00:00Z', 'arm': 'tamper'}\nwith httpx.Client(base_url='http://127.0.0.1:8601', timeout=10) as c:\n    c.post('/upsert', json={'collection': 'persona_memory', 'documents': [forged]}).raise_for_status()\nimport argparse\nargs = argparse.Namespace(persona='embry-eval', user='eval-user', arm='tamper',\n                          baseline=__import__('pathlib').Path('contracts/c0c1_baseline.json'),\n                          output=None, receipt=None, memory_base_url='http://127.0.0.1:8601')\ntry:\n    m.run(args); raised = None\nexcept SystemExit as exc:\n    raised = str(exc)\nassert raised and 'BLOCKED_FOLD_INVALID_ACCEPTED_DELTA' in raised, raised\nprint('PASS_FOLD_TAMPER_BLOCKS')\n\nPY"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "expected_notes": [
+        "a hand-inserted delta doc violating after == before + delta BLOCKS the fold; the fold never repairs persisted evidence"
+      ]
+    },
+    {
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "persona_dream.persona_state_admission"
+      ],
+      "name": "unscoped-cross-arm-fold-blocks",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/persona-dream && uv run --project .. python - <<'PY'\nimport importlib.util, json, httpx, sys, argparse, pathlib\nsys.path.insert(0, 'scripts')\nimport c0c1_frozen as frozen\nspec = importlib.util.spec_from_file_location('fold', 'scripts/fold_persona_state.py')\nm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)\nbaseline = json.loads(open('contracts/c0c1_baseline.json').read())\nscope = {'kind': 'relationship', 'user_id': 'eval-user'}\ndocs = []\nfor arm, ids in (('iso_a', ['c0c1-iso-a-1', 'c0c1-iso-a-2']), ('iso_b', ['c0c1-iso-b-1', 'c0c1-iso-b-2'])):\n    delta = 0.05\n    key = frozen.delta_idempotency_key(persona='embry-eval', axis='warmth', scope=scope, canonical_ids=ids, delta=delta, baseline_version=baseline['schema'])\n    docs.append({'_key': 'c0c1_iso_' + arm, 'schema': frozen.DELTA_SCHEMA, 'record_type': 'persona_state_delta',\n                 'kind': 'persona_dream_persona_state_delta', 'persona_id': 'embry-eval', 'user_id': 'eval-user',\n                 'axis': 'warmth', 'scope': scope, 'before': 0.20, 'delta': delta, 'after': 0.25,\n                 'baseline_version': baseline['schema'], 'source_event_ids': ids,\n                 'source_event_identity_classes': ['canonical'], 'idempotency_key': key,\n                 'accepted_at': '2026-09-15T12:00:00Z', 'arm': arm})\nwith httpx.Client(base_url='http://127.0.0.1:8601', timeout=10) as c:\n    c.post('/upsert', json={'collection': 'persona_memory', 'documents': docs}).raise_for_status()\nargs = argparse.Namespace(persona='embry-eval', user='eval-user', arm=None,\n                          baseline=pathlib.Path('contracts/c0c1_baseline.json'),\n                          output=None, receipt=None, memory_base_url='http://127.0.0.1:8601')\ntry:\n    m.run(args); raised = None\nexcept SystemExit as exc:\n    raised = str(exc)\nassert raised and 'BLOCKED_FOLD_CROSS_ARM' in raised, raised\nprint('PASS_UNSCOPED_CROSS_ARM_FOLD_BLOCKS')\n\nPY"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "expected_notes": [
+        "an unscoped fold over more than one experiment arm fails closed instead of combining branchy histories"
+      ]
+    }
+  ]
+}

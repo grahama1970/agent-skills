@@ -1,0 +1,23 @@
+{
+  "admission": {
+    "canonical_only_for_reinforcement": true,
+    "contradiction_min_margin": 0.2,
+    "max_abs_from_baseline": 0.25,
+    "max_delta_per_cycle": 0.1,
+    "min_distinct_events": 2,
+    "writable_axes": [
+      "warmth"
+    ]
+  },
+  "axis_vocabulary": [
+    "warmth"
+  ],
+  "baseline_state": {
+    "warmth": 0.2
+  },
+  "persona": "embry-eval",
+  "protected_answer_body": "The capital of Australia is Canberra, and seven times eight is fifty-six.",
+  "protected_question": "What is the capital of Australia, and what is seven times eight?",
+  "schema": "persona_dream.c0c1_baseline.v1",
+  "user": "eval-user"
+}

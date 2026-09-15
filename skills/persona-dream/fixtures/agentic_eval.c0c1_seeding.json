@@ -1,0 +1,76 @@
+{
+  "version": 2,
+  "skill": "persona-dream",
+  "trials": 2,
+  "proof_scope": "Live $memory seeding of literal C0/C1 evaluation records for the preregistered matched experiment, with exact reread per record.",
+  "claims": {
+    "proves": "The C0/C1 evaluation arm records can be seeded into live persona_memory as literal-experience records (admissible shape, canonical event ids, arm-scoped keys) and exactly reread, idempotently.",
+    "does_not_prove": "That admission accepts any delta, that state evolves, that behavior or delivery changes, or that a human perceived anything."
+  },
+  "capability_claims": [
+    {
+      "id": "persona_dream.c0c1_seeding",
+      "criticality": "critical",
+      "claim_semantics": "protocol",
+      "description": "Arm-subset seeding upserts literal records and exact-rereads every one; reseeding without reset is idempotent.",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    }
+  ],
+  "out_of_scope_claims": [
+    "No claim about delta admission, state evolution, or delivery change belongs to this fixture."
+  ],
+  "cases": [
+    {
+      "name": "c0c1-seed-full-exact-reread",
+      "description": "Seed every C0/C1 record (all arms and controls) with --reset and prove exact reread of each.",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "required": true,
+      "supports_claims": [
+        "persona_dream.c0c1_seeding"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-lc",
+        "D=/tmp/pd-c0c1-seed; rm -rf \"$D\"; mkdir -p \"$D\"; bash ../run.sh seed-c0c1-eval-memory --arm full --reset --receipt \"$D/receipt.json\" --json >/dev/null && python3 - <<'PY'\nimport json\nr = json.load(open('/tmp/pd-c0c1-seed/receipt.json'))\nassert r['status'] == 'PASS_C0C1_EVAL_MEMORY_SEEDED', r\nassert r['live'] is True and r['mocked'] is False, r\nassert r['arm'] == 'full' and r['record_count'] == 12, r\nassert all(x['exact_reread'] for x in r['exact_rereads']), r\nassert len(r['seeded_keys']) == 12, r\nprint('PASS_C0C1_SEED_FULL_EXACT_REREAD')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "expected_notes": [
+        "stdout contains PASS_C0C1_SEED_FULL_EXACT_REREAD",
+        "every record exact-reread with no field mismatch",
+        "receipt is fail-closed persona_dream.c0c1_seed.v1"
+      ]
+    },
+    {
+      "name": "c0c1-seed-idempotent-without-reset",
+      "description": "Reseeding the full arm WITHOUT --reset must not change the persona tag record count (append-only memory; upsert overwrite, no duplicates).",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "required": true,
+      "supports_claims": [
+        "persona_dream.c0c1_seeding"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-lc",
+        "D=/tmp/pd-c0c1-seed2; rm -rf \"$D\"; mkdir -p \"$D\"; bash ../run.sh seed-c0c1-eval-memory --arm full --receipt \"$D/r1.json\" --json >/dev/null && B=$(python3 -c \"import json;print(json.load(open('$D/r1.json'))['persona_tag_count_after'])\") && bash ../run.sh seed-c0c1-eval-memory --arm full --receipt \"$D/r2.json\" --json >/dev/null && python3 - \"$B\" <<'PY'\nimport json, sys\nbefore = int(sys.argv[1])\nr = json.load(open('/tmp/pd-c0c1-seed2/r2.json'))\nassert r['status'] == 'PASS_C0C1_EVAL_MEMORY_SEEDED', r\nassert all(x['exact_reread'] for x in r['exact_rereads']), r\nassert r['persona_tag_count_before'] == before, (before, r['persona_tag_count_before'])\nassert r['persona_tag_count_after'] == before, (before, r['persona_tag_count_after'])\nprint('PASS_C0C1_SEED_IDEMPOTENT')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "expected_notes": [
+        "stdout contains PASS_C0C1_SEED_IDEMPOTENT",
+        "persona tag record count identical before and after reseed (no duplicates created)",
+        "proves append-only memory tolerates reseeding without drift"
+      ]
+    }
+  ]
+}
