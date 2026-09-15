@@ -10,6 +10,7 @@ JSON receipt to /mnt/storage12tb/skills/chatterbox-speak/outputs/.
 """
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -32,15 +33,77 @@ from pauses import resolve_pause_macros, load_macros  # noqa: E402
 
 app = typer.Typer(add_completion=False)
 
-BASE_URL = "http://127.0.0.1:8018"
+BASE_URL = os.environ.get("CHATTERBOX_SPEAK_BASE_URL", "http://127.0.0.1:8018")
 OUT_DIR = Path("/mnt/storage12tb/skills/chatterbox-speak/outputs")
 # Container /out is host chatterbox/logs (see docker inspect chatterbox-fork-agent-server)
 CONTAINER_OUT = "/out"
 HOST_OUT = Path.home() / "workspace/experiments/chatterbox/logs"
 
-ANALYZER = Path.home() / ".pi/agent/skills/analyze-chatterbox-emotions/run.sh"
+def _analyzer_path() -> Path:
+    """Resolve the analyze-chatterbox-emotions runner.
+
+    Prefer the globally broadcast skill; fall back to the sibling skill in
+    this repo checkout so the live path does not depend on broadcast state
+    (observed: global path missing while the repo skill exists).
+    """
+    candidates = [
+        Path.home() / ".pi/agent/skills/analyze-chatterbox-emotions/run.sh",
+        Path(__file__).resolve().parents[2] / "analyze-chatterbox-emotions" / "run.sh",
+    ]
+    for cand in candidates:
+        if cand.is_file():
+            return cand
+    return candidates[0]
+
+
+ANALYZER = _analyzer_path()
 LEXICON_PATH = Path(__file__).resolve().parents[1] / "fixtures/pronunciation_lexicon.json"
 PAUSE_MACROS_PATH = Path(__file__).resolve().parents[1] / "fixtures/pause_macros.json"
+
+# Turbo-safe singular event tag vocabulary (SKILL.md "Tag vocabulary gotcha").
+# Plural forms ([laughs] [chuckles] [sighs]) are ElevenLabs-v3-only and are NOT
+# renderable by the backends this skill routes to; an unknown or plural tag sent
+# to the service is synthesized AS LITERAL SPOKEN TEXT. Fail closed before the POST.
+_KNOWN_EVENT_TAGS = frozenset(
+    t.lower() for t in (
+        "[clear throat]", "[sigh]", "[shush]", "[cough]", "[groan]",
+        "[sniff]", "[gasp]", "[chuckle]", "[laugh]", "[happy]",
+        "[surprised]", "[angry]", "[sarcastic]",
+    )
+)
+_TAG_RE = __import__("re").compile(r"\[[^\]\n]{1,40}\]")
+# Exact supported pause-token shapes: numeric `[pause:750ms]` (the pause
+# compiler's output shape). Named `[pause:weight]` macros are only renderable
+# via the --planned-pauses compiler, which resolves them BEFORE any POST; raw
+# in other modes they would be spoken literally and must fail closed.
+_PAUSE_NUMERIC_RE = __import__("re").compile(r"\[pause:\d+ms\]", __import__("re").IGNORECASE)
+_PAUSE_NAMED_RE = __import__("re").compile(r"\[pause:[a-z_]+\]", __import__("re").IGNORECASE)
+
+
+def _unsupported_tags(text: str, *, allow_event_tags: bool, allow_named_pauses: bool) -> list[str]:
+    """Bracket tags in `text` the EFFECTIVE backend cannot render as tags.
+
+    - allow_event_tags: False when the explicit --intensity route sends the
+      request to the base-affect backend, which speaks even known event tags
+      as literal words; then the whole event vocabulary is unsupported.
+    - allow_named_pauses: True only when the planned-pause path will resolve
+      `[pause:<name>]` macros before rendering.
+    - Only the exact numeric pause shape passes otherwise; `[pause nonsense]`
+      or `[pauseevil]` fail closed like unknown tags.
+    """
+    out = []
+    for tag in _TAG_RE.findall(text or ""):
+        low = tag.lower()
+        if allow_event_tags and low in _KNOWN_EVENT_TAGS:
+            continue
+        if _PAUSE_NUMERIC_RE.fullmatch(low):
+            continue
+        if allow_named_pauses and _PAUSE_NAMED_RE.fullmatch(low):
+            continue
+        if tag not in out:
+            out.append(tag)
+    return out
+
 
 VOICES = {
     "embry": "/data/embry_ref.wav",
@@ -305,7 +368,8 @@ def speak(
     arc_input: Path | None = typer.Option(None, help="Model-authored arc input (chatterbox_speak.arc_input.v1 JSON): per-phase text/tone/pace/complexity; complexity_source=model in the receipt; waypoints fill any gaps"),
     normalize: bool = typer.Option(True, help="Rule-based pronunciation normalization before render: spell control ids (SC-7 -> S C seven), space acronyms (CUI -> C U I), apply the irregular-term lexicon. Deterministic; native [tags] untouched"),
     temperature: float | None = typer.Option(None, help="Turbo expressiveness knob, 0.05-1.5 (service-validated). Tone is request-only on Turbo; temperature is the audible affect knob"),
-    render_chunks_plan: Path | None = typer.Option(None, help="Caller-owned render-chunk plan JSON {answer_text, render_chunks:[{text, tone?, pause_after_ms, ...}]}; bypasses pause compilation, pronunciation normalization still applied per chunk; extra chunk fields (e.g. sfx_after) pass through to the service")
+    render_chunks_plan: Path | None = typer.Option(None, help="Caller-owned render-chunk plan JSON {answer_text, render_chunks:[{text, tone?, pause_after_ms, ...}]}; bypasses pause compilation, pronunciation normalization still applied per chunk; extra chunk fields (e.g. sfx_after) pass through to the service"),
+    allow_unknown_tags: bool = typer.Option(False, help="OPT-OUT: send unsupported bracket tags to the service anyway (they may be spoken as literal words); the opt-out switch and any allowed-through tags are always recorded in the receipt (allow_unknown_tags / unknown_tags_detected / unknown_tag_policy)")
 ) -> None:
     """Render one line and write WAV + receipt."""
     _LAUGH_TAGS = ("[laugh]", "[giggles]", "[giggles]", "[chuckle]", "[chuckles]")
@@ -431,6 +495,40 @@ def speak(
     if intensity is not None and intensity not in INTENSITY:
         _fail(f"intensity must be one of {sorted(INTENSITY)}")
 
+    # Fail-closed tag gate, evaluated against the EFFECTIVE backend: an
+    # explicit --intensity routes to the base-affect backend, which speaks
+    # even known event tags as literal words, so on that route the whole
+    # event vocabulary is unsupported. Runs before any POST; explicit
+    # opt-out only, and the opt-out is always receipt-recorded.
+    gate_texts = [text]
+    if caller_plan is not None:
+        gate_texts.append(caller_plan.get("answer_text") or "")
+        gate_texts += [c.get("text", "") for c in caller_plan["render_chunks"]
+                       if isinstance(c, dict)]
+    allow_event_tags = intensity is None  # explicit --intensity => base-affect route
+    allow_named_pauses = planned_pauses
+    unknown_found: list[str] = []
+    for _gt in gate_texts:
+        for _t in _unsupported_tags(_gt, allow_event_tags=allow_event_tags,
+                                    allow_named_pauses=allow_named_pauses):
+            if _t not in unknown_found:
+                unknown_found.append(_t)
+    if unknown_found and not allow_unknown_tags:
+        route_note = (
+            "the explicit --intensity route uses the base-affect backend, which "
+            "speaks inline event tags as literal spoken words; drop --intensity "
+            "to use the Turbo tag route"
+            if not allow_event_tags else
+            "Plural forms ([laughs] [chuckles] [sighs]) are ElevenLabs-v3-only and "
+            "would be spoken as literal words on the routed backend; use the "
+            "singular form"
+        )
+        _fail(
+            f"unsupported bracket tag(s) {unknown_found} for the effective "
+            f"backend; supported event tags: {sorted(_KNOWN_EVENT_TAGS)}. {route_note}. "
+            "Override only with --allow-unknown-tags."
+        )
+
     state = _load_session(session) if session else None
     if state and to:
         state.speaker = to
@@ -554,6 +652,12 @@ def speak(
         "service_receipt": full,
     }
     receipt_path = out / "receipt.json"
+    # RECORD_TAG_OPT_OUT_ALWAYS: the policy switch itself is evidence, even
+    # when nothing was detected.
+    record["allow_unknown_tags"] = bool(allow_unknown_tags)
+    record["unknown_tags_detected"] = unknown_found
+    if allow_unknown_tags and unknown_found:
+        record["unknown_tag_policy"] = "explicit_operator_opt_out"
     receipt_path.write_text(json.dumps(record, indent=2))
 
     if analyze:

@@ -57,8 +57,11 @@ emotion: ~5 per band, deepest in medium where most conversation lives.
 (`[chuckle] [laugh] [sigh] [gasp] [surprised] [angry] [sarcastic]` — service
 `accepted_tags`); the PLURAL forms (`[chuckles] [laughs] [sighs]`) are ElevenLabs
 v3-clone only. A plural tag on Turbo hits `unknown_tag_behavior: synthesized_as_literal_text`
-— it SPEAKS the word "chuckles". Use singular for `turbo_native` entries, plural
-only for `v3_whole_sentence`.
+— it SPEAKS the word "chuckles". `speak.py` therefore FAILS CLOSED before the
+service POST on any bracket tag outside the known singular vocabulary
+(`_KNOWN_EVENT_TAGS`), naming the tag and the allowed set; the only override is
+explicit `--allow-unknown-tags`, which records `unknown_tags_allowed` in the
+receipt. Use singular for `turbo_native` entries, plural only for `v3_whole_sentence`.
 
 **Confirmed emotions (2026-09-11, human 'these are good'):** happy, celebration,
 crying (v3 splice), sadness, surprised, angry (controlled/firm, not shouting).

@@ -72,6 +72,158 @@
           "PASS_NON_QUESTION_TRIGGER_RECALL_REJECTED"
         ]
       }
+    },
+    {
+      "name": "derived-trigger-cannot-reenter-as-source-experience",
+      "description": "Deterministic fail-closed gate: a persisted Persona Dream emotional_trigger record (even with stronger lexical relevance) must be rejected by source admissibility while the literal experience is admitted; admitted triggers carry source_is_derived false and a non-empty source_event_identity.",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "fault_injected_deterministic",
+      "required": true,
+      "supports_claims": [
+        "persona_dream.memory_recall_emotional_triggers"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "uv run --project .. python - <<'PY'\nimport importlib.util\nspec = importlib.util.spec_from_file_location('ret', '../scripts/recall_emotional_triggers.py')\nm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)\nE1 = {'_key': 'embry_literal_experience_001', 'schema': 'memory.record.v1', 'record_type': 'experience', 'persona_id': 'embry', 'user_id': 'graham', 'observed_at': '2026-09-01T00:00:00Z', 'tags': ['persona:embry', 'user:graham'], 'summary': 'Embry recalled losing the regional finals while graham watched from the sideline.', 'event_context': {'immediate_trigger': 'losing the regional finals while graham watched'}, 'emotional_context': {'emotions': ['sadness', 'resolve'], 'intensity': 4, 'emotional_valence': 'negative'}}\nD1 = {'_key': 'persona_dream_emotional_trigger_x_t1', 'schema': 'persona_dream.emotional_trigger.v1', 'record_type': 'emotional_trigger', 'kind': 'persona_dream_emotional_trigger', 'project': 'persona-dream', 'persona_id': 'embry', 'user_id': 'graham', 'tags': ['persona-dream', 'emotional-trigger', 'persona:embry', 'user:graham'], 'trigger_text': 'strongest emotion Embry regional finals sadness', 'empathy': {'confidence': 0.0}}\nok, reason = m._source_admissibility(D1, persona='embry', user='graham')\nassert ok is False and reason, (ok, reason)\nok2, reason2 = m._source_admissibility(E1, persona='embry', user='graham')\nassert ok2 is True, (ok2, reason2)\nassert m._source_admissibility(E1, persona='embry', user=None)[0] is True\nassert m._source_admissibility(E1, persona='horus', user=None)[0] is False\n# case-insensitive discriminators cannot slip past the gate\nD1_lower = dict(D1); D1_lower['record_type'] = 'EMOTIONAL_TRIGGER'; D1_lower['kind'] = 'Persona_Dream_Emotional_Trigger'; D1_lower['tags'] = ['Persona-Dream', 'Emotional-Trigger', 'persona:embry']\nok3, reason3 = m._source_admissibility(D1_lower, persona='embry', user='graham')\nassert ok3 is False and reason3, (ok3, reason3)\n# ambiguous relationship identity fails closed\nE_amb = dict(E1); E_amb['user_id'] = 'graham'; E_amb['tags'] = ['persona:embry', 'user:graham', 'user:alice']\nassert m._source_user(E_amb) == '', E_amb\ntrigger = m._trigger(E1, query='Why does this experience still carry emotion?', recall_rank=1, recall_sha='sha256:test')\nassert trigger, 'literal experience must emit a trigger'\nassert trigger.get('source_is_derived') is False, trigger\nassert trigger.get('source_event_identity'), trigger\nassert trigger.get('source_event_identity_class') == 'document_fallback', trigger\nE1c = dict(E1); E1c['event_id'] = 'evt-regional-finals-2026'\ntrigger_c = m._trigger(E1c, query='Why does this experience still carry emotion?', recall_rank=1, recall_sha='sha256:test')\nassert trigger_c.get('source_event_identity') == 'evt-regional-finals-2026' and trigger_c.get('source_event_identity_class') == 'canonical', trigger_c\nassert trigger.get('recency_known') is True, trigger\nassert trigger.get('source_user_id') == 'graham', trigger\nprint('PASS_DERIVED_TRIGGER_CANNOT_REENTER')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_DERIVED_TRIGGER_CANNOT_REENTER"
+        ]
+      }
+    },
+    {
+      "name": "relationship-unproven-blocks-persist",
+      "description": "Deterministic fail-closed gate: persisting a trigger whose source carries no user identity with --user graham must exit nonzero with BLOCKED_TRIGGER_RELATIONSHIP_UNPROVEN and write nothing.",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "fault_injected_deterministic",
+      "required": true,
+      "supports_claims": [
+        "persona_dream.memory_recall_emotional_triggers"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "uv run --project .. python - <<'PY'\nimport argparse, importlib.util, json, pathlib, tempfile\nspec = importlib.util.spec_from_file_location('petm', '../scripts/persist_emotional_trigger_memory.py')\nm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)\nd = tempfile.mkdtemp()\nctx = pathlib.Path(d) / 'emotional_context.json'\ntrigger = {'trigger_id': 't1', 'trigger_text': 'A remembered loss still carries sadness.', 'source_event_ids': ['persona_memory/embry_literal_experience_001'], 'source_types': ['persona_memory_recall'], 'appraisal': {'emotions': ['sadness'], 'intensity': 0.8}, 'provenance': {'source_collection': 'persona_memory', 'source_key': 'embry_literal_experience_001', 'source_document_sha256': 'sha256:abc'}}\nctx.write_text(json.dumps({'triggers': [trigger]}))\nns = argparse.Namespace(run_dir=pathlib.Path(d), context=ctx, output=None, persona='embry', user='graham', run_id='red-test', memory_base_url='http://127.0.0.1:9')\ntry:\n    m.run(ns)\nexcept SystemExit as e:\n    assert 'BLOCKED_TRIGGER_RELATIONSHIP_UNPROVEN' in str(e), e\n    print('PASS_RELATIONSHIP_UNPROVEN_BLOCKED')\n    raise SystemExit(0)\nraise SystemExit('FAIL: relationship-unproven persistence was not blocked')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_RELATIONSHIP_UNPROVEN_BLOCKED"
+        ]
+      }
+    },
+    {
+      "name": "relationship-mismatch-blocks-persist",
+      "description": "Deterministic fail-closed gate: a trigger whose source-bound relationship (source_user_id alice) does not match the requested --user graham must exit nonzero with BLOCKED_TRIGGER_RELATIONSHIP_MISMATCH before any memory call, writing nothing.",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "fault_injected_deterministic",
+      "required": true,
+      "supports_claims": [
+        "persona_dream.memory_recall_emotional_triggers"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "uv run --project .. python - <<'PY'\nimport argparse, importlib.util, json, pathlib, tempfile\nspec = importlib.util.spec_from_file_location('petm', '../scripts/persist_emotional_trigger_memory.py')\nm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)\nd = tempfile.mkdtemp()\nctx = pathlib.Path(d) / 'emotional_context.json'\ntrigger = {'trigger_id': 't1', 'trigger_text': 'A remembered loss still carries sadness.', 'source_user_id': 'alice', 'source_event_ids': ['persona_memory/embry_literal_experience_001'], 'source_types': ['persona_memory_recall'], 'appraisal': {'emotions': ['sadness'], 'intensity': 0.8}, 'provenance': {'source_collection': 'persona_memory', 'source_key': 'embry_literal_experience_001', 'source_document_sha256': 'sha256:abc'}}\nctx.write_text(json.dumps({'triggers': [trigger]}))\nns = argparse.Namespace(run_dir=pathlib.Path(d), context=ctx, output=None, persona='embry', user='graham', run_id='red-test', memory_base_url='http://127.0.0.1:9')\ntry:\n    m.run(ns)\nexcept SystemExit as e:\n    assert 'BLOCKED_TRIGGER_RELATIONSHIP_MISMATCH' in str(e), e\n    print('PASS_RELATIONSHIP_MISMATCH_BLOCKED')\n    raise SystemExit(0)\nraise SystemExit('FAIL: relationship-mismatch persistence was not blocked')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_RELATIONSHIP_MISMATCH_BLOCKED"
+        ]
+      }
+    },
+    {
+      "name": "identity-fields-survive-persist-reread",
+      "description": "Live roundtrip: recall real source-bound triggers, persist them, and prove every identity/provenance field (source_event_identity, identity class, record type/kind, source relationship, timestamps, recency, derived flag) survives the exact reread unchanged. Live Embry memory docs carry no user tags, so the relationship is proven as the empty-string value these sources actually have (a non-empty relationship is exercised by the reverify negatives).",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "required": true,
+      "supports_claims": [
+        "persona_dream.memory_recall_emotional_triggers"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-lc",
+        "D=/tmp/pd-identity-roundtrip; rm -rf \"$D\"; mkdir -p \"$D\"; bash ../run.sh recall-emotional-triggers --persona embry --query 'What remembered experiences carry the strongest emotion for Embry Lawson and could shape how she responds in a later conversation?' --output \"$D/ec.json\" --receipt \"$D/recall.json\" --json >/dev/null && uv run --project .. python - <<'PY'\nimport json, os, subprocess\nfrom pathlib import Path\nimport httpx\nD = Path('/tmp/pd-identity-roundtrip')\nctx = json.load(open(D / 'ec.json'))\ntrigs = [t for t in ctx.get('triggers', []) if isinstance(t, dict)]\nassert trigs, 'no triggers recalled'\nuser = str(trigs[0].get('source_user_id') or '')\nsel = trigs\nctx['triggers'] = sel\n(D / 'filtered.json').write_text(json.dumps(ctx))\nrid = f\"identity-roundtrip-{os.getpid()}\"\nr = subprocess.run(['bash', '../run.sh', 'persist-emotional-triggers', '--context', str(D / 'filtered.json'), '--user', user, '--run-id', rid, '--output', str(D / 'persist.json'), '--json'], capture_output=True, text=True)\nassert r.returncode == 0, f'persist failed rc={r.returncode}: {r.stderr[-400:]}'\npr = json.load(open(D / 'persist.json'))\nassert pr['status'] == 'PASS_EMOTIONAL_TRIGGER_MEMORY_REREAD', pr\nfields = ['source_event_identity','source_event_identity_class','source_record_type','source_kind','source_user_id','source_observed_at','source_event_at','recency_known','source_is_derived']\nmissing = [f for f in fields if f not in pr.get('exact_fields', [])]\nassert not missing, f'exact_fields missing {missing}'\nassert len(pr['memory_keys']) == len(sel) and all(x['exact_reread'] for x in pr['exact_rereads']), pr['exact_rereads']\nwith httpx.Client(base_url='http://127.0.0.1:8601', timeout=15) as c:\n    for key, trig in zip(pr['memory_keys'], sel):\n        docs = c.post('/list', json={'collection': 'persona_memory', 'limit': 2, 'filters': {'_key': key}}).json().get('documents') or []\n        assert len(docs) == 1, (key, len(docs))\n        got = docs[0]\n        for f in fields:\n            expect = bool(trig.get(f)) if f in ('recency_known', 'source_is_derived') else str(trig.get(f) or '')\n            assert got.get(f) == expect, (key, f, got.get(f), expect)\nprint('PASS_IDENTITY_ROUNDTRIP')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_IDENTITY_ROUNDTRIP"
+        ]
+      },
+      "expected_notes": [
+        "persist exits zero with PASS_EMOTIONAL_TRIGGER_MEMORY_REREAD",
+        "receipt exact_fields covers all nine identity/provenance fields",
+        "independent /list reread equals the trigger packet value for every field"
+      ]
+    },
+    {
+      "name": "source-reverify-forged-hash-blocked",
+      "description": "Live negative: a trigger packet whose declared source_document_sha256 disagrees with the exact $memory source reread is blocked by the persistence reverify gate with zero writes.",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "required": true,
+      "supports_claims": [
+        "persona_dream.memory_recall_emotional_triggers"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-lc",
+        "D=/tmp/pd-reverify-hash; rm -rf \"$D\"; mkdir -p \"$D\"; bash ../run.sh recall-emotional-triggers --persona embry --query 'What remembered experiences carry the strongest emotion for Embry Lawson and could shape how she responds in a later conversation?' --output \"$D/ec.json\" --receipt \"$D/recall.json\" --json >/dev/null && uv run --project .. python - <<'PY'\nimport json, os, subprocess, importlib.util\nfrom pathlib import Path\nimport httpx\nspec = importlib.util.spec_from_file_location('pmod', '../scripts/persist_emotional_trigger_memory.py')\npmod = importlib.util.module_from_spec(spec); spec.loader.exec_module(pmod)\nD = Path('/tmp/pd-reverify-hash')\nctx = json.load(open(D / 'ec.json'))\ntrigs = [t for t in ctx.get('triggers', []) if isinstance(t, dict)]\nassert trigs, 'no triggers recalled'\nt = trigs[0]\nt['provenance']['source_document_sha256'] = str(t['provenance'].get('source_document_sha256') or '') + 'x'\nctx['triggers'] = [t]\n(D / 'forged.json').write_text(json.dumps(ctx))\nrid = f\"reverify-hash-{os.getpid()}\"\nr = subprocess.run(['bash', '../run.sh', 'persist-emotional-triggers', '--context', str(D / 'forged.json'), '--user', str(t.get('source_user_id') or ''), '--run-id', rid, '--output', str(D / 'persist.json'), '--json'], capture_output=True, text=True)\nassert r.returncode != 0, f'forged hash was accepted: {r.stdout[-300:]}'\nblob = r.stdout + r.stderr\nassert 'BLOCKED_TRIGGER_SOURCE_REVERIFY_FAILED' in blob, blob[-400:]\nwould_be_key = f\"persona_dream_emotional_trigger_{pmod._slug(rid)}_{pmod._slug(t['trigger_id'])}\"\nwith httpx.Client(base_url='http://127.0.0.1:8601', timeout=15) as c:\n    docs = c.post('/list', json={'collection': 'persona_memory', 'limit': 2, 'filters': {'_key': would_be_key}}).json().get('documents') or []\nassert len(docs) == 0, f'forged packet wrote anyway: {len(docs)} docs at {would_be_key}'\nprint('PASS_REVERIFY_FORGED_HASH')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_REVERIFY_FORGED_HASH"
+        ]
+      },
+      "expected_notes": [
+        "persist exits nonzero naming BLOCKED_TRIGGER_SOURCE_REVERIFY_FAILED",
+        "zero-write proof: /list by the would-be _key returns no document"
+      ]
+    },
+    {
+      "name": "source-reverify-forged-relationship-blocked",
+      "description": "Live negative: a packet whose source_user_id forges a relationship that --user confirms passes the request filter but is rejected by source reverify (packet claims disagree with the reread source document), with zero writes.",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "required": true,
+      "supports_claims": [
+        "persona_dream.memory_recall_emotional_triggers"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-lc",
+        "D=/tmp/pd-reverify-rel; rm -rf \"$D\"; mkdir -p \"$D\"; bash ../run.sh recall-emotional-triggers --persona embry --query 'What remembered experiences carry the strongest emotion for Embry Lawson and could shape how she responds in a later conversation?' --output \"$D/ec.json\" --receipt \"$D/recall.json\" --json >/dev/null && uv run --project .. python - <<'PY'\nimport json, os, subprocess, importlib.util\nfrom pathlib import Path\nimport httpx\nspec = importlib.util.spec_from_file_location('pmod', '../scripts/persist_emotional_trigger_memory.py')\npmod = importlib.util.module_from_spec(spec); spec.loader.exec_module(pmod)\nD = Path('/tmp/pd-reverify-rel')\nctx = json.load(open(D / 'ec.json'))\ntrigs = [t for t in ctx.get('triggers', []) if isinstance(t, dict)]\nassert trigs, 'no triggers recalled'\nt = trigs[0]\nforged = 'pd-forged-user-xyz'\nt['source_user_id'] = forged\nctx['triggers'] = [t]\n(D / 'forged.json').write_text(json.dumps(ctx))\nrid = f\"reverify-rel-{os.getpid()}\"\nr = subprocess.run(['bash', '../run.sh', 'persist-emotional-triggers', '--context', str(D / 'forged.json'), '--user', forged, '--run-id', rid, '--output', str(D / 'persist.json'), '--json'], capture_output=True, text=True)\nassert r.returncode != 0, f'forged relationship was accepted: {r.stdout[-300:]}'\nblob = r.stdout + r.stderr\nassert ('BLOCKED_TRIGGER_SOURCE_REVERIFY_FAILED' in blob) or ('BLOCKED_TRIGGER_RELATIONSHIP_MISMATCH' in blob), blob[-400:]\nwould_be_key = f\"persona_dream_emotional_trigger_{pmod._slug(rid)}_{pmod._slug(t['trigger_id'])}\"\nwith httpx.Client(base_url='http://127.0.0.1:8601', timeout=15) as c:\n    docs = c.post('/list', json={'collection': 'persona_memory', 'limit': 2, 'filters': {'_key': would_be_key}}).json().get('documents') or []\nassert len(docs) == 0, f'forged packet wrote anyway: {len(docs)} docs at {would_be_key}'\nprint('PASS_REVERIFY_FORGED_RELATIONSHIP')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_REVERIFY_FORGED_RELATIONSHIP"
+        ]
+      },
+      "expected_notes": [
+        "--user equal to the forged source_user_id passes the request filter, so the block must come from the source reread",
+        "persist exits nonzero naming BLOCKED_TRIGGER_SOURCE_REVERIFY_FAILED (or BLOCKED_TRIGGER_RELATIONSHIP_MISMATCH if caught earlier)",
+        "zero-write proof: /list by the would-be _key returns no document"
+      ]
     }
   ]
 }

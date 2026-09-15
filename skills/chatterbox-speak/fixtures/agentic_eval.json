@@ -11,7 +11,8 @@
       "evidence_required": {
         "deterministic": true,
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "protocol"
     },
     {
       "id": "speak.emotion.measured",
@@ -19,7 +20,8 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "other"
     },
     {
       "id": "speak.session.mood_hold",
@@ -27,7 +29,8 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "speak.fail_closed",
@@ -35,7 +38,8 @@
       "criticality": "critical",
       "evidence_required": {
         "deterministic": true
-      }
+      },
+      "claim_semantics": "control_flow"
     },
     {
       "id": "speak.contract.adversarial_sampled",
@@ -43,7 +47,8 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      }
+      },
+      "claim_semantics": "control_flow"
     }
   ],
   "out_of_scope_claims": {
@@ -167,6 +172,79 @@
       "supports_claims": [
         "speak.fail_closed"
       ],
+      "name": "unknown-tag-fails-closed",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && set +e; out=$(./run.sh speak --text '[laughs] Well, that is funny.' --voice embry 2>&1); rc=$?; set -e; test \"$rc\" -eq 1; printf '%s' \"$out\" | grep -qF '[laughs]'; printf '%s' \"$out\" | grep -q 'allow-unknown-tags'; echo PASS_UNKNOWN_TAG_FAIL_CLOSED_NAMED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_UNKNOWN_TAG_FAIL_CLOSED_NAMED"
+        ]
+      },
+      "expected_notes": [
+        "speak exits 1 and the error text names the unknown tag [laughs] and the --allow-unknown-tags opt-out",
+        "fails before any service POST; no receipt written",
+        "unknown bracket tags are never synthesized as literal spoken words without --allow-unknown-tags"
+      ]
+    },
+    {
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "speak.fail_closed"
+      ],
+      "name": "known-tag-on-base-affect-route-fails-closed",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && set +e; out=$(./run.sh speak --text '[sigh] I understand.' --voice embry --intensity high 2>&1); rc=$?; set -e; test \"$rc\" -eq 1; printf '%s' \"$out\" | grep -qF '[sigh]'; printf '%s' \"$out\" | grep -q 'base-affect'; echo PASS_BASE_AFFECT_ROUTE_REJECTS_EVENT_TAGS"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_BASE_AFFECT_ROUTE_REJECTS_EVENT_TAGS"
+        ]
+      },
+      "expected_notes": [
+        "explicit --intensity routes to the base-affect backend where even known event tags are spoken literally; the gate rejects [sigh] on that route",
+        "fails before any service POST"
+      ]
+    },
+    {
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "speak.fail_closed"
+      ],
+      "name": "malformed-pause-token-fails-closed",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && set +e; out=$(./run.sh speak --text 'Wait [pause nonsense] okay.' --voice embry 2>&1); rc=$?; set -e; test \"$rc\" -eq 1; printf '%s' \"$out\" | grep -qF '[pause nonsense]'; echo PASS_MALFORMED_PAUSE_TOKEN_FAIL_CLOSED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_MALFORMED_PAUSE_TOKEN_FAIL_CLOSED"
+        ]
+      },
+      "expected_notes": [
+        "only the exact numeric [pause:<ms>ms] shape (or named macros via --planned-pauses) passes the gate; malformed pause tokens fail closed",
+        "fails before any service POST"
+      ]
+    },
+    {
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "speak.fail_closed"
+      ],
       "name": "unknown-voice-fails-closed",
       "type": "negative",
       "command": [
@@ -244,6 +322,73 @@
           "cover_plan.py self-check: PASS"
         ]
       }
+    },
+    {
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "speak.fail_closed"
+      ],
+      "name": "render-chunk-unknown-tag-fails-closed",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-lc",
+        "P=$(mktemp /tmp/cbx-chunk-plan-XXXX.json); printf '%s' '{\"answer_text\":\"Fine.\",\"render_chunks\":[{\"text\":\"Sure thing. [shrug]\",\"pause_after_ms\":0}]}' > \"$P\"; cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && ./run.sh speak --render-chunks-plan \"$P\" --voice embry 2>\"$P.err\"; rc=$?; grep -q 'shrug' \"$P.err\" && ! grep -qi 'connection' \"$P.err\" && test \"$rc\" -eq 1 && echo PASS_RENDER_CHUNK_UNKNOWN_TAG"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": "PASS_RENDER_CHUNK_UNKNOWN_TAG"
+      },
+      "expected_notes": [
+        "unknown tag inside a caller-owned render chunk is rejected with exit 1 naming the tag",
+        "failure precedes any service POST (no connection error): validation covers the caller_plan chunk path"
+      ]
+    },
+    {
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "speak.fail_closed",
+        "speak.render.live"
+      ],
+      "name": "tag-opt-out-receipt-proof",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-lc",
+        "OUT=$(mktemp /tmp/cbx-optout-XXXX.json); cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && ./run.sh speak --text 'Well. [shrug] I suppose that is one way to see it.' --voice embry --allow-unknown-tags > \"$OUT\" 2>/dev/null; rc=$?; python3 - \"$OUT\" <<'PY'\nimport json,sys\nres=json.load(open(sys.argv[1]))\nassert res.get('ok') is True, res\nrec=json.load(open(res['receipt']))\nassert rec.get('allow_unknown_tags') is True, rec.get('allow_unknown_tags')\nassert any('shrug' in t for t in rec.get('unknown_tags_detected', [])), rec.get('unknown_tags_detected')\nassert rec.get('unknown_tag_policy') == 'explicit_operator_opt_out', rec.get('unknown_tag_policy')\nprint('PASS_OPT_OUT_RECEIPT')\nPY\ntest $rc -eq 0"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": "PASS_OPT_OUT_RECEIPT"
+      },
+      "expected_notes": [
+        "explicit --allow-unknown-tags renders successfully through the live service",
+        "receipt records allow_unknown_tags=true, the detected [shrug] tag, and unknown_tag_policy=explicit_operator_opt_out"
+      ]
+    },
+    {
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "speak.fail_closed"
+      ],
+      "name": "zero-post-on-unknown-tag",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak && export CHATTERBOX_SPEAK_BASE_URL=http://127.0.0.1:9; E1=$(mktemp /tmp/cbx-zp-tag-XXXX.err); E2=$(mktemp /tmp/cbx-zp-ctl-XXXX.err); ./run.sh speak --text 'Hello there. [shrug]' --voice embry > /dev/null 2>\"$E1\"; rc1=$?; grep -q 'shrug' \"$E1\" && ! grep -qiE 'connect|refused' \"$E1\" && test \"$rc1\" -eq 1 || { echo 'TAG_HALF_FAILED'; cat \"$E1\"; exit 1; }; ./run.sh speak --text 'Hello there plainly.' --voice embry > /dev/null 2>\"$E2\"; rc2=$?; test \"$rc2\" -ne 0 && grep -qiE 'connect|refused' \"$E2\" || { echo 'CONTROL_HALF_FAILED'; cat \"$E2\"; exit 1; }; echo PASS_ZERO_POST"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": "PASS_ZERO_POST"
+      },
+      "expected_notes": [
+        "with the service endpoint pinned to a closed port, an unknown tag fails with exit 1 naming the tag and NO connection error: the gate fires before any POST",
+        "paired control (valid text, same closed port) fails with a connection error instead, proving the override routes and a POST would otherwise have been attempted"
+      ]
     }
   ],
   "claims": {
