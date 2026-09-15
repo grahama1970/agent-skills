@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read back the real V2 ticket repair completed for agent-skills#1658."""
+"""Reject a false-close receipt before treating #1658 as a live success."""
 
 from __future__ import annotations
 
@@ -20,6 +20,7 @@ def run(*args: str) -> str:
 
 def main() -> None:
     receipt = json.loads(RECEIPT.read_text(encoding="utf-8"))
+    assert "Blocked, reporting rather than continuing" not in receipt["pi_subagents"]["fixer"]["stdout"], "#1658 fixer was blocked; this receipt cannot prove a successful repair"
     assert receipt["outcome"] == "success"
     assert receipt["ticket"] == "grahama1970/agent-skills#1658"
     assert receipt["pi_subagents"]["fixer"]["ok"] is True

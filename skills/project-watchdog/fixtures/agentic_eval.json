@@ -2,50 +2,128 @@
   "version": 2,
   "skill": "project-watchdog",
   "trials": 2,
-  "proof_scope": "Live GitHub and origin/main readback of the real V2 fixer-reviewer-proof-close path for agent-skills#1658. No mocked GitHub, Pi, reviewer, proof, or closure seam.",
+  "proof_scope": "Repeated native Pi workflow and editable-graph runs plus a controlled real GitHub ticket invoked through the production cron-shaped flock/tick path, with issue, file, proof, transcript, and receipt readback. The system crontab timer itself is not exercised.",
   "claims": {
-    "proves": "V2 processed one real ticket through an owned lease, real Pi fixer, real read-only Pi reviewer, trusted deterministic proof, GitHub closure, label cleanup, receipt retention, and independent readback.",
-    "does_not_prove": "Unpaused recurring cron operation, every registered project's proof configuration, or future provider availability."
+    "proves": "V2 invokes one native Pi workflow containing a fixer followed by a reviewer; the editable graph executes in a sandbox; and the cron-shaped production entrypoint completes one controlled real GitHub ticket lifecycle with independent readback.",
+    "does_not_prove": "The system crontab timer, indefinite recurring operation, every registered project's proof configuration, or future provider availability."
   },
   "capability_claims": [
     {
-      "id": "project_watchdog.v2.live_ticket",
-      "description": "The simplified V2 can process one real approved ticket end to end.",
+      "id": "project_watchdog.v2.native_workflow",
+      "description": "The V2 Pi handoff executes fixer then reviewer as one native workflow and returns evidence that the target changed.",
       "criticality": "critical",
       "claim_semantics": "protocol",
+      "evidence_required": {"live_e2e": true}
+    },
+    {
+      "id": "project_watchdog.v2.cron_ticket_lifecycle",
+      "description": "The noninteractive cron-shaped entrypoint admits one controlled GitHub ticket, runs the native Pi workflow, proves the checkout change, closes the issue, and retains a matching receipt.",
+      "criticality": "critical",
+      "claim_semantics": "control_flow",
+      "evidence_required": {"live_e2e": true, "deterministic": true}
+    },
+    {
+      "id": "project_watchdog.v2.editable_graph",
+      "description": "A revisioned three-node graph executes through the production sandbox path and retains inspectable node transcripts.",
+      "criticality": "critical",
+      "claim_semantics": "control_flow",
       "evidence_required": {"live_e2e": true}
     }
   ],
   "cases": [
     {
-      "name": "project-watchdog-v2-live-ticket-readback",
-      "type": "positive",
+      "name": "project-watchdog-production-admission-guards",
+      "type": "adversarial",
       "real_world": true,
-      "evidence_class": "live_e2e",
-      "supports_claims": ["project_watchdog.v2.live_ticket"],
-      "timeout_seconds": 120,
-      "command": ["python3", "../evals/live_v2_ticket.py"],
+      "evidence_class": "deterministic",
+      "supports_claims": ["project_watchdog.v2.cron_ticket_lifecycle"],
+      "timeout_seconds": 30,
+      "command": ["python3", "-m", "unittest", "discover", "-s", "../tests", "-p", "test_*.py", "-v"],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["PROJECT_WATCHDOG_V2_LIVE_TICKET_OK"]
+        "stderr_contains": ["Ran 17 tests", "OK"]
       },
       "readback": true
     },
     {
-      "name": "project-watchdog-v2-forbidden-hook-guard",
+      "name": "project-watchdog-cron-real-ticket-live",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": ["project_watchdog.v2.cron_ticket_lifecycle"],
+      "timeout_seconds": 7500,
+      "command": ["python3", "../evals/cron_real_ticket_live.py", "--output", "/mnt/storage12tb/skills/project-watchdog/outputs/cron-real-ticket-live.json"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PROJECT_WATCHDOG_CRON_REAL_TICKET_OK"],
+        "artifacts": [
+          {"path": "/mnt/storage12tb/skills/project-watchdog/outputs/cron-real-ticket-live.json", "json_pointer": "/ok", "equals": true},
+          {"path": "/mnt/storage12tb/skills/project-watchdog/outputs/cron-real-ticket-live.json", "json_pointer": "/issue/state", "equals": "CLOSED"},
+          {"path": "/mnt/storage12tb/skills/project-watchdog/outputs/cron-real-ticket-live.json", "json_pointer": "/marker", "equals": "FIXED\n"}
+        ]
+      },
+      "readback": true
+    },
+    {
+      "name": "project-watchdog-editor-three-node-live",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": ["project_watchdog.v2.editable_graph"],
+      "timeout_seconds": 900,
+      "command": ["python3", "../evals/editor_workflow_live.py", "--output", "/mnt/storage12tb/skills/project-watchdog/outputs/agentic-editor-live.json"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PROJECT_WATCHDOG_EDITOR_LIVE_OK"],
+        "artifacts": [
+          {"path": "/mnt/storage12tb/skills/project-watchdog/outputs/agentic-editor-live.json", "json_pointer": "/ok", "equals": true},
+          {"path": "/mnt/storage12tb/skills/project-watchdog/outputs/agentic-editor-live.json", "json_pointer": "/marker", "equals": "FIXED\n"}
+        ]
+      },
+      "readback": true
+    },
+    {
+      "name": "project-watchdog-editor-invalid-graph-and-conflict",
       "type": "adversarial",
       "real_world": false,
       "evidence_class": "deterministic",
-      "supports_claims": ["project_watchdog.v2.live_ticket"],
+      "supports_claims": ["project_watchdog.v2.editable_graph"],
       "timeout_seconds": 30,
-      "command": [
-        "bash",
-        "-c",
-        "python3 - <<'PY'\nfrom pathlib import Path\nsrc=Path('../scripts/watchdog_v2.py').read_text()\nfor token in ['$ask','tau-dag','scillm','canary','replay','worktree']:\n    assert token not in src, token\nprint('PROJECT_WATCHDOG_V2_FORBIDDEN_HOOK_GUARD_OK')\nPY"
-      ],
+      "command": ["python3", "../evals/editor_graph_negative.py"],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["PROJECT_WATCHDOG_V2_FORBIDDEN_HOOK_GUARD_OK"]
+        "stdout_contains": ["PROJECT_WATCHDOG_EDITOR_NEGATIVE_OK"]
+      },
+      "readback": true
+    },
+    {
+      "name": "project-watchdog-v2-native-workflow-live",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": ["project_watchdog.v2.native_workflow"],
+      "timeout_seconds": 900,
+      "command": ["python3", "../evals/native_workflow_live.py", "--output", "/mnt/storage12tb/skills/project-watchdog/outputs/agentic-native-workflow-live.json"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PROJECT_WATCHDOG_NATIVE_WORKFLOW_LIVE_OK"],
+        "artifacts": [
+          {"path": "/mnt/storage12tb/skills/project-watchdog/outputs/agentic-native-workflow-live.json", "json_pointer": "/result/ok", "equals": true},
+          {"path": "/mnt/storage12tb/skills/project-watchdog/outputs/agentic-native-workflow-live.json", "json_pointer": "/marker", "equals": "FIXED\n"}
+        ]
+      },
+      "readback": true
+    },
+    {
+      "name": "project-watchdog-v2-historical-false-close-detected",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 30,
+      "command": ["python3", "../evals/historical_false_close.py"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PROJECT_WATCHDOG_HISTORICAL_FALSE_CLOSE_DETECTED"]
       },
       "readback": true
     }
