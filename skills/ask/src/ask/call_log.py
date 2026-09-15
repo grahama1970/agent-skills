@@ -251,6 +251,66 @@ def seat_health(handler: str, *, docs: list[dict[str, Any]] | None = None, thres
     }
 
 
+def last_success_context(handlers: list[str], *, docs_by_handler: dict[str, list[dict[str, Any]]] | None = None) -> dict[str, Any]:
+    """Per-handler last-success context for the project agent, from $memory.
+
+    Returned inside every executed ask result so the agent that just consumed
+    a handler call also sees, in the same JSON, what last worked for each seat
+    and what to avoid — without running a separate history command.
+    Best-effort: memory being down omits the field, never fails the run.
+    """
+    context: dict[str, Any] = {}
+    for handler in dict.fromkeys(h for h in handlers if h):
+        if docs_by_handler is not None:
+            docs = docs_by_handler.get(handler, [])
+        else:
+            try:
+                response = httpx.post(
+                    f"{MEMORY_URL}/list",
+                    json={"collection": COLLECTION, "limit": 200, "filters": {"handler": handler}},
+                    timeout=10.0,
+                    headers={"x-caller-skill": "ask"},
+                )
+                response.raise_for_status()
+                docs = response.json().get("documents") or []
+            except (httpx.HTTPError, OSError):
+                continue
+        health = seat_health(handler, docs=docs)
+        ordered = sorted(docs, key=lambda d: str(d.get("ts") or ""), reverse=True)
+        last = next((d for d in ordered if d.get("ok") is True), None)
+        method = (last or {}).get("method") or {}
+        if not last:
+            context[handler] = {
+                "last_success_ts": None,
+                "blind_guess": True,
+                "consecutive_failures": health.get("consecutive_failures"),
+                "avoid_failure_codes": health.get("failure_codes"),
+            }
+            continue
+        context[handler] = {
+            "last_success_ts": last.get("ts"),
+            "run_dir": last.get("run_dir"),
+            "conversation_url": last.get("conversation_url"),
+            "controlled_tab_id": last.get("controlled_tab_id"),
+            "method": {
+                key: method[key]
+                for key in (
+                    "requested_url",
+                    "requested_reasoning",
+                    "selected_reasoning",
+                    "tab_lifecycle_mode",
+                    "layout",
+                    "constraint",
+                )
+                if method.get(key) is not None
+            },
+            "consecutive_failures": health.get("consecutive_failures"),
+            "avoid_failure_codes": health.get("failure_codes"),
+            "blind_guess": False,
+        }
+    return context
+
+
 def recommendation(handler: str, *, limit: int = 50) -> dict[str, Any]:
     """Non-blind starting point for the next call to this handler.
 

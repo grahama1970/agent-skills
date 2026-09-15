@@ -155,6 +155,28 @@ def main() -> int:
         ts = backfill._run_ts(undated, receipt)
         assert ts and ts.startswith("2025-06-15"), ts
 
+    # Per-handler last-success context is returned inside executed results
+    # (docs-by-handler injection keeps this check offline).
+    ctx = call_log.last_success_context(
+        ["webgemini"],
+        docs_by_handler={
+            "webgemini": [
+                {"ts": "2026-09-15T16:11:31Z", "ok": True,
+                 "run_dir": "/tmp/run-z", "conversation_url": "https://gemini.google.com/app/x",
+                 "controlled_tab_id": "42",
+                 "method": {"requested_url": "https://gemini.google.com/app", "layout": "isolated window per seat"}},
+                {"ts": "2026-09-15T16:20:00Z", "ok": False, "failure_code": "prompt_too_large_or_stalled"},
+            ],
+            "noseat": [],
+        },
+    )["webgemini"]
+    assert ctx["blind_guess"] is False and ctx["conversation_url"].endswith("/x"), ctx
+    assert ctx["method"]["layout"] == "isolated window per seat", ctx
+    assert ctx["consecutive_failures"] == 1, ctx
+    assert ctx["avoid_failure_codes"] == ["prompt_too_large_or_stalled"], ctx
+    blind = call_log.last_success_context(["noseat"], docs_by_handler={"noseat": []})["noseat"]
+    assert blind["blind_guess"] is True and blind["last_success_ts"] is None, blind
+
     print(
         json.dumps(
             {

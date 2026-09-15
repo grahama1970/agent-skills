@@ -147,6 +147,11 @@ proven method to reuse. A handler with no recorded success is a blind guess —
 compile-only or probe cheaply first. Historical runs are backfillable:
 `python3 skills/ask/scripts/backfill_call_log.py [outputs-root]` ingests every
 on-disk node receipt idempotently (deterministic _key per run+node).
+Every EXECUTED run's result JSON (and `execution-status.json`) also carries
+`handler_last_success`: per seat, the last successful method from memory
+(conversation URL, tab, lifecycle/layout), current consecutive failures, and
+failure codes to avoid — returned in context so the project agent never needs
+a separate history lookup after consuming a run.
 
 
 ## Deep-Dive References (read on demand)

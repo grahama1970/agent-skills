@@ -1299,6 +1299,24 @@ def run_tau_dag_bundle(
         )
     except Exception:
         pass
+    # Return each handler's last-success context from $memory inside the run
+    # result itself, so the project agent consuming this JSON sees what last
+    # worked per seat (and what to avoid) without a separate history command.
+    try:
+        from . import call_log
+
+        dag = bundle.get("dag") if isinstance(bundle.get("dag"), dict) else {}
+        handlers = [
+            str(value)
+            for value in _roundtable_handler_map_from_dag(dag).values()
+            if str(value)
+        ]
+        context = call_log.last_success_context(handlers)
+        if context:
+            result["handler_last_success"] = context
+            _write_json(run_dir / "execution-status.json", result)
+    except Exception:
+        pass
     return result
 
 
