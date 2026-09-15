@@ -43,6 +43,15 @@
         "deterministic": true
       },
       "claim_semantics": "protocol"
+    },
+    {
+      "id": "ask.pipeline_live_e2e",
+      "description": "The composed research->verify->packet->lanes pipeline executes live: browser seats answer with nonce, the gate writes a derived_from-traced packet, lanes verify from named files.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      },
+      "claim_semantics": "control_flow"
     }
   ],
   "seams": [
@@ -188,6 +197,37 @@
         ]
       },
       "proves": "The pipeline composer emits a sandbox-grammar-valid workflowScript (no async helpers, promise-chain fallback, live rungs baked, fail-closed stage settling) from a ping-verified roster."
+    },
+    {
+      "name": "pipeline-live-eval-20260916",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "mocked": false,
+      "supports_claims": [
+        "ask.pipeline_live_e2e"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask",
+        "python",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/scripts/eval_pipeline_run.py",
+        "/mnt/storage12tb/skills/ask/outputs/pipeline-live-eval-20260916",
+        "--nonce",
+        "PIPELINE-EVAL-20260916"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ask.pipeline_live_eval.v1",
+          "\"status\": \"PASS\"",
+          "seats verified ok+nonce on disk: 3"
+        ]
+      },
+      "proves": "The composed ask pipeline ran live end-to-end 2026-09-16: roster verification, 3 real browser seats answering with nonce (receipts ok on disk), verify gate synthesis + lane-specs with derived_from, and two reviewer lanes citing DERIVED_FROM - graded only from on-disk artifacts."
     }
   ]
 }

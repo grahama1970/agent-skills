@@ -42,8 +42,19 @@ import httpx  # noqa: E402
 BASE = "http://127.0.0.1:4001"
 
 
+def _scillm_probe_id(model: str) -> str:
+    """Pi-registry child id -> scillm probe id.
+
+    Children validate against the Pi model registry (zai-glm,
+    openai-codex/gpt-5.5:high); scillm probes need the bare base id
+    (gpt-5.5). Strip provider prefixes and effort suffixes.
+    """
+    base = model.rsplit(":", 1)[0] if ":" in model else model
+    return base.rsplit("/", 1)[-1] if "/" in base else base
+
+
 def ping_model(model: str, *, timeout: float = 15.0) -> dict:
-    route = resolve_scillm_model_route(model)
+    route = resolve_scillm_model_route(_scillm_probe_id(model))
     payload = {
         "model": route.model,
         "max_tokens": 8,
@@ -148,7 +159,14 @@ def main() -> int:
     for role, models in roles.items():
         rungs = [model_results[(role, i)] for i in range(len(models))]
         live = next((r["model"] for r in rungs if r["status"] == "ok"), None)
-        role_verdicts[role] = {"ladder": models, "rungs": rungs, "served_by": live, "ready": live is not None}
+        # proxy_paused is shared-proxy backoff, NOT model death: pi children
+        # have completed full runs during a paused proxy (observed 2026-09-16,
+        # research_r3 zai-glm 247s). A paused rung is degraded-but-eligible;
+        # only rate_limited / unknown_model / error disqualify a rung.
+        eligible = next((r["model"] for r in rungs if r["status"] in ("ok", "proxy_paused")), None)
+        role_verdicts[role] = {"ladder": models, "rungs": rungs, "served_by": eligible,
+                               "served_by_live": live, "degraded": live is None,
+                               "ready": eligible is not None}
 
     seats_block = seat_results.get("seats") if seat_results.get("source") == "memory" else None
     seat_ok = True

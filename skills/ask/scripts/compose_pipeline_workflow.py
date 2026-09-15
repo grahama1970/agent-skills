@@ -30,10 +30,14 @@ from ask import call_log  # noqa: E402
 # compose-time ping prunes to live rungs, so a provider coming back (Claude
 # 2026-09-16) or going dark needs NO edit here - availability knowledge is
 # derived per compose, never hardcoded to a moment in time.
+# PI-REGISTRY child ids (the subagent tool validates against the Pi model
+# registry, NOT the scillm catalog - observed 2026-09-16: scillm-valid
+# claude-fable-5/gpt-5.5 were registry-unknown; zai-glm runs). ping_model_roster
+# translates these to scillm ids when probing.
 DEFAULT_ROLES = {
-    "research": ["gpt-5.5", "claude-fable", "zai-glm"],
-    "synthesis": ["claude-fable", "zai-glm", "gpt-5.5"],
-    "code_run": ["claude-fable-5", "zai-glm-flash", "zai-glm"],
+    "research": ["openai-codex/gpt-5.5:high", "zai-glm"],
+    "synthesis": ["openai-codex/gpt-5.5", "zai-glm"],
+    "code_run": ["openai-codex/gpt-5.5:high", "zai-glm"],
 }
 DEFAULT_SEATS = ["webkimi", "webgemini", "webgpt"]
 
@@ -42,9 +46,17 @@ def build_roster(roles: dict[str, list[str]], seats: list[str]) -> dict:
     roster = {"roles": {}, "seats": []}
     for role, ladder in roles.items():
         rungs = [ping_model(m) for m in ladder]
-        live = [r["model"] for r in rungs if r["status"] == "ok"]
+        # Scillm probe status MISpredicts pi-child health in both directions
+        # (openai-codex OAuth children run while scillm says gpt rate-limited;
+        # zai children aborted while scillm said eligible - both observed
+        # 2026-09-16). For CHILD ladders only registry-unknown is disqualifying;
+        # ordering is ok > proxy_paused > rate_limited, and the runtime ladder
+        # settles the truth.
+        rank = {"ok": 0, "proxy_paused": 1, "rate_limited": 2}
+        eligible = [r["model"] for r in rungs if r["status"] in rank]
+        eligible.sort(key=lambda m: rank[next(r["status"] for r in rungs if r["model"] == m)])
         roster["roles"][role] = {"ladder": ladder, "rungs": rungs,
-                                 "live": live, "ready": bool(live)}
+                                 "live": eligible, "ready": bool(eligible)}
     for seat in seats:
         h = call_log.seat_health(seat)
         ok = not h.get("known_bad") and h.get("last_success_ts")
@@ -56,7 +68,7 @@ def build_roster(roles: dict[str, list[str]], seats: list[str]) -> dict:
 
 PRELUDE = """\
 function rung(key, agent, model, task) {
-  return runs.run(key, { agent, task, ...(model ? { model } : {}) });
+  return runs.run(key, { agent, task, context: "fresh", ...(model ? { model } : {}) });
 }
 function runWithFallback(key, ladder, task) {
   const attempts = [];
@@ -76,10 +88,19 @@ function runWithFallback(key, ladder, task) {
 
 def emit(roster: dict, packet: str, nonce: str, question: str, allow_degraded: bool) -> str:
     def ladder_js(role: str, agent: str) -> str:
-        live = roster["roles"][role]["live"]
-        if not live and allow_degraded:
-            return "[]  // degraded: no live rung at compose time; stage settles blocked"
-        return "[" + ", ".join(f'{{ agent: "{agent}", model: "{m}" }}' for m in live) + "]"
+        entry = roster["roles"][role]
+        live = entry["live"]
+        # Insurance rungs: candidates that pinged bad at compose still ride
+        # along AFTER the live rungs - catalogs rotate mid-run (observed
+        # 2026-09-16: claude-fable vanished between ping and launch) and a
+        # rate limit may lift. Never emit a single-rung ladder if more
+        # catalog-valid candidates exist.
+        insurance = [m for m in entry["ladder"] if m not in live]
+        ordered = live + insurance
+        if not ordered:
+            return "[]  // degraded: no catalog-valid rungs; stage settles blocked"
+        marker = "" if live else "  // degraded: no live rung at compose; insurance rungs only"
+        return "[" + ", ".join(f'{{ agent: "{agent}", model: "{m}" }}' for m in ordered) + f"]{marker}"
 
     ok_seats = [s["seat"] for s in roster["seats"] if s["ok"]] or ["webkimi"]
     role_args = " ".join(a for role, models in DEFAULT_ROLES.items() for m in models for a in (f"--role {role}={m}",))
@@ -91,21 +112,20 @@ def emit(roster: dict, packet: str, nonce: str, question: str, allow_degraded: b
 // STAGE 0 (mandatory): re-verify availability at execution time. A compose-time
 // green light can go dark before launch; this stage fails fast (~15s) instead
 // of burning minutes discovering limits mid-pipeline.
-const rosterCheck = await runs.run("verify_roster", {{
-  agent: "delegate",
+const rosterCheck = await runs.run("verify_roster", {{ context: "fresh", agent: "delegate", model: "{roster["roles"]["research"]["live"][0] if roster["roles"]["research"]["live"] else ""}",
   task: `Run EXACTLY, from /home/graham/workspace/experiments/agent-skills:
 python3 skills/ask/scripts/ping_model_roster.py {role_args} {seat_args}
-Report the exit code and paste the readiness line and every rung status line verbatim. If exit is not 0, say NOT_READY and the failing roles. Do nothing else.`,
+Your ENTIRE reply must be exactly one final line and nothing else:
+ROSTER_VERDICT_GO if the command exited 0, otherwise ROSTER_VERDICT_HALT followed by the failing roles. Do not quote statuses, do not explain.`,
 }});
-const notReady = /NOT_READY/.test(rosterCheck.output);
-if (notReady) {{
+if (rosterCheck.output.includes("ROSTER_VERDICT_HALT")) {{
   return JSON.stringify({{ status: "BLOCKED", stage: "verify_roster", roster_output: rosterCheck.output.slice(0, 3000) }});
 }}
 
 const ROOT = "{packet}";
 const NONCE = "{nonce}";
 const RESEARCH_LADDER = {ladder_js('research', 'worker')};
-const SYNTH_LADDER = {ladder_js('synthesis', 'reviewer')};
+const SYNTH_LADDER = {ladder_js('synthesis', 'worker')};  // worker: the gate WRITES synthesis.md + lane-specs.json (reviewer has no write tool)
 
 const research = await runWithFallback("research", RESEARCH_LADDER,
   `Run EXACTLY, from /home/graham/workspace/experiments/agent-skills/skills/ask:
@@ -116,14 +136,14 @@ if (research.failed) {{
 }}
 
 const verify = await runWithFallback("verify_and_packet", SYNTH_LADDER,
-  `You are the verification gate. Under ${{ROOT}} find every seat lane's node receipt + response file. For each seat verify on disk: receipt ok=true AND response contains ${{NONCE}}. Write ${{ROOT}}/synthesis.md and ${{ROOT}}/lane-specs.json (schema per skills/ask/references/lane-handoff.md; lanes keyed cross_check and extract_quality with derived_from). A seat that fails verification is recorded, never dropped. Return packet dir + per-seat ok table.`);
+  `You are the verification gate. READ ${{ROOT}}/one-shot-verdict.json FIRST - it lists each seat lane's run dir and answer path. Use THOSE paths. For each seat verify on disk: For each seat verify on disk: receipt ok=true AND response contains ${{NONCE}}. Write ${{ROOT}}/synthesis.md and ${{ROOT}}/lane-specs.json (schema per skills/ask/references/lane-handoff.md; lanes keyed cross_check and extract_quality with derived_from). A seat that fails verification is recorded, never dropped. Return packet dir + per-seat ok table.`);
 if (verify.failed) {{
   return JSON.stringify({{ status: "BLOCKED", stage: "verify", failure_code: verify.failure_code, attempts: verify.attempts, research_output: research.output.slice(0, 2000) }});
 }}
 
 const lanes = await runs.all([
-  {{ key: "cross_check", agent: "reviewer", task: `READ FIRST: ${{ROOT}}/lane-specs.json (your lane: cross_check) and ${{ROOT}}/synthesis.md. Answer your lane's task_question against the seat response files on disk. Read-only. End with: DERIVED_FROM: <your lane's derived_from>.` }},
-  {{ key: "extract_quality", agent: "reviewer", task: `READ FIRST: ${{ROOT}}/lane-specs.json (your lane: extract_quality) and ${{ROOT}}/synthesis.md. Answer your lane's task_question against the seat response files on disk. Read-only. End with: DERIVED_FROM: <your lane's derived_from>.` }},
+  {{ key: "cross_check", agent: "reviewer", task: `READ FIRST: ${{ROOT}}/lane-specs.json (your lane: cross_check) and ${{ROOT}}/synthesis.md. Use ONLY the exact file paths named there (seat response.md files under source_run). NEVER run find or grep across directories - read the named files directly. Read-only. End with: DERIVED_FROM: <your lane's derived_from>.` }},
+  {{ key: "extract_quality", agent: "reviewer", task: `READ FIRST: ${{ROOT}}/lane-specs.json (your lane: extract_quality) and ${{ROOT}}/synthesis.md. Use ONLY the exact file paths named there (seat response.md files under source_run). NEVER run find or grep across directories - read the named files directly. Read-only. End with: DERIVED_FROM: <your lane's derived_from>.` }},
 ]);
 return ["=== research ===", research.output, "=== verify ===", verify.output,
         "=== lanes ===", ...lanes.map((r) => r.output)].join("\\n");
