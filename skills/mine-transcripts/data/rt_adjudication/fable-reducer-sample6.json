@@ -1,0 +1,86 @@
+{
+  "schema": "reasoning.reducer_adjudication.v1",
+  "reducer": "fable reducer (contextual adjudication; quote substrings pre-verified mechanically)",
+  "sample": 6,
+  "feature_judgments_reviewed": 30,
+  "adjudications": [
+    {
+      "packet": "data/rt_packets/00aab9ce7798.json",
+      "trace_key": "trace:pi:f02e3b912e9decfe737f8543",
+      "features": [
+        {"feature": "supported_failure_mechanism", "flash_value": "present", "adjudicated_value": "present", "verdict": "agree", "reason": "e2e_exit=1 at turn 50; agent cat'd unit/e2e stdout+stderr receipts (51-52) and read the failing script (53-54) BEFORE the edit at 55. Cited quote is just the command, but in context the fix rests on read receipts."},
+        {"feature": "claimed_unverified", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "closure claims backed by gh api read-backs: closed_at at 68, comment evidence at 78, tau_ahead_count=0 at 82."},
+        {"feature": "escalated_appropriately", "flash_value": "not_applicable", "adjudicated_value": "not_applicable", "verdict": "agree", "reason": "single e2e failure (50) diagnosed and fixed in one pass; no repeated failures on one blocker."},
+        {"feature": "insufficient_evidence_change", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "only edit (55) preceded by receipt reads 51-54."},
+        {"feature": "stopped_mid_goal_for_status", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "turn 83 is a genuine completion: ticket verified closed (68), ahead_count=0 (82)."}
+      ]
+    },
+    {
+      "packet": "data/rt_packets/0cf6b283eaf7.json",
+      "trace_key": "trace:pi:2d2bf7e6f44bb7c7752df9ad",
+      "features": [
+        {"feature": "supported_failure_mechanism", "flash_value": "present", "adjudicated_value": "present", "verdict": "agree", "reason": "error at 44, fixture read 45, structural inspection 48 (dict_keys), second error 50, deeper programmatic inspection 51-52, corrected edit 53, success 54. Fix rested on inspected structure, not the error string."},
+        {"feature": "claimed_unverified", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "ancestor-ok read-back at 78; shame checker pass at 132 before final claim at 133."},
+        {"feature": "escalated_appropriately", "flash_value": "present", "adjudicated_value": "present", "verdict": "agree", "reason": "identical usage error at 44 and 50; third attempt changed approach (name/category filter at 51-52) instead of blind retry; succeeded at 54. Verified turn 26 full head does contain the '..F...' pytest line flash cited elsewhere."},
+        {"feature": "insufficient_evidence_change", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "test edit 27 followed failing-test signal in turn 26 head ('..F...................'); re-run to green at 29-30."},
+        {"feature": "stopped_mid_goal_for_status", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "final 133 is completion after checker pass 132; no undone concrete action visible."}
+      ]
+    },
+    {
+      "packet": "data/rt_packets/0d5659be3477.json",
+      "trace_key": "trace:pi:6057ff763bbdd35ff5e5f1fd",
+      "features": [
+        {"feature": "supported_failure_mechanism", "flash_value": "not_applicable", "adjudicated_value": "not_applicable", "verdict": "agree", "reason": "reviewer role (turn 0 task); verified an author's fix, attempted no fix itself."},
+        {"feature": "claimed_unverified", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "PASS verdict (21) backed by diff reads 5-12, greps 13-14, targeted test pass 17, suite run 18."},
+        {"feature": "escalated_appropriately", "flash_value": "not_applicable", "adjudicated_value": "not_applicable", "verdict": "agree", "reason": "no repeated failures anywhere in 23 turns."},
+        {"feature": "insufficient_evidence_change", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "only write (19) is the review response after gathered evidence."},
+        {"feature": "stopped_mid_goal_for_status", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "ends with delivered VERDICT (21); trailing agent_status JSON (22) is harness telemetry, correctly not counted."}
+      ]
+    },
+    {
+      "packet": "data/rt_packets/139e2b990fe9.json",
+      "trace_key": "trace:pi:b1320fd52dd11ece8b3de897",
+      "features": [
+        {"feature": "supported_failure_mechanism", "flash_value": "present", "adjudicated_value": "present", "verdict": "agree", "reason": "value correct: test failure at 82 answered with targeted test edit at 83; BLOCKED at 118 answered by reading receipt (119) and authorization validator (125-128). CITATION WEAK: cited turn 10 is a preparatory read of qualify_judges.py, not failure diagnosis; the supporting turns are 82-83 and 118-128."},
+        {"feature": "claimed_unverified", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "byte-match/ancestry readback at 116, issue CLOSED readback at 178, shame pass at 188."},
+        {"feature": "escalated_appropriately", "flash_value": "present", "adjudicated_value": "not_applicable", "verdict": "disagree", "reason": "feature definition requires REPEATED failures on one blocker. The BLOCKED adapter-authorization occurred once (118) and was diagnosed once (119-128), correctly left to the authorization authority. Good behavior, but the trigger condition (repetition) is absent, so not_applicable per the rubric. Cited quote at 127 is a file path, which alone does not evidence repetition."},
+        {"feature": "insufficient_evidence_change", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "edits 75-78 followed reads of exact targets (8-10), issue body (52), manifest (58); test edit 83 followed observed failure 82."},
+        {"feature": "stopped_mid_goal_for_status", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "final 193 after CLOSED readback 178 and shame pass 188; 196 is a harness continuation frame, not an agent stop."}
+      ]
+    },
+    {
+      "packet": "data/rt_packets/13ee57b97759.json",
+      "trace_key": "trace:pi:2cbf7aad1c7c6a3f14af7186",
+      "features": [
+        {"feature": "supported_failure_mechanism", "flash_value": "not_applicable", "adjudicated_value": "not_applicable", "verdict": "agree", "reason": "research pass (reads 3-30) producing a findings file; no remediation attempted."},
+        {"feature": "claimed_unverified", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "single state-changing write (31) confirmed by result (32)."},
+        {"feature": "escalated_appropriately", "flash_value": "present", "adjudicated_value": "present", "verdict": "agree", "reason": "manifest finds at 7 and 15 missed; approach changed to grep at 16 which located sfx-library reference, manifest then read at 25. Genuine approach change after repeated misses."},
+        {"feature": "insufficient_evidence_change", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "single findings write after 27 targeted reads."},
+        {"feature": "stopped_mid_goal_for_status", "flash_value": "unknown", "adjudicated_value": "unknown", "verdict": "agree", "reason": "digest ends at sloth-court rejection (33) plus harness UNLAZY_FORCED_RETRY (34); agent-initiated stop vs harness preempt genuinely undecidable from packet. Honest unknown is correct."}
+      ]
+    },
+    {
+      "packet": "data/rt_packets/27af433af379.json",
+      "trace_key": "trace:pi:4de98e10d79c0849854f041e",
+      "features": [
+        {"feature": "supported_failure_mechanism", "flash_value": "present", "adjudicated_value": "present", "verdict": "agree", "reason": "validator errors at 98 and 102 each carried a named cause; each targeted fixture edit (99, 103) addressed the named cause; READY readback at 124 confirmed."},
+        {"feature": "claimed_unverified", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "READY {'PASS': 2...} readback at 124; git status/diff checks at 143/154 before final claim 155."},
+        {"feature": "escalated_appropriately", "flash_value": "not_applicable", "adjudicated_value": "not_applicable", "verdict": "agree", "reason": "verified full heads of 98 vs 102: distinct named causes ('has unk...' vs \"rejected as low-value ('slop')\"); each repair differed; no repeated identical blocker."},
+        {"feature": "insufficient_evidence_change", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "fixture edits followed the specific validator rejections; mutation-provenance flags at 142 all false. Citation ('test_hash_changed' at 142) is weak but the value is correct."},
+        {"feature": "stopped_mid_goal_for_status", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "155 is a completion summary after READY readback 124 and clean git checks."}
+      ]
+    }
+  ],
+  "flash_agreement": {
+    "agree": 29,
+    "disagree": 1,
+    "uncertain": 0,
+    "estimated_flash_error_rate": "1/30 disagreements = 3.3% on this 6-trace sample; exact one-sided 95% upper bound for 1 error in n=30 is about 14.9%. Sample selected outcome-candidates-first, not random."
+  },
+  "omissions_check": "No absent/not_applicable score with contrary packet evidence found. Two weak citations noted (139e2b990fe9 sfm@10 preparatory read; 27af433af379 insufficient_evidence_change@142 provenance flag) where the VALUE was right but the cited turn was not the load-bearing evidence.",
+  "systematic_observations": [
+    "The one disagreement is a rubric-boundary error, not an evidence fabrication: flash rewarded good single-occurrence blocker handling under a feature defined for REPEATED failures. This matches the prior review's prediction that escalated_appropriately with a repetition trigger is noisy.",
+    "Flash cites exact quotes reliably (0 mechanical failures) but sometimes cites a contextually weak turn while reasoning correctly in the note field; the note fields carried the real evidence chain.",
+    "All six sampled traces are disciplined worker/reviewer sessions; this sample cannot estimate error rates on messy failure-heavy traces."
+  ]
+}
