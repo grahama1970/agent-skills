@@ -110,6 +110,92 @@ must survive the session is a ticket; work you will verify now is a lane.
 Everything upstream exists to make the ticket list correct; everything
 downstream exists to execute it.
 
+## Stage 0: ping the whole roster first
+
+Ping EVERY model the pipeline will use - web seats AND API models, primaries
+AND fallbacks - in one concurrent wave before anything expensive runs:
+
+```bash
+python3 skills/ask/scripts/ping_model_roster.py \
+  --role research=gpt-5.5 --role research=zai-glm \
+  --role synthesis=zai-glm --role code_run=zai-glm-flash \
+  --seat webkimi --seat webgemini --seat webgpt   # [--live-seats]
+```
+
+~15s wall. Model probes are 1-token scillm calls; seats default to
+`ask_call_log` memory health (instant) and promote to real browser pings with
+`--live-seats`. Verdicts are typed: `ok`, `rate_limited`, `proxy_paused`
+(scillm's concurrency guard is in adaptive backoff - a proxy-level verdict,
+not per-model), `unknown_model` (carries the proxy's own suggested catalog
+ids - model ids come from the catalog, never a guess). A green ping can still
+go dark mid-run (unlikely); the runtime ladder stays as insurance. `pi-usage`
+(the installed @mtrojnar/pi-usage extension) is the human's per-provider quota
+dashboard in the Pi UI; the ping is the machine's decision signal - it answers
+"can I make a call right now", which quota percentages cannot.
+
+## Rate-limit fallbacks: assume ANY model call can be limited
+
+Any web seat OR agent child can be rate-limited at any time (observed
+steady state: 2026-09-16 Claude API out till 16:00 EST, GPT API out 3 days,
+browser seats on separate web-account quotas). Every stage therefore runs a
+PROVIDER-DIVERSE ladder: try rung 1, on failure try rung 2 from a different
+provider, and settle the stage as a named blocker only when every rung failed.
+A rung failure is recorded in the result, never thrown.
+
+```js
+// Plain helpers only (no nested async fns in workflowScript).
+function rung(key, agent, model, task) {
+  return runs.run(key, { agent, task, ...(model ? { model } : {}) });
+}
+function runWithFallback(key, ladder, task) {
+  // ladder: [{agent, model}, ...] - NEVER two rungs on one provider.
+  const attempts = [];
+  function tryRung(i) {
+    if (i >= ladder.length) {
+      return Promise.resolve({ key, failed: true, failure_code: "all_rungs_failed", attempts, output: "" });
+    }
+    const spec = ladder[i];
+    return rung(`${key}_r${i + 1}`, spec.agent, spec.model, task).then(
+      (r) => ({ key, served_by: spec, output: r.output, attempts }),
+      (err) => { attempts.push({ rung: spec, error: String(err).slice(0, 300) }); return tryRung(i + 1); }
+    );
+  }
+  return tryRung(0);
+}
+
+// Ladders (cross-provider by construction; adjust to live catalog/seat health):
+const MUTATION_LADDER = [
+  { agent: "worker",  model: "openai-codex/gpt-5.5:high" },  // primary
+  { agent: "worker",  model: "zai/glm-5.3:high" },           // different provider
+];
+const READ_LADDER = [
+  { agent: "reviewer", model: null },                          // inherits parent
+  { agent: "reviewer", model: "zai/glm-5.3:high" },           // different provider
+];
+const research = await runWithFallback("research", MUTATION_LADDER,
+  `Run: ./run.sh one-shot --out-dir <root> "<question with nonce>" --handler webkimi --handler webgemini --min-answered 1 ...`);
+if (research.failed) { /* settle: record blocker, skip dependent stages or proceed degraded */ }
+```
+
+Better: do not hand-roll this at all - compose the script with
+`python3 skills/ask/scripts/compose_pipeline_workflow.py --packet <dir> --nonce <T>`,
+which pings the roster first (Stage 0), prunes ladders to live rungs, fails
+closed when a required role has no live rung (or `--allow-degraded`), and
+emits a workflowScript validated against the sandbox grammar. Validate any
+hand-rolled script with `subagent({ action: "validate", workflowScriptPath })`
+- NOT `node --check`, which rejects the sandbox's top-level return/await.
+
+Rules the ladder encodes:
+- Web-seat fallback lives INSIDE ask (concurrent seats, --min-answered floor,
+  per-seat named blockers); the child ladder covers the agent running the CLI.
+- Never two consecutive rungs on one provider; check `handler_last_success`
+  and the scillm catalog when picking primaries.
+- On total ladder failure the stage settles as `all_rungs_rate_limited_or_failed`
+  with every attempt recorded - the workflow continues to synthesis, which must
+  report the stage as skipped, exactly like a skipped web seat.
+- Long deterministic stages (ask CLI, 5-8 min) need child timeouts above the
+  run duration or the rung dies mid-run.
+
 ## End-to-end: research seats -> synthesis -> workflowScript
 
 The standard program: web models research, the parent synthesizes and

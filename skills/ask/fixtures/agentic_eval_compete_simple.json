@@ -34,6 +34,15 @@
         "deterministic": true
       },
       "claim_semantics": "protocol"
+    },
+    {
+      "id": "ask.compose_pipeline_offline",
+      "description": "compose_pipeline_workflow emits sandbox-valid workflowScripts from a ping-verified roster with provider-diverse ladders and fail-closed settling.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "protocol"
     }
   ],
   "seams": [
@@ -151,6 +160,30 @@
         ]
       },
       "proves": "ask.call_log.document_for emits deterministic success/failure documents with handler extraction and failure_code fallback; no embedding arrays enter Arango documents."
+    },
+    {
+      "name": "compose-pipeline-offline",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "real_world": false,
+      "mocked": false,
+      "supports_claims": [
+        "ask.compose_pipeline_offline"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/scripts/eval_compose_pipeline.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ask.compose_pipeline_offline_eval.v1",
+          "\"status\": \"PASS\"",
+          "promise-chain fallback"
+        ]
+      },
+      "proves": "The pipeline composer emits a sandbox-grammar-valid workflowScript (no async helpers, promise-chain fallback, live rungs baked, fail-closed stage settling) from a ping-verified roster."
     }
   ]
 }
