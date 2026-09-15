@@ -93,6 +93,55 @@ finding it implements.
 | **compete** | Winner's artifact + judge verdict | The lane job is *harvest/apply* the winner, not re-derive it — hand the artifact path |
 | **clean-room** | The produced spec/implementation | The lane verifies-and-integrates; never let a lane "improve" it unreviewed |
 
+## Synthesis is a list of $tickets to orchestrate
+
+The synthesis's terminal form is not prose - it is the TICKET LIST. Each
+parent-verified finding becomes one focused `$ticket` sized for the configured
+code runner (zai/glm-5.3-flash): one independently verifiable acceptance
+criterion, named scoped-files, proof as a deterministic local command,
+context-file/required-skill bootstrap, route/agent metadata, and `derived_from`
+naming the seat finding it implements. That list IS the orchestration unit:
+`ticket fleet --dry-run` review -> `--apply` files them -> `$project-watchdog`
+leases one at a time -> flash executes -> verify command passes -> close ->
+forced iteration stays watchdog-owned on failure. Analysis/harvest findings
+that need no repo repair run as direct pi-subagents lanes under the parent
+instead - verify immediately, do not ticket. Rule of thumb: repair work that
+must survive the session is a ticket; work you will verify now is a lane.
+Everything upstream exists to make the ticket list correct; everything
+downstream exists to execute it.
+
+## End-to-end: research seats -> synthesis -> workflowScript
+
+The standard program: web models research, the parent synthesizes and
+verifies, pi-subagents executes. The workflowScript is generated FROM
+`lane-specs.json` so declared and executed plans cannot drift:
+
+```js
+// subagent({ workflowScript, async: true, preflight: <from lane-specs> })
+// Parent already wrote /mnt/storage12tb/.../strategy-<date>/{synthesis.md,lane-specs.json}
+const PACKET = "/mnt/storage12tb/.../strategy-<date>";
+const results = await runs.all([
+  { key: "pd_gate", agent: "worker", task: `READ FIRST: ${PACKET}/lane-specs.json (your lane: pd_gate)
+and ${PACKET}/synthesis.md. Implement ONLY your lane: first_patch, then red_first,
+then run checks[]. Stay inside scope_paths; out_of_scope items are forbidden.
+Cite derived_from in your output.` },
+  { key: "recall_fix", agent: "worker", task: `READ FIRST: ${PACKET}/lane-specs.json (your lane: recall_fix)...` },
+]);
+return results.map(r => r.output).join("\n---\n");
+```
+
+Rules the example encodes:
+
+- The browser research happened BEFORE this script, through `$ask` (one-shot/
+  roundtable/compete) - web seats are never children of the workflow.
+- Lanes read the packet from disk (carrier 2); small verified digests may be
+  baked into task strings instead (carrier 1); multi-workflow programs move
+  the packet into mission `state` (carrier 3).
+- One writer per scope: lanes' `scope_paths` must not overlap, or use
+  `isolation: "worktree"`.
+- Seat PASS is advisory; lane completion is not closure; the parent still
+  runs deterministic local proof after the workflow returns.
+
 ## Checklist
 
 1. Run the ask mode; read node receipts and answers from the run dir.
