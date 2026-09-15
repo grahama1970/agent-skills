@@ -135,9 +135,13 @@ ask artifacts.
 Every executed handler call (success or failure) is recorded to the
 `ask_call_log` collection in `$memory` at the execution choke point, with
 handler, status, failure_code, and `controlled_tab_id`/conversation URL when
-present. Check a seat before relying on it:
+present, plus the proven method of the last successful call (reasoning
+selection, tab binding, lifecycle mode, dispatch command with secrets
+redacted). Check a seat before relying on it:
 `python3 skills/ask/scripts/ask_call_history.py --handler webgemini` prints
-the last successful call and recent failures.
+the last successful call and recent failures; add `--recommend` for the exact
+proven method to reuse. A handler with no recorded success is a blind guess —
+compile-only or probe cheaply first.
 
 
 ## Deep-Dive References (read on demand)

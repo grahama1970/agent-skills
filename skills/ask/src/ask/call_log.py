@@ -39,19 +39,80 @@ def _key_for(run_dir: str, node_id: str) -> str:
     return f"ask:{slug}"
 
 
+def _read_json_path(path: Path) -> dict[str, Any] | None:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
 def _conversation_fields(item: dict[str, Any]) -> dict[str, Any]:
     response_path = item.get("response_path")
     if not response_path:
         return {}
     meta_path = Path(str(response_path)).with_name("response.meta.json")
-    try:
-        meta = json.loads(meta_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    meta = _read_json_path(meta_path)
+    if meta is None:
         return {}
     return {
         "controlled_tab_id": meta.get("controlled_tab_id"),
         "conversation_url": meta.get("conversation_url"),
     }
+
+
+def _method_fields(item: dict[str, Any], run_dir: str) -> dict[str, Any]:
+    """Denormalize the exact configuration that produced this call's outcome.
+
+    A web-model call must not be a blind guess: the next run needs the proven
+    reasoning selection, tab binding, lifecycle mode, and dispatch command of
+    the last successful call without spelunking the run directory.
+    """
+    method: dict[str, Any] = {}
+    response_path = item.get("response_path")
+    meta: dict[str, Any] | None = None
+    if response_path:
+        meta = _read_json_path(Path(str(response_path)).with_name("response.meta.json"))
+    if meta:
+        for key in (
+            "requested_model",
+            "requested_reasoning",
+            "selected_reasoning",
+            "reasoning_selection_status",
+            "requested_tab_id",
+            "requested_url",
+            "roundtrip_preflight_required",
+            "roundtrip_preflight_exit_code",
+        ):
+            if meta.get(key) is not None:
+                method[key] = meta.get(key)
+    root = Path(run_dir) if run_dir else None
+    if root and root.is_dir():
+        lifecycle = _read_json_path(root / "browser-tab-lifecycle.json")
+        if lifecycle:
+            for key in ("mode", "cleanup_policy", "identity_guard"):
+                if lifecycle.get(key) is not None:
+                    method[f"tab_lifecycle_{key}"] = lifecycle.get(key)
+            created = lifecycle.get("created_tabs")
+            if isinstance(created, list) and created:
+                method["created_tabs"] = created
+        node_id = str(item.get("node_id") or "")
+        if node_id:
+            spec = _read_json_path(root / "command-specs" / node_id / "tau-dispatch-command.json")
+            command = spec.get("command") if spec else None
+            if isinstance(command, list) and command:
+                method["dispatch_command"] = _redact_command(command)
+    return method
+
+
+def _redact_command(command: list[Any]) -> list[Any]:
+    """Mask values of secret-bearing flags before they reach $memory."""
+    redacted = list(command)
+    for i, part in enumerate(redacted[:-1]):
+        token = str(part or "").lower()
+        if token.endswith("api-key") or token.endswith("token") or token.endswith("secret"):
+            redacted[i + 1] = "<redacted>"
+    return redacted
 
 
 def document_for(item: dict[str, Any], *, run_dir: str, target: str = "", status: str = "") -> dict[str, Any]:
@@ -87,6 +148,9 @@ def document_for(item: dict[str, Any], *, run_dir: str, target: str = "", status
         ),
     }
     doc.update(_conversation_fields(item))
+    method = _method_fields(item, run_dir)
+    if method:
+        doc["method"] = method
     return doc
 
 
@@ -124,7 +188,7 @@ def record_from_execution(execution: Any, *, target: str = "", run_dir: str = ""
 
 
 def call_history(handler: str, *, limit: int = 50) -> dict[str, Any]:
-    """Last successful call and recent failures for one handler, from $memory."""
+    """Last successful call, its method, and recent failures for one handler."""
     response = httpx.post(
         f"{MEMORY_URL}/list",
         json={"collection": COLLECTION, "limit": max(limit, 200), "filters": {"handler": handler}},
@@ -136,4 +200,61 @@ def call_history(handler: str, *, limit: int = 50) -> dict[str, Any]:
     docs.sort(key=lambda d: str(d.get("ts") or ""), reverse=True)
     last_success = next((d for d in docs if d.get("ok") is True), None)
     failures = [d for d in docs if d.get("ok") is not True and d.get("status") != "retracted_fixture"][:10]
-    return {"handler": handler, "total": len(docs), "last_success": last_success, "recent_failures": failures}
+    return {
+        "handler": handler,
+        "total": len(docs),
+        "last_success": last_success,
+        "last_success_method": (last_success or {}).get("method"),
+        "recent_failures": failures,
+    }
+
+
+def recommendation(handler: str, *, limit: int = 50) -> dict[str, Any]:
+    """Non-blind starting point for the next call to this handler.
+
+    Returns the proven method of the last successful call plus the failure
+    codes to avoid repeating. When no success is recorded, says so plainly:
+    the next call IS a blind guess and the caller should compile-only or probe
+    cheaply first.
+    """
+    history = call_history(handler, limit=limit)
+    method = history.get("last_success_method")
+    last = history.get("last_success") or {}
+    failure_codes: list[str] = []
+    for doc in history.get("recent_failures") or []:
+        code = str(doc.get("failure_code") or "").strip()
+        if code and code not in failure_codes:
+            failure_codes.append(code)
+    if not method:
+        return {
+            "schema": "ask.call_recommendation.v1",
+            "handler": handler,
+            "blind_guess": True,
+            "reason": "no successful call recorded in ask_call_log",
+            "avoid_failure_codes": failure_codes,
+            "next_command": f"python3 skills/ask/scripts/ask_call_history.py --handler {handler} --json",
+        }
+    return {
+        "schema": "ask.call_recommendation.v1",
+        "handler": handler,
+        "blind_guess": False,
+        "reuse": {
+            key: value
+            for key, value in {
+                **{k: method.get(k) for k in (
+                    "requested_reasoning",
+                    "selected_reasoning",
+                    "requested_tab_id",
+                    "requested_url",
+                    "tab_lifecycle_mode",
+                    "tab_lifecycle_cleanup_policy",
+                )},
+                "controlled_tab_id": last.get("controlled_tab_id"),
+                "conversation_url": last.get("conversation_url"),
+            }.items()
+            if value is not None
+        },
+        "full_method": method,
+        "last_success_ts": (history.get("last_success") or {}).get("ts"),
+        "avoid_failure_codes": failure_codes,
+    }

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -47,6 +48,49 @@ def main() -> int:
     retracted = {"ok": None, "status": "retracted_fixture"}
     assert not (retracted["ok"] is True) and retracted["status"] == "retracted_fixture"
 
+    # Method denormalization: a fake run dir must yield the exact proven
+    # configuration so the next web-model call is not a blind guess.
+    with tempfile.TemporaryDirectory(prefix="ask-call-log-method-") as raw:
+        run = Path(raw)
+        node = run / "node-artifacts" / "handler-webgemini"
+        node.mkdir(parents=True)
+        (node / "response.md").write_text("answer\n", encoding="utf-8")
+        (node / "response.meta.json").write_text(json.dumps({
+            "controlled_tab_id": "42",
+            "conversation_url": "https://gemini.google.com/app/x",
+            "requested_reasoning": "Pro",
+            "selected_reasoning": "2.5 Pro",
+            "reasoning_selection_status": "selected",
+            "requested_tab_id": "42",
+            "roundtrip_preflight_exit_code": 0,
+        }), encoding="utf-8")
+        (run / "browser-tab-lifecycle.json").write_text(json.dumps({
+            "mode": "fresh-keep", "cleanup_policy": "keep_created_tabs_for_inspection",
+            "created_tabs": ["42"],
+        }), encoding="utf-8")
+        spec_dir = run / "command-specs" / "handler-webgemini"
+        spec_dir.mkdir(parents=True)
+        (spec_dir / "tau-dispatch-command.json").write_text(json.dumps({
+            "command": ["/bin/worker", "--handler", "webgemini", "--topology", "concurrent"],
+        }), encoding="utf-8")
+        method_doc = call_log.document_for(
+            {"node_id": "handler-webgemini", "ok": True,
+             "response_path": str(node / "response.md"), "provider_live": True,
+             "provider_transport": "$surf"},
+            run_dir=str(run), target="t", status="PASS",
+        )
+        method = method_doc["method"]
+        assert method["requested_reasoning"] == "Pro", method
+        assert method["selected_reasoning"] == "2.5 Pro", method
+        assert method["tab_lifecycle_mode"] == "fresh-keep", method
+        assert method["tab_lifecycle_cleanup_policy"] == "keep_created_tabs_for_inspection", method
+        assert method["dispatch_command"][1:3] == ["--handler", "webgemini"], method
+        assert method_doc["controlled_tab_id"] == "42" and method_doc["conversation_url"].endswith("/x"), method_doc
+
+    # Secret-bearing flag values are redacted before storage.
+    redacted = call_log._redact_command(["--scillm-api-key", "sk-local-abc", "--handler", "webgpt"])
+    assert redacted[1] == "<redacted>" and redacted[3] == "webgpt", redacted
+
     print(
         json.dumps(
             {
@@ -54,9 +98,10 @@ def main() -> int:
                 "status": "PASS",
                 "checked": [
                     "success document shape: schema, handler, ok, deterministic _key",
-                    "failure document shape: failure_code fallback from failure dict, join adapter handler",
+                    "failure document shape: failure_code fallback from failure dict",
                     "no embedding vectors written into Arango documents",
                     f"memory url normalized to http: {env_url}",
+                    "method denormalization: reasoning, tab lifecycle, dispatch command, conversation url",
                 ],
                 "memory_url": env_url,
             },

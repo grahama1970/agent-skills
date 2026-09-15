@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Print $ask call history for one handler from $memory.
+"""Print $ask call history or a non-blind recommendation for one handler.
 
 Usage:
   python3 scripts/ask_call_history.py --handler webgemini
-  python3 scripts/ask_call_history.py --handler webgpt --json
+  python3 scripts/ask_call_history.py --handler webgpt --recommend --json
 """
 from __future__ import annotations
 
@@ -21,8 +21,24 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--handler", required=True, help="handler name, e.g. webgemini, webgpt, gpt-5.5-high")
     parser.add_argument("--limit", type=int, default=50)
+    parser.add_argument("--recommend", action="store_true", help="print the proven method to reuse for the next call")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
+    if args.recommend:
+        data = call_log.recommendation(args.handler, limit=args.limit)
+        if args.json:
+            print(json.dumps(data, indent=2))
+            return 0
+        if data["blind_guess"]:
+            print(f"handler {args.handler}: NO successful call recorded - the next call is a blind guess")
+            print(f"  reason: {data['reason']}")
+        else:
+            print(f"handler {args.handler}: reuse the proven method of {data.get('last_success_ts')}")
+            for key, value in data["reuse"].items():
+                print(f"  {key}: {value}")
+        codes = data.get("avoid_failure_codes") or []
+        print(f"  avoid failure codes: {', '.join(codes) if codes else 'none recorded'}")
+        return 0
     history = call_log.call_history(args.handler, limit=args.limit)
     if args.json:
         print(json.dumps(history, indent=2))
@@ -33,6 +49,8 @@ def main() -> int:
         print(f"last success: {last.get('ts')} run={last.get('run_dir')}")
         if last.get("conversation_url"):
             print(f"  conversation: {last['conversation_url']} (tab {last.get('controlled_tab_id')})")
+        for key, value in (last.get("method") or {}).items():
+            print(f"  method.{key}: {value}")
     else:
         print("last success: none recorded")
     failures = history["recent_failures"]
