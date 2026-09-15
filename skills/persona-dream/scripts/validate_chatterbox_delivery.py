@@ -8,6 +8,7 @@ Inputs/Outputs/Failures: See functions below.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -17,6 +18,10 @@ def _ratio(numerator: float, denominator: float) -> float:
     if denominator <= 0:
         return 0.0
     return numerator / denominator
+
+
+def _sha_file(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def main() -> int:
@@ -34,6 +39,7 @@ def main() -> int:
     metrics_path = run_root / "chatterbox_delivery.metrics.json"
     delivery_path = metrics_path if metrics_path.exists() else run_root / "chatterbox_delivery.json"
     failures: list[str] = []
+    metrics_digest = _sha_file(delivery_path) if delivery_path.exists() else None
     if not delivery_path.exists():
         failures.append("missing_chatterbox_delivery")
         delivery = {}
@@ -71,6 +77,7 @@ def main() -> int:
         "status": "PASS_CHATTERBOX_DELIVERY" if not failures else "FAIL_CHATTERBOX_DELIVERY",
         "run_root": args.run_root,
         "metrics": str(delivery_path),
+        "chatterbox_delivery_metrics_sha256": metrics_digest,
         "duration_ratio": round(duration_ratio, 6),
         "speech_rate_ratio": round(speech_rate_ratio, 6),
         "closing_duration_ratio": round(closing_ratio, 6),

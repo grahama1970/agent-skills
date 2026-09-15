@@ -1,0 +1,88 @@
+{
+  "version": 2,
+  "skill": "persona-dream",
+  "trials": 2,
+  "proof_scope": "Corrected-goal proof-boundary admission. Offline retained-artifact fail-closed replay plus deterministic fault injection; no paid/browser/provider calls and no generated positive earns real-world readiness. Tau provenance checks validate producer-owned receipt structure/hash fields, not cryptographic unforgeability against a malicious filesystem writer.",
+  "claims": {
+    "proves": "The corrected-goal adjudicator fails closed when source-memory bytes, manifest identity digest, identity artifact bytes, imported dynamic-conversation receipts/transcripts/audio, chatterbox delivery metrics, or exact gate schemas/status/live/mock bindings are absent or inconsistent.",
+    "does_not_prove": "A complete retained positive proof, fresh Memory retrieval, live provider availability, WebGPT/WebKimi/Kling readiness, human-perceived emotional value, canonical identity availability for historical runs, or cryptographic unforgeability against a malicious filesystem writer."
+  },
+  "capability_claims": [
+    {
+      "id": "persona_dream.corrected_goal_artifact_boundary",
+      "description": "Corrected-goal proof admission requires independently read artifact bytes and fails closed instead of accepting manifest-only source-memory, identity digest, dynamic-conversation, delivery, or gate claims.",
+      "criticality": "critical",
+      "evidence_required": {
+        "fault_injected_deterministic": true
+      },
+      "claim_semantics": "protocol"
+    }
+  ],
+  "cases": [
+    {
+      "name": "corrected-goal-proof-boundaries-fail-closed",
+      "description": "Runs the actual corrected-goal adjudicator against deterministic negative mutations and current retained artifacts. Retained real artifacts are used only to prove fail-closed behavior when canonical identity/provenance evidence is absent; synthetic internal coverage is not labeled live and is expected to block. Tau receipt checks validate structure and hash-shaped fields, not malicious-writer resistance.",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "required": true,
+      "supports_claims": [
+        "persona_dream.corrected_goal_artifact_boundary"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "python",
+        "../scripts/eval_corrected_goal_proof_boundaries.py",
+        "--output",
+        "/tmp/persona-dream-corrected-goal-proof-boundaries.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CORRECTED_GOAL_PROOF_BOUNDARIES_OK"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/persona-dream-corrected-goal-proof-boundaries.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/persona-dream-corrected-goal-proof-boundaries.json",
+            "json_pointer": "/provider_call_attempts",
+            "equals": 0
+          },
+          {
+            "path": "/tmp/persona-dream-corrected-goal-proof-boundaries.json",
+            "json_pointer": "/readiness_awarded/webgpt",
+            "equals": false
+          },
+          {
+            "path": "/tmp/persona-dream-corrected-goal-proof-boundaries.json",
+            "json_pointer": "/readiness_awarded/webkimi",
+            "equals": false
+          },
+          {
+            "path": "/tmp/persona-dream-corrected-goal-proof-boundaries.json",
+            "json_pointer": "/readiness_awarded/kling",
+            "equals": false
+          },
+          {
+            "path": "/tmp/persona-dream-corrected-goal-proof-boundaries.json",
+            "json_pointer": "/readiness_awarded/real_world_positive",
+            "equals": false
+          },
+          {
+            "path": "/tmp/persona-dream-corrected-goal-proof-boundaries.json",
+            "json_pointer": "/proof_boundary/positive_pair_proven",
+            "equals": false
+          }
+        ]
+      }
+    }
+  ]
+}
