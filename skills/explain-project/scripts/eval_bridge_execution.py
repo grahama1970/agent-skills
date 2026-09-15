@@ -162,6 +162,46 @@ def main() -> int:
               and (stale['status'] != 'STALE' or stale['receipt'] is None or stale['status_path'] is None),
               stale['status'])
 
+        # Run intent: explicit human gesture, launch config only from the
+        # bridge invocation, never from cockpit or imported state.
+        dispatch('debugger.run.request')
+        state = client.get('/api/cockpit/bootstrap').json()['state']
+        check('run intent surfaces RUN_INTENT with no config in state',
+              state['debugger']['status'] == 'RUN_INTENT'
+              and state['debugger']['run_intent'] is not None
+              and 'launch' not in json.dumps(state['debugger']['run_intent']),
+              state['debugger']['status'])
+
+        run_blocked = bridge('--execute')
+        run_result = json.loads(run_blocked.stdout)
+        check('run intent without --run-breakpoint blocks honestly',
+              run_result['status'] == 'BLOCKED'
+              and 'run-breakpoint' in (run_result.get('detail') or ''),
+              run_result.get('detail'))
+
+        (repo / '.vscode').mkdir(exist_ok=True)
+        (repo / '.vscode' / 'launch.json').write_text(
+            '{\n  "configurations": [\n    {"name": "Fixture Launch", '
+            '"type": "python", "request": "launch"}\n  ]\n}\n')
+        dispatch('debugger.run.request')
+        run_dry = bridge('--run-breakpoint', 'Fixture Launch')
+        dry_payload = json.loads(run_dry.stdout)
+        check('run intent dry-run carries the operator-supplied launch only',
+              run_dry.returncode == 0
+              and dry_payload['status'] == 'DRY_RUN'
+              and '--launch-config-name' in dry_payload['command']
+              and 'Fixture Launch' in dry_payload['command']
+              and dry_payload['command'][dry_payload['command'].index('--action') + 1] == 'start',
+              dry_payload['command'][:10])
+
+        run_exec = bridge('--execute', '--run-breakpoint', 'Fixture Launch')
+        run_exec_result = json.loads(run_exec.stdout)
+        check('run intent without a trusted bridge blocks honestly',
+              run_exec.returncode == 1
+              and run_exec_result['status'] == 'BLOCKED'
+              and run_exec_result['receipt']['status'] == 'BLOCKED',
+              run_exec_result.get('detail'))
+
         report['status'] = 'PASS'
     except Exception as error:  # noqa: BLE001 - single eval boundary
         report['error'] = f'{type(error).__name__}: {error}'

@@ -12,6 +12,7 @@ export type EventType =
   | 'step.previous'
   | 'source.reveal.request'
   | 'debugger.prepare.request'
+  | 'debugger.run.request'
   | 'adapter.receipt'
 
 export class CockpitApiError extends Error {

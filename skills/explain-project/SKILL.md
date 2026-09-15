@@ -136,9 +136,13 @@ through the owning `$debugger` skill: it reads the loopback API, dispatches one
 `$debugger request` (reveal or addBreakpoints) against the trusted workspace,
 validates the extension-owned native status artifact against the selected
 source range, and posts a revision-fenced `adapter.receipt` back. Dry-run is
-the default; `--watch` requires `--execute`; a named VS Code launch requires a
-separate one-shot `--run-breakpoint <config>` and a validated
-`debugger.proof.v1` before `PROOF_RECEIVED`. Superseded intents are never
+the default; `--watch` requires `--execute`. A named VS Code launch runs only
+for an explicit `debugger.run.request` cockpit gesture (empty-payload,
+revision-fenced, carries no configuration) fulfilled with the operator-supplied
+`--run-breakpoint <config>` (one-shot, or carried by `--watch`) and a validated
+`debugger.proof.v1` before `PROOF_RECEIVED`; a run intent without
+`--run-breakpoint` posts an honest BLOCKED receipt, and the launch name never
+enters cockpit or imported state. Superseded intents are never
 replayed (STALE/IDLE), failures post honest `BLOCKED` receipts, and cockpit
 mutations require loopback host + loopback origin + `application/json`.
 Imported explainer `runtime_launch` commands are never executed.

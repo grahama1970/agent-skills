@@ -545,10 +545,12 @@ class DebuggerProjection(Projection):
         "NONE",
         "TARGET_READY",
         "PREPARE_INTENT",
+        "RUN_INTENT",
         "BLOCKED",
         "PROOF_RECEIVED",
     ] = "NONE"
     prepare_intent: DebuggerTargetIntent | None = None
+    run_intent: DebuggerTargetIntent | None = None
     proof: DebuggerProofReference | None = None
 
 
@@ -692,6 +694,14 @@ class DebuggerPrepareEvent(BaseCockpitEvent):
     payload: EmptyPayload = Field(default_factory=EmptyPayload)
 
 
+class DebuggerRunEvent(BaseCockpitEvent):
+    """Human run gesture; carries NO launch config (operator supplies it to
+    the bridge invocation, never through cockpit/imported state)."""
+
+    type: Literal["debugger.run.request"]
+    payload: EmptyPayload = Field(default_factory=EmptyPayload)
+
+
 class AdapterReceiptEvent(BaseCockpitEvent):
     type: Literal["adapter.receipt"]
     payload: AdapterReceiptPayload
@@ -705,6 +715,7 @@ CockpitEvent: TypeAlias = Annotated[
     | StepPreviousEvent
     | SourceRevealEvent
     | DebuggerPrepareEvent
+    | DebuggerRunEvent
     | AdapterReceiptEvent,
     Field(discriminator="type"),
 ]
@@ -810,6 +821,7 @@ class CockpitScriptStep(StrictModel):
         "key.ArrowLeft",
         "source.reveal.request",
         "debugger.prepare.request",
+        "debugger.run.request",
     ]
     payload: dict[str, Any] = Field(default_factory=dict)
 

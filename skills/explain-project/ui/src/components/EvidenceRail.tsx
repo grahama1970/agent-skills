@@ -9,6 +9,7 @@ import {
 import {
   Eye,
   Play,
+  Zap,
 } from 'lucide-react'
 
 import {
@@ -53,6 +54,17 @@ export function EvidenceRail({
     description: (
       'Emit a breakpoint target intent; this action '
       + 'cannot run, continue, or step the debugger.'
+    ),
+  })
+
+  useRegisterAction({
+    element_id: 'cockpit:debugger:run',
+    app: 'explain-project',
+    action: 'DEBUGGER_RUN_TARGET',
+    label: 'Run debugger target',
+    description: (
+      'Emit a run intent fulfilled only by the bridge '
+      + 'operator-supplied launch configuration.'
     ),
   })
 
@@ -169,10 +181,32 @@ export function EvidenceRail({
             <span className="ml-1.5">Prepare</span>
           </button>
 
+          <button
+            type="button"
+            data-qid="cockpit:debugger:run"
+            data-qs-action="DEBUGGER_RUN_TARGET"
+            title="Run the debugger target through the bridge launch configuration"
+            className={[
+              'mt-1.5 w-full min-h-[34px] rounded border border-zinc-700 bg-zinc-900',
+              'py-1 px-2 text-xs font-medium text-zinc-200',
+              'hover:border-green-500/50 hover:bg-zinc-800 transition-all',
+            ].join(' ')}
+            onClick={() => {
+              void dispatch(
+                'debugger.run.request',
+              )
+            }}
+          >
+            <Zap aria-hidden="true" className="inline size-3.5 align-[-2px]" />
+            <span className="ml-1.5">Run</span>
+          </button>
+
           <p className="mt-1 text-[11px] font-mono text-zinc-400">
             {state.debugger.prepare_intent
               ? 'Intent only'
-              : state.debugger.status}
+              : state.debugger.run_intent
+                ? 'Run intent (bridge --run-breakpoint)'
+                : state.debugger.status}
           </p>
         </section>
       </div>

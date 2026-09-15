@@ -36,6 +36,7 @@ from .models import (
     Selection,
     SourceProjection,
     SourceRevealEvent,
+    DebuggerRunEvent,
     StepNextEvent,
     StepPreviousEvent,
     TeleprompterProjection,
@@ -134,6 +135,7 @@ def project_state(
     receipts: list[AdapterReceipt] | None = None,
     emit_source_reveal: bool = False,
     emit_debugger_prepare: bool = False,
+    emit_debugger_run: bool = False,
 ) -> CockpitState:
     """Project every cockpit pane from one revision and selected step."""
 
@@ -222,6 +224,7 @@ def project_state(
 
     debugger_status = "NONE"
     prepare_intent = None
+    run_intent = None
 
     if debugger_target is not None:
         debugger_status = (
@@ -236,6 +239,13 @@ def project_state(
                 debugger_target,
             )
             debugger_status = "PREPARE_INTENT"
+
+        if emit_debugger_run:
+            run_intent = debugger_target_intent(
+                revision,
+                debugger_target,
+            )
+            debugger_status = "RUN_INTENT"
 
     return CockpitState(
         revision=revision,
@@ -283,6 +293,7 @@ def project_state(
             target=debugger_target,
             status=debugger_status,
             prepare_intent=prepare_intent,
+            run_intent=run_intent,
             proof=proof,
         ),
         diagram=DiagramProjection(
@@ -515,6 +526,21 @@ def reduce_cockpit(
             step_index=step_index,
             receipts=receipts,
             emit_debugger_prepare=True,
+        )
+
+    if isinstance(event, DebuggerRunEvent):
+        if state.debugger.target is None:
+            return state
+
+        return project_state(
+            state.revision + 1,
+            rows,
+            question=question,
+            route_decision=decision,
+            feature_id=feature_id,
+            step_index=step_index,
+            receipts=receipts,
+            emit_debugger_run=True,
         )
 
     if isinstance(event, AdapterReceiptEvent):

@@ -127,9 +127,11 @@ export interface CockpitState {
       | 'NONE'
       | 'TARGET_READY'
       | 'PREPARE_INTENT'
+      | 'RUN_INTENT'
       | 'BLOCKED'
       | 'PROOF_RECEIVED'
     prepare_intent?: DebuggerTargetIntent | null
+    run_intent?: DebuggerTargetIntent | null
     proof?: {
       schema: 'explain_project.debugger_proof_reference.v1'
       proof_path: string

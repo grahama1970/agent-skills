@@ -90,11 +90,17 @@ def fulfill(client: httpx.Client, repo: Path, out_dir: Path, execute: bool,
     response = client.get('/api/cockpit/bootstrap')
     response.raise_for_status()
     state = BootstrapResponse.model_validate(response.json()).state
-    intent = state.source.reveal_intent or state.debugger.prepare_intent
+    intent = (state.source.reveal_intent or state.debugger.run_intent
+               or state.debugger.prepare_intent)
     if state.selection is None or (intent is None and launch_config is None):
         return ExecutionResult(status='IDLE', request_revision=state.revision)
     adapter = ('debugger_proof' if launch_config is not None else
                'source_reveal' if state.source.reveal_intent else 'debugger_prepare')
+    if state.debugger.run_intent is not None and launch_config is None:
+        result = ExecutionResult(status='BLOCKED', request_revision=state.revision)
+        result.detail = ('Run intent requires the bridge --run-breakpoint launch '
+                         'configuration; a launch name never enters cockpit state')
+        return result
     target = state.debugger.target if adapter != 'source_reveal' else state.source.location
     request_id = 'cockpit-' + uuid4().hex
     out = out_dir / request_id
@@ -243,15 +249,16 @@ def bridge_command(
     watch: bool = typer.Option(False, '--watch'),
     run_breakpoint: str | None = typer.Option(None, '--run-breakpoint', help='One-shot named VS Code launch; never taken from imported JSON.'),
 ) -> None:
-    """Fulfill explicit reveal/prepare intents; runtime launch is one-shot only."""
+    """Fulfill explicit reveal/prepare/run intents; a launch runs only for
+    an explicit debugger.run gesture with the operator-supplied config."""
     url = httpx.URL(base_url)
     if (url.scheme != 'http' or url.host not in {'127.0.0.1', 'localhost', '::1'}
             or url.path not in ('', '/') or url.userinfo or url.query or url.fragment):
         raise typer.BadParameter('--base-url must be a loopback HTTP origin')
     if run_breakpoint is not None and not run_breakpoint.strip():
         raise typer.BadParameter('--run-breakpoint requires a nonempty configuration name')
-    if watch and (not execute or run_breakpoint):
-        raise typer.BadParameter('--watch requires --execute and forbids --run-breakpoint')
+    if watch and not execute:
+        raise typer.BadParameter('--watch requires --execute')
     repo = repo.resolve()
     out_dir = out_dir.resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
