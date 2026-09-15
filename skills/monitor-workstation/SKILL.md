@@ -40,7 +40,7 @@ disciplines:
 
 # monitor-workstation
 
-Nightly workstation health monitor. Runs 8 probes to enforce storage rules, detect cache bloat, and verify drive health.
+Nightly workstation health monitor. Runs 13 probes to enforce storage rules, detect cache bloat, and verify drive health.
 
 ## Usage
 
@@ -73,15 +73,36 @@ Nightly workstation health monitor. Runs 8 probes to enforce storage rules, dete
 | W06 | docker-reclaimable| Docker system reclaimable space                  | >50GB = WARN            |
 | W07 | zombie-processes  | Zombie Claude/Chromium/Python processes           | Any = WARN              |
 | W08 | drive-health      | SMART status of NVMe + HDD                       | Any non-PASSED = FAIL   |
+| W09 | tmp-bloat         | Orphaned skill temporary directories             | Orphans = FAIL         |
+| W10 | inotify-watches   | Kernel watch budget                              | See probe thresholds   |
+| W11 | agent-cli-freshness | Installed agent CLI versions                    | Stale = WARN           |
+| W12 | skill-symlinks    | Copied skills, wrong/broken links, pre-symlink leftovers | Any match = WARN; scan errors = FAIL |
+| W13 | gpu-container-capability | GPU-attached containers actually have working CUDA inside | Any dead-CUDA container = FAIL; unprobeable (no python3/torch) = WARN |
+
+## One Canonical Skills Directory
+
+`~/workspace/experiments/agent-skills/skills` is the only canonical skills tree.
+Existing agent skill locations must be symlinks to it, not copied directories.
+W12 checks home and immediate project roots under `~/workspace` and
+`~/workspace/experiments`, without traversing project symlinks or copied trees.
+Missing agent skill locations are not created automatically.
+
+`./run.sh fix skill-symlinks` removes owned `skills.pre-symlink-*` directories
+only beside a valid canonical `skills` symlink. It does not archive copies on
+either drive. Wrong links and live copied `skills` directories remain warnings
+for explicit reconciliation; a missing canonical tree prevents any deletion.
+Removal is read back before it is reported as applied.
 
 ## Autofix (--autofix)
 
-Only cache pruning is auto-executed:
+Cache pruning is auto-executed:
 - `uv cache prune`
 - `pip cache purge`
 - `npm cache clean --force`
 
 Docker prune is logged as a recommendation, never auto-executed.
+W09 also removes orphaned temporary workspaces, W11 updates stale agent CLIs,
+and W12 removes pre-symlink leftovers under the safeguards above.
 
 ## State
 
