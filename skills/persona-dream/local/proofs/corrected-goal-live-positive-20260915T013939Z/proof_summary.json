@@ -1,0 +1,30 @@
+{
+  "boundary": "One fresh local C0/C1 mechanism proof. It does not prove human-perceived emotional value, human identity recognition, or production-scale reliability.",
+  "control_dynamic_receipt": "/mnt/storage12tb/skills/persona-dream/outputs/corrected-goal-fresh-20260915T013939Z/control-live/dynamic_conversation_receipt.v1.json",
+  "gate_statuses": {
+    "answer_invariance": "PASS_ANSWER_INVARIANCE",
+    "chatterbox_delivery": "PASS_CHATTERBOX_DELIVERY",
+    "emotional_carryover": "PASS_EMOTION_LINEAGE"
+  },
+  "identity_artifact": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png",
+  "identity_authority_manifest": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/reference_asset_manifest.json",
+  "identity_sha256": "sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c",
+  "live": true,
+  "live_tau_calls": 6,
+  "mocked": false,
+  "paired_proof_root": "/mnt/storage12tb/skills/persona-dream/outputs/corrected-goal-fresh-20260915T013939Z/paired-proof",
+  "positive_pair_proven": true,
+  "retained_receipts": {
+    "answer_invariance.json": "sha256:d176db8b2f1d49df364c7b21f17eb0b850d6bcaa9574017e02f4af83f9f08642",
+    "chatterbox_delivery.json": "sha256:916e3f6605134cafab592ccff6203c03fa140f0bed73f73e7cf1ac24c5de522a",
+    "corrected_goal_receipt.json": "sha256:8e98439a45fdd5f23e2b44d2737cf28c7aac36cc1e0757f69838703b80f31030",
+    "emotional_carryover.json": "sha256:a5dbca32da8bb75311fa89106fe7e79b1d11a65d4037a8322b0c587f6188a521",
+    "manifest.json": "sha256:968b8bcb837e8db61c165e944d70c58420709211ce306d0f6b9f5ad911eac327"
+  },
+  "schema": "persona_dream.corrected_goal_live_positive_summary.v1",
+  "source_run": "/mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260907T135011Z",
+  "status": "PASS_CORRECTED_GOAL_LIVE_POSITIVE",
+  "storage_run_root": "/mnt/storage12tb/skills/persona-dream/outputs/corrected-goal-fresh-20260915T013939Z",
+  "treatment_dynamic_receipt": "/mnt/storage12tb/skills/persona-dream/outputs/corrected-goal-fresh-20260915T013939Z/treatment-live-v2/dynamic_conversation_receipt.v1.json",
+  "voiced_turns": 12
+}

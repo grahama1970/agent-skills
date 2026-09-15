@@ -15,6 +15,7 @@ from typing import Any, Callable
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 from adjudicate_corrected_goal import adjudicate  # noqa: E402
+import append_conversation  # noqa: E402
 
 
 RETAINED = Path("/mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260907T135011Z")
@@ -209,6 +210,56 @@ def retained_case(root: Path) -> dict[str, Any]:
     }
 
 
+def append_corrected_goal_contract_case(root: Path) -> dict[str, Any]:
+    case_root = root / "append-corrected-goal-contract"
+    run = case_root / "run"
+    run.mkdir(parents=True, exist_ok=True)
+    (run / "journal_spoken.txt").write_text("journal spoken bytes\n", encoding="utf-8")
+    write_wav(run / "embry.wav")
+    answer = "Keep synthetic dreams marked as synthetic."
+    prefix = "I feel careful saying this."
+    suffix = "I can let the feeling stay in my voice."
+    text = append_conversation.corrected_goal_text(prefix, answer, suffix)
+    base = {
+        "run_dir": run,
+        "role": "embry",
+        "text": text,
+        "tone": "neutral_warm",
+        "audio": run / "embry.wav",
+        "chatterbox_utterance_text": text,
+        "tts_render_text": text,
+        "emotional_utterance_tags": None,
+        "chatterbox_pause_plan": None,
+        "answer_body": answer,
+        "answer_body_sha256": sha_text(answer),
+        "emotional_prefix": prefix,
+        "emotional_suffix": suffix,
+        "factual_claims_in_emotional_frame": "0",
+        "contradiction_count": "0",
+        "unsupported_fact_count": "0",
+        "created_at": "2026-09-15T00:00:00Z",
+        "out": None,
+        "json": True,
+    }
+    good = append_conversation.run(argparse.Namespace(**base))
+    mismatch = append_conversation.run(argparse.Namespace(**{**base, "text": f"{text} {answer}"}))
+    bad_hash = append_conversation.run(argparse.Namespace(**{**base, "answer_body_sha256": ZERO}))
+    ok = (
+        good.get("status") == "PASS_CONVERSATION_APPENDED"
+        and (good.get("appended") or {}).get("answer_body") == answer
+        and "answer_body_not_exactly_once" in mismatch.get("failed_gates", [])
+        and "answer_body_sha256_mismatch" in bad_hash.get("failed_gates", [])
+    )
+    return {
+        "name": "append-corrected-goal-answer-contract",
+        "ok": ok,
+        "status": "PASS" if ok else "FAIL",
+        "good_status": good.get("status"),
+        "mismatch_failures": mismatch.get("failed_gates", []),
+        "bad_hash_failures": bad_hash.get("failed_gates", []),
+    }
+
+
 def run_case(
     name: str,
     mutate: Callable[[Path, Path], None],
@@ -257,6 +308,7 @@ def main() -> int:
             run_case("chatterbox-delivery-metrics-missing", lambda _m, run: (run / "chatterbox_delivery.metrics.json").unlink(), "chatterbox_delivery_metrics_missing", tmp_path),
             run_case("chatterbox-delivery-metrics-digest-missing", lambda _m, run: _drop(run / "chatterbox_delivery.json", ["chatterbox_delivery_metrics_sha256"]), "chatterbox_delivery_metrics_digest_missing", tmp_path),
             run_case("chatterbox-delivery-metrics-digest-mismatch", lambda _m, run: _set(run / "chatterbox_delivery.json", ["chatterbox_delivery_metrics_sha256"], ZERO), "chatterbox_delivery_metrics_digest_mismatch", tmp_path),
+            append_corrected_goal_contract_case(tmp_path),
             retained_case(tmp_path),
         ]
 

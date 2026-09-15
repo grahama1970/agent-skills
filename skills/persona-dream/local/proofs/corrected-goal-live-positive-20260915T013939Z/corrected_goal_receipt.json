@@ -1,0 +1,82 @@
+{
+  "artifacts": {
+    "answer_invariance.json": "sha256:d176db8b2f1d49df364c7b21f17eb0b850d6bcaa9574017e02f4af83f9f08642",
+    "chatterbox_delivery.json": "sha256:916e3f6605134cafab592ccff6203c03fa140f0bed73f73e7cf1ac24c5de522a",
+    "chatterbox_delivery.metrics.json": "sha256:828a9ef2a28636190ef471cc92ee79c4652e4b71935388012e96f1810e451df2",
+    "control/../identity/embry_contact_sheet_v3.png": "sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c",
+    "control/conversation.jsonl": "sha256:873f10dfd4674d1939c437e4614f5a75c0b3b7f3e21d5c42493f643a45b3c1a5",
+    "control/dynamic_conversation_receipt.v1.json": "sha256:2599ca56177e65529d4bc71f55e15a4cf03daa2e1222edbad46da1d6149da95f",
+    "control/journal_spoken.txt": "sha256:ba14af62e7ddf93ef0f5d90e0f32b78bfbd937483f9e6a6f4c9b27469bcdc838",
+    "control/pd_horus_control-live_t1_36428979.wav": "sha256:74a7bf4ef93ee310441aa5c59d576d4d978afeec10c750cc352a9263bbfd5368",
+    "control/pd_horus_control-live_t2_78846672.wav": "sha256:d3d24ace4e1e5468d576a05fc0d5b4d9b33010c5fac9669c898fd188ad8179f3",
+    "control/pd_horus_control-live_t3_60257022.wav": "sha256:8472b66a607f2f38e7e43a329bc5f4b5caff7ca7b1c9cd51d122402bfbf9ef15",
+    "control/pd_reply_control-live_32469810.wav": "sha256:021c58ed739de9c5c618df71b9fdd4805c3690ff91376bba30e79d48ac8ad24c",
+    "control/pd_reply_control-live_44322424.wav": "sha256:c0d2e6448dbdc8f1191f0f16004de9a8683a8df4f0fb3335607a3294dda735e1",
+    "control/pd_reply_control-live_51728194.wav": "sha256:b7f3af836e20d30609d6133f2361e5c0fb0b411d353a35196fac225be39fa295",
+    "control/session_mood.json": "sha256:4afa525daccb3f99f296ab8f4207a067f1ee4094e6e029e5bdedf5e9e466df37",
+    "emotional_carryover.json": "sha256:a5dbca32da8bb75311fa89106fe7e79b1d11a65d4037a8322b0c587f6188a521",
+    "manifest.json": "sha256:968b8bcb837e8db61c165e944d70c58420709211ce306d0f6b9f5ad911eac327",
+    "source_memory/day_context.json": "sha256:6d982859351aa8d6b74ff20fb854ffa61c38731cbcf684deabf911ea82862131",
+    "source_memory/residue_links.json": "sha256:7fec4eaeb3ee31c72a88b731c1668d9089340e83d40f15b2d53a1d48ef6adcdb",
+    "treatment/../identity/embry_contact_sheet_v3.png": "sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c",
+    "treatment/conversation.jsonl": "sha256:3c11cb09a884e3654414b9d40e29060526b3d28c5f85f3f0e7ef27df2ccf50a9",
+    "treatment/dynamic_conversation_receipt.v1.json": "sha256:a65d28ca85405b7c304a2ab6e8369c4c6b2f1d4072a78bec8aea2febededcf66",
+    "treatment/journal_spoken.txt": "sha256:e3c082d9c72871d6c5500e708460706f15d5c25da8da81f42f1dee00db49399f",
+    "treatment/pd_horus_treatment-live-v2_t1_60191503.wav": "sha256:69529e4d46f1e3c72d8efee253dda41d4e58512ffd80fd4b057ce3d88b2883f7",
+    "treatment/pd_horus_treatment-live-v2_t2_45068253.wav": "sha256:0c488edab3008ac18c34d735634d92949b75f4d19047e8653920af972ea4e257",
+    "treatment/pd_horus_treatment-live-v2_t3_72171515.wav": "sha256:ab28ac9e2687c1719a0cb0872555f85aa31f09d3af718ecd3585dbf52c7818e9",
+    "treatment/pd_reply_treatment-live-v2_34978847.wav": "sha256:46d034b0c5608c66f6f6681ee8e3ed96ce02116e167b5e2166ed1eb5be21e2c3",
+    "treatment/pd_reply_treatment-live-v2_44684396.wav": "sha256:5629d0758494b0d56bd40d5c9d3bbbc76b38175d00f15aef3a5b7e1c2cd08779",
+    "treatment/pd_reply_treatment-live-v2_97624964.wav": "sha256:e5c3cfd517f6af89acc1ddb1def39ce848e5cc3c7d5e442b66532b37ad2dbe11",
+    "treatment/session_mood.json": "sha256:598fe1196000d9204fceb3a46eb4715998fbf34a2e48505c6a97f6df97c50d58"
+  },
+  "boundary_evidence": {
+    "control": {
+      "conversation_jsonl_sha256": "sha256:873f10dfd4674d1939c437e4614f5a75c0b3b7f3e21d5c42493f643a45b3c1a5",
+      "dynamic_conversation_receipt_sha256": "sha256:2599ca56177e65529d4bc71f55e15a4cf03daa2e1222edbad46da1d6149da95f",
+      "embry_answer_count": 3,
+      "embry_answer_sha256": [
+        "sha256:88180d5924d4271ffdb88573e4186fbec63975f0f662deb1af68247dd33703a0",
+        "sha256:318d9e3f54857c0963e409934bd538c510a5483edfae338e35a9725f6abcefbb",
+        "sha256:aefad9ad973dd2b338d4688aa366dd6180ff15c5478601cf4deaafaf0a78c4ee"
+      ],
+      "journal_spoken_sha256": "sha256:ba14af62e7ddf93ef0f5d90e0f32b78bfbd937483f9e6a6f4c9b27469bcdc838",
+      "validated_tau_receipt_count": 3
+    },
+    "observed_provider_call_count": 6,
+    "source_memory": {
+      "day_context_sha256": "sha256:6d982859351aa8d6b74ff20fb854ffa61c38731cbcf684deabf911ea82862131",
+      "residue_links_sha256": "sha256:7fec4eaeb3ee31c72a88b731c1668d9089340e83d40f15b2d53a1d48ef6adcdb"
+    },
+    "treatment": {
+      "conversation_jsonl_sha256": "sha256:3c11cb09a884e3654414b9d40e29060526b3d28c5f85f3f0e7ef27df2ccf50a9",
+      "dynamic_conversation_receipt_sha256": "sha256:a65d28ca85405b7c304a2ab6e8369c4c6b2f1d4072a78bec8aea2febededcf66",
+      "embry_answer_count": 3,
+      "embry_answer_sha256": [
+        "sha256:e6a241394bdd4da995a074e454ae8df063daaa983943c5354ae1d0e9a8f29a96",
+        "sha256:ea03e262bc848d4234e13afe342e34cd6fcae67556c3249fc831729c87395cb1",
+        "sha256:c8ef1dcd788908039d085ad46d35a1e52703c44206fadd5052d3b5b3832d698c"
+      ],
+      "journal_spoken_sha256": "sha256:e3c082d9c72871d6c5500e708460706f15d5c25da8da81f42f1dee00db49399f",
+      "validated_tau_receipt_count": 3
+    }
+  },
+  "claims": {
+    "does_not_prove": "reliability, human-perceived emotional value, human listener identity, production readiness, or separate mediation by dream versus journal",
+    "one_passing_pair_proves": "one local technical mechanism instance where dream+journal carryover changes bounded emotional framing and Chatterbox delivery without changing the answer body"
+  },
+  "failures": [],
+  "gate_statuses": {
+    "answer_invariance": "PASS_ANSWER_INVARIANCE",
+    "chatterbox_delivery": "PASS_CHATTERBOX_DELIVERY",
+    "emotional_carryover": "PASS_EMOTION_LINEAGE"
+  },
+  "live": true,
+  "manifest": "/mnt/storage12tb/skills/persona-dream/outputs/corrected-goal-fresh-20260915T013939Z/manifest.input.json",
+  "manifest_sha256": "sha256:968b8bcb837e8db61c165e944d70c58420709211ce306d0f6b9f5ad911eac327",
+  "mocked": false,
+  "proof_id": "PD-CORRECTED-GOAL-V1",
+  "run_root": "/mnt/storage12tb/skills/persona-dream/outputs/corrected-goal-fresh-20260915T013939Z/paired-proof",
+  "schema": "persona_dream.corrected_goal_receipt.v1",
+  "status": "PASS_CORRECTED_GOAL_PAIRED_PROOF"
+}

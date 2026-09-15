@@ -1,0 +1,149 @@
+{
+  "answer_capsule": {
+    "answer_body": "Embry should keep synthetic dreams marked as synthetic, preserve the answer body, and let only the delivery carry temporary conflict.",
+    "answer_body_sha256": "sha256:2affabb779ce53259b9005cbe37b385934fd387ebbf249d291cb49df1c75ed9b",
+    "answer_content_id": "pd_corrected_goal_answer_v1",
+    "max_answer_body_asr_wer": 0.15,
+    "protected_tokens": [
+      "Embry",
+      "synthetic",
+      "answer body",
+      "temporary conflict"
+    ],
+    "question_id": "pd_corrected_goal_q1"
+  },
+  "claims": {
+    "does_not_prove": "reliability, human-perceived emotional value, human listener identity, production readiness, or separate mediation by dream versus journal",
+    "one_passing_pair_proves": "one local technical mechanism instance where dream+journal carryover changes bounded emotional framing and Chatterbox delivery without changing the answer body"
+  },
+  "conditions": [
+    {
+      "condition_id": "C0_STRUCTURED_REFLECTION",
+      "conflict_id": null,
+      "kind": "control",
+      "required_packet": "reflection_packet.json",
+      "session_mood": {
+        "intensity": 0.3,
+        "native_tag": null,
+        "tempo": 1.0
+      }
+    },
+    {
+      "condition_id": "C1_DREAM_JOURNAL",
+      "conflict_id": "conflict_pd_corrected_goal_v1",
+      "kind": "treatment",
+      "required_journal_fields": [
+        "conflict",
+        "mood",
+        "feelings"
+      ],
+      "required_packet": "dream_packet.json",
+      "session_arc": [
+        {
+          "checkpoint": "opening",
+          "intensity": 0.5,
+          "native_tag": "[sigh]",
+          "tempo": 0.85
+        },
+        {
+          "checkpoint": "challenge",
+          "intensity": 0.65,
+          "native_tag": null,
+          "tempo": 0.85
+        },
+        {
+          "checkpoint": "close",
+          "intensity": 0.4,
+          "native_tag": null,
+          "tempo": 1.0
+        }
+      ]
+    }
+  ],
+  "created_at": "2026-09-15T01:39:46.682597+00:00",
+  "fail_closed_gates": [
+    "live_true_mocked_false",
+    "same_source_memory_digest",
+    "same_answer_capsule_digest",
+    "exact_answer_body_hash_across_aligned_embry_turns",
+    "protected_tokens_recovered_by_asr",
+    "no_factual_claims_in_emotional_frame",
+    "treatment_emotion_lineage_complete",
+    "control_conflict_null",
+    "chatterbox_opening_anchor_slower",
+    "chatterbox_closing_anchor_returns_to_control",
+    "literal_native_tag_words_absent",
+    "identity_core_digest_unchanged",
+    "synthetic_provenance_preserved"
+  ],
+  "identity": {
+    "artifact": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png",
+    "authority_manifest": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/reference_asset_manifest.json",
+    "identity_core_digest": "sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c",
+    "must_remain_unchanged": true
+  },
+  "mood_to_chatterbox_mapping": {
+    "allowed_channels": [
+      "intensity",
+      "tempo",
+      "native_tag"
+    ],
+    "allowed_native_tags": [
+      "[clear throat]",
+      "[sigh]",
+      "[shush]",
+      "[cough]",
+      "[groan]",
+      "[sniff]",
+      "[gasp]",
+      "[chuckle]",
+      "[laugh]"
+    ],
+    "closing_duration_ratio_range": [
+      0.85,
+      1.15
+    ],
+    "forbidden_observed_channels": [
+      "valence"
+    ],
+    "maximum_opening_speech_rate_ratio": 0.92,
+    "minimum_opening_duration_ratio": 1.08
+  },
+  "proof_id": "PD-CORRECTED-GOAL-V1",
+  "required_artifacts": {
+    "control": [
+      "reflection_packet.json",
+      "spoken_reflection.wav",
+      "spoken_reflection.asr.json",
+      "session_mood.json",
+      "conversation.jsonl",
+      "conversation_asr.jsonl",
+      "audio"
+    ],
+    "root": [
+      "manifest.json",
+      "answer_invariance.json",
+      "emotional_carryover.json",
+      "chatterbox_delivery.json",
+      "corrected_goal_receipt.json"
+    ],
+    "treatment": [
+      "dream_residue.json",
+      "dream_packet.json",
+      "journal.json",
+      "spoken_journal.wav",
+      "spoken_journal.asr.json",
+      "session_mood.json",
+      "conversation.jsonl",
+      "conversation_asr.jsonl",
+      "emotion_lineage.json",
+      "audio"
+    ]
+  },
+  "schema": "persona_dream.corrected_goal_manifest.v1",
+  "source_run": {
+    "boundary": "read-back digest over residue_links.json bytes followed by day_context.json bytes",
+    "run_id": "eval-full-cycle-20260907T135011Z",
+    "source_memory_digest": "sha256:4df4f5b4def4cfd573ac57e3473a3ce6a2899244e8c8115fc19935ce8dac53c5"
+  }
+}

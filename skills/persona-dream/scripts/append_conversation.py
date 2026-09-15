@@ -67,6 +67,27 @@ def sha_file(path: Path) -> str:
     return "sha256:" + h.hexdigest()
 
 
+def sha_text(text: str) -> str:
+    return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def corrected_goal_text(prefix: str, answer_body: str, suffix: str) -> str:
+    return " ".join(part.strip() for part in (prefix, answer_body, suffix) if part and part.strip())
+
+
+def _nonnegative_int(value: Any, name: str, failed: list[str]) -> int | None:
+    if value is None:
+        return None
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        failed.append(f"{name}_not_integer")
+        return None
+    if parsed < 0:
+        failed.append(f"{name}_negative")
+    return parsed
+
+
 def build_turn(args: argparse.Namespace, run_dir: Path) -> tuple[dict[str, Any], list[str]]:
     """The turn to append, plus any gate failures that should block the write."""
     failed: list[str] = []
@@ -86,6 +107,40 @@ def build_turn(args: argparse.Namespace, run_dir: Path) -> tuple[dict[str, Any],
     spoken = run_dir / "journal_spoken.txt"
     if spoken.is_file():
         turn["journal_spoken_sha256"] = sha_file(spoken)
+
+    answer_body = (getattr(args, "answer_body", None) or "").strip()
+    answer_body_hash = (getattr(args, "answer_body_sha256", None) or "").strip()
+    emotional_prefix = (getattr(args, "emotional_prefix", None) or "").strip()
+    emotional_suffix = (getattr(args, "emotional_suffix", None) or "").strip()
+    corrected_goal_fields = any((answer_body, answer_body_hash, emotional_prefix, emotional_suffix))
+    if corrected_goal_fields:
+        if args.role != "embry":
+            failed.append("corrected_goal_fields_embry_only")
+        if not answer_body:
+            failed.append("answer_body_missing")
+        expected_hash = sha_text(answer_body) if answer_body else ""
+        if answer_body_hash != expected_hash:
+            failed.append("answer_body_sha256_mismatch")
+        expected_text = corrected_goal_text(emotional_prefix, answer_body, emotional_suffix)
+        if text != expected_text:
+            failed.append("corrected_goal_text_composition_mismatch")
+        if answer_body and text.count(answer_body) != 1:
+            failed.append("answer_body_not_exactly_once")
+        counts: dict[str, int] = {}
+        for key in ("factual_claims_in_emotional_frame", "contradiction_count", "unsupported_fact_count"):
+            parsed = _nonnegative_int(getattr(args, key, None), key, failed)
+            counts[key] = parsed if parsed is not None else 0
+            if parsed not in (None, 0):
+                failed.append(f"{key}_must_be_zero")
+        turn.update({
+            "answer_body": answer_body,
+            "answer_body_sha256": answer_body_hash,
+            "emotional_prefix": emotional_prefix,
+            "emotional_suffix": emotional_suffix,
+            "factual_claims_in_emotional_frame": counts["factual_claims_in_emotional_frame"],
+            "contradiction_count": counts["contradiction_count"],
+            "unsupported_fact_count": counts["unsupported_fact_count"],
+        })
 
     if args.role in VOICED_ROLES:
         # A voiced persona turn must carry the same binding the journal does.
@@ -221,6 +276,13 @@ def main() -> int:
     ap.add_argument("--tts-render-text", help="exact text submitted to TTS; defaults to chatterbox utterance text or clean text")
     ap.add_argument("--emotional-utterance-tags", help="comma-separated native Chatterbox event tags injected into answer_text")
     ap.add_argument("--chatterbox-pause-plan", help="JSON list of Chatterbox render chunks with pause_after_ms")
+    ap.add_argument("--answer-body", help="corrected-goal immutable answer body for Embry turns")
+    ap.add_argument("--answer-body-sha256", help="sha256: digest of --answer-body")
+    ap.add_argument("--emotional-prefix", default="", help="Tau-drafted emotional text before the corrected-goal answer")
+    ap.add_argument("--emotional-suffix", default="", help="Tau-drafted emotional text after the corrected-goal answer")
+    ap.add_argument("--factual-claims-in-emotional-frame", default="0")
+    ap.add_argument("--contradiction-count", default="0")
+    ap.add_argument("--unsupported-fact-count", default="0")
     ap.add_argument("--created-at", help="override the timestamp (tests, backfill)")
     ap.add_argument("--out", type=Path)
     ap.add_argument("--json", action="store_true")

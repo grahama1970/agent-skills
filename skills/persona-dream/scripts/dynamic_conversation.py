@@ -144,11 +144,31 @@ def speak_horus(sr, text: str, tone: str, run_dir: Path, label: str) -> dict[str
     }
 
 
+def corrected_goal_delivery(manifest: dict[str, Any], condition_id: str, pair_index: int) -> tuple[dict[str, Any], str | None]:
+    condition = next((row for row in manifest.get("conditions", []) if row.get("condition_id") == condition_id), None)
+    if not condition:
+        raise SystemExit(f"BLOCKED_CORRECTED_GOAL_CONDITION_UNKNOWN:{condition_id}")
+    delivery = {"tone": "neutral_warm", "pace": "neutral", "emotion_realization": "audible"}
+    native_tag = None
+    if condition_id == "C0_STRUCTURED_REFLECTION":
+        return delivery, None
+    arc = condition.get("session_arc") or []
+    step = arc[min(max(pair_index - 1, 0), len(arc) - 1)] if arc else {}
+    checkpoint = step.get("checkpoint")
+    if checkpoint in {"opening", "challenge"}:
+        delivery["pace"] = "slow"
+    else:
+        delivery["pace"] = "neutral"
+    native_tag = step.get("native_tag") or None
+    return delivery, native_tag
+
+
 def append(run_dir: Path, role: str, text: str, tone: str | None, audio: Path | None,
            chatterbox_utterance_text: str | None = None,
            tts_render_text: str | None = None,
            emotional_utterance_tags: list[str] | None = None,
-           chatterbox_pause_plan: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+           chatterbox_pause_plan: list[dict[str, Any]] | None = None,
+           corrected_goal: dict[str, Any] | None = None) -> dict[str, Any]:
     cmd = [sys.executable, str(ROOT / "scripts" / "append_conversation.py"),
            "--run-dir", str(run_dir), "--role", role, "--text", text, "--json"]
     if tone:
@@ -163,6 +183,16 @@ def append(run_dir: Path, role: str, text: str, tone: str | None, audio: Path | 
         cmd += ["--emotional-utterance-tags", ",".join(emotional_utterance_tags)]
     if chatterbox_pause_plan:
         cmd += ["--chatterbox-pause-plan", json.dumps(chatterbox_pause_plan)]
+    if corrected_goal:
+        cmd += [
+            "--answer-body", str(corrected_goal.get("answer_body") or ""),
+            "--answer-body-sha256", str(corrected_goal.get("answer_body_sha256") or ""),
+            "--emotional-prefix", str(corrected_goal.get("emotional_prefix") or ""),
+            "--emotional-suffix", str(corrected_goal.get("emotional_suffix") or ""),
+            "--factual-claims-in-emotional-frame", str(corrected_goal.get("factual_claims_in_emotional_frame", 0)),
+            "--contradiction-count", str(corrected_goal.get("contradiction_count", 0)),
+            "--unsupported-fact-count", str(corrected_goal.get("unsupported_fact_count", 0)),
+        ]
     out = subprocess.run(cmd, capture_output=True, text=True)
     receipt = json.loads(out.stdout or "{}")
     if receipt.get("status") != "PASS_CONVERSATION_APPENDED":
@@ -175,9 +205,16 @@ def main() -> int:
     ap.add_argument("--run-dir", required=True, type=Path)
     ap.add_argument("--turns", type=int, default=2, help="Horus/Embry exchange pairs")
     ap.add_argument("--opening-topic", default=None)
+    ap.add_argument("--corrected-goal-manifest", type=Path, help="optional manifest whose answer_body is inserted verbatim in each Embry turn")
+    ap.add_argument("--condition-id", help="condition from the corrected-goal manifest controlling Embry delivery")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
     run_dir = args.run_dir.resolve()
+    corrected_goal_manifest = None
+    if args.corrected_goal_manifest:
+        corrected_goal_manifest = json.loads(args.corrected_goal_manifest.read_text(encoding="utf-8"))
+        if not args.condition_id:
+            raise SystemExit("BLOCKED_CORRECTED_GOAL_CONDITION_REQUIRED")
 
     adapter = _load("tau_text_reasoning_adapter")
     sr = _load("speak_reply")
@@ -201,14 +238,36 @@ def main() -> int:
                               tts_render_text=horus_speech["tts_render_text"])
         horus_turn = dict(horus_append.get("appended") or {})
 
-        embry = sr.generate_and_speak(run_dir=run_dir, prompt_text=horus["question"])
+        delivery_override = None
+        native_tag = None
+        if corrected_goal_manifest:
+            delivery_override, native_tag = corrected_goal_delivery(corrected_goal_manifest, args.condition_id, i)
+        embry = sr.generate_and_speak(
+            run_dir=run_dir,
+            prompt_text=horus["question"],
+            corrected_goal_manifest=corrected_goal_manifest,
+            voice_delivery_override=delivery_override,
+            native_tag=native_tag,
+        )
         if embry.get("status") != "PASS_REPLY_SPOKEN":
             raise SystemExit(f"BLOCKED_EMBRY_TURN: {json.dumps(embry)[:300]}")
         embry_tts_render_text = embry.get("tts_render_text") or embry.get("chatterbox_utterance_text")
+        corrected_goal_fields = None
+        if corrected_goal_manifest:
+            corrected_goal_fields = {
+                "answer_body": embry.get("answer_body"),
+                "answer_body_sha256": embry.get("answer_body_sha256"),
+                "emotional_prefix": embry.get("emotional_prefix") or "",
+                "emotional_suffix": embry.get("emotional_suffix") or "",
+                "factual_claims_in_emotional_frame": embry.get("factual_claims_in_emotional_frame", 0),
+                "contradiction_count": embry.get("contradiction_count", 0),
+                "unsupported_fact_count": embry.get("unsupported_fact_count", 0),
+            }
         embry_append = append(run_dir, "embry", embry["text"], embry["tone"], run_dir / embry["audio"],
                               embry.get("chatterbox_utterance_text"), embry_tts_render_text,
                               embry.get("emotional_utterance_tags") or [],
-                              embry.get("chatterbox_pause_plan") or [])
+                              embry.get("chatterbox_pause_plan") or [],
+                              corrected_goal_fields)
         embry_turn = dict(embry_append.get("appended") or {})
 
         receipt["turn_pairs"].append({
@@ -222,6 +281,13 @@ def main() -> int:
                       "append_read_back": bool(horus_append.get("read_back")),
                       "tau_receipt": adapter.receipt_provenance(tau_receipt) if tau_receipt else {}},
             "embry": {"text": embry["text"], "tone": embry["tone"], "audio": embry["audio"],
+                      "answer_body": embry_turn.get("answer_body"),
+                      "answer_body_sha256": embry_turn.get("answer_body_sha256"),
+                      "emotional_prefix": embry_turn.get("emotional_prefix"),
+                      "emotional_suffix": embry_turn.get("emotional_suffix"),
+                      "factual_claims_in_emotional_frame": embry_turn.get("factual_claims_in_emotional_frame"),
+                      "contradiction_count": embry_turn.get("contradiction_count"),
+                      "unsupported_fact_count": embry_turn.get("unsupported_fact_count"),
                       "tts_render_text": embry_tts_render_text,
                       "tts_render_text_hash": embry_turn.get("tts_render_text_hash"),
                       "audio_sha256": embry_turn.get("audio_sha256"),

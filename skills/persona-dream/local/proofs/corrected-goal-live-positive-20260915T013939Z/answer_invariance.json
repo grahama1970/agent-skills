@@ -1,0 +1,11 @@
+{
+  "aligned_embry_turns": 3,
+  "answer_body_sha256": "sha256:2affabb779ce53259b9005cbe37b385934fd387ebbf249d291cb49df1c75ed9b",
+  "control": "/mnt/storage12tb/skills/persona-dream/outputs/corrected-goal-fresh-20260915T013939Z/paired-proof/control/conversation.jsonl",
+  "failures": [],
+  "live": true,
+  "mocked": false,
+  "schema": "persona_dream.answer_invariance_validation.v1",
+  "status": "PASS_ANSWER_INVARIANCE",
+  "treatment": "/mnt/storage12tb/skills/persona-dream/outputs/corrected-goal-fresh-20260915T013939Z/paired-proof/treatment/conversation.jsonl"
+}

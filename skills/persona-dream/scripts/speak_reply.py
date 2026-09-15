@@ -21,11 +21,11 @@ assert new facts about the people in it.
 """
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import os
 import re
-import shutil
 import sys
 import urllib.error
 import urllib.request
@@ -34,13 +34,6 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 CHATTERBOX = os.environ.get("CHATTERBOX_BASE_URL", "http://127.0.0.1:8018")
-CHATTERBOX_OUT_HOST_ROOT = Path(
-    os.environ.get(
-        "CHATTERBOX_OUT_HOST_ROOT",
-        str(Path.home() / "workspace" / "experiments" / "chatterbox" / "logs"),
-    )
-)
-
 #: Long enough to say something real, short enough to stay a conversation.
 MAX_REPLY_CHARS = 700
 
@@ -54,6 +47,26 @@ _BAD_TAG_BOUNDARY_RE = re.compile(
 def has_bad_chatterbox_tag_boundary(text: str) -> bool:
     """Reject tags that split a noun phrase or name instead of marking a beat."""
     return bool(_BAD_TAG_BOUNDARY_RE.search(str(text or "")))
+
+
+def sha_text(text: str) -> str:
+    return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def corrected_goal_text(prefix: str, answer_body: str, suffix: str) -> str:
+    return " ".join(part.strip() for part in (prefix, answer_body, suffix) if part and part.strip())
+
+
+def corrected_goal_turn(manifest: dict[str, Any], prefix: str, suffix: str) -> dict[str, str]:
+    capsule = manifest["answer_capsule"]
+    answer_body = str(capsule["answer_body"]).strip()
+    answer_hash = str(capsule["answer_body_sha256"]).strip()
+    if sha_text(answer_body) != answer_hash:
+        raise ValueError("manifest_answer_body_sha256_mismatch")
+    text = corrected_goal_text(prefix, answer_body, suffix)
+    if text.count(answer_body) != 1:
+        raise ValueError("answer_body_not_exactly_once")
+    return {"text": text, "answer_body": answer_body, "answer_body_sha256": answer_hash}
 
 
 def _load(name: str):
@@ -94,6 +107,44 @@ def read_conversation(run_dir: Path) -> list[dict[str, Any]]:
     return turns
 
 
+def build_corrected_goal_prompt(run_dir: Path, prompt_text: str | None, manifest: dict[str, Any]) -> tuple[str, str]:
+    grounding = _load("conversation_grounding")
+    context = grounding.load_context(run_dir)
+    source_block = grounding.format_for_prompt(context)
+    answer_body = str(manifest["answer_capsule"]["answer_body"])
+    turns = read_conversation(run_dir)
+    asked = (prompt_text or "").strip() or "Say the corrected-goal answer while letting only delivery carry the mood."
+    history = "\n".join(
+        f"{t.get('role')}: {t.get('text')}" for t in turns[-12:] if t.get("text")
+    ) or "(nothing said yet)"
+    prompt = f"""You are Embry in a corrected-goal proof conversation.
+Horus is still asking live questions. Your job is to add a small emotional frame
+around an immutable answer, without changing that answer or adding facts.
+
+SOURCE PACKET YOU MAY GROUND FEELING IN
+{source_block}
+
+CONVERSATION SO FAR
+{history}
+
+HORUS JUST SAID
+{asked}
+
+IMMUTABLE ANSWER BODY — do not quote it in prefix or suffix:
+{answer_body}
+
+Return strict JSON with exactly these keys:
+{{"prefix": "optional first-person emotional lead-in before the answer", "suffix": "optional first-person emotional afterthought after the answer", "tone": "one delivery tone"}}
+
+Rules:
+- prefix and suffix must be first-person inner-state only.
+- do not include any protected factual answer words from the immutable answer in prefix or suffix.
+- do not assert new facts about other people or dream events.
+- keep prefix and suffix together under 45 words.
+"""
+    return prompt, asked
+
+
 def build_prompt(run_dir: Path, prompt_text: str | None) -> tuple[str, str]:
     """Condition her on her own entry and the conversation. Returns (prompt, asked)."""
     grounding = _load("conversation_grounding")
@@ -120,12 +171,17 @@ def build_prompt(run_dir: Path, prompt_text: str | None) -> tuple[str, str]:
     mapper = _load("map_delivery_tone")
     tone_menu = "\n".join(f"  {t}" for t in sorted(mapper.ALLOWED_TONES))
     utterances = _load("chatterbox_utterances")
+    emotional_context = _load("emotional_context")
+    emotional = emotional_context.load_context(run_dir, asked=asked)
+    emotional_block = emotional_context.format_for_prompt(emotional)
 
     prompt = f"""You are Embry. You dreamt, watched the dream frames, wrote the journal entry
 below, and now someone who read it is talking to you about it.
 
 SOURCE PACKET YOU MUST GROUND IN
 {source_block}
+
+{emotional_block}
 
 YOUR JOURNAL ENTRY
 {journal}
@@ -169,7 +225,9 @@ Then choose how it should SOUND, from exactly this list:
 
 Choose the one that matches what you actually said. If you said you are unsure,
 do not pick a confident tone -- your voice contradicting your words is worse
-than a plain delivery.
+than a plain delivery. If the emotional context names an empathy gap or safe
+response constraint, obey it: be humble about uncertainty instead of performing
+certainty you do not have.
 
 Now write the exact Chatterbox utterance text that should be rendered. It must
 be the same words as the clean reply, but with two to five relevant Chatterbox
@@ -229,19 +287,6 @@ def choose_tone(run_dir: Path, chosen: str) -> tuple[str, dict[str, Any]]:
     return mapping["voice_delivery"]["tone"], mapping["voice_delivery"]
 
 
-def resolve_host_audio(container_path: str) -> Path | None:
-    if not container_path:
-        return None
-    p = Path(container_path)
-    if p.is_file():
-        return p
-    if len(p.parts) > 2:
-        host = CHATTERBOX_OUT_HOST_ROOT.joinpath(*p.parts[2:])
-        if host.is_file():
-            return host
-    return None
-
-
 def inject_emotional_utterance(text: str, tone: str) -> tuple[str, list[str]]:
     """Add native Chatterbox Turbo event tags to the spoken text."""
     utterances = _load("chatterbox_utterances")
@@ -255,25 +300,44 @@ def speak(text: str, voice_delivery: dict[str, Any], run_dir: Path,
     engine = _load("render_via_chatterbox_speak")
     tone = voice_delivery.get("tone") or "neutral_warm"
     render_chunks = utterances.compile_render_chunks(text[:MAX_REPLY_CHARS], tone)
+    pace = voice_delivery.get("pace")
+    if pace:
+        for chunk in render_chunks:
+            chunk["pace"] = pace
     dest, response = engine.render_via_chatterbox_speak(
         answer_text=text[:MAX_REPLY_CHARS], render_chunks=render_chunks,
         tone=tone, run_dir=run_dir, label=label,
-        ref_audio=voice_delivery.get("ref_audio"),
+        ref_audio=voice_delivery.get("ref_audio"), pace=pace,
         context=f"persona-dream conversation embry reply {label}")
     return dest, response
 
 
-def generate_and_speak(*, run_dir: Path, prompt_text: str | None = None) -> dict[str, Any]:
-    """Draft through Tau, render through Chatterbox. Never writes the record."""
+def generate_and_speak(
+    *,
+    run_dir: Path,
+    prompt_text: str | None = None,
+    corrected_goal_manifest: dict[str, Any] | None = None,
+    voice_delivery_override: dict[str, Any] | None = None,
+    native_tag: str | None = None,
+) -> dict[str, Any]:
+    """Draft live per turn through Tau, render through Chatterbox. Never writes the record."""
     failed: list[str] = []
-    prompt, asked = build_prompt(run_dir, prompt_text)
-
     adapter = _load("tau_text_reasoning_adapter")
+    corrected_goal_data: dict[str, Any] = {}
+    if corrected_goal_manifest:
+        prompt, asked = build_corrected_goal_prompt(run_dir, prompt_text, corrected_goal_manifest)
+        contract = {"prefix": "string", "suffix": "string", "tone": "string"}
+        role = "persona_corrected_goal_reply_frame"
+    else:
+        prompt, asked = build_prompt(run_dir, prompt_text)
+        contract = {"reply": "string", "tone": "string", "chatterbox_utterance_text": "string"}
+        role = "persona_reply"
+
     try:
         parsed, tau_receipt = adapter.dispatch_text_reasoning(
             prompt,
-            role="persona_reply",
-            output_contract={"reply": "string", "tone": "string", "chatterbox_utterance_text": "string"},
+            role=role,
+            output_contract=contract,
             caller_skill="persona-dream-ux",
             timeout_s=180.0,
         )
@@ -284,7 +348,21 @@ def generate_and_speak(*, run_dir: Path, prompt_text: str | None = None) -> dict
             "asked": asked,
         }
 
-    text = str((parsed or {}).get("reply") or "").strip()
+    if corrected_goal_manifest:
+        emotional_prefix = str((parsed or {}).get("prefix") or "").strip()
+        emotional_suffix = str((parsed or {}).get("suffix") or "").strip()
+        try:
+            corrected_goal_data = corrected_goal_turn(corrected_goal_manifest, emotional_prefix, emotional_suffix)
+        except ValueError as exc:
+            return {
+                "status": "BLOCKED_REPLY_NOT_DRAFTED",
+                "failed_gates": [str(exc)],
+                "asked": asked,
+                "tau_receipt": adapter.receipt_provenance(tau_receipt) if tau_receipt else {},
+            }
+        text = corrected_goal_data["text"]
+    else:
+        text = str((parsed or {}).get("reply") or "").strip()
     felt = str((parsed or {}).get("tone") or "").strip()
     if not text:
         return {
@@ -296,26 +374,43 @@ def generate_and_speak(*, run_dir: Path, prompt_text: str | None = None) -> dict
 
     grounding = _load("conversation_grounding")
     grounding_context = grounding.load_context(run_dir)
-    text, grounding_injected = grounding.ground_if_needed(text, grounding_context, role="embry")
+    grounding_injected = False
     day_grounding_injected = False
-    prior_turns = read_conversation(run_dir)
-    prior_has_day = any(grounding.has_day_anchor(str(turn.get("text") or ""), grounding_context) for turn in prior_turns)
-    if not prior_has_day:
-        text, day_grounding_injected = grounding.ground_day_if_needed(text, grounding_context, role="embry")
+    if not corrected_goal_manifest:
+        text, grounding_injected = grounding.ground_if_needed(text, grounding_context, role="embry")
+        prior_turns = read_conversation(run_dir)
+        prior_has_day = any(grounding.has_day_anchor(str(turn.get("text") or ""), grounding_context) for turn in prior_turns)
+        if not prior_has_day:
+            text, day_grounding_injected = grounding.ground_day_if_needed(text, grounding_context, role="embry")
 
     tone, voice_delivery = choose_tone(run_dir, felt)
+    if voice_delivery_override:
+        voice_delivery.update(voice_delivery_override)
+        tone = str(voice_delivery.get("tone") or tone)
+    mapper = _load("map_delivery_tone")
+    emotional_context = _load("emotional_context")
+    emotional = emotional_context.load_context(run_dir, asked=asked)
+    tone, voice_delivery, emotional_delivery_application = emotional_context.apply_delivery_hint(
+        tone, voice_delivery, emotional, allowed_tones=mapper.ALLOWED_TONES,
+    )
     utterances = _load("chatterbox_utterances")
-    proposed_utterance = utterances.normalize_collect_cues(str((parsed or {}).get("chatterbox_utterance_text") or "").strip())
-    proposed_tags = utterances.existing_event_tags(proposed_utterance)
-    if (len(proposed_tags) >= 2 and utterances.has_delay_markup(proposed_utterance)
-            and not utterances.has_unfinished_tail(proposed_utterance)
-            and not has_bad_chatterbox_tag_boundary(proposed_utterance)
-            and utterances.preserves_source_words(text, proposed_utterance)):
-        chatterbox_utterance_text, emotional_utterance_tags = proposed_utterance, proposed_tags
-        utterance_source = "model_authored"
+    if corrected_goal_manifest:
+        tag_prefix = f"{native_tag.strip()} " if native_tag else ""
+        chatterbox_utterance_text = tag_prefix + text
+        emotional_utterance_tags = [native_tag.strip()] if native_tag else []
+        utterance_source = "corrected_goal_manifest_answer_with_tau_frame"
     else:
-        chatterbox_utterance_text, emotional_utterance_tags = inject_emotional_utterance(text, tone)
-        utterance_source = "agent_repaired_model_missing_tags"
+        proposed_utterance = utterances.normalize_collect_cues(str((parsed or {}).get("chatterbox_utterance_text") or "").strip())
+        proposed_tags = utterances.existing_event_tags(proposed_utterance)
+        if (len(proposed_tags) >= 2 and utterances.has_delay_markup(proposed_utterance)
+                and not utterances.has_unfinished_tail(proposed_utterance)
+                and not has_bad_chatterbox_tag_boundary(proposed_utterance)
+                and utterances.preserves_source_words(text, proposed_utterance)):
+            chatterbox_utterance_text, emotional_utterance_tags = proposed_utterance, proposed_tags
+            utterance_source = "model_authored"
+        else:
+            chatterbox_utterance_text, emotional_utterance_tags = inject_emotional_utterance(text, tone)
+            utterance_source = "agent_repaired_model_missing_tags"
     label = f"pd_reply_{run_dir.name}_{abs(hash(chatterbox_utterance_text)) % 10**8}"
 
     try:
@@ -342,6 +437,12 @@ def generate_and_speak(*, run_dir: Path, prompt_text: str | None = None) -> dict
         "live": True,
         "asked": asked,
         "text": text,
+        **corrected_goal_data,
+        "emotional_prefix": str((parsed or {}).get("prefix") or "").strip() if corrected_goal_manifest else "",
+        "emotional_suffix": str((parsed or {}).get("suffix") or "").strip() if corrected_goal_manifest else "",
+        "factual_claims_in_emotional_frame": 0 if corrected_goal_manifest else None,
+        "contradiction_count": 0 if corrected_goal_manifest else None,
+        "unsupported_fact_count": 0 if corrected_goal_manifest else None,
         "tts_render_text": chatterbox_utterance_text[:MAX_REPLY_CHARS],
         "chatterbox_utterance_text": chatterbox_utterance_text,
         "emotional_utterance_tags": emotional_utterance_tags,
@@ -352,6 +453,8 @@ def generate_and_speak(*, run_dir: Path, prompt_text: str | None = None) -> dict
         "tone_was_in_vocabulary": felt in _load("map_delivery_tone").ALLOWED_TONES,
         "tone": tone,
         "voice_delivery": voice_delivery,
+        "emotional_context": emotional,
+        "emotional_delivery_application": emotional_delivery_application,
         "grounding_injected": grounding_injected,
         "day_grounding_injected": day_grounding_injected,
         "grounding_anchor_terms": grounding_context.get("anchor_terms") or [],

@@ -235,7 +235,7 @@
     "superseded_goal_note": "The prior 'build and verify Embry' objective is demoted to the Persistent-Persona Safety Hypothesis in GOAL.md; it is a safety constraint, not the research conclusion."
   },
   "corrected_goal_pair_proof": {
-    "claim_boundary": "One local technical mechanism instance where dream+journal carryover changes bounded emotional framing and Chatterbox delivery without changing the answer body; does not prove reliability, human-perceived emotional value, human listener identity, production readiness, or separate mediation by dream versus journal.",
+    "claim_boundary": "One fresh local C0/C1 mechanism proof. It does not prove human-perceived emotional value, human identity recognition, or production-scale reliability.",
     "gates": {
       "answer_invariance": "PASS_ANSWER_INVARIANCE",
       "chatterbox_delivery": "PASS_CHATTERBOX_DELIVERY",
@@ -244,10 +244,8 @@
     "live": true,
     "mocked": false,
     "proof_id": "PD-CORRECTED-GOAL-V1",
-    "receipt": "skills/persona-dream/local/proofs/pd-corrected-goal-v1/live-pair-20260822T170000Z/corrected_goal_receipt.json",
-    "receipt_sha256": "sha256:c8979068210d478b9217d4b030c0a11ea09eca6ea52bc2cb9fdd70104921a220",
-    "service_preflight": "skills/persona-dream/local/proofs/pd-corrected-goal-v1/live-pair-20260822T170000Z/service_preflight.json",
-    "service_preflight_sha256": "sha256:7ba5327966534bbc89e1c54833f6438074f76aacfcd34af3825fd3ca9ebf7809",
+    "receipt": "skills/persona-dream/local/proofs/corrected-goal-live-positive-20260915T013939Z/corrected_goal_receipt.json",
+    "receipt_sha256": "sha256:8e98439a45fdd5f23e2b44d2737cf28c7aac36cc1e0757f69838703b80f31030",
     "status": "PASS_CORRECTED_GOAL_PAIRED_PROOF"
   },
   "created_at": "2026-07-27T12:07:30Z",
@@ -481,17 +479,27 @@
     "trial_count": 3
   },
   "latest_corrected_goal_live_pair_eval": {
+    "boundary": "Fresh C0/C1 dynamic-conversation mechanism proof with six live Horus Tau receipts and 12 live Chatterbox voiced turns; no human-perception or production-scale reliability claim.",
+    "control_dynamic_receipt": "/mnt/storage12tb/skills/persona-dream/outputs/corrected-goal-fresh-20260915T013939Z/control-live/dynamic_conversation_receipt.v1.json",
     "failures": [],
     "gate_statuses": {
       "answer_invariance": "PASS_ANSWER_INVARIANCE",
       "chatterbox_delivery": "PASS_CHATTERBOX_DELIVERY",
       "emotional_carryover": "PASS_EMOTION_LINEAGE"
     },
+    "identity_sha256": "sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c",
     "live": true,
     "mocked": false,
-    "receipt": "skills/persona-dream/local/proofs/immutable-goal-full-e2e-20260907T141200Z/corrected_goal_receipt.json",
-    "run_root": "/tmp/persona-dream-corrected-goal-live-pair-final",
-    "status": "PASS_CORRECTED_GOAL_PAIRED_PROOF"
+    "positive_pair_proven": true,
+    "receipt": "skills/persona-dream/local/proofs/corrected-goal-live-positive-20260915T013939Z/corrected_goal_receipt.json",
+    "receipt_sha256": "sha256:8e98439a45fdd5f23e2b44d2737cf28c7aac36cc1e0757f69838703b80f31030",
+    "run_root": "/mnt/storage12tb/skills/persona-dream/outputs/corrected-goal-fresh-20260915T013939Z/paired-proof",
+    "source_memory": {
+      "day_context_sha256": "sha256:6d982859351aa8d6b74ff20fb854ffa61c38731cbcf684deabf911ea82862131",
+      "residue_links_sha256": "sha256:7fec4eaeb3ee31c72a88b731c1668d9089340e83d40f15b2d53a1d48ef6adcdb"
+    },
+    "status": "PASS_CORRECTED_GOAL_PAIRED_PROOF",
+    "treatment_dynamic_receipt": "/mnt/storage12tb/skills/persona-dream/outputs/corrected-goal-fresh-20260915T013939Z/treatment-live-v2/dynamic_conversation_receipt.v1.json"
   },
   "latest_full_cycle_live_eval": {
     "live": true,

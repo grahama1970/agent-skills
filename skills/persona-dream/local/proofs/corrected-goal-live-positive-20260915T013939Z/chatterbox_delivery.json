@@ -1,0 +1,13 @@
+{
+  "chatterbox_delivery_metrics_sha256": "sha256:828a9ef2a28636190ef471cc92ee79c4652e4b71935388012e96f1810e451df2",
+  "closing_duration_ratio": 1.066274,
+  "duration_ratio": 1.251579,
+  "failures": [],
+  "live": true,
+  "metrics": "/mnt/storage12tb/skills/persona-dream/outputs/corrected-goal-fresh-20260915T013939Z/paired-proof/chatterbox_delivery.metrics.json",
+  "mocked": false,
+  "run_root": "/mnt/storage12tb/skills/persona-dream/outputs/corrected-goal-fresh-20260915T013939Z/paired-proof",
+  "schema": "persona_dream.chatterbox_delivery_validation.v1",
+  "speech_rate_ratio": 0.868468,
+  "status": "PASS_CHATTERBOX_DELIVERY"
+}

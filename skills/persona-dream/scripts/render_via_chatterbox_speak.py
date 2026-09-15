@@ -26,6 +26,7 @@ CONVERSATION_TEMPERATURE = 0.85  # Turbo expressiveness; tune by ear, receipt-re
 def render_via_chatterbox_speak(
     *, answer_text: str, render_chunks: list[dict[str, Any]], tone: str,
     run_dir: Path, label: str, ref_audio: str | None = None,
+    pace: str | None = None,
     temperature: float = CONVERSATION_TEMPERATURE, context: str = "",
 ) -> tuple[Path, dict[str, Any]]:
     """Render caller-owned chunks through the chatterbox-speak front door.
@@ -47,6 +48,8 @@ def render_via_chatterbox_speak(
            "--context", context or f"persona-dream {label}"]
     if ref_audio:
         cmd += ["--ref-audio", ref_audio]
+    if pace:
+        cmd += ["--pace", pace]
     proc = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
     if proc.returncode != 0:
         raise SystemExit(

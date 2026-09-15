@@ -1,0 +1,8 @@
+{
+  "failures": [],
+  "live": true,
+  "mocked": false,
+  "run_root": "/mnt/storage12tb/skills/persona-dream/outputs/corrected-goal-fresh-20260915T013939Z/paired-proof",
+  "schema": "persona_dream.emotion_lineage_validation.v1",
+  "status": "PASS_EMOTION_LINEAGE"
+}
