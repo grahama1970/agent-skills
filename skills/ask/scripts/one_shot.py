@@ -202,7 +202,7 @@ def main(
     attach_file: list[Path] = typer.Option(None, "--attach-file",
                                            help="Forwarded to each lane's browser submit. Repeat per file."),
     window_layout: str = typer.Option(
-        "shared",
+        "isolated",
         "--window-layout",
         help="Browser layout: isolated (default; one window per seat, every lane's tab is a visible document) or shared (all web model tabs in one reviewer window; hidden tabs stall on providers that gate submits on visibility, e.g. Gemini).",
     ),
