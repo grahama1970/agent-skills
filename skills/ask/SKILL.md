@@ -144,7 +144,9 @@ before dispatch with its failure codes. Check a seat before relying on it:
 `python3 skills/ask/scripts/ask_call_history.py --handler webgemini` prints
 the last successful call and recent failures; add `--recommend` for the exact
 proven method to reuse. A handler with no recorded success is a blind guess —
-compile-only or probe cheaply first.
+compile-only or probe cheaply first. Historical runs are backfillable:
+`python3 skills/ask/scripts/backfill_call_log.py [outputs-root]` ingests every
+on-disk node receipt idempotently (deterministic _key per run+node).
 
 
 ## Deep-Dive References (read on demand)

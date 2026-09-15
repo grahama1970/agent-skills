@@ -119,6 +119,28 @@ def main() -> int:
     healthy = call_log.seat_health("webgpt", docs=[{"ts": "2026-09-15T00:00:00Z", "ok": True}])
     assert healthy["known_bad"] is False, healthy
 
+    # Backfill: undated run dirs get their timestamp from the node receipt's
+    # mtime so history ordering reflects when runs actually happened.
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "backfill_call_log", Path(__file__).resolve().parent / "backfill_call_log.py"
+    )
+    backfill = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(backfill)
+    with tempfile.TemporaryDirectory(prefix="ask-backfill-") as raw:
+        undated = Path(raw) / "ask-tau-undated-run-abc123"
+        node = undated / "node-artifacts" / "handler-webkimi"
+        node.mkdir(parents=True)
+        receipt = node / "node-receipt.json"
+        receipt.write_text("{}", encoding="utf-8")
+        import os
+
+        stamp = 1750000000  # 2025-06-15: unambiguously not "now"
+        os.utime(receipt, (stamp, stamp))
+        ts = backfill._run_ts(undated, receipt)
+        assert ts and ts.startswith("2025-06-15"), ts
+
     print(
         json.dumps(
             {
