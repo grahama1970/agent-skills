@@ -46,15 +46,23 @@ def main() -> int:
 
     verified: dict[str, dict] = {}
     quote_fail = 0
+    provenance_fail = 0
     total_scores = 0
     for sp in Path(args.scores_dir).glob("*.json"):
         try:
             score = json.loads(sp.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
             continue
+        if not isinstance(score, dict):
+            provenance_fail += 1
+            continue
         tkey = score.get("trace_key")
         packet = packets.get(tkey)
-        if not packet or not isinstance(score.get("judgment_features"), list):
+        expected_key = next((d["trace_key"] for d in packets.values() if d.get("packet_id") == sp.stem), None) if False else None
+        # provenance guard: the score's trace_key must resolve to a packet in THIS run;
+        # a child that improvised and scored a different trace fails here.
+        if not packet:
+            provenance_fail += 1
             continue
         kept = []
         for fs in score["judgment_features"]:
@@ -92,6 +100,7 @@ def main() -> int:
         "traces_scored": len(verified),
         "total_feature_scores": total_scores,
         "quote_verification_failures": quote_fail,
+        "provenance_mismatches": provenance_fail,
         "quote_verification": "deterministic substring check against packet turn heads",
         "feature_values": {k: dict(v) for k, v in sorted(feature_stats.items())},
         "feature_outcome_associations": {k: dict(v) for k, v in sorted(assoc.items())},

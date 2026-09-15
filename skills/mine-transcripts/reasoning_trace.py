@@ -231,13 +231,13 @@ def parse_pi_session(session_file: Path) -> ReasoningTrace | None:
                 last_answer_text = text
         elif role == "toolResult":
             body = _extract_text(content) or json.dumps(content)[:200]
-            call_id = None
-            for c in content:
-                if c.get("callId"):
-                    call_id = c["callId"]
-                    break
+            call_id = msg.get("toolCallId")
             if call_id and call_id in pending:
                 pending[call_id].outcome = "error" if _looks_error(body) else "ok"
+            elif call_id and "|" in str(call_id):
+                base = call_id.split("|")[0]
+                if base in pending:
+                    pending[base].outcome = "error" if _looks_error(body) else "ok"
         elif role == "user":
             text = _extract_text(content)
             if not text:

@@ -1,0 +1,84 @@
+{
+  "schema": "reasoning.feature_outcome_table.v1",
+  "traces_in_corpus": 9,
+  "traces_scored": 4,
+  "total_feature_scores": 20,
+  "quote_verification_failures": 0,
+  "provenance_mismatches": 3,
+  "quote_verification": "deterministic substring check against packet turn heads",
+  "feature_values": {
+    "claimed_unverified": {
+      "absent": 3,
+      "unknown": 1
+    },
+    "det:final_turn_had_tool": {
+      "absent": 3,
+      "present": 1
+    },
+    "det:read_after_write": {
+      "absent": 1,
+      "present": 2,
+      "not_applicable": 1
+    },
+    "det:read_before_first_write": {
+      "absent": 3,
+      "present": 1
+    },
+    "det:repeated_call_signature": {
+      "absent": 2,
+      "present": 2
+    },
+    "escalated_appropriately": {
+      "present": 4
+    },
+    "insufficient_evidence_change": {
+      "absent": 3,
+      "not_applicable": 1
+    },
+    "stopped_mid_goal_for_status": {
+      "absent": 4
+    },
+    "supported_failure_mechanism": {
+      "present": 4
+    }
+  },
+  "feature_outcome_associations": {
+    "claimed_unverified": {
+      "absent@no_commit_evidence": 3
+    },
+    "det:final_turn_had_tool": {
+      "absent@no_commit_evidence": 3,
+      "present@no_commit_evidence": 1
+    },
+    "det:read_after_write": {
+      "absent@no_commit_evidence": 1,
+      "present@no_commit_evidence": 2
+    },
+    "det:read_before_first_write": {
+      "absent@no_commit_evidence": 3,
+      "present@no_commit_evidence": 1
+    },
+    "det:repeated_call_signature": {
+      "absent@no_commit_evidence": 2,
+      "present@no_commit_evidence": 2
+    },
+    "escalated_appropriately": {
+      "present@no_commit_evidence": 4
+    },
+    "insufficient_evidence_change": {
+      "absent@no_commit_evidence": 3
+    },
+    "stopped_mid_goal_for_status": {
+      "absent@no_commit_evidence": 4
+    },
+    "supported_failure_mechanism": {
+      "present@no_commit_evidence": 4
+    }
+  },
+  "caveats": [
+    "associations are exploratory counts, not causal estimates",
+    "outcome buckets are attribution candidates (file overlap), not verified authorship",
+    "judgment features scored by glm-5.3-flash; quote-verified but not context-verified",
+    "sample: 60 packets selected outcome-candidates-first, not random"
+  ]
+}
