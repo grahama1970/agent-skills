@@ -10,6 +10,7 @@ Usage:
 import json
 import os
 import sys
+import time
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -110,7 +111,7 @@ def get_api_key(*, paid: bool = False) -> str:
     raise ValueError("BRAVE_API_KEY or BRAVE_SEARCH_API_KEY not found in env or .env")
 
 
-def _request_json(url: str, api_key: str) -> Dict[str, Any]:
+def _request_json(url: str, api_key: str, *, _allow_paid_fallback: bool = True) -> Dict[str, Any]:
     req = urllib.request.Request(
         url,
         headers={
@@ -124,6 +125,19 @@ def _request_json(url: str, api_key: str) -> Dict[str, Any]:
             return json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
         body = exc.read().decode("utf-8") if exc.fp else ""
+        if exc.code == 429 and _allow_paid_fallback:
+            # Free-plan quota/rate exhaustion: retry once on the paid key.
+            try:
+                paid_key = get_api_key(paid=True)
+            except ValueError:
+                paid_key = ""
+            if paid_key and paid_key != api_key:
+                print(
+                    "brave-search: free key returned 429; retrying once with BRAVE_API_KEY_PAID",
+                    file=sys.stderr,
+                )
+                time.sleep(1.1)  # paid plan rate limit is 1 req/s
+                return _request_json(url, paid_key, _allow_paid_fallback=False)
         raise RuntimeError(f"HTTP {exc.code}: {exc.reason}\n{body}") from exc
 
 
