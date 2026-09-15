@@ -26,10 +26,14 @@ sys.path.insert(0, str(SKILL_ROOT / "src"))
 from ping_model_roster import ping_model  # noqa: E402
 from ask import call_log  # noqa: E402
 
+# Candidate rungs per role, provider-diverse and ORDERED BY PREFERENCE. The
+# compose-time ping prunes to live rungs, so a provider coming back (Claude
+# 2026-09-16) or going dark needs NO edit here - availability knowledge is
+# derived per compose, never hardcoded to a moment in time.
 DEFAULT_ROLES = {
-    "research": ["gpt-5.5", "zai-glm"],
-    "synthesis": ["zai-glm"],
-    "code_run": ["zai-glm-flash", "zai-glm"],
+    "research": ["gpt-5.5", "claude-fable", "zai-glm"],
+    "synthesis": ["claude-fable", "zai-glm", "gpt-5.5"],
+    "code_run": ["claude-fable-5", "zai-glm-flash", "zai-glm"],
 }
 DEFAULT_SEATS = ["webkimi", "webgemini", "webgpt"]
 

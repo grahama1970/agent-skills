@@ -127,7 +127,11 @@ hand-rolled - verifies availability at the moment of use. Composed scripts
 carry a mandatory `verify_roster` Stage 0 lane that re-runs the roster ping at
 execution time and settles BLOCKED before any expensive stage if the roster
 went dark between compose and launch. Hand-rolled scripts must begin with the
-same check or be composed instead.
+same check or be composed instead. Verification frequency is per
+workflowScript EXECUTION: a single run re-verifies every launch; a batch is
+ONE workflowScript fanning out over N items, so Stage 0 runs exactly once for
+the whole batch. Long batches rely on the in-stage ladders for mid-run
+darkening (re-verify per K items only if a freshness guarantee is needed).
 
 ~15s wall. Model probes are 1-token scillm calls; seats default to
 `ask_call_log` memory health (instant) and promote to real browser pings with
