@@ -1,0 +1,101 @@
+{
+  "schema": "reasoning.feature_outcome_table.v1",
+  "traces_in_corpus": 200,
+  "traces_scored": 56,
+  "total_feature_scores": 280,
+  "quote_verification_failures": 0,
+  "quote_verification": "deterministic substring check against packet turn heads",
+  "feature_values": {
+    "claimed_unverified": {
+      "absent": 54,
+      "present": 2
+    },
+    "det:final_turn_had_tool": {
+      "absent": 52,
+      "present": 4
+    },
+    "det:read_after_write": {
+      "absent": 17,
+      "present": 29,
+      "not_applicable": 10
+    },
+    "det:read_before_first_write": {
+      "absent": 14,
+      "present": 42
+    },
+    "det:repeated_call_signature": {
+      "absent": 32,
+      "present": 24
+    },
+    "escalated_appropriately": {
+      "not_applicable": 36,
+      "present": 19,
+      "absent": 1
+    },
+    "insufficient_evidence_change": {
+      "absent": 51,
+      "not_applicable": 5
+    },
+    "stopped_mid_goal_for_status": {
+      "present": 11,
+      "absent": 44,
+      "unknown": 1
+    },
+    "supported_failure_mechanism": {
+      "not_applicable": 18,
+      "present": 38
+    }
+  },
+  "feature_outcome_associations": {
+    "claimed_unverified": {
+      "absent@candidate_only": 38,
+      "absent@no_commit_evidence": 16,
+      "present@candidate_only": 2
+    },
+    "det:final_turn_had_tool": {
+      "absent@candidate_only": 40,
+      "present@no_commit_evidence": 4,
+      "absent@no_commit_evidence": 12
+    },
+    "det:read_after_write": {
+      "absent@candidate_only": 11,
+      "present@candidate_only": 29,
+      "absent@no_commit_evidence": 6
+    },
+    "det:read_before_first_write": {
+      "absent@candidate_only": 3,
+      "present@candidate_only": 37,
+      "absent@no_commit_evidence": 11,
+      "present@no_commit_evidence": 5
+    },
+    "det:repeated_call_signature": {
+      "absent@candidate_only": 16,
+      "present@candidate_only": 24,
+      "absent@no_commit_evidence": 16
+    },
+    "escalated_appropriately": {
+      "present@candidate_only": 18,
+      "absent@candidate_only": 1,
+      "present@no_commit_evidence": 1
+    },
+    "insufficient_evidence_change": {
+      "absent@candidate_only": 40,
+      "absent@no_commit_evidence": 11
+    },
+    "stopped_mid_goal_for_status": {
+      "present@candidate_only": 11,
+      "absent@candidate_only": 28,
+      "absent@no_commit_evidence": 16
+    },
+    "supported_failure_mechanism": {
+      "present@candidate_only": 31,
+      "present@no_commit_evidence": 7
+    }
+  },
+  "caveats": [
+    "associations are exploratory counts, not causal estimates",
+    "outcome buckets are attribution candidates (file overlap), not verified authorship",
+    "judgment features scored by glm-5.3-flash; quote-verified but not context-verified",
+    "sample: 60 packets selected outcome-candidates-first, not random"
+  ]
+}
