@@ -2,11 +2,15 @@
 """/ask one-shot: the same question to N seats, answers per seat.
 
 Not a roundtable and not a competition: no consensus step, no judge, no
-quorum refusal. By default, browser seats are provisioned into one shared
-reviewer window so the operator can inspect the web models in one place. The
-legacy isolated layout remains available when per-window visibility isolation
-is more important than a self-contained review surface. The deliverable is a
-per-seat table: the answer (path + first line) or the named blocker.
+quorum refusal. Browser seats default to the isolated layout (one window per
+seat): a tab that is not the frontmost tab of its window is a hidden document,
+and providers that gate their submit handler on visibility (Gemini, observed
+2026-09-15: three queued sends on a hidden tab did nothing; the send
+dispatched the moment the tab became visible) stall in a shared window where
+N-1 of N concurrent lanes are always hidden. The shared layout remains
+available with --window-layout shared when one review surface outweighs that
+risk. The deliverable is a per-seat table: the answer (path + first line) or
+the named blocker.
 
 Readiness semantics: exit 0 when at least --min-answered seats answered;
 exit 3 when every lane was honest but answers fell below that floor; exit 1
@@ -200,7 +204,7 @@ def main(
     window_layout: str = typer.Option(
         "shared",
         "--window-layout",
-        help="Browser layout: shared keeps all web model tabs in one reviewer window; isolated uses one Tau run/window per seat.",
+        help="Browser layout: isolated (default; one window per seat, every lane's tab is a visible document) or shared (all web model tabs in one reviewer window; hidden tabs stall on providers that gate submits on visibility, e.g. Gemini).",
     ),
     browser_tab_lifecycle: str = typer.Option(
         "",
@@ -211,7 +215,7 @@ def main(
     out_dir.mkdir(parents=True, exist_ok=True)
     nonce = f"ONESHOT-{uuid.uuid4().hex[:8].upper()}"
     lanes: dict[str, dict] = {}
-    layout = (window_layout or "shared").strip().lower()
+    layout = (window_layout or "isolated").strip().lower()
     if layout not in {"shared", "isolated"}:
         raise typer.BadParameter("window_layout must be shared or isolated")
     if layout == "shared":
