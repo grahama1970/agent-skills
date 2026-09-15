@@ -280,6 +280,18 @@ before submitting to any non-WebGPT provider.
 when the target is not your foreground tab. Refs from `surf read` without
 `--tab-id` refer to the **active** tab only.
 
+**Hidden-tab send deferral (observed 2026-09-15, Gemini):** a synthetic send
+on a tab whose `document.visibilityState` is `hidden` can be queued by the DOM
+and never processed by the provider's app — the composer keeps the prompt and
+the submit check reads "prompt remained in the composer after send". The queued
+send dispatches the moment the tab becomes visible (`tab.switch`/activation
+processed an already-typed stalled composer live; conversation completed with
+sentinel). Before diagnosing a stalled submit as prompt size or transport
+failure, check `document.visibilityState` on the target tab; for concurrent
+per-seat lanes prefer one window per tab so every lane is a visible document
+(a non-minimized window's active tab reports `visible` without stealing
+focus).
+
 ```bash
 surf click e5                    # Click element by ref
 surf click '[data-testid="btn"]' # Click element by CSS selector (auto-detected)

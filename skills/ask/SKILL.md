@@ -242,6 +242,20 @@ tables: `references/workflows.md`.
   conversation. After the run, report the tab id + conversation URL and bind
   them (`skills/browser-oracle/run.sh bind <project> --backend <b> --tab-id <id>
   --url <url> --manual`) so the follow-up targets the same session.
+- **Tab visibility gate (observed 2026-09-15, webgemini):** some providers
+  (Gemini confirmed) defer the composer send while the tab is a hidden
+  document — in a shared window only one tab can be frontmost, so N-1 of N
+  concurrent lanes are always hidden and stall as
+  `prompt_too_large_or_stalled` ("prompt remained in the composer after send").
+  Concurrent browser lanes therefore default to isolated windows (one window
+  per seat, placed on the reviewer desktop) so every lane tab is a visible
+  document; `--window-layout shared` is opt-in. A stalled already-typed
+  composer is salvageable: `skills/surf/run.sh tab.switch <id>` makes the tab
+  visible and the queued send dispatches. Check `document.visibilityState`
+  before shrinking prompts for this failure class. The verified per-seat
+  working method is stored in `$memory` (`ask_call_log` key
+  `ask:method:webgemini`; see `ask_call_history.py --handler webgemini
+  --recommend`).
 - `webclaude` is a claude.ai chat tab, testing-only — NOT agentic Claude. Prefer
   `claude-fable-low`, then `claude-opus-4-8-high` (see
   `references/seats-and-audits.md`).
