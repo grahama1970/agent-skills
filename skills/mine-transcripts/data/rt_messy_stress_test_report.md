@@ -36,3 +36,24 @@ Behavior is NONDETERMINISTIC across identical prompts.
 - toolCallId outcome linkage (errors were silently never detected)
 - aggregator provenance guard + non-dict score rejection
 - pending: task-path existence assertion in workflow generation
+
+## Final adjudication result (2026-09-15, late)
+
+- 7/9 messy traces scored and adjudicated: 35/35 feature agreements, 0 disagreements.
+- BOTH mechanical quote failures root-caused as CHECKER false negatives, not scorer
+  fabrication: (1) json.dumps escaping makes raw quotes unmatchable inside 220-char
+  heads; (2) 220-char head truncation cut off the cited command tail. Fixes named:
+  verify against unescaped/untruncated turn args before scaling.
+- CRITICAL independence caveat: fable-5-low hit a 429 and the adjudication ran on
+  zai/glm-5.3-flash:high — the SAME model family as the scorer. Model-on-model
+  agreement within one family proves little; 35/35 must be read as a lower bound
+  on effort, not as independent validation. WebGPT's warning applies verbatim.
+- 2 traces (4ce070173e6a, aa5db1c04b14) produced no parseable output in the retry
+  cohort; pending one more pass.
+- Deterministic-lane blind spot confirmed by scorer notes: bash-mediated reads
+  (cat/grep/sed) are invisible to read_before_first_write; v2 must track them.
+
+Verdict: the loop survives the messy stratum mechanically (provenance contract
+held 15/15 across both providers; quote gate caught only its own bugs). Semantic
+agreement on messy traces is PROVISIONAL pending an independent adjudicator
+(fable retry after rate-limit reset) and the 2 missing traces.

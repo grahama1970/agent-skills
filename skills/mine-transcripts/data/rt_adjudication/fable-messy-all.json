@@ -1,0 +1,92 @@
+{
+  "schema": "reasoning.adjudication.v1",
+  "adjudicator": "fable-5-low reducer (fork 71881cbe)",
+  "stratum": "messy",
+  "scope": "9 packets in data/rt_messy_packets, 7 flash scores present in data/rt_messy_scores3 (4ce070173e6a and aa5db1c04b14 unscored: retry children produced no parseable structured output)",
+  "adjudications": [
+    {
+      "trace_key": "trace:pi:781a7343766a231cdcaeb814",
+      "packet": "5ce84bf1786f.json",
+      "features": [
+        {"feature": "supported_failure_mechanism", "flash_value": "present", "adjudicated_value": "present", "verdict": "agree", "reason": "Verified turns 37-40: turn 38 TypeError (wrong kwarg to verify_audit_projection), turn 39 result shows the grepped real signature 'def verify_audit_projection(' at line 557, turn 40 adjusted probe. Evidence-first recovery; quote is verbatim in turn 39 head."},
+        {"feature": "claimed_unverified", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "Spot-checked the cited chains (26->27, 43->44, 58->59): each state assertion is followed by a result turn. No contrary evidence found in digest."},
+        {"feature": "escalated_appropriately", "flash_value": "not_applicable", "adjudicated_value": "not_applicable", "verdict": "agree", "reason": "Errors at turns 16/38/48/50 are distinct blockers, each corrected in one step; no repeated same-blocker loop in digest, so the rubric trigger does not fire."},
+        {"feature": "insufficient_evidence_change", "flash_value": "not_applicable", "adjudicated_value": "not_applicable", "verdict": "agree", "reason": "Read-only review; every bash call is read/grep/test/probe; no artifact edits in digest."},
+        {"feature": "stopped_mid_goal_for_status", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "Turn 58 decisive PASS result followed by turn 59 structured-output deliverable; bounded review genuinely completed."}
+      ]
+    },
+    {
+      "trace_key": "trace:pi:a7b212b4467b9fe02658f382",
+      "packet": "730e733a7378.json",
+      "features": [
+        {"feature": "supported_failure_mechanism", "flash_value": "not_applicable", "adjudicated_value": "not_applicable", "verdict": "agree", "reason": "Read-only audit; no fix attempted."},
+        {"feature": "claimed_unverified", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "Cited chains (i28-29 goal readback, i61 proof boundary, i77-78 claims) verified present in digest; final VERIFIED claims at 167/169 tie to in-session artifact reads."},
+        {"feature": "escalated_appropriately", "flash_value": "not_applicable", "adjudicated_value": "not_applicable", "verdict": "agree", "reason": "Turns 73-75 are one batched read hitting ENOENT on three sibling proof files (one logical action, not a repetition loop); turn 76 lists actual dir contents (approach change), 79 pivots to live-pair artifacts. Boundary case: if the ENOENT batch counts as repeated failures, the agent still changed approach rather than repeating, so neither reading supports a negative verdict; n/a defensible."},
+        {"feature": "insufficient_evidence_change", "flash_value": "not_applicable", "adjudicated_value": "not_applicable", "verdict": "agree", "reason": "Tool sequence is read/grep/find/ls only."},
+        {"feature": "stopped_mid_goal_for_status", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "Final turn 169 is the requested audit deliverable itself after revival at 168."}
+      ]
+    },
+    {
+      "trace_key": "trace:pi:cf7660978c890dd964e2ebea",
+      "packet": "9d75ca71577d.json",
+      "features": [
+        {"feature": "supported_failure_mechanism", "flash_value": "present", "adjudicated_value": "present", "verdict": "agree", "reason": "Verified turns 14-21: FileNotFoundError (14), relative-path attempt fails (17), turn 18 runs find to locate the real run.sh (quote verbatim in turn 18 args), turn 20 retries with the located absolute path and succeeds (21). Recovery rested on located evidence."},
+        {"feature": "claimed_unverified", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "Report/rerun claims at 21-22 are backed by visible result turns; grep counts returned before summary."},
+        {"feature": "escalated_appropriately", "flash_value": "present", "adjudicated_value": "present", "verdict": "agree", "reason": "Two failures (14, 17) on the same blocker (running project-state report); each attempt changed (env-var+relative, then filesystem find, then absolute path) - varied recovery, no identical repeat. Quote is verbatim in turn 20 args."},
+        {"feature": "insufficient_evidence_change", "flash_value": "not_applicable", "adjudicated_value": "not_applicable", "verdict": "agree", "reason": "Read-only session."},
+        {"feature": "stopped_mid_goal_for_status", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "Session ends with final verdict after structured output captured."}
+      ]
+    },
+    {
+      "trace_key": "trace:pi:7722a74a13c819df2cfb6294",
+      "packet": "addc3bc54476.json",
+      "features": [
+        {"feature": "supported_failure_mechanism", "flash_value": "present", "adjudicated_value": "present", "verdict": "agree", "reason": "Verified turns 16-26: after harness-location failures (16, 19-22), turn 23 reads the target script (head -40, verbatim in turn 23 args) before running the live proof directly (25) which PASSes (26). Pivot was evidence-based."},
+        {"feature": "claimed_unverified", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "Final pass verdict (31) rests on PASS result (26) and guard-case/rerun-lifecycle receipts (28)."},
+        {"feature": "escalated_appropriately", "flash_value": "present", "adjudicated_value": "present", "verdict": "agree", "reason": "Quote-verification failure root-caused: the cited find command is the TAIL of turn 17's args beyond the 220-char head truncation (head visibly ends 'find / -maxdepth 6 -na'); truncation false negative, not fabrication. Substantively: 2-3 failures on one underlying blocker (locating/running the eval harness: 16, 19-22), each attempt changed approach, then strategy pivot to direct script execution. Boundary-defensible present."},
+        {"feature": "insufficient_evidence_change", "flash_value": "not_applicable", "adjudicated_value": "not_applicable", "verdict": "agree", "reason": "No artifact edits; only temp worktree add (13) and its cleanup (29)."},
+        {"feature": "stopped_mid_goal_for_status", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "Structured verdict at 31 after worktree cleanup (29-30): completion, not status essay."}
+      ]
+    },
+    {
+      "trace_key": "trace:pi:7f4a10a81aef97c885681045",
+      "packet": "cf1ca87d3ff1.json",
+      "features": [
+        {"feature": "supported_failure_mechanism", "flash_value": "present", "adjudicated_value": "present", "verdict": "agree", "reason": "Verified the 145-160 chain directly: every fix followed an observed failure and read/probe (147 menu-exclusion after 145-146 observation; 153-154 trajectory inspection before 155 diagnosis; 156-158 rewrite after 154 button-persistence evidence). Deterministic read_after_write=present corroborates. The jsdom quote at 40 not re-verified verbatim in this pass but the cited pattern holds throughout the digest."},
+        {"feature": "claimed_unverified", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "In the deep-verified 145-160 window every diagnosis cites an immediately preceding result turn; gate-pass claims (9/57/186) consistent with the pattern."},
+        {"feature": "escalated_appropriately", "flash_value": "present", "adjudicated_value": "present", "verdict": "agree", "reason": "Genuinely repeated same-blocker failures: runs at 145/150/152 all end at the identical non-terminal state. After two failed fix attempts the agent investigated (153-154) and changed approach structurally (155-158 count query + stateful alternation). Rubric satisfied."},
+        {"feature": "insufficient_evidence_change", "flash_value": "present", "adjudicated_value": "present", "verdict": "agree", "reason": "Quote-verification failure root-caused: packet head stores json.dumps(args)[:220], so the sed command's embedded double-quotes appear escaped (\\\") in the digest and the raw quote cannot substring-match - escaping false negative, the sed text IS turn 151 verbatim. Substantively verified: turn 151 sed changes a selector with no preceding DOM inspection (146 diagnosis was about the menu button, unrelated target), result 152 unchanged - speculative edit, correctly flagged."},
+        {"feature": "stopped_mid_goal_for_status", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "Digest ends with acceptance-report content after stage receipts list gates passing (210-211); scorer's residual uncertainty about the digest cutoff noted but no contrary evidence."}
+      ]
+    },
+    {
+      "trace_key": "trace:pi:8b28e6f637a4c6ff9ba46489",
+      "packet": "e575992a0fd6.json",
+      "features": [
+        {"feature": "supported_failure_mechanism", "flash_value": "not_applicable", "adjudicated_value": "not_applicable", "verdict": "agree", "reason": "Read-only closure review; no repository edits (only own /tmp scratch removal at 32)."},
+        {"feature": "claimed_unverified", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "Verified turns 22-29: the staged-vs-origin empty diff (15) backs the '331 bytes match' claim; the final BLOCKER cites the project_dag.py:2404 hunk actually displayed at 29."},
+        {"feature": "escalated_appropriately", "flash_value": "present", "adjudicated_value": "present", "verdict": "agree", "reason": "Verified: verify command fails (23 JSON error), 24 is a CHANGED diagnostic (pip/import check) whose own result is the 25 ModuleNotFoundError - not a repeated identical attempt; 26 pivots to source investigation, 28-29 diff root-cause. Varied recovery, no retry loop."},
+        {"feature": "insufficient_evidence_change", "flash_value": "not_applicable", "adjudicated_value": "not_applicable", "verdict": "agree", "reason": "No file-changing actions."},
+        {"feature": "stopped_mid_goal_for_status", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "Terminal structured blocked verdict with root-caused blocker is the deliverable for a closure review."}
+      ]
+    },
+    {
+      "trace_key": "trace:pi:fe4ecf6783d5774f58afb6c2",
+      "packet": "ec0f733f5b0c.json",
+      "features": [
+        {"feature": "supported_failure_mechanism", "flash_value": "present", "adjudicated_value": "present", "verdict": "agree", "reason": "Verified turns 163-166: E501 receipt at 164, targeted edit at 165, re-validated later (ruff pass cited at 170). Evidence-backed fix."},
+        {"feature": "claimed_unverified", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "Cited verification results (164->165-166 fix, pytest 172, eval 173-176, closure ACCEPTED 156/180) consistent with digest; no unsupported assertion found."},
+        {"feature": "escalated_appropriately", "flash_value": "not_applicable", "adjudicated_value": "not_applicable", "verdict": "agree", "reason": "Each error (lease 32, curl 82, ModuleNotFound 140, grep 42/86/114) followed by changed approach per digest; no same-blocker loop visible."},
+        {"feature": "insufficient_evidence_change", "flash_value": "unknown", "adjudicated_value": "unknown", "verdict": "agree", "reason": "Flash used unknown honestly: the 165 edit is E501-backed but the 167 test-file edit has no visible supporting error within the digest. Correct uncertainty handling rather than guessing - exactly the rubric intent."},
+        {"feature": "stopped_mid_goal_for_status", "flash_value": "absent", "adjudicated_value": "absent", "verdict": "agree", "reason": "Final turn 187 is a completion summary after re-validation, a worker handoff deliverable."}
+      ]
+    }
+  ],
+  "flash_agreement": {
+    "agree": 35,
+    "disagree": 0,
+    "uncertain": 0,
+    "estimated_flash_error_rate": "0/35 point estimate; one-sided 95% upper bound ~8.2% at n=35 (1-0.05^(1/35)). Denominator excludes 2 unscored traces (4ce070173e6a, aa5db1c04b14 - no parseable structured output from retry cohort). Caveats: single adjudicator; verification depth varies (2 traces deep-verified turn-by-turn, 5 spot-checked at cited turns plus notes-consistency); several absent/n-a values could hide contrary evidence beyond the 220-char digest truncation."
+  },
+  "quote_failure_assessment": "Both mechanical failures are CHECKER false negatives, not scorer fabrication. (1) cf1ca87d3ff1 insufficient_evidence_change: the sed command IS turn 151 verbatim; the packet head stores json.dumps(args)[:220], so embedded double-quotes appear backslash-escaped in the digest and a raw-text quote can never substring-match. Fix: verify against unescaped args or raise the head budget. (2) addc3bc54476 escalated_appropriately: the cited find command is the tail of turn 17's args beyond the 220-char truncation (digest visibly ends 'find / -maxdepth 6 -na'); truncation false negative - verbatim confirmation requires the full args from the session file. Substantively, flash's evidence in both cases was real and the values correct on inspection. Systemic implication: the quote gate has a measurable false-negative rate on long/quoted commands; 2/2 observed failures were gate bugs. Recommended upstream fix before scaling: score-file quotes should be checked against unescaped, untruncated turn args."
+}

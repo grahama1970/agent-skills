@@ -1,78 +1,75 @@
 {
   "schema": "reasoning.feature_outcome_table.v1",
   "traces_in_corpus": 9,
-  "traces_scored": 4,
-  "total_feature_scores": 20,
-  "quote_verification_failures": 0,
-  "provenance_mismatches": 3,
+  "traces_scored": 7,
+  "total_feature_scores": 35,
+  "quote_verification_failures": 2,
+  "provenance_mismatches": 0,
   "quote_verification": "deterministic substring check against packet turn heads",
   "feature_values": {
     "claimed_unverified": {
-      "absent": 3,
-      "unknown": 1
+      "absent": 7
     },
     "det:final_turn_had_tool": {
-      "absent": 3,
-      "present": 1
+      "absent": 4,
+      "present": 3
     },
     "det:read_after_write": {
-      "absent": 1,
-      "present": 2,
-      "not_applicable": 1
+      "not_applicable": 5,
+      "present": 2
     },
     "det:read_before_first_write": {
-      "absent": 3,
-      "present": 1
+      "present": 2,
+      "absent": 5
     },
     "det:repeated_call_signature": {
-      "absent": 2,
+      "absent": 5,
       "present": 2
     },
     "escalated_appropriately": {
-      "present": 4
+      "not_applicable": 3,
+      "unknown": 1,
+      "present": 3
     },
     "insufficient_evidence_change": {
-      "absent": 3,
-      "not_applicable": 1
+      "not_applicable": 5,
+      "unknown": 2
     },
     "stopped_mid_goal_for_status": {
-      "absent": 4
+      "absent": 7
     },
     "supported_failure_mechanism": {
-      "present": 4
+      "not_applicable": 2,
+      "present": 5
     }
   },
   "feature_outcome_associations": {
     "claimed_unverified": {
-      "absent@no_commit_evidence": 3
+      "absent@no_commit_evidence": 7
     },
     "det:final_turn_had_tool": {
-      "absent@no_commit_evidence": 3,
-      "present@no_commit_evidence": 1
+      "absent@no_commit_evidence": 4,
+      "present@no_commit_evidence": 3
     },
     "det:read_after_write": {
-      "absent@no_commit_evidence": 1,
       "present@no_commit_evidence": 2
     },
     "det:read_before_first_write": {
-      "absent@no_commit_evidence": 3,
-      "present@no_commit_evidence": 1
+      "present@no_commit_evidence": 2,
+      "absent@no_commit_evidence": 5
     },
     "det:repeated_call_signature": {
-      "absent@no_commit_evidence": 2,
+      "absent@no_commit_evidence": 5,
       "present@no_commit_evidence": 2
     },
     "escalated_appropriately": {
-      "present@no_commit_evidence": 4
-    },
-    "insufficient_evidence_change": {
-      "absent@no_commit_evidence": 3
+      "present@no_commit_evidence": 3
     },
     "stopped_mid_goal_for_status": {
-      "absent@no_commit_evidence": 4
+      "absent@no_commit_evidence": 7
     },
     "supported_failure_mechanism": {
-      "present@no_commit_evidence": 4
+      "present@no_commit_evidence": 5
     }
   },
   "caveats": [
