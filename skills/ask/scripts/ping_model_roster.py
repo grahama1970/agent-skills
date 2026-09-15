@@ -111,6 +111,9 @@ def main() -> int:
     ap.add_argument("--seat", action="append", default=[], help="web seat name (repeatable)")
     ap.add_argument("--live-seats", action="store_true",
                     help="run real browser seat pings instead of memory health")
+    ap.add_argument("--record", action="store",
+                    nargs="?", const="model_availability", metavar="COLLECTION",
+                    help="upsert per-model/per-seat latest status to $memory (for the watchdog cron; shared by all agents)")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
@@ -161,6 +164,38 @@ def main() -> int:
         "readiness": "READY" if all_ready else "NOT_READY",
         "unparseable": unparseable,
     }
+    if args.record:
+        try:
+            import httpx as _hx
+            now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            docs = [
+                {
+                    "_key": f"model:{r['model']}", "kind": "model_availability",
+                    "model": r["model"], "status": r["status"], "ts": now,
+                    "latency_ms": r.get("ms"), "source": "roster_ping",
+                    "retrieval_text": f"model {r['model']} status {r['status']} at {now}",
+                }
+                for r in model_results.values()
+            ]
+            if seats_block:
+                docs += [
+                    {
+                        "_key": f"seat:{s['seat']}", "kind": "model_availability",
+                        "model": s["seat"], "status": s["status"], "ts": now,
+                        "source": "memory_seat_health",
+                        "retrieval_text": f"seat {s['seat']} status {s['status']} at {now}",
+                    }
+                    for s in seats_block
+                ]
+            resp = _hx.post(
+                f"{call_log.MEMORY_URL}/upsert",
+                json={"collection": args.record, "documents": docs},
+                timeout=10.0, headers={"x-caller-skill": "ask"},
+            )
+            resp.raise_for_status()
+            verdict["recorded_to"] = args.record
+        except Exception as exc:  # recording is best-effort; ping verdict still prints
+            verdict["record_error"] = str(exc)[:200]
     print(json.dumps(verdict, indent=2))
     return 0 if all_ready else (1 if unparseable else 3)
 
