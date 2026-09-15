@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 import threading
 from datetime import datetime, timezone
@@ -48,6 +49,7 @@ from .reducer import (
     reduce_cockpit,
 )
 from .services import probe_services
+from .voice_bridge import VoiceBridge
 
 MAX_BODY_BYTES = 2_000_000
 
@@ -667,6 +669,16 @@ def serve(
         (host, port),
         _handler_factory(session),
     )
+
+    bridge_thread: threading.Thread | None = None
+    if os.environ.get("EXPLAIN_PROJECT_VOICE_BRIDGE", "1") != "0":
+        bridge = VoiceBridge(session)
+        bridge_thread = threading.Thread(
+            target=bridge.run_forever,
+            name="explain-project-voice-bridge",
+            daemon=True,
+        )
+        bridge_thread.start()
 
     logger.info(
         "explain-project API listening on "

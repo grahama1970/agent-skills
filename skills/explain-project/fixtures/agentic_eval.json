@@ -202,6 +202,31 @@
       ]
     },
     {
+      "name": "live-question-bridge",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && PYTHONPATH=scripts uv run --with pydantic --with httpx --with loguru python3 fixtures/live_question_bridge_eval.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXPLAIN_PROJECT_LIVE_QUESTION_BRIDGE_OK"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "deterministic",
+      "notes": "Fake live-evidence HTTP server on a free port feeds a VoiceBridge against a real CockpitSession: accepted candidates appear in bootstrap state with source live_evidence_live and provenance live_fingerprint; a re-poll does not advance the revision (fingerprint dedup); a dead live-evidence service degrades honestly while manual question intake stays functional. The real live-evidence /api/events payload shape is not pinned by a local checkout; only question-candidate relay is claimed, never microphone capture, segmentation, or speaker attribution.",
+      "supports_claims": [
+        "explain_project.live_evidence_live_intake"
+      ],
+      "seams": [
+        "live-evidence-live-intake"
+      ]
+    },
+    {
       "name": "interaction-manifest-qid-only",
       "type": "positive",
       "real_world": true,
@@ -688,6 +713,15 @@
       "claim_semantics": "human_perceptual"
     },
     {
+      "id": "explain_project.live_evidence_live_intake",
+      "description": "The cockpit bridge polls the live-evidence service for question candidates and posts accepted ones to intake labeled live_evidence_live with fingerprint dedup, degrading honestly when the service is down while manual input stays functional.",
+      "criticality": "important",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
       "id": "explain_project.live_cockpit_walkthrough_ui",
       "description": "The live cockpit UI can drive the retained walkthrough through DOM proof, debugger proof UI, dedicated whiteboard tab, hotkey stepping, Embry narration, and Diagram Explorer interactions.",
       "criticality": "critical",
@@ -740,6 +774,14 @@
       "required_evidence": [
         "deterministic",
         "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "live-evidence-live-intake",
+      "seam_type": "external HTTP/API/provider",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
       ]
     },
     {

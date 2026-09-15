@@ -228,7 +228,7 @@ try:
     #    to the disposable preview and restore its URL afterwards.
     #    Never tab.new / tab.close here.
     tab_id = int(
-        os.environ.get("LIVEUI_TAB_ID", "837436340")
+        os.environ.get("LIVEUI_TAB_ID", "837439040")
     )
     prev = surf_retry(
         "js", "--no-activate", "location.href", tab=tab_id
@@ -341,7 +341,7 @@ try:
                 board_tab_id = int(
                     os.environ.get(
                         "LIVEUI_BOARD_TAB_ID",
-                        "837436448",
+                        "837439043",
                     )
                 )
                 # Verify via tab.list (no debugger attach): a
