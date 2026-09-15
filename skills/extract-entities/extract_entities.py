@@ -2015,6 +2015,50 @@ def _extract_nlp_entities(
             entities.append({**entity, "span": [start, end], "mention": text[start:end]})
             seen_ids.add(entity["id"])
 
+    # 3c. Structural id fallback: a well-formed framework id (CWE-29,
+    # EX-0016.01, T1190) that FlashText missed still gets one exact /list
+    # lookup by label. This is the safety net for a truncated or partially
+    # loaded dictionary: at limit=500 CWE-29 was simply absent from the trie
+    # and grounded nothing, which read exactly like "no such id". Ids are
+    # structurally unambiguous, so an exact-filter lookup cannot introduce the
+    # confusion fuzzy matching risks. Not-found ids stay unresolved on purpose:
+    # downstream applicability screening needs "id-shaped but unknown" as its
+    # no_coverage signal.
+    _ID_TOKEN_RE = re.compile(r"\b(?:[A-Za-z]{2,6}-\d+(?:\.\d+)*|T\d{4}(?:\.\d{3})?)\b")
+    matched_labels = {str(e.get("label") or "").upper() for e in entities}
+    matched_labels |= {str(e.get("name") or "").upper() for e in entities}
+    for token in dict.fromkeys(_ID_TOKEN_RE.findall(text)):
+        if token.upper() in matched_labels:
+            continue
+        docs_hit = []
+        for candidate in dict.fromkeys([token, token.upper()]):
+            docs_hit = _list_collection_docs(
+                client, collection=collection, filters={label_field: candidate},
+                limit=1, return_fields=["_id", "_key", name_field, label_field,
+                                        type_field, framework_field, "description"])
+            if docs_hit:
+                break
+        if not docs_hit:
+            continue
+        doc = docs_hit[0]
+        doc_id = doc.get("_id", "")
+        if doc_id and doc_id not in seen_ids:
+            entities.append({
+                "id": doc_id,
+                "key": doc.get("_key", ""),
+                "name": doc.get(name_field, ""),
+                "label": doc.get(label_field, ""),
+                "type": doc.get(type_field, ""),
+                "framework": doc.get(framework_field, ""),
+                "description": doc.get("description") or "",
+                "exists": True,
+                "span": _span_for(text, token),
+                "mention": token,
+                "match_type": "structural_id_lookup",
+            })
+            seen_ids.add(doc_id)
+            matched_labels.add(token.upper())
+
     # 3b. RapidFuzz fallback: if FlashText found nothing, try fuzzy matching
     _fuzzy_enabled = os.environ.get("EXTRACT_ENTITIES_FUZZY", "1").strip().lower() not in {"0", "false", "no"}
     if len(entities) == 0 and _fuzzy_enabled:
@@ -2423,7 +2467,7 @@ def resolve(
     delimiter: str = typer.Option("nlp", "--delimiter", "-d", help="Entity extraction mode: nlp, auto, or custom delimiter character(s)"),
     scope: str = typer.Option("", "--scope", "-s", help="Scope filter for /recall"),
     json_output: bool = typer.Option(True, "--json", help="Output JSON"),
-    limit: int = typer.Option(500, "--limit", help="Max entities to load for FlashText dictionary"),
+    limit: int = typer.Option(500_000, "--limit", help="Total cap on entities loaded for the FlashText dictionary (default: full id-space; pages of 500 fetched concurrently, cached per process)"),
 ) -> None:
     """Collection-agnostic entity extraction via FlashText + /memory recall.
 
@@ -2520,7 +2564,7 @@ def _run_default_mode() -> None:
         label_field: str = typer.Option("control_id", "--label-field", help="Field containing display labels"),
         framework_field: str = typer.Option("source_framework", "--framework-field", help="Field containing framework"),
         type_field: str = typer.Option("control_type", "--type-field", help="Field containing entity type"),
-        limit: int = typer.Option(500, "--limit", help="Max entities to load for FlashText dictionary"),
+        limit: int = typer.Option(500_000, "--limit", help="Total cap on entities loaded for the FlashText dictionary (default: full id-space)"),
         scope: str = typer.Option("", "--scope", help="Scope filter for /recall"),
     ) -> None:
         text = sys.stdin.read().strip()
