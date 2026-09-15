@@ -39,6 +39,27 @@ htmlcov/
 .local/
 scratch/
 artifacts/
+# project-dream issue #1239 retained publication receipts.
+!skills/project-dream/artifacts/
+skills/project-dream/artifacts/*
+!skills/project-dream/artifacts/agentic-eval-live/
+skills/project-dream/artifacts/agentic-eval-live/*
+!skills/project-dream/artifacts/agentic-eval-live/candidate.json
+!skills/project-dream/artifacts/agentic-eval-live/candidate.json.raw-output.txt
+!skills/project-dream/artifacts/agentic-eval-live/candidate.json.stage-receipt.json
+!skills/project-dream/artifacts/agentic-eval-live/candidate.json.synthesis-receipt.json
+!skills/project-dream/artifacts/agentic-eval-live/command-spec.json
+!skills/project-dream/artifacts/agentic-eval-live/memory-wrapper.sh
+!skills/project-dream/artifacts/agentic-eval-live/negative-candidate.json
+!skills/project-dream/artifacts/agentic-eval-live/negative-packet.json
+!skills/project-dream/artifacts/agentic-eval-live/negative-readback.json
+!skills/project-dream/artifacts/agentic-eval-live/negative-validation.json
+!skills/project-dream/artifacts/agentic-eval-live/packet.json
+!skills/project-dream/artifacts/agentic-eval-live/positive-readback.json
+!skills/project-dream/artifacts/agentic-eval-live/validation.json
+!skills/project-dream/artifacts/issue-1239/
+skills/project-dream/artifacts/issue-1239/*
+!skills/project-dream/artifacts/issue-1239/agentic-eval-report.json
 # persona-dream durable proof archive: the generic artifacts/ rule above would
 # silently drop archived receipts, leaving the archive short of its manifest.
 !skills/persona-dream/research/prospective-tom/evidence/external-proof-archive/**/artifacts/
@@ -117,7 +138,6 @@ site/design-roundtable/font-receipt*.json
 site/design-roundtable/*rater*.json
 site/design-roundtable/*rater*.md
 site/design-roundtable/live-collaboration-ledger.html
-skills/monitor-website/local/test-interactions/
 
 # Generated bulk that made `git status` unreadable (2026-08-14).
 # Each of these had ZERO tracked files, so ignoring hides no real change --

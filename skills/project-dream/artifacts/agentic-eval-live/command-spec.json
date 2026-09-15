@@ -1,0 +1,7 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "-c",
+    "import json, os; open(os.environ['PROJECT_DREAM_OUTPUT'], 'w').write(json.dumps({'schema_version': 'project_dream_candidate.v1', 'project_id': 'agent-skills', 'run_id': 'agentic-eval-live', 'input_digest': '75a1939a40c57773042bb4d89384625ed785f9672177b7fcbdbc7428da1fa73a', 'input_head': {'generation': 1, 'digest': 'active-head'}, 'model': {'provider': 'opencode-go', 'id': 'opencode-go/test-cheap'}, 'prompt': {'id': 'consolidate_project_memory.v1', 'sha256': 'eval'}, 'policy': {'exclude_from_learning': True, 'dream_run_id': 'agentic-eval-live'}, 'proposals': [{'topic_id': 'stage-boundary', 'topic_kind': 'boundary', 'title': 'Stage only through memory wrapper', 'action': 'REVISE_CANDIDATE', 'text': 'memory wrapper is the only staging path', 'retrieval_text': 'memory wrapper is the only staging path', 'claims': [{'text': 'memory wrapper is the only staging path', 'authority': 'current_code', 'confidence': 0.9, 'uncertainty': 'low', 'evidence_refs': [{'id': 'code'}]}], 'expected_head': {'generation': 1, 'digest': 'active-head'}}]}))"
+  ]
+}

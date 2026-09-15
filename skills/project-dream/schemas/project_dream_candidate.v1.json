@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "project_dream_candidate.v1",
+  "type": "object",
+  "required": ["schema_version", "project_id", "run_id", "input_digest", "input_head", "model", "prompt", "policy", "proposals"],
+  "properties": {
+    "schema_version": {"const": "project_dream_candidate.v1"},
+    "project_id": {"type": "string"},
+    "run_id": {"type": "string"},
+    "input_digest": {"type": "string"},
+    "input_head": {"type": "object"},
+    "model": {"type": "object", "required": ["id", "provider"]},
+    "prompt": {"type": "object", "required": ["id", "sha256"]},
+    "policy": {"type": "object", "required": ["exclude_from_learning", "dream_run_id"]},
+    "proposals": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["topic_id", "topic_kind", "title", "action", "text", "retrieval_text", "claims", "expected_head"],
+        "properties": {
+          "action": {"enum": ["CREATE_CANDIDATE", "REVISE_CANDIDATE", "SUPERSEDE_WITH_REPLACEMENT", "DEPRECATE_WITH_REPLACEMENT", "MARK_FRESHNESS_STALE", "NO_CHANGE", "NEEDS_HUMAN_REVIEW"]},
+          "claims": {"type": "array"}
+        }
+      }
+    }
+  }
+}

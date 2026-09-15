@@ -1,0 +1,49 @@
+{
+  "input_digest": "75a1939a40c57773042bb4d89384625ed785f9672177b7fcbdbc7428da1fa73a",
+  "input_head": {
+    "digest": "active-head",
+    "generation": 1
+  },
+  "model": {
+    "id": "opencode-go/test-cheap",
+    "provider": "opencode-go"
+  },
+  "policy": {
+    "dream_run_id": "agentic-eval-live",
+    "exclude_from_learning": true
+  },
+  "project_id": "agent-skills",
+  "prompt": {
+    "id": "consolidate_project_memory.v1",
+    "sha256": "eval"
+  },
+  "proposals": [
+    {
+      "action": "REVISE_CANDIDATE",
+      "claims": [
+        {
+          "authority": "current_code",
+          "confidence": 0.9,
+          "evidence_refs": [
+            {
+              "id": "code"
+            }
+          ],
+          "text": "memory wrapper is the only staging path",
+          "uncertainty": "low"
+        }
+      ],
+      "expected_head": {
+        "digest": "active-head",
+        "generation": 1
+      },
+      "retrieval_text": "memory wrapper is the only staging path",
+      "text": "memory wrapper is the only staging path",
+      "title": "Stage only through memory wrapper",
+      "topic_id": "stage-boundary",
+      "topic_kind": "boundary"
+    }
+  ],
+  "run_id": "agentic-eval-live",
+  "schema_version": "project_dream_candidate.v1"
+}

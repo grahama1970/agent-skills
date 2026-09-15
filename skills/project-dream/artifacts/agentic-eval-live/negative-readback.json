@@ -1,0 +1,8 @@
+{
+  "errors": [
+    "proposal[0].claim[0] unresolved evidence ref 'missing'",
+    "proposal[0] has no resolved claim evidence"
+  ],
+  "status": "PASS",
+  "validator_status": "blocked"
+}

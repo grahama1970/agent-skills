@@ -1,0 +1,25 @@
+{
+  "cache_hit": false,
+  "cache_key": "1063a643082010ba917de5e135ff8591ea7f734a5faa2562f74acf17aa4b6688",
+  "candidate_digest": "f74dc80be32fa36c03d91badf5757fa349476b96ea20f329e36986df12de981c",
+  "duration_ms": 25.866,
+  "errors": [],
+  "exclude_from_learning": true,
+  "exit_status": 0,
+  "input_digest": "75a1939a40c57773042bb4d89384625ed785f9672177b7fcbdbc7428da1fa73a",
+  "model": "opencode-go/test-cheap",
+  "output_path": "/home/graham/workspace/experiments/agent-skills/skills/project-dream/artifacts/agentic-eval-live/candidate.json",
+  "packet_digest": "bbc88c2ae1419be8785ed9f8d997bd3387cd5ab0ac7c61d3ef1b57c832838d46",
+  "project_id": "agent-skills",
+  "prompt_sha256": "9d8bdfcf45dfbce57af54822cefaec5d0ea2774953b2dea96c813c37cc5b7696",
+  "provider": "opencode-go",
+  "raw_output_path": "/home/graham/workspace/experiments/agent-skills/skills/project-dream/artifacts/agentic-eval-live/candidate.json.raw-output.txt",
+  "raw_output_sha256": "4c9438e01e8c24b47df7cf570acb7e1a2f64fcfd856514888a918589f40daa97",
+  "run_id": "agentic-eval-live",
+  "schema_version": "project_dream_synthesis_receipt.v1",
+  "status": "accepted",
+  "telemetry": {
+    "cost": null,
+    "tokens": null
+  }
+}

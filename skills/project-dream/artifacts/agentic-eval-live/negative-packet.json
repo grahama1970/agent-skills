@@ -1,0 +1,36 @@
+{
+  "active_topics": [
+    {
+      "authority": "current_code",
+      "status": "active",
+      "topic_id": "stage-boundary"
+    }
+  ],
+  "evidence_refs": [
+    {
+      "authority": "current_code",
+      "coverage_scope": "full",
+      "id": "code",
+      "kind": "code",
+      "project_id": "agent-skills",
+      "reconciliation_eligible": true,
+      "sha256": "5ebeccd6296f587dde55523d9937674161eda4b78f33907ebb7edbbd65fa3bc4",
+      "text": "memory wrapper is the only staging path",
+      "visibility": "project"
+    }
+  ],
+  "input_digest": "75a1939a40c57773042bb4d89384625ed785f9672177b7fcbdbc7428da1fa73a",
+  "input_head": {
+    "digest": "active-head",
+    "generation": 1
+  },
+  "policy": {
+    "mutation_budget": {
+      "max_changed_percent": 100,
+      "max_changed_topics": 1
+    }
+  },
+  "project_id": "agent-skills",
+  "run_id": "agentic-eval-live",
+  "schema_version": "project_dream_evidence_packet.v1"
+}

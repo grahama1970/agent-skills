@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "project_dream_validation_receipt.v1",
+  "type": "object",
+  "required": ["schema_version", "status", "errors", "warnings", "project_id", "run_id", "input_digest", "packet_digest", "candidate_digest", "shadow_only", "active_head_unchanged"],
+  "properties": {
+    "schema_version": {"const": "project_dream_validation_receipt.v1"},
+    "status": {"enum": ["accepted", "blocked"]},
+    "errors": {"type": "array", "items": {"type": "string"}},
+    "warnings": {"type": "array", "items": {"type": "string"}},
+    "shadow_only": {"const": true},
+    "active_head_unchanged": {"const": true}
+  }
+}

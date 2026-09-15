@@ -1,0 +1,16 @@
+{
+  "active_head_unchanged": true,
+  "candidate_digest": "46419f0acc1f4e3e1ee90c628586654989b2f3f1fa1a69f507115bfdc175c05e",
+  "errors": [
+    "proposal[0].claim[0] unresolved evidence ref 'missing'",
+    "proposal[0] has no resolved claim evidence"
+  ],
+  "input_digest": "75a1939a40c57773042bb4d89384625ed785f9672177b7fcbdbc7428da1fa73a",
+  "packet_digest": "bbc88c2ae1419be8785ed9f8d997bd3387cd5ab0ac7c61d3ef1b57c832838d46",
+  "project_id": "agent-skills",
+  "run_id": "agentic-eval-live",
+  "schema_version": "project_dream_validation_receipt.v1",
+  "shadow_only": true,
+  "status": "blocked",
+  "warnings": []
+}

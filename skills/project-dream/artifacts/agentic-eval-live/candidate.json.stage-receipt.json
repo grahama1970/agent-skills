@@ -1,0 +1,43 @@
+{
+  "active_head_after": {
+    "digest": "active-head",
+    "generation": 1
+  },
+  "active_head_before": {
+    "digest": "active-head",
+    "generation": 1
+  },
+  "active_head_unchanged": true,
+  "candidate_digest": "f74dc80be32fa36c03d91badf5757fa349476b96ea20f329e36986df12de981c",
+  "candidate_path": "/home/graham/workspace/experiments/agent-skills/skills/project-dream/artifacts/agentic-eval-live/candidate.json",
+  "errors": [],
+  "memory_command": [
+    "/home/graham/workspace/experiments/agent-skills/skills/project-dream/artifacts/agentic-eval-live/memory-wrapper.sh",
+    "project-memory",
+    "stage",
+    "--packet",
+    "/home/graham/workspace/experiments/agent-skills/skills/project-dream/artifacts/agentic-eval-live/candidate.json",
+    "--json"
+  ],
+  "memory_exit_status": 0,
+  "memory_response": {
+    "candidate_ref": "agentic-eval-live",
+    "head_after": {
+      "digest": "active-head",
+      "generation": 1
+    },
+    "head_before": {
+      "digest": "active-head",
+      "generation": 1
+    }
+  },
+  "memory_stderr": "",
+  "memory_stdout": "{\"head_before\":{\"generation\":1,\"digest\":\"active-head\"},\"head_after\":{\"generation\":1,\"digest\":\"active-head\"},\"candidate_ref\":\"agentic-eval-live\"}\n",
+  "project_id": "agent-skills",
+  "run_id": "agentic-eval-live",
+  "schema_version": "project_dream_stage_receipt.v1",
+  "shadow_only": true,
+  "status": "staged",
+  "validation_digest": "cf3b6d8c56756a883d80fc08477139187246876b0e4559d432e0cdc8d0968ee9",
+  "validation_path": "/home/graham/workspace/experiments/agent-skills/skills/project-dream/artifacts/agentic-eval-live/validation.json"
+}
