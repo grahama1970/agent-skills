@@ -74,6 +74,11 @@ if [[ "${1:-}" == "production-adapter" ]]; then
   exec uv run --project "$SCRIPT_DIR" python -m battle_skill.production_adapter "$@"
 fi
 
+if [[ "${1:-}" == "tau-authoring-route-proof" ]]; then
+  shift
+  exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/eval_tau_authoring_route.py" "$@"
+fi
+
 if [[ "${1:-}" == "release-candidate-baseline" ]]; then
   shift
   exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/release_candidate_baseline.py" "$@"

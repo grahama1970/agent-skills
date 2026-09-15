@@ -14,6 +14,7 @@ from pathlib import Path
 from battle_skill.team_artifact_pipeline import (
     review_artifact_errors,
     run_team_artifact_pipeline,
+    tau_authoring_route_errors,
 )
 
 
@@ -49,6 +50,57 @@ def test_team_artifact_pipeline_binds_red_hashes_through_docker(tmp_path: Path) 
     assert compile_receipt["selected_artifact_sha256"] == selected_sha
     assert handoff["target_identity_sha256"] == "target-sha"
     assert compile_receipt["live"] == "docker_python_compile"
+    descriptor = json.loads((tmp_path / "pipeline" / "team-artifact-descriptor.json").read_text(encoding="utf-8"))
+    assert descriptor["tau_task"]["id"] == "battle-004/run-1/red/red_case_proposal"
+    assert descriptor["route_identity"]["boundary"] == "tau"
+    assert descriptor["evaluator_authority"] == "locked_host_judge"
+
+
+def test_tau_authoring_route_blocks_missing_route_and_authority(tmp_path: Path) -> None:
+    source = tmp_path / "source.py"
+    source.write_text("from app import import_zip\n", encoding="utf-8")
+    provider = json.loads(_provider(tmp_path).read_text(encoding="utf-8"))
+    materialized = json.loads(_materialized(tmp_path, source, "red_exploit").read_text(encoding="utf-8"))
+    del materialized["retained_response_receipt"]
+    materialized["evaluator_authority_override"] = "worker_selected_judge"
+
+    errors = tau_authoring_route_errors(
+        team="red",
+        battle_id="battle-004",
+        run_id="run-1",
+        provider_payload=provider,
+        materialization_payload=materialized,
+    )
+
+    assert "Tau materialization missing retained response receipt" in errors
+    assert "Tau materialization attempted evaluator authority override" in errors
+
+
+def test_team_artifact_pipeline_requires_matching_tau_task_role(tmp_path: Path) -> None:
+    source = tmp_path / "source.py"
+    source.write_text("from app import import_zip\n", encoding="utf-8")
+    provider = _provider(tmp_path)
+    materialized = _materialized(tmp_path, source, "red_exploit")
+    payload = json.loads(materialized.read_text(encoding="utf-8"))
+    payload["tau_task"]["role"] = "blue_patch_proposal"
+    materialized.write_text(json.dumps(payload), encoding="utf-8")
+
+    try:
+        run_team_artifact_pipeline(
+            battle_id="battle-004",
+            run_id="run-1",
+            generation=1,
+            team="red",
+            source_artifact=source,
+            provider_receipt=provider,
+            materialization_receipt=materialized,
+            target_identity_sha256="target-sha",
+            out_dir=tmp_path / "pipeline",
+        )
+    except ValueError as exc:
+        assert "Tau materialization task role mismatch" in str(exc)
+    else:  # pragma: no cover - defensive assertion path
+        raise AssertionError("route mismatch was accepted")
 
 
 def test_team_artifact_pipeline_blocks_blue_without_public_interface(
@@ -56,7 +108,7 @@ def test_team_artifact_pipeline_blocks_blue_without_public_interface(
 ) -> None:
     source = tmp_path / "source.py"
     source.write_text("def unrelated():\n    return True\n", encoding="utf-8")
-    provider = _provider(tmp_path)
+    provider = _provider(tmp_path, team="blue", role="blue_patch_proposal")
     materialized = _materialized(tmp_path, source, "blue_patch")
 
     result = run_team_artifact_pipeline(
@@ -155,14 +207,46 @@ def _json(path: Path, payload: dict[str, object]) -> Path:
     return path
 
 
-def _provider(root: Path) -> Path:
+def _role_for_artifact(artifact_type: str) -> tuple[str, str]:
+    if artifact_type == "red_exploit":
+        return "red", "red_case_proposal"
+    if artifact_type == "blue_patch":
+        return "blue", "blue_patch_proposal"
+    return "unknown", "unknown"
+
+
+def _provider(root: Path, *, team: str = "red", role: str = "red_case_proposal") -> Path:
     return _json(
         root / "provider.json",
-        {"schema": "tau.subagent_receipt.v1", "result": {"status": "PASS"}},
+        {
+            "schema": "tau.subagent_receipt.v1",
+            "result": {"status": "PASS"},
+            "tau_task": {
+                "schema": "tau.battle_team_task_id.v1",
+                "id": f"battle-004/run-1/{team}/{role}",
+                "battle_id": "battle-004",
+                "run_id": "run-1",
+                "team": team,
+                "role": role,
+            },
+            "route_identity": {
+                "boundary": "tau",
+                "router": "tau.battle_live_handoff",
+                "route_id": f"tau://battle-004/run-1/{team}/{role}",
+            },
+            "authority_refs": {
+                "authorization_receipt_sha256": "auth-sha",
+                "evaluator_lock_sha256": "lock-sha",
+            },
+            "evaluator_authority": "locked_host_judge",
+        },
     )
 
 
 def _materialized(root: Path, source: Path, artifact_type: str) -> Path:
+    team, role = _role_for_artifact(artifact_type)
+    response = root / f"{team}-response-receipt.json"
+    response.write_text(json.dumps({"status": "PASS", "team": team, "role": role}), encoding="utf-8")
     return _json(
         root / "materialized.json",
         {
@@ -173,6 +257,28 @@ def _materialized(root: Path, source: Path, artifact_type: str) -> Path:
             "artifact_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
             "artifact_bytes": source.stat().st_size,
             "strategy_genome_sha256": "genome-sha",
-            "scillm_call_receipt_sha256": "call-sha",
+            "scillm_call_receipt_sha256": hashlib.sha256(response.read_bytes()).hexdigest(),
+            "tau_task": {
+                "schema": "tau.battle_team_task_id.v1",
+                "id": f"battle-004/run-1/{team}/{role}",
+                "battle_id": "battle-004",
+                "run_id": "run-1",
+                "team": team,
+                "role": role,
+            },
+            "route_identity": {
+                "boundary": "tau",
+                "router": "tau.battle_live_handoff",
+                "route_id": f"tau://battle-004/run-1/{team}/{role}",
+            },
+            "authority_refs": {
+                "authorization_receipt_sha256": "auth-sha",
+                "evaluator_lock_sha256": "lock-sha",
+            },
+            "retained_response_receipt": {
+                "path": str(response),
+                "sha256": hashlib.sha256(response.read_bytes()).hexdigest(),
+            },
+            "evaluator_authority": "locked_host_judge",
         },
     )

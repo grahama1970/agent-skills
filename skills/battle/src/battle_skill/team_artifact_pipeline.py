@@ -19,6 +19,24 @@ PRIVATE_MARKERS = (
     "judge/oracle/",
 )
 
+TEAM_TAU_ROLES = {
+    "red": "red_case_proposal",
+    "blue": "blue_patch_proposal",
+}
+TAU_TEAM_TASK_SCHEMA = "tau.battle_team_task_id.v1"
+TAU_AUTHORING_ROUTER = "tau.battle_live_handoff"
+REQUIRED_AUTHORITY_REFS = ("authorization_receipt_sha256", "evaluator_lock_sha256")
+NON_COMPETITIVE_TAU_STATES = {
+    "CANCELLED",
+    "CANCELED",
+    "CANCELLATION_REQUESTED",
+    "MALFORMED_RESPONSE",
+    "PROVIDER_QUOTA_EXCEEDED",
+    "QUOTA_EXCEEDED",
+    "TIMEOUT",
+}
+NON_COMPETITIVE_TAU_MARKERS = ("cancel", "malformed", "quota", "timeout")
+
 
 def review_artifact_errors(team: str, text: str) -> list[str]:
     """Deterministic review scan for one artifact's source text.
@@ -312,6 +330,216 @@ def _dotted_name(node: ast.AST) -> str | None:
     return None
 
 
+def tau_authoring_route_errors(
+    *,
+    team: str,
+    battle_id: str,
+    run_id: str,
+    provider_payload: dict[str, Any],
+    materialization_payload: dict[str, Any],
+) -> list[str]:
+    """Return Tau-route contract errors for Red/Blue authored artifacts."""
+
+    expected_role = TEAM_TAU_ROLES[team]
+    errors: list[str] = []
+    provider_task = provider_payload.get("tau_task")
+    materialized_task = materialization_payload.get("tau_task")
+    if not isinstance(provider_task, dict) or not isinstance(materialized_task, dict):
+        return ["Tau authoring route missing typed task ids"]
+    task_id = provider_task.get("id")
+    expected_task_prefix = f"{battle_id}/{run_id}/{team}/{expected_role}"
+    if not isinstance(task_id, str) or not task_id:
+        errors.append("Tau authoring route missing typed task id")
+    elif task_id != expected_task_prefix and not task_id.startswith(
+        f"{expected_task_prefix}/"
+    ):
+        errors.append("Tau authoring route task id does not match Battle team role")
+    if materialized_task.get("id") != task_id:
+        errors.append("Tau materialization task id does not match provider task id")
+    for payload_name, task in (("provider", provider_task), ("materialization", materialized_task)):
+        if task.get("schema") != TAU_TEAM_TASK_SCHEMA:
+            errors.append(f"Tau {payload_name} task id is not typed")
+        if task.get("battle_id") != battle_id:
+            errors.append(f"Tau {payload_name} task battle_id mismatch")
+        if task.get("run_id") != run_id:
+            errors.append(f"Tau {payload_name} task run_id mismatch")
+        if task.get("team") != team:
+            errors.append(f"Tau {payload_name} task team mismatch")
+        if task.get("role") != expected_role:
+            errors.append(f"Tau {payload_name} task role mismatch")
+
+    provider_route = provider_payload.get("route_identity")
+    materialized_route = materialization_payload.get("route_identity")
+    if not isinstance(provider_route, dict) or not isinstance(materialized_route, dict):
+        errors.append("Tau authoring route identity missing")
+    else:
+        expected_route_prefix = f"tau://{battle_id}/{run_id}/{team}/{expected_role}"
+        for route_name, route in (("provider", provider_route), ("materialization", materialized_route)):
+            if route.get("boundary") != "tau":
+                errors.append(f"Tau {route_name} route boundary mismatch")
+            route_id = route.get("route_id")
+            if not isinstance(route_id, str) or not route_id:
+                errors.append(f"Tau {route_name} route id missing")
+            elif route_id != expected_route_prefix and not route_id.startswith(
+                f"{expected_route_prefix}/"
+            ):
+                errors.append(f"Tau {route_name} route id does not match Battle team role")
+            router = route.get("router")
+            if not isinstance(router, str) or not router:
+                errors.append(f"Tau {route_name} route router missing")
+            elif router.startswith("battle"):
+                errors.append(f"Tau {route_name} route uses Battle-local provider path")
+            elif router != TAU_AUTHORING_ROUTER:
+                errors.append(
+                    f"Tau {route_name} route router is not {TAU_AUTHORING_ROUTER}"
+                )
+        if provider_route.get("route_id") != materialized_route.get("route_id"):
+            errors.append("Tau materialization route id does not match provider route id")
+
+    for payload_name, payload in (("provider", provider_payload), ("materialization", materialization_payload)):
+        authority_refs = payload.get("authority_refs")
+        if not isinstance(authority_refs, dict):
+            errors.append(f"Tau {payload_name} missing authority references")
+        else:
+            for key in REQUIRED_AUTHORITY_REFS:
+                if not authority_refs.get(key):
+                    errors.append(f"Tau {payload_name} missing authority reference: {key}")
+        errors.extend(_non_competitive_state_errors(payload_name, payload))
+        if payload.get("evaluator_authority_override") is not None:
+            errors.append(f"Tau {payload_name} attempted evaluator authority override")
+        if payload.get("evaluator_authority") not in (None, "locked_host_judge"):
+            errors.append(f"Tau {payload_name} evaluator authority is not locked_host_judge")
+
+    provider_authority = provider_payload.get("authority_refs")
+    materialized_authority = materialization_payload.get("authority_refs")
+    if isinstance(provider_authority, dict) and isinstance(materialized_authority, dict):
+        for key in REQUIRED_AUTHORITY_REFS:
+            if provider_authority.get(key) != materialized_authority.get(key):
+                errors.append(f"Tau materialization authority reference mismatch: {key}")
+
+    retained = materialization_payload.get("retained_response_receipt")
+    if not isinstance(retained, dict) or not retained.get("path") or not retained.get("sha256"):
+        errors.append("Tau materialization missing retained response receipt")
+    else:
+        errors.extend(_retained_response_errors(retained))
+        declared_sha = _normalized_sha(materialization_payload.get("scillm_call_receipt_sha256"))
+        if not declared_sha:
+            errors.append("Tau materialization missing SciLLM call receipt binding")
+        elif declared_sha != _normalized_sha(retained.get("sha256")):
+            errors.append(
+                "Tau materialization SciLLM call receipt binding does not match retained response receipt"
+            )
+    return errors
+
+
+def _non_competitive_state_errors(payload_name: str, payload: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    for key in ("status", "failure_code", "error_type", "reason"):
+        value = payload.get(key)
+        if isinstance(value, str) and _is_non_competitive_state(value):
+            errors.append(f"Tau {payload_name} non-competitive state cannot be a win: {key}={value}")
+    result = payload.get("result")
+    if isinstance(result, dict):
+        for key in ("status", "failure_code", "error_type", "reason"):
+            value = result.get(key)
+            if isinstance(value, str) and _is_non_competitive_state(value):
+                errors.append(f"Tau {payload_name} non-competitive result cannot be a win: {key}={value}")
+    return errors
+
+
+def _is_non_competitive_state(value: str) -> bool:
+    normalized = value.strip().upper().replace("-", "_")
+    if normalized in NON_COMPETITIVE_TAU_STATES:
+        return True
+    lowered = value.strip().lower().replace("-", "_")
+    return any(marker in lowered for marker in NON_COMPETITIVE_TAU_MARKERS)
+
+
+def _normalized_sha(value: Any) -> str:
+    return str(value or "").removeprefix("sha256:")
+
+
+def _retained_response_errors(retained: dict[str, Any]) -> list[str]:
+    path = Path(str(retained.get("path"))).expanduser()
+    expected = _normalized_sha(retained.get("sha256"))
+    try:
+        actual = _sha(path)
+    except OSError as exc:
+        return [f"Tau materialization retained response receipt unreadable: {exc}"]
+    if actual != expected:
+        return ["Tau materialization retained response receipt sha mismatch"]
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return [f"Tau materialization retained response receipt unparseable: {exc}"]
+    if not isinstance(payload, dict):
+        return ["Tau materialization retained response receipt is not a JSON object"]
+    statuses: list[tuple[str, str]] = []
+    status = payload.get("status")
+    if isinstance(status, str) and status:
+        statuses.append(("status", status))
+    result = payload.get("result")
+    if isinstance(result, dict):
+        result_status = result.get("status")
+        if isinstance(result_status, str) and result_status:
+            statuses.append(("result.status", result_status))
+    if not statuses:
+        return ["Tau materialization retained response receipt missing status"]
+    for name, value in statuses:
+        if _is_non_competitive_state(value):
+            return [
+                f"Tau materialization retained response receipt non-competitive status cannot be a win: {name}={value}"
+            ]
+        if value.strip().upper() != "PASS":
+            return [
+                f"Tau materialization retained response receipt status is not PASS: {name}={value}"
+            ]
+    return []
+
+
+def annotate_tau_authoring_route_receipts(
+    *,
+    battle_id: str,
+    run_id: str,
+    team: str,
+    worker_id: str,
+    provider_receipt: Path,
+    materialization_receipt: Path,
+    scillm_call_receipt: Path,
+    authority_refs: dict[str, str],
+) -> None:
+    """Bind legacy Tau worker receipts to Battle's typed authoring route."""
+
+    role = TEAM_TAU_ROLES[team]
+    task = {
+        "schema": TAU_TEAM_TASK_SCHEMA,
+        "id": f"{battle_id}/{run_id}/{team}/{role}/{worker_id}",
+        "battle_id": battle_id,
+        "run_id": run_id,
+        "team": team,
+        "role": role,
+        "worker_id": worker_id,
+    }
+    route = {
+        "boundary": "tau",
+        "router": "tau.battle_live_handoff",
+        "route_id": f"tau://{battle_id}/{run_id}/{team}/{role}/{worker_id}",
+    }
+    retained = {
+        "path": str(scillm_call_receipt),
+        "sha256": _sha(scillm_call_receipt),
+    }
+    for receipt_path in (provider_receipt, materialization_receipt):
+        payload = _read_json(receipt_path)
+        payload.setdefault("tau_task", task)
+        payload.setdefault("route_identity", route)
+        payload["authority_refs"] = dict(authority_refs)
+        payload.setdefault("evaluator_authority", "locked_host_judge")
+        if receipt_path == materialization_receipt:
+            payload["retained_response_receipt"] = retained
+        _write_json(receipt_path, payload)
+
+
 def run_team_artifact_pipeline(
     *,
     battle_id: str,
@@ -368,6 +596,15 @@ def run_team_artifact_pipeline(
         )
     if not materialization_payload.get("scillm_call_receipt_sha256"):
         input_errors.append("Tau materialization receipt lacks SciLLM call binding")
+    input_errors.extend(
+        tau_authoring_route_errors(
+            team=team,
+            battle_id=battle_id,
+            run_id=run_id,
+            provider_payload=provider_payload,
+            materialization_payload=materialization_payload,
+        )
+    )
     if input_errors:
         raise ValueError("; ".join(input_errors))
     selected_name = "red_exploit_submission.py" if team == "red" else "app.py"
@@ -392,6 +629,11 @@ def run_team_artifact_pipeline(
         "tau_scillm_call_receipt_sha256": materialization_payload[
             "scillm_call_receipt_sha256"
         ],
+        "tau_task": materialization_payload["tau_task"],
+        "route_identity": materialization_payload["route_identity"],
+        "authority_refs": materialization_payload["authority_refs"],
+        "retained_response_receipt": materialization_payload["retained_response_receipt"],
+        "evaluator_authority": "locked_host_judge",
         "provider_receipt_sha256": _sha(provider_receipt),
         "materialization_receipt_sha256": _sha(materialization_receipt),
         "target_identity_sha256": target_identity_sha256,

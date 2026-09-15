@@ -3486,7 +3486,7 @@
       "category": "battle-b25-route-red-and-blue-authoring-through-tau",
       "type": "adversarial",
       "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
+      "evidence_class": "fault_injected_deterministic",
       "supports_claims": [
         "battle.tau_subagent.provider_handoff"
       ],
@@ -3512,7 +3512,8 @@
             "min_bytes": 400
           }
         ]
-      }
+      },
+      "description": "B25 Red/Blue authoring crosses the real Tau CLI routing boundary over loopback HTTP with bound handoff, SciLLM, materialization, and subagent receipts.. The proof also rewrites hash-bound retained response receipt copies to TIMEOUT/PROVIDER_QUOTA_EXCEEDED/CANCELLED statuses and requires the Tau authoring route validator to reject each as a non-competitive non-win."
     },
     {
       "name": "battle-invariant-report-terminal-cards-live",
