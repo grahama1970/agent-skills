@@ -23,6 +23,7 @@ assert '{ agent: "worker", model: "zai-glm" }' in js, "live rung baked in"
 assert "code_run" in js.splitlines()[1], "roster recorded in header"
 assert "DERIVED_FROM" in js and "one-shot --out-dir" in js
 assert "research.failed" in js and '"BLOCKED"' in js, "fail-closed stage settling present"
+assert "verify_roster" in js and "ping_model_roster.py" in js, "mandatory Stage 0 availability verification embedded"
 print(json.dumps({"schema": "ask.compose_pipeline_offline_eval.v1", "status": "PASS",
                   "checked": ["no async helpers", "promise-chain fallback", "live rungs baked",
                               "roster header", "blocked-stage settling"]}, indent=2))

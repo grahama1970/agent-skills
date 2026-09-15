@@ -122,6 +122,13 @@ python3 skills/ask/scripts/ping_model_roster.py \
   --seat webkimi --seat webgemini --seat webgpt   # [--live-seats]
 ```
 
+NON-NEGOTIABLE (operator 2026-09-16): every workflowScript - composed or
+hand-rolled - verifies availability at the moment of use. Composed scripts
+carry a mandatory `verify_roster` Stage 0 lane that re-runs the roster ping at
+execution time and settles BLOCKED before any expensive stage if the roster
+went dark between compose and launch. Hand-rolled scripts must begin with the
+same check or be composed instead.
+
 ~15s wall. Model probes are 1-token scillm calls; seats default to
 `ask_call_log` memory health (instant) and promote to real browser pings with
 `--live-seats`. Verdicts are typed: `ok`, `rate_limited`, `proxy_paused`

@@ -78,9 +78,25 @@ def emit(roster: dict, packet: str, nonce: str, question: str, allow_degraded: b
         return "[" + ", ".join(f'{{ agent: "{agent}", model: "{m}" }}' for m in live) + "]"
 
     ok_seats = [s["seat"] for s in roster["seats"] if s["ok"]] or ["webkimi"]
+    role_args = " ".join(a for role, models in DEFAULT_ROLES.items() for m in models for a in (f"--role {role}={m}",))
+    seat_args = " ".join(f"--seat {s}" for s in ok_seats)
     return f"""// Composed by compose_pipeline_workflow.py from a ping-verified roster.
 // Roster at compose time: {json.dumps({r: v['live'] for r, v in roster['roles'].items()})}, seats ok: {ok_seats}
 {PRELUDE}
+
+// STAGE 0 (mandatory): re-verify availability at execution time. A compose-time
+// green light can go dark before launch; this stage fails fast (~15s) instead
+// of burning minutes discovering limits mid-pipeline.
+const rosterCheck = await runs.run("verify_roster", {{
+  agent: "delegate",
+  task: `Run EXACTLY, from /home/graham/workspace/experiments/agent-skills:
+python3 skills/ask/scripts/ping_model_roster.py {role_args} {seat_args}
+Report the exit code and paste the readiness line and every rung status line verbatim. If exit is not 0, say NOT_READY and the failing roles. Do nothing else.`,
+}});
+const notReady = /NOT_READY/.test(rosterCheck.output);
+if (notReady) {{
+  return JSON.stringify({{ status: "BLOCKED", stage: "verify_roster", roster_output: rosterCheck.output.slice(0, 3000) }});
+}}
 
 const ROOT = "{packet}";
 const NONCE = "{nonce}";
