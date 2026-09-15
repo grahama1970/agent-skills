@@ -8,7 +8,9 @@ Outputs: ProbeResult dataclasses consumed by monitor.py reporting layer.
 """
 from __future__ import annotations
 
+import json
 import os
+import re
 import shutil
 import subprocess
 import time
@@ -346,6 +348,10 @@ def probe_zombie_processes(autofix: bool = False) -> ProbeResult:
     # (pattern, max_age_hours, label)
     _PATTERNS = [
         ("claude", 24, "claude"), ("chromium", 24, "chromium"), ("chrome", 24, "chrome"),
+        # 2026-08-27 incident: five codex TUIs aged 2-6 days held ~640k
+        # inotify watches and exhausted the kernel budget (ENOSPC for every
+        # new dev server). Codex sessions older than 48h are stale.
+        ("codex", 48, "codex"),
         ("vitest", 1, "build-zombie"), ("jest", 1, "build-zombie"),
         ("webpack", 1, "build-zombie"), ("esbuild", 1, "build-zombie"),
     ]
@@ -501,9 +507,241 @@ def probe_tmp_bloat(autofix: bool = False) -> ProbeResult:
                        value=round(tmp_total_gb, 1))
 
 
+def probe_inotify_watches(autofix: bool = False) -> ProbeResult:
+    """W10: Check inotify watch budget (2026-08-27 incident: exhaustion by
+    stale agent sessions made every new file-watching dev server fail with
+    ENOSPC while the limit itself looked healthy)."""
+    try:
+        limit = int(Path("/proc/sys/fs/inotify/max_user_watches").read_text())
+    except (OSError, ValueError):
+        return ProbeResult("W10", "inotify-watches", ProbeStatus.SKIP,
+                           "cannot read inotify limits")
+
+    usage: dict[str, int] = {}
+    total = 0
+    for proc in Path("/proc").glob("[0-9]*"):
+        count = 0
+        try:
+            for fdinfo in (proc / "fdinfo").iterdir():
+                try:
+                    count += fdinfo.read_text().count("inotify wd:")
+                except OSError:
+                    continue
+        except OSError:
+            continue
+        if count:
+            total += count
+            try:
+                cmd = (proc / "cmdline").read_bytes().replace(b"\0", b" ").decode()[:60]
+            except OSError:
+                cmd = "?"
+            usage[f"{proc.name} {cmd.strip()}"] = count
+
+    pct = (total / limit) * 100 if limit else 0.0
+    top = sorted(usage.items(), key=lambda kv: kv[1], reverse=True)[:5]
+    details = {"total": total, "limit": limit,
+               "top_consumers": [f"{c} watches: {k}" for k, c in top]}
+    msg = f"{total}/{limit} watches in use ({pct:.0f}%)"
+    if pct >= 90:
+        return ProbeResult("W10", "inotify-watches", ProbeStatus.FAIL, msg,
+                           value=round(pct, 1), details=details)
+    if pct >= 70:
+        return ProbeResult("W10", "inotify-watches", ProbeStatus.WARN, msg,
+                           value=round(pct, 1), details=details)
+    return ProbeResult("W10", "inotify-watches", ProbeStatus.PASS, msg,
+                       value=round(pct, 1), details=details)
+
+
+def probe_agent_cli_freshness(autofix: bool = False) -> ProbeResult:
+    """W11: Keep claude/codex CLIs current (host + scillm container).
+
+    Providers enforce minimum client versions server-side; a stale CLI or a
+    stale impersonated version string starts failing with 400s on an arbitrary
+    date (observed: claude-cli/2.1.75 rejected for claude-fable-5-1).
+    Autofix runs the native updaters.
+    """
+    def _ver(cmd: list[str]) -> str:
+        try:
+            out = subprocess.run(cmd, capture_output=True, text=True, timeout=30).stdout
+            m = re.search(r"\d+\.\d+\.\d+", out)
+            return m.group(0) if m else ""
+        except Exception:
+            return ""
+
+    def _npm_latest(pkg: str) -> str:
+        try:
+            out = subprocess.run(
+                ["curl", "-s", "-m", "15", f"https://registry.npmjs.org/{pkg}/latest"],
+                capture_output=True, text=True, timeout=20,
+            ).stdout
+            return json.loads(out).get("version", "")
+        except Exception:
+            return ""
+
+    def _tup(v: str) -> tuple:
+        return tuple(int(p) for p in v.split(".")) if v else (0,)
+
+    scillm_cid = _ver_cid = subprocess.run(
+        ["docker", "ps", "-qf", "name=scillm"], capture_output=True, text=True, timeout=15
+    ).stdout.split()
+    scillm_cid = scillm_cid[0] if scillm_cid else ""
+
+    targets = [
+        ("claude(host)", ["claude", "--version"], "@anthropic-ai/claude-code",
+         ["claude", "update"]),
+        ("codex(host)", ["codex", "--version"], "@openai/codex",
+         ["npm", "install", "-g", "@openai/codex@latest"]),
+    ]
+    if scillm_cid:
+        targets.append((
+            "claude(scillm)",
+            ["docker", "exec", scillm_cid, "claude", "--version"],
+            "@anthropic-ai/claude-code",
+            ["docker", "exec", scillm_cid, "npm", "install", "-g",
+             "@anthropic-ai/claude-code@latest"],
+        ))
+
+    details, stale, fixed = {}, [], []
+    latest_cache: dict[str, str] = {}
+    for name, ver_cmd, pkg, fix_cmd in targets:
+        installed = _ver(ver_cmd)
+        latest = latest_cache.setdefault(pkg, _npm_latest(pkg))
+        details[name] = {"installed": installed, "latest": latest}
+        if not installed or not latest:
+            continue  # missing CLI or registry unreachable: report only
+        if _tup(installed) < _tup(latest):
+            stale.append(name)
+            if autofix:
+                subprocess.run(fix_cmd, capture_output=True, timeout=300)
+                after = _ver(ver_cmd)
+                details[name]["after_fix"] = after
+                if _tup(after) >= _tup(latest):
+                    fixed.append(name)
+
+    if all(not d["installed"] for d in details.values()):
+        return ProbeResult("W11", "agent-cli-freshness", ProbeStatus.WARN,
+                           "could not determine any CLI version", details=details)
+    if not stale:
+        return ProbeResult("W11", "agent-cli-freshness", ProbeStatus.PASS,
+                           "claude/codex CLIs current", details=details,
+                           auto_fixable=True)
+    if fixed and len(fixed) == len(stale):
+        return ProbeResult("W11", "agent-cli-freshness", ProbeStatus.FIXED,
+                           f"updated: {', '.join(fixed)}", details=details,
+                           auto_fixable=True, fix_applied=True)
+    return ProbeResult("W11", "agent-cli-freshness", ProbeStatus.WARN,
+                       f"stale: {', '.join(stale)}", value=float(len(stale)),
+                       details=details, auto_fixable=True, fix_applied=bool(fixed))
+
+
 # ---------------------------------------------------------------------------
 # Probe registry
 # ---------------------------------------------------------------------------
+
+def probe_skill_symlinks(autofix: bool = False) -> ProbeResult:
+    """W12: Keep one canonical skills tree; never archive duplicate trees."""
+    canonical = Path.home() / "workspace/experiments/agent-skills/skills"
+    violations = []
+    removed = []
+    checked = []
+    errors = []
+    if canonical.is_symlink() or not canonical.is_dir():
+        return ProbeResult("W12", "skill-symlinks", ProbeStatus.FAIL,
+                           "Canonical skills directory is missing or is a symlink")
+
+    # Bound discovery to project roots, never descend into copied skill trees.
+    roots = {Path.home()}
+    try:
+        for base in (Path.home() / "workspace", Path.home() / "workspace/experiments"):
+            roots.update(p for p in base.iterdir() if p.is_dir() and not p.is_symlink())
+        for root in sorted(roots):
+            for agent in (".agents", ".claude", ".codex", ".cursor", ".opencode", ".pi", ".pi/agent"):
+                parent = root / agent
+                if not parent.is_dir() or parent.is_symlink():
+                    continue
+                link = parent / "skills"
+                backups = sorted(parent.glob("skills.pre-symlink-*"))
+                if not os.path.lexists(link) and not backups:
+                    continue
+                checked.append(str(link))
+                valid = link.is_symlink() and link.resolve() == canonical
+                if not valid:
+                    violations.append({"path": str(link), "reason": "expected canonical symlink"})
+                for backup in backups:
+                    if autofix and valid and backup.is_dir() and not backup.is_symlink():
+                        # Never follow links or delete a tree mounted from elsewhere.
+                        if backup.stat().st_uid != os.getuid() or os.path.ismount(backup):
+                            errors.append(f"Refusing unowned or mounted directory: {backup}")
+                        else:
+                            try:
+                                shutil.rmtree(backup)
+                                if not os.path.lexists(backup):
+                                    removed.append(str(backup))
+                            except OSError as exc:
+                                errors.append(f"{backup}: {exc}")
+                    if os.path.lexists(backup):
+                        violations.append({"path": str(backup), "reason": "duplicate skills retained"})
+    except OSError as exc:
+        errors.append(str(exc))
+    status = (ProbeStatus.FAIL if errors else ProbeStatus.WARN if violations
+              else ProbeStatus.FIXED if removed else ProbeStatus.PASS)
+    return ProbeResult(
+        "W12", "skill-symlinks", status,
+        f"{len(violations)} skill-link violation(s); {len(removed)} duplicate tree(s) removed",
+        value=len(violations), auto_fixable=True, fix_applied=bool(removed),
+        details={"canonical": str(canonical), "checked": checked,
+                 "violations": violations, "removed": removed, "errors": errors},
+    )
+
+
+def probe_gpu_container_capability(autofix: bool = False) -> ProbeResult:
+    """W13: GPU-attached containers must have working CUDA inside.
+
+    Host driver reloads leave running containers with stale userspace driver
+    libs: docker inspect still shows the GPU request, but CUDA init fails
+    (observed 2026-09-15: embry-memory BLOCKED_DEPENDENCY for 15 days while
+    (healthy)). Capability probe, not liveness.
+    """
+    def _run(cmd: list[str]) -> tuple[int, str]:
+        try:
+            r = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            return r.returncode, (r.stdout + r.stderr).strip()
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            return 1, str(exc)
+
+    rc, out = _run(["docker", "ps", "--format", "{{.Names}}"])
+    if rc != 0:
+        return ProbeResult("W13", "gpu-container-capability", ProbeStatus.SKIP,
+                           f"docker unavailable: {out[:120]}")
+    gpu_containers = []
+    for name in [n for n in out.splitlines() if n.strip()]:
+        irc, inspect_out = _run(["docker", "inspect", "--format",
+                                 "{{.HostConfig.DeviceRequests}}", name])
+        if irc == 0 and "nvidia" in inspect_out and "gpu" in inspect_out:
+            gpu_containers.append(name)
+    if not gpu_containers:
+        return ProbeResult("W13", "gpu-container-capability", ProbeStatus.PASS,
+                           "no GPU-attached containers", value=0)
+    stale, errors = [], []
+    for name in gpu_containers:
+        crc, cout = _run(["docker", "exec", name, "python3", "-c",
+                          "import torch; raise SystemExit(0 if torch.cuda.is_available() else 3)"])
+        if crc == 0:
+            continue
+        if "No module named torch" in cout or "ModuleNotFoundError" in cout:
+            errors.append(f"{name}: torch not installed (cannot probe CUDA)")
+        elif crc == 3:
+            stale.append(f"{name}: CUDA unavailable inside container (stale driver libs?) — restart container")
+        else:
+            errors.append(f"{name}: probe failed rc={crc}: {cout[:120]}")
+    status = (ProbeStatus.FAIL if stale else
+              ProbeStatus.WARN if errors else ProbeStatus.PASS)
+    return ProbeResult("W13", "gpu-container-capability", status,
+                       f"{len(stale)}/{len(gpu_containers)} GPU container(s) with dead CUDA",
+                       value=len(stale), auto_fixable=False,
+                       details={"gpu_containers": gpu_containers, "stale": stale,
+                                "errors": errors})
+
 
 ALL_PROBES = [
     ("W01", "nvme-usage", probe_nvme_usage),
@@ -515,4 +753,8 @@ ALL_PROBES = [
     ("W07", "zombie-processes", probe_zombie_processes),
     ("W08", "drive-health", probe_drive_health),
     ("W09", "tmp-bloat", probe_tmp_bloat),
+    ("W10", "inotify-watches", probe_inotify_watches),
+    ("W11", "agent-cli-freshness", probe_agent_cli_freshness),
+    ("W12", "skill-symlinks", probe_skill_symlinks),
+    ("W13", "gpu-container-capability", probe_gpu_container_capability),
 ]
