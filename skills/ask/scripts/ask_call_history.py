@@ -38,7 +38,7 @@ def main() -> int:
     failures = history["recent_failures"]
     print(f"recent failures: {len(failures)}")
     for doc in failures:
-        print(f"  {doc.get('ts')} {doc.get('failure_code') or 'unknown'} run={doc.get('run_dir')}")
+        print(f"  {doc.get('ts')} {doc.get('failure_code') or doc.get('status') or 'unknown'} run={doc.get('run_dir')}")
     return 0
 
 

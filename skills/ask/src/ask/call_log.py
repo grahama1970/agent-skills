@@ -135,5 +135,5 @@ def call_history(handler: str, *, limit: int = 50) -> dict[str, Any]:
     docs = response.json().get("documents") or []
     docs.sort(key=lambda d: str(d.get("ts") or ""), reverse=True)
     last_success = next((d for d in docs if d.get("ok") is True), None)
-    failures = [d for d in docs if d.get("ok") is not True][:10]
+    failures = [d for d in docs if d.get("ok") is not True and d.get("status") != "retracted_fixture"][:10]
     return {"handler": handler, "total": len(docs), "last_success": last_success, "recent_failures": failures}
