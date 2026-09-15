@@ -52,6 +52,11 @@ case "$CMD" in
         python3 mine_transcripts.py sources
         ;;
 
+    mine-reasoning)
+        # Deterministic reasoning-trace extraction (no model calls)
+        python3 reasoning_trace.py "$@"
+        ;;
+
     help|*)
         cat <<EOF
 mine-transcripts - Extract training data from CLI agent conversations
@@ -61,6 +66,7 @@ USAGE:
 
 COMMANDS:
     mine        Mine transcripts for bridge classifier training
+    mine-reasoning  Extract reasoning.trace.v1 records (deterministic, no model calls)
     analyze     Analyze bridge coverage in dataset
     export      Export samples for human review
     merge       Merge reviewed data into training set
