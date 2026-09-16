@@ -41,7 +41,7 @@ trap 'rm -f "$GIT_INDEX_FILE"' EXIT
 for attempt in 1 2 3; do
     git read-tree origin/main
     [ ${#paths[@]} -gt 0 ] && git add -A -- "${paths[@]}"
-    [ ${#removes[@]} -gt 0 ] && git rm -r --cached --ignore-unmatch -q -- "${removes[@]}"
+    [ ${#removes[@]} -gt 0 ] && git rm -rf --cached --ignore-unmatch -q -- "${removes[@]}"
     tree=$(git write-tree)
     if [ "$tree" = "$(git rev-parse origin/main^{tree})" ]; then
         echo "land: no change vs origin/main for named paths — nothing to push"
