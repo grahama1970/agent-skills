@@ -847,7 +847,16 @@ async function mountKimiFileInput(cdp, log = () => {}) {
         ${buildClickDispatcher()}
         if (document.querySelector(${fileInputJson})) return { input: true };
         const popover = document.querySelector(${popoverJson});
-        const trigger = document.querySelector(${triggerJson});
+        // The trigger selector can also match dead nodes in message history
+        // (e.g. a prior tool-call's toolcall-flow summary span). querySelector
+        // returns the first, so the composer's real .toolkit-trigger-btn never
+        // gets clicked (observed: clicked 97x, popover never opened). Pick the
+        // visible composer button, excluding history/message/markdown subtrees.
+        const trigger = (() => {
+          const cands = Array.from(document.querySelectorAll(${triggerJson}))
+            .filter((el) => el.offsetParent !== null && !el.closest('[class*="toolcall"],[class*="message"],[class*="markdown"],[class*="history"]'));
+          return cands.find((el) => String(el.className && (el.className.baseVal || el.className) || '').includes('toolkit-trigger-btn')) || cands[0] || null;
+        })();
         if (popover) {
           if (${JSON.stringify(itemClicked)}) {
             return { input: false, popoverOpen: true, triggerPresent: Boolean(trigger) };
