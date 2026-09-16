@@ -1,0 +1,83 @@
+{
+  "version": 2,
+  "skill": "best-practices-workflowscript",
+  "trials": 3,
+  "proof_scope": "WorkflowScript authoring standard: anti-pattern lint, portable-syntax contract, and fail-closed validation posture for pi-subagents workflowScripts.",
+  "claims": {
+    "proves": "The linter passes the real production dev-cycle workflowScript, rejects the non-portable anti-patterns the pi-subagents runtime rejects (nested async functions, arrow helpers, host globals) on a fault-injected sample, and the skill composes agentic-evals for its eval posture.",
+    "does_not_prove": "That any specific workflowScript is semantically correct for its goal, that provider preflight or review gates were exercised live, or that a diagram was human-reviewed."
+  },
+  "capability_claims": [
+    {
+      "id": "best_practices_workflowscript.lint_contract",
+      "description": "validate-workflowscript.sh accepts the portable subset and exits nonzero on runtime-rejected syntax.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true,
+        "fault_injected_deterministic": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
+      "id": "best_practices_workflowscript.fail_closed",
+      "description": "The fixture catches removal of the lint step and regression of the linter on a fault-injected bad sample.",
+      "criticality": "important",
+      "evidence_required": {
+        "fault_injected_deterministic": true
+      },
+      "claim_semantics": "protocol"
+    }
+  ],
+  "cases": [
+    {
+      "name": "production-workflowscript-passes-lint",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "best_practices_workflowscript.lint_contract"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "test -f /home/graham/.pi/agent/workflows/dev-cycle.workflow.js && /home/graham/workspace/experiments/agent-skills/skills/best-practices-workflowscript/run.sh validate /home/graham/.pi/agent/workflows/dev-cycle.workflow.js | tee lint-output.txt"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "RESULT: CLEAN"
+        ],
+        "artifacts": [
+          {
+            "path": "lint-output.txt",
+            "min_bytes": 20
+          }
+        ]
+      }
+    },
+    {
+      "name": "fault-injected-bad-workflowscript-fails-closed",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "best_practices_workflowscript.lint_contract",
+        "best_practices_workflowscript.fail_closed"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "BAD=$(mktemp /tmp/bp-wfs-bad.XXXXXX.workflow.js); printf '%s\\n' 'const g = async () => { return 1; };' 'async function helper(){ return runs.run(\"x\",{}); }' 'const fs = require(\"fs\");' > \"$BAD\"; /home/graham/workspace/experiments/agent-skills/skills/best-practices-workflowscript/run.sh validate \"$BAD\"; rc=$?; rm -f \"$BAD\"; exit $rc"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": [
+          "VIOLATION",
+          "RESULT: FAIL"
+        ]
+      }
+    }
+  ]
+}

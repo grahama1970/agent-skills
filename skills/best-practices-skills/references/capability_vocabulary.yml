@@ -1,5 +1,14 @@
 schema: best-practices-skills.capability_vocabulary.v1
 capabilities:
+  pi-subagent-plan:
+    providers:
+      - pi-orchestrator
+  pi-subagent-workflow-script:
+    providers:
+      - pi-orchestrator
+  pi-workflow-recall:
+    providers:
+      - pi-orchestrator
   data-anonymization:
     providers:
       - anonymize-data
@@ -12,15 +21,6 @@ capabilities:
   meeting-companion-launch-plan:
     providers:
       - ops-google-meet
-  gemini-sidebar-clipboard-loop:
-    providers:
-      - ops-gemini-sidebar
-  browser-sidebar-coordinate-plan:
-    providers:
-      - ops-gemini-sidebar
-  gemini-response-copy-readback:
-    providers:
-      - ops-gemini-sidebar
   llm-completion:
     providers:
       - scillm
@@ -67,19 +67,6 @@ capabilities:
   project-state-readiness-pattern:
     providers:
       - best-practices-skills
-  acceptance-contract:
-    providers:
-      - acceptance-contract
-  requirements-extraction:
-    providers:
-      - acceptance-contract
-  immutable-goal-draft:
-    providers:
-      - acceptance-contract
-  report-generation:
-    providers:
-      - acceptance-contract
-      - create-report
   animation-vocabulary:
     providers:
       - animation-vocabulary
@@ -257,12 +244,4 @@ capabilities:
   human-named-target-authority-rule:
     description: A human-named delivery target is binding; undeliverable means NEEDS_ATTENTION, never reroute
     providers: [best-practices-delivery-proof]
-  obs-monitoring:
-    description: Live OBS Studio stats, health findings, and local install diagnostics via obs-websocket v5
-    providers: [ops-obs]
-  obs-control:
-    description: OBS Studio stream/record/scene control through the obs-websocket v5 RPC surface
-    providers: [ops-obs]
-  obs-streamdeck-bindings:
-    description: Validated Stream Deck button definitions and one-token OBS state probe for icon widgets
-    providers: [ops-obs]
+  - best-practices-workflowscript
