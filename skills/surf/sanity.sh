@@ -286,6 +286,16 @@ main() {
 
     print_header
 
+    # Deterministic regression tests (no browser needed) — fail loud.
+    local SD; SD="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    for t in "$SD"/tests/*.test.mjs; do
+        [ -e "$t" ] || continue
+        if ! node "$t"; then
+            echo "sanity: deterministic test failed: $t" >&2
+            exit 1
+        fi
+    done
+
     local all_passed=1
     local needs_build=0
     local needs_load=0
