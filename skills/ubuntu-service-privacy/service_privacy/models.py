@@ -19,6 +19,10 @@ DEFAULT_PROTECTED = ['/home', '/root', '/mnt', '/media', '/srv', '/run/user']
 RUNTIME_READ_FILES = [
     '/etc/os-release', '/usr/lib/os-release', '/etc/machine-id',
     '/proc/sys/kernel/osrelease', '/proc/cpuinfo', '/proc/meminfo', '/proc/uptime',
+    # Runtime needs observed on a live Kolide launcher (2026-09-16 crash-loop,
+    # kernel audit: nsswitch x2, /proc/stat x3, cpu-online, cgroup per start):
+    # glibc NSS init, osquery CPU tables, topology. Posture-class only.
+    '/etc/nsswitch.conf', '/etc/hosts', '/proc/stat', '/sys/devices/system/cpu/online',
 ]
 LOCAL_NETWORKS = [
     '0.0.0.0/8', '10.0.0.0/8', '100.64.0.0/10', '127.0.0.0/8',
