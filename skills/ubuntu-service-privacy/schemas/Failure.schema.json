@@ -1,0 +1,241 @@
+{
+  "$defs": {
+    "Seam": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "pydantic",
+          "default": "pydantic",
+          "title": "Kind",
+          "type": "string"
+        },
+        "status": {
+          "const": "PASS",
+          "default": "PASS",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "title": "Seam",
+      "type": "object"
+    },
+    "TriageResult": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "layer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Layer"
+        },
+        "cause": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cause"
+        },
+        "next_command": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Next Command"
+        },
+        "recoverable": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Recoverable"
+        },
+        "not_this": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Not This",
+          "type": "array"
+        },
+        "ambiguous": {
+          "title": "Ambiguous",
+          "type": "boolean"
+        },
+        "matched_tokens": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Matched Tokens",
+          "type": "array"
+        },
+        "aliased_from": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Aliased From"
+        }
+      },
+      "required": [
+        "code",
+        "ambiguous"
+      ],
+      "title": "TriageResult",
+      "type": "object"
+    },
+    "ValidationIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "title": "Type",
+          "type": "string"
+        },
+        "loc": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Loc",
+          "type": "array"
+        },
+        "msg": {
+          "title": "Msg",
+          "type": "string"
+        },
+        "ctx": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "Ctx",
+          "type": "object"
+        }
+      },
+      "required": [
+        "type",
+        "loc",
+        "msg"
+      ],
+      "title": "ValidationIssue",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "ubuntu_service_privacy.error.v1",
+      "default": "ubuntu_service_privacy.error.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "const": "BLOCKED",
+      "default": "BLOCKED",
+      "title": "Status",
+      "type": "string"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    },
+    "validation_errors": {
+      "items": {
+        "$ref": "#/$defs/ValidationIssue"
+      },
+      "title": "Validation Errors",
+      "type": "array"
+    },
+    "triage_status": {
+      "enum": [
+        "CLASSIFIED",
+        "UNAVAILABLE",
+        "CONTRACT_REJECTED",
+        "CALL_FAILED"
+      ],
+      "title": "Triage Status",
+      "type": "string"
+    },
+    "triage_errors": {
+      "items": {
+        "$ref": "#/$defs/TriageResult"
+      },
+      "title": "Triage Errors",
+      "type": "array"
+    },
+    "recovery_argv": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Recovery Argv",
+      "type": "array"
+    },
+    "next_command_execution": {
+      "const": "NEVER_AUTOMATIC",
+      "default": "NEVER_AUTOMATIC",
+      "title": "Next Command Execution",
+      "type": "string"
+    },
+    "seam_validation": {
+      "$ref": "#/$defs/Seam"
+    }
+  },
+  "required": [
+    "reason",
+    "validation_errors",
+    "triage_status",
+    "triage_errors",
+    "recovery_argv"
+  ],
+  "title": "Failure",
+  "type": "object"
+}

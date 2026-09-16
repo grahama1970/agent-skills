@@ -1,0 +1,122 @@
+{
+  "version": 2,
+  "skill": "ubuntu-service-privacy",
+  "trials": 3,
+  "proof_scope": "Deterministic mechanism tests and native userspace parsers; no live kernel confinement or actual Kolide qualification.",
+  "claims": {
+    "proves": "Strict inputs, deterministic generation, tamper handling, owner approval, and failure-state transaction behavior.",
+    "does_not_prove": "Unrelated proprietary/controlled information is inaccessible in every representation; actual Kolide compatibility; runtime confinement; ITAR compliance."
+  },
+  "capability_claims": [
+    {
+      "id": "service_privacy.owner_confidentiality",
+      "description": "Employer Device Trust must not obtain unrelated proprietary or controlled work in any representation or access path.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true,
+        "human_evaluation": true
+      }
+    },
+    {
+      "id": "service_privacy.policy_mechanisms",
+      "description": "Typed rejection, deterministic rendering, and explicit owner-approved transaction controls.",
+      "criticality": "important",
+      "evidence_required": {
+        "deterministic": true
+      }
+    }
+  ],
+  "cases": [
+    {
+      "name": "policy-and-artifact-positive",
+      "type": "positive",
+      "command": [
+        "bash",
+        "../sanity.sh",
+        "-k",
+        "test_private_artifact_roundtrip or test_render_is_deterministic_and_profile_inherits or test_real_apparmor_parser"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "service_privacy.policy_mechanisms"
+      ]
+    },
+    {
+      "name": "unconfined-probe-negative",
+      "type": "negative",
+      "command": [
+        "bash",
+        "../sanity.sh",
+        "-k",
+        "test_real_probe_does_not_pass_unconfined"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "service_privacy.policy_mechanisms"
+      ]
+    },
+    {
+      "name": "adversarial-input-and-interrupted-apply",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "../sanity.sh",
+        "-k",
+        "injection or failed_apply or failed_stop or wrong_approval or tamper"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "service_privacy.policy_mechanisms"
+      ]
+    }
+  ],
+  "coverage_seams": [
+    {
+      "seam_id": "policy-input",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "kernel-enforcement",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "value-representation",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "required_evidence": [
+        "live_e2e",
+        "human_evaluation"
+      ]
+    }
+  ]
+}

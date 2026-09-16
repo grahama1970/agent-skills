@@ -1,0 +1,85 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "ubuntu_service_privacy.policy.v1",
+      "default": "ubuntu_service_privacy.policy.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "unit": {
+      "title": "Unit",
+      "type": "string"
+    },
+    "executables": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 24,
+      "minItems": 1,
+      "title": "Executables",
+      "type": "array"
+    },
+    "protected_roots": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 64,
+      "title": "Protected Roots",
+      "type": "array"
+    },
+    "read_files": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 128,
+      "title": "Read Files",
+      "type": "array"
+    },
+    "read_roots": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 24,
+      "title": "Read Roots",
+      "type": "array"
+    },
+    "write_roots": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 8,
+      "minItems": 1,
+      "title": "Write Roots",
+      "type": "array"
+    },
+    "network_mode": {
+      "default": "OFFLINE",
+      "enum": [
+        "OFFLINE",
+        "PUBLIC_EGRESS_LOCAL_DENY"
+      ],
+      "title": "Network Mode",
+      "type": "string"
+    },
+    "public_dns": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 3,
+      "title": "Public Dns",
+      "type": "array"
+    },
+    "owner_acknowledges_limits": {
+      "default": false,
+      "title": "Owner Acknowledges Limits",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "unit",
+    "executables"
+  ],
+  "title": "Policy",
+  "type": "object"
+}

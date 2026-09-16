@@ -1,0 +1,273 @@
+{
+  "$defs": {
+    "Executable": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "title": "Executable",
+      "type": "object"
+    },
+    "Policy": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "ubuntu_service_privacy.policy.v1",
+          "default": "ubuntu_service_privacy.policy.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "executables": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 24,
+          "minItems": 1,
+          "title": "Executables",
+          "type": "array"
+        },
+        "protected_roots": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Protected Roots",
+          "type": "array"
+        },
+        "read_files": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 128,
+          "title": "Read Files",
+          "type": "array"
+        },
+        "read_roots": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 24,
+          "title": "Read Roots",
+          "type": "array"
+        },
+        "write_roots": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Write Roots",
+          "type": "array"
+        },
+        "network_mode": {
+          "default": "OFFLINE",
+          "enum": [
+            "OFFLINE",
+            "PUBLIC_EGRESS_LOCAL_DENY"
+          ],
+          "title": "Network Mode",
+          "type": "string"
+        },
+        "public_dns": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 3,
+          "title": "Public Dns",
+          "type": "array"
+        },
+        "owner_acknowledges_limits": {
+          "default": false,
+          "title": "Owner Acknowledges Limits",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "unit",
+        "executables"
+      ],
+      "title": "Policy",
+      "type": "object"
+    },
+    "Seam": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "pydantic",
+          "default": "pydantic",
+          "title": "Kind",
+          "type": "string"
+        },
+        "status": {
+          "const": "PASS",
+          "default": "PASS",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "title": "Seam",
+      "type": "object"
+    },
+    "UnitSnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "fragment_path": {
+          "title": "Fragment Path",
+          "type": "string"
+        },
+        "unit_text_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Unit Text Sha256",
+          "type": "string"
+        },
+        "exec_paths": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Exec Paths",
+          "type": "array"
+        },
+        "runtime_executable_paths": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Runtime Executable Paths",
+          "type": "array"
+        },
+        "active_state": {
+          "title": "Active State",
+          "type": "string"
+        },
+        "unit_file_state": {
+          "title": "Unit File State",
+          "type": "string"
+        },
+        "control_group": {
+          "title": "Control Group",
+          "type": "string"
+        },
+        "main_pid": {
+          "minimum": 0,
+          "title": "Main Pid",
+          "type": "integer"
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Properties"
+        }
+      },
+      "required": [
+        "unit",
+        "fragment_path",
+        "unit_text_sha256",
+        "exec_paths",
+        "active_state",
+        "unit_file_state",
+        "control_group",
+        "main_pid",
+        "properties"
+      ],
+      "title": "UnitSnapshot",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "ubuntu_service_privacy.plan.v1",
+      "default": "ubuntu_service_privacy.plan.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "policy": {
+      "$ref": "#/$defs/Policy"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    },
+    "host_binding": {
+      "title": "Host Binding",
+      "type": "string"
+    },
+    "source_unit": {
+      "$ref": "#/$defs/UnitSnapshot"
+    },
+    "executables": {
+      "items": {
+        "$ref": "#/$defs/Executable"
+      },
+      "title": "Executables",
+      "type": "array"
+    },
+    "host_addresses": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Host Addresses",
+      "type": "array"
+    },
+    "rendered_sha256": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Rendered Sha256",
+      "type": "object"
+    },
+    "seam_validation": {
+      "$ref": "#/$defs/Seam"
+    },
+    "privacy_boundary": {
+      "const": "NOT_ESTABLISHED",
+      "default": "NOT_ESTABLISHED",
+      "title": "Privacy Boundary",
+      "type": "string"
+    },
+    "itar_compliance": {
+      "const": "NOT_ASSESSED",
+      "default": "NOT_ASSESSED",
+      "title": "Itar Compliance",
+      "type": "string"
+    },
+    "device_trust_compatibility": {
+      "const": "NOT_TESTED",
+      "default": "NOT_TESTED",
+      "title": "Device Trust Compatibility",
+      "type": "string"
+    }
+  },
+  "required": [
+    "policy",
+    "created_at",
+    "host_binding",
+    "source_unit",
+    "executables",
+    "host_addresses",
+    "rendered_sha256"
+  ],
+  "title": "Plan",
+  "type": "object"
+}

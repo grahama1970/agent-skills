@@ -1,0 +1,18 @@
+[project]
+name = "ubuntu-service-privacy"
+version = "0.1.0"
+description = "Transparent owner-controlled AppArmor/systemd service confinement"
+requires-python = ">=3.11"
+dependencies = [
+  "pydantic==2.13.4",
+  "typer==0.26.3",
+  "loguru==0.7.3",
+  "psutil==7.2.2",
+]
+
+[dependency-groups]
+dev = ["pytest==9.0.2", "pyyaml==6.0.3"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-p no:cacheprovider"

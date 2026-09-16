@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+outputs/
+artifacts/
+logs/
+work/
+state/
+*.local.json
+profiles/kolide.local.json
+.env

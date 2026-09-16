@@ -1,0 +1,118 @@
+{
+  "$defs": {
+    "Seam": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "pydantic",
+          "default": "pydantic",
+          "title": "Kind",
+          "type": "string"
+        },
+        "status": {
+          "const": "PASS",
+          "default": "PASS",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "title": "Seam",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "ubuntu_service_privacy.tests.v1",
+      "default": "ubuntu_service_privacy.tests.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "timestamp": {
+      "title": "Timestamp",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "FAIL"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "tests": {
+      "title": "Tests",
+      "type": "integer"
+    },
+    "failures": {
+      "title": "Failures",
+      "type": "integer"
+    },
+    "errors": {
+      "title": "Errors",
+      "type": "integer"
+    },
+    "skipped": {
+      "title": "Skipped",
+      "type": "integer"
+    },
+    "returncode": {
+      "title": "Returncode",
+      "type": "integer"
+    },
+    "live": {
+      "const": false,
+      "default": false,
+      "title": "Live",
+      "type": "boolean"
+    },
+    "mocked": {
+      "const": true,
+      "default": true,
+      "title": "Mocked",
+      "type": "boolean"
+    },
+    "proof_scope": {
+      "const": "local_tests_with_native_parser_and_synthetic_fault_injection_not_live_confinement",
+      "default": "local_tests_with_native_parser_and_synthetic_fault_injection_not_live_confinement",
+      "title": "Proof Scope",
+      "type": "string"
+    },
+    "claims_proves": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Claims Proves",
+      "type": "array"
+    },
+    "claims_does_not_prove": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Claims Does Not Prove",
+      "type": "array"
+    },
+    "release_readiness": {
+      "const": "NOT_ESTABLISHED",
+      "default": "NOT_ESTABLISHED",
+      "title": "Release Readiness",
+      "type": "string"
+    },
+    "seam_validation": {
+      "$ref": "#/$defs/Seam"
+    }
+  },
+  "required": [
+    "timestamp",
+    "status",
+    "tests",
+    "failures",
+    "errors",
+    "skipped",
+    "returncode",
+    "claims_proves",
+    "claims_does_not_prove"
+  ],
+  "title": "TestReceipt",
+  "type": "object"
+}

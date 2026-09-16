@@ -1,0 +1,50 @@
+# Threat model and representation/access matrix
+
+## Threat and trust
+
+Threat: a normally operating privileged third-party device-trust process receives
+broader local access than the workstation owner intends. Enforcement is imposed
+by the owner via AppArmor, systemd and capabilities, rather than by changing the
+agent's answers. The client sees actual errors/missing connectivity.
+
+Trusted: the owner, kernel, AppArmor/systemd implementations, root-controlled
+policy deployment code and interpreter, and the explicit local approval. An
+independent malicious administrator/kernel/hypervisor, compromised policy tools,
+or secret data intentionally copied into allowed resources is out of this
+candidate's guarantee. Package-manager hooks outside the selected service are
+not automatically confined. Unknown other software is not proven absent.
+
+## Matrix: never narrow the information invariant to files alone
+
+| Surface / representation | Candidate control | Delivered evidence | Missing production evidence |
+|---|---|---|---|
+| Protected files/directories | Default deny plus named audited denies | Renderer/schema/native parser tests | Kernel canary run on target; full client layout |
+| symlinks/path traversal/policy-token injection | Literal paths, root/canonical resource roots, typed rejection | Deterministic adversarial cases | Actual mount/alias inventory |
+| Hardlinks and data copied into allowed state | Not an information-flow control | Hardlinked receipt inputs rejected only | Content/alias lineage; existing state review |
+| Process environment and memory | No general /proc PID reads; ptrace denied; zero caps | Policy tests; C negative-control capability | Target probe and all collection mechanisms |
+| Histories/browser/AI archives | Home and client storage inaccessible | Policy fixtures | Real archive locations and alternate copies |
+| Kernel/raw block devices | PrivateDevices; default deny; no raw-device grants/caps | Parser and policy assertions | Target kernel behavior |
+| Docker/SSH/desktop/local Unix sockets | No general Unix peer access; denied admin/user paths | Unix positive/negative probe implementation | Actual abstract/named socket mediation |
+| Local IPv4/IPv6 services | Offline namespace or public-egress local deny | IP renderer tests; probe implementation | Actual unit BPF enforcement and drift behavior |
+| Remote proxy/hairpin access to local services | Not exhaustively addressed | Non-claim | Full host/router/data-flow review |
+| Child processes / fork | Inherited AppArmor; executable allowlist; thread readback | Renderer and probe implementation | Actual launcher/osquery children and races |
+| Updates/new executable paths | No executable writes; code hashes; drift check | Deterministic identity guards | Real vendor upgrades and maintenance workflow |
+| Existing agent cache / prior collection | No deletion or retrospective guarantee | Explicit non-claim | Data-owner/export-control review |
+| Tool outputs / errors | Strict typed envelopes, private files, input values omitted | CLI redaction/tamper/permissions tests | External collection/retention policy |
+
+## Acceptance decision
+
+A userspace parser pass is not kernel enforcement. A loopback denial is not a
+complete network privacy proof. A hash of the profile file is not proof of the
+exact bytes presently loaded in the kernel. Root can replace kernel policy.
+Runtime checks inspect loaded profile name/mode and thread labels, not a full
+cryptographic kernel attestation.
+
+Native API/system-call metadata such as uname/sysinfo is not semantically
+filtered. Permitted OS files and runtime resources are explicit disclosure
+surfaces. The C probe opens a protected canary only to test permission; it never
+reads or prints its contents. No real proprietary data is a test fixture.
+
+Actual Device Trust semantics must be checked independently: an inaccessible
+resource must not be silently interpreted by a client check as inspected-and-
+clean. This tool does not fabricate the resource or the result.

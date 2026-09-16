@@ -1,0 +1,151 @@
+{
+  "$defs": {
+    "ProcessProof": {
+      "additionalProperties": false,
+      "properties": {
+        "pid": {
+          "title": "Pid",
+          "type": "integer"
+        },
+        "start_ticks": {
+          "title": "Start Ticks",
+          "type": "integer"
+        },
+        "executable": {
+          "title": "Executable",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "thread_count": {
+          "title": "Thread Count",
+          "type": "integer"
+        },
+        "zero_capabilities": {
+          "title": "Zero Capabilities",
+          "type": "boolean"
+        },
+        "no_new_privileges": {
+          "title": "No New Privileges",
+          "type": "boolean"
+        },
+        "private_network": {
+          "title": "Private Network",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "pid",
+        "start_ticks",
+        "executable",
+        "label",
+        "thread_count",
+        "zero_capabilities",
+        "no_new_privileges",
+        "private_network"
+      ],
+      "title": "ProcessProof",
+      "type": "object"
+    },
+    "Seam": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "pydantic",
+          "default": "pydantic",
+          "title": "Kind",
+          "type": "string"
+        },
+        "status": {
+          "const": "PASS",
+          "default": "PASS",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "title": "Seam",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "ubuntu_service_privacy.verification.v1",
+      "default": "ubuntu_service_privacy.verification.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "unit": {
+      "title": "Unit",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "RUNTIME_CHECKS_PASS",
+        "FAIL",
+        "STOPPED_NO_RUNNING_PROOF"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "checked_at": {
+      "title": "Checked At",
+      "type": "string"
+    },
+    "failures": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Failures",
+      "type": "array"
+    },
+    "processes": {
+      "items": {
+        "$ref": "#/$defs/ProcessProof"
+      },
+      "title": "Processes",
+      "type": "array"
+    },
+    "network_assertion": {
+      "enum": [
+        "SEPARATE_NETWORK_NAMESPACE",
+        "CONFIG_READBACK_AND_PRESTART_PROBE_ONLY"
+      ],
+      "title": "Network Assertion",
+      "type": "string"
+    },
+    "effective_filesystem_access": {
+      "const": "SYNTHETIC_PROBES_ONLY_NOT_EXHAUSTIVE",
+      "default": "SYNTHETIC_PROBES_ONLY_NOT_EXHAUSTIVE",
+      "title": "Effective Filesystem Access",
+      "type": "string"
+    },
+    "privacy_boundary": {
+      "const": "NOT_ESTABLISHED",
+      "default": "NOT_ESTABLISHED",
+      "title": "Privacy Boundary",
+      "type": "string"
+    },
+    "itar_compliance": {
+      "const": "NOT_ASSESSED",
+      "default": "NOT_ASSESSED",
+      "title": "Itar Compliance",
+      "type": "string"
+    },
+    "seam_validation": {
+      "$ref": "#/$defs/Seam"
+    }
+  },
+  "required": [
+    "unit",
+    "status",
+    "checked_at",
+    "failures",
+    "processes",
+    "network_assertion"
+  ],
+  "title": "Verification",
+  "type": "object"
+}

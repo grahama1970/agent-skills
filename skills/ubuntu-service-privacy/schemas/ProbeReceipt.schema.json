@@ -1,0 +1,155 @@
+{
+  "$defs": {
+    "ProbeResults": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "ubuntu_service_privacy.probe_result.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "allowed_read": {
+          "title": "Allowed Read",
+          "type": "boolean"
+        },
+        "denied_read": {
+          "title": "Denied Read",
+          "type": "boolean"
+        },
+        "denied_proc": {
+          "title": "Denied Proc",
+          "type": "boolean"
+        },
+        "denied_unix": {
+          "title": "Denied Unix",
+          "type": "boolean"
+        },
+        "denied_ipv4": {
+          "title": "Denied Ipv4",
+          "type": "boolean"
+        },
+        "denied_ipv6": {
+          "title": "Denied Ipv6",
+          "type": "boolean"
+        },
+        "no_capabilities": {
+          "title": "No Capabilities",
+          "type": "boolean"
+        },
+        "no_new_privileges": {
+          "title": "No New Privileges",
+          "type": "boolean"
+        },
+        "profile_attached": {
+          "title": "Profile Attached",
+          "type": "boolean"
+        },
+        "child_inherits": {
+          "title": "Child Inherits",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schema_version",
+        "allowed_read",
+        "denied_read",
+        "denied_proc",
+        "denied_unix",
+        "denied_ipv4",
+        "denied_ipv6",
+        "no_capabilities",
+        "no_new_privileges",
+        "profile_attached",
+        "child_inherits"
+      ],
+      "title": "ProbeResults",
+      "type": "object"
+    },
+    "Seam": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "pydantic",
+          "default": "pydantic",
+          "title": "Kind",
+          "type": "string"
+        },
+        "status": {
+          "const": "PASS",
+          "default": "PASS",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "title": "Seam",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "ubuntu_service_privacy.probe.v1",
+      "default": "ubuntu_service_privacy.probe.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "plan_sha256": {
+      "title": "Plan Sha256",
+      "type": "string"
+    },
+    "host_binding": {
+      "title": "Host Binding",
+      "type": "string"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    },
+    "production_profile_sha256": {
+      "title": "Production Profile Sha256",
+      "type": "string"
+    },
+    "results": {
+      "$ref": "#/$defs/ProbeResults"
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "FAIL"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "live": {
+      "const": true,
+      "default": true,
+      "title": "Live",
+      "type": "boolean"
+    },
+    "mocked": {
+      "const": false,
+      "default": false,
+      "title": "Mocked",
+      "type": "boolean"
+    },
+    "proof_scope": {
+      "const": "synthetic_canaries_same_rendered_controls_extra_probe_executable",
+      "default": "synthetic_canaries_same_rendered_controls_extra_probe_executable",
+      "title": "Proof Scope",
+      "type": "string"
+    },
+    "seam_validation": {
+      "$ref": "#/$defs/Seam"
+    }
+  },
+  "required": [
+    "plan_sha256",
+    "host_binding",
+    "created_at",
+    "production_profile_sha256",
+    "results",
+    "status"
+  ],
+  "title": "ProbeReceipt",
+  "type": "object"
+}

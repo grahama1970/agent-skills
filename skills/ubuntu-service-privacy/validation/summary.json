@@ -1,0 +1,58 @@
+{
+  "schema_version": "ubuntu_service_privacy.delivery_validation.v1",
+  "created_at": "2026-09-15T22:31:38.820630+00:00",
+  "package": "ubuntu-service-privacy",
+  "version": "0.1.0",
+  "source_inventory_sha256": "3d08b24fd6889c044359c8fa71a2284420da29fa0dc337e9c5ede59162f0fe67",
+  "result": "PASS_LOCAL_MECHANISMS_ONLY",
+  "final_runs": 3,
+  "tests_per_run": [
+    79,
+    79,
+    79
+  ],
+  "total_test_executions": 237,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "evidence_scope": {
+    "transaction_boundaries": "MOCKED_SYSTEMD_AND_KERNEL_IN_UNIT_TESTS",
+    "native_checks": "REAL_USERSPACE_APPARMOR_AND_SYSTEMD_PARSERS",
+    "negative_control": "REAL_COMPILED_C_PROBE_FAILS_UNCONFINED",
+    "live_kernel_confinement": "NOT_RUN",
+    "actual_kolide_compatibility": "NOT_RUN",
+    "python_3_11": "NOT_RUN",
+    "ubuntu_24_04": "NOT_RUN",
+    "canonical_agentic_evals_runner": "NOT_RUN",
+    "canonical_installed_repo_validator": "NOT_RUN",
+    "integration_patch": "CONTEXT_ONLY_GIT_APPLY_CHECK_NOT_FULL_REPOSITORY"
+  },
+  "release_readiness": "NOT_ESTABLISHED",
+  "privacy_boundary": "NOT_ESTABLISHED",
+  "itar_compliance": "NOT_ASSESSED",
+  "host_changes_on_user_workstation": false,
+  "github_writes": false,
+  "environment": {
+    "python": "3.13.5 (main, Jul 15 2026, 20:25:40) [GCC 14.2.0]",
+    "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "apparmor_parser": "AppArmor parser version 4.1.0\nCopyright (C) 1999-2008 Novell Inc.\nCopyright 2009-2018 Canonical Ltd.",
+    "systemd_analyze": "systemd 257 (257.9-1~deb13u1)",
+    "pid1": "supervisord",
+    "dependencies": {
+      "pydantic": "2.13.4",
+      "typer": "0.26.3",
+      "loguru": "0.7.3",
+      "psutil": "7.2.2",
+      "pytest": "9.0.2",
+      "PyYAML": "6.0.3"
+    }
+  },
+  "known_limits": [
+    "OFFLINE is default; public mode blocks local browser-identification traffic.",
+    "No vendor-domain authentication or TCP-443-only egress policy.",
+    "Previously collected data in agent state is not erased or assessed.",
+    "Independent whole-workflow, lifecycle, cached/aliased representation coverage remains unproven.",
+    "A restricted agent may fail checks, updates, or startup; no automatic widening is implemented.",
+    "Runtime drift verification is point-in-time, not continuous supervision."
+  ]
+}

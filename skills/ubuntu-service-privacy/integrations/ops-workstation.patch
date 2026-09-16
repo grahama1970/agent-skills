@@ -1,0 +1,26 @@
+diff --git a/skills/ops-workstation/run.sh b/skills/ops-workstation/run.sh
+--- a/skills/ops-workstation/run.sh
++++ b/skills/ops-workstation/run.sh
+@@ -4,6 +4,14 @@
+ set -euo pipefail
+ 
+ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
++
++# Keep the privileged privacy route ahead of project .env sourcing.
++# The delegated skill never implicitly elevates or downloads dependencies.
++if [[ "${1:-}" == "privacy" ]]; then
++    shift
++    exec "$SCRIPT_DIR/../ubuntu-service-privacy/run.sh" "$@"
++fi
++
+ PROJECT_ROOT="$(dirname "$(dirname "$(dirname "$SCRIPT_DIR")")")"
+ 
+ # Load .env if present
+@@ -28,6 +36,7 @@
+   gpu [opts]        GPU status and utilization
+   health [opts]     Drive health (SMART) and maintenance status
+   net [opts]        Network diagnostics (link, IP, DNS, sockets, gateway)
++  privacy [opts]    Owner-controlled service confinement (explicit mutation gates)
+   temps [opts]      Temperature monitoring (CPU, GPU, NVMe)
+   audio [opts]      Audio diagnostics (PipeWire, ALSA, XRUN, sink hijack)
+   jabra [opts]      Jabra SPEAK 510 USB diagnostics (flaps, topology, PipeWire users)

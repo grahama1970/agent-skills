@@ -1,0 +1,31 @@
+{
+  "schema_version": "ubuntu_service_privacy.policy.v1",
+  "unit": "launcher.kolide-k2.service",
+  "executables": [
+    "/usr/local/kolide-k2/REPLACE_WITH_CANONICAL_EXECUTABLE"
+  ],
+  "protected_roots": [
+    "/home",
+    "/root",
+    "/mnt",
+    "/media",
+    "/srv",
+    "/run/user"
+  ],
+  "read_files": [
+    "/etc/os-release",
+    "/usr/lib/os-release",
+    "/etc/machine-id",
+    "/proc/sys/kernel/osrelease",
+    "/proc/cpuinfo",
+    "/proc/meminfo",
+    "/proc/uptime"
+  ],
+  "read_roots": [],
+  "write_roots": [
+    "/var/kolide-k2"
+  ],
+  "network_mode": "OFFLINE",
+  "public_dns": [],
+  "owner_acknowledges_limits": false
+}
