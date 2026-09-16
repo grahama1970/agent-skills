@@ -97,6 +97,21 @@ def create_app(db_path: Path = DEFAULT_DB_PATH) -> FastAPI:
     def health() -> dict[str, Any]:
         return {"status": "ok", "schema": "embry.listener_service_health.v1", "db_path": str(db_path)}
 
+    @app.get("/readiness")
+    def readiness() -> dict[str, Any]:
+        # CORE_BUILD_RUNTIME_PARITY: prove WHICH gate bytes this service
+        # loaded (digest vs the baked/expected digest) so a stale image can
+        # never silently run an older, unreviewed gate.
+        from embry_voice_control import chatterbox_gate
+        try:
+            chatterbox_gate.load_speak_core()
+            render_gate = chatterbox_gate.core_identity()
+        except ImportError as exc:
+            render_gate = {"loaded": False, "digest_match": False,
+                           "error": str(exc)[:300]}
+        return {"status": "ok", "schema": "embry.listener_service_readiness.v1",
+                "render_gate": render_gate}
+
     @app.post("/v1/listener/events")
     def ingest(event: VoiceEvent) -> dict[str, Any]:
         try:

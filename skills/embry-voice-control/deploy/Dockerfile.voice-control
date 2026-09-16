@@ -1,5 +1,19 @@
 FROM python:3.12-slim
 
+# RENDER_GATE single-definition inclusion: speak_core.py (the hardened
+# chatterbox-speak gate/render core) is COPYied from the "chatterbox-speak"
+# compose additional context into /opt — the one canonical definition, never
+# a copy diverging in the image. compose.yaml passes:
+#   build.additional_contexts: chatterbox-speak:../../chatterbox-speak
+# (path relative to deploy/, i.e. the skills dir). Standalone docker builds
+# must pass: --build-context chatterbox-speak=<path-to-agent-skills>/skills/chatterbox-speak
+COPY --from=chatterbox-speak scripts/speak_core.py /opt/chatterbox-speak/speak_core.py
+# CORE_BUILD_RUNTIME_PARITY: bake the copied core's digest so the running
+# service (and /readiness) can prove the loaded gate bytes are the reviewed
+# bytes, not a stale image.
+RUN sha256sum /opt/chatterbox-speak/speak_core.py | awk '{print $1}' \
+    > /opt/chatterbox-speak/speak_core.py.sha256
+
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 WORKDIR /app
 RUN pip install --no-cache-dir uv==0.8.4

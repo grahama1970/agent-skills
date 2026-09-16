@@ -323,6 +323,10 @@ class RenderResult(BaseModel):
     plan_sha256: str
     plan_snapshot: dict[str, Any]
     request_payload_sha256: str
+    # ROUTE_FROM_RENDER_RESULT: the route the gate actually evaluated,
+    # selected at render time — callers copy it forward; recomputation is
+    # verification, never origination.
+    render_route: str
 
 
 class ServiceReceipt(BaseModel):
@@ -442,7 +446,8 @@ def render(plan: VoiceDeliveryPlan, *, base_url: str | None = None) -> RenderRes
                         host_wav=host_wav, wav_copy=wav_copy,
                         duration_seconds=receipt.duration_seconds,
                         plan_sha256=digest, plan_snapshot=snapshot,
-                        request_payload_sha256=request_payload_sha256)
+                        request_payload_sha256=request_payload_sha256,
+                        render_route=route)
 
 
 # RECEIPT_RESERVED_FIELDS: core-owned evidence a caller may never override.

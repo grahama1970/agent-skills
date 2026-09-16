@@ -5,6 +5,9 @@ services:
     build:
       context: ..
       dockerfile: deploy/Dockerfile.voice-control
+      additional_contexts:
+        # RENDER_GATE single-definition source for /opt/chatterbox-speak/speak_core.py
+        chatterbox-speak: ../../chatterbox-speak
     environment:
       EMBRY_VOICE_JOURNAL_DB: /var/lib/embry-voice/voice-events.sqlite3
     volumes:

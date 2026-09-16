@@ -23,6 +23,7 @@ import wave
 import httpx
 from loguru import logger
 
+from embry_voice_control import chatterbox_gate
 from embry_voice_control.listener_turn import DEFAULT_OUTPUT_ROOT
 from embry_voice_control.listener_turn import DEFAULT_UNIX_LISTENER_ROOT
 from embry_voice_control.listener_turn import compact_value
@@ -304,19 +305,32 @@ def synthesize_chatterbox(
     ref_audio: Path,
     label: str,
     timeout: float,
+    voice_policy: dict[str, Any] | None = None,
 ) -> tuple[int | None, dict[str, Any], str | None, Path | None]:
-    """Call Chatterbox /synthesize and resolve the returned WAV path."""
+    """Call Chatterbox /synthesize through the hardened core gate and resolve
+    the returned WAV path.
+
+    RENDER_GATE_CONTRACT: every Chatterbox-bound request is built as a core
+    ``VoiceDeliveryPlan`` and rendered via ``speak_core.render``, which fails
+    closed on unsupported tags BEFORE any service POST and records
+    plan_sha256 / request_payload_sha256 / render_route / core identity in
+    the body. ``ref_audio`` is the host-path form; the service receives the
+    container ref path exactly as before this refactor.
+
+    BIND_MEMORY_INTENT_POLICY: pass the actual ``voice_policy`` that the turn
+    resolved (``build_tau_response_plan()['voice_policy']``). Its content hash
+    is bound into the receipt and ``intent_policy_source`` claims
+    ``memory.intent`` only when that policy was really carried.
+    """
     container_ref_audio = f"{DEFAULT_CHATTERBOX_CONTAINER_REF_DIR.rstrip('/')}/{ref_audio.name}"
-    payload = {
-        "text": text,
-        "ref_audio": container_ref_audio,
-        "label": label,
-        "delivery_stage": "satisfied",
-        "temperature": 0.7,
-    }
-    status, body, error = post_json(normalize_url(chatterbox_url, "synthesize"), payload, timeout)
-    audio_path = resolve_chatterbox_audio_path(body.get("audio") if isinstance(body, dict) else None)
-    return status, body, error, audio_path
+    return chatterbox_gate.render_chatterbox(
+        chatterbox_url=chatterbox_url,
+        text=text,
+        ref_audio_container=container_ref_audio,
+        label=label,
+        temperature=0.7,
+        voice_policy=voice_policy,
+    )
 
 
 def run_embry_chat_static_query_live(
@@ -372,12 +386,22 @@ def run_embry_chat_static_query_live(
         ref_audio=ref_audio,
         label=run_id,
         timeout=timeout,
+        voice_policy=response_plan["voice_policy"],
     )
     final_audio_path: Path | None = None
     if generated_audio is not None:
         output_dir.mkdir(parents=True, exist_ok=True)
         final_audio_path = output_dir / "embry_response.wav"
         shutil.copyfile(generated_audio, final_audio_path)
+    # TURN_RECEIPT_GATE_BINDING + AUDIO_ARTIFACT_BINDING: required first-class
+    # render evidence; the acceptance gate below fails the turn when any
+    # binding is missing or when the copied WAV diverges from the rendered one.
+    render_evidence, render_evidence_missing = chatterbox_gate.assemble_render_evidence(
+        turn_id=run_id,
+        response_body=chatterbox_response or {},
+        generated_wav=generated_audio,
+        final_wav=final_audio_path,
+    )
     local_playback = play_audio_local(
         audio_path=str(final_audio_path or ""),
         playback_target=local_playback_target,
@@ -411,6 +435,11 @@ def run_embry_chat_static_query_live(
         "chatterbox_http_2xx": chatterbox_status is not None and 200 <= chatterbox_status < 300,
         "chatterbox_status_ok": chatterbox_response.get("ok") is True,
         "chatterbox_audio_exists": final_audio_path is not None and final_audio_path.exists(),
+        "render_evidence_complete": not render_evidence_missing,
+        "render_audio_copy_binding": (
+            render_evidence.get("audio_sha256") is not None
+            and render_evidence.get("audio_sha256") == render_evidence.get("final_audio_sha256")
+        ),
     }
     if play_local:
         checks["local_playback_requested"] = bool(local_playback.get("requested"))
@@ -476,6 +505,8 @@ def run_embry_chat_static_query_live(
             "input_source": "tau.response_plan.tts_render_text",
             "status_code": chatterbox_status,
             "response": compact_value(chatterbox_response),
+            "render_evidence": render_evidence,
+            "render_evidence_missing": render_evidence_missing,
             "ref_audio": wav_metadata(ref_audio) if ref_audio.exists() else {"path": str(ref_audio), "exists": False},
             "generated_audio_path": str(generated_audio) if generated_audio else "",
             "audio": wav_metadata(final_audio_path) if final_audio_path and final_audio_path.exists() else None,
