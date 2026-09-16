@@ -22,7 +22,6 @@ provides:
 composes:
   - hack
   - anvil
-  - dogpile
   - memory
   - treesitter
   - taxonomy
@@ -50,220 +49,6 @@ disciplines:
 **Red vs Blue Team Security Competition Orchestrator**
 
 Pits a Red Team (attack) against a Blue Team (defense) in a long-running competitive loop. Each team leverages all `.pi/skills` to attack or defend a target codebase.
-
-
-## Invariant battles (the common case)
-
-Battle's default scoring targets exploitation (system-down, command injection),
-but the most frequent real use of an adversarial Red/Blue loop is verifying a
-PROJECT-SPECIFIC INVARIANT: "no PII value leaks", "the ledger balances", "the
-parser drops no record", "the authz check cannot be bypassed".
-
-Supply a pluggable invariant Judge -- a small independent module
-`judge(target_dir, params) -> {passed, violations, evidence}` (schema
-`battle.invariant_result.v1`). Red's objective becomes "produce an input that
-makes the Judge fail"; Blue's is "make it pass"; the scorekeeper reads the Judge
-result, never an agent's self-report. Judges are fail-closed: a judge that
-errors is a FAILED invariant, never a silent pass.
-
-```bash
-python3 -m battle_skill.invariant_judge \
-  --judge fixtures/reference-judges/no_data_leak_judge.py \
-  --target <released-output-dir> \
-  --params '{"policy": "policy.json", "output_subdir": "corpus"}'
-```
-
-`fixtures/reference-judges/no_data_leak_judge.py` is the anonymizer
-confidentiality invariant as a Judge: it independently scans released output
-(JSON scalars incl decoded escapes, numeric expansion, SQLite cells + schema
-DDL + header integers, text/CSV, report.json, and captured stdout/stderr) for
-any policy value in any representation.
-
-
-## Contract variation-family research (generic Battle composition)
-
-Battle is not project-specific. For any project or skill with an
-`acceptance_contract.bundle.v1`, Battle should expand each contract item through
-Dogpile before claiming comprehensive adversarial coverage:
-
-```bash
-./run.sh contract-variation-plan \
-  --acceptance-bundle /path/to/acceptance_bundle.json \
-  --dogpile-source brave-search \
-  --dogpile-source arxiv \
-  --out /tmp/battle-variation-plan.json
-```
-
-The output is `battle.contract_variation_plan.v1`. It is a three-phase Battle
-contract, not a loose note:
-
-1. Phase 1: pass the frozen `acceptance_contract.bundle.v1` floor.
-2. Phase 2: after that pass, gather `$project-state`, current Battle receipts,
-   source-filtered `$dogpile` research, and `$ask one-shot` reviewer proposals.
-3. Phase 3: freeze useful Phase 2 findings into deterministic cases, run them,
-   and retain adaptive-lineage proof for Red wins, Blue fixes, and replay.
-
-The plan maps every acceptance case to source-bearing Dogpile research lanes and
-reusable variation families. Use repeatable `--dogpile-source` filters when a
-Battle phase needs only selected Dogpile providers such as `brave-search`,
-`arxiv`, `github-search`, `youtube`, `brave-questions`, `feeds`, `wayback`, or
-`context7` instead of the full source fanout. The reusable variation families
-include representation equivalence, encoding/normalization, parser differentials,
-release-surface boundaries, lossy conversion, split/composed facts, scale,
-retry/concurrency, authorization, and failure-leak boundaries. Dogpile and Ask
-are research input only: they discover meaningful variation families and source
-evidence. Battle then freezes selected families into deterministic generators,
-runs the real target in Docker/QEMU/digital-twin evidence gates, emits
-`battle.case_receipt.v1` per case, aggregates with `battle.campaign_aggregate.v1`,
-and retains the workflow classes as `$agentic-evals` cases. A serious release
-gate should expect hundreds of deterministic cases and roughly 20-30 retained
-eval classes when the contract surface is broad; smaller smoke gates must label
-themselves as smoke.
-
-
-## Invariant campaigns (test the contract floor, then attack beyond it)
-
-An invariant *battle* judges one output. An invariant *campaign* has Red generate
-the whole MATRIX of input "versions" the target's spec names -- every format x
-every representation x the documented edge cases -- PLUS random fuzz, runs the
-real target on each, and the Judge scores every output. Every case emits a
-`battle.case_receipt.v1` with fixture precheck, execution, rejection, security
-Judge, optional functional Judge, and verdict fields. A campaign PASSES only if
-all case receipts pass, required `MUST_ACCEPT` cases are actually accepted and
-functionally judged, required `MUST_REJECT` cases are safely rejected, and the
-computed `battle.campaign_aggregate.v1` has no failed or incomplete cases. One
-failing version is a concrete, reproducible Red win.
-
-For anonymization/privacy targets, the acceptance contract is only the floor.
-When an `acceptance_contract.bundle.v1` exists, the arena build may pass it as
-`acceptance_floor` to the production adapter. Battle then fails closed unless
-every `acceptance_cases[]` id maps to at least one campaign generator case in the
-profile's `required_case_ids`; those are the bare-minimum adversarial versions
-that MUST pass before any extra fuzz or beyond-contract cases matter. Battle must
-also run a beyond-contract campaign that attacks surfaces a client brief often
-omits: JSON keys and duplicate keys, CSV headers/dialects/multiline cells,
-SQLite identifiers/defaults/generated values/partial indexes/triggers,
-filenames, report.json, stdout/stderr, alternate encodings, and same-identity
-representation traps. A clean brief-matrix replay alone is a smoke proof, not a
-comprehensive Battle proof.
-
-```bash
-python3 -m battle_skill.invariant_campaign \
-  --generator fixtures/reference-generators/anon_brief_matrix.py \
-  --target-run-cmd 'docker run --rm -v {input}/corpus:/trial/input/corpus:ro -v {input}/policy.json:/trial/input/policy.json:ro -v {output}:/trial/output anonymization-trial run' \
-  --judge fixtures/reference-judges/no_data_leak_judge.py \
-  --gen-params '{"fuzz": 20}' --judge-params '{"output_subdir": "corpus"}'
-```
-
-`fixtures/reference-generators/anon_brief_matrix.py` yields the anonymization
-brief's versions: the four formats, JSON string/int/float/scientific, SQLite
-TEXT/INTEGER/REAL, Unicode NFC/NFD, BOM, JSON \u-escape, SQLite CHECK-literal,
-plus fuzz. It also carries the oai-trial roundtable edge cases: formatted policy
-phone values stored as digit-only JSON/SQLite numerics, the same identity seeded
-across every in-scope format, and lossy leading-zero / large-float traps.
-`fixtures/reference-generators/anon_beyond_brief_matrix.py` is the required next
-rung for privacy/anonymization proof: it tries non-obvious schema/path/encoding/
-log/release-boundary surfaces that go beyond the literal acceptance contract. A
-generator + target-run-cmd + judge is a pluggable trio: point it at any project's
-spec matrix and invariant.
-
-The no-data-leak Judge also supports an explicit opt-in interpretation profile
-for transformation semantics. These guarantees are OFF unless declared in
-`--judge-params`, so Battle does not silently expand the contract after seeing a
-failure:
-
-```json
-{
-  "interpretation_profile": {
-    "decoders": ["base64", "base64url", "hex"],
-    "record_local_reconstruction": true,
-    "max_decoded_bytes": 4096
-  }
-}
-```
-
-With that profile, whole scalar/token base64/base64url/hex values are decoded
-once and record-local adjacent JSON/CSV/SQLite scalar fields may reconstruct a
-complete policy value. Arbitrary recursive decoding, global field joins, and
-visual-confusable character folding remain out of the default blocking gate.
-
-After Red finds failing cases and Blue patches the target, emit the replayable
-lineage receipt instead of summarizing in prose:
-
-```bash
-./run.sh invariant-lineage-receipt \
-  --red-campaign /tmp/red-result.json \
-  --replay-campaign /tmp/replay-result.json \
-  --target oai-trial \
-  --out /tmp/battle-lineage.json
-```
-
-A `battle.invariant_adaptive_lineage.v1` PASS proves Red found contract edge
-cases, Blue removed those Red wins, and the independent Judge replay passed.
-
-Then Battle must produce a `$create-report`-validated report with `$project-state`
-context and an explicit exploits table. The report is the human-readable decision
-artifact; receipts remain the authority. Generate fresh project state first,
-then render the report:
-
-```bash
-PROJECT_STATE_ROOT=/path/to/target ../project-state/run.sh report --json --output /tmp/project-state.json
-./run.sh invariant-report \
-  --campaign /tmp/battle-brief-fuzz.json \
-  --campaign /tmp/battle-beyond-brief.json \
-  --adaptive-lineage /tmp/battle-lineage.json \
-  --project-state /tmp/project-state.json \
-  --target oai-trial \
-  --out-json /tmp/battle-report.json \
-  --out-md /tmp/battle-report.md
-```
-
-For project-agent terminal review, use cards when cases have long evidence:
-
-```bash
-./run.sh invariant-report \
-  --campaign /tmp/battle-brief-fuzz.json \
-  --campaign /tmp/battle-beyond-brief.json \
-  --project-state /tmp/project-state.json \
-  --target oai-trial \
-  --out-json /tmp/battle-report.json \
-  --out-md /tmp/battle-report.md \
-  --terminal-cards
-```
-
-`invariant-report` is a Typer CLI command. It writes machine JSON to stdout and
-keeps the human Battle report on stderr. Use `--terminal-cards` for normal
-project-agent review of Battle evidence: it groups cards under `Acceptance
-contract floor`, `Beyond-contract exploits`, `Adaptive lineage`, and fallback
-`Other campaign cases` headings, then prints one `==============` block per case
-with `Scope`, `Case`, `Acceptance parent`, `Expect`, `Result`, `Example`, `Why
-Battle checks this`, `Related research`, `Adaptive lineage`, and `Judge
-evidence`. If a production-adapter receipt carries `acceptance_floor.case_map`,
-contract-floor cards show the parent `AC-*` id(s); otherwise `Acceptance parent`
-is `not recorded in case receipt`. If a receipt has `example`, `why_chosen`,
-`research_refs`, or `source_refs`, cards show those exact fields; otherwise
-examples/rationales are deterministic from the case id and research is reported
-as `not recorded in case receipt`.
-
-`--terminal-table` remains the compact overview alias for `--terminal-summary`:
-both print contract floor, Red pressure, Scorekeeper call, and one case-table row
-per attack. In an interactive terminal Battle uses Rich's terminal-aware colored
-table (`RED_WIN` red, clean passes green, fail-closed stops yellow) and honors
-`NO_COLOR`; under capture/CI it falls back to deterministic plain text so logs
-and tests stay stable.
-
-`invariant-report` writes `create_report.report.v1`, validates it through
-`skills/create-report/run.sh validate`, renders Markdown through
-`skills/create-report/run.sh render`, and appends `## Exploits Table`. The table
-must be plain-spoken and scannable: one row per attack case, with columns for
-`Scope`, `Contractual?`, `Adaptive lineage?`, `Case`, `Exploit / attack`,
-`Why chosen`, `Expectation`, `Result`, and `Judge evidence`. `Scope` separates
-`contractual` acceptance-floor cases from `beyond-contract` probes;
-`Why chosen` explains non-contractual probes; `Adaptive lineage?` marks Red wins
-that were fixed and replayed; `RED_WIN` blocks release. The table is derived
-from `battle.case_receipt.v1` when present, falling back to legacy `case_log`
-only for older campaign receipts. A Battle closure without that report is
-missing the decision surface even if campaign receipts pass.
 
 ## Purpose Boundary
 
@@ -443,6 +228,25 @@ Supported QEMU machines:
 - `riscv32`/`riscv64` - RISC-V
 - `x86_64`/`i386` - x86
 - `mips` - MIPS (routers, embedded)
+
+### 3b. Full-system VM (qemu-vm)
+For battling over host-level policy (systemd units, AppArmor profiles, cgroup-BPF IP
+filters) that Docker twins cannot host because containers share the host kernel.
+Boots a base cloud image (e.g. Ubuntu 24.04 qcow2) with a fresh overlay per round,
+KVM acceleration, ephemeral SSH key via NoCloud cloud-init, executes one payload
+inside the VM, and writes a `battle.vm_round.v1` receipt. Requires a
+`security.target_authorization.v1` manifest binding the image path AND sha256
+before QEMU starts.
+
+```bash
+./run.sh vm-round --image /mnt/storage12tb/skills/battle/images/noble-server-cloudimg-amd64.img \
+  --command 'uname -r; echo VM_CANARY_OK' \
+  --authorization-manifest fixtures/vm-round/authorization.json --out-dir /tmp/battle-vm
+```
+
+Snapshot discipline: each round boots `base.qcow2` + throwaway overlay (qemu-img
+backing file), so rounds never accumulate state; persistent learning belongs in
+`$memory`, not the disk image.
 
 ### 4. Copy Mode (fallback)
 For non-git directories. Creates simple file copies for each team.

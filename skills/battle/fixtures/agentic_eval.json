@@ -4,12 +4,12 @@
   "trials": 2,
   "eval_tier": "compliance",
   "live": true,
-  "proof_scope": "Battle feature regression coverage through existing Battle entrypoints, local Docker proof receipts, create-report/project-state invariant reports, local transport receipts, receipt-backed Pixi replay browser proof, focused contract suites, an explicit fail-closed adaptive-lineage exact-chain receipt gate, and explicit uncovered seams for Battle features that still need agentic evals",
+  "proof_scope": "Battle feature regression coverage through existing Battle entrypoints, local Docker proof receipts, local transport receipts, receipt-backed Pixi replay browser proof, focused contract suites, an explicit fail-closed adaptive-lineage exact-chain receipt gate, and explicit uncovered seams for Battle features that still need agentic evals",
   "claims": {
-    "proves": "Battle's authorization gate, isolated local Docker reactive Judge round, Red/Judge/Blue visibility boundary, scorekeeper authority, terminal semantics fail-closed validation, adaptive-lineage contract guards, durable adaptive-lineage exact-chain proof, browser-visible receipt-backed Pixi replay, immutable-goal close-gate readiness, Pydantic arena/Red/Blue/play-by-play event receipts, commentary causality, memory-lineage contract guards, same-run transport, pause/resume transport safety, and staging fail-closed behavior are covered by agentic eval seams with artifact readback",
+    "proves": "Battle's authorization gate, isolated local Docker reactive Judge round, Red/Judge/Blue visibility boundary, scorekeeper authority, adaptive-lineage contract guards, durable adaptive-lineage exact-chain proof, browser-visible receipt-backed Pixi replay, immutable-goal close-gate readiness, Pydantic arena/Red/Blue/play-by-play event receipts, memory-lineage contract guards, same-run transport, pause/resume transport safety, and staging fail-closed behavior are covered by agentic eval seams with artifact readback",
     "does_not_prove": "arbitrary target exploitability, a real 1000-round overnight campaign, QEMU boot execution, production WebSocket TLS/auth/fanout against a real public endpoint, or full visual design acceptance"
   },
-  "what_was_exercised": "uv-run Battle probe script invocations that call Battle run.sh commands, local Docker proof generation, current-status terminal-semantics receipt readback, focused pytest contract suites, independent JSON receipt readback, and a built spectator bundle served over local HTTP for Playwright Pixi replay proof, plus the production adapter acceptance-floor gate that blocks unmapped/open-question acceptance-contract bundles before target launch",
+  "what_was_exercised": "uv-run Battle probe script invocations that call Battle run.sh commands, local Docker proof generation, focused pytest contract suites, independent JSON receipt readback, and a built spectator bundle served over local HTTP for Playwright Pixi replay proof",
   "what_remains_unverified": "external staging authority bundle (#1149), production WebSocket TLS/auth/fanout against a real public endpoint, a real 1000-round overnight campaign, QEMU boot execution, arbitrary target exploitability, and full visual design acceptance",
   "capability_claims": [
     {
@@ -18,8 +18,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.authorization.cli_target_binding",
@@ -27,89 +26,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "battle.authorization.executable_target_binding",
-      "description": "Battle production campaigns validate authorization against the actual executable Docker image and lower-level Docker campaign execution refuses unbound authorization receipts.",
-      "criticality": "critical",
-      "evidence_required": {
-        "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "battle.campaign_acceptance.strict_envelopes",
-      "description": "Battle campaign, profile, project-enrollment, and acceptance-floor envelopes reject duplicate keys, unknown fields, non-finite numbers, duplicate or empty IDs, invalid case maps, and unknown expectations before execution.",
-      "criticality": "critical",
-      "evidence_required": {
-        "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "battle.evaluator_lock.enforced_before_load",
-      "description": "Battle verifies generator, Judge, adapter, profile, and helper files against an independent evaluator lock before loading executable Docker campaign components.",
-      "criticality": "critical",
-      "evidence_required": {
-        "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "battle.artifact_snapshot.confinement",
-      "description": "Battle rejects unsafe case IDs, traversal, escaping symlinks, special files, and externally mutable case paths before target launch, then executes only controller-owned snapshots.",
-      "criticality": "critical",
-      "evidence_required": {
-        "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "battle.execution_outcome.safe_rejection",
-      "description": "Battle case receipts distinguish accepted output, contract-verified rejection, launch error, crash, timeout, OOM, and incomplete capture; only contract-marked permitted rejection can satisfy a rejection expectation, and target launches are counted from observed starts.",
-      "criticality": "critical",
-      "evidence_required": {
-        "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "battle.fixture_witness.typed",
-      "description": "Battle fixture prechecks require typed policy-value witnesses or approved invalid-input predicates; unrelated Judge failures and malformed fixtures become INVALID_CASE without target launch or floor coverage.",
-      "criticality": "critical",
-      "evidence_required": {
-        "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "battle.receipt_inventory.closure",
-      "description": "Battle offline verification re-enumerates retained input/output inventories, enforces one-to-one case rosters, and recomputes request and plan digests, aggregate counters, Judge coverage, and verdicts instead of trusting recorded PASS fields.",
-      "criticality": "critical",
-      "evidence_required": {
-        "adversarial_live_e2e": true
-      },
-      "claim_semantics": "protocol"
-    },
-    {
-      "id": "battle.offline_replay.portable_package",
-      "description": "Battle exports self-contained replay packages with relative evidence and evaluator paths so offline verification succeeds after moving the package and deleting the original workspace, and missing packaged evidence cannot be recovered from old paths.",
-      "criticality": "critical",
-      "evidence_required": {
-        "adversarial_live_e2e": true
-      },
-      "claim_semantics": "protocol"
-    },
-    {
-      "id": "battle.execution_provenance.runner_attested",
-      "description": "Battle runner attestations bind authorization, resolved image, input/output digests, case identity, and execution observations with a controller-held HMAC key; tampered unsigned manifests cannot forge RUNNER_ATTESTED provenance and missing attestations remain NOT_VERIFIED.",
-      "criticality": "critical",
-      "evidence_required": {
-        "adversarial_live_e2e": true
-      },
-      "claim_semantics": "protocol"
+      }
     },
     {
       "id": "battle.local_docker.reactive_round",
@@ -117,8 +34,7 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.red_judge_blue.visibility",
@@ -126,8 +42,7 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.blue.functionality_tri_state",
@@ -135,8 +50,7 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.scorekeeper.judge_authority",
@@ -144,8 +58,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.adaptive_lineage.judge_authority",
@@ -153,63 +66,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "battle.anonymization.comprehensive_contract_and_beyond_contract_campaign",
-      "description": "Anonymization invariant campaigns must test the acceptance-contract floor and a beyond-contract adversarial matrix covering non-JSON schema, path, encoding, report, and execution-log surfaces; clean brief-only replay is not sufficient proof.",
-      "criticality": "critical",
-      "evidence_required": {
-        "adversarial_live_e2e": true,
-        "docker": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "battle.contract_variation.dogpile_family_expansion",
-      "description": "For any acceptance_contract.bundle.v1, Battle emits a generic battle.contract_variation_plan.v1 with Phase 1 acceptance floor, Phase 2 project-state + source-filtered Dogpile + Ask one-shot research expansion, Phase 3 adaptive-lineage promotion/replay, plus reusable variation families, deterministic case slots, and 20-30 retained agentic-eval workflow classes before Docker/Judge campaign proof.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      },
-      "claim_semantics": "protocol"
-    },
-    {
-      "id": "battle.invariant_report.create_report_project_state_exploits_table",
-      "description": "Battle invariant closure emits a create_report.report.v1 report and terminal case cards from fresh Battle campaign receipts, preserving machine JSON stdout while naming the contract floor, Red pressure, Scorekeeper call, examples, rationale, research provenance, and Judge evidence.",
-      "criticality": "critical",
-      "evidence_required": {
-        "adversarial_live_e2e": true
-      },
-      "claim_semantics": "protocol"
-    },
-    {
-      "id": "battle.release_gate.case_receipts_and_aggregate",
-      "description": "Battle invariant campaigns emit battle.case_receipt.v1 per attempted case and battle.campaign_aggregate.v1 computed from those receipts, including fixture precheck, execution kind, rejection status, security judge, functional judge, verdict, and aggregate failure counts.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      },
-      "claim_semantics": "protocol"
-    },
-    {
-      "id": "battle.release_gate.non_vacuous_acceptance",
-      "description": "Battle cannot pass by rejecting or deleting everything: MUST_ACCEPT cases must be accepted and functionally judged, MUST_REJECT cases must safely reject, invalid fixtures fail before target execution, and judge/target/incomplete failures block campaign PASS.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      },
-      "claim_semantics": "protocol"
-    },
-    {
-      "id": "battle.release_gate.opt_in_transformation_profile",
-      "description": "Battle's no-data-leak Judge supports an explicit opt-in interpretation profile for bounded one-layer base64/base64url/hex decoding and record-local adjacent-field reconstruction; these semantics are not silently enabled after failures.",
-      "criticality": "important",
-      "evidence_required": {
-        "deterministic": true
-      },
-      "claim_semantics": "protocol"
+      }
     },
     {
       "id": "battle.adaptive_lineage.contracts",
@@ -217,8 +74,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.adaptive_lineage.live_exact_chain",
@@ -226,8 +82,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.adaptive_lineage.provider_tau_seeded_spawn",
@@ -235,8 +90,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.receipts.hash_finalization",
@@ -244,8 +98,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.adaptive_lineage.broadcast_required_evidence",
@@ -253,8 +106,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.adaptive_lineage.selection_reporting",
@@ -262,8 +114,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.adaptive_lineage.commentary_provenance",
@@ -271,17 +122,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "battle.adaptive_lineage.commentary_causality",
-      "description": "Provider/Tau broadcast commentary narrates scenario objective, Red mechanism, Blue response, replay transition, and Judge terminal result only from typed source-bound receipt fact slots, omitting absent facts and unsupported kill language.",
-      "criticality": "critical",
-      "evidence_required": {
-        "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.memory.provider_tau_promotion",
@@ -289,8 +130,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.memory.admission_binding",
@@ -298,8 +138,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.current_status.adaptive_lineage_receipt",
@@ -307,8 +146,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.current_status.proof_chain_revalidation",
@@ -316,35 +154,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "battle.current_status.terminal_semantics",
-      "description": "Battle current-status validates local MVP terminal semantics through typed Judge/scorekeeper evidence and rejects kill, fastest_crash, promotion aliases, and crash-only promotion.",
-      "criticality": "critical",
-      "evidence_required": {
-        "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "battle.current_status.unsupported_claim_gates",
-      "description": "CURRENT_STATUS check rejects promotion of explicitly unsupported readiness claims unless each claim is bound to its required receipt class.",
-      "criticality": "critical",
-      "evidence_required": {
-        "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "battle.adaptive_lineage.adaptive_improvement",
-      "description": "A paired battle-004 Docker Judge replay distinguishes lineage existence from a retained promoted Blue artifact causing a predeclared Judge/functionality metric improvement, with a same-treatment negative control.",
-      "criticality": "critical",
-      "evidence_required": {
-        "live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.immutable_goal.adaptive_lineage_pixi",
@@ -353,8 +163,7 @@
       "evidence_required": {
         "adversarial_live_e2e": true,
         "live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.memory.lineage_contracts",
@@ -362,8 +171,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.transport.same_run_pixi",
@@ -371,8 +179,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.receipt_pixi.replay",
@@ -380,8 +187,7 @@
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.pause_resume.fail_closed",
@@ -389,8 +195,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.staging.readiness_boundary",
@@ -398,8 +203,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.orchestrator.overnight_resume_report",
@@ -407,8 +211,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.digital_twin.non_docker_modes",
@@ -416,8 +219,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.tau_subagent.provider_handoff",
@@ -425,8 +227,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.memory.team_learning",
@@ -434,8 +235,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.research.host_only_ingress",
@@ -443,8 +243,7 @@
       "criticality": "important",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.adaptive_lineage.same_run_backend",
@@ -452,8 +251,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.swarm.throughput_envelope",
@@ -461,8 +259,7 @@
       "criticality": "important",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.monitor.human_interjection",
@@ -470,8 +267,7 @@
       "criticality": "important",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.pixi.gameplay_video_acceptance",
@@ -479,8 +275,7 @@
       "criticality": "important",
       "evidence_required": {
         "live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.production.positive_readiness",
@@ -488,8 +283,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
+      }
     },
     {
       "id": "battle.production.small_medium_local",
@@ -497,134 +291,7 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "battle.proof_rungs.fast_sanity_live_separation",
-      "description": "Fast offline sanity receipts cannot satisfy live backend qualification proof rungs; live gates require matching live receipt classes.",
-      "criticality": "critical",
-      "evidence_required": {
-        "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "battle.campaign.profile_contract",
-      "description": "Consumer-owned campaign profiles resolve MAY_REJECT choices, never downgrade the spec floor, and fail closed on unknown overrides, missing required cases, and malformed profiles.",
-      "criticality": "critical",
-      "evidence_required": {
-        "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "battle.campaign.functional_judge",
-      "claim_semantics": "control_flow",
-      "description": "The functional judge catches accept-and-destroy: destroyed inventories, blanked content, modified literals, and unreplaced values all fail; correct anonymized output passes.",
-      "criticality": "critical",
-      "evidence_required": {
-        "adversarial_live_e2e": true
       }
-    },
-    {
-      "id": "battle.docker_execution_boundary",
-      "description": "Battle production adapter can block non-Docker target command templates before target launch when the Docker boundary gate is enabled.",
-      "criticality": "critical",
-      "evidence_required": {
-        "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "battle.frozen_plan_execution",
-      "description": "Battle campaign contract execution consumes the materialized frozen plan without invoking the generator a second time.",
-      "criticality": "critical",
-      "evidence_required": {
-        "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "battle.receipt_store.crash_safe_immutable_attempts",
-      "description": "Battle persists immutable run/attempt receipts with content-addressed artifacts, atomic commits, idempotent acknowledged retries, and incomplete recovery for ambiguous launches.",
-      "criticality": "critical",
-      "evidence_required": {
-        "adversarial_live_e2e": true
-      },
-      "claim_semantics": "protocol"
-    },
-    {
-      "id": "no_data_leak_judge.sqlite_raw_text_surfaces",
-      "description": "No-data-leak Judge scans complete released SQLite bytes for text encodings in the frozen profile, including BLOB content and unused raw byte surfaces, while failing closed on scan limits.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "no_data_leak_judge.sqlite_header_integer_coverage",
-      "description": "No-data-leak Judge scans every in-scope documented SQLite database header integer field with documented width and page-size encoding semantics.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "no_data_leak_judge.sqlite_stored_scalar_coverage",
-      "description": "No-data-leak Judge inspects SQLite hidden rowids and internal scalar stores such as sqlite_sequence, handles quoted identifiers and WITHOUT ROWID tables, and fails closed when rowid storage cannot be inspected.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "reference_judges.strict_json_inputs_outputs",
-      "description": "Battle reference Judges reject ambiguous JSON inputs and outputs including duplicate keys and non-finite values, while distinguishing invalid fixtures from invalid released output.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "reference_judges.policy_record_identity_alignment",
-      "description": "Battle functional reference Judge preserves policy rule, type, value, and subject identity metadata while ordering values for longest-match comparison, so same-subject aliases may converge but distinct subjects cannot collapse due to sorting.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "reference_judges.functional_exact_numeric_slot_matching",
-      "description": "Battle functional reference Judge matches numeric policy slots with exact decimal semantics instead of lossy float aliases, so large neighboring integers stay distinct, approved exponent-equivalent numeric forms match, and booleans remain nonnumeric.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "battle.judge_qualification.exact_configuration",
-      "description": "Ranked Battle production campaigns require a passing Judge qualification receipt keyed by evaluator image, qualification-suite digest, Judge file digests, and interpretation configuration before target launch.",
-      "criticality": "critical",
-      "evidence_required": {
-        "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
-    },
-    {
-      "id": "battle.arena_protocol.generic_non_anonymization",
-      "description": "Battle campaign and production adapter execution use an arena protocol for fixture validation, observations, applicable Judges, expectations, and reset behavior so a deterministic containerized HTTP authorization arena can run without corpus or policy.json.",
-      "criticality": "critical",
-      "evidence_required": {
-        "adversarial_live_e2e": true
-      },
-      "claim_semantics": "control_flow"
     }
   ],
   "seams": [
@@ -713,132 +380,6 @@
         "CLI validates authorization identity A while executing target path B",
         "CLI validates authorization identity A while constructing a Docker battle for image B",
         "caller-supplied authorization aliases bypass the actual target mapping check"
-      ],
-      "required_evidence": [
-        "adversarial_live_e2e"
-      ]
-    },
-    {
-      "seam_id": "authorization.executable_target_binding",
-      "claim_id": "battle.authorization.executable_target_binding",
-      "seam_type": "production-adapter/security-authorization",
-      "criticality": "critical",
-      "failure_modes": [
-        "production adapter authorizes target A while executing Docker image B",
-        "effective Docker runtime scope is not checked by the authorization validator",
-        "lower-level Docker campaign execution runs without a bound authorization receipt"
-      ],
-      "required_evidence": [
-        "adversarial_live_e2e"
-      ]
-    },
-    {
-      "seam_id": "campaign_acceptance.strict_envelopes",
-      "claim_id": "battle.campaign_acceptance.strict_envelopes",
-      "seam_type": "schema/receipt-validation",
-      "criticality": "critical",
-      "failure_modes": [
-        "duplicate JSON keys are silently collapsed before validation",
-        "extra fields or non-finite numeric values enter campaign envelopes",
-        "duplicate or empty case IDs and invalid case maps reach target execution"
-      ],
-      "required_evidence": [
-        "adversarial_live_e2e"
-      ]
-    },
-    {
-      "seam_id": "evaluator_lock.enforced_before_load",
-      "claim_id": "battle.evaluator_lock.enforced_before_load",
-      "seam_type": "supply-chain/evaluator-lock",
-      "criticality": "critical",
-      "failure_modes": [
-        "changed imported helper remains trusted because only top-level Judge file was hashed",
-        "worker replaces both evaluator path and claimed expected digest in the request",
-        "lock mismatch reaches target launch"
-      ],
-      "required_evidence": [
-        "adversarial_live_e2e"
-      ]
-    },
-    {
-      "seam_id": "artifact_snapshot.confinement",
-      "claim_id": "battle.artifact_snapshot.confinement",
-      "seam_type": "filesystem/materialization",
-      "criticality": "critical",
-      "failure_modes": [
-        "case ID traversal writes output outside the work root",
-        "generator symlink imports host files into retained evidence",
-        "external mutation changes evidence after plan resolution"
-      ],
-      "required_evidence": [
-        "adversarial_live_e2e"
-      ]
-    },
-    {
-      "seam_id": "execution_outcome.safe_rejection",
-      "claim_id": "battle.execution_outcome.safe_rejection",
-      "seam_type": "runner/execution-observation",
-      "criticality": "critical",
-      "failure_modes": [
-        "Docker launch error is recorded as safe rejection",
-        "crash or incomplete capture satisfies MUST_REJECT",
-        "target_launches is copied from planned case count instead of observed starts"
-      ],
-      "required_evidence": [
-        "adversarial_live_e2e"
-      ]
-    },
-    {
-      "seam_id": "fixture_witness.typed",
-      "claim_id": "battle.fixture_witness.typed",
-      "seam_type": "fixture/precheck",
-      "criticality": "critical",
-      "failure_modes": [
-        "any Judge failure is accepted as proof that the intended sensitive value exists",
-        "MUST_REJECT fixtures bypass an approved invalid-input predicate",
-        "invalid fixture is counted as a Red win or successful floor case"
-      ],
-      "required_evidence": [
-        "adversarial_live_e2e"
-      ]
-    },
-    {
-      "seam_id": "receipt_inventory.closure",
-      "claim_id": "battle.receipt_inventory.closure",
-      "seam_type": "receipt/offline-verifier",
-      "criticality": "critical",
-      "failure_modes": [
-        "unrecorded retained artifact is ignored by verification",
-        "duplicated or reassigned case receipt preserves recorded PASS verdict",
-        "request digest, plan digest, or aggregate counter tampering is trusted"
-      ],
-      "required_evidence": [
-        "adversarial_live_e2e"
-      ]
-    },
-    {
-      "seam_id": "offline_replay.portable_package",
-      "claim_id": "battle.offline_replay.portable_package",
-      "seam_type": "receipt/portable-replay",
-      "criticality": "critical",
-      "failure_modes": [
-        "offline verification reads the original absolute work_root after export",
-        "moved replay package cannot run because evaluator paths are absolute",
-        "missing packaged evidence is silently recovered from the old workspace"
-      ],
-      "required_evidence": [
-        "adversarial_live_e2e"
-      ]
-    },
-    {
-      "seam_id": "execution_provenance.runner_attested",
-      "claim_id": "battle.execution_provenance.runner_attested",
-      "seam_type": "runner/provenance-attestation",
-      "criticality": "critical",
-      "failure_modes": [
-        "internally consistent receipt is fabricated without target execution",
-        "case execution fields are rewritten without invalidating provenance",
-        "missing runner attestation is reported as verified execution provenance"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -943,20 +484,6 @@
       ]
     },
     {
-      "seam_id": "adaptive_lineage.commentary_causality",
-      "claim_id": "battle.adaptive_lineage.commentary_causality",
-      "seam_type": "receipt fact-slot commentary projection",
-      "criticality": "critical",
-      "failure_modes": [
-        "commentary narrates an objective, exploit mechanism, Blue response, replay transition, or Judge result without a typed source-bound receipt slot",
-        "commentary fabricates a Red exploit mechanism when the Red genome is absent",
-        "crash-only or unsupported events are narrated as kills without a typed terminal kill slot"
-      ],
-      "required_evidence": [
-        "adversarial_live_e2e"
-      ]
-    },
-    {
       "seam_id": "memory.provider_tau_promotion",
       "claim_id": "battle.memory.provider_tau_promotion",
       "seam_type": "memory/write-readback",
@@ -1011,51 +538,6 @@
       ],
       "required_evidence": [
         "adversarial_live_e2e"
-      ]
-    },
-    {
-      "seam_id": "current_status.terminal_semantics",
-      "claim_id": "battle.current_status.terminal_semantics",
-      "seam_type": "typed terminal-result validation",
-      "criticality": "critical",
-      "failure_modes": [
-        "kill is accepted as a terminal success alias",
-        "fastest_crash is accepted as a terminal success alias",
-        "promotion is accepted without a supported local MVP terminal state",
-        "crash-only evidence promotes a terminal result without typed Judge evidence"
-      ],
-      "required_evidence": [
-        "adversarial_live_e2e"
-      ]
-    },
-    {
-      "seam_id": "battle.current_status.unsupported_claim_gates",
-      "claim_id": "battle.current_status.unsupported_claim_gates",
-      "seam_type": "receipt/status projection",
-      "criticality": "critical",
-      "failure_modes": [
-        "CURRENT_STATUS reports MET while production_deployment_ready is promoted without production infrastructure receipt",
-        "CURRENT_STATUS reports MET while full_adaptive_improvement_proven is promoted without full adaptive improvement receipt",
-        "CURRENT_STATUS reports MET while kill/fastest-crash terminal semantics are promoted without typed Judge receipt family",
-        "CURRENT_STATUS treats fast sanity as live product proof"
-      ],
-      "required_evidence": [
-        "adversarial_live_e2e"
-      ]
-    },
-    {
-      "seam_id": "adaptive_lineage.adaptive_improvement",
-      "claim_id": "battle.adaptive_lineage.adaptive_improvement",
-      "seam_type": "paired Docker Judge metric contrast",
-      "criticality": "critical",
-      "failure_modes": [
-        "lineage existence is mistaken for adaptive improvement",
-        "the promoted artifact is selected but not consumed by the adaptive arm",
-        "PASS is emitted without a paired baseline, Judge metric gain, repeat, or bound hashes",
-        "the same-treatment control reports improvement"
-      ],
-      "required_evidence": [
-        "live_e2e"
       ]
     },
     {
@@ -1286,93 +768,6 @@
       "required_evidence": [
         "adversarial_live_e2e"
       ]
-    },
-    {
-      "seam_id": "proof_rungs.fast_sanity_live_separation",
-      "claim_id": "battle.proof_rungs.fast_sanity_live_separation",
-      "seam_type": "proof-class/provenance boundary",
-      "criticality": "critical",
-      "failure_modes": [
-        "battle.tiered_fast_sanity_gate.v1 is accepted by a live qualification gate",
-        "live qualification passes without an explicit live receipt schema",
-        "same-run live qualification accepts an offline deterministic fixture receipt"
-      ],
-      "required_evidence": [
-        "adversarial_live_e2e"
-      ]
-    },
-    {
-      "seam_id": "campaign.profile_contract",
-      "claim_id": "battle.campaign.profile_contract",
-      "seam_type": "acceptance-contract boundary",
-      "criticality": "critical",
-      "failure_modes": [
-        "a profile silently downgrades a spec-floor MUST_ACCEPT",
-        "unknown override targets or missing required cases pass silently",
-        "malformed profiles are ignored instead of failing closed"
-      ],
-      "required_evidence": [
-        "adversarial_live_e2e"
-      ]
-    },
-    {
-      "seam_id": "campaign.functional_judge",
-      "claim_id": "battle.campaign.functional_judge",
-      "seam_type": "functional-equivalence boundary",
-      "criticality": "critical",
-      "failure_modes": [
-        "a target accepts required cases while emitting destroyed or blanked output",
-        "non-slot content is modified silently",
-        "a policy value passes through unreplaced and only the leak judge notices structure loss"
-      ],
-      "required_evidence": [
-        "adversarial_live_e2e"
-      ]
-    },
-    {
-      "seam_id": "acceptance_floor.production_adapter",
-      "claim_id": "battle.anonymization.comprehensive_contract_and_beyond_contract_campaign",
-      "seam_type": "contract/admission-control",
-      "criticality": "critical",
-      "failure_modes": [
-        "acceptance-contract cases are not mapped into required campaign cases",
-        "open acceptance-contract questions reach target execution",
-        "beyond-contract fuzz receives credit while the contract floor is incomplete"
-      ],
-      "required_evidence": [
-        "adversarial_live_e2e"
-      ]
-    },
-    {
-      "seam_id": "receipt_store.crash_safe_immutable_attempts",
-      "claim_id": "battle.receipt_store.crash_safe_immutable_attempts",
-      "seam_type": "storage_protocol",
-      "criticality": "critical",
-      "failure_modes": [
-        "receipt overwrite",
-        "lost artifact evidence",
-        "non-idempotent retry",
-        "ambiguous launch relabeled success"
-      ],
-      "required_evidence": [
-        "crash-recovery pytest",
-        "agentic eval receipt readback"
-      ]
-    },
-    {
-      "seam_id": "invariant_report.terminal_summary",
-      "claim_id": "battle.invariant_report.create_report_project_state_exploits_table",
-      "seam_type": "reporting/output-projection",
-      "criticality": "critical",
-      "failure_modes": [
-        "terminal report buries the Battle story in generic report prose",
-        "terminal report omits contract-floor or beyond-contract counts",
-        "terminal report reports a Red win without the next playbook and release-blocking call",
-        "opt-in terminal summary contaminates machine-readable JSON stdout"
-      ],
-      "required_evidence": [
-        "deterministic"
-      ]
     }
   ],
   "cases": [
@@ -1475,336 +870,6 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/review-cli-authorization-target-binding.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 800
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-b04-bind-authorization-to-the-actual-executable-target",
-      "category": "battle-b04-bind-authorization-to-the-actual-executable-target",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.authorization.executable_target_binding"
-      ],
-      "seams": [
-        "authorization.executable_target_binding"
-      ],
-      "timeout_seconds": 240,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b04-bind-authorization-to-the-actual-executable-target --summary /tmp/battle-agentic-evals/battle-b04-bind-authorization-to-the-actual-executable-target.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b04-bind-authorization-to-the-actual-executable-target"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-b04-bind-authorization-to-the-actual-executable-target.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 800
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-b05-strictly-validate-campaign-and-acceptance-envelopes",
-      "category": "battle-b05-strictly-validate-campaign-and-acceptance-envelopes",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.campaign_acceptance.strict_envelopes"
-      ],
-      "seams": [
-        "campaign_acceptance.strict_envelopes"
-      ],
-      "timeout_seconds": 240,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b05-strictly-validate-campaign-and-acceptance-envelopes --summary /tmp/battle-agentic-evals/battle-b05-strictly-validate-campaign-and-acceptance-envelopes.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b05-strictly-validate-campaign-and-acceptance-envelopes"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-b05-strictly-validate-campaign-and-acceptance-envelopes.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 800
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-b06-verify-evaluator-locks-before-loading-executable-components",
-      "category": "battle-b06-verify-evaluator-locks-before-loading-executable-components",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.evaluator_lock.enforced_before_load"
-      ],
-      "seams": [
-        "evaluator_lock.enforced_before_load"
-      ],
-      "timeout_seconds": 240,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b06-verify-evaluator-locks-before-loading-executable-components --summary /tmp/battle-agentic-evals/battle-b06-verify-evaluator-locks-before-loading-executable-components.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b06-verify-evaluator-locks-before-loading-executable-components"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-b06-verify-evaluator-locks-before-loading-executable-components.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 800
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-b07-confine-all-materialized-artifacts-to-owned-snapshots",
-      "category": "battle-b07-confine-all-materialized-artifacts-to-owned-snapshots",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.artifact_snapshot.confinement"
-      ],
-      "seams": [
-        "artifact_snapshot.confinement"
-      ],
-      "timeout_seconds": 240,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b07-confine-all-materialized-artifacts-to-owned-snapshots --summary /tmp/battle-agentic-evals/battle-b07-confine-all-materialized-artifacts-to-owned-snapshots.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b07-confine-all-materialized-artifacts-to-owned-snapshots"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-b07-confine-all-materialized-artifacts-to-owned-snapshots.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 800
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-b08-separate-safe-rejection-from-execution-failure",
-      "category": "battle-b08-separate-safe-rejection-from-execution-failure",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.execution_outcome.safe_rejection"
-      ],
-      "seams": [
-        "execution_outcome.safe_rejection"
-      ],
-      "timeout_seconds": 240,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b08-separate-safe-rejection-from-execution-failure --summary /tmp/battle-agentic-evals/battle-b08-separate-safe-rejection-from-execution-failure.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b08-separate-safe-rejection-from-execution-failure"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-b08-separate-safe-rejection-from-execution-failure.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 800
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-b09-require-a-typed-fixture-witness-rather-than-any-judge-failu",
-      "category": "battle-b09-require-a-typed-fixture-witness-rather-than-any-judge-failu",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.fixture_witness.typed"
-      ],
-      "seams": [
-        "fixture_witness.typed"
-      ],
-      "timeout_seconds": 240,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b09-require-a-typed-fixture-witness-rather-than-any-judge-failu --summary /tmp/battle-agentic-evals/battle-b09-require-a-typed-fixture-witness-rather-than-any-judge-failu.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b09-require-a-typed-fixture-witness-rather-than-any-judge-failu"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-b09-require-a-typed-fixture-witness-rather-than-any-judge-failu.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 800
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-b10-verify-complete-evidence-inventories-and-case-rosters",
-      "category": "battle-b10-verify-complete-evidence-inventories-and-case-rosters",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.receipt_inventory.closure"
-      ],
-      "seams": [
-        "receipt_inventory.closure"
-      ],
-      "timeout_seconds": 240,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b10-verify-complete-evidence-inventories-and-case-rosters --summary /tmp/battle-agentic-evals/battle-b10-verify-complete-evidence-inventories-and-case-rosters.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b10-verify-complete-evidence-inventories-and-case-rosters"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-b10-verify-complete-evidence-inventories-and-case-rosters.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 800
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-b11-make-offline-replay-independent-of-original-filesystem-path",
-      "category": "battle-b11-make-offline-replay-independent-of-original-filesystem-path",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.offline_replay.portable_package"
-      ],
-      "seams": [
-        "offline_replay.portable_package"
-      ],
-      "timeout_seconds": 240,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b11-make-offline-replay-independent-of-original-filesystem-path --summary /tmp/battle-agentic-evals/battle-b11-make-offline-replay-independent-of-original-filesystem-path.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b11-make-offline-replay-independent-of-original-filesystem-path"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-b11-make-offline-replay-independent-of-original-filesystem-path.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 800
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-b12-add-runner-attested-execution-provenance",
-      "category": "battle-b12-add-runner-attested-execution-provenance",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.execution_provenance.runner_attested"
-      ],
-      "seams": [
-        "execution_provenance.runner_attested"
-      ],
-      "timeout_seconds": 240,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b12-add-runner-attested-execution-provenance --summary /tmp/battle-agentic-evals/battle-b12-add-runner-attested-execution-provenance.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b12-add-runner-attested-execution-provenance"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-b12-add-runner-attested-execution-provenance.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 800
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-b13-persist-immutable-attempts-with-crash-safe-recovery",
-      "category": "battle-b13-persist-immutable-attempts-with-crash-safe-recovery",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.receipt_store.crash_safe_immutable_attempts"
-      ],
-      "seams": [
-        "receipt_store.crash_safe_immutable_attempts"
-      ],
-      "timeout_seconds": 240,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b13-persist-immutable-attempts-with-crash-safe-recovery --summary /tmp/battle-agentic-evals/battle-b13-persist-immutable-attempts-with-crash-safe-recovery.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b13-persist-immutable-attempts-with-crash-safe-recovery"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-b13-persist-immutable-attempts-with-crash-safe-recovery.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800
@@ -2111,39 +1176,6 @@
       }
     },
     {
-      "name": "battle-commentary-causality",
-      "category": "battle-commentary-causality",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.adaptive_lineage.commentary_causality"
-      ],
-      "seams": [
-        "adaptive_lineage.commentary_causality"
-      ],
-      "timeout_seconds": 240,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-commentary-causality --summary /tmp/battle-agentic-evals/battle-commentary-causality.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-commentary-causality"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-commentary-causality.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 800
-          }
-        ]
-      }
-    },
-    {
       "name": "provider-tau-memory-promotion",
       "type": "adversarial",
       "real_world": true,
@@ -2272,126 +1304,6 @@
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-terminal-semantics",
-      "category": "battle-terminal-semantics",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.current_status.terminal_semantics"
-      ],
-      "seams": [
-        "current_status.terminal_semantics"
-      ],
-      "timeout_seconds": 240,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-terminal-semantics --summary /tmp/battle-agentic-evals/battle-terminal-semantics.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-terminal-semantics"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-terminal-semantics.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 800
-          },
-          {
-            "path": "/tmp/battle-agentic-evals/battle-terminal-semantics/terminal-semantics-receipt.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 1000
-          },
-          {
-            "path": "/tmp/battle-agentic-evals/battle-terminal-semantics/terminal-semantics-receipt.json",
-            "json_pointer": "/adapter_judge_authority_verified",
-            "equals": true
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-current-status-claim-gates",
-      "category": "battle-current-status-claim-gates",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.current_status.unsupported_claim_gates"
-      ],
-      "seams": [
-        "battle.current_status.unsupported_claim_gates"
-      ],
-      "timeout_seconds": 360,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-current-status-claim-gates --summary /tmp/battle-agentic-evals/battle-current-status-claim-gates.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-current-status-claim-gates"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-current-status-claim-gates.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 800
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-adaptive-improvement",
-      "category": "battle-adaptive-improvement",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "live_e2e",
-      "supports_claims": [
-        "battle.adaptive_lineage.adaptive_improvement"
-      ],
-      "seams": [
-        "adaptive_lineage.adaptive_improvement"
-      ],
-      "timeout_seconds": 600,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-adaptive-improvement --summary /tmp/battle-agentic-evals/battle-adaptive-improvement.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-adaptive-improvement"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-adaptive-improvement.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 800
-          },
-          {
-            "path": "/tmp/battle-agentic-evals/battle-adaptive-improvement/positive.json",
-            "json_pointer": "/judge_metric_improved",
-            "equals": true
-          },
-          {
-            "path": "/tmp/battle-agentic-evals/battle-adaptive-improvement/same-treatment.json",
-            "json_pointer": "/judge_metric_improved",
-            "equals": false
           }
         ]
       }
@@ -2849,639 +1761,6 @@
       }
     },
     {
-      "name": "small-medium-production-battle",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.production.small_medium_local"
-      ],
-      "seams": [
-        "production.small_medium_local_battle"
-      ],
-      "timeout_seconds": 300,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python ../scripts/agentic_eval_probe.py small-medium-production-battle --summary /tmp/battle-agentic-evals/small-medium-production-battle.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=small-medium-production-battle"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/small-medium-production-battle.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 800
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-proof-rung-separation",
-      "category": "battle-proof-rung-separation",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.proof_rungs.fast_sanity_live_separation"
-      ],
-      "seams": [
-        "proof_rungs.fast_sanity_live_separation"
-      ],
-      "timeout_seconds": 360,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-proof-rung-separation --summary /tmp/battle-agentic-evals/battle-proof-rung-separation.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-proof-rung-separation"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-proof-rung-separation.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 800
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-profile-contract",
-      "category": "battle-profile-contract",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.campaign.profile_contract"
-      ],
-      "seams": [
-        "campaign.profile_contract"
-      ],
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-profile-contract --summary /tmp/battle-agentic-evals/battle-profile-contract.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-profile-contract"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-profile-contract.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 400
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-functional-judge",
-      "category": "battle-functional-judge",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.campaign.functional_judge"
-      ],
-      "seams": [
-        "campaign.functional_judge"
-      ],
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-functional-judge --summary /tmp/battle-agentic-evals/battle-functional-judge.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-functional-judge"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-functional-judge.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 400
-          }
-        ]
-      }
-    },
-    {
-      "name": "contract-variation-plan",
-      "category": "contract-variation-plan",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "battle.contract_variation.dogpile_family_expansion"
-      ],
-      "seams": [
-        "contract_variation.dogpile_family_expansion"
-      ],
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py contract-variation-plan --summary /tmp/battle-agentic-evals/contract-variation-plan.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=contract-variation-plan"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/contract-variation-plan.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 400
-          }
-        ]
-      }
-    },
-    {
-      "name": "acceptance-floor-production-adapter",
-      "category": "battle-b03-make-contract-enrollment-impossible-to-opt-out-of",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.anonymization.comprehensive_contract_and_beyond_contract_campaign"
-      ],
-      "seams": [
-        "acceptance_floor.production_adapter"
-      ],
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py acceptance-floor-production-adapter --summary /tmp/battle-agentic-evals/acceptance-floor-production-adapter.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=acceptance-floor-production-adapter"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/acceptance-floor-production-adapter.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 500
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-b14-require-executed-requirement-evidence-before-beyond-contrac",
-      "category": "battle-b14-require-executed-requirement-evidence-before-beyond-contrac",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.anonymization.comprehensive_contract_and_beyond_contract_campaign"
-      ],
-      "seams": [
-        "acceptance_floor.production_adapter"
-      ],
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b14-require-executed-requirement-evidence-before-beyond-contrac --summary /tmp/battle-agentic-evals/battle-b14-require-executed-requirement-evidence-before-beyond-contrac.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b14-require-executed-requirement-evidence-before-beyond-contrac"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-b14-require-executed-requirement-evidence-before-beyond-contrac.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 500
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-b15-scan-every-declared-release-and-execution-log-stream",
-      "category": "battle-b15-scan-every-declared-release-and-execution-log-stream",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.anonymization.comprehensive_contract_and_beyond_contract_campaign"
-      ],
-      "seams": [
-        "no_data_leak_judge.release_stream_inventory"
-      ],
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b15-scan-every-declared-release-and-execution-log-stream --summary /tmp/battle-agentic-evals/battle-b15-scan-every-declared-release-and-execution-log-stream.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b15-scan-every-declared-release-and-execution-log-stream"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-b15-scan-every-declared-release-and-execution-log-stream.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 500
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-b16-remove-the-seven-digit-confidentiality-threshold",
-      "category": "battle-b16-remove-the-seven-digit-confidentiality-threshold",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.anonymization.comprehensive_contract_and_beyond_contract_campaign"
-      ],
-      "seams": [
-        "no_data_leak_judge.numeric_policy_values"
-      ],
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b16-remove-the-seven-digit-confidentiality-threshold --summary /tmp/battle-agentic-evals/battle-b16-remove-the-seven-digit-confidentiality-threshold.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b16-remove-the-seven-digit-confidentiality-threshold"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-b16-remove-the-seven-digit-confidentiality-threshold.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 400
-          }
-        ]
-      }
-    },
-    {
-      "name": "docker-execution-boundary",
-      "category": "docker-execution-boundary",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.docker_execution_boundary"
-      ],
-      "seams": [
-        "docker.execution.boundary"
-      ],
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py docker-execution-boundary --summary /tmp/battle-agentic-evals/docker-execution-boundary.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=docker-execution-boundary"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/docker-execution-boundary.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 400
-          }
-        ]
-      }
-    },
-    {
-      "name": "frozen-plan-execution",
-      "category": "frozen-plan-execution",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.frozen_plan_execution"
-      ],
-      "seams": [
-        "frozen.plan.execution"
-      ],
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py frozen-plan-execution --summary /tmp/battle-agentic-evals/frozen-plan-execution.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=frozen-plan-execution"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/frozen-plan-execution.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 400
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-b17-scan-whole-sqlite-files-for-retained-text-form-values",
-      "category": "battle-b17-scan-whole-sqlite-files-for-retained-text-form-values",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "no_data_leak_judge.sqlite_raw_text_surfaces"
-      ],
-      "seams": [
-        "sqlite.raw_text_surfaces"
-      ],
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b17-scan-whole-sqlite-files-for-retained-text-form-values --summary /tmp/battle-agentic-evals/battle-b17-scan-whole-sqlite-files-for-retained-text-form-values.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b17-scan-whole-sqlite-files-for-retained-text-form-values"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-b17-scan-whole-sqlite-files-for-retained-text-form-values.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 400
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-b18-complete-sqlite-header-integer-coverage",
-      "category": "battle-b18-complete-sqlite-header-integer-coverage",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "no_data_leak_judge.sqlite_header_integer_coverage"
-      ],
-      "seams": [
-        "sqlite.header_integer_coverage"
-      ],
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b18-complete-sqlite-header-integer-coverage --summary /tmp/battle-agentic-evals/battle-b18-complete-sqlite-header-integer-coverage.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b18-complete-sqlite-header-integer-coverage"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-b18-complete-sqlite-header-integer-coverage.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 400
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-b19-inspect-omitted-sqlite-stored-scalar-values",
-      "category": "battle-b19-inspect-omitted-sqlite-stored-scalar-values",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "no_data_leak_judge.sqlite_stored_scalar_coverage"
-      ],
-      "seams": [
-        "sqlite.stored_scalar_coverage"
-      ],
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b19-inspect-omitted-sqlite-stored-scalar-values --summary /tmp/battle-agentic-evals/battle-b19-inspect-omitted-sqlite-stored-scalar-values.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b19-inspect-omitted-sqlite-stored-scalar-values"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-b19-inspect-omitted-sqlite-stored-scalar-values.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 400
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-b20-reject-ambiguous-json-in-judge-inputs-and-outputs",
-      "category": "battle-b20-reject-ambiguous-json-in-judge-inputs-and-outputs",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "reference_judges.strict_json_inputs_outputs"
-      ],
-      "seams": [
-        "json.duplicate_keys",
-        "json.non_finite_values",
-        "judge.input_output_classification"
-      ],
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b20-reject-ambiguous-json-in-judge-inputs-and-outputs --summary /tmp/battle-agentic-evals/battle-b20-reject-ambiguous-json-in-judge-inputs-and-outputs.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b20-reject-ambiguous-json-in-judge-inputs-and-outputs"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-b20-reject-ambiguous-json-in-judge-inputs-and-outputs.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 400
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-b21-preserve-identity-metadata-when-ordering-policy-values",
-      "category": "battle-b21-preserve-identity-metadata-when-ordering-policy-values",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "reference_judges.policy_record_identity_alignment"
-      ],
-      "seams": [
-        "policy.value_ordering",
-        "policy.subject_identity_alignment",
-        "functional_judge.alias_convergence"
-      ],
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b21-preserve-identity-metadata-when-ordering-policy-values --summary /tmp/battle-agentic-evals/battle-b21-preserve-identity-metadata-when-ordering-policy-values.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b21-preserve-identity-metadata-when-ordering-policy-values"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-b21-preserve-identity-metadata-when-ordering-policy-values.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 400
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-b22-remove-lossy-numeric-aliases-from-functional-slot-matching",
-      "category": "battle-b22-remove-lossy-numeric-aliases-from-functional-slot-matching",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "reference_judges.functional_exact_numeric_slot_matching"
-      ],
-      "seams": [
-        "functional_judge.numeric_slot_matching",
-        "policy.large_integer_precision",
-        "json_numeric_equivalence"
-      ],
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b22-remove-lossy-numeric-aliases-from-functional-slot-matching --summary /tmp/battle-agentic-evals/battle-b22-remove-lossy-numeric-aliases-from-functional-slot-matching.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b22-remove-lossy-numeric-aliases-from-functional-slot-matching"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-b22-remove-lossy-numeric-aliases-from-functional-slot-matching.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 400
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-b23-require-qualification-for-the-exact-judge-configuration",
-      "category": "battle-b23-require-qualification-for-the-exact-judge-configuration",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.judge_qualification.exact_configuration"
-      ],
-      "seams": [
-        "judge_qualification.production_adapter"
-      ],
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b23-require-qualification-for-the-exact-judge-configuration --summary /tmp/battle-agentic-evals/battle-b23-require-qualification-for-the-exact-judge-configuration.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b23-require-qualification-for-the-exact-judge-configuration"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-b23-require-qualification-for-the-exact-judge-configuration.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 400
-          }
-        ]
-      }
-    },
-    {
-      "name": "battle-b24-extract-an-arena-protocol-independent-of-anonymization",
-      "category": "battle-b24-extract-an-arena-protocol-independent-of-anonymization",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "adversarial_live_e2e",
-      "supports_claims": [
-        "battle.arena_protocol.generic_non_anonymization"
-      ],
-      "seams": [
-        "campaign_contract.arena_protocol",
-        "production_adapter.generic_arena"
-      ],
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-b24-extract-an-arena-protocol-independent-of-anonymization --summary /tmp/battle-agentic-evals/battle-b24-extract-an-arena-protocol-independent-of-anonymization.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-b24-extract-an-arena-protocol-independent-of-anonymization"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/battle-agentic-evals/battle-b24-extract-an-arena-protocol-independent-of-anonymization.json",
-            "json_pointer": "/status",
-            "equals": "PASS",
-            "min_bytes": 400
-          }
-        ]
-      }
-    },
-    {
       "name": "battle-b25-route-red-and-blue-authoring-through-tau",
       "category": "battle-b25-route-red-and-blue-authoring-through-tau",
       "type": "adversarial",
@@ -3516,142 +1795,56 @@
       "description": "B25 Red/Blue authoring crosses the real Tau CLI routing boundary over loopback HTTP with bound handoff, SciLLM, materialization, and subagent receipts.. The proof also rewrites hash-bound retained response receipt copies to TIMEOUT/PROVIDER_QUOTA_EXCEEDED/CANCELLED statuses and requires the Tau authoring route validator to reject each as a non-competitive non-win."
     },
     {
-      "name": "battle-invariant-report-terminal-cards-live",
-      "category": "battle-invariant-report-terminal-cards",
-      "type": "adversarial",
+      "name": "small-medium-production-battle",
+      "type": "positive",
       "real_world": true,
       "evidence_class": "adversarial_live_e2e",
       "supports_claims": [
-        "battle.invariant_report.create_report_project_state_exploits_table"
+        "battle.production.small_medium_local"
       ],
       "seams": [
-        "invariant_report.terminal_cards",
-        "oai_trial.live_battle_gate",
-        "docker_target_execution",
-        "independent_judge_replay",
-        "adaptive_lineage.live_exact_chain",
-        "invariant_report.adaptive_lineage_section"
+        "production.small_medium_local_battle"
       ],
-      "timeout_seconds": 600,
+      "timeout_seconds": 300,
       "command": [
         "bash",
         "-c",
-        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py battle-invariant-report-terminal-cards-live --summary /tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json"
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python ../scripts/agentic_eval_probe.py small-medium-production-battle --summary /tmp/battle-agentic-evals/small-medium-production-battle.json"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "BATTLE_AGENTIC_EVAL_PASS suite=battle-invariant-report-terminal-cards-live"
+          "BATTLE_AGENTIC_EVAL_PASS suite=small-medium-production-battle"
         ],
         "artifacts": [
           {
-            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
+            "path": "/tmp/battle-agentic-evals/small-medium-production-battle.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800
-          },
-          {
-            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
-            "json_pointer": "/acceptance_adapter_status",
-            "equals": "PASS"
-          },
-          {
-            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
-            "json_pointer": "/beyond_campaign_verdict",
-            "equals": "PASS"
-          },
-          {
-            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
-            "json_pointer": "/judge_qualification_passed",
-            "equals": true
-          },
-          {
-            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
-            "json_pointer": "/create_report_valid",
-            "equals": true
-          },
-          {
-            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
-            "json_pointer": "/has_case_table",
-            "equals": false
-          },
-          {
-            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
-            "json_pointer": "/has_acceptance_section",
-            "equals": true
-          },
-          {
-            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
-            "json_pointer": "/has_beyond_section",
-            "equals": true
-          },
-          {
-            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
-            "json_pointer": "/has_campaign_scope",
-            "equals": false
-          },
-          {
-            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
-            "json_pointer": "/has_contractual_scope",
-            "equals": true
-          },
-          {
-            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
-            "json_pointer": "/has_beyond_scope",
-            "equals": true
-          },
-          {
-            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
-            "json_pointer": "/has_acceptance_parent",
-            "equals": true
-          },
-          {
-            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
-            "json_pointer": "/has_adaptive_section",
-            "equals": true
-          },
-          {
-            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
-            "json_pointer": "/has_adaptive_scope",
-            "equals": true
-          },
-          {
-            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
-            "json_pointer": "/has_adaptive_case",
-            "equals": true
-          },
-          {
-            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
-            "json_pointer": "/adaptive_qualification_status",
-            "equals": "PASS"
-          },
-          {
-            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
-            "json_pointer": "/adaptive_qualification_live",
-            "equals": true
-          },
-          {
-            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
-            "json_pointer": "/adaptive_qualification_mocked",
-            "equals": false
-          },
-          {
-            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
-            "json_pointer": "/adaptive_verification_status",
-            "equals": "PASS"
-          },
-          {
-            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
-            "json_pointer": "/adaptive_verification_live",
-            "equals": true
-          },
-          {
-            "path": "/tmp/battle-agentic-evals/battle-invariant-report-terminal-cards-live.json",
-            "json_pointer": "/adaptive_verification_mocked",
-            "equals": false
           }
         ]
       }
+    },
+    {
+      "name": "vm-round-seams-deterministic",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-c",
+        "cd \"${PWD%fixtures}\" && uv run --project . python -m pytest tests/test_qemu_vm.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "battle.vm_round_primitive"
+      ]
     }
   ]
 }

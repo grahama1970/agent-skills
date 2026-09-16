@@ -1,0 +1,27 @@
+{
+  "schema": "security.target_authorization.v1",
+  "authorization_id": "battle-vm-round-local-smoke",
+  "issuer": "agent-skills battle maintainer",
+  "approver": "operator",
+  "issued_at": "2026-09-16T00:00:00Z",
+  "expires_at": "2099-01-01T00:00:00Z",
+  "target": {
+    "kind": "vm-image",
+    "canonical_id": "vm-image:/mnt/storage12tb/skills/battle/images/noble-server-cloudimg-amd64.img",
+    "immutable_ref": "sha256:612b2c0cc1bc413a6cb8c38fd611794caf0f2b436c50013d8b3794db12ad7354"
+  },
+  "allowed_target_urls": ["ssh://127.0.0.1"],
+  "allowed_cidrs": ["127.0.0.0/8"],
+  "allowed_ports": [22],
+  "runtime_modes": ["qemu"],
+  "allowed_actions": ["qemu-vm-round"],
+  "allowed_probe_classes": ["canary_read", "canary_connect", "config_review"],
+  "denied_probe_classes": ["destructive", "credential", "denial_of_service", "persistence"],
+  "network_policy": "user-mode NAT bound to host loopback forward only",
+  "egress_policy": "no external egress from host control plane; VM netdev user-mode only",
+  "limits": {"requests_per_second": 1, "max_concurrency": 1, "duration_seconds": 600, "cpu": 2, "memory_mb": 2048, "storage_mb": 4096},
+  "permissions": {"destructive": false, "persistence": false, "credential": false, "denial_of_service": false, "nonlocal": false},
+  "artifact_root": "/tmp/battle-vm-smoke",
+  "redaction_policy": "fixture contains no secrets; ephemeral SSH keys destroyed with round dir",
+  "legal_non_opinion_ack": true
+}
