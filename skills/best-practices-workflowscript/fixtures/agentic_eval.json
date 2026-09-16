@@ -4,7 +4,7 @@
   "trials": 3,
   "proof_scope": "WorkflowScript authoring standard: anti-pattern lint, portable-syntax contract, and fail-closed validation posture for pi-subagents workflowScripts.",
   "claims": {
-    "proves": "The linter passes the real production dev-cycle workflowScript with an empty machine-read violations list, and fail-closes with a JSON violations artifact naming the injected anti-patterns \u2014 verified by artifact-content readback (json_pointer equals), not exit codes or tee'd stdout.",
+    "proves": "The linter passes the real production dev-cycle workflowScript with an empty machine-read violations list, and fail-closes with a JSON violations artifact naming the injected anti-patterns \u2014 verified by artifact-content readback (json_pointer equals), not exit codes or tee'd stdout. The self-contained header contract (purpose + Diagram link + Launch line) is enforced fail-closed.",
     "does_not_prove": "That any specific workflowScript is semantically correct for its goal, that provider preflight or review gates were exercised live, or that a diagram was human-reviewed."
   },
   "capability_claims": [
@@ -93,6 +93,35 @@
             "path": "bad-result.json",
             "json_pointer": "/violations/0/rule",
             "equals": "nested_async_function"
+          }
+        ]
+      }
+    },
+    {
+      "name": "headerless-workflowscript-fails-closed",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "best_practices_workflowscript.fail_closed"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "H=$(mktemp /tmp/bp-wfs-nohdr.XXXXXX.workflow.js); printf '%s\\n' 'const g=await runs.run(\"gate\",{agent:\"scout\",task:\"ok\",outputSchema:{type:\"object\",additionalProperties:false,properties:{ok:{type:\"boolean\"}},required:[\"ok\"]}});' 'return {ok:g.structuredOutput.ok};' > \"$H\"; /home/graham/workspace/experiments/agent-skills/skills/best-practices-workflowscript/run.sh validate \"$H\" --json-out hdr-result.json; rc=$?; rm -f \"$H\"; exit $rc"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": [
+          "missing_self_contained_header",
+          "RESULT: FAIL"
+        ],
+        "artifacts": [
+          {
+            "path": "hdr-result.json",
+            "json_pointer": "/violations/0/rule",
+            "equals": "missing_self_contained_header"
           }
         ]
       }

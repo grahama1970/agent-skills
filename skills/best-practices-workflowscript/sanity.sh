@@ -9,8 +9,11 @@ trap 'rm -rf "$WORK"' EXIT
 LINT="$HERE/scripts/validate-workflowscript.sh"
 fail=0
 
-# --- positive control: portable script passes and emits a CLEAN verdict
+# --- positive control: portable script with self-contained header passes
 cat > "$WORK/good.workflow.js" <<'EOF'
+// Minimal compliant workflow: gate + return.
+// Diagram: good.diagram.md ($create-architecture).
+// Launch: subagent({ workflowScriptPath: 'good.workflow.js', cwd: <repo> })
 const g=await runs.run('gate',{agent:'scout',task:'Compare against origin/main.',outputSchema:{type:'object',additionalProperties:false,properties:{ok:{type:'boolean'}},required:['ok']}});
 return {ok:g.structuredOutput.ok};
 EOF
@@ -26,6 +29,9 @@ PY
 
 # --- negative control: injected anti-patterns fail closed with named rules
 cat > "$WORK/bad.workflow.js" <<'EOF'
+// Header present; body carries every runtime-rejected anti-pattern.
+// Diagram: bad.diagram.md ($create-architecture).
+// Launch: subagent({ workflowScriptPath: 'bad.workflow.js', cwd: <repo> })
 const g = async () => { return 1; };
 async function helper(){ return runs.run('x',{}); }
 const fs = require('fs');
@@ -48,10 +54,25 @@ before=$(sha256sum "$WORK/bad.workflow.js" | cut -d' ' -f1)
 after=$(sha256sum "$WORK/bad.workflow.js" | cut -d' ' -f1)
 [[ "$before" == "$after" ]] || { echo "FAIL safety-boundary: linter mutated the target file"; fail=1; }
 
-# --- noise control: empty/whitespace file is CLEAN, not a crash
+# --- header-negative control: portable body, NO self-contained header
+cat > "$WORK/nohdr.workflow.js" <<'EOF'
+const g=await runs.run('gate',{agent:'scout',task:'ok',outputSchema:{type:'object',additionalProperties:false,properties:{ok:{type:'boolean'}},required:['ok']}});
+return {ok:g.structuredOutput.ok};
+EOF
+"$LINT" "$WORK/nohdr.workflow.js" --json-out "$WORK/nohdr.json" > /dev/null 2>&1
+[[ $? -eq 1 ]] || { echo "FAIL header-negative: headerless script should exit 1"; fail=1; }
+python3 - "$WORK/nohdr.json" <<'PY' || fail=1
+import json,sys
+d=json.load(open(sys.argv[1]))
+assert d["verdict"]=="FAIL", f"verdict {d['verdict']} != FAIL"
+assert d["violations"][0]["rule"]=="missing_self_contained_header", d["violations"]
+assert all(v["rule"]=="missing_self_contained_header" for v in d["violations"]), "portable body must yield only the header violation"
+PY
+
+# --- noise control: empty/whitespace file fails ONLY on the header, not a crash
 printf '\n\n' > "$WORK/empty.workflow.js"
 "$LINT" "$WORK/empty.workflow.js" > /dev/null 2>&1
-[[ $? -eq 0 ]] || { echo "FAIL noise-control: empty file should be CLEAN"; fail=1; }
+[[ $? -eq 1 ]] || { echo "FAIL noise-control: empty file should exit 1 (header violation)"; fail=1; }
 
 # --- usage error: missing file exits 2 with usage, not a crash
 "$LINT" "$WORK/nonexistent.js" > /dev/null 2>&1

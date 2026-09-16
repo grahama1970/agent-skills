@@ -82,6 +82,30 @@ Syntax the runtime rejects or that breaks portability across Node/Bun:
 - **No repo-wide pathspecs, no `git add -A`, no stash/reset/branch switching in
   children.** Landing goes through `$gh-land` with explicit paths only.
 
+## Code conventions (enforced by the linter)
+
+Every workflowScript is self-contained: a reader of the file alone knows what
+it does, how to launch it, what its terminal states mean, and where its
+diagram lives. The header block is REQUIRED and linted:
+
+```js
+// <One-line purpose.>
+// Config: <repo>/.pi/<name>.json (max_iterations, mode, focus, readiness_command).
+// Terminal states: ready_to_share | blocked_human | iteration_cap_reached | no_provider_capacity.
+// Diagram: <name>.diagram.md ($create-architecture) — lanes, gates, terminal states.
+// Launch: subagent({ workflowScriptPath: '/home/graham/.pi/agent/workflows/<name>.workflow.js',
+//                    cwd: <repo>, async: true, globalConcurrencyLimit: 1 })
+```
+
+Body conventions (reviewed, not linted):
+
+- Structure order: schemas/constants → method notes → gates → loops → audit → return.
+- Run keys `'<verb>-<target>'` (`gate-1`, `review-320-0`, `close-362`); schema
+  constants `<noun>Schema`; shared strings defined once.
+- No magic literals repeated; every terminal state named in the header appears
+  verbatim in the code.
+- Comments explain WHY (the failure a rule prevents), never narrate the code.
+
 ## Robustness rules (field-proven)
 
 Each rule below was paid for by a real failure; do not relax them silently.

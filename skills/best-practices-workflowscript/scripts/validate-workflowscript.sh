@@ -38,6 +38,16 @@ check 'require\(|from[[:space:]]+.fs.|node:fs|process\.' 'host_global_or_fs'
 check 'git add -A|git add \.|git stash|git reset --hard|git checkout main ' 'banned_git_mutation'
 check 'workflowScript\s*:\s*['"'"'"]'   'nested_workflowscript_launch'
 
+# Self-contained header contract: purpose + Diagram: link + Launch: usage
+first_lines="$(head -n 12 "$FILE")"
+if ! printf '%s' "$first_lines" | head -n 1 | grep -q '^//'; then
+  echo "VIOLATION [missing_self_contained_header]: file must start with a // header block"; echo -e '1\tmissing_self_contained_header' >> "$VIOLATIONS_FILE"; fail=1
+elif ! printf '%s' "$first_lines" | grep -q 'Diagram:'; then
+  echo "VIOLATION [missing_self_contained_header]: header must link its diagram: 'Diagram: <name>.diagram.md ($create-architecture)'"; echo -e '1\tmissing_self_contained_header' >> "$VIOLATIONS_FILE"; fail=1
+elif ! printf '%s' "$first_lines" | grep -q 'Launch:'; then
+  echo "VIOLATION [missing_self_contained_header]: header must contain a 'Launch:' usage line"; echo -e '1\tmissing_self_contained_header' >> "$VIOLATIONS_FILE"; fail=1
+fi
+
 grep -nE 'while[[:space:]]*\(|for[[:space:]]*\(;;' "$FILE" >/dev/null 2>&1 \
   && { echo "ADVISORY: unbounded while/for(;;) loop — confirm cap source (config gate child)"; \
        echo "unbounded_loop" >> "$ADVISORIES_FILE"; }
