@@ -105,6 +105,12 @@ Body conventions (reviewed, not linted):
 - No magic literals repeated; every terminal state named in the header appears
   verbatim in the code.
 - Comments explain WHY (the failure a rule prevents), never narrate the code.
+- Build multi-line child `task:` strings with template literals (backticks) and
+  `${...}` interpolation, not `+` concatenation. Concatenated prompts are hard to
+  edit and silently drop the space between fragments (`'...contract ' +` must
+  hand-place the trailing space; a missed one corrupts the prompt). Template
+  literals are portable and runtime-accepted — the portable-core ban on nested
+  `async`/arrow/method helpers does not apply to them.
 
 ## Robustness rules (field-proven)
 
