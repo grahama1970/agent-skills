@@ -39,6 +39,12 @@ def apparmor(policy: Policy, probe_executable: str | None = None,
         '  /etc/localtime r,',
         '  /etc/ssl/certs/** r,',
         '  /proc/[0-9]*/attr/current r,',
+        # Go-runtime/osquery self-introspection reads (maps, cgroup). With zero
+        # capabilities the confined process cannot pass DAC on other users' proc
+        # entries, so the glob is effectively self-only. Observed 2026-09-16 audit.
+        '  /proc/[0-9]*/maps r,',
+        '  /proc/[0-9]*/cgroup r,',
+        '  /sys/kernel/mm/transparent_hugepage/hpage_pmd_size r,',
         '  /proc/self/attr/current r,',
         '  /run/systemd/notify w,',
         '  unix (create, bind, listen, accept, getattr, getopt, setopt),',

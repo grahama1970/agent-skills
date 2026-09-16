@@ -23,6 +23,7 @@ RUNTIME_READ_FILES = [
     # kernel audit: nsswitch x2, /proc/stat x3, cpu-online, cgroup per start):
     # glibc NSS init, osquery CPU tables, topology. Posture-class only.
     '/etc/nsswitch.conf', '/etc/hosts', '/proc/stat', '/sys/devices/system/cpu/online',
+    '/sys/kernel/mm/transparent_hugepage/hpage_pmd_size',
 ]
 LOCAL_NETWORKS = [
     '0.0.0.0/8', '10.0.0.0/8', '100.64.0.0/10', '127.0.0.0/8',
