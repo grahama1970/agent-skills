@@ -207,6 +207,44 @@ controls are installed. Explicit owner removal of the hold outside this tool
 would restore the original service's ability to start; that is NOT a privacy-
 protected resume. Review `systemctl cat "$UNIT"` to see the actual controls.
 
+## Choose what is shared, and watch it
+
+Two concerns are kept separate: what the service is allowed to read, and whether
+it is alive and un-denied.
+
+The data-sharing controls edit the policy JSON and print the exact owner-gated
+deploy commands; they never widen access or apply anything on their own.
+
+```bash
+./run.sh firewall POLICY.json --action show       # what the service may read
+./run.sh firewall POLICY.json --preset PRESET      # apply a preset to the policy
+./run.sh configure POLICY.json                     # interactive preset picker
+./run.sh configure POLICY.json --preset PRESET --non-interactive
+```
+
+Presets remove only optional identity items; the code-gated `RUNTIME_READ_FILES`
+baseline the service needs to run is never touched by a preset:
+
+| Preset | Effect |
+|---|---|
+| `compliance-safe` (default) | Share what the agent needs to stay green; deny all user/client work. Removes nothing optional. |
+| `minimal-identity` | Also drop `/etc/machine-id` (stops stable cross-reinstall device tracking). |
+| `locked-down` | Drop machine-id plus other optional identity reads present in the policy. |
+
+Monitoring is read-only. `logs` is the crash-cause view; `health` pairs the
+local state with an optional browser-side capture of the agent's own dashboard.
+
+```bash
+./run.sh logs --unit "$UNIT"                       # state, restarts, AppArmor denials
+./run.sh logs --unit "$UNIT" --follow             # tail the live service log
+./run.sh logs --unit "$UNIT" --denials            # kernel denial records (read first when it dies)
+./run.sh health --unit "$UNIT"                     # local summary + optional dashboard capture
+```
+
+These report state and edit policy; they do not, by themselves, prove the
+required device-trust workflow still functions. That still needs an actual
+verify and a real check-in.
+
 ## Confidentiality limitations that matter
 
 The agent's existing databases may already contain collected information. They
