@@ -120,3 +120,35 @@ def test_probe_cannot_lie(plan):
     results=ProbeResults.model_validate(data)
     with pytest.raises(ValidationError):ProbeReceipt(plan_sha256=sha(canonical(plan)),host_binding=plan.host_binding,created_at=plan.created_at,
         production_profile_sha256=plan.rendered_sha256['apparmor.profile'],results=results,status='PASS')
+
+
+def test_watchdog_artifacts_fail_closed_on_unload(policy):
+    from service_privacy.policy import destinations
+    files = rendered(policy, [])
+    assert set(files) >= {'watchdog.service', 'watchdog.timer'}
+    text = files['watchdog.service'].decode()
+    assert f'grep -qx "{policy.profile_name} (enforce)"' in text
+    assert f'systemctl stop -- {policy.unit}' in text
+    assert 'OnUnitActiveSec=5min' in files['watchdog.timer'].decode()
+    assert str(destinations(policy)['watchdog.service']).startswith('/etc/systemd/system/osp-')
+
+
+def test_apparmor_patch_gate_fails_closed(monkeypatch):
+    import service_privacy.system as system
+    # No owner-pinned minimum version -> fail closed.
+    with pytest.raises(Blocked, match='APPARMOR_MIN_VERSION_UNSPECIFIED'):
+        system.apparmor_userspace_patched()
+    monkeypatch.setattr(system, 'read_private', lambda *a, **k: b'4.0.0-0ubuntu1\n')
+    monkeypatch.setattr(system, 'checked',
+                        lambda argv, timeout=30: (__import__('service_privacy.models', fromlist=['CommandResult']).CommandResult(
+                            argv=argv, returncode=1 if argv and argv[:2] == ['dpkg', '--compare-versions'] and argv[3:] == ['3.0.0', 'ge', '4.0.0-0ubuntu1'] else 0,
+                            stdout='3.0.0' if argv and argv[1:2] == ['-W'] else '', stderr='')))
+    with pytest.raises(Blocked):
+        system.apparmor_userspace_patched()  # installed 3.0.0 < pinned 4.0.0
+
+
+def test_userns_gate_requires_host_sysctl(monkeypatch):
+    import service_privacy.system as system
+    monkeypatch.setattr('pathlib.Path.read_text', lambda self: '0\n')
+    with pytest.raises(Blocked, match='UNPRIVILEGED_USERNS_UNRESTRICTED'):
+        system.host_userns_restricted()

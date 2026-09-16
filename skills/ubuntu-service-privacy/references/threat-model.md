@@ -7,10 +7,16 @@ broader local access than the workstation owner intends. Enforcement is imposed
 by the owner via AppArmor, systemd and capabilities, rather than by changing the
 agent's answers. The client sees actual errors/missing connectivity.
 
-Trusted: the owner, kernel, AppArmor/systemd implementations, root-controlled
-policy deployment code and interpreter, and the explicit local approval. An
-independent malicious administrator/kernel/hypervisor, compromised policy tools,
-or secret data intentionally copied into allowed resources is out of this
+Trusted: the owner, kernel, AppArmor/systemd implementations *at a verified
+patch level*, root-controlled policy deployment code and interpreter, and the
+explicit local approval. AppArmor userspace trust is conditional, not assumed:
+CrackArmor-class confused-deputy flaws let unprivileged users manage profiles
+while every readback still reports loaded/enforce, so apply/verify gate on an
+owner-pinned minimum `apparmor` package version
+(`/etc/ubuntu-service-privacy/apparmor-min-version`, set from the Ubuntu
+security notice) and on `kernel.apparmor_restrict_unprivileged_userns=1`.
+An independent malicious administrator/kernel/hypervisor, compromised policy
+tools, or secret data intentionally copied into allowed resources is out of this
 candidate's guarantee. Package-manager hooks outside the selected service are
 not automatically confined. Unknown other software is not proven absent.
 
@@ -28,6 +34,9 @@ not automatically confined. Unknown other software is not proven absent.
 | Local IPv4/IPv6 services | Offline namespace or public-egress local deny | IP renderer tests; probe implementation | Actual unit BPF enforcement and drift behavior |
 | Remote proxy/hairpin access to local services | Not exhaustively addressed | Non-claim | Full host/router/data-flow review |
 | Child processes / fork | Inherited AppArmor; executable allowlist; thread readback | Renderer and probe implementation | Actual launcher/osquery children and races |
+| osquery extension / config-plugin channel | Thrift extension binaries are code: executable allowlist, root-owned config roots, unix peers label-scoped, PrivateTmp isolates default extension sockets | Policy and renderer tests | Extension socket inventory on target; vetted plugin list |
+| AppArmor implementation patch level (CrackArmor) | Owner-pinned `apparmor` package minimum + userns sysctl gate in apply/verify | Gate implementation and tests | Continuous USN tracking; kernel-side fixes are separate |
+| Profile unload during upgrade/restart | Watchdog timer artifact re-checks enforce state and fails closed (stops the service) | Rendered artifact tests | dpkg/apt hook for tighter-than-5-minute coverage; enabled timer on target |
 | Updates/new executable paths | No executable writes; code hashes; drift check | Deterministic identity guards | Real vendor upgrades and maintenance workflow |
 | Existing agent cache / prior collection | No deletion or retrospective guarantee | Explicit non-claim | Data-owner/export-control review |
 | Tool outputs / errors | Strict typed envelopes, private files, input values omitted | CLI redaction/tamper/permissions tests | External collection/retention policy |
@@ -38,7 +47,9 @@ A userspace parser pass is not kernel enforcement. A loopback denial is not a
 complete network privacy proof. A hash of the profile file is not proof of the
 exact bytes presently loaded in the kernel. Root can replace kernel policy.
 Runtime checks inspect loaded profile name/mode and thread labels, not a full
-cryptographic kernel attestation.
+cryptographic kernel attestation, and a patched-version gate is a proxy for
+kernel enforcement correctness, not a proof of it. The watchdog detects unload
+windows only at its polling interval.
 
 Native API/system-call metadata such as uname/sysinfo is not semantically
 filtered. Permitted OS files and runtime resources are explicit disclosure

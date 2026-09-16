@@ -14,7 +14,7 @@ from pathlib import Path
 
 import psutil
 
-from .core import Blocked, checked, command, host_binding, sha, tool
+from .core import Blocked, checked, command, host_binding, read_private, sha, tool
 from .models import Executable, ProcessProof, UNIT_RE, UnitSnapshot, contained, literal_path
 
 EXEC_KEYS = ['ExecCondition', 'ExecStartPre', 'ExecStart', 'ExecStartPost', 'ExecReload', 'ExecStop', 'ExecStopPost']
@@ -151,6 +151,36 @@ def digest_executable(path: str) -> Executable:
         os.close(fd)
 
 
+APPARMOR_MIN_VERSION_FILE = Path('/etc/ubuntu-service-privacy/apparmor-min-version')
+
+
+def apparmor_userspace_patched() -> None:
+    """CrackArmor-class confused-deputy flaws live in the apparmor userspace
+    package: a profile can read back as loaded-and-enforcing while unprivileged
+    profile-management is still possible. Version floor is owner-pinned from the
+    Ubuntu security notice; absent/older pin fails closed."""
+    try:
+        minimum = read_private(APPARMOR_MIN_VERSION_FILE, True).decode().strip()
+    except (OSError, Blocked):
+        raise Blocked('APPARMOR_MIN_VERSION_UNSPECIFIED') from None
+    if not re.fullmatch(r'[0-9][0-9A-Za-z.+~:-]*', minimum):
+        raise Blocked('APPARMOR_MIN_VERSION_MALFORMED')
+    version = checked([tool('dpkg-query'), '-W', '-f=${Version}', 'apparmor']).stdout.strip()
+    checked([tool('dpkg'), '--compare-versions', version, 'ge', minimum])
+
+
+def host_userns_restricted() -> None:
+    """The host-wide sysctl CrackArmor bypassed. Service-side RestrictNamespaces
+    alone does not remove the 3.4x unprivileged-userns kernel attack surface."""
+    path = Path('/proc/sys/kernel/apparmor_restrict_unprivileged_userns')
+    try:
+        value = path.read_text().strip()
+    except OSError:
+        raise Blocked('UNPRIVILEGED_USERNS_SYSCTL_UNAVAILABLE') from None
+    if value != '1':
+        raise Blocked('UNPRIVILEGED_USERNS_UNRESTRICTED')
+
+
 def apparmor_ready() -> None:
     if Path('/proc/1/comm').read_text().strip() != 'systemd':
         raise Blocked('SYSTEMD_PID1_REQUIRED')
@@ -160,6 +190,15 @@ def apparmor_ready() -> None:
         raise Blocked('CGROUP_V2_REQUIRED')
     if not Path('/sys/kernel/security/apparmor/profiles').is_file():
         raise Blocked('APPARMOR_POLICY_READBACK_UNAVAILABLE')
+    apparmor_userspace_patched()
+    host_userns_restricted()
+
+
+def _soft(check) -> bool:
+    try:
+        check(); return True
+    except Blocked:
+        return False
 
 
 def loaded_profile(name: str) -> bool:
@@ -261,6 +300,8 @@ def doctor() -> dict[str, object]:
         'systemd_pid1': Path('/proc/1/comm').read_text().strip() == 'systemd',
         'cgroup_v2': Path('/sys/fs/cgroup/cgroup.controllers').exists(),
         'apparmor_readback': Path('/sys/kernel/security/apparmor/profiles').is_file(),
+        'apparmor_userspace_patched': _soft(apparmor_userspace_patched),
+        'unprivileged_userns_restricted': _soft(host_userns_restricted),
     }
     for name in ['systemctl', 'systemd-run', 'apparmor_parser', 'cc']:
         try:

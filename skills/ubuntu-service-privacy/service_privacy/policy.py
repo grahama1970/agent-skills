@@ -119,6 +119,29 @@ def dropin(policy: Policy, host_addresses: list[str]) -> str:
     return '\n'.join(lines) + '\n'
 
 
+def watchdog(policy: Policy) -> dict[str, bytes]:
+    """Detect profile-unload windows (package upgrades/restarts can leave the
+    service unconfined with no alert) and fail closed by stopping it. Owner
+    enables it: systemctl enable --now <name>-watchdog.timer"""
+    # ponytail: 5-minute poll; a dpkg/apt hook gives tighter coverage if needed.
+    service = (
+        '# Owner-controlled confinement watchdog; fail closed on profile unload.\n'
+        '[Unit]\n'
+        f'Description=Confinement watchdog for {policy.unit}\n'
+        'ConditionPathExists=/sys/kernel/security/apparmor/profiles\n\n'
+        '[Service]\n'
+        'Type=oneshot\n'
+        f"ExecStart=/bin/sh -ec 'grep -qx \"{policy.profile_name} (enforce)\" "
+        f'/sys/kernel/security/apparmor/profiles || systemctl stop -- {policy.unit}\'\n'
+    )
+    timer = (
+        f'[Unit]\nDescription=Periodic confinement watchdog for {policy.unit}\n\n'
+        '[Timer]\nOnBootSec=2min\nOnUnitActiveSec=5min\nAccuracySec=30s\nPersistent=yes\n\n'
+        '[Install]\nWantedBy=timers.target\n'
+    )
+    return {'watchdog.service': service.encode(), 'watchdog.timer': timer.encode()}
+
+
 def rendered(policy: Policy, host_addresses: list[str]) -> dict[str, bytes]:
     files = {
         'apparmor.profile': apparmor(policy).encode(),
@@ -128,6 +151,7 @@ def rendered(policy: Policy, host_addresses: list[str]) -> dict[str, bytes]:
         files['resolv.conf'] = ('# Owner-selected DNS; loopback resolver is intentionally unavailable.\n' +
                                 ''.join('nameserver ' + value + '\n' for value in policy.public_dns) +
                                 'options timeout:2 attempts:2\n').encode()
+    files.update(watchdog(policy))
     return files
 
 
@@ -142,4 +166,6 @@ def destinations(policy: Policy) -> dict[str, Path]:
     }
     if policy.network_mode == 'PUBLIC_EGRESS_LOCAL_DENY':
         result['resolv.conf'] = Path('/etc/ubuntu-service-privacy') / policy.profile_name / 'resolv.conf'
+    result.update({'watchdog.service': Path('/etc/systemd/system') / (policy.profile_name + '-watchdog.service'),
+                   'watchdog.timer': Path('/etc/systemd/system') / (policy.profile_name + '-watchdog.timer')})
     return result

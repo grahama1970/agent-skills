@@ -14,7 +14,7 @@ import pytest
 from service_privacy.core import Blocked, ROOT, canonical, load, read_private, secure_dir, write_new
 from service_privacy.models import Plan, Policy, ProbeResults
 from service_privacy.planning import save_plan, verify_plan_files
-from service_privacy.policy import apparmor, dropin
+from service_privacy.policy import apparmor, dropin, rendered
 
 
 def test_private_artifact_roundtrip(plan, tmp_path):
@@ -65,6 +65,9 @@ def test_real_systemd_unit_parser(policy,tmp_path):
     result=subprocess.run(['/usr/bin/systemd-analyze','verify',str(unit)],capture_output=True,text=True)
     assert result.returncode==0,result.stderr
     assert 'Unknown' not in result.stderr and 'Failed to parse' not in result.stderr
+    wd=tmp_path/'watchdog.service';wd.write_bytes(rendered(policy,[])['watchdog.service'])
+    result=subprocess.run(['/usr/bin/systemd-analyze','verify','--man=no',str(wd)],capture_output=True,text=True)
+    assert 'Unknown' not in result.stderr and 'Failed to parse' not in result.stderr,result.stderr
 
 
 def test_real_probe_does_not_pass_unconfined(tmp_path):

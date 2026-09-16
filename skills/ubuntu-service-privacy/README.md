@@ -168,8 +168,14 @@ true. Apply refuses changed executables, changed unit text, new host addresses,
 foreign policy files, and an already-managed installation.
 
 The transaction writes a visible OFF hold, stops the service and verifies no
-related processes remain, installs/loads the policy, removes the hold only after
+related processes remain, installs/loads the policy (plus a confinement
+watchdog unit/timer pair), removes the hold only after
 those controls exist, starts the service, and verifies the running processes.
+Apply and verify also fail closed unless `/etc/ubuntu-service-privacy/apparmor-min-version`
+contains an `apparmor` package version floor taken from the Ubuntu CrackArmor
+notice, and unless `kernel.apparmor_restrict_unprivileged_userns` is `1`.
+Enable the watchdog after apply with the exact rendered name:
+`sudo systemctl enable --now /etc/systemd/system/<profile-name>-watchdog.timer`.
 On failure it restores the hold and attempts a verified stop. A stop that cannot
 be verified is reported as `FAILURE_STATE_UNKNOWN` rather than as successful
 containment. This release supports initial installation; changing a managed
