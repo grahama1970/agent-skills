@@ -57,3 +57,19 @@ Verdict: the loop survives the messy stratum mechanically (provenance contract
 held 15/15 across both providers; quote gate caught only its own bugs). Semantic
 agreement on messy traces is PROVISIONAL pending an independent adjudicator
 (fable retry after rate-limit reset) and the 2 missing traces.
+
+## Independent web-model re-adjudication (2026-09-15, final)
+
+WebGPT (different org, browser transport) re-adjudicated all 35 judgments:
+18 agree / 9 disagree / 8 uncertain — demonstrated scorer error 25.7%
+(range 25.7-48.6% counting unresolved). The same-family fallback adjudication
+(35/35 agree) is RETIRED as evidence: independent adjudication found roughly a
+quarter of settled judgments wrong, concentrated in claimed_unverified (0/7
+clean) and escalated_appropriately. Also found 2 additional nonliteral quotes
+(scorer-authored commentary spliced into quote fields) beyond the 2 known
+checker artifacts.
+
+CONCLUSION: flash-class scoring of messy traces is NOT reliable enough for
+supervision without independent adjudication. The two-layer design (cheap
+scorer + independent reducer) is mandatory, not optional; same-family
+fallback in the adjudicator lane produced a 100%-agreement illusion.
