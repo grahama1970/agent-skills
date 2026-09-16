@@ -7,6 +7,16 @@ to disguise the host's state or fake a successful security check.
 **Delivery status: local mechanisms tested; live confinement and actual Kolide
 compatibility NOT ESTABLISHED. This is not an ITAR isolation/compliance certificate.**
 
+## Platform support
+
+Today this is **Ubuntu-only**: the enforcement is AppArmor (mandatory access
+control) plus systemd sandboxing. **macOS and Windows support is TBD.** Those
+platforms have no AppArmor or systemd, so a backend there is a separate
+implementation against different primitives (macOS: Seatbelt / App Sandbox,
+`launchd`, TCC), not a port. The owner-authorized `inspect -> plan -> probe ->
+apply -> verify` contract is platform-agnostic and is the intended foundation for
+those backends.
+
 ## What is implemented
 
 Strict default-deny AppArmor generation; systemd privilege/mount/IPC isolation;
@@ -26,6 +36,41 @@ approved executable paths are immutable from the confined process's perspective.
 or the agent itself.** Failures are visible. Permissions never expand to make a
 check green. The tool cannot determine how your client's application interprets
 unavailable data; that requires separate live testing.
+
+## How it works
+
+The owner authors a policy (the unit, its executables, the read allowlist, the
+network mode). `plan` inspects the host (`service_privacy/system.py`) and
+generates the AppArmor profile plus the systemd drop-in
+(`service_privacy/policy.py`); `apply` installs them, starts the service, and
+verifies it at runtime (`service_privacy/deploy.py`), failing closed to a parked
+`OFF` hold if the post-start check does not pass. Nothing deploys without the
+approval hash and both owner-authorization flags.
+
+```mermaid
+flowchart LR
+  P["policy JSON\nunit + executables\nread allowlist + network mode"] --> PL["plan\ninspect host + generate\nAppArmor profile + systemd drop-in"]
+  PL --> PR["probe\nsynthetic pre-start check"]
+  PR --> AP{"apply\nowner-authorized\napprove-sha256 + probe receipt"}
+  AP -->|post-start verified| RUN["running caged service"]
+  AP -->|verify fails| RB["rollback: park OFF hold"]
+  RUN --> V["verify / logs / health"]
+```
+
+At runtime two enforcement layers hold the service to the approved boundary. The
+code-gated read baseline lives in `service_privacy/models.py`; denied reads
+return an honest "unavailable", never faked telemetry.
+
+```mermaid
+flowchart TB
+  L["launcher + osqueryd\nenforce mode, zero capabilities"] --> CAGE
+  subgraph CAGE["Two enforcement layers"]
+    AA["AppArmor profile\ndefault-deny + read allowlist"]
+    SD["systemd sandbox\nzero caps, ProtectSystem=strict, PrivateTmp/IPC\nIPAddressAllow loopback / Deny private+VPN"]
+  end
+  CAGE -->|ALLOWED| OK["OS-posture files, machine-id,\nagent config/state, phone home"]
+  CAGE -->|DENIED honest 'unavailable'| NO["/home /root /mnt /media /srv /run/user\nSSH keys, browser secrets, client work\nprivate network ranges"]
+```
 
 ## Network modes
 
