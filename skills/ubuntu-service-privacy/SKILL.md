@@ -37,6 +37,10 @@ disciplines:
 
 # Ubuntu service privacy
 
+**This skill is a GENERIC service-confinement engine for any Ubuntu systemd
+service. Kolide is one deployment recipe** (see `kolide/README.md`); nothing in
+the engine is Kolide-specific.
+
 Owner-enforced least privilege, not covert evasion. Keep every denied check and
 connectivity limitation visible. Never forge inventory, acknowledgements, device
 posture, query results, or authentication. Never infer malicious intent from a
@@ -61,6 +65,28 @@ for the Ubuntu services firewall or for `kolide-audit`'s socket observations.
 
 `integrations/ops-workstation.patch` is an optional dispatcher patch, not an
 already-applied repository change. The standalone Kolide audit CLI and socket collector are not copied here.
+
+## Monitoring and privacy controls
+
+- `logs --unit U.service`: read-only at-a-glance record (status `PASS`; the live
+  service state is in `details.active_state`, never in `status`). `--follow`
+  tails the log; `--denials` prints kernel AppArmor denial records.
+- `firewall POLICY.json --preset NAME`: apply a named preset to the policy
+  JSON's `read_files` — `compliance-safe` (DEFAULT, removes nothing),
+  `minimal-identity` (removes `/etc/machine-id`), `locked-down` (removes all
+  optional identity reads). Presets never touch operational `read_roots` or the
+  code-gated `RUNTIME_READ_FILES` baseline in `models.py`, and always print the
+  owner-gated deploy command without applying it.
+- `configure POLICY.json`: composes the interview skill so a human picks a
+  preset (compliance-safe pre-selected as recommended) or toggles individual
+  optional items; rewrites the policy JSON and prints the deploy command.
+  `--preset NAME --non-interactive` skips the interview (testable).
+- `health --unit U.service [--kolide-tab-id ID]`: read-only health record
+  (state, restarts, denial count) plus an optional hint to snapshot the Kolide
+  browser dashboard via the surf skill. Surf is optional; its absence is a
+  detail, not a failure. For an hourly check, wire this command into the
+  scheduler skill (`skills/scheduler`) and alert when
+  `apparmor_denials_in_window` is non-zero.
 
 ## Workflow
 

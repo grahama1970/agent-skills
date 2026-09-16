@@ -42,6 +42,93 @@ def profile_for(unit: str) -> str:
     return 'osp-' + hashlib.sha256(unit.encode()).hexdigest()[:20]
 
 
+# Optional identity items: toggled in policy JSON read_files ONLY. The code-gated
+# RUNTIME_READ_FILES baseline in models.py is never modified by presets.
+_OPTIONAL_IDENTITY = {
+    '/etc/machine-id': 'stable cross-reinstall device tracking',
+    '/etc/kolide-k2/installer-info.json': 'installer metadata (enrollment identity)',
+}
+_PRESETS: dict[str, frozenset[str]] = {
+    'compliance-safe': frozenset(),               # DEFAULT: remove nothing optional
+    'minimal-identity': frozenset({'/etc/machine-id'}),
+    'locked-down': frozenset(_OPTIONAL_IDENTITY),  # superset of minimal-identity
+}
+
+
+@app.command(name='firewall')
+def firewall_command(
+    policy_file: Annotated[Path, typer.Argument(help='Policy JSON to inspect or harden')],
+    action: Annotated[str, typer.Option('--action', help='show | harden')] = 'show',
+    preset: Annotated[str, typer.Option('--preset', help='compliance-safe (default posture) | minimal-identity | locked-down')] = '',
+) -> None:
+    """Easy data-sharing firewall: show what Kolide may read; harden removes sharable-but-optional items.
+
+    harden never widens access and never mutates the deployed policy by itself:
+    it edits the policy file, then prints the exact owner-gated plan/probe/apply
+    commands required to deploy. Falsifying returned telemetry is out of scope
+    by design: denied reads stay honest 'unavailable'.
+    """
+    import json as _json
+    # Harden presets: items that are optional for posture but leak identity/metadata.
+    # These are OPTIONAL identity items toggled in the policy JSON's read_files only;
+    # the CODE-GATED RUNTIME_READ_FILES baseline in models.py is never removed.
+    HARDENABLE = {'/etc/machine-id': 'stable cross-reinstall device tracking'}
+    OPTIONAL_IDENTITY = {
+        '/etc/machine-id': 'stable cross-reinstall device tracking',
+        '/etc/kolide-k2/installer-info.json': 'installer metadata (enrollment identity)',
+    }
+    PRESETS: dict[str, set[str]] = {
+        'compliance-safe': set(),               # DEFAULT: remove nothing optional, keep client green
+        'minimal-identity': {'/etc/machine-id'},
+        'locked-down': set(OPTIONAL_IDENTITY),  # superset of minimal-identity
+    }
+    data = _json.loads(Path(policy_file).read_text())
+    if preset:
+        if preset not in PRESETS:
+            raise typer.BadParameter(f"preset must be one of: {', '.join(PRESETS)}")
+        removed = [p for p in data.get('read_files', []) if p in PRESETS[preset]]
+        if removed:
+            data['read_files'] = [p for p in data['read_files'] if p not in PRESETS[preset]]
+            Path(policy_file).write_text(_json.dumps(data, indent=2) + '\n')
+        cmd = (f'sudo python3 -m service_privacy plan {policy_file} --output /tmp/fw-plan && '
+               f'H=$(sudo cat /tmp/fw-plan/approval-sha256.txt) && '
+               f'sudo bash -c \'python3 -m service_privacy probe /tmp/fw-plan/plan.json --execute --owner-authorized > /tmp/fw-probe.json 2>/tmp/fw-probe.err; chmod 600 /tmp/fw-probe.json\' && '
+               f'sudo python3 -m service_privacy apply /tmp/fw-plan/plan.json --approve-sha256 $H '
+               f'--probe-receipt /tmp/fw-probe.json --execute --owner-authorized --accept-check-failures')
+        emit(Info(operation=f'firewall-preset-{preset}', status='PASS', checks={},
+                  details={'removed': ', '.join(removed) or '(nothing to remove)',
+                           'why': '; '.join(f'{p}={OPTIONAL_IDENTITY[p]}' for p in removed),
+                           'deploy_command': cmd,
+                           'note': 'deploy is owner-gated; nothing applied yet; operational read_roots untouched'}))
+        return
+    if action == 'show':
+        shares = {'read_files': ', '.join(sorted(data.get('read_files', []))),
+                  'read_roots': ', '.join(sorted(data.get('read_roots', []))),
+                  'write_roots': ', '.join(sorted(data.get('write_roots', []))),
+                  'network_mode': str(data.get('network_mode'))}
+        emit(Info(operation='firewall-show', status='PASS', checks={}, details=shares))
+        return
+    if action == 'harden':
+        removed = [p for p in HARDENABLE if p in data.get('read_files', [])]
+        if not removed:
+            emit(Info(operation='firewall-harden', status='PASS', checks={},
+                      details={'removed': '', 'note': 'already hardened'}))
+            return
+        data['read_files'] = [p for p in data['read_files'] if p not in HARDENABLE]
+        Path(policy_file).write_text(_json.dumps(data, indent=2) + '\n')
+        cmd = (f'sudo python3 -m service_privacy plan {policy_file} --output /tmp/fw-plan && '
+               f'H=$(sudo cat /tmp/fw-plan/approval-sha256.txt) && '
+               f'sudo bash -c \'python3 -m service_privacy probe /tmp/fw-plan/plan.json --execute --owner-authorized > /tmp/fw-probe.json 2>/tmp/fw-probe.err; chmod 600 /tmp/fw-probe.json\' && '
+               f'sudo python3 -m service_privacy apply /tmp/fw-plan/plan.json --approve-sha256 $H '
+               f'--probe-receipt /tmp/fw-probe.json --execute --owner-authorized --accept-check-failures')
+        emit(Info(operation='firewall-harden', status='PASS', checks={},
+                  details={'removed': ', '.join(removed), 'why': '; '.join(f'{p}={HARDENABLE[p]}' for p in removed),
+                           'deploy_command': cmd,
+                           'note': 'deploy is owner-gated; nothing applied yet'}))
+        return
+    raise typer.BadParameter("action must be 'show' or 'harden'")
+
+
 @app.command()
 def doctor() -> None:
     """Read-only host prerequisites; no installation or configuration changes."""
@@ -56,6 +143,140 @@ def doctor() -> None:
 def inspect_command(unit: Annotated[str, typer.Option('--unit')]) -> None:
     """Read canonical unit identity and approved-command candidates; omits argv and tokens."""
     emit(inspect_unit(unit))
+
+
+def unit_summary(unit: str, window: str) -> dict[str, str]:
+    """Read-only state summary shared by `logs` and `health`. No status verdict here."""
+    import subprocess
+    run = lambda c: subprocess.run(c, capture_output=True, text=True).stdout.strip()
+    profile = profile_for(unit)
+    kern = run(['journalctl', '-k', '--since', window, '--no-pager'])
+    denied = [l for l in kern.splitlines() if profile in l and 'DENIED' in l]
+    return {'unit': unit, 'profile': profile,
+            'active_state': run(['systemctl', 'is-active', unit]),
+            'restarts': run(['systemctl', 'show', unit, '-p', 'NRestarts', '--value']),
+            'main_pid': run(['systemctl', 'show', unit, '-p', 'MainPID', '--value']),
+            'apparmor_denials_in_window': str(len(denied)), 'window': window,
+            'denied_lines': '\n'.join(denied[-40:]),
+            'denials_hint': 'journalctl -k --since "' + window + '" | grep "' + profile + '.*DENIED"'}
+
+
+@app.command(name='logs')
+def logs_command(unit: Annotated[str, typer.Option('--unit')],
+                 window: str = '-1 hour', follow: bool = False, denials: bool = False) -> None:
+    """Read-only at-a-glance: service state, restart count, and AppArmor denials for the
+    confined unit. --follow tails the live service log; --denials lists kernel denial records
+    (the crash-cause log). Denials are the first thing to read when a confined service dies.
+
+    status is always a schema-valid PASS here; the live service state itself is in
+    details.active_state (Info.status is not a service-state field).
+    """
+    if follow:
+        os.execvp('journalctl', ['journalctl', '-u', unit, '-f'])
+    summary = unit_summary(unit, window)
+    denied_lines = summary.pop('denied_lines')
+    if denials:
+        sys.stderr.write(denied_lines + ('\n' if denied_lines else 'no denials in window\n'))
+    summary['follow_hint'] = 'journalctl -u ' + unit + ' -f'
+    emit(Info(operation='logs', status='PASS', details=summary))
+
+
+@app.command(name='configure')
+def configure_command(policy_file: Path,
+                      preset: Annotated[str, typer.Option('--preset', help='compliance-safe | minimal-identity | locked-down')] = '',
+                      non_interactive: Annotated[bool, typer.Option('--non-interactive')] = False) -> None:
+    """Pick a privacy preset (or toggle individual optional items) via the interview skill,
+    then rewrite the policy JSON and print the owner-gated deploy command.
+
+    --non-interactive skips the human interview and applies the named preset
+    (compliance-safe if none given) so the path is testable without a human.
+    """
+    import json as _json
+    import subprocess
+    import tempfile
+    data = _json.loads(Path(policy_file).read_text())
+    optional = {p: why for p, why in _OPTIONAL_IDENTITY.items() if p in data.get('read_files', [])}
+    if non_interactive:
+        chosen = preset or 'compliance-safe'
+        if chosen not in _PRESETS:
+            raise typer.BadParameter(f"preset must be one of: {', '.join(_PRESETS)}")
+        removed_preset = [p for p in data.get('read_files', []) if p in _PRESETS[chosen]]
+        removed = removed_preset
+        source = f'preset:{chosen}'
+    else:
+        questions = {
+            'title': 'Service privacy preset',
+            'context': 'Choose how much optional device identity telemetry may read. Operational runtime reads are not affected.',
+            'questions': [
+                {'id': 'preset', 'text': 'Which privacy preset?', 'type': 'single_select',
+                 'recommendation': 'compliance-safe', 'header': 'Preset',
+                 'options': [
+                     {'label': 'compliance-safe', 'description': 'DEFAULT: remove nothing optional; keep the client green (recommended)'},
+                     {'label': 'minimal-identity', 'description': 'Remove /etc/machine-id'},
+                     {'label': 'locked-down', 'description': 'Remove /etc/machine-id and all other optional identity reads'},
+                     {'label': 'individual', 'description': 'Toggle individual optional items instead'}]},
+                {'id': 'items', 'text': 'Which optional identity reads should be removed?',
+                 'type': 'single_select', 'multi_select': True, 'required': False, 'header': 'Items',
+                 'options': [{'label': p, 'description': w} for p, w in optional.items()] or [{'label': 'none', 'description': 'no optional items present'}]},
+            ]}
+        interview_run = core.ROOT.parent / 'interview' / 'run.sh'
+        if not interview_run.is_file():
+            raise Blocked('INTERVIEW_SKILL_UNAVAILABLE')
+        with tempfile.NamedTemporaryFile('w', suffix='.json', delete=False) as fh:
+            _json.dump(questions, fh)
+            qfile = fh.name
+        result = subprocess.run(['bash', str(interview_run), '-f', qfile, '--json'],
+                                capture_output=True, text=True)
+        if result.returncode != 0:
+            raise Blocked(f'INTERVIEW_FAILED: {result.stderr.strip()[:200]}')
+        answers = _json.loads(result.stdout)['responses']
+        chosen = answers.get('preset', {}).get('value', 'compliance-safe')
+        if chosen == 'individual':
+            value = answers.get('items', {}).get('value', [])
+            chosen_items = value if isinstance(value, list) else [value]
+            removed = [p for p in data.get('read_files', []) if p in chosen_items and p in _OPTIONAL_IDENTITY]
+            source = 'individual'
+        else:
+            if chosen not in _PRESETS:
+                raise Blocked(f'INTERVIEW_RETURNED_UNKNOWN_PRESET: {chosen}')
+            removed = [p for p in data.get('read_files', []) if p in _PRESETS[chosen]]
+            source = f'preset:{chosen}'
+    if removed:
+        data['read_files'] = [p for p in data['read_files'] if p not in removed]
+        Path(policy_file).write_text(_json.dumps(data, indent=2) + '\n')
+    cmd = (f'sudo python3 -m service_privacy plan {policy_file} --output /tmp/fw-plan && '
+           f'H=$(sudo cat /tmp/fw-plan/approval-sha256.txt) && '
+           f'sudo bash -c \'python3 -m service_privacy probe /tmp/fw-plan/plan.json --execute --owner-authorized > /tmp/fw-probe.json 2>/tmp/fw-probe.err; chmod 600 /tmp/fw-probe.json\' && '
+           f'sudo python3 -m service_privacy apply /tmp/fw-plan/plan.json --approve-sha256 $H '
+           f'--probe-receipt /tmp/fw-probe.json --execute --owner-authorized --accept-check-failures')
+    emit(Info(operation='configure', status='PASS', checks={},
+              details={'source': source, 'removed': ', '.join(removed) or '(nothing to remove)',
+                       'deploy_command': cmd, 'policy_file': str(policy_file),
+                       'note': 'deploy is owner-gated; nothing applied yet; operational read_roots untouched'}))
+
+
+@app.command(name='health')
+def health_command(unit: Annotated[str, typer.Option('--unit')],
+                   window: str = '-1 hour',
+                   kolide_tab_id: Annotated[str, typer.Option('--kolide-tab-id', help='Kolide browser dashboard device tab id for the surf snapshot hint')] = '') -> None:
+    """Read-only health summary plus an optional hint to capture the Kolide browser
+    dashboard via the surf skill. Surf is OPTIONAL: absence is reported, never a failure.
+    """
+    import socket
+    summary = unit_summary(unit, window)
+    denied_lines = summary.pop('denied_lines')
+    details = dict(summary)
+    try:
+        with socket.create_connection(('127.0.0.1', 9222), timeout=1):
+            details['surf_cdp'] = 'available on 127.0.0.1:9222'
+        snap = 'bash ' + str(core.ROOT.parent / 'surf' / 'run.sh') + ' snap'
+        tab = f' (Kolide device tab {kolide_tab_id})' if kolide_tab_id else ''
+        details['dashboard_capture_hint'] = f'{snap} --output /tmp/kolide-dashboard.png{tab}'
+    except OSError:
+        details['surf_cdp'] = 'absent (surf/CDP not running on 127.0.0.1:9222); start Chrome CDP to enable dashboard snapshots'
+    details['scheduler_hint'] = ('hourly check: run `python3 -m service_privacy health --unit ' + unit +
+                                 '` from the scheduler skill (skills/scheduler) and alert on apparmor_denials_in_window > 0')
+    emit(Info(operation='health', status='PASS', checks={}, details=details))
 
 
 @config_app.command(name='init')
