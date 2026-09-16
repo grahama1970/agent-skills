@@ -22,7 +22,7 @@ EXEC_KEYS = ['ExecCondition', 'ExecStartPre', 'ExecStart', 'ExecStartPost', 'Exe
 SAFE_KEYS = ['Id', 'LoadState', 'FragmentPath', 'ActiveState', 'SubState', 'MainPID', 'ControlGroup',
              'UnitFileState', 'Type', 'User', 'Group', 'AppArmorProfile', 'NoNewPrivileges',
              'CapabilityBoundingSet', 'AmbientCapabilities', 'ProtectSystem', 'ProtectHome',
-             'PrivateTmp', 'PrivateDevices', 'PrivateNetwork', 'PrivateIPC', 'KillMode', 'Delegate',
+             'PrivateTmp', 'PrivateDevices', 'PrivateNetwork', 'PrivateIPC', 'TemporaryFileSystem', 'KillMode', 'Delegate',
              'TriggeredBy', 'Triggers', 'Sockets', 'RootDirectory', 'RootImage', 'JoinsNamespaceOf',
              'LoadCredential', 'ImportCredential', 'OpenFile', 'FileDescriptorStoreMax',
              'IPAddressAllow', 'IPAddressDeny', 'BindPaths', 'BindReadOnlyPaths',
@@ -74,9 +74,12 @@ def inspect_unit(unit: str) -> UnitSnapshot:
     if not values.get('ExecStart') or not paths:
         raise Blocked('MISSING_EXECSTART')
     # Namespace/socket/credential handoffs complicate the boundary. No guessed handling.
+    # TemporaryFileSystem= (e.g. /:ro) is silently undone by the ProtectSystem=/
+    # ProtectHome= this renderer always applies (ArchWiki systemd/Sandboxing),
+    # re-exposing / — and the renderer never emits it, so presence is unreviewed.
     for key in ['TriggeredBy', 'Triggers', 'Sockets', 'RootDirectory', 'RootImage', 'JoinsNamespaceOf',
                 'LoadCredential', 'ImportCredential', 'OpenFile', 'NetworkNamespacePath',
-                'OnFailure', 'OnSuccess']:
+                'TemporaryFileSystem', 'OnFailure', 'OnSuccess']:
         value = values.get(key, '')
         if value == '[unprintable]' and key in ('LoadCredential', 'ImportCredential') and not re.search(
                 r'(?mi)^\s*(LoadCredential|LoadCredentialEncrypted|SetCredential|SetCredentialEncrypted|ImportCredential)\s*=\s*\S',
@@ -174,8 +177,15 @@ def apparmor_userspace_patched() -> None:
 def kernel_patched() -> None:
     """The CrackArmor 2026 fixes (CVE-2026-23268..23411) are kernel-side: an
     unprivileged process can strip profiles while apparmorfs readback still
-    reports loaded/enforce. Gate the running kernel image package against an
-    owner-pinned minimum set from the Ubuntu USN; absent/older pin fails closed."""
+    reports loaded/enforce. The pin must ALSO cover CVE-2026-72460: its kernel
+    fix moves the no_new_privs subset check before aa_change_profile()'s
+    fn_label_build_in_scope() label build, a distinct bypass of the NNP
+    guarantee this policy relies on (NoNewPrivileges=yes + inherited
+    confinement). Gate the running kernel image package against an
+    owner-pinned minimum set from the Ubuntu USN covering BOTH; absent/older
+    pin fails closed. (The related 64 KiB kernel-memory leak via crafted
+    file-matching expressions remains outside any pin: it is a disclosure
+    of kernel memory, not a confinement bypass.)"""
     try:
         minimum = read_private(KERNEL_MIN_VERSION_FILE, True).decode().strip()
     except (OSError, Blocked):

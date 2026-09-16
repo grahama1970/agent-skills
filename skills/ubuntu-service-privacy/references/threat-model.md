@@ -14,7 +14,9 @@ CrackArmor-class confused-deputy flaws let unprivileged users manage profiles
 while every readback still reports loaded/enforce, so apply/verify gate on an owner-pinned minimum `apparmor` package version
 (`/etc/ubuntu-service-privacy/apparmor-min-version`), an owner-pinned minimum
 running-kernel image version (`/etc/ubuntu-service-privacy/kernel-min-version`,
-covering the kernel-side CVE-2026-23268..23411 fixes), a readback-independent
+covering the kernel-side CVE-2026-23268..23411 fixes and the separate
+CVE-2026-72460 fix to the aa_change_profile() no_new_privs subset check,
+which bypassed the exact NNP guarantee this policy relies on), a readback-independent
 canary that attempts an unprivileged open of the apparmor profile-management
 interface and requires denial, and on
 `kernel.apparmor_restrict_unprivileged_userns=1`.
@@ -38,7 +40,9 @@ not automatically confined. Unknown other software is not proven absent.
 | Remote proxy/hairpin access to local services | Not exhaustively addressed | Non-claim | Full host/router/data-flow review |
 | Child processes / fork | Inherited AppArmor; executable allowlist; thread readback | Renderer and probe implementation | Actual launcher/osquery children and races |
 | osquery extension / config-plugin channel | Thrift extension binaries are code: executable allowlist, root-owned config roots, unix peers label-scoped, PrivateTmp isolates default extension sockets | Policy and renderer tests | Extension socket inventory on target; vetted plugin list |
-| AppArmor implementation patch level (CrackArmor) | Owner-pinned `apparmor` package minimum + owner-pinned running-kernel image minimum (kernel-side CVE-2026-23268..23411) + readback-independent unprivileged profile-management canary + userns sysctl gate in apply/verify | Gate implementation and tests | Continuous USN tracking; canary covers only the profile-management interface, not every confused-deputy path |
+| AppArmor implementation patch level (CrackArmor + CVE-2026-72460) | Owner-pinned `apparmor` package minimum + owner-pinned running-kernel image minimum (kernel-side CVE-2026-23268..23411 AND CVE-2026-72460, whose fix moves the `aa_change_profile()` NNP subset check ahead of the label build) + readback-independent unprivileged profile-management canary + userns sysctl gate in apply/verify | Gate implementation and tests | Continuous USN tracking; canary covers only the profile-management interface, not every confused-deputy path; the CrackArmor 64 KiB kernel-memory leak via crafted file-matching expressions is a kernel-memory disclosure, not a confinement bypass, and is not gated |
+| systemd directive-interaction weakening (e.g. `TemporaryFileSystem=/:ro` silently undone by `ProtectSystem=`/`ProtectHome=`, re-exposing /; cf. Flatpak CVE-2026-34078 sandbox-assembly class) | Renderer never emits interacting mount-namespace directives; inspect_unit fails closed on any effective `TemporaryFileSystem` alongside the always-applied `ProtectSystem=strict`/`ProtectHome=yes` | Faked-systemd unit rejection test | Exhaustive pairwise directive-conflict validation; sandbox setup-time (trustworthy-time) verification on target |
+| Query-driven osquery file carving over permitted egress (distributed-query `carve` exports any file the confined agent can still read, over the authenticated channel, no content filtering, no local receipt) | Not an information-flow control in this release: explicit non-claim. Permitted OS files remain explicit disclosure surfaces; mitigation (disabling distributed queries/carve, egress pinning, or content filtering) requires an owner decision because it changes agent capability, not just confinement | Threat-model row + named residual decision | Owner policy on remote query surface; content-level egress controls |
 | Profile unload during upgrade/restart | Watchdog timer artifact re-checks enforce state and fails closed (stops the service) | Rendered artifact tests | dpkg/apt hook for tighter-than-5-minute coverage; enabled timer on target |
 | Updates/new executable paths | No executable writes; code hashes; drift check | Deterministic identity guards | Real vendor upgrades and maintenance workflow |
 | Existing agent cache / prior collection | No deletion or retrospective guarantee | Explicit non-claim | Data-owner/export-control review |

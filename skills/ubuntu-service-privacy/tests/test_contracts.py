@@ -187,3 +187,28 @@ def test_userns_gate_requires_host_sysctl(monkeypatch):
     monkeypatch.setattr('pathlib.Path.read_text', lambda self: '0\n')
     with pytest.raises(Blocked, match='UNPRIVILEGED_USERNS_UNRESTRICTED'):
         system.host_userns_restricted()
+
+
+def test_temporary_filesystem_protectsystem_conflict_rejected(monkeypatch):
+    # ArchWiki systemd/Sandboxing: TemporaryFileSystem=/:ro is silently undone by
+    # ProtectSystem=/ProtectHome=, re-exposing /. Our renderer always applies
+    # ProtectSystem=strict, so any effective TemporaryFileSystem entry fails closed.
+    import service_privacy.system as system
+
+    class Result:
+        stdout = ''
+
+    shown = {'Id': 'osp-fixture-test.service', 'LoadState': 'loaded', 'ActiveState': 'inactive',
+             'Type': 'simple', 'User': 'root', 'TemporaryFileSystem': '/:ro',
+             'ExecStart': '{ path=/usr/bin/sleep ; argv[]=/usr/bin/sleep 60 ; ignore_errors=no ; start_time=[unprintable] ; stop_time=[unprintable] ; pid=0 ; code=(null) ; status=0/0 }'}
+
+    def fake_checked(argv, *args, **kwargs):
+        result = Result()
+        result.stdout = '\n'.join(f'{k}={v}' for k, v in shown.items()) if 'show' in argv \
+            else '[Service]\nExecStart=/usr/bin/sleep 60\n'
+        return result
+
+    monkeypatch.setattr(system, 'tool', lambda name: '/usr/bin/' + name)
+    monkeypatch.setattr(system, 'checked', fake_checked)
+    with pytest.raises(Blocked, match='UNSUPPORTED_UNIT_HANDOFF_TEMPORARYFILESYSTEM'):
+        system.inspect_unit('osp-fixture-test.service')
