@@ -170,8 +170,12 @@ def verify_record(record: Registry) -> Verification:
             # The Device Trust loopback allow is the one sanctioned override
             # (browser must reach the agent's local /v1/cmd server). Anything
             # else — or a widened form — is an unauthorized policy weakening.
-            sanctioned_allow = '127.0.0.1/8 ::1/128'
-            effective_allow = actual_unit.properties.get('IPAddressAllow', '')
+            # systemd canonicalizes (127.0.0.1/8 -> 127.0.0.0/8) and reorders
+            # (reports '::1/128 127.0.0.0/8'), so a raw string compare always
+            # mis-fires. Normalize both sides to a network set, exactly like the
+            # IPAddressDeny check below. Empirically verified via systemd-run.
+            sanctioned_allow = {str(ipaddress.ip_network(i, strict=False)) for i in '127.0.0.1/8 ::1/128'.split()}
+            effective_allow = {str(ipaddress.ip_network(i, strict=False)) for i in actual_unit.properties.get('IPAddressAllow', '').split()}
             if effective_allow != sanctioned_allow:
                 failures.append('IP_ALLOW_OVERRIDE_PRESENT')
             from .policy import properties
