@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -139,12 +140,46 @@ def test_apparmor_patch_gate_fails_closed(monkeypatch):
     with pytest.raises(Blocked, match='APPARMOR_MIN_VERSION_UNSPECIFIED'):
         system.apparmor_userspace_patched()
     monkeypatch.setattr(system, 'read_private', lambda *a, **k: b'4.0.0-0ubuntu1\n')
-    monkeypatch.setattr(system, 'checked',
-                        lambda argv, timeout=30: (__import__('service_privacy.models', fromlist=['CommandResult']).CommandResult(
-                            argv=argv, returncode=1 if argv and argv[:2] == ['dpkg', '--compare-versions'] and argv[3:] == ['3.0.0', 'ge', '4.0.0-0ubuntu1'] else 0,
-                            stdout='3.0.0' if argv and argv[1:2] == ['-W'] else '', stderr='')))
+    def checked(argv, timeout=30):
+        from service_privacy.core import Blocked as _B
+        result = (__import__('service_privacy.models', fromlist=['CommandResult']).CommandResult(
+            argv=argv, returncode=1 if argv and len(argv) == 5 and Path(argv[0]).name == 'dpkg' and argv[1:] == ['--compare-versions', '3.0.0', 'ge', '4.0.0-0ubuntu1'] else 0,
+            stdout='3.0.0' if argv and argv[1:2] == ['-W'] else '', stderr=''))
+        if result.returncode != 0:
+            raise _B('COMMAND_FAILED_DPKG')
+        return result
+    monkeypatch.setattr(system, 'checked', checked)
     with pytest.raises(Blocked):
         system.apparmor_userspace_patched()  # installed 3.0.0 < pinned 4.0.0
+
+
+def test_kernel_patch_gate_fails_closed(monkeypatch):
+    import service_privacy.system as system
+    # No owner-pinned kernel minimum -> fail closed (2026 CVEs are kernel-side).
+    with pytest.raises(Blocked, match='KERNEL_MIN_VERSION_UNSPECIFIED'):
+        system.kernel_patched()
+    monkeypatch.setattr(system, 'read_private', lambda *a, **k: b'6.8.0-60.0ubuntu1\n')
+    def kchecked(argv, timeout=30):
+        from service_privacy.core import Blocked as _B
+        result = (__import__('service_privacy.models', fromlist=['CommandResult']).CommandResult(
+            argv=argv, returncode=1 if argv and len(argv) == 5 and Path(argv[0]).name == 'dpkg' and argv[1:] == ['--compare-versions', '6.8.0-55.0ubuntu1', 'ge', '6.8.0-60.0ubuntu1'] else 0,
+            stdout='6.8.0-55.0ubuntu1' if argv and argv[1:2] == ['-W'] else '', stderr=''))
+        if result.returncode != 0:
+            raise _B('COMMAND_FAILED_DPKG')
+        return result
+    monkeypatch.setattr(system, 'checked', kchecked)
+    with pytest.raises(Blocked):
+        system.kernel_patched()  # running kernel image 6.8.0-55 < pinned 6.8.0-60
+
+
+def test_unprivileged_profile_canary_requires_denial(monkeypatch):
+    import service_privacy.system as system
+    monkeypatch.setattr(system, 'tool', lambda name: '/usr/sbin/' + name)
+    monkeypatch.setattr(system, 'command',
+                        lambda argv, timeout=30: __import__('service_privacy.models', fromlist=['CommandResult']).CommandResult(
+                            argv=argv, returncode=0, stdout='', stderr=''))
+    with pytest.raises(Blocked, match='UNPRIVILEGED_PROFILE_MANAGEMENT_ALLOWED'):
+        system.unprivileged_profile_canary()
 
 
 def test_userns_gate_requires_host_sysctl(monkeypatch):

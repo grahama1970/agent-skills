@@ -10,6 +10,7 @@ import os
 import re
 import socket
 import stat
+import sys
 from pathlib import Path
 
 import psutil
@@ -152,6 +153,7 @@ def digest_executable(path: str) -> Executable:
 
 
 APPARMOR_MIN_VERSION_FILE = Path('/etc/ubuntu-service-privacy/apparmor-min-version')
+KERNEL_MIN_VERSION_FILE = Path('/etc/ubuntu-service-privacy/kernel-min-version')
 
 
 def apparmor_userspace_patched() -> None:
@@ -167,6 +169,37 @@ def apparmor_userspace_patched() -> None:
         raise Blocked('APPARMOR_MIN_VERSION_MALFORMED')
     version = checked([tool('dpkg-query'), '-W', '-f=${Version}', 'apparmor']).stdout.strip()
     checked([tool('dpkg'), '--compare-versions', version, 'ge', minimum])
+
+
+def kernel_patched() -> None:
+    """The CrackArmor 2026 fixes (CVE-2026-23268..23411) are kernel-side: an
+    unprivileged process can strip profiles while apparmorfs readback still
+    reports loaded/enforce. Gate the running kernel image package against an
+    owner-pinned minimum set from the Ubuntu USN; absent/older pin fails closed."""
+    try:
+        minimum = read_private(KERNEL_MIN_VERSION_FILE, True).decode().strip()
+    except (OSError, Blocked):
+        raise Blocked('KERNEL_MIN_VERSION_UNSPECIFIED') from None
+    if not re.fullmatch(r'[0-9][0-9A-Za-z.+~:-]*', minimum):
+        raise Blocked('KERNEL_MIN_VERSION_MALFORMED')
+    image = 'linux-image-' + os.uname().release
+    version = checked([tool('dpkg-query'), '-W', '-f=${Version}', image]).stdout.strip()
+    checked([tool('dpkg'), '--compare-versions', version, 'ge', minimum])
+
+
+def unprivileged_profile_canary() -> None:
+    """Independent of apparmorfs readback (the exact interface subverted by
+    CVE-2026-23268-class fd-passing): attempt an unprivileged open of the
+    profile-management interface itself and require that it is denied."""
+    try:
+        setpriv = tool('setpriv')
+    except Blocked:
+        raise Blocked('CANARY_TOOL_UNAVAILABLE') from None
+    probe = "import sys; f = open('/sys/kernel/security/apparmor/.load', 'ab'); f.close(); sys.exit(0)"
+    result = command([setpriv, '--reuid=65534', '--regid=65534', '--clear-groups',
+                      sys.executable, '-c', probe])
+    if result.returncode == 0:
+        raise Blocked('UNPRIVILEGED_PROFILE_MANAGEMENT_ALLOWED')
 
 
 def host_userns_restricted() -> None:
@@ -191,6 +224,8 @@ def apparmor_ready() -> None:
     if not Path('/sys/kernel/security/apparmor/profiles').is_file():
         raise Blocked('APPARMOR_POLICY_READBACK_UNAVAILABLE')
     apparmor_userspace_patched()
+    kernel_patched()
+    unprivileged_profile_canary()
     host_userns_restricted()
 
 
@@ -301,6 +336,8 @@ def doctor() -> dict[str, object]:
         'cgroup_v2': Path('/sys/fs/cgroup/cgroup.controllers').exists(),
         'apparmor_readback': Path('/sys/kernel/security/apparmor/profiles').is_file(),
         'apparmor_userspace_patched': _soft(apparmor_userspace_patched),
+        'kernel_patched': _soft(kernel_patched),
+        'unprivileged_profile_canary': _soft(unprivileged_profile_canary),
         'unprivileged_userns_restricted': _soft(host_userns_restricted),
     }
     for name in ['systemctl', 'systemd-run', 'apparmor_parser', 'cc']:
