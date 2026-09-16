@@ -1,4 +1,4 @@
-const KIMI_TAB_URL = "https://www.kimi.com/";
+const KIMI_TAB_URL = "https://www.kimi.ai/";
 const { insertPromptText } = require("./prompt-insert.cjs");
 
 const SELECTORS = {
@@ -67,12 +67,10 @@ async function evaluate(cdp, expression) {
     const desc = result.exceptionDetails.exception?.description || 
                  result.exceptionDetails.text || 
                  "Evaluation failed";
-    const where = String(expression || '').replace(/\s+/g, ' ').slice(0, 160);
-    throw new Error(`${desc} while evaluating: ${where}`);
+    throw new Error(desc);
   }
   if (result.error) {
-    const where = String(expression || '').replace(/\s+/g, ' ').slice(0, 160);
-    throw new Error(`${result.error} while evaluating: ${where}`);
+    throw new Error(result.error);
   }
   return result.result?.value;
 }
@@ -152,6 +150,7 @@ async function setPromptInComposerDom(cdp, prompt) {
   return await evaluate(
     cdp,
     `(() => {
+      ${buildClickDispatcher()}
       const prompt = ${encodedPrompt};
       const selectors = [
         '.chat-input-editor[role="textbox"]',
@@ -167,10 +166,50 @@ async function setPromptInComposerDom(cdp, prompt) {
         if (!node) return false;
         const rect = node.getBoundingClientRect();
         const style = window.getComputedStyle(node);
-        return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
+        return rect.width > 0
+          && rect.height > 0
+          && style.visibility !== 'hidden'
+          && style.display !== 'none';
       };
       const textOf = (node) => node.innerText || node.textContent || node.value || '';
-      const norm = (value) => String(value || '').replace(/\s+/g, ' ').trim();
+      const setNativeValue = (node, value) => {
+        const proto = node instanceof HTMLTextAreaElement
+          ? HTMLTextAreaElement.prototype
+          : node instanceof HTMLInputElement
+          ? HTMLInputElement.prototype
+          : null;
+        const setter = proto ? Object.getOwnPropertyDescriptor(proto, 'value')?.set : null;
+        if (setter) setter.call(node, value);
+        else node.value = value;
+      };
+      const selectNodeContents = (node) => {
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      };
+      const fireInput = (node, data, inputType) => {
+        node.dispatchEvent(new InputEvent('beforeinput', { bubbles: true, cancelable: true, data, inputType }));
+        node.dispatchEvent(new InputEvent('input', { bubbles: true, data, inputType }));
+      };
+      const dispatchPaste = (node, text) => {
+        try {
+          const dt = new DataTransfer();
+          dt.setData('text/plain', text);
+          dt.setData('text/markdown', text);
+          const paste = new ClipboardEvent('paste', { bubbles: true, cancelable: true, composed: true });
+          Object.defineProperty(paste, 'clipboardData', { value: dt });
+          node.dispatchEvent(paste);
+          return true;
+        } catch {
+          return false;
+        }
+      };
+      // Rich-text composers re-render markdown newlines, so exact substring
+      // checks on slices spanning line breaks false-negative on a successful
+      // insert. Compare whitespace-normalized text instead.
+      const norm = (value) => String(value || '').replace(/\\s+/g, ' ').trim();
       const normPrompt = norm(prompt);
       const promptStart = normPrompt.slice(0, 80);
       const promptEnd = normPrompt.slice(-80);
@@ -178,36 +217,35 @@ async function setPromptInComposerDom(cdp, prompt) {
         const text = norm(textOf(node));
         return text.includes(promptStart) && text.includes(promptEnd);
       };
-      const fireInput = (node, data, inputType) => {
-        node.dispatchEvent(new InputEvent('beforeinput', { bubbles: true, cancelable: true, data, inputType }));
-        node.dispatchEvent(new InputEvent('input', { bubbles: true, data, inputType }));
-      };
-      const setNativeValue = (node, value) => {
-        const proto = node instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : node instanceof HTMLInputElement ? HTMLInputElement.prototype : null;
-        const desc = proto ? Object.getOwnPropertyDescriptor(proto, 'value') : null;
-        if (desc && desc.set) desc.set.call(node, value);
-        else node.value = value;
-      };
-      const setLexicalText = (node, value) => {
-        const editor = node.__lexicalEditor;
-        if (!editor || typeof editor.parseEditorState !== 'function' || typeof editor.setEditorState !== 'function') return false;
-        const state = { root: { children: [{ children: value ? [{ detail: 0, format: 0, mode: 'normal', style: '', text: value, type: 'text', version: 1 }] : [], direction: value ? 'ltr' : null, format: '', indent: 0, type: 'paragraph', version: 1 }], direction: value ? 'ltr' : null, format: '', indent: 0, type: 'root', version: 1 } };
-        editor.setEditorState(editor.parseEditorState(JSON.stringify(state)));
-        fireInput(node, value || null, value ? 'insertFromPaste' : 'deleteContentBackward');
-        return true;
-      };
       for (const selector of selectors) {
-        for (const node of Array.from(document.querySelectorAll(selector))) {
+        const nodes = Array.from(document.querySelectorAll(selector));
+        for (const node of nodes) {
           if (!visible(node) || node.hasAttribute('disabled')) continue;
+          dispatchClickSequence(node);
           if (typeof node.focus === 'function') node.focus();
           if (node.tagName === 'TEXTAREA' || node.tagName === 'INPUT') {
+            setNativeValue(node, '');
+            node.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'deleteContentBackward' }));
             setNativeValue(node, prompt);
-            fireInput(node, prompt, 'insertFromPaste');
-          } else if (!setLexicalText(node, prompt)) {
-            node.textContent = prompt;
-            fireInput(node, prompt, 'insertFromPaste');
+            node.dispatchEvent(new InputEvent('input', { bubbles: true, data: prompt, inputType: 'insertFromPaste' }));
+          } else {
+            selectNodeContents(node);
+            document.execCommand('delete', false, null);
+            fireInput(node, null, 'deleteContentBackward');
+            dispatchPaste(node, prompt);
+            let inserted = holdsPrompt(node);
+            if (!inserted) {
+              selectNodeContents(node);
+              inserted = document.execCommand('insertText', false, prompt);
+            }
+            if (!inserted || !holdsPrompt(node)) {
+              node.textContent = prompt;
+              fireInput(node, prompt, 'insertFromPaste');
+            }
           }
-          if (holdsPrompt(node)) return { ok: true, selector, length: textOf(node).length, mode: 'set_state' };
+          if (holdsPrompt(node)) {
+            return { ok: true, selector, length: textOf(node).length, mode: 'dom_fallback' };
+          }
         }
       }
       return { ok: false };
@@ -247,23 +285,6 @@ async function clearPromptInComposerDom(cdp, timeoutMs = 5000) {
           node.dispatchEvent(new InputEvent('beforeinput', { bubbles: true, cancelable: true, data, inputType }));
           node.dispatchEvent(new InputEvent('input', { bubbles: true, data, inputType }));
         };
-        const setLexicalText = (node, value) => {
-          const editor = node.__lexicalEditor;
-          if (!editor || typeof editor.parseEditorState !== 'function' || typeof editor.setEditorState !== 'function') return false;
-          const state = {
-            root: {
-              children: [{ children: [], direction: null, format: '', indent: 0, type: 'paragraph', version: 1 }],
-              direction: null,
-              format: '',
-              indent: 0,
-              type: 'root',
-              version: 1,
-            },
-          };
-          editor.setEditorState(editor.parseEditorState(JSON.stringify(state)));
-          fireInput(node, null, 'deleteContentBackward');
-          return String(node.innerText || node.textContent || node.value || '').trim().length === 0;
-        };
         for (const selector of selectors) {
           for (const node of Array.from(document.querySelectorAll(selector))) {
             if (!visible(node) || node.hasAttribute('disabled')) continue;
@@ -276,20 +297,18 @@ async function clearPromptInComposerDom(cdp, timeoutMs = 5000) {
               else node.value = '';
               fireInput(node, null, 'deleteContentBackward');
             } else {
-              if (!setLexicalText(node, '')) {
-                const selection = window.getSelection();
-                const range = document.createRange();
-                range.selectNodeContents(node);
-                selection.removeAllRanges();
-                selection.addRange(range);
-                document.execCommand('delete', false, null);
-                node.textContent = '';
-                node.innerHTML = '';
-                fireInput(node, null, 'deleteContentBackward');
-              }
+              const selection = window.getSelection();
+              const range = document.createRange();
+              range.selectNodeContents(node);
+              selection.removeAllRanges();
+              selection.addRange(range);
+              document.execCommand('delete', false, null);
+              node.textContent = '';
+              node.innerHTML = '';
+              fireInput(node, null, 'deleteContentBackward');
             }
             const text = textOf(node);
-            return { ok: String(text).trim().length === 0, selector, length: text.length };
+            return { ok: text.length === 0, selector, length: text.length };
           }
         }
         return { ok: false, length: null };
@@ -466,64 +485,11 @@ const assistantSnapshotExpression = (sentinel) => {
   })()`;
 };
 
-const simpleAssistantSnapshotExpression = (sentinel) => {
-  const sentinelLiteral = JSON.stringify(sentinel || null);
-  return `(() => {
-    const SENTINEL = ${sentinelLiteral};
-    const visible = (node) => {
-      if (!node) return false;
-      const rect = node.getBoundingClientRect();
-      const style = getComputedStyle(node);
-      return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
-    };
-    const stopVisible = Array.from(document.querySelectorAll('${SELECTORS.stopButton}')).some(visible);
-    const selectors = [
-      '.chat-content-item-assistant .markdown',
-      '.segment-assistant .markdown',
-      '[data-role="assistant"] .markdown',
-      '[data-message-role="assistant"] .markdown',
-      '[class*="assistant-message"] .markdown',
-    ];
-    const seen = new Set();
-    const candidates = [];
-    for (const selector of selectors) {
-      for (const node of document.querySelectorAll(selector)) {
-        if (seen.has(node) || node.closest('.toolcall-content-text')) continue;
-        seen.add(node);
-        const text = (node.innerText || node.textContent || '').trim();
-        if (text) candidates.push({ node, text });
-      }
-    }
-    const selected = SENTINEL
-      ? candidates.slice().reverse().find((item) => item.text.includes(SENTINEL))
-      : candidates.at(-1);
-    const responseText = (selected?.text || '').slice(-16000);
-    const sentinelMatch = SENTINEL && responseText.includes(SENTINEL) ? SENTINEL : null;
-    const lower = responseText.toLowerCase();
-    const providerBusy = lower.includes('system is currently busy') || lower.includes('temporarily busy');
-    const conversationTooLong = lower.includes('conversation') && lower.includes('too long');
-    return {
-      text: responseText,
-      stopVisible,
-      finished: !stopVisible && responseText.length > 0,
-      providerBusy,
-      providerBusyInPage: providerBusy,
-      providerBusyInResponse: providerBusy,
-      providerBusyAfterPrompt: providerBusy,
-      conversationTooLongInPage: conversationTooLong,
-      conversationTooLongInResponse: conversationTooLong,
-      source: 'assistant-dom',
-      pageTextContainsSentinel: Boolean(sentinelMatch),
-      sentinelMatch,
-    };
-  })()`;
-};
-
 async function assistantSnapshot(cdp, sentinel, timeoutMs = 12000) {
-  return await withTimeout(
-    evaluate(cdp, simpleAssistantSnapshotExpression(sentinel)),
-    Math.min(timeoutMs, 5000),
-    "Kimi bounded assistant DOM snapshot",
+  return withTimeout(
+    evaluate(cdp, assistantSnapshotExpression(sentinel)),
+    timeoutMs,
+    "Kimi assistant DOM snapshot",
   );
 }
 
@@ -1074,11 +1040,6 @@ async function clearFocusedEditor(inputCdp) {
 async function clickComposerCenter(inputCdp, target) {
   if (!target || !Number.isFinite(target.x) || !Number.isFinite(target.y)) return;
   await inputCdp("Input.dispatchMouseEvent", {
-    type: "mouseMoved",
-    x: target.x,
-    y: target.y,
-  });
-  await inputCdp("Input.dispatchMouseEvent", {
     type: "mousePressed",
     x: target.x,
     y: target.y,
@@ -1093,88 +1054,6 @@ async function clickComposerCenter(inputCdp, target) {
     clickCount: 1,
   });
   await delay(100);
-}
-
-async function visibleCenters(cdp, selector, label = "") {
-  return await evaluate(
-    cdp,
-    `(() => {
-      const selector = ${JSON.stringify(selector)};
-      const label = ${JSON.stringify(label)};
-      const out = [];
-      for (const node of Array.from(document.querySelectorAll(selector))) {
-        if (label) {
-          const text = (node.innerText || node.textContent || node.getAttribute('aria-label') || '').trim();
-          if (text !== label) continue;
-        }
-        const rect = node.getBoundingClientRect();
-        const style = window.getComputedStyle(node);
-        if (rect.width <= 0 || rect.height <= 0 || style.visibility === 'hidden' || style.display === 'none') continue;
-        out.push({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
-      }
-      return out;
-    })()`,
-  ).catch(() => []);
-}
-
-async function clickVisibleCenters(inputCdp, targets) {
-  for (const target of targets || []) {
-    await clickComposerCenter(inputCdp, target);
-  }
-}
-
-async function dismissKimiOverlays(cdp, inputCdp) {
-  const jsResult = await evaluate(
-    cdp,
-    `(() => {
-      ${buildClickDispatcher()}
-      let clicked = 0;
-      for (const node of Array.from(document.querySelectorAll('button,[role="button"]'))) {
-        const text = (node.innerText || node.textContent || node.getAttribute('aria-label') || '').trim();
-        if (text !== 'Got it') continue;
-        const rect = node.getBoundingClientRect();
-        const style = getComputedStyle(node);
-        if (rect.width <= 0 || rect.height <= 0 || style.visibility === 'hidden' || style.display === 'none') continue;
-        dispatchClickSequence(node);
-        clicked += 1;
-      }
-      document.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Escape', code: 'Escape' }));
-      return { clicked };
-    })()`,
-  ).catch(() => ({ clicked: 0 }));
-  const targets = await visibleCenters(cdp, 'button,[role="button"]', 'Got it');
-  await clickVisibleCenters(inputCdp, targets);
-  await delay(jsResult.clicked || targets.length ? 250 : 0);
-  return { clicked: (jsResult.clicked || 0) + targets.length };
-}
-
-async function kimiSubmissionBlocker(cdp) {
-  return await evaluate(
-    cdp,
-    `(() => {
-      const text = (document.body?.innerText || document.body?.textContent || '').replace(/\s+/g, ' ').trim();
-      if (/Credits used up|free quota is used up/i.test(text)) {
-        return 'Kimi credits used up block submission';
-      }
-      if (/Upgrade your plan/i.test(text)) {
-        return 'Kimi upgrade modal blocks submission';
-      }
-      if (/Currently available to .*members/i.test(text)) {
-        return 'Kimi paid-feature modal blocks submission';
-      }
-      return null;
-    })()`,
-  ).catch(() => null);
-}
-
-async function clearKimiAttachments(cdp, inputCdp) {
-  for (let round = 0; round < 4; round++) {
-    const targets = await visibleCenters(cdp, '.file-card-delete,.delete-icon');
-    if (!targets.length) return { clicked: 0 };
-    await clickVisibleCenters(inputCdp, targets.reverse());
-    await delay(300);
-  }
-  return { clicked: 1 };
 }
 
 async function typePrompt(cdp, inputCdp, prompt) {
@@ -1246,9 +1125,6 @@ async function typePrompt(cdp, inputCdp, prompt) {
     }
     if (typed.mode === "focused_editable") {
       await clickComposerCenter(inputCdp, typed.target);
-      await clearKimiAttachments(cdp, inputCdp).catch((err) => {
-        lastFailure = err?.message || String(err);
-      });
       await clearFocusedEditor(inputCdp).catch((err) => {
         lastFailure = err?.message || String(err);
       });
@@ -1282,23 +1158,17 @@ async function typePrompt(cdp, inputCdp, prompt) {
   );
 }
 
-async function clickSend(cdp, inputCdp, expectedMarker) {
+async function clickSend(cdp, inputCdp) {
   const promptSelectors = JSON.stringify(SELECTORS.promptTextarea.split(", ").map((s) => s.trim()));
   const sendSelectors = JSON.stringify(
     SELECTORS.sendButton.split(", ").map((s) => s.trim()).concat([
       'button[aria-label*="Send"]',
       'button[aria-label*="send"]',
       'button[data-test-id="send-button"]',
-      '.send-button-container',
-      '.send-icon',
-      'svg[name="Send"]',
     ]),
   );
   const deadline = Date.now() + 8000;
   while (Date.now() < deadline) {
-    const preexistingBlocker = await kimiSubmissionBlocker(cdp);
-    if (preexistingBlocker) throw new Error(preexistingBlocker);
-    await dismissKimiOverlays(cdp, inputCdp);
     const result = await evaluate(
       cdp,
       `(() => {
@@ -1306,80 +1176,50 @@ async function clickSend(cdp, inputCdp, expectedMarker) {
         const promptSelectors = ${promptSelectors};
         const sendSelectors = ${sendSelectors};
         let prompt = null;
-        const center = (node) => {
-          const r = node.getBoundingClientRect();
-          return r.width > 0 && r.height > 0 ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : null;
-        };
-        const visible = (node) => {
-          if (!node) return false;
-          const rect = node.getBoundingClientRect();
-          const style = getComputedStyle(node);
-          return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
-        };
         for (const selector of promptSelectors) {
-          prompt = Array.from(document.querySelectorAll(selector)).find(visible) || null;
+          prompt = document.querySelector(selector);
           if (prompt) break;
         }
         const tryButton = (button) => {
           if (!button) return null;
-          const target = (typeof button.closest === 'function' ? button.closest('.send-button-container,button,[role="button"]') : null) || button;
-          const targetCenter = center(target);
-          if (!visible(target) || !targetCenter) return null;
-          const disabled = target.hasAttribute('disabled')
-            || target.getAttribute('aria-disabled') === 'true'
-            || target.getAttribute('data-disabled') === 'true';
-          if (disabled) return { status: 'disabled', target: targetCenter };
-          dispatchClickSequence(target);
-          return { status: 'clicked', target: targetCenter };
+          const disabled = button.hasAttribute('disabled')
+            || button.getAttribute('aria-disabled') === 'true'
+            || button.getAttribute('data-disabled') === 'true';
+          if (disabled) return 'disabled';
+          dispatchClickSequence(button);
+          return 'clicked';
         };
         for (const selector of sendSelectors) {
-          const button = Array.from(document.querySelectorAll(selector)).find(visible) || null;
-          const result = tryButton(button);
-          if (result && result.status === 'clicked') return { status: 'clicked-global', target: result.target };
-          if (result && result.status === 'disabled') return { status: 'disabled', target: result.target };
+          const button = document.querySelector(selector);
+          const status = tryButton(button);
+          if (status === 'clicked') return 'clicked-global';
+          if (status === 'disabled') return 'disabled';
         }
         if (prompt) {
           let node = prompt;
           for (let depth = 0; depth < 10 && node; depth++) {
-            const buttons = node.querySelectorAll ? Array.from(node.querySelectorAll('button,.send-button-container,.send-icon,svg[name="Send"]')) : [];
+            const buttons = node.querySelectorAll ? Array.from(node.querySelectorAll('button')) : [];
             for (const button of buttons) {
               const aria = (button.getAttribute('aria-label') || '').toLowerCase();
-              const label = (button.textContent || button.getAttribute('name') || '').trim().toLowerCase();
-              if (aria.includes('send') || label === 'send' || button.matches('.send-button-container,.send-icon,svg[name="Send"]')) {
-                const result = tryButton(button);
-                if (result && result.status === 'clicked') return { status: 'clicked-near', target: result.target };
-                if (result && result.status === 'disabled') return { status: 'disabled', target: result.target };
+              const label = (button.textContent || '').trim().toLowerCase();
+              if (aria.includes('send') || label === 'send') {
+                const status = tryButton(button);
+                if (status === 'clicked') return 'clicked-near';
+                if (status === 'disabled') return 'disabled';
               }
             }
             node = node.parentElement;
           }
         }
-        return { status: 'missing', target: null };
+        return 'missing';
       })()`
     );
-    if (result?.status === "clicked-global" || result?.status === "clicked-near") {
-      let accepted = await waitForSubmissionAcceptance(cdp, promptSelectors, 2500, expectedMarker);
-      if (accepted) {
-        await delay(8000);
-        const blocker = await kimiSubmissionBlocker(cdp);
-        if (blocker) throw new Error(blocker);
-        return true;
-      }
-      const blocker = await kimiSubmissionBlocker(cdp);
-      if (blocker) throw new Error(blocker);
-      await clickComposerCenter(inputCdp, result.target);
-      accepted = await waitForSubmissionAcceptance(cdp, promptSelectors, 2500, expectedMarker);
-      if (accepted) {
-        await delay(8000);
-        const blocker = await kimiSubmissionBlocker(cdp);
-        if (blocker) throw new Error(blocker);
-        return true;
-      }
-      const secondBlocker = await kimiSubmissionBlocker(cdp);
-      if (secondBlocker) throw new Error(secondBlocker);
+    if (result === "clicked-global" || result === "clicked-near") {
+      const accepted = await waitForSubmissionAcceptance(cdp, promptSelectors, 2500);
+      if (accepted) return true;
       break;
     }
-    if (result?.status === "disabled") {
+    if (result === "disabled") {
       await delay(150);
       continue;
     }
@@ -1406,50 +1246,29 @@ async function clickSend(cdp, inputCdp, expectedMarker) {
       modifiers,
     });
     await delay(250);
-    if (await waitForSubmissionAcceptance(cdp, promptSelectors, 1200, expectedMarker)) {
-      await delay(8000);
-      const blocker = await kimiSubmissionBlocker(cdp);
-      if (blocker) throw new Error(blocker);
-      return true;
-    }
-    const blocker = await kimiSubmissionBlocker(cdp);
-    if (blocker) throw new Error(blocker);
+    if (await waitForSubmissionAcceptance(cdp, promptSelectors, 1200)) return true;
   }
   return false;
 }
 
-async function waitForSubmissionAcceptance(cdp, promptSelectors, timeoutMs, expectedMarker) {
+async function waitForSubmissionAcceptance(cdp, promptSelectors, timeoutMs) {
   const deadline = Date.now() + timeoutMs;
-  let emptyPolls = 0;
   while (Date.now() < deadline) {
     const accepted = await evaluate(
       cdp,
       `(() => {
         const promptSelectors = ${promptSelectors};
         let prompt = null;
-        const visible = (node) => {
-          if (!node) return false;
-          const rect = node.getBoundingClientRect();
-          const style = getComputedStyle(node);
-          return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
-        };
         for (const selector of promptSelectors) {
-          prompt = Array.from(document.querySelectorAll(selector)).find(visible) || null;
+          prompt = document.querySelector(selector);
           if (prompt) break;
         }
         const promptText = (prompt?.innerText || prompt?.textContent || prompt?.value || '').trim();
-        const marker = ${JSON.stringify(expectedMarker || "")};
-        const submitted = !marker || Array.from(document.querySelectorAll('.chat-content-item-user,[data-role="user"],[data-message-role="user"]'))
-          .some((node) => (node.innerText || node.textContent || '').includes(marker));
-        return promptText.length === 0 && submitted;
+        const generating = Boolean(document.querySelector('${SELECTORS.stopButton}'));
+        return generating || promptText.length === 0;
       })()`,
     ).catch(() => false);
-    if (accepted) {
-      emptyPolls += 1;
-      if (emptyPolls >= 3) return true;
-    } else {
-      emptyPolls = 0;
-    }
+    if (accepted) return true;
     await delay(150);
   }
   return false;
@@ -1625,7 +1444,7 @@ async function query(options) {
     log("Prompt ready");
     const modelSelection = model ? await selectPreference(cdp, "model", model) : { status: "skipped" };
     if (model) log(`Kimi model selection: ${modelSelection.status} ${modelSelection.label || model}`);
-    let reasoningSelection = reasoning ? await selectPreference(cdp, "reasoning", reasoning) : { status: "skipped" };
+    const reasoningSelection = reasoning ? await selectPreference(cdp, "reasoning", reasoning) : { status: "skipped" };
     if (reasoning) log(`Kimi reasoning selection: ${reasoningSelection.status} ${reasoningSelection.label || reasoning}`);
 
     // A bound tab can already be sitting on a thread Kimi has declared too
@@ -1640,42 +1459,12 @@ async function query(options) {
     const runAttempt = async () => {
       const baseline = await assistantSnapshot(cdp, null).catch(() => ({ text: "" }));
       if (file) {
-        attachment = await withTimeout(
-          attachFile(cdp, inputCdp, file, log),
-          ATTACH_MOUNT_TIMEOUT_MS + 25000,
-          "Kimi attachment upload",
-        );
+        attachment = await attachFile(cdp, inputCdp, file, log);
         log(`File attached: ${file}`);
       }
       const typed = await typePrompt(cdp, inputCdp, prompt);
       log(`Prompt typed (${typed.attempts} composer attempt${typed.attempts === 1 ? "" : "s"})`);
-      let submitted;
-      try {
-        submitted = await clickSend(cdp, inputCdp, sentinel);
-      } catch (err) {
-        const paidModeBlocked = /paid-feature modal|upgrade modal/i.test(err?.message || "");
-        if (!paidModeBlocked || reasoning) throw err;
-        await dismissKimiOverlays(cdp, inputCdp);
-        // kimi.ai renamed the free reasoning tiers ("Standard" became
-        // "Instant"); a single hardcoded label made the paid-mode fallback
-        // itself throw "reasoning option not confirmed". Try the known free
-        // labels in order; the first one that confirms wins.
-        let fallbackSelected = null;
-        let fallbackError = null;
-        for (const label of ["Standard", "Instant"]) {
-          try {
-            fallbackSelected = await selectPreference(cdp, "reasoning", label);
-            break;
-          } catch (prefErr) {
-            fallbackError = prefErr;
-          }
-        }
-        if (!fallbackSelected) throw fallbackError;
-        reasoningSelection = fallbackSelected;
-        log(`Kimi unavailable paid reasoning mode replaced with free tier: ${reasoningSelection.status}`);
-        await typePrompt(cdp, inputCdp, prompt);
-        submitted = await clickSend(cdp, inputCdp, sentinel);
-      }
+      const submitted = await clickSend(cdp, inputCdp);
       if (!submitted) {
         throw new Error("Kimi prompt submission was not accepted: composer still contains draft");
       }

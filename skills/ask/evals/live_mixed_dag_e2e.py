@@ -41,7 +41,7 @@ DEFAULT_PROJECTS = {
 FRESH_URLS = {
     "webgpt": "https://chatgpt.com/",
     "webclaude": "https://claude.ai/new",
-    "webkimi": "https://www.kimi.com/",
+    "webkimi": "https://www.kimi.ai/",
     "webgrok": "https://grok.com/",
     "webgemini": "https://gemini.google.com/app",
 }
