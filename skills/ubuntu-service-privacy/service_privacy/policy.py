@@ -37,6 +37,9 @@ def apparmor(policy: Policy, probe_executable: str | None = None,
         '  /usr/lib/locale/** r,',
         '  /usr/share/zoneinfo/** r,',
         '  /etc/localtime r,',
+        # Ubuntu resolves DNS via the systemd stub; /etc/resolv.conf symlinks here.
+        # Denied 2026-09-16 -> Go resolver fell back to [::1]:53 -> phone-home dead.
+        '  /run/systemd/resolve/stub-resolv.conf r,',
         '  /etc/ssl/certs/** r,',
         '  /proc/[0-9]*/attr/current r,',
         # Go-runtime/osquery self-introspection reads (maps, cgroup). With zero
@@ -47,7 +50,7 @@ def apparmor(policy: Policy, probe_executable: str | None = None,
         '  /sys/kernel/mm/transparent_hugepage/hpage_pmd_size r,',
         '  /proc/self/attr/current r,',
         '  /run/systemd/notify w,',
-        '  unix (create, bind, listen, accept, getattr, getopt, setopt),',
+        '  unix (create, bind, listen, accept, getattr, getopt, setopt, shutdown),',
         f'  unix (connect, send, receive) peer=(label={name}),',
     ]
     # Explicit denies are audited instead of silently suppressing deny messages.
