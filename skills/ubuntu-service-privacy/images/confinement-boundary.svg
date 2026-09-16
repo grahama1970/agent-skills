@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" role="img" aria-labelledby="rsa-title rsa-desc">
+  <title id="rsa-title">Confinement boundary</title>
+  <desc id="rsa-desc">What the caged agent may read, and what it cannot</desc>
+  <style>.rsa-sans{font-family:Play,'Trebuchet MS','Segoe UI',system-ui,sans-serif}.rsa-mono{font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace}.rsa-shadow{filter:drop-shadow(2px 2px 4px rgba(0,0,0,.8))}.rsa-shadow-strong{filter:drop-shadow(3px 3px 6px rgba(0,0,0,.9))}.rsa-target{transform-box:fill-box;transform-origin:center}@media (prefers-reduced-motion: no-preference){@keyframes rsa_k000{0%{opacity:0}0%{opacity:0;animation-timing-function:ease-in-out}50%{opacity:0.35;animation-timing-function:ease-in-out}100%{opacity:0}100%{opacity:0}}.rsa_a000{animation:rsa_k000 3s linear 0s infinite both}@keyframes rsa_k001{0%{opacity:0}0%{opacity:0;animation-timing-function:ease-in-out}50%{opacity:0.35;animation-timing-function:ease-in-out}100%{opacity:0}100%{opacity:0}}.rsa_a001{animation:rsa_k001 3s linear 1.5s infinite both}}</style>
+  <rect width="1920" height="1080" rx="24.0" fill="#0d1117"/>
+  <circle cx="380" cy="170" r="30" fill="none" stroke="#00FF10" stroke-width="5.0"/>
+  <path d="M 366 171 L 376 182 L 395 158" fill="none" stroke="#00FF10" stroke-width="6.0" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="440" y="170" class="rsa-sans rsa-shadow" font-size="46.0" fill="#00FF10" text-anchor="start" dominant-baseline="central" letter-spacing="6.0">ALLOWED</text>
+  <circle cx="1240" cy="170" r="30" fill="none" stroke="#EF4444" stroke-width="5.0"/>
+  <path d="M 1229 159 L 1251 181 M 1251 159 L 1229 181" fill="none" stroke="#EF4444" stroke-width="6.0" stroke-linecap="round"/>
+  <text x="1300" y="170" class="rsa-sans rsa-shadow" font-size="46.0" fill="#EF4444" text-anchor="start" dominant-baseline="central" letter-spacing="6.0">DENIED</text>
+  <rect x="139" y="249" width="782" height="682" rx="24.0" fill="none" stroke="#00FF10" opacity="0.35" stroke-width="3.0" data-target="left-glow" class="rsa-target rsa_a000"/>
+  <rect x="150" y="260" width="760" height="660" rx="18.0" fill="rgba(0,255,16,0.1)" stroke="#00FF10" stroke-width="4.0" data-target="left-card" class="rsa-target"/>
+  <text x="260" y="360" class="rsa-sans rsa-shadow" font-size="34.0" fill="#FFFFFF" text-anchor="start" dominant-baseline="central">OS posture files</text>
+  <path d="M 200 360 L 212 372 L 232 346" fill="none" stroke="#00FF10" stroke-width="5.0" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="260" y="470" class="rsa-sans rsa-shadow" font-size="34.0" fill="#FFFFFF" text-anchor="start" dominant-baseline="central">Machine ID</text>
+  <path d="M 200 470 L 212 482 L 232 456" fill="none" stroke="#00FF10" stroke-width="5.0" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="260" y="580" class="rsa-sans rsa-shadow" font-size="34.0" fill="#FFFFFF" text-anchor="start" dominant-baseline="central">Agent config + state</text>
+  <path d="M 200 580 L 212 592 L 232 566" fill="none" stroke="#00FF10" stroke-width="5.0" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="260" y="690" class="rsa-sans rsa-shadow" font-size="34.0" fill="#FFFFFF" text-anchor="start" dominant-baseline="central">Phone home</text>
+  <path d="M 200 690 L 212 702 L 232 676" fill="none" stroke="#00FF10" stroke-width="5.0" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="999" y="249" width="782" height="682" rx="24.0" fill="none" stroke="#EF4444" opacity="0.35" stroke-width="3.0" data-target="right-glow" class="rsa-target rsa_a001"/>
+  <rect x="1010" y="260" width="760" height="660" rx="18.0" fill="rgba(239,68,68,0.1)" stroke="#EF4444" stroke-width="4.0" data-target="right-card" class="rsa-target"/>
+  <text x="1120" y="360" class="rsa-sans rsa-shadow" font-size="34.0" fill="rgba(255,255,255,0.85)" text-anchor="start" dominant-baseline="central">Home + client work</text>
+  <path d="M 1060 348 L 1084 372 M 1084 348 L 1060 372" fill="none" stroke="#EF4444" stroke-width="5.0" stroke-linecap="round"/>
+  <text x="1120" y="470" class="rsa-sans rsa-shadow" font-size="34.0" fill="rgba(255,255,255,0.85)" text-anchor="start" dominant-baseline="central">SSH keys</text>
+  <path d="M 1060 458 L 1084 482 M 1084 458 L 1060 482" fill="none" stroke="#EF4444" stroke-width="5.0" stroke-linecap="round"/>
+  <text x="1120" y="580" class="rsa-sans rsa-shadow" font-size="34.0" fill="rgba(255,255,255,0.85)" text-anchor="start" dominant-baseline="central">Browser secrets</text>
+  <path d="M 1060 568 L 1084 592 M 1084 568 L 1060 592" fill="none" stroke="#EF4444" stroke-width="5.0" stroke-linecap="round"/>
+  <text x="1120" y="690" class="rsa-sans rsa-shadow" font-size="34.0" fill="rgba(255,255,255,0.85)" text-anchor="start" dominant-baseline="central">Private network</text>
+  <path d="M 1060 678 L 1084 702 M 1084 678 L 1060 702" fill="none" stroke="#EF4444" stroke-width="5.0" stroke-linecap="round"/>
+  <text x="960" y="1000" class="rsa-sans" font-size="30.0" fill="rgba(255,255,255,0.55)" text-anchor="middle" dominant-baseline="central" letter-spacing="3.0">PASSES THE CHECK, NOT YOUR WORK</text>
+</svg>

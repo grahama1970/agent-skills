@@ -45,32 +45,16 @@ generates the AppArmor profile plus the systemd drop-in
 (`service_privacy/policy.py`); `apply` installs them, starts the service, and
 verifies it at runtime (`service_privacy/deploy.py`), failing closed to a parked
 `OFF` hold if the post-start check does not pass. Nothing deploys without the
-approval hash and both owner-authorization flags.
-
-```mermaid
-flowchart LR
-  P["policy JSON\nunit + executables\nread allowlist + network mode"] --> PL["plan\ninspect host + generate\nAppArmor profile + systemd drop-in"]
-  PL --> PR["probe\nsynthetic pre-start check"]
-  PR --> AP{"apply\nowner-authorized\napprove-sha256 + probe receipt"}
-  AP -->|post-start verified| RUN["running caged service"]
-  AP -->|verify fails| RB["rollback: park OFF hold"]
-  RUN --> V["verify / logs / health"]
-```
+approval hash and both owner-authorization flags. The lifecycle is
+`plan -> probe -> apply -> verify`, with `logs`/`health` for ongoing checks.
 
 At runtime two enforcement layers hold the service to the approved boundary. The
 code-gated read baseline lives in `service_privacy/models.py`; denied reads
 return an honest "unavailable", never faked telemetry.
 
-```mermaid
-flowchart TB
-  L["launcher + osqueryd\nenforce mode, zero capabilities"] --> CAGE
-  subgraph CAGE["Two enforcement layers"]
-    AA["AppArmor profile\ndefault-deny + read allowlist"]
-    SD["systemd sandbox\nzero caps, ProtectSystem=strict, PrivateTmp/IPC\nIPAddressAllow loopback / Deny private+VPN"]
-  end
-  CAGE -->|ALLOWED| OK["OS-posture files, machine-id,\nagent config/state, phone home"]
-  CAGE -->|DENIED honest 'unavailable'| NO["/home /root /mnt /media /srv /run/user\nSSH keys, browser secrets, client work\nprivate network ranges"]
-```
+<p align="center">
+  <img src="images/confinement-boundary.svg" alt="Confinement boundary: the caged agent may read OS posture and phone home, but home and client work, SSH keys, browser secrets, and private network are denied" width="850">
+</p>
 
 ## Network modes
 
