@@ -205,10 +205,26 @@ def unprivileged_profile_canary() -> None:
         setpriv = tool('setpriv')
     except Blocked:
         raise Blocked('CANARY_TOOL_UNAVAILABLE') from None
-    probe = "import sys; f = open('/sys/kernel/security/apparmor/.load', 'ab'); f.close(); sys.exit(0)"
-    result = command([setpriv, '--reuid=65534', '--regid=65534', '--clear-groups',
-                      sys.executable, '-c', probe])
-    if result.returncode == 0:
+    # Ubuntu ships apparmorfs profile-management files world-writable (0666) and
+    # enforces CAP_MAC_ADMIN at load time, NOT at open time. An open-denial canary
+    # false-positives on every stock 24.04 host. The honest, effect-based check:
+    # an unprivileged attempt to LOAD a canary profile must leave no new profile
+    # in the loaded- profiles readback.
+    # Nobody-side: attempt the load write only (profiles readback is root-only,
+    # so a nobody-side read would traceback and false-trip the gate).
+    marker = 'xcanary-probe'
+    probe = ("try:\n"
+             "    f = open('/sys/kernel/security/apparmor/.load', 'ab')\n"
+             "    f.write(b'profile " + marker + " {}')\n"
+             "    f.close()\n"
+             "except OSError:\n"
+             "    pass\n")
+    command([setpriv, '--reuid=65534', '--regid=65534', '--clear-groups',
+             sys.executable, '-c', probe])
+    # Root-side: effect readback. The invariant is that no unprivileged caller
+    # can cause a profile to exist in the loaded set.
+    profiles = Path('/sys/kernel/security/apparmor/profiles').read_text()
+    if marker in profiles:
         raise Blocked('UNPRIVILEGED_PROFILE_MANAGEMENT_ALLOWED')
 
 

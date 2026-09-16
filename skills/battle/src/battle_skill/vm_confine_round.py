@@ -208,7 +208,13 @@ cloud-init status --wait || true
 sudo pip3 install --break-system-packages --ignore-installed -q typer pydantic psutil loguru pyyaml
 gcc -static -O2 -o /tmp/battle-agent /tmp/battle-agent.c && sudo mkdir -p /opt/battle-agent && sudo install -m 0755 /tmp/battle-agent {AGENT_BIN}
 sudo cp /tmp/battle-agent.service /etc/systemd/system/{AGENT_UNIT}
-sudo mkdir -p /var/kolide-k2 && sudo chmod 755 /var/kolide-k2
+sudo mkdir -p /var/kolide-k2 /etc/ubuntu-service-privacy
+AV=$(dpkg-query -W -f='${{Version}}' apparmor); KV=$(dpkg-query -W -f='${{Version}}' linux-image-$(uname -r))
+printf '%s' "$AV" | sudo tee /etc/ubuntu-service-privacy/apparmor-min-version >/dev/null
+printf '%s' "$KV" | sudo tee /etc/ubuntu-service-privacy/kernel-min-version >/dev/null
+sudo chmod 600 /etc/ubuntu-service-privacy/apparmor-min-version /etc/ubuntu-service-privacy/kernel-min-version
+sudo chown root:root /etc/ubuntu-service-privacy/apparmor-min-version /etc/ubuntu-service-privacy/kernel-min-version
+sudo chmod 755 /var/kolide-k2
 sudo systemctl daemon-reload && sudo systemctl enable --now {AGENT_UNIT}
 cd /tmp/ubuntu-service-privacy
 sudo python3 -m service_privacy plan /tmp/policy.json --output /tmp/plan
