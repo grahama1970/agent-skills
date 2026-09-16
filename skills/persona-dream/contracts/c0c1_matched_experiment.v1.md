@@ -114,6 +114,17 @@ content caused the change. Every claim derived from C0/C1 inherits this bound.
    change. Every admission receipt and paper claim derived from C0/C1 must
    carry this scope.
 
+3. **Replay semantics for experiment receipts (2026-09-16, parent-ratified).**
+   Memory is append-only and idempotency keys are content-addressed over the
+   frozen canonical event ids, so any rerun of an arm whose delta was already
+   admitted (e.g. by the retained live eval) MUST return ALREADY_APPLIED. An
+   arm therefore PASSES on either (a) a fresh ACCEPTED satisfying all gates,
+   or (b) ALREADY_APPLIED where the existing delta is validated by the fold
+   (cited, |delta| <= 0.10, fold == baseline + delta, idempotency key
+   content-addressed over the same canonical ids). The receipt records which
+   path occurred ("fresh_accept" vs "replay_persisted"); the causal-acceptance
+   evidence for a replayed arm is the original live admission cited by hash.
+
 ## Non-claims
 
 No felt emotion, no sentience, no human-perceived change, no longitudinal

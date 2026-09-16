@@ -1,0 +1,83 @@
+{
+  "arms": {
+    "c0": {
+      "accept_path": null,
+      "admit_delta": null,
+      "admit_disposition": "REJECTED",
+      "admit_reason": "insufficient_distinct_events",
+      "fold_delta_count": 0,
+      "fold_receipt_sha256": "sha256:782aae9cd673946a8386f1a39b49e45a6009320aae8426f3cea0c4509988123b",
+      "fold_state": {
+        "warmth": 0.2
+      },
+      "recall_status": "PASS_MEMORY_RECALL_EMOTIONAL_TRIGGERS",
+      "receipt_hashes": {
+        "admit": "sha256:db00277fcad97f9ffd6d705f5c3b7b5491edb571a833fe6f2a97c99af37834d3",
+        "recall": "sha256:6044c81d0ab59aa5082cfc9c0536c8907fd5691fcf31da017b88e2c4c5786a51",
+        "seed": "sha256:c2f432d44b4d68d8a397b7cb5e54655ecc8992c8dc74de373becfc78af749901"
+      },
+      "seed_status": "PASS_C0C1_EVAL_MEMORY_SEEDED"
+    },
+    "c1": {
+      "accept_path": "replay_persisted",
+      "admit_delta": 0.1,
+      "admit_disposition": "ALREADY_APPLIED",
+      "admit_reason": null,
+      "fold_delta_count": 1,
+      "fold_receipt_sha256": "sha256:c44e069648eabb4f38e5c4e2a396f79901d0d2593447ac077e8522bb5457d482",
+      "fold_state": {
+        "warmth": 0.3
+      },
+      "recall_status": "PASS_MEMORY_RECALL_EMOTIONAL_TRIGGERS",
+      "receipt_hashes": {
+        "admit": "sha256:82e242e2adf08221f5c2f723c6560b55e396282228b35ef30a1e919b0999e2f7",
+        "recall": "sha256:96def8799a72c93bd4e6ba45dfa43b4d4daa41fae4dff9a3dca2f31bedecb85e",
+        "seed": "sha256:c7aa31d8a51a9111ec20ba2d9452d41e34731855e51f56f2a857d25e11ac4f71"
+      },
+      "seed_status": "PASS_C0C1_EVAL_MEMORY_SEEDED"
+    },
+    "c1_inert": {
+      "accept_path": "replay_persisted",
+      "admit_delta": 0.1,
+      "admit_disposition": "ALREADY_APPLIED",
+      "admit_reason": null,
+      "fold_delta_count": 1,
+      "fold_receipt_sha256": "sha256:61d21d0e71828ade1cebf36027041737d18296591e8c5d41132e1cada6953be1",
+      "fold_state": {
+        "warmth": 0.3
+      },
+      "recall_status": "PASS_MEMORY_RECALL_EMOTIONAL_TRIGGERS",
+      "receipt_hashes": {
+        "admit": "sha256:b4f6b4cc83e05a03d8f319e3eb7743d8fa237b4e6524ac340191b48b6929d5b8",
+        "recall": "sha256:7ebfa806b20eeac655768368b6ef6ad8be373b65fcb5d3e19005e0ca35e85f5e",
+        "seed": "sha256:5dd9375905e2524157d69a73868ee8ace83ec3a1309c207652a9c21eeda38898"
+      },
+      "seed_status": "PASS_C0C1_EVAL_MEMORY_SEEDED"
+    },
+    "c1_null": {
+      "accept_path": null,
+      "admit_delta": null,
+      "admit_disposition": "REJECTED",
+      "admit_reason": "unknown_intensity_scale",
+      "fold_delta_count": 0,
+      "fold_receipt_sha256": "sha256:d541858545b54d86cac3172767082c4b91284244518f20aee866f927be5463b5",
+      "fold_state": {
+        "warmth": 0.2
+      },
+      "recall_status": "PASS_MEMORY_RECALL_EMOTIONAL_TRIGGERS",
+      "receipt_hashes": {
+        "admit": "sha256:fac261432bb69e94d03ca36a6edb17b5f9e8dfa8b84331c64b65ef8e8edd8a70",
+        "recall": "sha256:12813387ab064eb66d79ac33bc87726608f04e78dd8ef5e5711fba57dabe2a4a",
+        "seed": "sha256:2d7f958789e882c94656bb9f1e76b445b48bf41adef9fcc53fe25ec1ccd73ed9"
+      },
+      "seed_status": "PASS_C0C1_EVAL_MEMORY_SEEDED"
+    }
+  },
+  "baseline_sha256": "sha256:d6cae5f4be44357d972489fe003e9c5adb620a1de08f6caa38ebb8dbe0b99ac8",
+  "contract_sha256": "sha256:b017167e83f8614d5d5b429e99ecfda95ff03d90080b31b30cf466a76e6da2e4",
+  "executed_at": "2026-09-16T02:52:27.175964+00:00",
+  "frozen_baseline_digest": "d6cae5f4be44357d972489fe003e9c5adb620a1de08f6caa38ebb8dbe0b99ac8",
+  "result": "PASS",
+  "schema": "persona_dream.c0c1_experiment_receipt.v1",
+  "violations": []
+}
