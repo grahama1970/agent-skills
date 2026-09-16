@@ -4,21 +4,28 @@
 # never stashes, never stages anything outside the given paths, never
 # deletes a worktree (the hourly reaper owns reclamation).
 #
-# usage: land.sh -m "message" [--repo PATH] <path>...
+# usage: land.sh -m "message" [--repo PATH] [--remove PATH ...] <path>...
+#   <path>...      add/update these paths from the working tree.
+#   --remove PATH  remove PATH from origin/main in the same commit (scoped
+#                  deletes and renames). Operates on the temp index only,
+#                  never the working tree. At least one add path OR one
+#                  --remove is required.
 set -euo pipefail
 
 msg="" repo=""
 paths=()
+removes=()
 while [ $# -gt 0 ]; do
     case "$1" in
         -m) msg="${2:?-m needs a message}"; shift 2 ;;
         --repo) repo="${2:?--repo needs a path}"; shift 2 ;;
+        --remove) removes+=("${2:?--remove needs a path}"); shift 2 ;;
         *) paths+=("$1"); shift ;;
     esac
 done
 [ -n "$msg" ] || { echo "land: commit message required (-m)" >&2; exit 2; }
-[ ${#paths[@]} -gt 0 ] || { echo "land: at least one explicit path required" >&2; exit 2; }
-for p in "${paths[@]}"; do
+[ ${#paths[@]} -gt 0 ] || [ ${#removes[@]} -gt 0 ] || { echo "land: at least one explicit path or --remove required" >&2; exit 2; }
+for p in "${paths[@]}" "${removes[@]}"; do
     case "$p" in
         .|./|-A|--all|:/|'*') echo "land: refuse repo-wide pathspec '$p' — name the files" >&2; exit 2 ;;
     esac
@@ -33,7 +40,8 @@ trap 'rm -f "$GIT_INDEX_FILE"' EXIT
 
 for attempt in 1 2 3; do
     git read-tree origin/main
-    git add -A -- "${paths[@]}"
+    [ ${#paths[@]} -gt 0 ] && git add -A -- "${paths[@]}"
+    [ ${#removes[@]} -gt 0 ] && git rm -r --cached --ignore-unmatch -q -- "${removes[@]}"
     tree=$(git write-tree)
     if [ "$tree" = "$(git rev-parse origin/main^{tree})" ]; then
         echo "land: no change vs origin/main for named paths — nothing to push"
