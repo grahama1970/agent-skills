@@ -65,6 +65,48 @@ def _free_port() -> int:
         return int(sock.getsockname()[1])
 
 
+class VMTwin:
+    """Persistent VM twin: prepare once, run many payloads, teardown at round end."""
+
+    def __init__(self, base_image: Path, work_dir: Path, ssh_port: int | None = None):
+        self.base_image = base_image
+        self.work_dir = work_dir
+        self.port = ssh_port or _free_port()
+        self.overlay: Path | None = None
+        self.seed_iso: Path | None = None
+        self.pid: int | None = None
+        self.key: Path | None = None
+
+    def prepare(self, extra_user_data: str = "", boot_timeout: int = 300) -> "VMTwin":
+        preflight_tools()
+        self.work_dir.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["ssh-keygen", "-t", "ed25519", "-N", "", "-q", "-f", str(self.work_dir / "id_ed25519")],
+                       check=True, capture_output=True)
+        self.key = self.work_dir / "id_ed25519"
+        self.overlay = prepare_overlay(self.base_image, self.work_dir)
+        self.seed_iso = make_seed_iso(self.work_dir, self.key.with_suffix(".pub").read_text().strip(), extra_user_data)
+        self.pid = boot_vm(self.overlay, self.seed_iso, self.port, self.work_dir, boot_timeout, self.key)
+        return self
+
+    def run(self, payload: str, remote: str = "bash -s") -> tuple[int, str, str]:
+        if self.pid is None:
+            raise RuntimeError("VMTwin not prepared")
+        if remote == "bash -s":
+            return run_payload(self.port, self.key, payload)
+        proc = subprocess.run(_ssh_argv(self.port, self.key, remote), capture_output=True, text=True)
+        return proc.returncode, proc.stdout, proc.stderr
+
+    def fetch(self, remote_path: str, local_path: Path) -> None:
+        subprocess.run(["scp", "-i", str(self.key), "-P", str(self.port), "-o", "StrictHostKeyChecking=no",
+                        "-o", "UserKnownHostsFile=/dev/null",
+                        f"{CLOUD_USER}@127.0.0.1:{remote_path}", str(local_path)],
+                       check=True, capture_output=True)
+
+    def teardown(self, keep: bool = False) -> None:
+        if self.pid is not None:
+            teardown(self.pid, keep, self.work_dir)
+
+
 def preflight_tools() -> None:
     missing = [tool for tool in REQUIRED_HOST_TOOLS if shutil.which(tool) is None]
     if missing:
@@ -91,14 +133,14 @@ def prepare_overlay(base_image: Path, round_dir: Path) -> Path:
     return overlay
 
 
-def make_seed_iso(round_dir: Path, ssh_public_key: str) -> Path:
+def make_seed_iso(round_dir: Path, ssh_public_key: str, extra_user_data: str = "") -> Path:
     seed_dir = round_dir / "seed"
     seed_dir.mkdir(parents=True, exist_ok=True)
     user_data = (
         "#cloud-config\n"
         f"hostname: battle-vm\n"
         f"ssh_authorized_keys:\n  - {ssh_public_key}\n"
-        "ssh_pwauth: false\n"
+        "ssh_pwauth: false\n" + extra_user_data
     )
     (seed_dir / "user-data").write_text(user_data)
     (seed_dir / "meta-data").write_text("instance-id: battle-vm-001\nlocal-hostname: battle-vm\n")
@@ -188,30 +230,23 @@ def vm_round(
     round_dir = out_dir / f"vm-round-{started.strftime('%Y%m%dT%H%M%S')}-{int(started.timestamp())}"
     round_dir.mkdir(parents=True, exist_ok=True)
 
-    port = ssh_port or _free_port()
-    subprocess.run(["ssh-keygen", "-t", "ed25519", "-N", "", "-q", "-f", str(round_dir / "id_ed25519")],
-                   check=True, capture_output=True)
-    public_key = (round_dir / "id_ed25519.pub").read_text().strip()
-
     receipt = VMRoundReceipt(
         base_image=str(base_image),
         authorization_id=authorization.get("authorization_id", ""),
-        ssh_port=port,
+        ssh_port=ssh_port or 0,
         started_at=started.isoformat(),
     )
-    pid: int | None = None
+    twin = VMTwin(base_image, round_dir, ssh_port=ssh_port)
+    receipt.ssh_port = twin.port
+    payload_file = round_dir / "payload.sh"
+    payload_file.write_text(payload)
+    receipt.payload_sha256 = _sha256(payload_file)
     try:
-        overlay = prepare_overlay(base_image, round_dir)
-        seed_iso = make_seed_iso(round_dir, public_key)
-        payload_file = round_dir / "payload.sh"
-        payload_file.write_text(payload)
-        receipt.payload_sha256 = _sha256(payload_file)
-        pid = boot_vm(overlay, seed_iso, port, round_dir, boot_timeout, round_dir / "id_ed25519")
+        twin.prepare(boot_timeout=boot_timeout)
         receipt.booted = True
-        receipt.exit_code, receipt.stdout, receipt.stderr = run_payload(port, round_dir / "id_ed25519", payload)
+        receipt.exit_code, receipt.stdout, receipt.stderr = twin.run(payload)
     finally:
-        if pid is not None:
-            teardown(pid, keep_round_dir, round_dir)
+        twin.teardown(keep_round_dir)
 
     receipt.finished_at = datetime.now(timezone.utc).isoformat()
     receipt.validate()

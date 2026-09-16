@@ -34,6 +34,7 @@ from rich.table import Table
 
 from common.security_authorization import validate_target_authorization
 from .qemu_vm import vm_round as run_vm_round
+from .vm_confine_round import run_confine_round
 from .config import (
     BATTLES_DIR,
     REPORTS_DIR,
@@ -441,6 +442,18 @@ def vm_round_cmd(
     )
     console.print_json(data=receipt.__dict__)
     raise typer.Exit(0 if receipt.booted and receipt.exit_code == 0 else 1)
+
+
+@app.command("vm-confine-round")
+def vm_confine_round_cmd(
+    image: Path = typer.Option(..., help="Base qcow2 image (Ubuntu cloud image)"),
+    out_dir: Path = typer.Option(Path("/tmp/battle-confine-round"), help="Output directory"),
+    boot_timeout: int = typer.Option(420, help="Seconds to wait for SSH (first boot installs packages)"),
+):
+    """Round 1: cage the dummy agent in a VM, red channel-menu under the profile, judge scores."""
+    receipt = run_confine_round(image, out_dir, boot_timeout=boot_timeout)
+    console.print_json(data=receipt.__dict__)
+    raise typer.Exit(0 if receipt.verdict == "BLUE_WINS" else 1)
 
 
 @app.command("battle-fixture")
