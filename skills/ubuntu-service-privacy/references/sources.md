@@ -31,6 +31,25 @@ iosquery extensions, DirtyClone, systemd user-manager socket).
   and CVE-2026-23404 (recursive profile-removal stack exhaustion, enforcement
   DoS): https://windowsforum.com/threads/cve-2026-23404 . Both tracked under
   the owner-pinned `kernel-min-version`/`apparmor-min-version` gates.
+- CVE-2026-46333 (Qualys, 2026-05-20: ptrace-path local-root LPE with
+  credential disclosure — reading other processes' credentials via the ptrace
+  path):
+  https://blog.qualys.com/.../cve-2026-46333-local-root-privilege-escalation-and-credential-disclosure-in-the-linux-kernel-ptrace-path .
+  Response: `audit deny ptrace,` plus adding CVE-2026-46333 to the named CVE
+  set the owner-pinned `kernel-min-version` gate must cover.
+- CVE-2026-53362 "ipv6_frag_escape" (Red Hat RHSB-2026-009: IPv6
+  fragmentation container/host escape; unit-local IPAddressDeny BPF is a
+  packet filter, not a fragmentation-aware firewall): explicit non-claim row
+  in the threat model; mitigation (IPv6 disablement or host-side stateful
+  firewall) is an owner decision.
+- CVE-2026-31431 (kernel LPE, Berkeley ISO advisory): same class as the
+  pinned LPEs; added to the named CVE set under the `kernel-min-version`
+  gate.
+- Tamper-evasion convergence on "kill the telemetry path itself" (audit
+  backlog/rate-limit saturation to mask real events;
+  securityboulevard.com EDR inhibitors 2026/03, stingrai EDR evasion 2026):
+  watchdog already fails closed on missing telemetry; rate-limit anomaly
+  alerting named as an owner decision in the threat model.
 - CVE-2026-47128 class (sandbox escape via AF_UNIX to the systemd user-manager
   socket with `systemd-run --user`, not D-Bus):
   https://advisories.gitlab.com/cargo/nono-cli/CVE-2026-47128 and

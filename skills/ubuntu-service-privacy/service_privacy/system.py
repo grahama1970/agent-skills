@@ -222,10 +222,14 @@ def kernel_patched() -> None:
     corrupts the in-memory image of an allowlisted, hash-pinned executable
     without touching the on-disk bytes, defeating BOTH the executable
     allowlist and the code-hash drift check — only a patched running kernel
-    mitigates it. Gate the running kernel image package against an
+    mitigates it. The pin must ALSO cover CVE-2026-46333 (ptrace-path local
+    root LPE with a credential-disclosure primitive: reading other processes'
+    credentials through the ptrace path; the profile's `audit deny ptrace,`
+    mediates the ptrace entry point but only a patched kernel closes the
+    underlying credential read) and CVE-2026-31431 (kernel LPE, same class as
+    the pinned LPEs). Gate the running kernel image package against an
     owner-pinned minimum set from the Ubuntu USN covering all of these;
-    absent/older
-    pin fails closed. (The related 64 KiB kernel-memory leak via crafted
+    absent/older pin fails closed. (The related 64 KiB kernel-memory leak via crafted
     file-matching expressions remains outside any pin: it is a disclosure
     of kernel memory, not a confinement bypass.)"""
     try:

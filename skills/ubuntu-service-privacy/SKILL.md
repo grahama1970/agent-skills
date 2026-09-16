@@ -100,7 +100,10 @@ Default-deny AppArmor; only enumerated code paths execute, with inherited
 confinement. Zero capabilities, `NoNewPrivileges=yes`, no writable executable
 roots, private temporary directories/devices/IPC, protected home/storage roots,
 and no general process-memory or administrative-socket access. Explicit deny
-rules are audited. Ordinary kernel log rate limiting can still lose events.
+rules are audited. Ordinary kernel log rate limiting can still lose events — a
+deny flood can saturate journal/auditd rate limits or the audit backlog and
+mask a later real DENIED event; see the threat model's telemetry-saturation
+row (rate-limit anomaly alerting is an owner decision).
 
 `OFFLINE` is the default. `PUBLIC_EGRESS_LOCAL_DENY` allows external TCP/UDP,
 uses owner-selected public DNS, and denies private/local/host addresses through
