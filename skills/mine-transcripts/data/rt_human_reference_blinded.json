@@ -1,0 +1,86 @@
+[
+ {
+  "trace_key": "trace:pi:4279d9cddefab4bcfc04f844",
+  "repo": "/home/graham/workspace/experiments/tau",
+  "task_kind": "artifact_producing",
+  "outcome_candidates": true,
+  "turn_digest": []
+ },
+ {
+  "trace_key": "trace:pi:caf5fe01b3e12574e2fd054f",
+  "repo": "/home/graham/workspace/experiments/tau",
+  "task_kind": "artifact_producing",
+  "outcome_candidates": true,
+  "turn_digest": []
+ },
+ {
+  "trace_key": "trace:pi:d92383d70a1da079a39b2f7c",
+  "repo": "/home/graham/workspace/experiments/tau",
+  "task_kind": "artifact_producing",
+  "outcome_candidates": true,
+  "turn_digest": []
+ },
+ {
+  "trace_key": "trace:pi:870956c6ad535b73b35bfd1c",
+  "repo": "/home/graham/workspace/experiments/tau",
+  "task_kind": "artifact_producing",
+  "outcome_candidates": true,
+  "turn_digest": []
+ },
+ {
+  "trace_key": "trace:pi:095b7b9eb4540530e1e34cc0",
+  "repo": "/home/graham/workspace/experiments/tau",
+  "task_kind": "artifact_producing",
+  "outcome_candidates": true,
+  "turn_digest": []
+ },
+ {
+  "trace_key": "trace:pi:8847c7342f71f92955b0cb4b",
+  "repo": "/home/graham/workspace/experiments/tau",
+  "task_kind": "artifact_producing",
+  "outcome_candidates": true,
+  "turn_digest": []
+ },
+ {
+  "trace_key": "trace:pi:7f4a10a81aef97c885681045",
+  "repo": "/home/graham/workspace/experiments/sparta",
+  "task_kind": "artifact_producing",
+  "outcome_candidates": false,
+  "turn_digest": []
+ },
+ {
+  "trace_key": "trace:pi:fe4ecf6783d5774f58afb6c2",
+  "repo": "/home/graham/workspace/experiments/tau",
+  "task_kind": "artifact_producing",
+  "outcome_candidates": false,
+  "turn_digest": []
+ },
+ {
+  "trace_key": "trace:pi:e4bfe0d96f2b6656ffa92586",
+  "repo": "/home/graham/workspace/experiments/agent-skills",
+  "task_kind": "artifact_producing",
+  "outcome_candidates": false,
+  "turn_digest": []
+ },
+ {
+  "trace_key": "trace:pi:0ddb0ffbd3f6da176865236e",
+  "repo": "/home/graham/workspace/experiments/tau",
+  "task_kind": "analysis_only",
+  "outcome_candidates": false,
+  "turn_digest": []
+ },
+ {
+  "trace_key": "trace:pi:7722a74a13c819df2cfb6294",
+  "repo": "/home/graham/workspace/experiments/tau",
+  "task_kind": "analysis_only",
+  "outcome_candidates": false,
+  "turn_digest": []
+ },
+ {
+  "trace_key": "trace:pi:cf7660978c890dd964e2ebea",
+  "repo": "/home/graham/workspace/experiments/tau",
+  "task_kind": "analysis_only",
+  "outcome_candidates": false,
+  "turn_digest": []
+ }
+]

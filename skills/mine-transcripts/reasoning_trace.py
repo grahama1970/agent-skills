@@ -221,10 +221,14 @@ def parse_pi_session(session_file: Path) -> ReasoningTrace | None:
                     if name in WRITE_TOOLS:
                         saw_write = True
                         written_paths |= _paths_from_args(name, args)
-                    if name in READ_TOOLS and not saw_write:
-                        read_before_first_write = True
-                        read_paths |= _paths_from_args(name, args)
-                    elif name in READ_TOOLS:
+                    is_read = name in READ_TOOLS or (
+                        name == "bash"
+                        and isinstance(args.get("command"), str)
+                        and args["command"].lstrip().startswith(("cat ", "head ", "grep ", "rg ", "sed -n", "less ", "tail "))
+                    )
+                    if is_read:
+                        if not saw_write:
+                            read_before_first_write = True
                         read_paths |= _paths_from_args(name, args)
             text = _extract_text(content)
             if text:

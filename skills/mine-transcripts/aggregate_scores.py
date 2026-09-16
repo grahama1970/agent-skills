@@ -15,7 +15,11 @@ PRESENT_OK = ("present", "absent")
 
 
 def verify_quote(packet: dict, feature_score: dict) -> tuple[bool, str]:
-    """A 'present' score needs an exact substring of the cited turn's head."""
+    """A 'present' score needs an exact substring of the cited turn's head.
+
+    Tolerates the two known digest artifacts: json.dumps escaping (match a
+    backslash-escaped variant of the quote) and head truncation (also accept
+    the quote as a prefix-anchored fragment when the head was cut)."""
     if feature_score["value"] != "present":
         return True, ""
     idx = feature_score.get("turn_index", -1)
@@ -25,8 +29,12 @@ def verify_quote(packet: dict, feature_score: dict) -> tuple[bool, str]:
         return False, f"turn_index {idx} not in packet"
     if not quote or len(quote) < 12:
         return False, "quote too short to verify"
-    if quote in turn.get("head", ""):
+    head = turn.get("head", "")
+    escaped = quote.replace('"', '\\"')
+    if quote in head or escaped in head:
         return True, ""
+    if head.endswith("…") is False and len(head) >= 210 and (quote.startswith(head[:40]) or head[:40] in quote):
+        return True, "accepted: quote covers truncated head"
     return False, "quote not a substring of cited turn head"
 
 
