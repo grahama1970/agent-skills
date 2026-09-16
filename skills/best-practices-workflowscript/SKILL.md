@@ -25,6 +25,11 @@ composes:
   - interview
   - create-architecture
   - agentic-evals
+complies:
+  - best-practices-skills
+taxonomy:
+  - validation
+  - composition
 disciplines:
   - agentic-orchestration
   - developer-tooling
