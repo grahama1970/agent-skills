@@ -126,12 +126,21 @@ def test_probe_cannot_lie(plan):
 def test_watchdog_artifacts_fail_closed_on_unload(policy):
     from service_privacy.policy import destinations
     files = rendered(policy, [])
-    assert set(files) >= {'watchdog.service', 'watchdog.timer'}
+    assert set(files) >= {'watchdog.service', 'watchdog.timer', 'watchdog-check.sh'}
     text = files['watchdog.service'].decode()
-    assert f'grep -qx "{policy.profile_name} (enforce)"' in text
-    assert f'systemctl stop -- {policy.unit}' in text
+    assert 'ExecStart=/bin/sh /etc/ubuntu-service-privacy/' + policy.profile_name + '/watchdog-check.sh' in text
+    check = files['watchdog-check.sh'].decode()
+    assert f'grep -qx "$name (enforce)"' in check
+    # Same-name profile replacement is caught by content-hash comparison
+    # against the apply-time captured reference, not just the name readback.
+    assert 'sha256sum' in check and 'loaded-profile-sha256.txt' in check
+    # Effective systemd directives are re-checked between verify ticks.
+    assert 'systemctl show --no-pager -p AppArmorProfile' in check or '-p AppArmorProfile' in check
+    assert f"grep -Fxq 'AppArmorProfile={policy.profile_name}'" in check
+    assert 'fail_closed' in check
     assert 'OnUnitActiveSec=5min' in files['watchdog.timer'].decode()
     assert str(destinations(policy)['watchdog.service']).startswith('/etc/systemd/system/osp-')
+    str(destinations(policy)['watchdog-check.sh']).startswith('/etc/ubuntu-service-privacy/osp-')
 
 
 def test_apparmor_patch_gate_fails_closed(monkeypatch):
@@ -212,3 +221,96 @@ def test_temporary_filesystem_protectsystem_conflict_rejected(monkeypatch):
     monkeypatch.setattr(system, 'checked', fake_checked)
     with pytest.raises(Blocked, match='UNSUPPORTED_UNIT_HANDOFF_TEMPORARYFILESYSTEM'):
         system.inspect_unit('osp-fixture-test.service')
+
+
+def test_host_addresses_skip_temporary_and_link_local(monkeypatch):
+    import service_privacy.system as system
+
+    class A4:
+        family = system.socket.AF_INET
+        def __init__(self, address): self.address = address
+
+    class A6:
+        family = system.socket.AF_INET6
+        def __init__(self, address): self.address = address
+
+    permanent = '2001:db8:1:2:3:4:5:6'
+    temporary = '2001:db8:1:2:a:b:c:d'
+    monkeypatch.setattr(system.psutil, 'net_if_addrs', lambda: {
+        'lo': [A4('127.0.0.1')],
+        'eth0': [A6('fe80::1'), A6(permanent), A6(temporary), A4('192.168.1.10')],
+    })
+    import ipaddress
+    monkeypatch.setattr('pathlib.Path.read_text',
+                        lambda self, **kw:
+                        format(int(ipaddress.IPv6Address(temporary)), '032x') + ' 03 40 00 21 eth0\n'
+                        if str(self) == '/proc/net/if_inet6' else '0\n')
+    result = system.host_addresses()
+    assert result == ['127.0.0.1', '192.168.1.10', permanent]
+    assert temporary not in result and 'fe80::1' not in result
+
+
+def test_temporary_ipv6_parsing():
+    import service_privacy.system as system
+
+    import ipaddress
+    hex_addr = format(int(ipaddress.IPv6Address('2001:db8::abcd')), '032x')
+    text = (hex_addr + ' 03 40 00 80 eth0\n' +      # permanent
+            hex_addr + ' 03 40 00 21 eth0\n' +      # temporary (0x01 flag)
+            hex_addr + ' 03 40 00 01 eth0\n')       # temporary
+    assert system.temporary_ipv6_addresses(text) == {'2001:db8::abcd'}
+
+
+def test_kernel_gate_requires_reboot_when_installed_newer(monkeypatch):
+    import service_privacy.system as system
+
+    monkeypatch.setattr(system, 'read_private', lambda *a, **k: b'6.8.0-55.0ubuntu1\n')
+    monkeypatch.setattr(system.os, 'uname', lambda: type('U', (), {'release': '6.8.0-55-generic'})())
+
+    def kchecked(argv, timeout=30):
+        from service_privacy.core import Blocked as _B
+        from service_privacy.models import CommandResult
+        if argv[1:2] == ['-W'] and 'linux-image*' in argv:
+            return CommandResult(argv=argv, returncode=0,
+                                 stdout='linux-image-6.8.0-55-generic 6.8.0-55.0ubuntu1\n'
+                                        'linux-image-unsigned-6.8.0-60-generic 6.8.0-60.0ubuntu1\n', stderr='')
+        if argv[1:4] == ['--compare-versions', '6.8.0-60.0ubuntu1', 'le']:
+            raise _B('COMMAND_FAILED_DPKG')
+        return CommandResult(argv=argv, returncode=0,
+                             stdout='6.8.0-55.0ubuntu1' if argv[1:2] == ['-W'] else '', stderr='')
+
+    monkeypatch.setattr(system, 'checked', kchecked)
+    monkeypatch.setattr(system, 'tool', lambda name: '/usr/bin/' + name)
+    with pytest.raises(Blocked, match='REBOOT_REQUIRED_RUNNING_KERNEL_OLDER_THAN_INSTALLED'):
+        system.kernel_patched()
+
+
+def test_profile_denies_io_uring_and_snap_confine(policy):
+    text = apparmor(policy)
+    assert 'audit deny io_uring,' in text
+    assert 'audit deny "/usr/lib/snapd/snap-confine" rwklmx,' in text
+
+
+def test_loaded_profile_block_detects_same_name_replacement():
+    import service_privacy.system as system
+
+    original = 'osp-x (enforce)\n  deny x,\n\nother (enforce)\n  deny y,\n'
+    replaced = 'osp-x (enforce)\n  allow everything,\n\nother (enforce)\n  deny y,\n'
+    monkey_target = {'text': original}
+    import pathlib
+
+    real_read = pathlib.Path.read_text
+
+    def fake_read(self, *a, **kw):
+        if str(self) == '/sys/kernel/security/apparmor/profiles':
+            return monkey_target['text']
+        return real_read(self, *a, **kw)
+
+    pathlib.Path.read_text = fake_read
+    try:
+        assert system.loaded_profile_block('osp-x') == 'osp-x (enforce)\n  deny x,'
+        monkey_target['text'] = replaced
+        assert system.loaded_profile_block('osp-x') != 'osp-x (enforce)\n  deny x,'
+        assert system.loaded_profile_block('missing') is None
+    finally:
+        pathlib.Path.read_text = real_read

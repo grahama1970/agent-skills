@@ -20,9 +20,9 @@ from .core import (Blocked, STATE, canonical, checked, host_binding, load, now, 
                    replace_private, root_required, secure_dir, sha, tool, write_new)
 from .models import Plan, ProbeReceipt, Registry, Verification
 from .planning import revalidate_host, syntax_check, verify_plan_files
-from .policy import destinations, rendered
+from .policy import destinations, loaded_profile_hash_path, rendered
 from .system import (apparmor_ready, cgroup_pids, digest_executable, host_addresses, inspect_unit,
-                     loaded_profile, outsiders, process_proof, service)
+                     loaded_profile, loaded_profile_block, outsiders, process_proof, service)
 
 HOLD = (b'# Explicit owner-held OFF. Visible in systemctl cat/status; not a health spoof.\n'
         b'# / always exists, so this condition prevents future starts, including at boot.\n'
@@ -117,6 +117,27 @@ def probe_is_current(plan: Plan, receipt: ProbeReceipt) -> None:
         raise Blocked('PROBE_DOES_NOT_AUTHORIZE_THIS_PLAN')
 
 
+def capture_loaded_profile_hash(profile: str) -> str:
+    """Hash of the loaded-profile readback stanza, captured right after the
+    kernel load. The watchdog compares later readbacks against it, so a
+    same-name profile replacement (the CrackArmor readback window) is detected
+    even though the profile NAME still reads back as enforcing."""
+    block = loaded_profile_block(profile)
+    if block is None:
+        raise Blocked('INSTALLED_PROFILE_NOT_ENFORCING')
+    # Mirror the watchdog's awk paragraph output: record text + newline.
+    return sha((block + '\n').encode())
+
+
+def loaded_profile_matches(policy) -> bool:
+    try:
+        block = loaded_profile_block(policy.profile_name)
+        expected = read_private(loaded_profile_hash_path(policy), True).decode().strip()
+        return block is not None and expected == sha((block + '\n').encode())
+    except (Blocked, OSError, ValueError):
+        return False
+
+
 def verify_record(record: Registry) -> Verification:
     plan = record.plan
     failures = []
@@ -125,6 +146,8 @@ def verify_record(record: Registry) -> Verification:
         apparmor_ready()
         if not loaded_profile(plan.policy.profile_name):
             failures.append('PROFILE_NOT_ENFORCING')
+        if not loaded_profile_matches(plan.policy):
+            failures.append('LOADED_PROFILE_CONTENT_DRIFT')
         if record.phase not in ['APPLIED', 'FILES_INSTALLED']:
             failures.append('REGISTRY_NOT_APPLIED')
         actual_unit = inspect_unit(plan.policy.unit)
@@ -223,8 +246,12 @@ def apply_plan(path: Path, approval: str, probe_path: Path) -> Verification:
             for name, content in files.items():
                 write_new(paths[name], content)
             checked([tool('apparmor_parser'), '-a', '-T', '-K', str(paths['apparmor.profile'])])
-            if not loaded_profile(plan.policy.profile_name):
-                raise Blocked('INSTALLED_PROFILE_NOT_ENFORCING')
+            profile_hash = capture_loaded_profile_hash(plan.policy.profile_name)
+            hash_target = loaded_profile_hash_path(plan.policy)
+            trusted_parent(hash_target.parent)
+            if hash_target.exists() or hash_target.is_symlink():
+                raise Blocked('REFUSE_OVERWRITE_EXISTING_POLICY')
+            write_new(hash_target, (profile_hash + '\n').encode())
             record.phase = 'FILES_INSTALLED'; record.changed_at = now()
             save_registry(record_path, record)
             hold_off(plan); reload_systemd()
@@ -302,6 +329,11 @@ def rollback(profile: str) -> Registry:
         for target in paths.values():
             if target.exists():
                 target.unlink()
+        hash_target = loaded_profile_hash_path(plan.policy)
+        if hash_target.is_symlink():
+            raise Blocked('ROLLBACK_REFUSES_CHANGED_POLICY_FILE')
+        if hash_target.exists():
+            hash_target.unlink()
         reload_systemd()
         record.phase = 'ROLLED_BACK_STOPPED'; record.changed_at = now(); record.failure_code = None
         save_registry(path, record)

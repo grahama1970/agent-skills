@@ -61,6 +61,9 @@ def fake_deployment(plan,tmp_path,monkeypatch):
     monkeypatch.setattr(deploy,'hold_path',lambda plan:state/'hold.conf')
     actions=[];kernel={'loaded':False}
     monkeypatch.setattr(deploy,'loaded_profile',lambda profile:kernel['loaded'])
+    monkeypatch.setattr(deploy,'capture_loaded_profile_hash',lambda profile:'a'*64)
+    monkeypatch.setattr(deploy,'loaded_profile_matches',lambda policy:True)
+    monkeypatch.setattr(deploy,'loaded_profile_hash_path',lambda policy:state/'loaded-profile-sha256.txt')
     def checked(argv,*args):
         actions.append(('command',tuple(argv)))
         if '-a' in argv:kernel['loaded']=True

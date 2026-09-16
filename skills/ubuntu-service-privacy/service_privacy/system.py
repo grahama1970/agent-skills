@@ -6,6 +6,7 @@ paths and content hashes bind plans to the host actually inspected.
 from __future__ import annotations
 
 import hashlib
+import ipaddress
 import os
 import re
 import socket
@@ -118,12 +119,44 @@ def inspect_unit(unit: str) -> UnitSnapshot:
                         main_pid=int(values.get('MainPID', '0')), properties=safe)
 
 
+IFA_F_TEMPORARY = 0x01
+
+
+def temporary_ipv6_addresses(text: str) -> set[str]:
+    """Parse /proc/net/if_inet6 and return RFC 4941 privacy-extension
+    temporary addresses (they rotate without owner action)."""
+    result = set()
+    for line in text.splitlines():
+        parts = line.split()
+        if len(parts) >= 6 and int(parts[4], 16) & IFA_F_TEMPORARY:
+            result.add(socket.inet_ntop(socket.AF_INET6, bytes.fromhex(parts[0])))
+    return result
+
+
 def host_addresses() -> list[str]:
+    try:
+        temporary = temporary_ipv6_addresses(Path('/proc/net/if_inet6').read_text())
+    except (OSError, ValueError):
+        temporary = set()
     values = set()
     for addresses in psutil.net_if_addrs().values():
         for addr in addresses:
             if addr.family in (socket.AF_INET, socket.AF_INET6):
-                values.add(addr.address.split('%', 1)[0])
+                value = addr.address.split('%', 1)[0]
+                # Link-local ranges stay denied via LOCAL_NETWORKS. Temporary
+                # privacy-extension IPv6 addresses rotate daily and previously
+                # tripped HOST_ADDRESSES_CHANGED_REPLAN_REQUIRED / DRIFT, which
+                # stopped healthy services on innocent host behavior.
+                # ponytail: temp addresses are excluded from the pinned deny
+                # list too; deny the interface /64 if that hairpin matters.
+                if value in temporary:
+                    continue
+                try:
+                    if ipaddress.ip_address(value).is_link_local:
+                        continue
+                except ValueError:
+                    continue
+                values.add(value)
     if not values:
         raise Blocked('HOST_ADDRESS_INVENTORY_EMPTY')
     return sorted(values)
@@ -204,6 +237,20 @@ def kernel_patched() -> None:
     image = 'linux-image-' + os.uname().release
     version = checked([tool('dpkg-query'), '-W', '-f=${Version}', image]).stdout.strip()
     checked([tool('dpkg'), '--compare-versions', version, 'ge', minimum])
+    # dpkg reports the INSTALLED package for the running release: after a
+    # security upgrade the package is updated while the still-running kernel
+    # predates the fix (post-upgrade pre-reboot false negative). Fail closed
+    # whenever any installed generic kernel image is newer than the running one.
+    listing = checked([tool('dpkg-query'), '-W', '-f=${binary:Package} ${Version}\n',
+                       'linux-image*']).stdout
+    for line in listing.splitlines():
+        name, _, candidate = line.strip().partition(' ')
+        if not name or name == image or not re.fullmatch(r'linux-image(-unsigned)?-\d[^ ]*-generic', name):
+            continue
+        try:
+            checked([tool('dpkg'), '--compare-versions', candidate, 'le', version])
+        except Blocked:
+            raise Blocked('REBOOT_REQUIRED_RUNNING_KERNEL_OLDER_THAN_INSTALLED') from None
 
 
 def unprivileged_profile_canary() -> None:
@@ -273,6 +320,21 @@ def _soft(check) -> bool:
 
 def loaded_profile(name: str) -> bool:
     return name + ' (enforce)' in Path('/sys/kernel/security/apparmor/profiles').read_text().splitlines()
+
+
+def loaded_profile_block(name: str) -> str | None:
+    """Full readback stanza for a profile, or None if absent. A same-name
+    replacement (the CrackArmor window the name-only check misses) changes the
+    stanza content, so content hashing detects it."""
+    try:
+        text = Path('/sys/kernel/security/apparmor/profiles').read_text()
+    except OSError:
+        return None
+    for block in text.split('\n\n'):
+        lines = block.splitlines()
+        if lines and lines[0] == name + ' (enforce)':
+            return block
+    return None
 
 
 def service(action: str, unit: str) -> None:

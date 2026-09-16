@@ -26,6 +26,9 @@ def apparmor(policy: Policy, probe_executable: str | None = None,
         '  audit deny mount,',
         '  audit deny umount,',
         '  audit deny dbus,',
+        # io_uring: seccomp denying io_uring_setup does not cover a ring fd
+        # acquired by other means; AppArmor 4 mediates io_uring directly.
+        '  audit deny io_uring,',
         '  signal (receive) peer=unconfined,',
         f'  signal (send, receive) peer={name},',
         '  /dev/null rw,', '  /dev/zero r,', '  /dev/random r,', '  /dev/urandom r,',
@@ -45,7 +48,7 @@ def apparmor(policy: Policy, probe_executable: str | None = None,
     for root in policy.protected_roots:
         lines += [f'  audit deny "{root}" rwklmx,', f'  audit deny "{root}/**" rwklmx,']
     for path in ['/run/docker.sock', '/run/containerd/**', '/run/dbus/**', '/run/systemd/private',
-                 '/run/user/**',
+                 '/run/user/**', '/usr/lib/snapd/snap-confine',
                  '/dev/mem', '/dev/kmem', '/dev/kmsg', '/sys/kernel/security/**']:
         lines.append(f'  audit deny "{path}" rwklmx,')
     for path in policy.read_files:
@@ -123,27 +126,55 @@ def dropin(policy: Policy, host_addresses: list[str]) -> str:
     return '\n'.join(lines) + '\n'
 
 
+def watchdog_check_script(policy: Policy) -> str:
+    """Fail-closed check script. Beyond the profile-name readback (which a
+    same-name replacement survives for a polling interval, the CrackArmor
+    window), it compares the LOADED PROFILE CONTENT hash against the apply-time
+    captured reference and re-checks effective systemd directives each tick."""
+    props = dict(properties(policy, []))
+    watch = ['AppArmorProfile', 'NoNewPrivileges', 'ProtectSystem', 'ProtectHome',
+             'PrivateTmp', 'PrivateDevices', 'PrivateIPC', 'PrivateNetwork']
+    lines = [
+        '#!/bin/sh',
+        '# Owner-generated confinement watchdog check; any mismatch stops the service.',
+        f"name='{policy.profile_name}'",
+        f"unit='{policy.unit}'",
+        'profiles=/sys/kernel/security/apparmor/profiles',
+        f"expected=/etc/ubuntu-service-privacy/{policy.profile_name}/loaded-profile-sha256.txt",
+        'fail_closed() { systemctl stop -- "$unit"; exit 0; }',
+        '[ -s "$expected" ] || fail_closed',
+        'grep -qx "$name (enforce)" "$profiles" || fail_closed',
+        "got=$(awk -v RS= -v n=\"$name\" -v m='(enforce)' '$1 == n && $2 == m' \"$profiles\" | sha256sum | cut -c1-64)",
+        '[ "$got" = "$(cat "$expected")" ] || fail_closed',
+        'out=$(systemctl show --no-pager ' + ' '.join('-p ' + key for key in watch) + ' -- \"$unit\") || fail_closed',
+    ]
+    for key in watch:
+        lines.append(f"printf '%s\\n' \"$out\" | grep -Fxq '{key}={props[key]}' || fail_closed")
+    return '\n'.join(lines) + '\n'
+
+
 def watchdog(policy: Policy) -> dict[str, bytes]:
-    """Detect profile-unload windows (package upgrades/restarts can leave the
-    service unconfined with no alert) and fail closed by stopping it. Owner
-    enables it: systemctl enable --now <name>-watchdog.timer"""
-    # ponytail: 5-minute poll; a dpkg/apt hook gives tighter coverage if needed.
+    """Detect profile-unload/replacement windows and effective-directive drift
+    between verify ticks, and fail closed by stopping it. Owner enables it:
+    systemctl enable --now <name>-watchdog.timer"""
+    check_path = f'/etc/ubuntu-service-privacy/{policy.profile_name}/watchdog-check.sh'
     service = (
-        '# Owner-controlled confinement watchdog; fail closed on profile unload.\n'
+        '# Owner-controlled confinement watchdog; fail closed on profile unload or drift.\n'
         '[Unit]\n'
         f'Description=Confinement watchdog for {policy.unit}\n'
-        'ConditionPathExists=/sys/kernel/security/apparmor/profiles\n\n'
+        'ConditionPathExists=/sys/kernel/security/apparmor/profiles\n'
+        f'ConditionPathExists={check_path}\n\n'
         '[Service]\n'
         'Type=oneshot\n'
-        f"ExecStart=/bin/sh -ec 'grep -qx \"{policy.profile_name} (enforce)\" "
-        f'/sys/kernel/security/apparmor/profiles || systemctl stop -- {policy.unit}\'\n'
+        f'ExecStart=/bin/sh {check_path}\n'
     )
     timer = (
         f'[Unit]\nDescription=Periodic confinement watchdog for {policy.unit}\n\n'
         '[Timer]\nOnBootSec=2min\nOnUnitActiveSec=5min\nAccuracySec=30s\nPersistent=yes\n\n'
         '[Install]\nWantedBy=timers.target\n'
     )
-    return {'watchdog.service': service.encode(), 'watchdog.timer': timer.encode()}
+    return {'watchdog.service': service.encode(), 'watchdog.timer': timer.encode(),
+            'watchdog-check.sh': watchdog_check_script(policy).encode()}
 
 
 def rendered(policy: Policy, host_addresses: list[str]) -> dict[str, bytes]:
@@ -171,5 +202,10 @@ def destinations(policy: Policy) -> dict[str, Path]:
     if policy.network_mode == 'PUBLIC_EGRESS_LOCAL_DENY':
         result['resolv.conf'] = Path('/etc/ubuntu-service-privacy') / policy.profile_name / 'resolv.conf'
     result.update({'watchdog.service': Path('/etc/systemd/system') / (policy.profile_name + '-watchdog.service'),
-                   'watchdog.timer': Path('/etc/systemd/system') / (policy.profile_name + '-watchdog.timer')})
+                   'watchdog.timer': Path('/etc/systemd/system') / (policy.profile_name + '-watchdog.timer'),
+                   'watchdog-check.sh': Path('/etc/ubuntu-service-privacy') / policy.profile_name / 'watchdog-check.sh'})
     return result
+
+
+def loaded_profile_hash_path(policy: Policy) -> Path:
+    return Path('/etc/ubuntu-service-privacy') / policy.profile_name / 'loaded-profile-sha256.txt'
