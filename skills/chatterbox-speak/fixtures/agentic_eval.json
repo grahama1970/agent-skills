@@ -389,6 +389,32 @@
         "with the service endpoint pinned to a closed port, an unknown tag fails with exit 1 naming the tag and NO connection error: the gate fires before any POST",
         "paired control (valid text, same closed port) fails with a connection error instead, proving the override routes and a POST would otherwise have been attempted"
       ]
+    },
+    {
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "speak.render.live"
+      ],
+      "name": "core-import-contract",
+      "type": "positive",
+      "readback": true,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/chatterbox-speak/fixtures && uv run --project .. python ../scripts/test_core_contract.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_CORE_IMPORT_CONTRACT"
+        ]
+      },
+      "expected_notes": [
+        "the importable speak_core renders through the REAL service",
+        "receipt carries plan_sha256, tag policy fields, backend, live=true",
+        "gate refuses unsupported tags before any POST (in-process check)"
+      ]
     }
   ],
   "claims": {

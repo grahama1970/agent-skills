@@ -30,14 +30,15 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from pronounce import normalize_pronunciation, load_lexicon  # noqa: E402
 from pauses import resolve_pause_macros, load_macros  # noqa: E402
+import speak_core as core  # noqa: E402
 
 app = typer.Typer(add_completion=False)
 
-BASE_URL = os.environ.get("CHATTERBOX_SPEAK_BASE_URL", "http://127.0.0.1:8018")
-OUT_DIR = Path("/mnt/storage12tb/skills/chatterbox-speak/outputs")
+BASE_URL = core.BASE_URL
+OUT_DIR = core.OUT_DIR
 # Container /out is host chatterbox/logs (see docker inspect chatterbox-fork-agent-server)
-CONTAINER_OUT = "/out"
-HOST_OUT = Path.home() / "workspace/experiments/chatterbox/logs"
+CONTAINER_OUT = core.CONTAINER_OUT
+HOST_OUT = core.HOST_OUT
 
 def _analyzer_path() -> Path:
     """Resolve the analyze-chatterbox-emotions runner.
@@ -60,57 +61,20 @@ ANALYZER = _analyzer_path()
 LEXICON_PATH = Path(__file__).resolve().parents[1] / "fixtures/pronunciation_lexicon.json"
 PAUSE_MACROS_PATH = Path(__file__).resolve().parents[1] / "fixtures/pause_macros.json"
 
-# Turbo-safe singular event tag vocabulary (SKILL.md "Tag vocabulary gotcha").
-# Plural forms ([laughs] [chuckles] [sighs]) are ElevenLabs-v3-only and are NOT
-# renderable by the backends this skill routes to; an unknown or plural tag sent
-# to the service is synthesized AS LITERAL SPOKEN TEXT. Fail closed before the POST.
-_KNOWN_EVENT_TAGS = frozenset(
-    t.lower() for t in (
-        "[clear throat]", "[sigh]", "[shush]", "[cough]", "[groan]",
-        "[sniff]", "[gasp]", "[chuckle]", "[laugh]", "[happy]",
-        "[surprised]", "[angry]", "[sarcastic]",
-    )
-)
-_TAG_RE = __import__("re").compile(r"\[[^\]\n]{1,40}\]")
-# Exact supported pause-token shapes: numeric `[pause:750ms]` (the pause
-# compiler's output shape). Named `[pause:weight]` macros are only renderable
-# via the --planned-pauses compiler, which resolves them BEFORE any POST; raw
-# in other modes they would be spoken literally and must fail closed.
-_PAUSE_NUMERIC_RE = __import__("re").compile(r"\[pause:\d+ms\]", __import__("re").IGNORECASE)
-_PAUSE_NAMED_RE = __import__("re").compile(r"\[pause:[a-z_]+\]", __import__("re").IGNORECASE)
+# Backend-aware fail-closed tag gate: ONE definition, in speak_core; the CLI
+# imports it back (_UNSUPPORTED_TAGS / _KNOWN_EVENT_TAGS above).
 
 
-def _unsupported_tags(text: str, *, allow_event_tags: bool, allow_named_pauses: bool) -> list[str]:
-    """Bracket tags in `text` the EFFECTIVE backend cannot render as tags.
-
-    - allow_event_tags: False when the explicit --intensity route sends the
-      request to the base-affect backend, which speaks even known event tags
-      as literal words; then the whole event vocabulary is unsupported.
-    - allow_named_pauses: True only when the planned-pause path will resolve
-      `[pause:<name>]` macros before rendering.
-    - Only the exact numeric pause shape passes otherwise; `[pause nonsense]`
-      or `[pauseevil]` fail closed like unknown tags.
-    """
-    out = []
-    for tag in _TAG_RE.findall(text or ""):
-        low = tag.lower()
-        if allow_event_tags and low in _KNOWN_EVENT_TAGS:
-            continue
-        if _PAUSE_NUMERIC_RE.fullmatch(low):
-            continue
-        if allow_named_pauses and _PAUSE_NAMED_RE.fullmatch(low):
-            continue
-        if tag not in out:
-            out.append(tag)
-    return out
-
-
-VOICES = {
-    "embry": "/data/embry_ref.wav",
-}
-INTENSITY = {"low": 0.3, "medium": 0.6, "high": 0.9}
-SESSIONS = OUT_DIR / "sessions"
 MEMORY_URL = "http://127.0.0.1:8601"
+
+
+# Turbo-safe singular event tag vocabulary and the backend-aware fail-closed
+# gate live in speak_core (ONE definition); the CLI imports them back.
+_UNSUPPORTED_TAGS = core.unsupported_tags
+_KNOWN_EVENT_TAGS = core._KNOWN_EVENT_TAGS
+VOICES = core.VOICES
+INTENSITY = core.INTENSITY
+SESSIONS = OUT_DIR / "sessions"
 MOOD_BLEND = 0.5  # ponytail: bounded arc delta — mood moves halfway toward each request, clamped 0-1
 
 
@@ -168,13 +132,8 @@ def _recall_context(query: str, speaker: str | None) -> dict:
         return {"found": False, "error": f"memory recall unavailable: {exc}", "tags": tags}
 
 
-class SpeakRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    text: str
-    ref_audio: str
-    tone: str | None = None
-    label: str = "chatterbox-speak"
-    voice_delivery: dict | None = None
+# SpeakRequest / BatchReceipt / ServiceReceipt moved to speak_core (the core
+# owns the request and typed service-response seams).
 
 
 class RenderChunk(BaseModel):
@@ -192,25 +151,7 @@ class RenderPlan(BaseModel):
     render_chunks: list[RenderChunk] = Field(min_length=1)
 
 
-class BatchReceipt(BaseModel):
-    # Projection of the owning service contract; original bytes remain in the receipt.
-    model_config = ConfigDict(extra="allow", strict=True)
-    ok: Literal[True]
-    live: Literal[True]
-    mocked: Literal[False]
-    finished_response_audio: str
-
-
-class ServiceReceipt(BaseModel):
-    """Minimal typed view of the service response; extra fields kept via model_extra."""
-
-    model_config = ConfigDict(extra="allow")
-    ok: bool
-    live: bool
-    mocked: bool
-    audio: str
-    duration_seconds: float
-    tone: str | None = None
+# BatchReceipt / ServiceReceipt: see speak_core.
 
 
 def _fail(msg: str) -> None:
@@ -500,6 +441,7 @@ def speak(
     # even known event tags as literal words, so on that route the whole
     # event vocabulary is unsupported. Runs before any POST; explicit
     # opt-out only, and the opt-out is always receipt-recorded.
+    # The gate itself is the ONE definition in speak_core.
     gate_texts = [text]
     if caller_plan is not None:
         gate_texts.append(caller_plan.get("answer_text") or "")
@@ -509,7 +451,7 @@ def speak(
     allow_named_pauses = planned_pauses
     unknown_found: list[str] = []
     for _gt in gate_texts:
-        for _t in _unsupported_tags(_gt, allow_event_tags=allow_event_tags,
+        for _t in _UNSUPPORTED_TAGS(_gt, allow_event_tags=allow_event_tags,
                                     allow_named_pauses=allow_named_pauses):
             if _t not in unknown_found:
                 unknown_found.append(_t)
@@ -551,22 +493,14 @@ def speak(
     if pace is not None:
         delivery = {**(delivery or {}), "pace": pace}
 
-    try:
-        req = SpeakRequest(text=text, ref_audio=ref, tone=tone, voice_delivery=delivery,
-                           label=f"chatterbox-speak-{uuid4().hex}")
-    except ValidationError as exc:
-        _fail(exc.json())
-
-    payload = req.model_dump(exclude_none=True)
-    endpoint = "synthesize"
-    plan = None
+    turn_id = f"cli-{uuid4().hex}"
+    answer_text = None
+    pause_plan_chunks = None
+    compiled_answer_text = None
     if caller_plan is not None:
-        endpoint = "synthesize-batch"
-        payload = {"answer_text": caller_plan.get("answer_text") or text,
-                   "render_chunks": caller_plan["render_chunks"],
-                   "label": req.label, "ref_audio": ref, "crossfade_ms": 0,
-                   "use_blessed_qra_cache": False, "asr_verify": False,
-                   "voice_delivery": {"tone": tone or "neutral_warm", **(delivery or {})}}
+        answer_text = caller_plan.get("answer_text") or text
+        chunks = caller_plan["render_chunks"]
+        render_source = "caller_plan"
     elif planned_pauses:
         compiler = Path(__file__).resolve().parents[2] / "best-practices-chatterbox/run.sh"
         try:
@@ -577,46 +511,46 @@ def speak(
                                "--tone", tone or "neutral_warm"], capture_output=True, text=True, timeout=30)
         if proc.returncode:
             _fail(f"pause compiler failed: {proc.stderr}")
-        plan = RenderPlan.model_validate_json(proc.stdout)
-        endpoint = "synthesize-batch"
-        payload = {"answer_text": plan.answer_text,
-                   "render_chunks": [c.model_dump() for c in plan.render_chunks],
-                   "label": req.label, "ref_audio": ref, "crossfade_ms": 0,
-                   "use_blessed_qra_cache": False, "asr_verify": False,
-                   "voice_delivery": {"tone": tone or "neutral_warm", **(delivery or {})}}
-    if temperature is not None:
-        payload["temperature"] = temperature
+        compiled = RenderPlan.model_validate_json(proc.stdout)
+        answer_text = compiled.answer_text
+        compiled_answer_text = compiled.answer_text
+        chunks = [c.model_dump() for c in compiled.render_chunks]
+        pause_plan_chunks = chunks
+        render_source = "compiled"
+    else:
+        chunks = None
+        render_source = "single"
+
+    # Gate + payload + POST + typed validation + host-WAV copy: the core's
+    # single render seam. The gate re-fires here (defense in depth) and has
+    # already passed above, so behavior is unchanged.
     try:
-        resp = httpx.post(f"{BASE_URL}/{endpoint}", json=payload, timeout=300)
-        resp.raise_for_status()
-    except httpx.HTTPError as exc:
-        detail = getattr(getattr(exc, "response", None), "text", "")
-        _fail(f"chatterbox service call failed: {exc} {detail[:500]}")
-
-    try:
-        if endpoint == "synthesize-batch":
-            batch = BatchReceipt.model_validate(resp.json())
-            host_audio = HOST_OUT / Path(batch.finished_response_audio).relative_to(CONTAINER_OUT)
-            with wave.open(str(host_audio), "rb") as audio:
-                duration = audio.getnframes() / audio.getframerate()
-            receipt = ServiceReceipt(ok=True, live=True, mocked=False,
-                                     audio=batch.finished_response_audio, duration_seconds=duration, tone=tone)
-        else:
-            receipt = ServiceReceipt.model_validate(resp.json())
-    except ValidationError as exc:
-        _fail(f"service response failed typed validation: {exc.json()}")
-    if not (receipt.ok and receipt.live) or receipt.mocked:
-        _fail(f"render not live/ok: ok={receipt.ok} live={receipt.live} mocked={receipt.mocked}")
-
-    host_wav = HOST_OUT / Path(receipt.audio).relative_to(CONTAINER_OUT)
-    if not host_wav.is_file() or host_wav.stat().st_size == 0:
-        _fail(f"rendered WAV missing/empty on host: {host_wav}")
-
-    run_id = f"{int(time.time())}-{req.label}"
-    out = OUT_DIR / run_id
-    out.mkdir(parents=True, exist_ok=True)
-    wav_copy = out / host_wav.name
-    shutil.copy2(host_wav, wav_copy)
+        plan = core.build_plan(
+            turn_id=turn_id, text=text, answer_text=answer_text,
+            render_chunks=chunks, voice=voice, ref_audio=ref, tone=tone,
+            intensity=intensity, delivery=delivery, pace=pace,
+            temperature=temperature, allow_unknown_tags=allow_unknown_tags,
+            render_source=render_source,
+        )
+        result = core.render(plan)
+    except core.UnsupportedTagError as exc:
+        route_note = (
+            "the explicit --intensity route uses the base-affect backend, which "
+            "speaks inline event tags as literal spoken words; drop --intensity "
+            "to use the Turbo tag route"
+            if exc.base_affect_route else
+            "Plural forms ([laughs] [chuckles] [sighs]) are ElevenLabs-v3-only and "
+            "would be spoken as literal words on the routed backend; use the "
+            "singular form"
+        )
+        _fail(
+            f"unsupported bracket tag(s) {exc.tags} for the effective "
+            f"backend; supported event tags: {sorted(core._KNOWN_EVENT_TAGS)}. {route_note}. "
+            "Override only with --allow-unknown-tags."
+        )
+    except (core.UnknownVoiceError, ValueError, core.ServiceCallFailed,
+            core.ServiceResponseInvalid) as exc:
+        _fail(str(exc))
 
     if state:
         state.last_tone = tone
@@ -625,45 +559,23 @@ def speak(
 
     memory_context = _recall_context(context or text, (state.speaker if state else to)) if recall_context else None
 
-    full = resp.json()
-    record = {
-        "schema": "chatterbox_speak.receipt.v1",
-        "voice": voice,
-        "context": context,
-        "original_text": original_text,
-        "spoken_text": text,
-        "pronunciation_normalized": bool(normalize),
-        "requested_intensity": intensity,
-        "speaking_to": (state.speaker if state else to),
-        "session": state.model_dump() if state else None,
-        "memory_context": memory_context,
-        "voice_delivery": {"tone": tone or "neutral_warm", **(delivery or {})},
-        "request": payload,
-        "chatterbox_pause_plan": ([c.model_dump() for c in plan.render_chunks] if plan else (caller_plan or {}).get("render_chunks")),
-        "render_source": ("caller_plan" if caller_plan is not None else ("compiled" if plan else "single")),
-        "temperature": temperature,
-        "wav": str(wav_copy),
-        "duration_seconds": receipt.duration_seconds,
-        "mocked": receipt.mocked,
-        "live": receipt.live,
-        "tag_handling": full.get("tag_handling"),
-        "affect_effect": full.get("affect_effect"),
-        "backend": full.get("backend"),
-        "service_receipt": full,
-    }
-    receipt_path = out / "receipt.json"
-    # RECORD_TAG_OPT_OUT_ALWAYS: the policy switch itself is evidence, even
-    # when nothing was detected.
-    record["allow_unknown_tags"] = bool(allow_unknown_tags)
-    record["unknown_tags_detected"] = unknown_found
-    if allow_unknown_tags and unknown_found:
-        record["unknown_tag_policy"] = "explicit_operator_opt_out"
+    record = core.build_receipt(
+        plan, result, context=context, original_text=original_text,
+        spoken_text=text, pronunciation_normalized=bool(normalize),
+        requested_intensity=intensity,
+        speaking_to=(state.speaker if state else to),
+        session=(state.model_dump() if state else None),
+        memory_context=memory_context,
+        pause_plan_chunks=(pause_plan_chunks if pause_plan_chunks is not None
+                           else (caller_plan or {}).get("render_chunks")),
+    ).model_dump()
+    receipt_path = result.wav_copy.parent / "receipt.json"
     receipt_path.write_text(json.dumps(record, indent=2))
 
     if analyze:
         proc = subprocess.run(
-            [str(ANALYZER), "analyze", "--audio", str(wav_copy), "--json",
-             "--expected-text", plan.answer_text if plan else text,
+            [str(ANALYZER), "analyze", "--audio", str(result.wav_copy), "--json",
+             "--expected-text", compiled_answer_text if compiled_answer_text is not None else text,
              "--render-plan", str(receipt_path)],
             capture_output=True, text=True, check=False, timeout=120,
         )
@@ -676,16 +588,16 @@ def speak(
         receipt_path.write_text(json.dumps(record, indent=2))
 
     if play:
-        rc = subprocess.run(["pw-play", str(wav_copy)], check=False, timeout=300).returncode
-        record["playback"] = {"cmd": f"pw-play {wav_copy}", "returncode": rc}
+        rc = subprocess.run(["pw-play", str(result.wav_copy)], check=False, timeout=300).returncode
+        record["playback"] = {"cmd": f"pw-play {result.wav_copy}", "returncode": rc}
         receipt_path.write_text(json.dumps(record, indent=2))
         if rc:
             _fail(f"playback failed (rc={rc})")
 
-    print(json.dumps({"ok": True, "wav": str(wav_copy), "receipt": str(receipt_path),
-                      "duration_seconds": receipt.duration_seconds,
-                      "backend": (full.get("backend") or {}).get("id"),
-                      "tags_interpreted": (full.get("tag_handling") or {}).get("tags_interpreted"),
+    print(json.dumps({"ok": True, "wav": str(result.wav_copy), "receipt": str(receipt_path),
+                      "duration_seconds": result.receipt.duration_seconds,
+                      "backend": (result.service_json.get("backend") or {}).get("id"),
+                      "tags_interpreted": (result.service_json.get("tag_handling") or {}).get("tags_interpreted"),
                       "analysis": (record.get("analysis") or {}).get("affect")}, indent=2))
 
 
