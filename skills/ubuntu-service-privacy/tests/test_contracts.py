@@ -138,6 +138,10 @@ def test_watchdog_artifacts_fail_closed_on_unload(policy):
     assert 'systemctl show --no-pager -p AppArmorProfile' in check or '-p AppArmorProfile' in check
     assert f"grep -Fxq 'AppArmorProfile={policy.profile_name}'" in check
     assert 'fail_closed' in check
+    # Audited AppArmor DENIED events are consumed each tick, not just emitted;
+    # unreadable telemetry is itself fail-closed.
+    assert 'journalctl' in check and 'apparmor="DENIED"' in check and 'last-tick' in check
+    assert '[ -x /usr/bin/journalctl ] || fail_closed' in check
     assert 'OnUnitActiveSec=5min' in files['watchdog.timer'].decode()
     assert str(destinations(policy)['watchdog.service']).startswith('/etc/systemd/system/osp-')
     str(destinations(policy)['watchdog-check.sh']).startswith('/etc/ubuntu-service-privacy/osp-')

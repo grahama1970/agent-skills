@@ -95,6 +95,14 @@ def test_memfd_and_keyring_syscalls_denied(policy):
         assert syscall in line
 
 
+def test_side_channel_syscalls_denied(policy):
+    # AppArmor does not mediate perf_event_open; seccomp must close it.
+    unit = dropin(policy, ['192.0.2.10'])
+    line = next(l for l in unit.splitlines() if l.startswith('SystemCallFilter='))
+    for syscall in ('perf_event_open', 'process_vm_readv', 'userfaultfd'):
+        assert syscall in line
+
+
 def test_no_shell_true_or_dynamic_exec():
     for file in (ROOT/'service_privacy').glob('*.py'):
         tree=ast.parse(file.read_text())

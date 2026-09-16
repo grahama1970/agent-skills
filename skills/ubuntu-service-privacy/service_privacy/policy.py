@@ -87,7 +87,11 @@ def properties(policy: Policy, host_addresses: list[str]) -> list[tuple[str, str
         # memfd_create: path-based exec allowlists don't cover anonymous exec; keyring
         # syscalls: AppArmor does not mediate add_key/request_key/keyctl (KeyringMode=private
         # plus deny closes the cross-process stash channel).
-        ('SystemCallFilter', '~@mount @reboot @swap @raw-io @module @debug io_uring_setup memfd_create add_key request_key keyctl'),
+        # perf_event_open/process_vm_readv/userfaultfd: AppArmor does not mediate
+        # perf_event_open, so with kernel.perf_event_paranoid <= 2 unprivileged
+        # cross-process sampling/reads would leak data across the unit's file-policy
+        # boundary; userfaultfd enables same-class cross-process memory manipulation.
+        ('SystemCallFilter', '~@mount @reboot @swap @raw-io @module @debug io_uring_setup memfd_create add_key request_key keyctl perf_event_open process_vm_readv userfaultfd'),
         ('MemoryDenyWriteExecute', 'yes'),
         ('RestrictAddressFamilies', 'AF_UNIX AF_INET AF_INET6'),
         ('StandardInput', 'null'), ('StandardOutput', 'journal'), ('StandardError', 'journal'),
@@ -141,6 +145,7 @@ def watchdog_check_script(policy: Policy) -> str:
         f"unit='{policy.unit}'",
         'profiles=/sys/kernel/security/apparmor/profiles',
         f"expected=/etc/ubuntu-service-privacy/{policy.profile_name}/loaded-profile-sha256.txt",
+        f"lasttick=/etc/ubuntu-service-privacy/{policy.profile_name}/last-tick",
         'fail_closed() { systemctl stop -- "$unit"; exit 0; }',
         '[ -s "$expected" ] || fail_closed',
         'grep -qx "$name (enforce)" "$profiles" || fail_closed',
@@ -150,6 +155,18 @@ def watchdog_check_script(policy: Policy) -> str:
     ]
     for key in watch:
         lines.append(f"printf '%s\\n' \"$out\" | grep -Fxq '{key}={props[key]}' || fail_closed")
+    # Tamper/blindness signal: audited AppArmor DENIED events for this profile
+    # since the last tick are consumed, not merely emitted. A DENIED hit means
+    # the confined process attempted a denied action; unreadable telemetry
+    # (journalctl missing/failing) is itself treated as a failure so a missing
+    # signal becomes an alert instead of silence.
+    lines += [
+        '[ -x /usr/bin/journalctl ] || fail_closed',
+        'since=$(cat "$lasttick" 2>/dev/null || printf -- "-5min")',
+        'log=$(journalctl -kq --since="$since" 2>&1) || fail_closed',
+        'case "$log" in *\'apparmor="DENIED"\'*"$name"*) fail_closed ;; esac',
+        'date -u +%Y-%m-%dT%H:%M:%SZ > "$lasttick"',
+    ]
     return '\n'.join(lines) + '\n'
 
 
