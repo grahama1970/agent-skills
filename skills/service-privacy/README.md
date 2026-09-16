@@ -302,6 +302,22 @@ receipts, denied filenames or agent exports to public issue trackers or models.
 AppArmor audit logs may themselves contain sensitive paths; normal log rate
 limiting also prevents a claim of perfect denial accounting.
 
+Loopback egress is not narrowed. The systemd IP filter allows all of
+`127.0.0.1/8` and `::1/128` so the agent's own components and the browser's
+device-trust check keep working, but systemd IP filtering is address-based with
+no port or direction control. A caged agent can therefore reach any other
+service listening on loopback, not only answer the browser. Narrowing this needs
+a port-scoped firewall that this tool deliberately does not install.
+
+The synthetic probe's network-denial check is corroboration, not the primary
+proof of egress enforcement. It connects to a denied address; when that address
+has no route on the host (for example a `fd00::/8` target on a machine without
+IPv6), the connect fails at routing before the filter is consulted, so it proves
+unreachability rather than enforcement. The enforcement proof is the structural
+readback of the unit's effective `IPAddressDeny` in verify, compared as
+normalized networks; treat the probe's per-family network rows as supporting
+signal only.
+
 ## Integration and evidence
 
 `integrations/ops-workstation.patch` adds `./run.sh privacy ...` delegation before
