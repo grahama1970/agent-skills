@@ -31,8 +31,8 @@ static bool network_denied(int family, const char *port) {
     if(fd<0)return errno==EACCES || errno==EPERM || errno==EAFNOSUPPORT;
     struct timeval timeout={.tv_sec=2,.tv_usec=0}; setsockopt(fd,SOL_SOCKET,SO_SNDTIMEO,&timeout,sizeof(timeout));
     int rc;
-    if(family==AF_INET){struct sockaddr_in a={.sin_family=AF_INET,.sin_port=htons(atoi(port))};inet_pton(AF_INET,"127.0.0.1",&a.sin_addr);rc=connect(fd,(void*)&a,sizeof(a));}
-    else {struct sockaddr_in6 a={.sin6_family=AF_INET6,.sin6_port=htons(atoi(port))};inet_pton(AF_INET6,"::1",&a.sin6_addr);rc=connect(fd,(void*)&a,sizeof(a));}
+    if(family==AF_INET){struct sockaddr_in a={.sin_family=AF_INET,.sin_port=htons(atoi(port))};inet_pton(AF_INET,"10.255.255.1",&a.sin_addr);rc=connect(fd,(void*)&a,sizeof(a));}
+    else {struct sockaddr_in6 a={.sin6_family=AF_INET6,.sin6_port=htons(atoi(port))};inet_pton(AF_INET6,"fd00::1",&a.sin6_addr);rc=connect(fd,(void*)&a,sizeof(a));}
     int e=errno;close(fd);
     return rc<0 && (e==EPERM || e==EACCES || e==ENETUNREACH || e==EHOSTUNREACH || e==ECONNREFUSED || e==EINPROGRESS);
 }
