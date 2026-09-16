@@ -313,10 +313,17 @@ The synthetic probe's network-denial check is corroboration, not the primary
 proof of egress enforcement. It connects to a denied address; when that address
 has no route on the host (for example a `fd00::/8` target on a machine without
 IPv6), the connect fails at routing before the filter is consulted, so it proves
-unreachability rather than enforcement. The enforcement proof is the structural
-readback of the unit's effective `IPAddressDeny` in verify, compared as
-normalized networks; treat the probe's per-family network rows as supporting
-signal only.
+unreachability rather than enforcement. The structural readback of the unit's
+effective `IPAddressDeny` in verify (compared as normalized networks) proves only
+configuration agreement — the manager reports the intended deny list. It does NOT
+prove the kernel filter executed. Neither the readback nor the current dynamic
+probe establishes egress enforcement. Proving enforcement requires kernel
+attachment inspection (`bpftool cgroup show <path> effective`, then inspecting
+the program and rule maps) or an A–B–A behavioral test against a reachable,
+owner-controlled witness that isolates the IP filter from the network namespace
+— and for egress specifically, a one-way UDP datagram to that witness, since a
+failed TCP handshake does not prove nothing left the host. That test is not yet
+implemented; egress confinement is therefore NOT ESTABLISHED, only configured.
 
 ## Integration and evidence
 
