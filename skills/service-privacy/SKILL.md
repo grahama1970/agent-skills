@@ -1,5 +1,5 @@
 ---
-name: ubuntu-service-privacy
+name: service-privacy
 description: >
   Apply transparent owner-controlled AppArmor and systemd confinement to a
   personally owned Ubuntu service. Use when asked to restrict Kolide access,

@@ -23,7 +23,7 @@ from loguru import logger
 
 from .qemu_vm import VMTwin, CLOUD_USER
 
-SKILL_SRC = Path(__file__).resolve().parents[3] / "ubuntu-service-privacy"
+SKILL_SRC = Path(__file__).resolve().parents[3] / "service-privacy"
 ENCODINGS = ("plain", "base64", "hex")
 
 
