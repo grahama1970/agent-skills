@@ -44,9 +44,29 @@ import httpx
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 BASE_URL = os.environ.get("CHATTERBOX_SPEAK_BASE_URL", "http://127.0.0.1:8018")
+def _host_wav(container_path: str) -> Path:
+    """Resolve a container-side WAV path to the host across deployment layouts.
+
+    Tries the configured mapping first, then the compose artifacts layout, so
+    the CLI works against both the legacy /out mount and the embry-voice
+    compose deployment without env plumbing at every call site.
+    """
+    candidates = [(HOST_OUT, CONTAINER_OUT),
+                  (Path("/mnt/storage12tb/embry-voice/artifacts/chatterbox"),
+                   "/var/lib/embry-artifacts/chatterbox")]
+    for host_root, container_root in candidates:
+        try:
+            cand = host_root / Path(container_path).relative_to(container_root)
+        except ValueError:
+            continue
+        if cand.is_file():
+            return cand
+    return HOST_OUT / Path(container_path).relative_to(CONTAINER_OUT)
+
+
 OUT_DIR = Path("/mnt/storage12tb/skills/chatterbox-speak/outputs")
 # Container /out is host chatterbox/logs (see docker inspect chatterbox-fork-agent-server)
-CONTAINER_OUT = "/out"
+CONTAINER_OUT = os.environ.get("CHATTERBOX_SPEAK_CONTAINER_OUT", "/out")
 HOST_OUT = Path(os.environ.get(
     "CHATTERBOX_SPEAK_HOST_OUT", str(Path.home() / "workspace/experiments/chatterbox/logs")))
 
@@ -417,7 +437,7 @@ def render(plan: VoiceDeliveryPlan, *, base_url: str | None = None) -> RenderRes
     try:
         if endpoint == "synthesize-batch":
             batch = BatchReceipt.model_validate(resp.json())
-            host_audio = HOST_OUT / Path(batch.finished_response_audio).relative_to(CONTAINER_OUT)
+            host_audio = _host_wav(batch.finished_response_audio)
             with wave.open(str(host_audio), "rb") as audio:
                 duration = audio.getnframes() / audio.getframerate()
             receipt = ServiceReceipt(ok=batch.ok, live=batch.live, mocked=batch.mocked,
@@ -432,7 +452,7 @@ def render(plan: VoiceDeliveryPlan, *, base_url: str | None = None) -> RenderRes
         raise ServiceCallFailed(
             f"render not live/ok: ok={receipt.ok} live={receipt.live} mocked={receipt.mocked}")
 
-    host_wav = HOST_OUT / Path(receipt.audio).relative_to(CONTAINER_OUT)
+    host_wav = _host_wav(receipt.audio)
     if not host_wav.is_file() or host_wav.stat().st_size == 0:
         raise ServiceCallFailed(f"rendered WAV missing/empty on host: {host_wav}")
 

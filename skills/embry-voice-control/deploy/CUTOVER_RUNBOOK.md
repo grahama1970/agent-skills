@@ -105,3 +105,12 @@ curl -s http://127.0.0.1:8018/health | grep '"model_loaded":true'
 
 The old container comes back with its original mounts (repo ro, /out, ref wav,
 chatterbox-hf-cache) — identical to its pre-cutover state.
+
+## Cutover executed 2026-09-16 (addendum)
+
+Executed per this runbook. Three deviations found live and resolved:
+1. New deployment writes WAVs to /var/lib/embry-artifacts/chatterbox (named volume), not /out — speak_core now resolves host WAVs across both layouts (_host_wav fallback: configured mapping, then the compose artifacts bind), and CHATTERBOX_SPEAK_CONTAINER_OUT can pin it explicitly.
+2. Wake model file is hey_embry_v1.onnx, not compose's hey_embry.onnx — corrected via override env (ready:true, sha256 verified after fix).
+3. Ref-audio parity VERIFIED post-up (4d8e829f… both sides); voice-control /readiness reports digest_match:true (container core af6ac1bc…).
+
+The sanitized override lives at deploy/cutover-override.example.yaml (secret replaced by ${WHISPER_API_KEY}); the live override with the real key stays untracked at /tmp/cutover-override.yaml. Old container retired-renamed chatterbox-fork-agent-server-retired-20260916 (rollback: rename back + start_agent_server_docker.sh). Smoke results: CLI render ok; gate contract test 5/5; cancel route returns turn_cancel_receipt journal event; all three services healthy; GPU 16.8/24.5GiB.

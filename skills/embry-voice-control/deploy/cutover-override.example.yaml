@@ -1,0 +1,17 @@
+# Cutover override (untracked; closes runbook gaps 1+2 + host-visible artifacts)
+services:
+  voice-control:
+    volumes:
+      - embry-journal:/var/lib/embry-voice
+      - /mnt/storage12tb/embry-voice/artifacts:/var/lib/embry-artifacts:ro
+  chatterbox:
+    environment:
+      CHATTERBOX_ASR_OPENAI_BASE_URL: http://172.17.0.1:9000
+      WHISPER_API_KEY: ${WHISPER_API_KEY}
+      CHATTERBOX_REF_AUDIO_ROOTS: /data:/voices:/work
+    volumes:
+      - ${CHATTERBOX_REPO}:/work:ro
+      - /mnt/storage12tb/embry-voice/artifacts:/var/lib/embry-artifacts
+  realtime-stt:
+    environment:
+      EMBRY_OPENWAKEWORD_MODEL: /models/openwakeword/hey_embry_v1.onnx
