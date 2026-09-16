@@ -1,7 +1,8 @@
 # Primary sources reviewed
 
 Reviewed 2026-09-15. Product configuration on the user's host was not inspected.
-Last gap review: 2026-09-15 (CrackArmor, unload windows, unprivileged userns, osquery extensions).
+Last gap review: 2026-09-15 cycle 2 (CrackArmor, unload windows, unprivileged userns,
+iosquery extensions, DirtyClone, systemd user-manager socket).
 
 - Qualys TRU, CrackArmor (2026-03-12), nine AppArmor flaws incl. a confused-deputy
   in AppArmor policy management via pseudo-files; unprivileged profile
@@ -19,6 +20,23 @@ Last gap review: 2026-09-15 (CrackArmor, unload windows, unprivileged userns, os
   expand reachable kernel attack surface (8/40 to 27/40 operations);
   service-side RestrictNamespaces alone does not shrink the host surface:
   https://zylos.ai/research/2026-06-26-agent-subprocess-isolation-nested-sandboxing-runtime-sandboxing/
+- JFrog, Dissecting and Exploiting Linux LPE Variant DirtyClone
+  (CVE-2026-43503, 2026-06-25; also ubuntu.com/blog/apparmor-vulnerability-fixes-available):
+  kernel skbuff-path corruption of file-backed memory of already-running
+  binaries; defeats both the executable allowlist and the code-hash drift
+  check, so only the owner-pinned running-kernel minimum version gate
+  mitigates: https://research.jfrog.com/post/dissecting-and-exploiting-linux-lpe-variant-dirtyclone-cve-2026-43503/ .
+- CVE-2026-72456 (AppArmor exe file resources not released on path failure):
+  https://hol.org/guard/security/cves/CVE-2026-72456-apparmor-release-exe-file-resources-on-path ;
+  and CVE-2026-23404 (recursive profile-removal stack exhaustion, enforcement
+  DoS): https://windowsforum.com/threads/cve-2026-23404 . Both tracked under
+  the owner-pinned `kernel-min-version`/`apparmor-min-version` gates.
+- CVE-2026-47128 class (sandbox escape via AF_UNIX to the systemd user-manager
+  socket with `systemd-run --user`, not D-Bus):
+  https://advisories.gitlab.com/cargo/nono-cli/CVE-2026-47128 and
+  https://miggo.io/vulnerability-database/cve/CVE-2026-47128 . Response:
+  `ProtectHome=yes` plus explicit AppArmor `deny /run/user/**` and
+  peer-label-scoped unix rules.
 - osquery Thrift extensions API (extension/config plugins load arbitrary
   binaries): treated as code, hence mediated by the executable allowlist,
   root-owned config roots and label-scoped unix peers; documented in

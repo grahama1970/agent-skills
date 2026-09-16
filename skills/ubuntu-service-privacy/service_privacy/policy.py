@@ -45,6 +45,7 @@ def apparmor(policy: Policy, probe_executable: str | None = None,
     for root in policy.protected_roots:
         lines += [f'  audit deny "{root}" rwklmx,', f'  audit deny "{root}/**" rwklmx,']
     for path in ['/run/docker.sock', '/run/containerd/**', '/run/dbus/**', '/run/systemd/private',
+                 '/run/user/**',
                  '/dev/mem', '/dev/kmem', '/dev/kmsg', '/sys/kernel/security/**']:
         lines.append(f'  audit deny "{path}" rwklmx,')
     for path in policy.read_files:

@@ -181,8 +181,17 @@ def kernel_patched() -> None:
     fix moves the no_new_privs subset check before aa_change_profile()'s
     fn_label_build_in_scope() label build, a distinct bypass of the NNP
     guarantee this policy relies on (NoNewPrivileges=yes + inherited
-    confinement). Gate the running kernel image package against an
-    owner-pinned minimum set from the Ubuntu USN covering BOTH; absent/older
+    confinement). The pin must ALSO cover CVE-2026-72456 (AppArmor exe file
+    resources not released on path failure) and CVE-2026-23404 (recursive
+    profile-removal stack exhaustion, an enforcement DoS), and
+    CVE-2026-43503 ("DirtyClone", skbuff-path corruption of the file-backed
+    memory of already-running pinned binaries): a DirtyClone-class kernel LPE
+    corrupts the in-memory image of an allowlisted, hash-pinned executable
+    without touching the on-disk bytes, defeating BOTH the executable
+    allowlist and the code-hash drift check — only a patched running kernel
+    mitigates it. Gate the running kernel image package against an
+    owner-pinned minimum set from the Ubuntu USN covering all of these;
+    absent/older
     pin fails closed. (The related 64 KiB kernel-memory leak via crafted
     file-matching expressions remains outside any pin: it is a disclosure
     of kernel memory, not a confinement bypass.)"""
