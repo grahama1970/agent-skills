@@ -6,11 +6,12 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CMD="${1:-}"
 case "$CMD" in
   validate)
-    [[ -n "${2:-}" ]] || { echo "usage: run.sh validate <file.workflow.js>"; exit 2; }
-    exec bash "$HERE/scripts/validate-workflowscript.sh" "$2"
+    [[ -n "${2:-}" ]] || { echo "usage: run.sh validate <file.workflow.js> [--json-out <path>]"; exit 2; }
+    shift
+    exec bash "$HERE/scripts/validate-workflowscript.sh" "$@"
     ;;
   *)
-    echo "usage: run.sh validate <file.workflow.js>"
+    echo "usage: run.sh validate <file.workflow.js> [--json-out <path>]"
     exit 2
     ;;
 esac

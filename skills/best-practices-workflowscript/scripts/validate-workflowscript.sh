@@ -1,36 +1,71 @@
 #!/usr/bin/env bash
 # Anti-pattern linter for pi-subagents workflowScripts.
-# Usage: validate-workflowscript.sh <file.workflow.js>
+# Usage: validate-workflowscript.sh <file.workflow.js> [--json-out <path>]
 # exit 0 = clean; exit 1 = violations listed (patterns the runtime rejects or
 # that break portability/robustness per best-practices-workflowscript).
+# --json-out writes {file, verdict, violations:[{line,rule}], advisories:[...]}
+# so callers get a content oracle, not just exit codes.
 set -uo pipefail
-FILE="${1:-}"
-[[ -n "$FILE" && -f "$FILE" ]] || { echo "usage: $0 <file.workflow.js>"; exit 2; }
+FILE=""
+JSON_OUT=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --json-out) JSON_OUT="$2"; shift 2 ;;
+    *) FILE="$1"; shift ;;
+  esac
+done
+[[ -n "$FILE" && -f "$FILE" ]] || { echo "usage: $0 <file.workflow.js> [--json-out <path>]"; exit 2; }
+
+VIOLATIONS_FILE="$(mktemp /tmp/wfs-viol.XXXXXX)"
+ADVISORIES_FILE="$(mktemp /tmp/wfs-adv.XXXXXX)"
+trap 'rm -f "$VIOLATIONS_FILE" "$ADVISORIES_FILE"' EXIT
 
 fail=0
-check() { # pattern label
-  if grep -nE "$1" "$FILE" >/dev/null 2>&1; then
-    echo "VIOLATION [$2]:"; grep -nE "$1" "$FILE" | head -3; fail=1
-  fi
+check() { # pattern rule-id
+  local hits
+  hits="$(grep -nE "$1" "$FILE" 2>/dev/null)" || return 0
+  while IFS= read -r line; do
+    printf '%s\t%s\n' "${line%%:*}" "$2" >> "$VIOLATIONS_FILE"
+    echo "VIOLATION [$2]: $line"
+  done <<< "$hits"
+  fail=1
 }
 
-check 'async[[:space:]]+function' 'nested async function (not portable)'
-check '=>'          'arrow function (not portable)'
-check 'async[[:space:]]*\(' 'async arrow/paren helper'
-check 'require\(|from[[:space:]]+.fs.|node:fs|process\.' 'host globals / fs (scripts have none)'
-check 'git add -A|git add \.|git stash|git reset --hard|git checkout main ' 'banned git mutation in child task text'
-check 'workflowScript\s*:\s*['"'"'"]'   'nested workflowScript launch (children cannot)'
+check 'async[[:space:]]+function' 'nested_async_function'
+check '=>'          'arrow_function'
+check 'async[[:space:]]*\(' 'async_paren_helper'
+check 'require\(|from[[:space:]]+.fs.|node:fs|process\.' 'host_global_or_fs'
+check 'git add -A|git add \.|git stash|git reset --hard|git checkout main ' 'banned_git_mutation'
+check 'workflowScript\s*:\s*['"'"'"]'   'nested_workflowscript_launch'
 
-# advisories (do not fail, but surface)
 grep -nE 'while[[:space:]]*\(|for[[:space:]]*\(;;' "$FILE" >/dev/null 2>&1 \
-  && { echo "ADVISORY: unbounded while/for(;;) loop — confirm cap source (config gate child)"; }
-grep -q 'model-preflight' "$FILE" || grep -qE 'PREFLIGHT|preflight' "$FILE" \
-  || { echo "ADVISORY: no provider preflight reference — required if the workflow consumes models/web seats"; }
-grep -q 'origin/main' "$FILE" \
-  || { echo "ADVISORY: no origin/main comparison note — mutating children need the CRIT method note"; }
-
-if (( fail )); then
-  echo "RESULT: FAIL — fix violations, then run subagent({action:'validate',workflowScriptPath})"
-  exit 1
+  && { echo "ADVISORY: unbounded while/for(;;) loop — confirm cap source (config gate child)"; \
+       echo "unbounded_loop" >> "$ADVISORIES_FILE"; }
+grep -q 'model-preflight' "$FILE" || grep -qE 'PREFLIGHT|preflight' "$FILE" || true
+if ! grep -qE 'preflight' "$FILE"; then
+  echo "ADVISORY: no provider preflight reference — required if the workflow consumes models/web seats"
+  echo "no_preflight" >> "$ADVISORIES_FILE"
 fi
-echo "RESULT: CLEAN — now run subagent({action:'validate',workflowScriptPath:'$FILE'}) before launching"
+grep -q 'origin/main' "$FILE" || {
+  echo "ADVISORY: no origin/main comparison note — mutating children need the CRIT method note"
+  echo "no_origin_main_note" >> "$ADVISORIES_FILE"
+}
+
+VERDICT="CLEAN"
+(( fail )) && VERDICT="FAIL"
+echo "RESULT: $VERDICT"
+
+if [[ -n "$JSON_OUT" ]]; then
+  python3 - "$FILE" "$VERDICT" "$VIOLATIONS_FILE" "$ADVISORIES_FILE" "$JSON_OUT" <<'PY'
+import json, sys
+path, verdict, vfile, afile, out = sys.argv[1:6]
+violations=[]
+for line in open(vfile):
+    ln, rule = line.rstrip('\n').split('\t', 1)
+    violations.append({"line": int(ln), "rule": rule})
+advisories=[l.strip() for l in open(afile) if l.strip()]
+json.dump({"file": path, "verdict": verdict, "violations": violations,
+           "advisories": advisories}, open(out, 'w'), indent=1)
+PY
+fi
+exit $(( fail ? 1 : 0 ))

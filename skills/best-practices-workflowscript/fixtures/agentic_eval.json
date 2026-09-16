@@ -4,7 +4,7 @@
   "trials": 3,
   "proof_scope": "WorkflowScript authoring standard: anti-pattern lint, portable-syntax contract, and fail-closed validation posture for pi-subagents workflowScripts.",
   "claims": {
-    "proves": "The linter passes the real production dev-cycle workflowScript, rejects the non-portable anti-patterns the pi-subagents runtime rejects (nested async functions, arrow helpers, host globals) on a fault-injected sample, and the skill composes agentic-evals for its eval posture.",
+    "proves": "The linter passes the real production dev-cycle workflowScript with an empty machine-read violations list, and fail-closes with a JSON violations artifact naming the injected anti-patterns \u2014 verified by artifact-content readback (json_pointer equals), not exit codes or tee'd stdout.",
     "does_not_prove": "That any specific workflowScript is semantically correct for its goal, that provider preflight or review gates were exercised live, or that a diagram was human-reviewed."
   },
   "capability_claims": [
@@ -40,7 +40,7 @@
       "command": [
         "bash",
         "-lc",
-        "test -f /home/graham/.pi/agent/workflows/dev-cycle.workflow.js && /home/graham/workspace/experiments/agent-skills/skills/best-practices-workflowscript/run.sh validate /home/graham/.pi/agent/workflows/dev-cycle.workflow.js | tee lint-output.txt"
+        "/home/graham/workspace/experiments/agent-skills/skills/best-practices-workflowscript/run.sh validate /home/graham/.pi/agent/workflows/dev-cycle.workflow.js --json-out lint-result.json"
       ],
       "timeout_seconds": 60,
       "expected": {
@@ -50,8 +50,14 @@
         ],
         "artifacts": [
           {
-            "path": "lint-output.txt",
-            "min_bytes": 20
+            "path": "lint-result.json",
+            "json_pointer": "/verdict",
+            "equals": "CLEAN"
+          },
+          {
+            "path": "lint-result.json",
+            "json_pointer": "/violations",
+            "equals": []
           }
         ]
       }
@@ -68,7 +74,7 @@
       "command": [
         "bash",
         "-lc",
-        "BAD=$(mktemp /tmp/bp-wfs-bad.XXXXXX.workflow.js); printf '%s\\n' 'const g = async () => { return 1; };' 'async function helper(){ return runs.run(\"x\",{}); }' 'const fs = require(\"fs\");' > \"$BAD\"; /home/graham/workspace/experiments/agent-skills/skills/best-practices-workflowscript/run.sh validate \"$BAD\"; rc=$?; rm -f \"$BAD\"; exit $rc"
+        "BAD=$(mktemp /tmp/bp-wfs-bad.XXXXXX.workflow.js); printf '%s\\n' 'const g = async () => { return 1; };' 'async function helper(){ return runs.run(\"x\",{}); }' 'const fs = require(\"fs\");' > \"$BAD\"; /home/graham/workspace/experiments/agent-skills/skills/best-practices-workflowscript/run.sh validate \"$BAD\" --json-out bad-result.json ; rc=$?; rm -f \"$BAD\" ; exit $rc"
       ],
       "timeout_seconds": 60,
       "expected": {
@@ -76,6 +82,18 @@
         "stdout_contains": [
           "VIOLATION",
           "RESULT: FAIL"
+        ],
+        "artifacts": [
+          {
+            "path": "bad-result.json",
+            "json_pointer": "/verdict",
+            "equals": "FAIL"
+          },
+          {
+            "path": "bad-result.json",
+            "json_pointer": "/violations/0/rule",
+            "equals": "nested_async_function"
+          }
         ]
       }
     }
