@@ -21,8 +21,10 @@ Based on research into:
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Optional
 
@@ -51,6 +53,128 @@ except ImportError:
 
 app = typer.Typer(help="Red vs Blue Team Security Competition Orchestrator")
 console = Console()
+
+
+def _load_campaign_json(path: Path) -> dict:
+    text = path.read_text(encoding="utf-8")
+    start, end = text.find("{"), text.rfind("}")
+    if start < 0 or end < start:
+        raise ValueError(f"campaign JSON not found: {path}")
+    data = json.loads(text[start:end + 1])
+    if data.get("schema") != "battle.invariant_campaign_result.v1":
+        raise ValueError(f"not an invariant campaign result: {path}")
+    return data
+
+
+def _render_invariant_report_module():
+    script = Path(__file__).resolve().parents[2] / "scripts" / "render_invariant_campaign_report.py"
+    spec = importlib.util.spec_from_file_location("battle_render_invariant_campaign_report", script)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load invariant report renderer: {script}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@app.command("contract-variation-plan")
+def contract_variation_plan(
+    acceptance_bundle: Path = typer.Option(..., "--acceptance-bundle", exists=True, readable=True, help="acceptance_contract.bundle.v1 to expand into Battle research/test lanes."),
+    out: Path = typer.Option(..., "--out", help="battle.contract_variation_plan.v1 output path."),
+    execute_dogpile: bool = typer.Option(False, "--execute-dogpile", help="Run generated Dogpile lanes now. Default only writes the typed plan."),
+    dogpile_limit: int = typer.Option(0, "--dogpile-limit", help="Optional cap when --execute-dogpile is set. 0 means all lanes."),
+    dogpile_source: Optional[list[str]] = typer.Option(None, "--dogpile-source", help="Limit Dogpile provider lanes. Repeatable: brave-search, arxiv, github-search, youtube, brave-questions, feeds, wayback, context7."),
+    project_root: Optional[Path] = typer.Option(None, "--project-root", exists=True, file_okay=False, help="Project checkout used by the Phase 2 project-state step."),
+    battle_receipt: Optional[list[Path]] = typer.Option(None, "--battle-receipt", exists=True, readable=True, help="Current Battle receipt(s) used as Phase 2 learning input."),
+    ask_handler: Optional[list[str]] = typer.Option(None, "--ask-handler", help="Ask one-shot reviewer handler. Defaults to webgpt, webgemini, webkimi, webclaude."),
+) -> None:
+    """Plan Dogpile-backed variation-family expansion for any acceptance contract."""
+    from .contract_variation_plan import write_plan
+
+    plan = write_plan(
+        acceptance_bundle,
+        out,
+        execute_dogpile=execute_dogpile,
+        dogpile_limit=dogpile_limit,
+        dogpile_sources=dogpile_source,
+        project_root=project_root,
+        battle_receipts=battle_receipt,
+        ask_handlers=ask_handler,
+    )
+    typer.echo(json.dumps(plan, indent=2, sort_keys=True))
+    if plan["status"] != "READY":
+        raise typer.Exit(1)
+
+
+@app.command("invariant-report")
+def invariant_report(
+    campaign: list[Path] = typer.Option(..., "--campaign", exists=True, readable=True, help="Battle invariant campaign result/log; repeatable."),
+    adaptive_lineage: Optional[list[Path]] = typer.Option(None, "--adaptive-lineage", exists=True, readable=True, help="battle.invariant_adaptive_lineage.v1 receipt; repeatable."),
+    project_state: Path = typer.Option(..., "--project-state", exists=True, readable=True, help="Project-state JSON/Markdown artifact used as report context."),
+    target: str = typer.Option("target", "--target", help="Target name for the report."),
+    out_json: Path = typer.Option(..., "--out-json", help="create_report.report.v1 output path."),
+    out_md: Path = typer.Option(..., "--out-md", help="Markdown report output path."),
+    terminal_summary: bool = typer.Option(False, "--terminal-summary", help="Print the plain Battle report and case table to stderr; stdout remains JSON."),
+    terminal_table: bool = typer.Option(False, "--terminal-table", help="Alias for --terminal-summary; optimized for project-agent terminal review."),
+    terminal_cards: bool = typer.Option(False, "--terminal-cards", help="Print one long-form case card per separator block to stderr; stdout remains JSON."),
+) -> None:
+    """Render a Battle invariant report, with optional terminal table/cards on stderr."""
+    argv: list[str] = []
+    for path in campaign:
+        argv += ["--campaign", str(path)]
+    for path in adaptive_lineage or []:
+        argv += ["--adaptive-lineage", str(path)]
+    argv += [
+        "--project-state", str(project_state),
+        "--target", target,
+        "--out-json", str(out_json),
+        "--out-md", str(out_md),
+    ]
+    if terminal_summary:
+        argv.append("--terminal-summary")
+    if terminal_table:
+        argv.append("--terminal-table")
+    if terminal_cards:
+        argv.append("--terminal-cards")
+    exit_code = _render_invariant_report_module().main(argv)
+    if exit_code:
+        raise typer.Exit(exit_code)
+
+
+@app.command("invariant-lineage-receipt")
+def invariant_lineage_receipt(
+    red_campaign: Path = typer.Option(..., "--red-campaign", exists=True, readable=True, help="Failing campaign where Red found invariant violations."),
+    replay_campaign: Path = typer.Option(..., "--replay-campaign", exists=True, readable=True, help="Successful replay campaign after Blue fixes."),
+    out: Path = typer.Option(..., "--out", help="Receipt output path."),
+    target: str = typer.Option("target", "--target", help="Target being improved."),
+) -> None:
+    """Emit a machine-readable invariant adaptive-lineage improvement receipt."""
+    red = _load_campaign_json(red_campaign)
+    replay = _load_campaign_json(replay_campaign)
+    red_wins = [f for f in red.get("failures", []) if f.get("case")]
+    replay_failures = {f.get("case") for f in replay.get("failures", []) if f.get("case")}
+    fixed_cases = sorted({f["case"] for f in red_wins if f.get("case") not in replay_failures})
+    status = "PASS" if (not red.get("passed") and replay.get("passed") and fixed_cases) else "NOT_PROVEN"
+    receipt = {
+        "schema": "battle.invariant_adaptive_lineage.v1",
+        "status": status,
+        "created_at": datetime.now(UTC).isoformat(),
+        "target": target,
+        "red_campaign": str(red_campaign),
+        "replay_campaign": str(replay_campaign),
+        "red_wins": [{"case": f.get("case"), "violations": f.get("violations", [])} for f in red_wins],
+        "fixed_cases": fixed_cases,
+        "replay_passed": bool(replay.get("passed")),
+        "replay_cases": {"passed": replay.get("cases_passed"), "total": replay.get("cases_total")},
+        "proof_scope": {
+            "proves": ["Red found contract edge cases", "Blue patch removed those Red wins", "Battle Judge replay passed after the patch"],
+            "does_not_prove": ["all possible PII representations", "unbounded overnight search", "provider-generated exploit quality"],
+        },
+    }
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    typer.echo(json.dumps(receipt, indent=2, sort_keys=True))
+    if status != "PASS":
+        raise typer.Exit(1)
 
 
 def _write_ux_transport_artifacts(*, out: Path, battle_id: str) -> dict:
@@ -113,6 +237,24 @@ def battle(
         None,
         "--expected-manifest-sha256",
         help="Expected authorization manifest SHA-256.",
+    ),
+    invariant_judge: Optional[str] = typer.Option(
+        None,
+        "--invariant-judge",
+        help="Path to a pluggable invariant Judge module (judge(target_dir, params) "
+             "-> {passed, violations, evidence}). The Judge, not agent self-report, "
+             "decides the verdict.",
+    ),
+    judge_target: Optional[str] = typer.Option(
+        None,
+        "--judge-target",
+        help="Directory the invariant Judge inspects (e.g. released output). "
+             "Defaults to the battle target.",
+    ),
+    judge_params: Optional[str] = typer.Option(
+        "{}",
+        "--judge-params",
+        help="JSON params passed to the invariant Judge.",
     ),
 ):
     """
@@ -203,6 +345,9 @@ def battle(
         chaos=chaos,
         profile=profile,
         model=model,
+        invariant_judge=invariant_judge,
+        judge_target=judge_target,
+        judge_params=json.loads(judge_params or "{}"),
     )
     state = orchestrator.run(checkpoint_interval)
 
