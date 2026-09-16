@@ -29,6 +29,23 @@
   ],
   "cases": [
     {
+      "name": "live-doctor-entrypoint",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "../run.sh", "doctor"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\":\"PASS\""
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "service_privacy.policy_mechanisms"
+      ]
+    },
+    {
       "name": "policy-and-artifact-positive",
       "type": "positive",
       "command": [
@@ -77,7 +94,7 @@
         "bash",
         "../sanity.sh",
         "-k",
-        "injection or failed_apply or failed_stop or wrong_approval or tamper"
+        "test_frontdoor_rejects_mutation_without_flags or test_rejected_input_not_echoed or wrong_approval or tamper"
       ],
       "expected": {
         "exit_code": 0,
