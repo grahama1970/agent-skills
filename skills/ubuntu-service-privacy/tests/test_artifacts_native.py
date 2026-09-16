@@ -88,6 +88,13 @@ def test_real_probe_does_not_pass_unconfined(tmp_path):
     assert not data.all_pass()
 
 
+def test_memfd_and_keyring_syscalls_denied(policy):
+    unit = dropin(policy, ['192.0.2.10'])
+    line = next(l for l in unit.splitlines() if l.startswith('SystemCallFilter='))
+    for syscall in ('memfd_create', 'add_key', 'request_key', 'keyctl'):
+        assert syscall in line
+
+
 def test_no_shell_true_or_dynamic_exec():
     for file in (ROOT/'service_privacy').glob('*.py'):
         tree=ast.parse(file.read_text())

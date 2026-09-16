@@ -80,7 +80,10 @@ def properties(policy: Policy, host_addresses: list[str]) -> list[tuple[str, str
         ('RestrictNamespaces', 'yes'), ('RestrictSUIDSGID', 'yes'),
         ('LockPersonality', 'yes'), ('KeyringMode', 'private'),
         ('UMask', '0077'), ('LimitCORE', '0'), ('KillMode', 'control-group'), ('Delegate', 'no'),
-        ('SystemCallFilter', '~@mount @reboot @swap @raw-io @module @debug io_uring_setup'),
+        # memfd_create: path-based exec allowlists don't cover anonymous exec; keyring
+        # syscalls: AppArmor does not mediate add_key/request_key/keyctl (KeyringMode=private
+        # plus deny closes the cross-process stash channel).
+        ('SystemCallFilter', '~@mount @reboot @swap @raw-io @module @debug io_uring_setup memfd_create add_key request_key keyctl'),
         ('MemoryDenyWriteExecute', 'yes'),
         ('RestrictAddressFamilies', 'AF_UNIX AF_INET AF_INET6'),
         ('StandardInput', 'null'), ('StandardOutput', 'journal'), ('StandardError', 'journal'),
