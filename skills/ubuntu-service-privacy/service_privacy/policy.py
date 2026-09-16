@@ -122,7 +122,12 @@ def properties(policy: Policy, host_addresses: list[str]) -> list[tuple[str, str
         resolver = f'/etc/ubuntu-service-privacy/{policy.profile_name}/resolv.conf'
         items += [
             ('PrivateNetwork', 'no'), ('IPAccounting', 'yes'),
-            ('IPAddressAllow', ''), ('IPAddressDeny', ' '.join(sorted(set(denied)))),
+            # Loopback allow: Kolide Device Trust requires the browser to reach the
+            # agent's local /v1/cmd server (observed live 2026-09-16: probes to five
+            # random high ports all dropped). systemd allow-overrides-deny applies
+            # per-address, so private/VPN ranges stay denied. Residual (named in the
+            # threat model): the agent may also reach other local TCP listeners.
+            ('IPAddressAllow', '127.0.0.1/8 ::1/128'), ('IPAddressDeny', ' '.join(sorted(set(denied)))),
             ('BindReadOnlyPaths', f'{resolver}:/etc/resolv.conf'),
         ]
     return items
