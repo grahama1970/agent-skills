@@ -40,7 +40,7 @@ disciplines:
 
 # monitor-workstation
 
-Nightly workstation health monitor. Runs 13 probes to enforce storage rules, detect cache bloat, and verify drive health.
+Nightly workstation health monitor. Runs 14 probes to enforce storage rules, detect cache bloat, and verify drive health.
 
 ## Usage
 
@@ -78,6 +78,7 @@ Nightly workstation health monitor. Runs 13 probes to enforce storage rules, det
 | W11 | agent-cli-freshness | Installed agent CLI versions                    | Stale = WARN           |
 | W12 | skill-symlinks    | Copied skills, wrong/broken links, pre-symlink leftovers | Any match = WARN; scan errors = FAIL |
 | W13 | gpu-container-capability | GPU-attached containers actually have working CUDA inside | Any dead-CUDA container = FAIL; unprobeable (no python3/torch) = WARN |
+| W14 | mail-auth         | SPF + DMARC + DKIM DNS records for sending domains | DKIM missing under enforcing DMARC = FAIL; missing SPF/DMARC = WARN |
 
 ## One Canonical Skills Directory
 

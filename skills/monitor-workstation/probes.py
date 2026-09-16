@@ -743,6 +743,60 @@ def probe_gpu_container_capability(autofix: bool = False) -> ProbeResult:
                                 "errors": errors})
 
 
+_MAIL_AUTH_DOMAINS = [
+    # (domain, dkim_selector) — domains whose outbound mail must stay DMARC-aligned.
+    ("grahama.co", "google"),
+]
+
+
+def probe_mail_auth(autofix: bool = False) -> ProbeResult:
+    """W14: SPF + DMARC + DKIM records must exist for sending domains.
+
+    2026-09-15 incident: grahama.co published DMARC p=quarantine with SPF as
+    the only auth leg and no DKIM key. Every SPF-alignment break (forwarding,
+    relays) failed DMARC and recipients quarantined per the domain's own
+    policy (550 5.7.1). Invisible until a human read a bounce. This probe
+    fails when the DKIM leg disappears (DNS wipe, key rotation without
+    republish) and warns on missing SPF/DMARC.
+    """
+    def _dig_txt(name: str) -> str:
+        try:
+            r = subprocess.run(["dig", "+short", "TXT", name],
+                               capture_output=True, text=True, timeout=15)
+            return r.stdout.strip()
+        except (OSError, subprocess.TimeoutExpired):
+            return ""
+
+    failures, warnings = [], []
+    for domain, selector in _MAIL_AUTH_DOMAINS:
+        spf = _dig_txt(domain)
+        if "v=spf1" not in spf:
+            warnings.append(f"{domain}: no SPF record")
+        dmarc = _dig_txt(f"_dmarc.{domain}")
+        if "v=DMARC1" not in dmarc:
+            warnings.append(f"{domain}: no DMARC record")
+        dkim = _dig_txt(f"{selector}._domainkey.{domain}")
+        if "v=DKIM1" not in dkim:
+            enforcing = "p=quarantine" in dmarc or "p=reject" in dmarc
+            msg = f"{domain}: DKIM record {selector}._domainkey missing"
+            if enforcing:
+                failures.append(msg + " while DMARC enforces "
+                                + ("quarantine" if "p=quarantine" in dmarc else "reject")
+                                + " — outbound mail will bounce on forwarded paths")
+            else:
+                warnings.append(msg)
+    status = (ProbeStatus.FAIL if failures else
+              ProbeStatus.WARN if warnings else ProbeStatus.PASS)
+    return ProbeResult(
+        "W14", "mail-auth", status,
+        f"{len(failures)} mail-auth failure(s), {len(warnings)} warning(s) "
+        f"across {len(_MAIL_AUTH_DOMAINS)} domain(s)",
+        value=len(failures), auto_fixable=False,
+        details={"domains": [d for d, _ in _MAIL_AUTH_DOMAINS],
+                 "failures": failures, "warnings": warnings},
+    )
+
+
 ALL_PROBES = [
     ("W01", "nvme-usage", probe_nvme_usage),
     ("W02", "nvme-artifacts", probe_nvme_artifacts),
@@ -757,4 +811,5 @@ ALL_PROBES = [
     ("W11", "agent-cli-freshness", probe_agent_cli_freshness),
     ("W12", "skill-symlinks", probe_skill_symlinks),
     ("W13", "gpu-container-capability", probe_gpu_container_capability),
+    ("W14", "mail-auth", probe_mail_auth),
 ]
