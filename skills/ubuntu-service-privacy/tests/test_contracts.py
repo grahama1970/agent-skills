@@ -188,9 +188,12 @@ def test_kernel_patch_gate_fails_closed(monkeypatch):
 def test_unprivileged_profile_canary_requires_denial(monkeypatch):
     import service_privacy.system as system
     monkeypatch.setattr(system, 'tool', lambda name: '/usr/sbin/' + name)
+    # Effect-based canary (2026-09-16 rewrite): nobody-side write is fire-and-forget;
+    # the BLOCK trips on the ROOT-side readback finding the canary profile loaded.
     monkeypatch.setattr(system, 'command',
                         lambda argv, timeout=30: __import__('service_privacy.models', fromlist=['CommandResult']).CommandResult(
                             argv=argv, returncode=0, stdout='', stderr=''))
+    monkeypatch.setattr('pathlib.Path.read_text', lambda self: 'xcanary-probe (enforce)\n')
     with pytest.raises(Blocked, match='UNPRIVILEGED_PROFILE_MANAGEMENT_ALLOWED'):
         system.unprivileged_profile_canary()
 
