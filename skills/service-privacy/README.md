@@ -129,6 +129,45 @@ agent helpers in `executables`. This release rejects mutable executable roots
 extra namespace handoffs, systemd passed credentials/sockets, and commands with
 privilege-bypassing prefixes. Those cases require explicit engineering review.
 
+## Choose what is shared, and watch it
+
+Two concerns are kept separate: what the service is allowed to read, and whether
+it is alive and un-denied.
+
+The data-sharing controls edit the policy JSON and print the exact owner-gated
+deploy commands; they never widen access or apply anything on their own.
+
+```bash
+./run.sh firewall POLICY.json --action show       # what the service may read
+./run.sh firewall POLICY.json --preset PRESET      # apply a preset to the policy
+./run.sh configure POLICY.json                     # interactive preset picker
+./run.sh configure POLICY.json --preset PRESET --non-interactive
+```
+
+Presets remove only optional identity items; the code-gated `RUNTIME_READ_FILES`
+baseline the service needs to run is never touched by a preset:
+
+| Preset | Effect |
+|---|---|
+| `compliance-safe` (default) | Keep the posture reads the agent needs; deny the listed user and client-work roots. Removes nothing optional. |
+| `minimal-identity` | Also drop `/etc/machine-id` (stops stable cross-reinstall device tracking). |
+| `locked-down` | Drop machine-id plus other optional identity reads present in the policy. |
+
+Monitoring commands change no service state. `logs` is the crash-cause view;
+`health` pairs the local state with an optional browser-side screenshot of the
+agent's own compliance dashboard (nothing is collected or transmitted by this tool).
+
+```bash
+./run.sh logs --unit "$UNIT"                       # state, restarts, AppArmor denials
+./run.sh logs --unit "$UNIT" --follow             # tail the live service log
+./run.sh logs --unit "$UNIT" --denials            # kernel denial records (read first when it dies)
+./run.sh health --unit "$UNIT"                     # local summary + optional dashboard capture
+```
+
+These report state and edit policy; they do not, by themselves, prove the
+required device-trust workflow still functions. That still needs an actual
+verify and a real check-in.
+
 ## Create and review the policy
 
 ```bash
@@ -245,45 +284,6 @@ unconfined. A new approved apply can remove this exact owned hold after its new
 controls are installed. Explicit owner removal of the hold outside this tool
 would restore the original service's ability to start; that is NOT a privacy-
 protected resume. Review `systemctl cat "$UNIT"` to see the actual controls.
-
-## Choose what is shared, and watch it
-
-Two concerns are kept separate: what the service is allowed to read, and whether
-it is alive and un-denied.
-
-The data-sharing controls edit the policy JSON and print the exact owner-gated
-deploy commands; they never widen access or apply anything on their own.
-
-```bash
-./run.sh firewall POLICY.json --action show       # what the service may read
-./run.sh firewall POLICY.json --preset PRESET      # apply a preset to the policy
-./run.sh configure POLICY.json                     # interactive preset picker
-./run.sh configure POLICY.json --preset PRESET --non-interactive
-```
-
-Presets remove only optional identity items; the code-gated `RUNTIME_READ_FILES`
-baseline the service needs to run is never touched by a preset:
-
-| Preset | Effect |
-|---|---|
-| `compliance-safe` (default) | Keep the posture reads the agent needs; deny the listed user and client-work roots. Removes nothing optional. |
-| `minimal-identity` | Also drop `/etc/machine-id` (stops stable cross-reinstall device tracking). |
-| `locked-down` | Drop machine-id plus other optional identity reads present in the policy. |
-
-Monitoring commands change no service state. `logs` is the crash-cause view;
-`health` pairs the local state with an optional browser-side screenshot of the
-agent's own compliance dashboard (nothing is collected or transmitted by this tool).
-
-```bash
-./run.sh logs --unit "$UNIT"                       # state, restarts, AppArmor denials
-./run.sh logs --unit "$UNIT" --follow             # tail the live service log
-./run.sh logs --unit "$UNIT" --denials            # kernel denial records (read first when it dies)
-./run.sh health --unit "$UNIT"                     # local summary + optional dashboard capture
-```
-
-These report state and edit policy; they do not, by themselves, prove the
-required device-trust workflow still functions. That still needs an actual
-verify and a real check-in.
 
 ## Confidentiality limitations that matter
 
