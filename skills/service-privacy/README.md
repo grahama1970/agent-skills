@@ -7,6 +7,14 @@ to disguise the host's state or fake a successful security check.
 **Delivery status: local mechanisms tested; live confinement and actual Kolide
 compatibility NOT ESTABLISHED. This is not an ITAR isolation/compliance certificate.**
 
+## Start here
+
+The minimum path, in order: **inspect** the service, **install** the tool,
+**create** a policy, run the **synthetic probe**, do an **owner-approved apply**,
+then **verify**. Every stage below expands one of these steps; the privacy
+presets (`firewall`/`configure`) shape the policy, so choose them before you
+create it.
+
 ## Platform support
 
 Today this is **Ubuntu-only**: the enforcement is AppArmor (mandatory access
@@ -19,12 +27,14 @@ those backends.
 
 ## What is implemented
 
-Strict default-deny AppArmor generation; systemd privilege/mount/IPC isolation;
-owner-reviewed plans bound to the actual unit and executable hashes; a local
-synthetic probe with both allowed and denied controls; explicit apply; runtime
-readback including every observed thread; stop-on-drift; and rollback that parks
-the service OFF rather than starting it unrestricted. Native package/agent files
-are not modified or deleted. No global firewall rules are installed.
+I generate a strict default-deny AppArmor profile and a systemd sandbox
+(privilege, mount, and IPC isolation), bound to the actual unit and its
+executable hashes. Before anything is applied, a local synthetic probe exercises
+both allowed and denied controls, and every apply is owner-reviewed. After apply
+I read the runtime back — including every observed thread — and can stop on drift;
+rollback parks the service OFF rather than resuming it unrestricted. I never
+modify or delete the native package or agent files, and I install no global
+firewall rules.
 
 The default denies client storage under `/home`, `/root`, `/mnt`, `/media`,
 `/srv`, and `/run/user`; the allowlist limits other file access as well. Allowed
@@ -256,12 +266,13 @@ baseline the service needs to run is never touched by a preset:
 
 | Preset | Effect |
 |---|---|
-| `compliance-safe` (default) | Share what the agent needs to stay green; deny all user/client work. Removes nothing optional. |
+| `compliance-safe` (default) | Keep the posture reads the agent needs; deny the listed user and client-work roots. Removes nothing optional. |
 | `minimal-identity` | Also drop `/etc/machine-id` (stops stable cross-reinstall device tracking). |
 | `locked-down` | Drop machine-id plus other optional identity reads present in the policy. |
 
-Monitoring is read-only. `logs` is the crash-cause view; `health` pairs the
-local state with an optional browser-side capture of the agent's own dashboard.
+Monitoring commands change no service state. `logs` is the crash-cause view;
+`health` pairs the local state with an optional browser-side screenshot of the
+agent's own compliance dashboard (nothing is collected or transmitted by this tool).
 
 ```bash
 ./run.sh logs --unit "$UNIT"                       # state, restarts, AppArmor denials
