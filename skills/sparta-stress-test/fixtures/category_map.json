@@ -1,0 +1,16 @@
+{
+  "schema": "agentic_evals.category_map.v1",
+  "repo": "grahama1970/graph-memory-operator",
+  "map_version": "1",
+  "categories": {
+    "grounding": {
+      "category_id": "grounding",
+      "label": "eval-cat-grounding",
+      "defect": "real countermeasure (CM) and weakness (CWE) controls do not ground through /answer (can_answer False, 0 sources) though techniques do",
+      "expected": "every in-corpus control grounds; can_answer is a projection of block-level grounding, not control family",
+      "supports_claims": ["memory.answer.grounded"],
+      "seams": ["answer.claim_requirements"],
+      "depends_on": []
+    }
+  }
+}

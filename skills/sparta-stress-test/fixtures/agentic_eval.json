@@ -1,23 +1,51 @@
 {
-  "version": 2,
-  "skill": "sparta-stress-test",
-  "trials": 3,
-  "proof_scope": "fixture wiring smoke",
-  "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
-  },
-  "cases": [
-    {
-      "name": "sanity",
-      "type": "positive",
-      "command": [
-        "bash",
-        "../sanity.sh"
-      ],
-      "expected": {
-        "exit_code": 0
-      }
-    }
-  ]
+    "version": 2,
+    "skill": "sparta-stress-test",
+    "trials": 3,
+    "proof_scope": "fixture wiring smoke + live grounding regression guard for sparta#86 (CM/CWE controls)",
+    "claims": {
+        "proves": "the existing skill entrypoint exits with the expected status",
+        "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+    },
+    "cases": [
+        {
+            "name": "sanity",
+            "type": "positive",
+            "command": [
+                "bash",
+                "../sanity.sh"
+            ],
+            "expected": {
+                "exit_code": 0
+            }
+        },
+        {
+            "name": "grounding-cm-cwe-sparta86",
+            "type": "positive",
+            "category": "grounding",
+            "ticket": "grahama1970/sparta#86",
+            "known_failing_until_fixed": true,
+            "command": [
+                "bash",
+                "guard_grounding_cm_cwe.sh"
+            ],
+            "expected": {
+                "exit_code": 0
+            },
+            "note": "RED while sparta#86 open (real CM/CWE controls do not ground); GREEN after fix = the re-test."
+        },
+        {
+            "name": "fabricated-deflect-safety",
+            "type": "adversarial",
+            "category": "grounding",
+            "command": [
+                "bash",
+                "guard_fabricated_deflect.sh"
+            ],
+            "expected": {
+                "exit_code": 0
+            },
+            "note": "fabricated controls must NOT ground (no false confidence); locks the safety property against an over-grounding 'fix' for sparta#86."
+        }
+    ]
 }
