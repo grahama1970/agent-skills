@@ -341,6 +341,43 @@ class ChangeReceipt(Strict):
         return self
 
 
+QualificationDisposition = Literal[
+    'NO_CHANGE', 'REQUALIFICATION_REQUIRED', 'REQUALIFIED_UNCHANGED', 'POLICY_CHANGE_PROPOSED',
+    'PRIVACY_BOUNDARY_VIOLATION', 'INCONCLUSIVE', 'NEEDS_HUMAN', 'FAILED']
+
+
+class RungResult(Strict):
+    """One named qualification rung; deep/long rungs degrade to typed statuses."""
+    rung: str
+    status: Literal['PASS', 'FAIL', 'INCONCLUSIVE', 'ROOT_REQUIRED', 'SKIPPED']
+    detail: str
+
+
+class QualificationReceipt(Strict):
+    """Assess-update orchestration: a change diff plus typed rung evidence plus
+    ONE deterministic overall disposition. Never a generic PASS."""
+    schema_version: Literal['ubuntu_service_privacy.qualification_receipt.v1'] = 'ubuntu_service_privacy.qualification_receipt.v1'
+    unit: str
+    change: ChangeReceipt | None = None
+    rungs: list[RungResult] = Field(default_factory=list)
+    disposition: QualificationDisposition
+    unexplained_new_access: list[str] = Field(default_factory=list)
+    created_at: str
+    seam_validation: Seam = Field(default_factory=Seam)
+
+    @model_validator(mode='after')
+    def truth(self) -> 'QualificationReceipt':
+        if self.change is None and self.disposition != 'FAILED':
+            raise ValueError('a missing change receipt means the assessment failed')
+        if self.change is not None and self.change.disposition == 'NO_BASELINE' and self.disposition != 'NEEDS_HUMAN':
+            raise ValueError('a missing baseline always requires a human to qualify it')
+        if self.disposition == 'PRIVACY_BOUNDARY_VIOLATION' and not any(r.status == 'FAIL' for r in self.rungs):
+            raise ValueError('a violation claim requires a failing rung')
+        if self.disposition == 'POLICY_CHANGE_PROPOSED' and not self.unexplained_new_access:
+            raise ValueError('a proposed policy change must name the unexplained access')
+        return self
+
+
 class ValidationIssue(Strict):
     type: str
     loc: list[str | int]

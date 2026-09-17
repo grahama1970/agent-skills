@@ -387,6 +387,22 @@ def change_snapshot(unit: Annotated[str, typer.Option('--unit')],
         raise typer.Exit(2)
 
 
+@app.command(name='assess-update')
+def assess_update(unit: Annotated[str, typer.Option('--unit')],
+                  full: Annotated[bool, typer.Option('--full', help='Also run lifecycle rungs (requires root; they stay honest placeholders)')] = False,
+                  record_baseline: Annotated[bool, typer.Option('--record-baseline', help='Store this snapshot as the new last-qualified baseline first (root only)')] = False) -> None:
+    """Qualification orchestrator: change diff + confinement rungs -> one disposition.
+
+    NO_CHANGE/REQUALIFIED_UNCHANGED exit 0; drift, violations, needs-human,
+    inconclusive and failures all exit 2 so qualification is never a silent success.
+    """
+    from .qualification import assess
+    receipt = assess(unit, full=full, record_baseline=record_baseline)
+    emit(receipt)
+    if receipt.disposition not in ('NO_CHANGE', 'REQUALIFIED_UNCHANGED'):
+        raise typer.Exit(2)
+
+
 @app.command(name='repo-check')
 def repo_check() -> None:
     """Delegate to the installed best-practices-skills validator; parse findings."""

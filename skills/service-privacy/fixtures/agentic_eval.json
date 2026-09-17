@@ -106,6 +106,24 @@
       ]
     },
     {
+      "name": "live-assess-update-entrypoint",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "../run.sh", "assess-update", "--unit", "launcher.kolide-k2.service"],
+      "expected": {
+        "exit_code": 2,
+        "stdout_contains": [
+          "ubuntu_service_privacy.qualification_receipt.v1",
+          "\"disposition\":\"NEEDS_HUMAN\""
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "service_privacy.policy_mechanisms"
+      ]
+    },
+    {
       "name": "adversarial-input-and-interrupted-apply",
       "type": "adversarial",
       "command": [
