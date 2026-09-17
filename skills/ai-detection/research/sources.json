@@ -66,6 +66,32 @@
       "url": "https://link.springer.com/article/10.1007/s00521-026-12336-0",
       "use": "Consider multiple prompting and editing scenarios rather than only clean generation.",
       "implementation": "Dataset shortlist; license and provenance admission still required."
+    },
+    {
+      "id": "llm-authorship",
+      "title": "Authorship Attribution in the Era of LLMs: Problems, Methodologies, and Challenges",
+      "date": "2024-08-16",
+      "url": "https://arxiv.org/abs/2408.08946",
+      "use": "Methodology for authorship attribution under LLMs; informs a stylometry-embedding blue channel robust to reformatting.",
+      "implementation": "Verified via arXiv API and recorded as design input on 2026-09-17. Not extracted to /memory (the arxiv skill learn lane returned HTTP 406 / soft-404 this session) and not reproduced."
+    },
+    {
+      "id": "shield",
+      "title": "SHIELD: Thwarting Code Authorship Attribution",
+      "date": "2023-04-26",
+      "url": "https://arxiv.org/abs/2304.13255",
+      "use": "Adversarial transforms that defeat code authorship attribution; seeds the red-team humanizer attack menu.",
+      "implementation": "Verified via arXiv API and recorded as design input on 2026-09-17. Not extracted to /memory (the arxiv skill learn lane returned HTTP 406 / soft-404 this session) and not reproduced."
+    },
+    {
+      "id": "gitblame",
+      "title": "Git Blame Who?: Stylistic Authorship Attribution of Small, Incomplete Source Code Fragments",
+      "date": "2017-01-20",
+      "url": "https://arxiv.org/abs/1701.05681",
+      "use": "Code stylometry features for small fragments; candidate features that survive whitespace/comment normalization.",
+      "implementation": "Verified via arXiv API and recorded as design input on 2026-09-17. Not extracted to /memory (the arxiv skill learn lane returned HTTP 406 / soft-404 this session) and not reproduced."
     }
-  ]
+  ],
+  "last_appended_on": "2026-09-17",
+  "provenance_note": "2026-09-17 append: three arXiv papers verified directly against the arXiv API. Candidate IDs surfaced by a dogpile snippet layer (2506.17323, 2404.01907, 2601.19264) did NOT resolve in the arXiv API (0 entries) and were excluded as unverified."
 }
