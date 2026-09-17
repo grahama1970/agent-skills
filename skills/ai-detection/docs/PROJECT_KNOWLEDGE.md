@@ -68,6 +68,19 @@ is not evasion of a qualified detector or an efficacy number. Moving the
 frontier needs a real-provenance corpus, semantic red transforms, and
 Battle/Judge replay.
 
+## Provenance labeling (R&D, 2026-09-17)
+
+`src/ai_detection/provenance.py` + `ai-detection classify-provenance` implement
+the three-class labeling policy from metadata only (no code content, no license
+risk): `agent_authored` (bot author), `ai_assisted` (human author + agent
+co-author/trailer), `human_proxy` (no signal). `EFFICACY_ELIGIBLE` is empty by
+design — no gh-mined class may establish detection accuracy; the strong-label
+tier must come from a published, license-cleared dataset. Live metadata survey
+(cline/cline, 40 commits): 0 agent_authored / 4 ai_assisted / 36 human_proxy,
+confirming agent-attributed code is sparse and weak in the wild. Pulling code
+bodies for training remains gated behind explicit human license/consent
+clearance.
+
 ## Next meaningful gates
 
 Collect consented provenance-grounded human examples plus held-out generator

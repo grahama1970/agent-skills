@@ -21,6 +21,7 @@ from ai_detection.humanize import Transform, humanize, probe_fragility
 from ai_detection.io import atomic_json, canonical, read_json
 from ai_detection.model import evaluate, load_model, model_digest, save_model, train
 from ai_detection.native import invoke_native
+from ai_detection.provenance import CommitSignal, classify, detector_label, survey
 from ai_detection.verify import verify_export
 
 app = typer.Typer(no_args_is_help=True, pretty_exceptions_enable=False)
@@ -121,6 +122,26 @@ def humanize_command(source: Annotated[Path, typer.Argument(exists=True, dir_oka
             atomic_json(output, result)
         emit(result)
     except (DetectionError, ValidationError, OSError, UnicodeError) as exc:
+        logger.error("classified_failure module=cli")
+        fail(exc)
+
+
+@app.command("classify-provenance")
+def classify_provenance(metadata: Annotated[Path, typer.Argument(exists=True, dir_okay=False)]) -> None:
+    """Classify commit METADATA (JSON list of {author_login, message}) into the
+    three provenance tiers. Metadata only, no code content -> no licensing risk.
+    Emits per-commit class + label and a survey count for corpus planning."""
+    try:
+        rows = read_json(metadata)
+        if not isinstance(rows, list):
+            raise DetectionError(Code.INVALID_INPUT, "Expect a JSON list of commit metadata objects.")
+        signals = [CommitSignal(author_login=str(r.get("author_login", "")),
+                                message=str(r.get("message", ""))) for r in rows]
+        items = [{"provenance": classify(s).value, "label": detector_label(classify(s))} for s in signals]
+        emit({"schema": "ai_detection.provenance_survey.v1",
+              "does_not_prove": "authorship, efficacy, or that any class may feed the strong-label tier",
+              "counts": survey(signals), "items": items})
+    except (DetectionError, ValidationError, OSError, UnicodeError, ValueError) as exc:
         logger.error("classified_failure module=cli")
         fail(exc)
 
