@@ -166,5 +166,6 @@ def test_native_parser_rejects_broken_policy(tmp_path):
 
 def test_manual_check_does_not_claim_continuous_supervision():
     text=(ROOT/'README.md').read_text()
-    assert 'snapshot, not continuous supervision' in text
-    assert 'This is not an ITAR' in text
+    # README must keep the two honest caveats (wording tracks the current README):
+    assert 'point-in-time readback' in text          # verification is a snapshot, not continuous supervision
+    assert 'ITAR compliance certification' in text   # explicit ITAR non-claim

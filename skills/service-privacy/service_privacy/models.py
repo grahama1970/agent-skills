@@ -16,15 +16,26 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 UNIT_RE = r"[A-Za-z0-9][A-Za-z0-9_.@-]{0,180}\.service"
 PATH_RE = r"/[A-Za-z0-9_./+-]+"
 DEFAULT_PROTECTED = ['/home', '/root', '/mnt', '/media', '/srv', '/run/user']
-RUNTIME_READ_FILES = [
+# Reviewed harmless read-only OS-posture classes. Rule: sensitive roots
+# (/home /root /mnt /media /srv /run/user) are unconditional denies and are
+# NEVER part of any read class; new files are NOT auto-added from denials —
+# adding a path is a reviewed code change.
+OS_IDENTITY = frozenset({
     '/etc/os-release', '/usr/lib/os-release', '/etc/machine-id',
-    '/proc/sys/kernel/osrelease', '/proc/cpuinfo', '/proc/meminfo', '/proc/uptime',
-    # Runtime needs observed on a live Kolide launcher (2026-09-16 crash-loop,
-    # kernel audit: nsswitch x2, /proc/stat x3, cpu-online, cgroup per start):
-    # glibc NSS init, osquery CPU tables, topology. Posture-class only.
-    '/etc/nsswitch.conf', '/etc/hosts', '/proc/stat', '/sys/devices/system/cpu/online',
+    '/proc/sys/kernel/osrelease', '/etc/nsswitch.conf', '/etc/hosts',
+})
+CPU_TOPOLOGY = frozenset({
+    '/proc/cpuinfo', '/proc/stat', '/sys/devices/system/cpu/online',
     '/sys/kernel/mm/transparent_hugepage/hpage_pmd_size',
-]
+})
+# Runtime needs observed on a live Kolide launcher (2026-09-16 crash-loop,
+# kernel audit: nsswitch x2, /proc/stat x3, cpu-online, cgroup per start):
+# glibc NSS init, osquery CPU tables, topology. Posture-class only.
+PACKAGE_METADATA: frozenset[str] = frozenset()
+AGENT_STATE: frozenset[str] = frozenset()
+PROC_STATUS = frozenset({'/proc/meminfo', '/proc/uptime'})
+RUNTIME_READ_FILES = sorted(
+    OS_IDENTITY | CPU_TOPOLOGY | PROC_STATUS | PACKAGE_METADATA | AGENT_STATE)
 LOCAL_NETWORKS = [
     '0.0.0.0/8', '10.0.0.0/8', '100.64.0.0/10', '127.0.0.0/8',
     '169.254.0.0/16', '172.16.0.0/12', '192.168.0.0/16',

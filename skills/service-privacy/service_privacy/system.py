@@ -318,7 +318,10 @@ def apparmor_ready() -> None:
 def _soft(check) -> bool:
     try:
         check(); return True
-    except Blocked:
+    except (Blocked, OSError):
+        # OSError covers PermissionError on root-only paths (e.g. non-root read of
+        # /sys/kernel/security/apparmor/profiles): a check we cannot verify is a
+        # failed prerequisite (safe default: BLOCKED), never an uncaught crash.
         return False
 
 

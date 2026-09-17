@@ -414,7 +414,13 @@ def main() -> None:
     logger.remove()
     logger.add(sys.stderr, format='{level}: {message}', level='INFO')
     try:
-        app(standalone_mode=False)
+        # standalone_mode=False makes Click RETURN a command's exit code instead
+        # of raising typer.Exit, so a clean `raise typer.Exit(2)` (e.g. doctor
+        # BLOCKED) would otherwise be discarded and the process would exit 0 —
+        # a false green. Honor the returned code.
+        rv = app(standalone_mode=False)
+        if isinstance(rv, int) and rv != 0:
+            raise SystemExit(rv)
     except typer.Exit as error:
         raise SystemExit(error.exit_code) from None
     except KeyboardInterrupt:
