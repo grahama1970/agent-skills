@@ -1,0 +1,13 @@
+# Template (owner-installed) — hourly fallback that runs the same oneshot
+# detector, so drift missed by watch.path (e.g. replaced during a watch restart)
+# is still caught.
+[Unit]
+Description=Hourly service-privacy drift detection fallback
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+Unit=service-privacy-detect.service
+
+[Install]
+WantedBy=timers.target

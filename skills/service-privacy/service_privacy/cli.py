@@ -387,6 +387,30 @@ def change_snapshot(unit: Annotated[str, typer.Option('--unit')],
         raise typer.Exit(2)
 
 
+@app.command(name='watch-detect')
+def watch_detect(unit: Annotated[str, typer.Option('--unit')]) -> None:
+    """Automatic drift detector entrypoint (#1746), used by the systemd watch
+    units. It is deliberately a thin wrapper over change-snapshot: capture ->
+    diff against the stored baseline -> emit a typed notification receipt.
+
+    The ONLY automatic action is detect -> collect -> qualify -> notify.
+    This command never applies, widens, rolls back or executes anything;
+    policy changes always go through the human approval gate.
+    NO_CHANGE exits 0; drift or inconclusive exits 2 so drift is never silent.
+    """
+    from .change import capture, diff_against_baseline
+    receipt = diff_against_baseline(capture(unit))
+    emit(receipt)
+    # Typed notification record: nothing beyond notify/propose may follow it.
+    emit(Info(operation='watch-detect',
+              status='PASS' if receipt.disposition == 'NO_CHANGE' else 'BLOCKED',
+              details={'unit': receipt.unit, 'notification': receipt.disposition,
+                       'automatic_action': 'notify_only',
+                       'next_step': 'assess-update (human approval for any change)'}))
+    if receipt.disposition != 'NO_CHANGE':
+        raise typer.Exit(2)
+
+
 @app.command(name='assess-update')
 def assess_update(unit: Annotated[str, typer.Option('--unit')],
                   full: Annotated[bool, typer.Option('--full', help='Also run lifecycle rungs (requires root; they stay honest placeholders)')] = False,

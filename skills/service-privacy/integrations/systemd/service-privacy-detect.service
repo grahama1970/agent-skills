@@ -1,0 +1,15 @@
+# Template (owner-installed) — oneshot drift detector (#1746).
+# The ONLY automatic action is detect -> collect -> qualify -> notify.
+# It MUST NOT (and does not) call apply, rollback or execute; policy changes
+# require the human approval gate (assess-update -> proposal -> approval).
+[Unit]
+Description=service-privacy drift detector (notify only, never widens)
+After=launcher.kolide-k2.service
+
+[Service]
+Type=oneshot
+# Replace with the skill checkout path and host unit name.
+ExecStart=/home/graham/workspace/experiments/agent-skills/skills/service-privacy/run.sh watch-detect --unit launcher.kolide-k2.service
+# Non-NO_CHANGE dispositions exit 2: systemd records the failure and the typed
+# REQUALIFICATION_REQUIRED / INCONCLUSIVE notification receipt in the journal.
+SuccessExitStatus=0

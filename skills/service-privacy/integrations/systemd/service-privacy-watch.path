@@ -1,0 +1,16 @@
+# Template (owner-installed) — path-based drift trigger for service-privacy (#1746).
+# Watching: Kolide executable dir, unit + drop-in dirs, rendered AppArmor profile.
+[Unit]
+Description=Watch Kolide/service-privacy cage inputs for drift
+
+[Path]
+PathModified=/usr/local/kolide-k2/bin
+PathChanged=/usr/local/kolide-k2/bin
+PathModified=/etc/systemd/system/launcher.kolide-k2.service.d
+PathModified=/usr/lib/systemd/system/launcher.kolide-k2.service
+# Rendered profile name is osp-<sha256(unit)[:20]>; adjust per host.
+PathModified=/etc/apparmor.d
+Unit=service-privacy-detect.service
+
+[Install]
+WantedBy=multi-user.target

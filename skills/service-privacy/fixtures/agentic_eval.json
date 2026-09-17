@@ -227,6 +227,28 @@
       "supports_claims": [
         "service_privacy.owner_confidentiality"
       ]
+    },
+    {
+      "name": "drift-detect-requalification-selftest",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "../integrations/systemd/drift-selftest.sh"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "NO_CHANGE OK",
+          "REQUALIFICATION_REQUIRED",
+          "no apply/execute actions performed"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "service_privacy.policy_mechanisms"
+      ]
     }
   ],
   "coverage_seams": [
