@@ -30,12 +30,12 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && UV_PROJECT_ENVIRONMENT=/tmp/triage-eval-venv uv run --with pytest --project . python -m pytest -q tests/ && ./run.sh classify --text \"zip contains 9 files; maximum is 5\" --layer surf && ./run.sh classify --text '{\"failure_code\":\"handler_execution_failed\",\"evidence\":{\"response_chars\":0,\"submit_meta_status\":200}}' --layer ask && ./run.sh classify --text '{\"checks\":{\"linkedin_top_applicant_status_accounted\":false,\"linkedin_premium_status_accounted\":false},\"source_accounting\":{\"linkedin_top_applicant\":{\"status\":\"FAILED\"},\"linkedin_premium\":{\"status\":\"FAILED\"}},\"preflight\":{\"expected_revision\":\"abc123\"}}' --layer monitor-opportunities && ./run.sh classify --text '{\"schema\":\"pi_research_gate.retry_misuse.v1\",\"failure_code\":\"pi_research_gate_retry_command_mismatch\",\"observed\":\"agent ran paraphrased memory query instead of the exact next_command\"}' --layer pi"
+        "cd .. && UV_PROJECT_ENVIRONMENT=/tmp/triage-eval-venv uv run --with pytest --with httpx --project . python -m pytest -q tests/ && ./run.sh classify --text \"zip contains 9 files; maximum is 5\" --layer surf && ./run.sh classify --text '{\"failure_code\":\"handler_execution_failed\",\"evidence\":{\"response_chars\":0,\"submit_meta_status\":200}}' --layer ask && ./run.sh classify --text '{\"checks\":{\"linkedin_top_applicant_status_accounted\":false,\"linkedin_premium_status_accounted\":false},\"source_accounting\":{\"linkedin_top_applicant\":{\"status\":\"FAILED\"},\"linkedin_premium\":{\"status\":\"FAILED\"}},\"preflight\":{\"expected_revision\":\"abc123\"}}' --layer monitor-opportunities && ./run.sh classify --text '{\"schema\":\"pi_research_gate.retry_misuse.v1\",\"failure_code\":\"pi_research_gate_retry_command_mismatch\",\"observed\":\"agent ran paraphrased memory query instead of the exact next_command\"}' --layer pi"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "21 passed",
+          "32 passed",
           "webgpt_attachment_bundle_rejected",
           "scillm_empty_response_200",
           "monitor_opportunities_linkedin_source_accounting_failed",
@@ -50,7 +50,7 @@
       "command": [
         "bash",
         "-c",
-        "T=$(mktemp) && cat > $T <<'JSON'\n{\n  \"active_failure_code\": \"create_svg_tau_compile_or_execute_failed\",\n  \"failure_codes\": [\n    {\"code\": \"create_svg_variant_count_invalid\"},\n    {\"code\": \"create_svg_tau_compile_or_execute_failed\"}\n  ]\n}\nJSON\n../run.sh classify --receipt $T --layer create-svg | python3 -c \"import json,sys;d=json.load(sys.stdin);assert d['code']=='create_svg_tau_compile_or_execute_failed' and d['ambiguous'] is False;print('CREATE_SVG_ACTIVE_CODE_OK')\""
+        "T=$(mktemp) && cat > $T <<'JSON'\n{\n  \"active_failure_code\": \"create_svg_tau_compile_or_execute_failed\",\n  \"failure_codes\": [\n    {\"code\": \"create_svg_variant_count_invalid\"},\n    {\"code\": \"create_svg_tau_compile_or_execute_failed\"}\n  ]\n}\nJSON\n../run.sh classify --receipt $T --layer create-svg | python3 -c \"import json,sys;d=json.load(sys.stdin)['report'];assert d['code']=='create_svg_tau_compile_or_execute_failed' and d['ambiguous'] is False;print('CREATE_SVG_ACTIVE_CODE_OK')\""
       ],
       "expected": {
         "exit_code": 0,
@@ -68,7 +68,7 @@
       "command": [
         "bash",
         "-c",
-        "../run.sh classify --text '{\"failure_code\":\"browser_submit_not_accepted\",\"failure\":\"Kimi prompt composer did not receive inserted text after 4 attempt(s)\"}' --layer create-svg | python3 -c \"import json,sys;d=json.load(sys.stdin);assert d['code']=='create_svg_browser_submit_not_accepted' and d['ambiguous'] is False and 'browser-recovery-packet.json' in d['next_command'];print('CREATE_SVG_BROWSER_SUBMIT_TRIAGE_OK')\""
+        "../run.sh classify --text '{\"failure_code\":\"browser_submit_not_accepted\",\"failure\":\"Kimi prompt composer did not receive inserted text after 4 attempt(s)\"}' --layer create-svg | python3 -c \"import json,sys;d=json.load(sys.stdin)['report'];assert d['code']=='create_svg_browser_submit_not_accepted' and d['ambiguous'] is False and 'browser-recovery-packet.json' in d['next_command'];print('CREATE_SVG_BROWSER_SUBMIT_TRIAGE_OK')\""
       ],
       "expected": {
         "exit_code": 0,
@@ -86,7 +86,7 @@
       "command": [
         "bash",
         "-c",
-        "../run.sh classify --text '{\"failure_code\":\"reviewer_artifact_hash_mismatch\"}' --layer tau.project_dag | python3 -c \"import json,sys;d=json.load(sys.stdin);assert d['code']=='tau_reviewer_artifact_hash_mismatch' and d['ambiguous'] is False and 'sha256' in d['cause'];print('TAU_NODE_SANITY_TRIAGE_OK')\""
+        "../run.sh classify --text '{\"failure_code\":\"reviewer_artifact_hash_mismatch\"}' --layer tau.project_dag | python3 -c \"import json,sys;d=json.load(sys.stdin)['report'];assert d['code']=='tau_reviewer_artifact_hash_mismatch' and d['ambiguous'] is False and 'sha256' in d['cause'];print('TAU_NODE_SANITY_TRIAGE_OK')\""
       ],
       "expected": {
         "exit_code": 0,
@@ -104,7 +104,7 @@
       "command": [
         "bash",
         "-c",
-        "../run.sh classify --text '{\"failure_code\":\"create_svg_tau_provenance_missing_candidate_receipt\"}' --layer create-svg | python3 -c \"import json,sys;d=json.load(sys.stdin);assert d['code']=='create_svg_tau_provenance_missing_candidate_receipt' and d['ambiguous'] is False and 'tau-provenance-gate' in d['next_command'];print('CREATE_SVG_TAU_PROVENANCE_TRIAGE_OK')\""
+        "../run.sh classify --text '{\"failure_code\":\"create_svg_tau_provenance_missing_candidate_receipt\"}' --layer create-svg | python3 -c \"import json,sys;d=json.load(sys.stdin)['report'];assert d['code']=='create_svg_tau_provenance_missing_candidate_receipt' and d['ambiguous'] is False and 'tau-provenance-gate' in d['next_command'];print('CREATE_SVG_TAU_PROVENANCE_TRIAGE_OK')\""
       ],
       "expected": {
         "exit_code": 0,
@@ -122,7 +122,7 @@
       "command": [
         "bash",
         "-c",
-        "for code in tau_dag_requested_handler_substituted create_svg_required_payload_missing create_svg_candidate_receipt_invalid create_svg_artifact_origin_invalid; do ../run.sh classify --text '{\"failure_code\":\"'\"$code\"'\"}' --layer tau.project_dag | EXPECTED_CODE=$code python3 -c 'import json,os,sys;d=json.load(sys.stdin);expected=os.environ[\"EXPECTED_CODE\"];assert d[\"code\"]==expected and d[\"ambiguous\"] is False and d[\"recoverable\"] is True;print(expected+\"_OK\")' || exit 1; done"
+        "for code in tau_dag_requested_handler_substituted create_svg_required_payload_missing create_svg_candidate_receipt_invalid create_svg_artifact_origin_invalid; do ../run.sh classify --text '{\"failure_code\":\"'\"$code\"'\"}' --layer tau.project_dag | EXPECTED_CODE=$code python3 -c 'import json,os,sys;d=json.load(sys.stdin)[\"report\"];expected=os.environ[\"EXPECTED_CODE\"];assert d[\"code\"]==expected and d[\"ambiguous\"] is False and d[\"recoverable\"] is True;print(expected+\"_OK\")' || exit 1; done"
       ],
       "expected": {
         "exit_code": 0,
@@ -146,7 +146,7 @@
       "command": [
         "bash",
         "-c",
-        "for code in tau_dag_verification_contract_incomplete tau_dag_self_verification_forbidden tau_model_claim_without_receipt tau_model_artifact_path_missing tau_model_artifact_hash_mismatch tau_model_proof_command_unverified tau_join_unadmitted_evidence tau_recovery_without_failed_path_rerun tau_human_acceptance_receipt_missing; do ../run.sh classify --text '{\"failure_code\":\"'\"$code\"'\"}' --layer tau.project_dag | EXPECTED_CODE=$code python3 -c 'import json,os,sys;d=json.load(sys.stdin);expected=os.environ[\"EXPECTED_CODE\"];assert d[\"code\"]==expected and d[\"ambiguous\"] is False and d[\"recoverable\"] is True;print(expected+\"_OK\")' || exit 1; done"
+        "for code in tau_dag_verification_contract_incomplete tau_dag_self_verification_forbidden tau_model_claim_without_receipt tau_model_artifact_path_missing tau_model_artifact_hash_mismatch tau_model_proof_command_unverified tau_join_unadmitted_evidence tau_recovery_without_failed_path_rerun tau_human_acceptance_receipt_missing; do ../run.sh classify --text '{\"failure_code\":\"'\"$code\"'\"}' --layer tau.project_dag | EXPECTED_CODE=$code python3 -c 'import json,os,sys;d=json.load(sys.stdin)[\"report\"];expected=os.environ[\"EXPECTED_CODE\"];assert d[\"code\"]==expected and d[\"ambiguous\"] is False and d[\"recoverable\"] is True;print(expected+\"_OK\")' || exit 1; done"
       ],
       "expected": {
         "exit_code": 0,
@@ -182,7 +182,7 @@
       "command": [
         "bash",
         "-c",
-        "../run.sh classify --text 'README generated block drifts from CURRENT_STATUS.json; receipt_status_does_not_support_claim:Chatterbox voice expression; handoff missing Research phase' --layer persona-dream | python3 -c \"import json,sys;d=json.load(sys.stdin);assert d['code']=='persona_dream_status_surface_drift' and d['ambiguous'] is False and d['recoverable'] is True and 'generate-readme-research-state' in d['next_command'];print('PERSONA_DREAM_STATUS_SURFACE_DRIFT_TRIAGE_OK')\""
+        "../run.sh classify --text 'README generated block drifts from CURRENT_STATUS.json; receipt_status_does_not_support_claim:Chatterbox voice expression; handoff missing Research phase' --layer persona-dream | python3 -c \"import json,sys;d=json.load(sys.stdin)['report'];assert d['code']=='persona_dream_status_surface_drift' and d['ambiguous'] is False and d['recoverable'] is True and 'generate-readme-research-state' in d['next_command'];print('PERSONA_DREAM_STATUS_SURFACE_DRIFT_TRIAGE_OK')\""
       ],
       "expected": {
         "exit_code": 0,
@@ -190,6 +190,50 @@
           "PERSONA_DREAM_STATUS_SURFACE_DRIFT_TRIAGE_OK"
         ]
       }
+    },
+    {
+      "name": "jev-tier2-fails-closed-without-key",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "triage_error.classifier"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-c",
+        "env -u JEV_API_KEY -u JEV_TIER2 ../run.sh classify --layer tau --text 'novel zqxv failure signal' | python3 -c \"import json,sys; o=json.load(sys.stdin); assert o['jev_shadow'] is None; assert o['report']['ambiguous'] is True; print('JEV_TIER2_FAIL_CLOSED_OK')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "JEV_TIER2_FAIL_CLOSED_OK"
+        ]
+      },
+      "readback": true
+    },
+    {
+      "name": "contract-tau-emits-admitted-single-line-canonical",
+      "type": "positive",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "triage_error.classifier"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-c",
+        "out=$(../run.sh classify --text 'target ownership conflict unowned_target_edit' --layer project-watchdog --contract tau) && python3 -c \"import json,sys; p=json.loads(sys.argv[1]); assert p['schema']=='tau.triage_error_classification.v1'; assert p['code']=='project_watchdog_target_ownership_conflict'; assert p['disposition']=='NEEDS_HUMAN'; assert p['layer']=='tau'; print('CONTRACT_TAU_OK')\" \"$out\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CONTRACT_TAU_OK"
+        ]
+      },
+      "readback": true
     }
   ]
 }

@@ -240,6 +240,7 @@ class Triage:
             data = json.loads(proc.stdout)
         except json.JSONDecodeError:
             return {"ok": False, "classifier": out}
+        data = data.get("report", data)  # CLI emits {"report": ..., "jev_shadow": ...}
         return {
             "ok": True,
             "code": data.get("code"),

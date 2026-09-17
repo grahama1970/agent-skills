@@ -26,8 +26,8 @@ from typing import Any
 import typer
 from loguru import logger
 
-from classifier import classify, load_catalog, _normalize, _mint_code, _first_error_line  # noqa: F401
-from jev_shadow import log_shadow, shadow_classify, shadow_enabled
+from classifier import classify, load_catalog, _normalize, _mint_code, _first_error_line, _catalog_entry_for_code  # noqa: F401
+from jev_shadow import log_shadow, shadow_classify, shadow_enabled, tier2_enabled
 
 app = typer.Typer(add_completion=False, help="Classify ambiguous pipeline errors into unambiguous codes.")
 
@@ -122,7 +122,15 @@ def catalog() -> None:
 
 
 def _run_shadow(signal: str, layer: str | None, report: dict[str, Any]) -> dict[str, Any] | None:
-    """Shadow Jev alongside the deterministic classifier. Never changes the decision."""
+    """Shadow Jev alongside the deterministic classifier.
+
+    Shadow tier (JEV_API_KEY): measure-only, logs both verdicts, never changes
+    the decision.
+    Tier 2 (JEV_API_KEY + JEV_TIER2=1): when the deterministic classifier
+    minted an ambiguous code AND Jev ACCEPTED a catalog code, promote that
+    entry into the report. Fail-closed: abstain, no_match, or a code missing
+    from the live catalog leaves the minted code untouched.
+    """
     if not shadow_enabled():
         return None
     shadow = shadow_classify(signal, layer)
@@ -134,8 +142,59 @@ def _run_shadow(signal: str, layer: str | None, report: dict[str, Any]) -> dict[
         if shadow.get("jev_decision") == "accept"
         else None
     )
+    promoted = False
+    if (
+        tier2_enabled()
+        and report.get("ambiguous")
+        and shadow.get("jev_decision") == "accept"
+    ):
+        entry = (
+            _catalog_entry_for_code(load_catalog(), shadow.get("jev_code"), layer)
+            or _catalog_entry_for_code(load_catalog(), shadow.get("jev_code"), None)
+        )
+        if entry:
+            report["minted_code"] = report["code"]
+            report.update(
+                code=entry["code"],
+                layer=entry.get("layer") or report.get("layer"),
+                cause=entry.get("cause") or report.get("cause"),
+                next_command=entry.get("next_command") or report.get("next_command"),
+                recoverable=entry.get("recoverable") if entry.get("recoverable") is not None else report.get("recoverable"),
+                not_this=entry.get("not_this") or report.get("not_this", []),
+                ambiguous=False,
+                matched_tokens=[f"jev_tier2:{shadow.get('jev_code')}"],
+                classified_by="jev_tier2",
+            )
+            promoted = True
+    shadow["tier2_promoted"] = promoted
+    shadow["final_code"] = report.get("code")
     log_shadow(shadow)
     return shadow
+
+
+TAU_LAYERS = {"tau", "dag-runtime", "scheduler", "adapter", "worker", "resource", "workspace", "replay", "transition", "correction"}
+
+
+def _tau_contract_payload(signal: str, layer: str | None, report: dict[str, Any]) -> dict[str, Any]:
+    """Emit tau.triage_error_classification.v1 (tau bridge pydantic contract).
+
+    The skill cannot compose Tau scheduler repair args, so it never claims
+    KNOWN_REPAIR: canonical catalog codes map to NEEDS_HUMAN (apply the
+    code's next_command), minted codes to AMBIGUOUS. Both fail closed with
+    requires_human=True, mirroring the bridge's own _mint shape.
+    """
+    ambiguous = bool(report.get("ambiguous"))
+    cause = " ".join(_first_error_line(signal).split())[:512]
+    return {
+        "schema": "tau.triage_error_classification.v1",
+        "code": report["code"],
+        "layer": layer if layer in TAU_LAYERS else "tau",
+        "cause": cause,
+        "repair_family": "triage_unavailable" if ambiguous else "unknown_internal_failure",
+        "disposition": "AMBIGUOUS" if ambiguous else "NEEDS_HUMAN",
+        "requires_human": True,
+        "diagnostics": {"classifier_kind": "SKILL_CATALOG", "ambiguous": ambiguous},
+    }
 
 
 @app.command(name="classify")
@@ -143,13 +202,20 @@ def classify_cmd(
     text: str = typer.Option("", "--text", help="Raw error text."),
     receipt: Path = typer.Option(None, "--receipt", help="A lane receipt / *.meta.json to read."),
     layer: str = typer.Option("", "--layer", help="ask|tau|surf|scillm (optional)."),
+    contract: str = typer.Option("", "--contract", help="Emit a strict consumer contract (tau) as single-line canonical JSON."),
 ) -> None:
     """Classify one error signal into a canonical (or minted) code."""
+    if contract not in ("", "tau"):
+        typer.echo(json.dumps({"error": f"unknown --contract {contract}"}))
+        raise typer.Exit(2)
     signal = _read_signal(text, receipt)
     if not signal.strip():
         typer.echo(json.dumps({"error": "no --text or --receipt content"}))
         raise typer.Exit(2)
     report = classify(signal, layer or None)
+    if contract == "tau":
+        typer.echo(json.dumps(_tau_contract_payload(signal, layer or None, report), sort_keys=True, separators=(",", ":"), ensure_ascii=False))
+        return
     shadow = _run_shadow(signal, layer or None, report)
     typer.echo(json.dumps({"report": report, "jev_shadow": shadow}, indent=2))
 

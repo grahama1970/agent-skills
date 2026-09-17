@@ -30,6 +30,16 @@ def shadow_enabled() -> bool:
     return bool(os.getenv("JEV_API_KEY")) and os.getenv("JEV_SHADOW", "1") not in {"0", "false", "no"}
 
 
+def tier2_enabled() -> bool:
+    """Tier 2 lets an ACCEPTED Jev verdict replace an ambiguous minted code.
+
+    Decision-changing (unlike shadow), so it needs explicit opt-in beyond the
+    key: JEV_TIER2=1. Abstain/no_match/unknown code still fails closed to the
+    minted code, so enabling this can only narrow, never widen, ambiguity.
+    """
+    return shadow_enabled() and os.getenv("JEV_TIER2") == "1"
+
+
 def _criteria_from_catalog() -> dict[str, str]:
     criteria = {
         entry["code"]: (entry.get("cause") or entry["code"])[:220]

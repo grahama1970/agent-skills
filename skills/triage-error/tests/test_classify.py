@@ -371,3 +371,62 @@ def test_tau_contract_maps_unknown_layer_and_flattens_cause():
     payload = json.loads(out)
     assert payload["layer"] == "tau", "layers outside tau's frozenset must collapse to tau"
     assert "\n" not in payload["cause"]
+
+
+# --- Jev tier-2 promotion (decision-changing only with explicit opt-in) ---
+
+def _ambiguous_report(signal: str = "totally novel gibberish failure zqxv") -> dict:
+    r = t.classify(signal, "project-watchdog")
+    assert r["ambiguous"] is True
+    return r
+
+
+def test_tier2_disabled_by_default_keeps_minted(monkeypatch) -> None:
+    called = []
+    monkeypatch.setenv("JEV_API_KEY", "k")
+    monkeypatch.delenv("JEV_TIER2", raising=False)
+    monkeypatch.setattr(t, "shadow_classify", lambda s, l: called.append(1) or {"jev_decision": "accept", "jev_code": "webgpt_chatgpt_rate_limited"})
+    monkeypatch.setattr(t, "log_shadow", lambda rec: None)
+    r = _ambiguous_report()
+    t._run_shadow("sig", "project-watchdog", r)
+    assert called and r["ambiguous"] is True and "classified_by" not in r
+
+
+def test_tier2_promotes_accepted_catalog_code(monkeypatch) -> None:
+    monkeypatch.setenv("JEV_API_KEY", "k")
+    monkeypatch.setenv("JEV_TIER2", "1")
+    monkeypatch.setattr(t, "shadow_classify", lambda s, l: {"jev_decision": "accept", "jev_code": "webgpt_chatgpt_rate_limited", "jev_confidence": 0.99})
+    monkeypatch.setattr(t, "log_shadow", lambda rec: None)
+    r = _ambiguous_report()
+    minted = r["code"]
+    shadow = t._run_shadow("sig", "project-watchdog", r)
+    assert r["code"] == "webgpt_chatgpt_rate_limited"
+    assert r["ambiguous"] is False
+    assert r["classified_by"] == "jev_tier2"
+    assert r["minted_code"] == minted
+    assert r["next_command"] is not None
+    assert shadow["tier2_promoted"] is True
+
+
+def test_tier2_no_match_and_abstain_fail_closed(monkeypatch) -> None:
+    monkeypatch.setenv("JEV_API_KEY", "k")
+    monkeypatch.setenv("JEV_TIER2", "1")
+    monkeypatch.setattr(t, "log_shadow", lambda rec: None)
+    for verdict in ({"jev_decision": "accept", "jev_code": "no_match"}, {"jev_decision": "abstain", "jev_reason": "transport"}):
+        monkeypatch.setattr(t, "shadow_classify", lambda s, l, v=verdict: v)
+        r = _ambiguous_report()
+        minted = r["code"]
+        shadow = t._run_shadow("sig", "project-watchdog", r)
+        assert r["code"] == minted and r["ambiguous"] is True
+        assert shadow["tier2_promoted"] is False
+
+
+def test_tier2_never_touches_unambiguous_report(monkeypatch) -> None:
+    monkeypatch.setenv("JEV_API_KEY", "k")
+    monkeypatch.setenv("JEV_TIER2", "1")
+    monkeypatch.setattr(t, "shadow_classify", lambda s, l: {"jev_decision": "accept", "jev_code": "webgpt_chatgpt_rate_limited"})
+    monkeypatch.setattr(t, "log_shadow", lambda rec: None)
+    r = t.classify("ChatGPTTooManyRequestsDetected: true", "surf")
+    t._run_shadow("sig", "surf", r)
+    assert r["code"] == "webgpt_chatgpt_rate_limited"
+    assert r.get("classified_by") != "jev_tier2"

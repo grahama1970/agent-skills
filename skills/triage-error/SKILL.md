@@ -100,21 +100,38 @@ Files: `triage_error.py` (Typer CLI), `failure_codes.json` (catalog), `run.sh`,
 `sanity.sh`, `fixtures/agentic_eval.json`, `tests/`.
 
 
-## Jev shadow (fail-open tier, never decides)
+## Jev shadow (measure-only) and tier 2 (opt-in promotion)
 
-When `JEV_API_KEY` is set and `JEV_SHADOW != 0`, every `classify`/`triage` run
-also asks Jev (TypeSafe System One) to classify the same signal against the
-LIVE `failure_codes.json` catalog (criteria generated at call time) and logs
-both verdicts to memory collection `jev_shadow_log`. The deterministic catalog
+**Shadow** (default with `JEV_API_KEY`): every `classify`/`triage` run also
+asks Jev (TypeSafe System One) to classify the same signal against the LIVE
+`failure_codes.json` catalog (criteria generated at call time) and logs both
+verdicts to memory collection `jev_shadow_log`. The deterministic catalog
 result remains the only decision; the shadow is measurement only.
+
+**Tier 2** (`JEV_API_KEY` + `JEV_TIER2=1`): when the deterministic matcher
+minted an ambiguous code AND Jev ACCEPTED a catalog code at the confidence
+bar, that entry is promoted into the report (`classified_by: "jev_tier2"`,
+minted code kept as `minted_code`). Fail closed: abstain, `no_match`, or a
+code absent from the live catalog leaves the minted code untouched, so the
+worst case equals shadow-off behavior.
 
 Day-one backfill (60 real `llm_call_log` errors): 53/60 agree, 7 disagreements
 — ALL on signals the deterministic matcher already marked ambiguous
 (`*_unclassified_*`), where Jev proposed a real catalog code at 0.58–0.72
 confidence (e.g. token-miss "JSON validation failed after repair" from
 persona-dream -> `persona_dream_pydantic_step_gate_failed`). Agreement where
-the catalog matched: 100%. Promotion path: deterministic -> Jev-on-residual
--> auto-accept only at conf >= 0.98 after a week of shadow data.
+the catalog matched: 100%. Consequence: with the default 0.98 accept bar,
+tier 2 will abstain on most day-one residuals; tune `JEV_ACCEPT_CONFIDENCE`
+from shadow data (`jev_shadow_log`) before expecting promotion volume.
+
+## `--contract tau`
+
+`classify --contract tau` emits the strict `tau.triage_error_classification.v1`
+envelope (single-line canonical sorted JSON) consumed by Tau's
+`dag_runtime/triage_error_bridge.py`. The skill never claims `KNOWN_REPAIR`
+(it cannot compose Tau scheduler repair args): canonical catalog codes map to
+`NEEDS_HUMAN` (apply the code's `next_command`), minted codes to `AMBIGUOUS`;
+unknown layers collapse to `tau`. Both dispositions carry `requires_human`.
 
 ## Ecosystem
 
