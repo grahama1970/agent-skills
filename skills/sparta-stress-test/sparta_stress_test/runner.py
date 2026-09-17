@@ -16,6 +16,7 @@ import time
 from pathlib import Path
 from typing import Optional
 
+import httpx
 from loguru import logger
 
 from . import grader
@@ -526,87 +527,18 @@ def _extract_skill_answer(resp: dict | list) -> str:
     return ""
 
 
-def _ask_brandon_via_qra(question: dict) -> Optional[dict]:
-    """Look up QRAs via /memory recall subprocess (BM25 + vector + graph)."""
-    try:
-        ctrl_id = question.get("target_control", "")
-        q_text = question.get("question", "")
-        search_query = f"{ctrl_id} {q_text}" if ctrl_id else q_text
-
-        if not search_query.strip():
-            return None
-
-        result = _memory_cmd([
-            "recall", "--q", search_query,
-            "--scope", "brandon_bailey",
-            "--k", "10",
-        ])
-
-        qras = result.get("items", result.get("results", []))
-
-        if not qras:
-            return {
-                "answered": False,
-                "answer_text": f"No QRAs found for {ctrl_id or 'query'}",
-                "source_qra_keys": [],
-                "qra_count": 0,
-                "sparta_techniques": [],
-                "sparta_countermeasures": [],
-                "search_scores": [],
-            }
-
-        answer_parts = []
-        source_keys = []
-        all_techniques = []
-        all_cms = []
-        search_scores = []
-
-        for qra in qras[:5]:
-            if qra.get("answer") or qra.get("solution"):
-                answer_parts.append((qra.get("answer") or qra.get("solution", ""))[:300])
-                source_keys.append(qra.get("_key", ""))
-            search_scores.append({
-                "key": qra.get("_key", ""),
-                "score": qra.get("score", qra.get("_score", 0)),
-                "bm25": qra.get("bm25_score", 0),
-                "dense": qra.get("similarity_score", 0),
-            })
-            if ctrl_id and qra.get("control_id") == ctrl_id:
-                for t in (qra.get("sparta_techniques") or []):
-                    tid = t.get("id", "") if isinstance(t, dict) else str(t)
-                    if tid and tid not in all_techniques:
-                        all_techniques.append(tid)
-                for cm in (qra.get("sparta_countermeasures") or []):
-                    cmid = cm.get("id", "") if isinstance(cm, dict) else str(cm)
-                    if cmid and cmid not in all_cms:
-                        all_cms.append(cmid)
-
-        # Compose answer: prefix with control ID for name_match grading,
-        # join with newlines (not pipes) for response_naturalness.
-        prefix = f"Regarding {ctrl_id}: " if ctrl_id else ""
-        answer_text = prefix + "\n\n".join(answer_parts)
-
-        return {
-            "answered": True,
-            "answer_text": answer_text,
-            "source_qra_keys": source_keys,
-            "qra_count": len(qras),
-            "sparta_techniques": all_techniques,
-            "sparta_countermeasures": all_cms,
-            "search_scores": search_scores,
-        }
-    except Exception as e:
-        logger.warning(f"QRA lookup failed: {e}")
-        return None
-
-
 from .control_validation import (
-import httpx
     CONTROL_PATTERN as _CONTROL_PATTERN,
     validate_control_id as _validate_control_id,
     find_closest_control as _find_closest_control,
     classify_without_mapper as _classify_without_mapper,
     get_valid_prefixes,
+)
+from .pipeline_client import (
+    pipeline_intent as _pipeline_intent,
+    pipeline_answer as _pipeline_answer,
+    pipeline_clarify as _pipeline_clarify,
+    pipeline_deflect as _pipeline_deflect,
 )
 
 
@@ -626,13 +558,27 @@ def run_single(
     start = time.monotonic()
     is_code = _is_code_question(question)
 
-    # Step 1: Intent classification (different classifiers per domain)
+    # Step 1: Intent classification.
+    # REAL pipeline path: POST /intent (the first-class product). The old embedded
+    # copy (in-process IntentMapper / classify_without_mapper) is RETIRED for SPARTA
+    # questions -- fail closed on daemon-unreachable, never silently fall back to a
+    # copy of the pipeline (that made this suite test a copy instead of the system).
     if is_code:
         intent_result = _classify_code_question(question)
-    elif mapper:
-        intent_result = mapper.infer(question["question"])
     else:
-        intent_result = _classify_without_mapper(question)
+        intent_result = _pipeline_intent(
+            question["question"], scope="sparta", session_id="sparta-stress-test")
+        if intent_result.get("pipeline_error"):
+            # Infrastructure failure, not a routing verdict -- surface it typed.
+            return {
+                "question": question,
+                "intent_result": intent_result,
+                "answer": None,
+                "nlg_response": None,
+                "grade": None,
+                "pipeline_status": "pipeline_unreachable",
+                "elapsed_s": round(time.monotonic() - start, 3),
+            }
 
     # Step 1b: Validate control ID for SPARTA questions only
     if not is_code:
@@ -653,22 +599,22 @@ def run_single(
             # Nico's code questions: /recommend-skill-chain → invoke → synthesize
             answer = _ask_embry_via_skill_chain(question)
         else:
-            # Brandon's SPARTA questions: QRA retrieval via /memory
-            answer = _ask_brandon_via_qra(question)
+            # Brandon's SPARTA questions: REAL /answer product (can_answer decides;
+            # can_answer=false is the honest hold/draft signal, NOT composed by us)
+            answer = _pipeline_answer(
+                question["question"], scope="sparta", k=10)
 
-            # Post-retrieval reclassification for SPARTA
+            # Keep the deterministic fabricated-control guard (entity existence)
             ctrl = question.get("target_control") or ""
-            if ctrl and answer and not answer.get("answered"):
+            if ctrl and answer and answer.get("answered") is False and not answer.get("pipeline_error"):
                 action = "NO_MATCH"
                 intent_result["action"] = "NO_MATCH"
-                closest = _find_closest_control(ctrl)
+                deflect = _pipeline_deflect(question["question"], intent_action="NO_MATCH")
                 intent_result["persona_guidance"] = (
-                    f"I couldn't find any information about '{ctrl}'. "
-                    f"Did you mean {closest}? "
-                    f"Valid control families: {', '.join(sorted(get_valid_prefixes()))}."
-                ) if closest else f"'{ctrl}' doesn't match any known SPARTA control."
+                    deflect.get("final_response")
+                    or f"'{ctrl}' doesn't match any known SPARTA control.")
 
-            # NLG synthesis for SPARTA answers
+            # NLG synthesis for SPARTA answers (rendering only; grounding already real)
             if answer and answer.get("answered") and nlg_fn:
                 try:
                     nlg_response = nlg_fn(
@@ -680,10 +626,18 @@ def run_single(
                     logger.debug(f"NLG synthesis failed: {e}")
 
     elif action == "CLARIFY":
-        pass  # Disambiguation handled by intent_result persona_guidance
+        # REAL /clarify product supplies the clarifying question text
+        cl = _pipeline_clarify(question["question"], scope="sparta")
+        if not cl.get("pipeline_error"):
+            intent_result["persona_guidance"] = cl.get("final_response") or cl.get(
+                "clarifying_question") or intent_result.get("persona_guidance", "")
 
     elif action == "NO_MATCH":
-        pass  # Error detection handled by intent_result
+        # REAL /deflect product supplies the deflection text
+        df = _pipeline_deflect(question["question"], intent_action="NO_MATCH")
+        if not df.get("pipeline_error"):
+            intent_result["persona_guidance"] = df.get("final_response") or intent_result.get(
+                "persona_guidance", "")
 
     # Step 3: Grade via full cascade (Tier 0 → 0.5 → 1.5 → 2)
     # grade_via_cascade falls back to heuristic-only if /assistant unavailable
