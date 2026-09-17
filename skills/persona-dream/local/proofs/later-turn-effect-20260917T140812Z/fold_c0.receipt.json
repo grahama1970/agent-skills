@@ -1,0 +1,18 @@
+{
+  "arm": "c0",
+  "baseline_sha256": "d6cae5f4be44357d972489fe003e9c5adb620a1de08f6caa38ebb8dbe0b99ac8",
+  "baseline_version": "persona_dream.c0c1_baseline.v1",
+  "current_state": {
+    "warmth": 0.2
+  },
+  "delta_citations": [],
+  "delta_count": 0,
+  "equals_baseline": true,
+  "failed_gates": [],
+  "live": true,
+  "mocked": false,
+  "persona_id": "embry-eval",
+  "schema": "persona_dream.persona_state_fold.v1",
+  "status": "PASS_PERSONA_STATE_FOLDED",
+  "user_id": "eval-user"
+}

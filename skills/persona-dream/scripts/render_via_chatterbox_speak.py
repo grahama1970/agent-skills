@@ -26,14 +26,16 @@ CONVERSATION_TEMPERATURE = 0.85  # Turbo expressiveness; tune by ear, receipt-re
 def render_via_chatterbox_speak(
     *, answer_text: str, render_chunks: list[dict[str, Any]], tone: str,
     run_dir: Path, label: str, ref_audio: str | None = None,
-    pace: str | None = None,
+    pace: str | None = None, intensity: str | None = None,
     temperature: float = CONVERSATION_TEMPERATURE, context: str = "",
 ) -> tuple[Path, dict[str, Any]]:
     """Render caller-owned chunks through the chatterbox-speak front door.
 
-    Returns (wav_path_in_run_dir, service_receipt). Raises SystemExit
-    (BLOCKED_RENDER_NOT_SPOKEN) when the engine reports anything other than a
-    live, ok render — the engine's own fail-closed validation is authoritative.
+    Returns (wav_path_in_run_dir, service_receipt). The full core receipt is
+    copied to ``<run_dir>/<label>.receipt.json`` (plan/request hashes are
+    evidence callers cite). Raises SystemExit (BLOCKED_RENDER_NOT_SPOKEN) when
+    the engine reports anything other than a live, ok render — the engine's
+    own fail-closed validation is authoritative.
     """
     plan_path = run_dir / f"{label}.render_chunks.json"
     plan_path.write_text(json.dumps({
@@ -50,6 +52,8 @@ def render_via_chatterbox_speak(
         cmd += ["--ref-audio", ref_audio]
     if pace:
         cmd += ["--pace", pace]
+    if intensity:
+        cmd += ["--intensity", intensity]
     proc = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
     if proc.returncode != 0:
         raise SystemExit(
@@ -61,6 +65,7 @@ def render_via_chatterbox_speak(
     receipt = json.loads(Path(out["receipt"]).read_text())
     if not receipt.get("live"):
         raise SystemExit("BLOCKED_RENDER_NOT_SPOKEN: engine reports not-live render")
+    (run_dir / f"{label}.receipt.json").write_text(json.dumps(receipt, indent=2, sort_keys=True))
     dest = run_dir / f"{label}.wav"
     shutil.copyfile(out["wav"], dest)
     service_receipt = receipt.get("service_receipt") or {}

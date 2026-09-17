@@ -1,0 +1,14 @@
+{
+  "answer_capsule": {
+    "question": "What is the capital of Australia, and what is seven times eight?",
+    "answer_body": "The capital of Australia is Canberra, and seven times eight is fifty-six.",
+    "answer_body_sha256": "sha256:62ac8ae23b86c9dbe5dc0d3e147259f990ab5cae1161a97e2da984501eadfec0",
+    "protected_tokens": [
+      "canberra",
+      "australia",
+      "fifty-six",
+      "seven",
+      "eight"
+    ]
+  }
+}

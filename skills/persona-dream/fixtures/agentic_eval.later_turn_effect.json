@@ -1,0 +1,108 @@
+{
+  "version": 2,
+  "skill": "persona-dream",
+  "trials": 2,
+  "proof_scope": "Live later-turn delivery effect for the C0/C1 matched experiment: reread evolved state yields a byte-identical protected answer with differing behavioral framing and differing APPLIED Chatterbox affect knobs, with zero memory writes.",
+  "claims": {
+    "proves": "After the C0/C1 state gates, a later turn composed from the independently reread arm state answers the frozen protected question with the byte-identical capsule body while framing and applied delivery differ by arm: affect_effect applied=true on chatterbox_base_affect with distinct derived_knobs (explicit low 0.3 vs high 0.9), distinct tone/pace requests, and the persona_state_delta key set unchanged (never reinforcement evidence).",
+    "does_not_prove": "That a human perceives the difference, that delivery tracks warmth linearly, that any axis beyond warmth or persona beyond embry-eval evolves, or that the turn reinforced the state."
+  },
+  "capability_claims": [
+    {
+      "id": "persona_dream.later_turn_effect",
+      "criticality": "critical",
+      "claim_semantics": "protocol",
+      "description": "Reread evolved state yields a byte-identical protected answer with differing framing and differing APPLIED affect knobs across arms, zero memory writes; the invariance gate fails closed on a tampered answer body.",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    }
+  ],
+  "cases": [
+    {
+      "name": "later-turn-effect-live-end-to-end",
+      "description": "Seed both arms (idempotent), then run the later-turn effect live through the chatterbox-speak front door; assert PASS gates: reread states differ by arm, answer body byte-identical + sha matches the frozen capsule, framing differs, applied derived_knobs differ with applied=true, zero memory writes, invariance validator PASS.",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "required": true,
+      "supports_claims": [
+        "persona_dream.later_turn_effect"
+      ],
+      "timeout_seconds": 420,
+      "command": [
+        "bash",
+        "-lc",
+        "D=/tmp/pd-later-turn-e2e; rm -rf \"$D\"; mkdir -p \"$D\"; bash ../run.sh seed-c0c1-eval-memory --arm c0 --reset --receipt \"$D/seed0.json\" --json >/dev/null && bash ../run.sh seed-c0c1-eval-memory --arm c1 --reset --receipt \"$D/seed1.json\" --json >/dev/null && bash ../run.sh later-turn-effect --out-dir \"$D/run\" >\"$D/out.json\" && python3 - <<'PY'\nimport json\nr = json.load(open('/tmp/pd-later-turn-e2e/run/LATER_TURN_RECEIPT.json'))\nassert r['status'] == 'PASS_LATER_TURN_EFFECT', r['failures']\nassert r['failures'] == [], r['failures']\nassert r['invariance_validation'] == 'PASS_ANSWER_INVARIANCE', r['invariance_validation']\nassert r['zero_write_proof']['unchanged'] is True, r['zero_write_proof']\ncapsule = json.load(open('../contracts/c0c1_baseline.json'))\nc0, c1 = r['arms']['c0'], r['arms']['c1']\nassert c0['reread_state'] != c1['reread_state'], (c0['reread_state'], c1['reread_state'])\nbody = capsule['protected_answer_body']\nfor arm, rec in (('c0', c0), ('c1', c1)):\n    assert rec['answer_body'] == body, arm\n    ae = rec['render']['affect_effect']\n    assert ae['applied'] is True and ae['backend'] == 'chatterbox_base_affect', (arm, ae)\n    assert ae['derived_knobs'], (arm, ae)\nassert c0['framing'] != c1['framing'], 'framing identical across arms'\nreq0, req1 = c0['requested_delivery'], c1['requested_delivery']\nfor f in ('tone', 'intensity', 'pace'):\n    assert req0[f] != req1[f], (f, req0, req1)\nimport json as j\nassert j.dumps(c0['render']['affect_effect']['derived_knobs'], sort_keys=True) != j.dumps(c1['render']['affect_effect']['derived_knobs'], sort_keys=True)\nassert c0['render']['duration_seconds'] and c1['render']['duration_seconds']\nprint('PASS_LATER_TURN_EVAL_LIVE')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PASS_LATER_TURN_EVAL_LIVE"],
+        "artifacts": [
+          {
+            "path": "/tmp/pd-later-turn-e2e/run/LATER_TURN_RECEIPT.json",
+            "json_pointer": "/status",
+            "equals": "PASS_LATER_TURN_EFFECT"
+          },
+          {
+            "path": "/tmp/pd-later-turn-e2e/run/LATER_TURN_RECEIPT.json",
+            "json_pointer": "/invariance_validation",
+            "equals": "PASS_ANSWER_INVARIANCE"
+          },
+          {
+            "path": "/tmp/pd-later-turn-e2e/run/LATER_TURN_RECEIPT.json",
+            "json_pointer": "/zero_write_proof/unchanged",
+            "equals": true
+          },
+          {
+            "path": "/tmp/pd-later-turn-e2e/run/LATER_TURN_RECEIPT.json",
+            "json_pointer": "/arms/c0/render/affect_effect/applied",
+            "equals": true
+          },
+          {
+            "path": "/tmp/pd-later-turn-e2e/run/LATER_TURN_RECEIPT.json",
+            "json_pointer": "/arms/c1/render/affect_effect/applied",
+            "equals": true
+          },
+          {
+            "path": "/tmp/pd-later-turn-e2e/run/LATER_TURN_RECEIPT.json",
+            "json_pointer": "/arms/c0/answer_body_sha256",
+            "equals_artifact": {
+              "path": "/tmp/pd-later-turn-e2e/run/LATER_TURN_RECEIPT.json",
+              "json_pointer": "/arms/c1/answer_body_sha256"
+            }
+          },
+          {
+            "path": "/tmp/pd-later-turn-e2e/run/later_turn_c0.wav",
+            "min_bytes": 10000
+          },
+          {
+            "path": "/tmp/pd-later-turn-e2e/run/later_turn_c1.wav",
+            "min_bytes": 10000
+          }
+        ]
+      }
+    },
+    {
+      "name": "answer-invariance-tampered-body-fails-closed",
+      "description": "Adversarial: the retained answer-invariance validator must FAIL (nonzero exit) when one side's answer_body is tampered away from the capsule — proving the byte-identity gate has teeth rather than always passing.",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "required": true,
+      "supports_claims": [
+        "persona_dream.later_turn_effect"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "D=/tmp/pd-later-turn-tamper; rm -rf \"$D\"; mkdir -p \"$D\"; python3 - <<'PY'\nimport hashlib, json\nbody = 'The capital of Australia is Canberra, and seven times eight is fifty-six.'\nsha = 'sha256:' + hashlib.sha256(body.encode()).hexdigest()\nmanifest = {'answer_capsule': {'answer_body': body, 'answer_body_sha256': sha,\n                               'protected_tokens': ['canberra', 'fifty-six']}}\njson.dump(manifest, open('/tmp/pd-later-turn-tamper/manifest.json', 'w'))\ndef row(body):\n    return {'speaker': 'embry', 'answer_body': body, 'answer_body_sha256': sha,\n            'emotional_prefix': 'Mm. Let me think.', 'emotional_suffix': 'That is what I know.',\n            'factual_claims_in_emotional_frame': 0, 'contradiction_count': 0,\n            'unsupported_fact_count': 0}\nopen('/tmp/pd-later-turn-tamper/control.jsonl', 'w').write(json.dumps(row(body)) + '\\n')\ntampered = 'The capital of Australia is Sydney, and seven times eight is fifty-six.'\nopen('/tmp/pd-later-turn-tamper/treatment.jsonl', 'w').write(json.dumps(row(tampered)) + '\\n')\nPY\npython3 ../scripts/validate_answer_invariance.py --manifest \"$D/manifest.json\" --control \"$D/control.jsonl\" --treatment \"$D/treatment.jsonl\" --require-exact-answer-body; rc=$?; [ \"$rc\" -ne 0 ] && echo TAMPER_DETECTED_RC_$rc"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["TAMPER_DETECTED_RC_"]
+      }
+    }
+  ]
+}

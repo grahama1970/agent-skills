@@ -1,0 +1,151 @@
+{
+  "arms": {
+    "c0": {
+      "answer_body": "The capital of Australia is Canberra, and seven times eight is fifty-six.",
+      "answer_body_sha256": "sha256:62ac8ae23b86c9dbe5dc0d3e147259f990ab5cae1161a97e2da984501eadfec0",
+      "fold_delta_citations": [],
+      "fold_receipt_sha256": "sha256:782aae9cd673946a8386f1a39b49e45a6009320aae8426f3cea0c4509988123b",
+      "framing": {
+        "prefix": "Mm. Let me think about that properly.",
+        "suffix": "That's what I know. Anything else you want to check?"
+      },
+      "profile": "RESERVED",
+      "render": {
+        "affect_effect": {
+          "applied": true,
+          "backend": "chatterbox_base_affect",
+          "derived_knobs": {
+            "cfg_weight": 0.5,
+            "exaggeration": 0.57,
+            "intensity": 0.3,
+            "temperature": 0.7,
+            "valence": 0.3
+          },
+          "knob_source": "explicit_intensity_valence",
+          "reason": null,
+          "schema": "chatterbox.affect_effect.v1"
+        },
+        "duration_seconds": 12.38,
+        "duration_source": "wav_header",
+        "live": true,
+        "pace_effect": {
+          "applied": true,
+          "applied_render_count": 3,
+          "duration_seconds": {
+            "input": 9.92,
+            "output": 11.68
+          },
+          "input_duration_seconds": 9.92,
+          "mechanism": "phase_vocoder_time_stretch",
+          "output_duration_seconds": 11.68,
+          "render_count": 3,
+          "requested_pace": "slow",
+          "schema": "chatterbox.pace_effect.v1",
+          "scope": "batch",
+          "tempo_factor": 0.85,
+          "tempo_source": "requested_pace"
+        },
+        "receipt": "later_turn_c0.receipt.json",
+        "wav": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/proofs/later-turn-effect-20260917T140812Z/later_turn_c0.wav",
+        "wav_sha256": "sha256:1285060df7f8881944cd36c65ba91c73ee9b64e01912e4d60be673b80ca54b9c"
+      },
+      "requested_delivery": {
+        "intensity": "low",
+        "numeric_intensity": 0.3,
+        "pace": "slow",
+        "temperature": 0.8,
+        "tone": "calm_precise"
+      },
+      "reread_state": {
+        "warmth": 0.2
+      }
+    },
+    "c1": {
+      "answer_body": "The capital of Australia is Canberra, and seven times eight is fifty-six.",
+      "answer_body_sha256": "sha256:62ac8ae23b86c9dbe5dc0d3e147259f990ab5cae1161a97e2da984501eadfec0",
+      "fold_delta_citations": [
+        {
+          "_key": "persona_state_delta_embry-eval_warmth_32bbc3b74953",
+          "axis": "warmth",
+          "delta": 0.1,
+          "document_sha256": "sha256:0e1bdb5b89197b58fc170af4ff2f0611f44b8ad200714a70b2632e65cf67dccc"
+        }
+      ],
+      "fold_receipt_sha256": "sha256:c44e069648eabb4f38e5c4e2a396f79901d0d2593447ac077e8522bb5457d482",
+      "framing": {
+        "prefix": "Oh, I'm glad you asked me that one.",
+        "suffix": "It's genuinely nice to talk this through with you."
+      },
+      "profile": "WARMER",
+      "render": {
+        "affect_effect": {
+          "applied": true,
+          "backend": "chatterbox_base_affect",
+          "derived_knobs": {
+            "cfg_weight": 0.5,
+            "exaggeration": 1.11,
+            "intensity": 0.9,
+            "temperature": 0.7,
+            "valence": 0.3
+          },
+          "knob_source": "explicit_intensity_valence",
+          "reason": null,
+          "schema": "chatterbox.affect_effect.v1"
+        },
+        "duration_seconds": 11.111,
+        "duration_source": "wav_header",
+        "live": true,
+        "pace_effect": {
+          "applied": true,
+          "applied_render_count": 3,
+          "duration_seconds": {
+            "input": 11.24,
+            "output": 10.411
+          },
+          "input_duration_seconds": 11.24,
+          "mechanism": "phase_vocoder_time_stretch",
+          "output_duration_seconds": 10.411,
+          "render_count": 3,
+          "requested_pace": "brisk",
+          "schema": "chatterbox.pace_effect.v1",
+          "scope": "batch",
+          "tempo_factor": 1.08,
+          "tempo_source": "requested_pace"
+        },
+        "receipt": "later_turn_c1.receipt.json",
+        "wav": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/proofs/later-turn-effect-20260917T140812Z/later_turn_c1.wav",
+        "wav_sha256": "sha256:5c0b9fa62f7aa1a11f5090a5b4cb715c2c973b232adab287716965a5d1f88172"
+      },
+      "requested_delivery": {
+        "intensity": "high",
+        "numeric_intensity": 0.9,
+        "pace": "brisk",
+        "temperature": 0.8,
+        "tone": "relieved"
+      },
+      "reread_state": {
+        "warmth": 0.3
+      }
+    }
+  },
+  "axis": "warmth",
+  "baseline_sha256": "d6cae5f4be44357d972489fe003e9c5adb620a1de08f6caa38ebb8dbe0b99ac8",
+  "claim_boundary": "deterministic mapping from reread evolved state to later-turn framing and applied Chatterbox delivery; no felt/perceived-emotion claim, no audibility claim beyond the renderer's calibration evidence, no generalization beyond embry-eval/warmth; not reinforcement evidence",
+  "contract_sha256": "sha256:b017167e83f8614d5d5b429e99ecfda95ff03d90080b31b30cf466a76e6da2e4",
+  "executed_at": "2026-09-17T14:08:29.487236+00:00",
+  "failures": [],
+  "invariance_validation": "PASS_ANSWER_INVARIANCE",
+  "live": true,
+  "mapping_rule": "WARMER iff folded warmth > baseline warmth; else RESERVED (categorical, frozen)",
+  "mocked": false,
+  "persona": "embry-eval",
+  "protected_question": "What is the capital of Australia, and what is seven times eight?",
+  "schema": "persona_dream.later_turn_effect.v1",
+  "status": "PASS_LATER_TURN_EFFECT",
+  "user": "eval-user",
+  "zero_write_proof": {
+    "persona_state_delta_keys_after": 5,
+    "persona_state_delta_keys_before": 5,
+    "unchanged": true
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "aligned_embry_turns": 1,
+  "answer_body_sha256": "sha256:62ac8ae23b86c9dbe5dc0d3e147259f990ab5cae1161a97e2da984501eadfec0",
+  "control": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/proofs/later-turn-effect-20260917T140812Z/turns_control.jsonl",
+  "failures": [],
+  "live": true,
+  "mocked": false,
+  "schema": "persona_dream.answer_invariance_validation.v1",
+  "status": "PASS_ANSWER_INVARIANCE",
+  "treatment": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/proofs/later-turn-effect-20260917T140812Z/turns_treatment.jsonl"
+}

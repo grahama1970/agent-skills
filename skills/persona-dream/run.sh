@@ -201,6 +201,7 @@ Commands:
   seed-c0c1-eval-memory      Seed literal C0/C1 evaluation memory records into persona_memory (idempotent upsert)
   admit-persona-state-delta  Deterministic C0/C1 persona-state admission over an emotional-trigger packet
   fold-persona-state         Independent baseline+accepted-deltas state fold with exact rereads
+  later-turn-effect          C0/C1 back half: reread state -> byte-identical answer + differing framing/delivery
   converse-dynamic        Run dynamic voiced Horus/Embry conversation for a dream run
   chatterbox-conversation Alias for converse-dynamic; terminal dream-spine speech step
   render-blinded-listener-rater-page Render the static blinded listener-study rater page
@@ -889,6 +890,9 @@ case "$COMMAND" in
     ;;
   fold-persona-state)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/fold_persona_state.py" "$@"
+    ;;
+  later-turn-effect)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/run_later_turn_effect.py" "$@"
     ;;
   persist-emotional-triggers)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/persist_emotional_trigger_memory.py" "$@"

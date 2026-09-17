@@ -1,0 +1,25 @@
+{
+  "arm": "c1",
+  "baseline_sha256": "d6cae5f4be44357d972489fe003e9c5adb620a1de08f6caa38ebb8dbe0b99ac8",
+  "baseline_version": "persona_dream.c0c1_baseline.v1",
+  "current_state": {
+    "warmth": 0.3
+  },
+  "delta_citations": [
+    {
+      "_key": "persona_state_delta_embry-eval_warmth_32bbc3b74953",
+      "axis": "warmth",
+      "delta": 0.1,
+      "document_sha256": "sha256:0e1bdb5b89197b58fc170af4ff2f0611f44b8ad200714a70b2632e65cf67dccc"
+    }
+  ],
+  "delta_count": 1,
+  "equals_baseline": false,
+  "failed_gates": [],
+  "live": true,
+  "mocked": false,
+  "persona_id": "embry-eval",
+  "schema": "persona_dream.persona_state_fold.v1",
+  "status": "PASS_PERSONA_STATE_FOLDED",
+  "user_id": "eval-user"
+}

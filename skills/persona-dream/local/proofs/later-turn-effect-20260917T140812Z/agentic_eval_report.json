@@ -1,0 +1,181 @@
+{
+  "schema": "agentic_evals.report.v2",
+  "source": "skills/persona-dream/fixtures/agentic_eval.later_turn_effect.json",
+  "run_id": "c2f407b3bb84",
+  "fixture_sha256": "sha256:a9abfee447d02099d2ed258153d2c60a7d0deb28454082a95b23505ff4bb44b7",
+  "repo": {
+    "sha": "74ff0e1153a5a6ef2596bb001d3f1875e9da2063",
+    "ref": "main"
+  },
+  "mocked": false,
+  "fixture_backed": true,
+  "live": true,
+  "proof_scope": "Live later-turn delivery effect for the C0/C1 matched experiment: reread evolved state yields a byte-identical protected answer with differing behavioral framing and differing APPLIED Chatterbox affect knobs, with zero memory writes.",
+  "claims": {
+    "proves": "After the C0/C1 state gates, a later turn composed from the independently reread arm state answers the frozen protected question with the byte-identical capsule body while framing and applied delivery differ by arm: affect_effect applied=true on chatterbox_base_affect with distinct derived_knobs (explicit low 0.3 vs high 0.9), distinct tone/pace requests, and the persona_state_delta key set unchanged (never reinforcement evidence).",
+    "does_not_prove": "That a human perceives the difference, that delivery tracks warmth linearly, that any axis beyond warmth or persona beyond embry-eval evolves, or that the turn reinforced the state."
+  },
+  "what_was_exercised": "local commands declared in the fixture manifest",
+  "what_remains_unverified": "semantic correctness, live services, LLM judge behavior, and release readiness",
+  "readiness": "READY",
+  "case_readiness": "READY",
+  "capability_readiness": {
+    "aggregate_readiness": "READY",
+    "critical_claim_count": 1,
+    "critical_claims_proven": 1,
+    "claims": [
+      {
+        "id": "persona_dream.later_turn_effect",
+        "description": "Reread evolved state yields a byte-identical protected answer with differing framing and differing APPLIED affect knobs across arms, zero memory writes; the invariance gate fails closed on a tampered answer body.",
+        "criticality": "critical",
+        "required_evidence": [
+          "live_e2e"
+        ],
+        "verdict": "PROVEN",
+        "per_class": {
+          "live_e2e": {
+            "status": "PROVEN",
+            "cases": [
+              "later-turn-effect-live-end-to-end"
+            ]
+          }
+        },
+        "missing_evidence": [],
+        "blocked_evidence": [],
+        "exempt_evidence": [],
+        "exemptions": [],
+        "unqualified_live_cases": [],
+        "supporting_cases": [
+          "later-turn-effect-live-end-to-end",
+          "answer-invariance-tampered-body-fails-closed"
+        ]
+      }
+    ]
+  },
+  "claims_coverage": "manifest-spanning",
+  "focused_cases": [],
+  "generated_at": "2026-09-17T14:07:55.948397+00:00",
+  "case_count": 2,
+  "required_case_count": 2,
+  "outcome_counts": {
+    "PASS": 2,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "NOT_TESTED": 0
+  },
+  "trial_count": 4,
+  "cases": [
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "later-turn-effect-live-end-to-end",
+      "type": "positive",
+      "case_id": "c2f407b3bb84-c000",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-lc",
+        "D=/tmp/pd-later-turn-e2e; rm -rf \"$D\"; mkdir -p \"$D\"; bash ../run.sh seed-c0c1-eval-memory --arm c0 --reset --receipt \"$D/seed0.json\" --json >/dev/null && bash ../run.sh seed-c0c1-eval-memory --arm c1 --reset --receipt \"$D/seed1.json\" --json >/dev/null && bash ../run.sh later-turn-effect --out-dir \"$D/run\" >\"$D/out.json\" && python3 - <<'PY'\nimport json\nr = json.load(open('/tmp/pd-later-turn-e2e/run/LATER_TURN_RECEIPT.json'))\nassert r['status'] == 'PASS_LATER_TURN_EFFECT', r['failures']\nassert r['failures'] == [], r['failures']\nassert r['invariance_validation'] == 'PASS_ANSWER_INVARIANCE', r['invariance_validation']\nassert r['zero_write_proof']['unchanged'] is True, r['zero_write_proof']\ncapsule = json.load(open('../contracts/c0c1_baseline.json'))\nc0, c1 = r['arms']['c0'], r['arms']['c1']\nassert c0['reread_state'] != c1['reread_state'], (c0['reread_state'], c1['reread_state'])\nbody = capsule['protected_answer_body']\nfor arm, rec in (('c0', c0), ('c1', c1)):\n    assert rec['answer_body'] == body, arm\n    ae = rec['render']['affect_effect']\n    assert ae['applied'] is True and ae['backend'] == 'chatterbox_base_affect', (arm, ae)\n    assert ae['derived_knobs'], (arm, ae)\nassert c0['framing'] != c1['framing'], 'framing identical across arms'\nreq0, req1 = c0['requested_delivery'], c1['requested_delivery']\nfor f in ('tone', 'intensity', 'pace'):\n    assert req0[f] != req1[f], (f, req0, req1)\nimport json as j\nassert j.dumps(c0['render']['affect_effect']['derived_knobs'], sort_keys=True) != j.dumps(c1['render']['affect_effect']['derived_knobs'], sort_keys=True)\nassert c0['render']['duration_seconds'] and c1['render']['duration_seconds']\nprint('PASS_LATER_TURN_EVAL_LIVE')\nPY"
+      ],
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "live_e2e",
+      "live_qualified": true,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "persona_dream.later_turn_effect"
+      ],
+      "seams": [],
+      "passed_trials": 2,
+      "total_trials": 2,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 18626.356,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "PASS_LATER_TURN_EVAL_LIVE\n",
+          "stderr": "",
+          "duration_ms": 18659.355,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "c2f407b3bb84-c000-t00",
+          "artifact_hashes": {
+            "/tmp/pd-later-turn-e2e/run/LATER_TURN_RECEIPT.json": "sha256:bcf071733b3393b8ffae26640b976443059b7d723f91d6011558751dbcdc788b",
+            "/tmp/pd-later-turn-e2e/run/later_turn_c0.wav": "sha256:03878daa4f44591bd087489af3892ff683fb215aac583d123caf3d25abe968ca",
+            "/tmp/pd-later-turn-e2e/run/later_turn_c1.wav": "sha256:e5037c6539a63cce25677ebf0d9acffa428f1ec1725dd6487a0382fddf39bd7e"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "PASS_LATER_TURN_EVAL_LIVE\n",
+          "stderr": "",
+          "duration_ms": 18593.357,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "c2f407b3bb84-c000-t01",
+          "artifact_hashes": {
+            "/tmp/pd-later-turn-e2e/run/LATER_TURN_RECEIPT.json": "sha256:e743e173097819cb62361384c2ede2d861f24954d0eef9d230ea54c0dc645ed4",
+            "/tmp/pd-later-turn-e2e/run/later_turn_c0.wav": "sha256:88ea325574f3cab6a5ac1030ab8c0c1abedd7b631333db0ce818feed36cbbcbf",
+            "/tmp/pd-later-turn-e2e/run/later_turn_c1.wav": "sha256:093148b4d9ac799724cb7b91c96c102a9d33a32a47aa79d6bc8413a267640b05"
+          },
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "answer-invariance-tampered-body-fails-closed",
+      "type": "negative",
+      "case_id": "c2f407b3bb84-c001",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-lc",
+        "D=/tmp/pd-later-turn-tamper; rm -rf \"$D\"; mkdir -p \"$D\"; python3 - <<'PY'\nimport hashlib, json\nbody = 'The capital of Australia is Canberra, and seven times eight is fifty-six.'\nsha = 'sha256:' + hashlib.sha256(body.encode()).hexdigest()\nmanifest = {'answer_capsule': {'answer_body': body, 'answer_body_sha256': sha,\n                               'protected_tokens': ['canberra', 'fifty-six']}}\njson.dump(manifest, open('/tmp/pd-later-turn-tamper/manifest.json', 'w'))\ndef row(body):\n    return {'speaker': 'embry', 'answer_body': body, 'answer_body_sha256': sha,\n            'emotional_prefix': 'Mm. Let me think.', 'emotional_suffix': 'That is what I know.',\n            'factual_claims_in_emotional_frame': 0, 'contradiction_count': 0,\n            'unsupported_fact_count': 0}\nopen('/tmp/pd-later-turn-tamper/control.jsonl', 'w').write(json.dumps(row(body)) + '\\n')\ntampered = 'The capital of Australia is Sydney, and seven times eight is fifty-six.'\nopen('/tmp/pd-later-turn-tamper/treatment.jsonl', 'w').write(json.dumps(row(tampered)) + '\\n')\nPY\npython3 ../scripts/validate_answer_invariance.py --manifest \"$D/manifest.json\" --control \"$D/control.jsonl\" --treatment \"$D/treatment.jsonl\" --require-exact-answer-body; rc=$?; [ \"$rc\" -ne 0 ] && echo TAMPER_DETECTED_RC_$rc"
+      ],
+      "declared_evidence_class": "deterministic",
+      "effective_evidence_class": "deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "persona_dream.later_turn_effect"
+      ],
+      "seams": [],
+      "passed_trials": 2,
+      "total_trials": 2,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 78.806,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "{\n  \"aligned_embry_turns\": 1,\n  \"answer_body_sha256\": \"sha256:62ac8ae23b86c9dbe5dc0d3e147259f990ab5cae1161a97e2da984501eadfec0\",\n  \"control\": \"/tmp/pd-later-turn-tamper/control.jsonl\",\n  \"failures\": [\n    \"treatment:turn_1:answer_body_changed\",\n    \"treatment:turn_1:answer_body_sha256_mismatch\"\n  ],\n  \"live\": false,\n  \"mocked\": false,\n  \"schema\": \"persona_dream.answer_invariance_validation.v1\",\n  \"status\": \"FAIL_ANSWER_INVARIANCE\",\n  \"treatment\": \"/tmp/pd-later-turn-tamper/treatment.jsonl\"\n}\nTAMPER_DETECTED_RC_1\n",
+          "stderr": "",
+          "duration_ms": 78.409,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "c2f407b3bb84-c001-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\n  \"aligned_embry_turns\": 1,\n  \"answer_body_sha256\": \"sha256:62ac8ae23b86c9dbe5dc0d3e147259f990ab5cae1161a97e2da984501eadfec0\",\n  \"control\": \"/tmp/pd-later-turn-tamper/control.jsonl\",\n  \"failures\": [\n    \"treatment:turn_1:answer_body_changed\",\n    \"treatment:turn_1:answer_body_sha256_mismatch\"\n  ],\n  \"live\": false,\n  \"mocked\": false,\n  \"schema\": \"persona_dream.answer_invariance_validation.v1\",\n  \"status\": \"FAIL_ANSWER_INVARIANCE\",\n  \"treatment\": \"/tmp/pd-later-turn-tamper/treatment.jsonl\"\n}\nTAMPER_DETECTED_RC_1\n",
+          "stderr": "",
+          "duration_ms": 79.203,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "c2f407b3bb84-c001-t01",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    }
+  ]
+}

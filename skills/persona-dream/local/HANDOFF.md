@@ -1,9 +1,10 @@
 # Handoff Report: Persona Dream
 
-**Timestamp**: 2026-09-16
+**Timestamp**: 2026-09-17 (updated after the later-turn-effect milestone)
 **Active Agent**: pi (agent-skills session)
-**Scope**: this session's work — the closed experience→state loop and the
-chatterbox-speak / embry-voice-control safety wiring + deployment. Older
+**Scope**: this session's work — the closed experience→state loop, the
+chatterbox-speak / embry-voice-control safety wiring + deployment, and the
+later-turn delivery effect (the loop's back half). Older
 revision-qualification / Kling / video-plan state is unchanged and still lives
 in `CURRENT_STATUS.json` and `PROJECT_KNOWLEDGE.md`.
 
@@ -31,6 +32,7 @@ All commits verified as ancestors of `origin/main`, byte-matched at land time.
 | `1ae62979` | **chatterbox-speak core extraction**: `speak_core.py` (typed VoiceDeliveryPlan → gated render → hashed receipt), CLI thinned, 13-case live eval |
 | `16a92c70` | **embry-voice-control wired through the core**: digest-verified loader, `/readiness` core parity, `render_evidence` in turn receipts, `check_no_direct_chatterbox_posts.py` |
 | `15bf4958` | **voice-stack cutover executed**: `speak_core` resolves host WAVs across layouts; `CUTOVER_RUNBOOK.md` addendum + sanitized override template |
+| this session | **later-turn delivery effect (loop's back half) landed**: `run_later_turn_effect.py` + `run.sh later-turn-effect`, `render_via_chatterbox_speak` gained `--intensity` passthrough + persisted core receipts, retained eval `fixtures/agentic_eval.later_turn_effect.json` (readiness READY, critical claim proven live). Retained proof: `local/proofs/later-turn-effect-20260917T140812Z/` (PASS: c0 warmth 0.20→RESERVED, c1 0.30→WARMER; answer byte-identical + invariance gate PASS; affect applied=true, exaggeration 0.57 vs 1.11; durations 12.38s slow vs 11.11s brisk; zero memory writes) |
 
 Reference doc `18674b0d` (`skills/ask/references/strategy-to-workflow.md`) also
 landed: the ask-one-shot → lane-specs → workflowScript recipe used to drive all
@@ -60,15 +62,25 @@ of the above.
   :8019 (healthy, `/readiness` digest_match:true), realtime-stt :8020 (ready,
   wake sha256 verified), chatterbox :8018 (model_loaded). Old ad-hoc container
   retired-renamed; rollback = `start_agent_server_docker.sh` (one command).
+- **Later-turn effect proven live** (contract §"Later-turn effect"): both arms
+  answer the frozen protected question from the independently reread folded
+  state with a byte-identical capsule body (validator PASS, tamper case fails
+  closed), framing differs by arm via a FROZEN CATEGORICAL mapping
+  (warmth>baseline → WARMER else RESERVED), and Chatterbox delivery differs
+  with paired `affect_effect applied=true` receipts (explicit low 0.3 vs high
+  0.9 → exaggeration 0.57 vs 1.11 on chatterbox_base_affect; pace slow/brisk;
+  temperature held identical). `persona_state_delta` key set unchanged across
+  the run — the turn is never reinforcement evidence.
 
 ## 4. What is Currently Broken / Open
 
-- **The research question itself is NOT answered.** The loop is proven
-  *bounded and causal for a single axis (warmth) on one eval persona
-  (embry-eval)*. It does **not** yet show dreaming beats direct memory /
-  structured reflection, nor felt/perceived emotion, nor longitudinal benefit.
-  Claim boundary is frozen: "deterministic evolution from declared,
-  provenance-bound emotional signals."
+- **The research question itself is NOT answered.** The loop is now proven
+  *bounded, causal, and carried through to later-turn behavior/delivery for a
+  single axis (warmth) on one eval persona (embry-eval)* — but it does **not**
+  yet show dreaming beats direct memory / structured reflection, nor
+  felt/perceived emotion, nor longitudinal benefit. Claim boundary is frozen:
+  "deterministic evolution from declared, provenance-bound emotional signals,
+  deterministically mapped to later framing and applied delivery."
 - **C1-inert is an accepted amendment, not a passed content-control.** A
   deterministic gate reading only emotional signals can't distinguish records
   differing solely in a non-emotional attribute; content-pathway discrimination
@@ -101,20 +113,21 @@ of the above.
    independent scenarios, then run the preregistered comparison against direct
    memory (M) and structured reflection (R) — the M/R/D arm. A null result is a
    valid, publishable finding. Do not treat the proven mechanism as the answer.
-2. **Later-turn delivery effect** (the loop's back half): exercise a later turn
-   using the reread evolved state, prove the protected factual answer is
-   byte-identical across arms while behavioral framing + Chatterbox delivery
-   differ, with a paired `*_effect: applied:true` receipt.
-3. **Harden the deploy**: fold the non-secret override gaps into
+2. **Harden the deploy**: fold the non-secret override gaps into
    `deploy/compose.yaml`; keep `WHISPER_API_KEY` in a gitignored `.env`. Decide
    whether to retire the generic whisper :9000 and journal :8032 drift after a
    soak period (currently left up on purpose).
-4. **Optional self-healing** (open design question from the user, not yet built):
+3. **Optional self-healing** (open design question from the user, not yet built):
    map each `BLOCKED_*`/`REJECTED_*` disposition to `triage-error` catalog
    entries with `next_command`; add bounded *deterministic* self-repair only for
    the recoverable subset (reseed-arm is idempotent by design). Keep `$jev` in
    shadow/measure-only mode — the pipeline emits closed-set typed codes, so there
    is little ambiguous signal for a classifier to decide yet.
+4. **Later-turn follow-ups (optional)**: linear (non-categorical) warmth→delivery
+   mapping is future work — the renderer's response curve says small deltas are
+   inaudible, so the categorical profile is the honest frozen choice; a
+   perceptual/audibility claim needs the listener-study machinery, not this
+   receipt.
 
 ## 6. Project Context for Success
 
@@ -126,17 +139,26 @@ of the above.
   seed arms with `run.sh seed-c0c1-eval-memory --arm {c0,c1,c1_null,c1_inert,full} --reset`.
 - **Admission/fold**: `scripts/admit_persona_state_delta.py`,
   `scripts/fold_persona_state.py`, shared frozen digest in `scripts/c0c1_frozen.py`.
+- **Later-turn effect**: `run.sh later-turn-effect --out-dir <dir>` →
+  `scripts/run_later_turn_effect.py` (folds both arms live, composes the turn
+  from the frozen mapping, renders through the chatterbox-speak front door,
+  gates answer invariance / applied affect / zero writes, writes
+  `LATER_TURN_RECEIPT.json`).
 - **Evals** (the acceptance authority, not unit tests):
   `fixtures/agentic_eval.persona_state_admission.json` (19 cases),
   `fixtures/agentic_eval.memory_recall_emotional_triggers.json` (8),
-  `fixtures/c0c1_eval_memory_seed.json`, `agentic_eval.c0c1_seeding.json`.
+  `fixtures/c0c1_eval_memory_seed.json`, `agentic_eval.c0c1_seeding.json`,
+  `fixtures/agentic_eval.later_turn_effect.json` (2 cases: live e2e + tamper
+  negative; readiness READY).
   Run with `skills/agentic-evals/run.sh run <fixture> --output <report>`.
 - **Voice**: chatterbox-speak core is `skills/chatterbox-speak/scripts/speak_core.py`;
   the gateway seam is `skills/embry-voice-control/src/embry_voice_control/chatterbox_gate.py`;
   stack is `skills/embry-voice-control/deploy/compose.yaml` +
   `CUTOVER_RUNBOOK.md`.
 - **Retained proof for this session**:
-  `local/proofs/c0c1-experiment-20260916T025216Z/EXPERIMENT_RECEIPT.json`.
+  `local/proofs/c0c1-experiment-20260916T025216Z/EXPERIMENT_RECEIPT.json` and
+  `local/proofs/later-turn-effect-20260917T140812Z/LATER_TURN_RECEIPT.json`
+  (+ `agentic_eval_report.json`).
 - **Gotcha**: local `run.sh` flaps between old-HEAD and origin content because
   background cron lanes rewrite tracked files mid-session; re-align to
   `git show origin/main:skills/persona-dream/run.sh` if a subcommand goes

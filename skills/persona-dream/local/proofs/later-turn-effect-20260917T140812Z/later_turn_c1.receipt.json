@@ -1,0 +1,2166 @@
+{
+  "affect_effect": {
+    "applied": true,
+    "backend": "chatterbox_base_affect",
+    "derived_knobs": {
+      "cfg_weight": 0.5,
+      "exaggeration": 1.11,
+      "intensity": 0.9,
+      "temperature": 0.7,
+      "valence": 0.3
+    },
+    "knob_source": "explicit_intensity_valence",
+    "reason": null,
+    "schema": "chatterbox.affect_effect.v1"
+  },
+  "allow_unknown_tags": false,
+  "backend": {
+    "capability_digest": "e4d1eed07cd193000853dbabd211f0ea7b62dfd2fb3e55b54306f761ff920048",
+    "id": "chatterbox_base_affect",
+    "selection_source": "affect_auto"
+  },
+  "caller_metadata": {},
+  "chatterbox_pause_plan": [
+    {
+      "interruptible": true,
+      "pause_after_ms": 300,
+      "role": "behavioral_framing_prefix",
+      "text": "Oh, I'm glad you asked me that one."
+    },
+    {
+      "interruptible": false,
+      "pause_after_ms": 400,
+      "role": "protected_answer_body",
+      "text": "The capital of Australia is Canberra, and seven times eight is fifty-six."
+    },
+    {
+      "interruptible": true,
+      "pause_after_ms": 0,
+      "role": "behavioral_framing_suffix",
+      "text": "It's genuinely nice to talk this through with you."
+    }
+  ],
+  "context": "persona-dream later-turn-effect arm=c1 profile=WARMER",
+  "duration_seconds": 11.110666666666667,
+  "intent_policy_source": "cli.direct",
+  "live": true,
+  "memory_context": null,
+  "mocked": false,
+  "original_text": "",
+  "plan_sha256": "sha256:2deadf6d90cf4a818d5165182764fc89a6a2a399d1d9524f7f6670da5f4e34df",
+  "pronunciation_normalized": true,
+  "render_source": "caller_plan",
+  "request": {
+    "answer_text": "Oh, I'm glad you asked me that one. The capital of Australia is Canberra, and seven times eight is fifty-six. It's genuinely nice to talk this through with you.",
+    "asr_verify": false,
+    "crossfade_ms": 0,
+    "label": "chatterbox-speak-27e0e17b09f243349a0acc06a7006c7a",
+    "ref_audio": "/data/embry_ref.wav",
+    "render_chunks": [
+      {
+        "delivery": null,
+        "intensity": null,
+        "interruptible": true,
+        "pause_after_ms": 300,
+        "role": "behavioral_framing_prefix",
+        "text": "Oh, I'm glad you asked me that one.",
+        "tone": null
+      },
+      {
+        "delivery": null,
+        "intensity": null,
+        "interruptible": false,
+        "pause_after_ms": 400,
+        "role": "protected_answer_body",
+        "text": "The capital of Australia is Canberra, and seven times eight is fifty-six.",
+        "tone": null
+      },
+      {
+        "delivery": null,
+        "intensity": null,
+        "interruptible": true,
+        "pause_after_ms": 0,
+        "role": "behavioral_framing_suffix",
+        "text": "It's genuinely nice to talk this through with you.",
+        "tone": null
+      }
+    ],
+    "temperature": 0.8,
+    "use_blessed_qra_cache": false,
+    "voice_delivery": {
+      "emotion_realization": "audible",
+      "intensity": 0.9,
+      "pace": "brisk",
+      "tone": null
+    }
+  },
+  "request_payload_sha256": "sha256:537c0e32e1b03a2eac562dfe4d9983762dd4e2c222a8b998db68d8c04247aeb9",
+  "requested_intensity": "high",
+  "schema": "chatterbox_speak.receipt.v1",
+  "service_receipt": {
+    "affect_effect": {
+      "applied": true,
+      "backend": "chatterbox_base_affect",
+      "derived_knobs": {
+        "cfg_weight": 0.5,
+        "exaggeration": 1.11,
+        "intensity": 0.9,
+        "temperature": 0.7,
+        "valence": 0.3
+      },
+      "knob_source": "explicit_intensity_valence",
+      "reason": null,
+      "schema": "chatterbox.affect_effect.v1"
+    },
+    "answer_text_sha256": "eafe43435e6e0b03c1fb92d033391df61aaacf67ea4a3543edea5e810b1378e4",
+    "applied_controls": [
+      {
+        "applied": {
+          "can_interrupt_after": true,
+          "delivery_stage": "slightly_concerned",
+          "pace": "brisk",
+          "pause_after_ms": 300,
+          "pause_strategy": null,
+          "tone": "neutral_warm"
+        },
+        "chunk_index": 1,
+        "normalized": {
+          "delivery_stage": "slightly_concerned",
+          "pace": "brisk",
+          "pause_after_ms": 300,
+          "pause_strategy": null,
+          "tone": "neutral_warm"
+        },
+        "requested": {
+          "delivery_stage": null,
+          "pace": "brisk",
+          "pause_after_ms": 300,
+          "pause_strategy": null,
+          "tone": null
+        }
+      },
+      {
+        "applied": {
+          "can_interrupt_after": false,
+          "delivery_stage": "positive",
+          "pace": "brisk",
+          "pause_after_ms": 400,
+          "pause_strategy": null,
+          "tone": "neutral_warm"
+        },
+        "chunk_index": 2,
+        "normalized": {
+          "delivery_stage": "positive",
+          "pace": "brisk",
+          "pause_after_ms": 400,
+          "pause_strategy": null,
+          "tone": "neutral_warm"
+        },
+        "requested": {
+          "delivery_stage": null,
+          "pace": "brisk",
+          "pause_after_ms": 400,
+          "pause_strategy": null,
+          "tone": null
+        }
+      },
+      {
+        "applied": {
+          "can_interrupt_after": true,
+          "delivery_stage": "satisfied",
+          "pace": "brisk",
+          "pause_after_ms": 0,
+          "pause_strategy": null,
+          "tone": "neutral_warm"
+        },
+        "chunk_index": 3,
+        "normalized": {
+          "delivery_stage": "satisfied",
+          "pace": "brisk",
+          "pause_after_ms": 0,
+          "pause_strategy": null,
+          "tone": "neutral_warm"
+        },
+        "requested": {
+          "delivery_stage": null,
+          "pace": "brisk",
+          "pause_after_ms": 0,
+          "pause_strategy": null,
+          "tone": null
+        }
+      }
+    ],
+    "asr_verification": {
+      "api_key_available": null,
+      "api_key_env": null,
+      "cache_enabled": null,
+      "enabled": false,
+      "failed_gates": [],
+      "max_candidates": null,
+      "max_duration_ratio": null,
+      "max_wer": null,
+      "openai_base_url": null,
+      "request_overrides_allowed": false
+    },
+    "backend": {
+      "capability_digest": "e4d1eed07cd193000853dbabd211f0ea7b62dfd2fb3e55b54306f761ff920048",
+      "id": "chatterbox_base_affect",
+      "selection_source": "affect_auto"
+    },
+    "batch_label": "chatterbox-speak-27e0e17b09f243349a0acc06a7006c7a",
+    "blessed_qra_cache": {
+      "enabled": false,
+      "failed_gates": [],
+      "hit": false,
+      "reason": "request_disabled",
+      "schema_version": "blessed_qra_response_cache.v1"
+    },
+    "cache_key": "f02a110113ba9953b9702fbe328c6db0e82c071aaa430448e0a7918f16eb15d7",
+    "cache_material": {
+      "answer_text_sha256": "eafe43435e6e0b03c1fb92d033391df61aaacf67ea4a3543edea5e810b1378e4",
+      "asr_verify": false,
+      "chunk_text_sha256": [
+        "c180209762c003868003c33e356bc6db482eb3826ce375402be4740ebcf2f437",
+        "62ac8ae23b86c9dbe5dc0d3e147259f990ab5cae1161a97e2da984501eadfec0",
+        "dcca1f801e927842ea7c80ee97dbfece8fba2acbc15ba5b9f33cb4f70c989ddb"
+      ],
+      "completion_cue_sha256": null,
+      "delivery_stages": [
+        "slightly_concerned",
+        "positive",
+        "satisfied"
+      ],
+      "emotion_knobs": {
+        "cfg_weight": 0.5,
+        "exaggeration": 1.11,
+        "intensity": 0.9,
+        "temperature": 0.7,
+        "valence": 0.3
+      },
+      "engine": "chatterbox_base",
+      "max_chars": 300,
+      "ref_audio": "/data/embry_ref.wav",
+      "stage_presets": {
+        "positive": {
+          "norm_loudness": true,
+          "repetition_penalty": 1.16,
+          "temperature": 0.9,
+          "top_k": 1100,
+          "top_p": 0.97
+        },
+        "satisfied": {
+          "norm_loudness": true,
+          "repetition_penalty": 1.18,
+          "temperature": 0.84,
+          "top_k": 1000,
+          "top_p": 0.96
+        },
+        "slightly_concerned": {
+          "norm_loudness": true,
+          "repetition_penalty": 1.22,
+          "temperature": 0.72,
+          "top_k": 900,
+          "top_p": 0.9
+        }
+      },
+      "temperature": 0.8,
+      "voice_delivery": {
+        "confidence": null,
+        "delivery_stage": "neutral",
+        "delivery_stage_source": "tone_mapping",
+        "detected_event_tags": [],
+        "emotion_realization": "audible",
+        "evidence": null,
+        "ignored_turbo_params": [
+          "cfg_weight",
+          "exaggeration",
+          "min_p"
+        ],
+        "intensity": 0.9,
+        "normalized_tone": "neutral_warm",
+        "pace": "brisk",
+        "pause_strategy": null,
+        "prefer_tag_consuming_backend": false,
+        "requested_delivery_stage": null,
+        "requested_tone": null,
+        "schema": "chatterbox.voice_delivery.v1",
+        "source": null,
+        "tag_handling": {
+          "accepted_tag_classes": {
+            "emotion_delivery": [
+              "[advertisement]",
+              "[angry]",
+              "[crying]",
+              "[dramatic]",
+              "[fear]",
+              "[happy]",
+              "[narration]",
+              "[sarcastic]",
+              "[surprised]",
+              "[whispering]"
+            ],
+            "vocal_event": [
+              "[chuckle]",
+              "[clear throat]",
+              "[cough]",
+              "[gasp]",
+              "[groan]",
+              "[laugh]",
+              "[shush]",
+              "[sigh]",
+              "[sniff]"
+            ]
+          },
+          "accepted_tags": [
+            "[advertisement]",
+            "[angry]",
+            "[chuckle]",
+            "[clear throat]",
+            "[cough]",
+            "[crying]",
+            "[dramatic]",
+            "[fear]",
+            "[gasp]",
+            "[groan]",
+            "[happy]",
+            "[laugh]",
+            "[narration]",
+            "[sarcastic]",
+            "[shush]",
+            "[sigh]",
+            "[sniff]",
+            "[surprised]",
+            "[whispering]"
+          ],
+          "applied_tags": [],
+          "backend": "chatterbox_base_affect",
+          "dedicated_tag_channel": "native_event_tags_on_tag_consuming_backend",
+          "detected_tags": [],
+          "inline_text_tag_behavior": "consumed_natively_on_tag_consuming_backend__literal_text_on_other_backends",
+          "requested_tags": [],
+          "schema": "chatterbox.tag_handling.v1",
+          "tag_consuming_backends": [
+            "chatterbox_turbo"
+          ],
+          "tags_interpreted": false,
+          "tags_interpreted_reason": "no_event_tags_in_text__backend_chatterbox_base_affect_would_speak_them_literally",
+          "unknown_tag_behavior": "synthesized_as_literal_text"
+        },
+        "tag_realization": "native",
+        "tone": "neutral_warm",
+        "tone_was_normalized": false,
+        "use_base_emotion": null,
+        "valence": null,
+        "wait_activity": null
+      }
+    },
+    "chunks": [
+      {
+        "affect_effect": {
+          "applied": true,
+          "backend": "chatterbox_base_affect",
+          "derived_knobs": {
+            "cfg_weight": 0.5,
+            "exaggeration": 1.11,
+            "intensity": 0.9,
+            "temperature": 0.7,
+            "valence": 0.3
+          },
+          "knob_source": "explicit_intensity_valence",
+          "reason": null,
+          "schema": "chatterbox.affect_effect.v1"
+        },
+        "applied_control": {
+          "applied": {
+            "can_interrupt_after": true,
+            "delivery_stage": "slightly_concerned",
+            "pace": "brisk",
+            "pause_after_ms": 300,
+            "pause_strategy": null,
+            "tone": "neutral_warm"
+          },
+          "chunk_index": 1,
+          "normalized": {
+            "delivery_stage": "slightly_concerned",
+            "pace": "brisk",
+            "pause_after_ms": 300,
+            "pause_strategy": null,
+            "tone": "neutral_warm"
+          },
+          "requested": {
+            "delivery_stage": null,
+            "pace": "brisk",
+            "pause_after_ms": 300,
+            "pause_strategy": null,
+            "tone": null
+          }
+        },
+        "audio": "/var/lib/embry-artifacts/chatterbox/chatterbox-speak-27e0e17b09f243349a0acc06a7006c7a/chunk_01_slightly_concerned.wav",
+        "backend": {
+          "capability_digest": "e4d1eed07cd193000853dbabd211f0ea7b62dfd2fb3e55b54306f761ff920048",
+          "id": "chatterbox_base_affect",
+          "selection_source": "affect_auto"
+        },
+        "can_interrupt_after": true,
+        "chunk_index": 1,
+        "chunk_total": 3,
+        "delivery_stage": "slightly_concerned",
+        "duration_seconds": 2.379,
+        "emotion_knobs": {
+          "cfg_weight": 0.5,
+          "exaggeration": 1.11,
+          "intensity": 0.9,
+          "temperature": 0.7,
+          "valence": 0.3
+        },
+        "engine": "chatterbox_base",
+        "failed_gates": [],
+        "generation_params": {
+          "norm_loudness": true,
+          "repetition_penalty": 1.22,
+          "temperature": 0.8,
+          "top_k": 900,
+          "top_p": 0.9
+        },
+        "generation_seconds": 1.942,
+        "ignored_turbo_params": [
+          "cfg_weight",
+          "exaggeration",
+          "min_p"
+        ],
+        "latency_events": [
+          {
+            "elapsed_ms": 0.001,
+            "name": "request_received"
+          },
+          {
+            "elapsed_ms": 0.425,
+            "name": "generation_params_ready"
+          },
+          {
+            "elapsed_ms": 1942.482,
+            "engine": "chatterbox_base",
+            "name": "voice_conditioning_ready",
+            "render_lock": "held"
+          },
+          {
+            "elapsed_ms": 1942.49,
+            "generation_seconds": 1.942,
+            "name": "first_audio_ready"
+          },
+          {
+            "elapsed_ms": 1948.184,
+            "name": "pace_stretch_applied",
+            "output_duration_seconds": 2.379,
+            "tempo_factor": 1.08
+          },
+          {
+            "elapsed_ms": 1950.347,
+            "name": "audio_saved"
+          },
+          {
+            "elapsed_ms": 2002.362,
+            "name": "audio_metrics_ready"
+          }
+        ],
+        "live": true,
+        "metrics": {
+          "bytes": 114254,
+          "channels": 1,
+          "codec_name": "pcm_s16le",
+          "duration_seconds": 2.379,
+          "exists": true,
+          "ffprobe": {
+            "cmd": [
+              "ffprobe",
+              "-hide_banner",
+              "-v",
+              "error",
+              "-show_entries",
+              "format=duration,size",
+              "-show_entries",
+              "stream=codec_name,sample_rate,channels",
+              "-of",
+              "json",
+              "/var/lib/embry-artifacts/chatterbox/chatterbox-speak-27e0e17b09f243349a0acc06a7006c7a/chunk_01_slightly_concerned.wav"
+            ],
+            "returncode": 0,
+            "stderr": "",
+            "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"2.378667\",\n        \"size\": \"114254\"\n    }\n}\n"
+          },
+          "ffprobe_size": 114254,
+          "path": "/var/lib/embry-artifacts/chatterbox/chatterbox-speak-27e0e17b09f243349a0acc06a7006c7a/chunk_01_slightly_concerned.wav",
+          "sample_rate": 24000,
+          "sha256": "a373f1d20e60fb56216da096b82e300ed50a593a5d8f2f1dc8e1a4123f85f3d9"
+        },
+        "mocked": false,
+        "normalized_tone": "neutral_warm",
+        "ok": true,
+        "output_format": {
+          "backend_sample_rate": 24000,
+          "channels": 1,
+          "container": "wav",
+          "declared_sample_rate": 24000
+        },
+        "pace_effect": {
+          "applied": true,
+          "input_duration_seconds": 2.56,
+          "mechanism": "phase_vocoder_time_stretch",
+          "output_duration_seconds": 2.379,
+          "requested_pace": "brisk",
+          "schema": "chatterbox.pace_effect.v1",
+          "tempo_factor": 1.08,
+          "tempo_source": "requested_pace"
+        },
+        "pause_after_ms": 300,
+        "phase": "answer_chunk",
+        "realtime_factor": 0.816,
+        "reference_audio": "/data/embry_ref.wav",
+        "requested_delivery_stage": "slightly_concerned",
+        "requested_device": "cuda",
+        "requested_tone": "neutral_warm",
+        "stochasticity": {
+          "cache_behavior": "repeat_group_id_is_receipt_metadata_not_a_cache_buster",
+          "deterministic_audio": false,
+          "equivalence": "same_repeat_group_id_groups_comparable_stochastic_renders_without_implying_identical_audio",
+          "repeat_group_id": null,
+          "schema": "chatterbox.stochasticity.v1",
+          "seed": null,
+          "seed_supported": false
+        },
+        "tag_handling": {
+          "accepted_tag_classes": {
+            "emotion_delivery": [
+              "[advertisement]",
+              "[angry]",
+              "[crying]",
+              "[dramatic]",
+              "[fear]",
+              "[happy]",
+              "[narration]",
+              "[sarcastic]",
+              "[surprised]",
+              "[whispering]"
+            ],
+            "vocal_event": [
+              "[chuckle]",
+              "[clear throat]",
+              "[cough]",
+              "[gasp]",
+              "[groan]",
+              "[laugh]",
+              "[shush]",
+              "[sigh]",
+              "[sniff]"
+            ]
+          },
+          "accepted_tags": [
+            "[advertisement]",
+            "[angry]",
+            "[chuckle]",
+            "[clear throat]",
+            "[cough]",
+            "[crying]",
+            "[dramatic]",
+            "[fear]",
+            "[gasp]",
+            "[groan]",
+            "[happy]",
+            "[laugh]",
+            "[narration]",
+            "[sarcastic]",
+            "[shush]",
+            "[sigh]",
+            "[sniff]",
+            "[surprised]",
+            "[whispering]"
+          ],
+          "applied_tags": [],
+          "backend": "chatterbox_base_affect",
+          "dedicated_tag_channel": "native_event_tags_on_tag_consuming_backend",
+          "detected_tags": [],
+          "inline_text_tag_behavior": "consumed_natively_on_tag_consuming_backend__literal_text_on_other_backends",
+          "requested_tags": [],
+          "schema": "chatterbox.tag_handling.v1",
+          "tag_consuming_backends": [
+            "chatterbox_turbo"
+          ],
+          "tags_interpreted": false,
+          "tags_interpreted_reason": "no_event_tags_in_text__backend_chatterbox_base_affect_would_speak_them_literally",
+          "unknown_tag_behavior": "synthesized_as_literal_text"
+        },
+        "text": "Oh, I'm glad you asked me that one.",
+        "text_sha256": "c180209762c003868003c33e356bc6db482eb3826ce375402be4740ebcf2f437",
+        "tone": "neutral_warm",
+        "total_elapsed_ms": 2002.39,
+        "voice_conditioning": {
+          "emotion_knobs": {
+            "cfg_weight": 0.5,
+            "exaggeration": 1.11,
+            "intensity": 0.9,
+            "temperature": 0.7,
+            "valence": 0.3
+          },
+          "engine": "chatterbox_base",
+          "reference_audio": "/data/embry_ref.wav"
+        },
+        "voice_delivery": {
+          "confidence": null,
+          "delivery_stage": "slightly_concerned",
+          "delivery_stage_source": "request.delivery_stage",
+          "detected_event_tags": [],
+          "emotion_realization": "audible",
+          "evidence": null,
+          "ignored_turbo_params": [
+            "cfg_weight",
+            "exaggeration",
+            "min_p"
+          ],
+          "intensity": 0.9,
+          "normalized_tone": "neutral_warm",
+          "pace": "brisk",
+          "pause_strategy": null,
+          "prefer_tag_consuming_backend": false,
+          "requested_delivery_stage": "slightly_concerned",
+          "requested_tone": "neutral_warm",
+          "schema": "chatterbox.voice_delivery.v1",
+          "source": null,
+          "tag_handling": {
+            "accepted_tag_classes": {
+              "emotion_delivery": [
+                "[advertisement]",
+                "[angry]",
+                "[crying]",
+                "[dramatic]",
+                "[fear]",
+                "[happy]",
+                "[narration]",
+                "[sarcastic]",
+                "[surprised]",
+                "[whispering]"
+              ],
+              "vocal_event": [
+                "[chuckle]",
+                "[clear throat]",
+                "[cough]",
+                "[gasp]",
+                "[groan]",
+                "[laugh]",
+                "[shush]",
+                "[sigh]",
+                "[sniff]"
+              ]
+            },
+            "accepted_tags": [
+              "[advertisement]",
+              "[angry]",
+              "[chuckle]",
+              "[clear throat]",
+              "[cough]",
+              "[crying]",
+              "[dramatic]",
+              "[fear]",
+              "[gasp]",
+              "[groan]",
+              "[happy]",
+              "[laugh]",
+              "[narration]",
+              "[sarcastic]",
+              "[shush]",
+              "[sigh]",
+              "[sniff]",
+              "[surprised]",
+              "[whispering]"
+            ],
+            "applied_tags": [],
+            "backend": "chatterbox_base_affect",
+            "dedicated_tag_channel": "native_event_tags_on_tag_consuming_backend",
+            "detected_tags": [],
+            "inline_text_tag_behavior": "consumed_natively_on_tag_consuming_backend__literal_text_on_other_backends",
+            "requested_tags": [],
+            "schema": "chatterbox.tag_handling.v1",
+            "tag_consuming_backends": [
+              "chatterbox_turbo"
+            ],
+            "tags_interpreted": false,
+            "tags_interpreted_reason": "no_event_tags_in_text__backend_chatterbox_base_affect_would_speak_them_literally",
+            "unknown_tag_behavior": "synthesized_as_literal_text"
+          },
+          "tag_realization": "native",
+          "tone": "neutral_warm",
+          "tone_was_normalized": false,
+          "use_base_emotion": null,
+          "valence": null,
+          "wait_activity": null
+        },
+        "voice_delivery_effect": {
+          "consumer_guidance": "Treat any field not marked applied as receipt metadata. Echo-back of a request field is never evidence of acoustic effect; only a per-render *_effect receipt with applied=true is.",
+          "engine": "chatterbox_turbo",
+          "fields": {
+            "chatterbox_tags": {
+              "reason": "The voice_delivery.chatterbox_tags LIST remains request-only metadata; invented tokens such as [firm] or [breath] are not model vocabulary. INLINE tags in the text are different: see paralinguistic_tags.",
+              "status": "request_only"
+            },
+            "intensity_valence": {
+              "mechanism": "intensity scales exaggeration (0.3+0.9*intensity, clamped 0.3-1.4); negative valence lowers cfg_weight (0.5-0.2*max(0,-valence), clamped 0.3-0.5)",
+              "per_render_receipt": "affect_effect (chatterbox.affect_effect.v1)",
+              "response_curve": {
+                "consumer_guidance": "Use large intensity/valence contrasts (>=0.5 apart) for audibly distinct arms; do not expect fine-grained gradations to be audible.",
+                "measured": {
+                  "audible": "intensity 0.9 / valence -0.8 vs intensity 0.2 / valence -0.2 separated f0_median by 66.6 Hz against an 8.1 Hz same-parameter floor and rms by 3.5x its floor (eval_tone_audibility affect case, 2026-08-04)",
+                  "inaudible": "single-axis deltas of 0.25-0.32 intensity from a 0.5 floor moved no metric past a 4-repeat noise floor (persona-dream measurement, chatterbox#21)"
+                },
+                "perceptual_validation": "Held-out dimensional emotion model (audeering MSP-Podcast wav2vec2): perceived arousal rank-correlates with requested intensity at Spearman 0.96 across all 15 calibrated tones; perceived valence does NOT track the requested valence knob (Spearman ~0.08) -- arousal is the single perceptually verified affect dimension. See the machine_listener eval case.",
+                "summary": "Response is nonlinear and top-weighted: audible change is measured only near the top of the intensity range. Small deltas sit below the renderer's own same-parameter noise floor."
+              },
+              "status": "intensity_applied_on_chatterbox_base_affect__valence_perceptually_inert",
+              "valence_inertness": {
+                "consumer_guidance": "Treat requested valence as engine-internal metadata, not a perceptual promise. Perceived tone differentiation comes from arousal (intensity) and tempo. A valence-capable engine is future work.",
+                "declared": true,
+                "evidence": "Full raw-knob sweep on /synthesize-emotion (cfg_weight 0.1-0.9, temperature 0.5-1.1, exaggeration 0.3-1.1; interleaved floor n=4) scored by the audeering dimensional model: every axis's perceived-valence sweep range (0.043-0.075) fell inside the same-parameter floor spread (0.082). No generation knob moves perceived valence on the Chatterbox engines. Receipt: docs/proofs/valence_sweep_20260804.json (chatterbox#23)."
+              }
+            },
+            "pace": {
+              "mechanism": "phase_vocoder_time_stretch",
+              "proof_metric": "duration_seconds scales by 1/tempo_factor; see per-render pace_effect receipt",
+              "status": "applied",
+              "tempo_factors": {
+                "brisk": 1.08,
+                "default": 1.0,
+                "fast": 1.18,
+                "measured": 0.92,
+                "neutral": 1.0,
+                "slow": 0.85
+              },
+              "unknown_value_behavior": "request_only"
+            },
+            "paralinguistic_tags": {
+              "accepted_tags": [
+                "[advertisement]",
+                "[angry]",
+                "[chuckle]",
+                "[clear throat]",
+                "[cough]",
+                "[crying]",
+                "[dramatic]",
+                "[fear]",
+                "[gasp]",
+                "[groan]",
+                "[happy]",
+                "[laugh]",
+                "[narration]",
+                "[sarcastic]",
+                "[shush]",
+                "[sigh]",
+                "[sniff]",
+                "[surprised]",
+                "[whispering]"
+              ],
+              "affect_tradeoff": {
+                "consumer_override": "Set voice_delivery.tag_realization='literal' to prefer the arousal knobs instead; the render then routes to chatterbox_base_affect and tag_handling reports tags_interpreted=false, so a consumer that cannot accept a spoken tag word fails closed on the receipt.",
+                "declared": true,
+                "explicit_knob_conflict": "Explicit intensity/valence/use_base_emotion always win the routing, because they are a direct instruction. With inline tags present that combination is declared unsatisfiable in tags_interpreted_reason rather than silently resolved.",
+                "resolution": "When inline event tags are present and tone-derived calibration is the only affect source, the render stays on the tag-consuming backend and carries the backend-independent TONE_CALIBRATION tempo axis. The intensity/valence knob axis is then NOT applied and affect_effect reports applied=false with the backend reason.",
+                "summary": "Tag realization and the arousal knob axis live on different backends and cannot both be applied to one render. chatterbox_turbo consumes the event tags but ignores exaggeration/cfg_weight; chatterbox_base_affect honors those knobs but speaks the tag as a literal word."
+              },
+              "mechanism": "native model vocabulary on chatterbox_turbo; no separate channel",
+              "proof_metric": "per-render tag_handling receipt; ASR transcript must not contain the tag word on a tag-consuming path",
+              "status": "applied_on_tag_consuming_backend__literal_text_elsewhere"
+            },
+            "pause_strategy": {
+              "audible_channel": "Use per-chunk pause_after_ms, which inserts real silence when segments are combined.",
+              "reason": "No synthesis code path consumes pause_strategy.",
+              "status": "request_only"
+            },
+            "tone": {
+              "audible_channel": "Set emotion_realization=audible (request field or voice_delivery key) and the tone alone routes through TONE_CALIBRATION -> chatterbox_base_affect knobs plus a per-tone tempo, with no knob knowledge required. Explicit intensity/valence or use_base_emotion also route audibly, as before.",
+              "calibration": "TONE_CALIBRATION; pairwise distinguishability matrix published by the tone_matrix eval case",
+              "default_policy": "Default is fast (turbo) for latency compatibility with live chat; override per request or via CHATTERBOX_EMOTION_REALIZATION_DEFAULT=audible.",
+              "reason": "On the default turbo fast path, tone maps to STAGE_PRESETS which shift only sampling params; measured acoustic shifts are below same-parameter stochastic spread, and the params that move affect (exaggeration, cfg_weight) are ignored by Turbo.",
+              "status": "audible_with_emotion_realization_audible__request_only_on_default_fast_path"
+            }
+          },
+          "schema": "chatterbox.voice_delivery_effect.v1"
+        }
+      },
+      {
+        "affect_effect": {
+          "applied": true,
+          "backend": "chatterbox_base_affect",
+          "derived_knobs": {
+            "cfg_weight": 0.5,
+            "exaggeration": 1.11,
+            "intensity": 0.9,
+            "temperature": 0.7,
+            "valence": 0.3
+          },
+          "knob_source": "explicit_intensity_valence",
+          "reason": null,
+          "schema": "chatterbox.affect_effect.v1"
+        },
+        "applied_control": {
+          "applied": {
+            "can_interrupt_after": false,
+            "delivery_stage": "positive",
+            "pace": "brisk",
+            "pause_after_ms": 400,
+            "pause_strategy": null,
+            "tone": "neutral_warm"
+          },
+          "chunk_index": 2,
+          "normalized": {
+            "delivery_stage": "positive",
+            "pace": "brisk",
+            "pause_after_ms": 400,
+            "pause_strategy": null,
+            "tone": "neutral_warm"
+          },
+          "requested": {
+            "delivery_stage": null,
+            "pace": "brisk",
+            "pause_after_ms": 400,
+            "pause_strategy": null,
+            "tone": null
+          }
+        },
+        "audio": "/var/lib/embry-artifacts/chatterbox/chatterbox-speak-27e0e17b09f243349a0acc06a7006c7a/chunk_02_positive.wav",
+        "backend": {
+          "capability_digest": "e4d1eed07cd193000853dbabd211f0ea7b62dfd2fb3e55b54306f761ff920048",
+          "id": "chatterbox_base_affect",
+          "selection_source": "affect_auto"
+        },
+        "can_interrupt_after": false,
+        "chunk_index": 2,
+        "chunk_total": 3,
+        "delivery_stage": "positive",
+        "duration_seconds": 5.333,
+        "emotion_knobs": {
+          "cfg_weight": 0.5,
+          "exaggeration": 1.11,
+          "intensity": 0.9,
+          "temperature": 0.7,
+          "valence": 0.3
+        },
+        "engine": "chatterbox_base",
+        "failed_gates": [],
+        "generation_params": {
+          "norm_loudness": true,
+          "repetition_penalty": 1.16,
+          "temperature": 0.8,
+          "top_k": 1100,
+          "top_p": 0.97
+        },
+        "generation_seconds": 3.691,
+        "ignored_turbo_params": [
+          "cfg_weight",
+          "exaggeration",
+          "min_p"
+        ],
+        "latency_events": [
+          {
+            "elapsed_ms": 0.0,
+            "name": "request_received"
+          },
+          {
+            "elapsed_ms": 0.37,
+            "name": "generation_params_ready"
+          },
+          {
+            "elapsed_ms": 3691.641,
+            "engine": "chatterbox_base",
+            "name": "voice_conditioning_ready",
+            "render_lock": "held"
+          },
+          {
+            "elapsed_ms": 3691.649,
+            "generation_seconds": 3.691,
+            "name": "first_audio_ready"
+          },
+          {
+            "elapsed_ms": 3699.653,
+            "name": "pace_stretch_applied",
+            "output_duration_seconds": 5.333,
+            "tempo_factor": 1.08
+          },
+          {
+            "elapsed_ms": 3703.886,
+            "name": "audio_saved"
+          },
+          {
+            "elapsed_ms": 3760.76,
+            "name": "audio_metrics_ready"
+          }
+        ],
+        "live": true,
+        "metrics": {
+          "bytes": 256078,
+          "channels": 1,
+          "codec_name": "pcm_s16le",
+          "duration_seconds": 5.333,
+          "exists": true,
+          "ffprobe": {
+            "cmd": [
+              "ffprobe",
+              "-hide_banner",
+              "-v",
+              "error",
+              "-show_entries",
+              "format=duration,size",
+              "-show_entries",
+              "stream=codec_name,sample_rate,channels",
+              "-of",
+              "json",
+              "/var/lib/embry-artifacts/chatterbox/chatterbox-speak-27e0e17b09f243349a0acc06a7006c7a/chunk_02_positive.wav"
+            ],
+            "returncode": 0,
+            "stderr": "",
+            "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"5.333333\",\n        \"size\": \"256078\"\n    }\n}\n"
+          },
+          "ffprobe_size": 256078,
+          "path": "/var/lib/embry-artifacts/chatterbox/chatterbox-speak-27e0e17b09f243349a0acc06a7006c7a/chunk_02_positive.wav",
+          "sample_rate": 24000,
+          "sha256": "62820dca3ea870f3b9bf01d9b533b3b31d9daa59ea58df6550daf3831f4136c6"
+        },
+        "mocked": false,
+        "normalized_tone": "neutral_warm",
+        "ok": true,
+        "output_format": {
+          "backend_sample_rate": 24000,
+          "channels": 1,
+          "container": "wav",
+          "declared_sample_rate": 24000
+        },
+        "pace_effect": {
+          "applied": true,
+          "input_duration_seconds": 5.76,
+          "mechanism": "phase_vocoder_time_stretch",
+          "output_duration_seconds": 5.333,
+          "requested_pace": "brisk",
+          "schema": "chatterbox.pace_effect.v1",
+          "tempo_factor": 1.08,
+          "tempo_source": "requested_pace"
+        },
+        "pause_after_ms": 400,
+        "phase": "answer_chunk",
+        "realtime_factor": 0.692,
+        "reference_audio": "/data/embry_ref.wav",
+        "requested_delivery_stage": "positive",
+        "requested_device": "cuda",
+        "requested_tone": "neutral_warm",
+        "stochasticity": {
+          "cache_behavior": "repeat_group_id_is_receipt_metadata_not_a_cache_buster",
+          "deterministic_audio": false,
+          "equivalence": "same_repeat_group_id_groups_comparable_stochastic_renders_without_implying_identical_audio",
+          "repeat_group_id": null,
+          "schema": "chatterbox.stochasticity.v1",
+          "seed": null,
+          "seed_supported": false
+        },
+        "tag_handling": {
+          "accepted_tag_classes": {
+            "emotion_delivery": [
+              "[advertisement]",
+              "[angry]",
+              "[crying]",
+              "[dramatic]",
+              "[fear]",
+              "[happy]",
+              "[narration]",
+              "[sarcastic]",
+              "[surprised]",
+              "[whispering]"
+            ],
+            "vocal_event": [
+              "[chuckle]",
+              "[clear throat]",
+              "[cough]",
+              "[gasp]",
+              "[groan]",
+              "[laugh]",
+              "[shush]",
+              "[sigh]",
+              "[sniff]"
+            ]
+          },
+          "accepted_tags": [
+            "[advertisement]",
+            "[angry]",
+            "[chuckle]",
+            "[clear throat]",
+            "[cough]",
+            "[crying]",
+            "[dramatic]",
+            "[fear]",
+            "[gasp]",
+            "[groan]",
+            "[happy]",
+            "[laugh]",
+            "[narration]",
+            "[sarcastic]",
+            "[shush]",
+            "[sigh]",
+            "[sniff]",
+            "[surprised]",
+            "[whispering]"
+          ],
+          "applied_tags": [],
+          "backend": "chatterbox_base_affect",
+          "dedicated_tag_channel": "native_event_tags_on_tag_consuming_backend",
+          "detected_tags": [],
+          "inline_text_tag_behavior": "consumed_natively_on_tag_consuming_backend__literal_text_on_other_backends",
+          "requested_tags": [],
+          "schema": "chatterbox.tag_handling.v1",
+          "tag_consuming_backends": [
+            "chatterbox_turbo"
+          ],
+          "tags_interpreted": false,
+          "tags_interpreted_reason": "no_event_tags_in_text__backend_chatterbox_base_affect_would_speak_them_literally",
+          "unknown_tag_behavior": "synthesized_as_literal_text"
+        },
+        "text": "The capital of Australia is Canberra, and seven times eight is fifty-six.",
+        "text_sha256": "62ac8ae23b86c9dbe5dc0d3e147259f990ab5cae1161a97e2da984501eadfec0",
+        "tone": "neutral_warm",
+        "total_elapsed_ms": 3760.79,
+        "voice_conditioning": {
+          "emotion_knobs": {
+            "cfg_weight": 0.5,
+            "exaggeration": 1.11,
+            "intensity": 0.9,
+            "temperature": 0.7,
+            "valence": 0.3
+          },
+          "engine": "chatterbox_base",
+          "reference_audio": "/data/embry_ref.wav"
+        },
+        "voice_delivery": {
+          "confidence": null,
+          "delivery_stage": "positive",
+          "delivery_stage_source": "request.delivery_stage",
+          "detected_event_tags": [],
+          "emotion_realization": "audible",
+          "evidence": null,
+          "ignored_turbo_params": [
+            "cfg_weight",
+            "exaggeration",
+            "min_p"
+          ],
+          "intensity": 0.9,
+          "normalized_tone": "neutral_warm",
+          "pace": "brisk",
+          "pause_strategy": null,
+          "prefer_tag_consuming_backend": false,
+          "requested_delivery_stage": "positive",
+          "requested_tone": "neutral_warm",
+          "schema": "chatterbox.voice_delivery.v1",
+          "source": null,
+          "tag_handling": {
+            "accepted_tag_classes": {
+              "emotion_delivery": [
+                "[advertisement]",
+                "[angry]",
+                "[crying]",
+                "[dramatic]",
+                "[fear]",
+                "[happy]",
+                "[narration]",
+                "[sarcastic]",
+                "[surprised]",
+                "[whispering]"
+              ],
+              "vocal_event": [
+                "[chuckle]",
+                "[clear throat]",
+                "[cough]",
+                "[gasp]",
+                "[groan]",
+                "[laugh]",
+                "[shush]",
+                "[sigh]",
+                "[sniff]"
+              ]
+            },
+            "accepted_tags": [
+              "[advertisement]",
+              "[angry]",
+              "[chuckle]",
+              "[clear throat]",
+              "[cough]",
+              "[crying]",
+              "[dramatic]",
+              "[fear]",
+              "[gasp]",
+              "[groan]",
+              "[happy]",
+              "[laugh]",
+              "[narration]",
+              "[sarcastic]",
+              "[shush]",
+              "[sigh]",
+              "[sniff]",
+              "[surprised]",
+              "[whispering]"
+            ],
+            "applied_tags": [],
+            "backend": "chatterbox_base_affect",
+            "dedicated_tag_channel": "native_event_tags_on_tag_consuming_backend",
+            "detected_tags": [],
+            "inline_text_tag_behavior": "consumed_natively_on_tag_consuming_backend__literal_text_on_other_backends",
+            "requested_tags": [],
+            "schema": "chatterbox.tag_handling.v1",
+            "tag_consuming_backends": [
+              "chatterbox_turbo"
+            ],
+            "tags_interpreted": false,
+            "tags_interpreted_reason": "no_event_tags_in_text__backend_chatterbox_base_affect_would_speak_them_literally",
+            "unknown_tag_behavior": "synthesized_as_literal_text"
+          },
+          "tag_realization": "native",
+          "tone": "neutral_warm",
+          "tone_was_normalized": false,
+          "use_base_emotion": null,
+          "valence": null,
+          "wait_activity": null
+        },
+        "voice_delivery_effect": {
+          "consumer_guidance": "Treat any field not marked applied as receipt metadata. Echo-back of a request field is never evidence of acoustic effect; only a per-render *_effect receipt with applied=true is.",
+          "engine": "chatterbox_turbo",
+          "fields": {
+            "chatterbox_tags": {
+              "reason": "The voice_delivery.chatterbox_tags LIST remains request-only metadata; invented tokens such as [firm] or [breath] are not model vocabulary. INLINE tags in the text are different: see paralinguistic_tags.",
+              "status": "request_only"
+            },
+            "intensity_valence": {
+              "mechanism": "intensity scales exaggeration (0.3+0.9*intensity, clamped 0.3-1.4); negative valence lowers cfg_weight (0.5-0.2*max(0,-valence), clamped 0.3-0.5)",
+              "per_render_receipt": "affect_effect (chatterbox.affect_effect.v1)",
+              "response_curve": {
+                "consumer_guidance": "Use large intensity/valence contrasts (>=0.5 apart) for audibly distinct arms; do not expect fine-grained gradations to be audible.",
+                "measured": {
+                  "audible": "intensity 0.9 / valence -0.8 vs intensity 0.2 / valence -0.2 separated f0_median by 66.6 Hz against an 8.1 Hz same-parameter floor and rms by 3.5x its floor (eval_tone_audibility affect case, 2026-08-04)",
+                  "inaudible": "single-axis deltas of 0.25-0.32 intensity from a 0.5 floor moved no metric past a 4-repeat noise floor (persona-dream measurement, chatterbox#21)"
+                },
+                "perceptual_validation": "Held-out dimensional emotion model (audeering MSP-Podcast wav2vec2): perceived arousal rank-correlates with requested intensity at Spearman 0.96 across all 15 calibrated tones; perceived valence does NOT track the requested valence knob (Spearman ~0.08) -- arousal is the single perceptually verified affect dimension. See the machine_listener eval case.",
+                "summary": "Response is nonlinear and top-weighted: audible change is measured only near the top of the intensity range. Small deltas sit below the renderer's own same-parameter noise floor."
+              },
+              "status": "intensity_applied_on_chatterbox_base_affect__valence_perceptually_inert",
+              "valence_inertness": {
+                "consumer_guidance": "Treat requested valence as engine-internal metadata, not a perceptual promise. Perceived tone differentiation comes from arousal (intensity) and tempo. A valence-capable engine is future work.",
+                "declared": true,
+                "evidence": "Full raw-knob sweep on /synthesize-emotion (cfg_weight 0.1-0.9, temperature 0.5-1.1, exaggeration 0.3-1.1; interleaved floor n=4) scored by the audeering dimensional model: every axis's perceived-valence sweep range (0.043-0.075) fell inside the same-parameter floor spread (0.082). No generation knob moves perceived valence on the Chatterbox engines. Receipt: docs/proofs/valence_sweep_20260804.json (chatterbox#23)."
+              }
+            },
+            "pace": {
+              "mechanism": "phase_vocoder_time_stretch",
+              "proof_metric": "duration_seconds scales by 1/tempo_factor; see per-render pace_effect receipt",
+              "status": "applied",
+              "tempo_factors": {
+                "brisk": 1.08,
+                "default": 1.0,
+                "fast": 1.18,
+                "measured": 0.92,
+                "neutral": 1.0,
+                "slow": 0.85
+              },
+              "unknown_value_behavior": "request_only"
+            },
+            "paralinguistic_tags": {
+              "accepted_tags": [
+                "[advertisement]",
+                "[angry]",
+                "[chuckle]",
+                "[clear throat]",
+                "[cough]",
+                "[crying]",
+                "[dramatic]",
+                "[fear]",
+                "[gasp]",
+                "[groan]",
+                "[happy]",
+                "[laugh]",
+                "[narration]",
+                "[sarcastic]",
+                "[shush]",
+                "[sigh]",
+                "[sniff]",
+                "[surprised]",
+                "[whispering]"
+              ],
+              "affect_tradeoff": {
+                "consumer_override": "Set voice_delivery.tag_realization='literal' to prefer the arousal knobs instead; the render then routes to chatterbox_base_affect and tag_handling reports tags_interpreted=false, so a consumer that cannot accept a spoken tag word fails closed on the receipt.",
+                "declared": true,
+                "explicit_knob_conflict": "Explicit intensity/valence/use_base_emotion always win the routing, because they are a direct instruction. With inline tags present that combination is declared unsatisfiable in tags_interpreted_reason rather than silently resolved.",
+                "resolution": "When inline event tags are present and tone-derived calibration is the only affect source, the render stays on the tag-consuming backend and carries the backend-independent TONE_CALIBRATION tempo axis. The intensity/valence knob axis is then NOT applied and affect_effect reports applied=false with the backend reason.",
+                "summary": "Tag realization and the arousal knob axis live on different backends and cannot both be applied to one render. chatterbox_turbo consumes the event tags but ignores exaggeration/cfg_weight; chatterbox_base_affect honors those knobs but speaks the tag as a literal word."
+              },
+              "mechanism": "native model vocabulary on chatterbox_turbo; no separate channel",
+              "proof_metric": "per-render tag_handling receipt; ASR transcript must not contain the tag word on a tag-consuming path",
+              "status": "applied_on_tag_consuming_backend__literal_text_elsewhere"
+            },
+            "pause_strategy": {
+              "audible_channel": "Use per-chunk pause_after_ms, which inserts real silence when segments are combined.",
+              "reason": "No synthesis code path consumes pause_strategy.",
+              "status": "request_only"
+            },
+            "tone": {
+              "audible_channel": "Set emotion_realization=audible (request field or voice_delivery key) and the tone alone routes through TONE_CALIBRATION -> chatterbox_base_affect knobs plus a per-tone tempo, with no knob knowledge required. Explicit intensity/valence or use_base_emotion also route audibly, as before.",
+              "calibration": "TONE_CALIBRATION; pairwise distinguishability matrix published by the tone_matrix eval case",
+              "default_policy": "Default is fast (turbo) for latency compatibility with live chat; override per request or via CHATTERBOX_EMOTION_REALIZATION_DEFAULT=audible.",
+              "reason": "On the default turbo fast path, tone maps to STAGE_PRESETS which shift only sampling params; measured acoustic shifts are below same-parameter stochastic spread, and the params that move affect (exaggeration, cfg_weight) are ignored by Turbo.",
+              "status": "audible_with_emotion_realization_audible__request_only_on_default_fast_path"
+            }
+          },
+          "schema": "chatterbox.voice_delivery_effect.v1"
+        }
+      },
+      {
+        "affect_effect": {
+          "applied": true,
+          "backend": "chatterbox_base_affect",
+          "derived_knobs": {
+            "cfg_weight": 0.5,
+            "exaggeration": 1.11,
+            "intensity": 0.9,
+            "temperature": 0.7,
+            "valence": 0.3
+          },
+          "knob_source": "explicit_intensity_valence",
+          "reason": null,
+          "schema": "chatterbox.affect_effect.v1"
+        },
+        "applied_control": {
+          "applied": {
+            "can_interrupt_after": true,
+            "delivery_stage": "satisfied",
+            "pace": "brisk",
+            "pause_after_ms": 0,
+            "pause_strategy": null,
+            "tone": "neutral_warm"
+          },
+          "chunk_index": 3,
+          "normalized": {
+            "delivery_stage": "satisfied",
+            "pace": "brisk",
+            "pause_after_ms": 0,
+            "pause_strategy": null,
+            "tone": "neutral_warm"
+          },
+          "requested": {
+            "delivery_stage": null,
+            "pace": "brisk",
+            "pause_after_ms": 0,
+            "pause_strategy": null,
+            "tone": null
+          }
+        },
+        "audio": "/var/lib/embry-artifacts/chatterbox/chatterbox-speak-27e0e17b09f243349a0acc06a7006c7a/chunk_03_satisfied.wav",
+        "backend": {
+          "capability_digest": "e4d1eed07cd193000853dbabd211f0ea7b62dfd2fb3e55b54306f761ff920048",
+          "id": "chatterbox_base_affect",
+          "selection_source": "affect_auto"
+        },
+        "can_interrupt_after": true,
+        "chunk_index": 3,
+        "chunk_total": 3,
+        "delivery_stage": "satisfied",
+        "duration_seconds": 2.699,
+        "emotion_knobs": {
+          "cfg_weight": 0.5,
+          "exaggeration": 1.11,
+          "intensity": 0.9,
+          "temperature": 0.7,
+          "valence": 0.3
+        },
+        "engine": "chatterbox_base",
+        "failed_gates": [],
+        "generation_params": {
+          "norm_loudness": true,
+          "repetition_penalty": 1.18,
+          "temperature": 0.8,
+          "top_k": 1000,
+          "top_p": 0.96
+        },
+        "generation_seconds": 2.212,
+        "ignored_turbo_params": [
+          "cfg_weight",
+          "exaggeration",
+          "min_p"
+        ],
+        "latency_events": [
+          {
+            "elapsed_ms": 0.0,
+            "name": "request_received"
+          },
+          {
+            "elapsed_ms": 0.412,
+            "name": "generation_params_ready"
+          },
+          {
+            "elapsed_ms": 2212.813,
+            "engine": "chatterbox_base",
+            "name": "voice_conditioning_ready",
+            "render_lock": "held"
+          },
+          {
+            "elapsed_ms": 2212.822,
+            "generation_seconds": 2.212,
+            "name": "first_audio_ready"
+          },
+          {
+            "elapsed_ms": 2218.312,
+            "name": "pace_stretch_applied",
+            "output_duration_seconds": 2.699,
+            "tempo_factor": 1.08
+          },
+          {
+            "elapsed_ms": 2220.779,
+            "name": "audio_saved"
+          },
+          {
+            "elapsed_ms": 2271.923,
+            "name": "audio_metrics_ready"
+          }
+        ],
+        "live": true,
+        "metrics": {
+          "bytes": 129614,
+          "channels": 1,
+          "codec_name": "pcm_s16le",
+          "duration_seconds": 2.699,
+          "exists": true,
+          "ffprobe": {
+            "cmd": [
+              "ffprobe",
+              "-hide_banner",
+              "-v",
+              "error",
+              "-show_entries",
+              "format=duration,size",
+              "-show_entries",
+              "stream=codec_name,sample_rate,channels",
+              "-of",
+              "json",
+              "/var/lib/embry-artifacts/chatterbox/chatterbox-speak-27e0e17b09f243349a0acc06a7006c7a/chunk_03_satisfied.wav"
+            ],
+            "returncode": 0,
+            "stderr": "",
+            "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"2.698667\",\n        \"size\": \"129614\"\n    }\n}\n"
+          },
+          "ffprobe_size": 129614,
+          "path": "/var/lib/embry-artifacts/chatterbox/chatterbox-speak-27e0e17b09f243349a0acc06a7006c7a/chunk_03_satisfied.wav",
+          "sample_rate": 24000,
+          "sha256": "42448d11c5d88cc50ebec251a27d67c17bf4f1a1b1887a42588840fb7872332b"
+        },
+        "mocked": false,
+        "normalized_tone": "neutral_warm",
+        "ok": true,
+        "output_format": {
+          "backend_sample_rate": 24000,
+          "channels": 1,
+          "container": "wav",
+          "declared_sample_rate": 24000
+        },
+        "pace_effect": {
+          "applied": true,
+          "input_duration_seconds": 2.92,
+          "mechanism": "phase_vocoder_time_stretch",
+          "output_duration_seconds": 2.699,
+          "requested_pace": "brisk",
+          "schema": "chatterbox.pace_effect.v1",
+          "tempo_factor": 1.08,
+          "tempo_source": "requested_pace"
+        },
+        "pause_after_ms": 0,
+        "phase": "answer_chunk",
+        "realtime_factor": 0.82,
+        "reference_audio": "/data/embry_ref.wav",
+        "requested_delivery_stage": "satisfied",
+        "requested_device": "cuda",
+        "requested_tone": "neutral_warm",
+        "stochasticity": {
+          "cache_behavior": "repeat_group_id_is_receipt_metadata_not_a_cache_buster",
+          "deterministic_audio": false,
+          "equivalence": "same_repeat_group_id_groups_comparable_stochastic_renders_without_implying_identical_audio",
+          "repeat_group_id": null,
+          "schema": "chatterbox.stochasticity.v1",
+          "seed": null,
+          "seed_supported": false
+        },
+        "tag_handling": {
+          "accepted_tag_classes": {
+            "emotion_delivery": [
+              "[advertisement]",
+              "[angry]",
+              "[crying]",
+              "[dramatic]",
+              "[fear]",
+              "[happy]",
+              "[narration]",
+              "[sarcastic]",
+              "[surprised]",
+              "[whispering]"
+            ],
+            "vocal_event": [
+              "[chuckle]",
+              "[clear throat]",
+              "[cough]",
+              "[gasp]",
+              "[groan]",
+              "[laugh]",
+              "[shush]",
+              "[sigh]",
+              "[sniff]"
+            ]
+          },
+          "accepted_tags": [
+            "[advertisement]",
+            "[angry]",
+            "[chuckle]",
+            "[clear throat]",
+            "[cough]",
+            "[crying]",
+            "[dramatic]",
+            "[fear]",
+            "[gasp]",
+            "[groan]",
+            "[happy]",
+            "[laugh]",
+            "[narration]",
+            "[sarcastic]",
+            "[shush]",
+            "[sigh]",
+            "[sniff]",
+            "[surprised]",
+            "[whispering]"
+          ],
+          "applied_tags": [],
+          "backend": "chatterbox_base_affect",
+          "dedicated_tag_channel": "native_event_tags_on_tag_consuming_backend",
+          "detected_tags": [],
+          "inline_text_tag_behavior": "consumed_natively_on_tag_consuming_backend__literal_text_on_other_backends",
+          "requested_tags": [],
+          "schema": "chatterbox.tag_handling.v1",
+          "tag_consuming_backends": [
+            "chatterbox_turbo"
+          ],
+          "tags_interpreted": false,
+          "tags_interpreted_reason": "no_event_tags_in_text__backend_chatterbox_base_affect_would_speak_them_literally",
+          "unknown_tag_behavior": "synthesized_as_literal_text"
+        },
+        "text": "It's genuinely nice to talk this through with you.",
+        "text_sha256": "dcca1f801e927842ea7c80ee97dbfece8fba2acbc15ba5b9f33cb4f70c989ddb",
+        "tone": "neutral_warm",
+        "total_elapsed_ms": 2271.958,
+        "voice_conditioning": {
+          "emotion_knobs": {
+            "cfg_weight": 0.5,
+            "exaggeration": 1.11,
+            "intensity": 0.9,
+            "temperature": 0.7,
+            "valence": 0.3
+          },
+          "engine": "chatterbox_base",
+          "reference_audio": "/data/embry_ref.wav"
+        },
+        "voice_delivery": {
+          "confidence": null,
+          "delivery_stage": "satisfied",
+          "delivery_stage_source": "request.delivery_stage",
+          "detected_event_tags": [],
+          "emotion_realization": "audible",
+          "evidence": null,
+          "ignored_turbo_params": [
+            "cfg_weight",
+            "exaggeration",
+            "min_p"
+          ],
+          "intensity": 0.9,
+          "normalized_tone": "neutral_warm",
+          "pace": "brisk",
+          "pause_strategy": null,
+          "prefer_tag_consuming_backend": false,
+          "requested_delivery_stage": "satisfied",
+          "requested_tone": "neutral_warm",
+          "schema": "chatterbox.voice_delivery.v1",
+          "source": null,
+          "tag_handling": {
+            "accepted_tag_classes": {
+              "emotion_delivery": [
+                "[advertisement]",
+                "[angry]",
+                "[crying]",
+                "[dramatic]",
+                "[fear]",
+                "[happy]",
+                "[narration]",
+                "[sarcastic]",
+                "[surprised]",
+                "[whispering]"
+              ],
+              "vocal_event": [
+                "[chuckle]",
+                "[clear throat]",
+                "[cough]",
+                "[gasp]",
+                "[groan]",
+                "[laugh]",
+                "[shush]",
+                "[sigh]",
+                "[sniff]"
+              ]
+            },
+            "accepted_tags": [
+              "[advertisement]",
+              "[angry]",
+              "[chuckle]",
+              "[clear throat]",
+              "[cough]",
+              "[crying]",
+              "[dramatic]",
+              "[fear]",
+              "[gasp]",
+              "[groan]",
+              "[happy]",
+              "[laugh]",
+              "[narration]",
+              "[sarcastic]",
+              "[shush]",
+              "[sigh]",
+              "[sniff]",
+              "[surprised]",
+              "[whispering]"
+            ],
+            "applied_tags": [],
+            "backend": "chatterbox_base_affect",
+            "dedicated_tag_channel": "native_event_tags_on_tag_consuming_backend",
+            "detected_tags": [],
+            "inline_text_tag_behavior": "consumed_natively_on_tag_consuming_backend__literal_text_on_other_backends",
+            "requested_tags": [],
+            "schema": "chatterbox.tag_handling.v1",
+            "tag_consuming_backends": [
+              "chatterbox_turbo"
+            ],
+            "tags_interpreted": false,
+            "tags_interpreted_reason": "no_event_tags_in_text__backend_chatterbox_base_affect_would_speak_them_literally",
+            "unknown_tag_behavior": "synthesized_as_literal_text"
+          },
+          "tag_realization": "native",
+          "tone": "neutral_warm",
+          "tone_was_normalized": false,
+          "use_base_emotion": null,
+          "valence": null,
+          "wait_activity": null
+        },
+        "voice_delivery_effect": {
+          "consumer_guidance": "Treat any field not marked applied as receipt metadata. Echo-back of a request field is never evidence of acoustic effect; only a per-render *_effect receipt with applied=true is.",
+          "engine": "chatterbox_turbo",
+          "fields": {
+            "chatterbox_tags": {
+              "reason": "The voice_delivery.chatterbox_tags LIST remains request-only metadata; invented tokens such as [firm] or [breath] are not model vocabulary. INLINE tags in the text are different: see paralinguistic_tags.",
+              "status": "request_only"
+            },
+            "intensity_valence": {
+              "mechanism": "intensity scales exaggeration (0.3+0.9*intensity, clamped 0.3-1.4); negative valence lowers cfg_weight (0.5-0.2*max(0,-valence), clamped 0.3-0.5)",
+              "per_render_receipt": "affect_effect (chatterbox.affect_effect.v1)",
+              "response_curve": {
+                "consumer_guidance": "Use large intensity/valence contrasts (>=0.5 apart) for audibly distinct arms; do not expect fine-grained gradations to be audible.",
+                "measured": {
+                  "audible": "intensity 0.9 / valence -0.8 vs intensity 0.2 / valence -0.2 separated f0_median by 66.6 Hz against an 8.1 Hz same-parameter floor and rms by 3.5x its floor (eval_tone_audibility affect case, 2026-08-04)",
+                  "inaudible": "single-axis deltas of 0.25-0.32 intensity from a 0.5 floor moved no metric past a 4-repeat noise floor (persona-dream measurement, chatterbox#21)"
+                },
+                "perceptual_validation": "Held-out dimensional emotion model (audeering MSP-Podcast wav2vec2): perceived arousal rank-correlates with requested intensity at Spearman 0.96 across all 15 calibrated tones; perceived valence does NOT track the requested valence knob (Spearman ~0.08) -- arousal is the single perceptually verified affect dimension. See the machine_listener eval case.",
+                "summary": "Response is nonlinear and top-weighted: audible change is measured only near the top of the intensity range. Small deltas sit below the renderer's own same-parameter noise floor."
+              },
+              "status": "intensity_applied_on_chatterbox_base_affect__valence_perceptually_inert",
+              "valence_inertness": {
+                "consumer_guidance": "Treat requested valence as engine-internal metadata, not a perceptual promise. Perceived tone differentiation comes from arousal (intensity) and tempo. A valence-capable engine is future work.",
+                "declared": true,
+                "evidence": "Full raw-knob sweep on /synthesize-emotion (cfg_weight 0.1-0.9, temperature 0.5-1.1, exaggeration 0.3-1.1; interleaved floor n=4) scored by the audeering dimensional model: every axis's perceived-valence sweep range (0.043-0.075) fell inside the same-parameter floor spread (0.082). No generation knob moves perceived valence on the Chatterbox engines. Receipt: docs/proofs/valence_sweep_20260804.json (chatterbox#23)."
+              }
+            },
+            "pace": {
+              "mechanism": "phase_vocoder_time_stretch",
+              "proof_metric": "duration_seconds scales by 1/tempo_factor; see per-render pace_effect receipt",
+              "status": "applied",
+              "tempo_factors": {
+                "brisk": 1.08,
+                "default": 1.0,
+                "fast": 1.18,
+                "measured": 0.92,
+                "neutral": 1.0,
+                "slow": 0.85
+              },
+              "unknown_value_behavior": "request_only"
+            },
+            "paralinguistic_tags": {
+              "accepted_tags": [
+                "[advertisement]",
+                "[angry]",
+                "[chuckle]",
+                "[clear throat]",
+                "[cough]",
+                "[crying]",
+                "[dramatic]",
+                "[fear]",
+                "[gasp]",
+                "[groan]",
+                "[happy]",
+                "[laugh]",
+                "[narration]",
+                "[sarcastic]",
+                "[shush]",
+                "[sigh]",
+                "[sniff]",
+                "[surprised]",
+                "[whispering]"
+              ],
+              "affect_tradeoff": {
+                "consumer_override": "Set voice_delivery.tag_realization='literal' to prefer the arousal knobs instead; the render then routes to chatterbox_base_affect and tag_handling reports tags_interpreted=false, so a consumer that cannot accept a spoken tag word fails closed on the receipt.",
+                "declared": true,
+                "explicit_knob_conflict": "Explicit intensity/valence/use_base_emotion always win the routing, because they are a direct instruction. With inline tags present that combination is declared unsatisfiable in tags_interpreted_reason rather than silently resolved.",
+                "resolution": "When inline event tags are present and tone-derived calibration is the only affect source, the render stays on the tag-consuming backend and carries the backend-independent TONE_CALIBRATION tempo axis. The intensity/valence knob axis is then NOT applied and affect_effect reports applied=false with the backend reason.",
+                "summary": "Tag realization and the arousal knob axis live on different backends and cannot both be applied to one render. chatterbox_turbo consumes the event tags but ignores exaggeration/cfg_weight; chatterbox_base_affect honors those knobs but speaks the tag as a literal word."
+              },
+              "mechanism": "native model vocabulary on chatterbox_turbo; no separate channel",
+              "proof_metric": "per-render tag_handling receipt; ASR transcript must not contain the tag word on a tag-consuming path",
+              "status": "applied_on_tag_consuming_backend__literal_text_elsewhere"
+            },
+            "pause_strategy": {
+              "audible_channel": "Use per-chunk pause_after_ms, which inserts real silence when segments are combined.",
+              "reason": "No synthesis code path consumes pause_strategy.",
+              "status": "request_only"
+            },
+            "tone": {
+              "audible_channel": "Set emotion_realization=audible (request field or voice_delivery key) and the tone alone routes through TONE_CALIBRATION -> chatterbox_base_affect knobs plus a per-tone tempo, with no knob knowledge required. Explicit intensity/valence or use_base_emotion also route audibly, as before.",
+              "calibration": "TONE_CALIBRATION; pairwise distinguishability matrix published by the tone_matrix eval case",
+              "default_policy": "Default is fast (turbo) for latency compatibility with live chat; override per request or via CHATTERBOX_EMOTION_REALIZATION_DEFAULT=audible.",
+              "reason": "On the default turbo fast path, tone maps to STAGE_PRESETS which shift only sampling params; measured acoustic shifts are below same-parameter stochastic spread, and the params that move affect (exaggeration, cfg_weight) are ignored by Turbo.",
+              "status": "audible_with_emotion_realization_audible__request_only_on_default_fast_path"
+            }
+          },
+          "schema": "chatterbox.voice_delivery_effect.v1"
+        }
+      }
+    ],
+    "completion_cue": null,
+    "crossfade_ms": 0,
+    "delivery_stage": "neutral",
+    "emotion_knobs": {
+      "cfg_weight": 0.5,
+      "exaggeration": 1.11,
+      "intensity": 0.9,
+      "temperature": 0.7,
+      "valence": 0.3
+    },
+    "engine": "chatterbox_base",
+    "failed_gates": [],
+    "finished_response_audio": "/var/lib/embry-artifacts/chatterbox/chatterbox-speak-27e0e17b09f243349a0acc06a7006c7a/finished_response.wav",
+    "finished_response_metrics": {
+      "bytes": 533390,
+      "channels": 1,
+      "codec_name": "pcm_s16le",
+      "duration_seconds": 11.111,
+      "exists": true,
+      "ffprobe": {
+        "cmd": [
+          "ffprobe",
+          "-hide_banner",
+          "-v",
+          "error",
+          "-show_entries",
+          "format=duration,size",
+          "-show_entries",
+          "stream=codec_name,sample_rate,channels",
+          "-of",
+          "json",
+          "/var/lib/embry-artifacts/chatterbox/chatterbox-speak-27e0e17b09f243349a0acc06a7006c7a/finished_response.wav"
+        ],
+        "returncode": 0,
+        "stderr": "",
+        "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"11.110667\",\n        \"size\": \"533390\"\n    }\n}\n"
+      },
+      "ffprobe_size": 533390,
+      "path": "/var/lib/embry-artifacts/chatterbox/chatterbox-speak-27e0e17b09f243349a0acc06a7006c7a/finished_response.wav",
+      "sample_rate": 24000,
+      "sha256": "5c0b9fa62f7aa1a11f5090a5b4cb715c2c973b232adab287716965a5d1f88172"
+    },
+    "ignored_turbo_params": [
+      "cfg_weight",
+      "exaggeration",
+      "min_p"
+    ],
+    "latency_events": [
+      {
+        "elapsed_ms": 0.003,
+        "name": "batch_received"
+      },
+      {
+        "elapsed_ms": 0.519,
+        "name": "batch_dir_ready"
+      },
+      {
+        "elapsed_ms": 0.527,
+        "enabled": false,
+        "hit": false,
+        "name": "blessed_qra_lookup_done",
+        "reason": "request_disabled"
+      },
+      {
+        "chunk_count": 3,
+        "elapsed_ms": 1.17,
+        "name": "render_plan_ready"
+      },
+      {
+        "asr_verified": false,
+        "chunk_index": 1,
+        "elapsed_ms": 2004.046,
+        "name": "chunk_done",
+        "ok": true
+      },
+      {
+        "asr_verified": false,
+        "chunk_index": 2,
+        "elapsed_ms": 5764.939,
+        "name": "chunk_done",
+        "ok": true
+      },
+      {
+        "asr_verified": false,
+        "chunk_index": 3,
+        "elapsed_ms": 8037.008,
+        "name": "chunk_done",
+        "ok": true
+      },
+      {
+        "bytes": 533390,
+        "elapsed_ms": 8112.697,
+        "name": "finished_audio_ready"
+      }
+    ],
+    "live": true,
+    "mocked": false,
+    "normalized_tone": "neutral_warm",
+    "ok": true,
+    "pace_effect": {
+      "applied": true,
+      "applied_render_count": 3,
+      "duration_seconds": {
+        "input": 11.24,
+        "output": 10.411
+      },
+      "input_duration_seconds": 11.24,
+      "mechanism": "phase_vocoder_time_stretch",
+      "output_duration_seconds": 10.411,
+      "render_count": 3,
+      "requested_pace": "brisk",
+      "schema": "chatterbox.pace_effect.v1",
+      "scope": "batch",
+      "tempo_factor": 1.08,
+      "tempo_source": "requested_pace"
+    },
+    "render_plan": {
+      "answer_text": "Oh, I'm glad you asked me that one. The capital of Australia is Canberra, and seven times eight is fifty-six. It's genuinely nice to talk this through with you.",
+      "answer_text_sha256": "eafe43435e6e0b03c1fb92d033391df61aaacf67ea4a3543edea5e810b1378e4",
+      "chunk_count": 3,
+      "chunking_strategy": {
+        "does_not_split_inside_words": true,
+        "hard_cap_enforced": false,
+        "name": "caller_supplied_chunks",
+        "requested_max_chars": 300,
+        "safety_activated": false,
+        "splitter": "caller_supplied_speakable_chunks",
+        "target_max_chars": 300,
+        "turbo_safety_recommended_max_chars": 300
+      },
+      "chunks": [
+        {
+          "arc_position": 0.333,
+          "can_interrupt_after": true,
+          "char_len": 35,
+          "delivery_role": "behavioral_framing_prefix",
+          "delivery_stage": "slightly_concerned",
+          "delivery_tone": "",
+          "index": 1,
+          "pace": null,
+          "pause_after_ms": 300,
+          "pause_strategy": null,
+          "requested_delivery_stage": null,
+          "requested_tone": null,
+          "text": "Oh, I'm glad you asked me that one.",
+          "text_sha256": "c180209762c003868003c33e356bc6db482eb3826ce375402be4740ebcf2f437",
+          "tone": null,
+          "total": 3
+        },
+        {
+          "arc_position": 0.667,
+          "can_interrupt_after": false,
+          "char_len": 73,
+          "delivery_role": "protected_answer_body",
+          "delivery_stage": "positive",
+          "delivery_tone": "",
+          "index": 2,
+          "pace": null,
+          "pause_after_ms": 400,
+          "pause_strategy": null,
+          "requested_delivery_stage": null,
+          "requested_tone": null,
+          "text": "The capital of Australia is Canberra, and seven times eight is fifty-six.",
+          "text_sha256": "62ac8ae23b86c9dbe5dc0d3e147259f990ab5cae1161a97e2da984501eadfec0",
+          "tone": null,
+          "total": 3
+        },
+        {
+          "arc_position": 1.0,
+          "can_interrupt_after": true,
+          "char_len": 50,
+          "delivery_role": "behavioral_framing_suffix",
+          "delivery_stage": "satisfied",
+          "delivery_tone": "",
+          "index": 3,
+          "pace": null,
+          "pause_after_ms": 0,
+          "pause_strategy": null,
+          "requested_delivery_stage": null,
+          "requested_tone": null,
+          "text": "It's genuinely nice to talk this through with you.",
+          "text_sha256": "dcca1f801e927842ea7c80ee97dbfece8fba2acbc15ba5b9f33cb4f70c989ddb",
+          "tone": null,
+          "total": 3
+        }
+      ],
+      "completion_cue": null,
+      "completion_cue_sha256": null,
+      "max_chars": 300,
+      "plan_schema": "chatterbox.render_plan.v1",
+      "render_plan_digest": "32222da8e9040925c9defa76e8ab89035c3d15806a1996a27862cc6f5fceddd6",
+      "requested_max_chars": 300
+    },
+    "render_plan_digest": "32222da8e9040925c9defa76e8ab89035c3d15806a1996a27862cc6f5fceddd6",
+    "requested_delivery_stage": null,
+    "requested_tone": null,
+    "stochasticity": {
+      "cache_behavior": "repeat_group_id_is_receipt_metadata_not_a_cache_buster",
+      "deterministic_audio": false,
+      "equivalence": "same_repeat_group_id_groups_comparable_stochastic_renders_without_implying_identical_audio",
+      "repeat_group_id": null,
+      "schema": "chatterbox.stochasticity.v1",
+      "seed": null,
+      "seed_supported": false
+    },
+    "tag_handling": {
+      "accepted_tag_classes": {
+        "emotion_delivery": [
+          "[advertisement]",
+          "[angry]",
+          "[crying]",
+          "[dramatic]",
+          "[fear]",
+          "[happy]",
+          "[narration]",
+          "[sarcastic]",
+          "[surprised]",
+          "[whispering]"
+        ],
+        "vocal_event": [
+          "[chuckle]",
+          "[clear throat]",
+          "[cough]",
+          "[gasp]",
+          "[groan]",
+          "[laugh]",
+          "[shush]",
+          "[sigh]",
+          "[sniff]"
+        ]
+      },
+      "accepted_tags": [
+        "[advertisement]",
+        "[angry]",
+        "[chuckle]",
+        "[clear throat]",
+        "[cough]",
+        "[crying]",
+        "[dramatic]",
+        "[fear]",
+        "[gasp]",
+        "[groan]",
+        "[happy]",
+        "[laugh]",
+        "[narration]",
+        "[sarcastic]",
+        "[shush]",
+        "[sigh]",
+        "[sniff]",
+        "[surprised]",
+        "[whispering]"
+      ],
+      "applied_tags": [],
+      "backend": "chatterbox_base_affect",
+      "dedicated_tag_channel": "native_event_tags_on_tag_consuming_backend",
+      "detected_tags": [],
+      "inline_text_tag_behavior": "consumed_natively_on_tag_consuming_backend__literal_text_on_other_backends",
+      "requested_tags": [],
+      "schema": "chatterbox.tag_handling.v1",
+      "tag_consuming_backends": [
+        "chatterbox_turbo"
+      ],
+      "tags_interpreted": false,
+      "tags_interpreted_reason": "no_event_tags_in_text__backend_chatterbox_base_affect_would_speak_them_literally",
+      "unknown_tag_behavior": "synthesized_as_literal_text"
+    },
+    "tone": "neutral_warm",
+    "total_elapsed_ms": 8112.751,
+    "voice_delivery": {
+      "confidence": null,
+      "delivery_stage": "neutral",
+      "delivery_stage_source": "tone_mapping",
+      "detected_event_tags": [],
+      "emotion_realization": "audible",
+      "evidence": null,
+      "ignored_turbo_params": [
+        "cfg_weight",
+        "exaggeration",
+        "min_p"
+      ],
+      "intensity": 0.9,
+      "normalized_tone": "neutral_warm",
+      "pace": "brisk",
+      "pause_strategy": null,
+      "prefer_tag_consuming_backend": false,
+      "requested_delivery_stage": null,
+      "requested_tone": null,
+      "schema": "chatterbox.voice_delivery.v1",
+      "source": null,
+      "tag_handling": {
+        "accepted_tag_classes": {
+          "emotion_delivery": [
+            "[advertisement]",
+            "[angry]",
+            "[crying]",
+            "[dramatic]",
+            "[fear]",
+            "[happy]",
+            "[narration]",
+            "[sarcastic]",
+            "[surprised]",
+            "[whispering]"
+          ],
+          "vocal_event": [
+            "[chuckle]",
+            "[clear throat]",
+            "[cough]",
+            "[gasp]",
+            "[groan]",
+            "[laugh]",
+            "[shush]",
+            "[sigh]",
+            "[sniff]"
+          ]
+        },
+        "accepted_tags": [
+          "[advertisement]",
+          "[angry]",
+          "[chuckle]",
+          "[clear throat]",
+          "[cough]",
+          "[crying]",
+          "[dramatic]",
+          "[fear]",
+          "[gasp]",
+          "[groan]",
+          "[happy]",
+          "[laugh]",
+          "[narration]",
+          "[sarcastic]",
+          "[shush]",
+          "[sigh]",
+          "[sniff]",
+          "[surprised]",
+          "[whispering]"
+        ],
+        "applied_tags": [],
+        "backend": "chatterbox_base_affect",
+        "dedicated_tag_channel": "native_event_tags_on_tag_consuming_backend",
+        "detected_tags": [],
+        "inline_text_tag_behavior": "consumed_natively_on_tag_consuming_backend__literal_text_on_other_backends",
+        "requested_tags": [],
+        "schema": "chatterbox.tag_handling.v1",
+        "tag_consuming_backends": [
+          "chatterbox_turbo"
+        ],
+        "tags_interpreted": false,
+        "tags_interpreted_reason": "no_event_tags_in_text__backend_chatterbox_base_affect_would_speak_them_literally",
+        "unknown_tag_behavior": "synthesized_as_literal_text"
+      },
+      "tag_realization": "native",
+      "tone": "neutral_warm",
+      "tone_was_normalized": false,
+      "use_base_emotion": null,
+      "valence": null,
+      "wait_activity": null
+    },
+    "voice_delivery_effect": {
+      "consumer_guidance": "Treat any field not marked applied as receipt metadata. Echo-back of a request field is never evidence of acoustic effect; only a per-render *_effect receipt with applied=true is.",
+      "engine": "chatterbox_turbo",
+      "fields": {
+        "chatterbox_tags": {
+          "reason": "The voice_delivery.chatterbox_tags LIST remains request-only metadata; invented tokens such as [firm] or [breath] are not model vocabulary. INLINE tags in the text are different: see paralinguistic_tags.",
+          "status": "request_only"
+        },
+        "intensity_valence": {
+          "mechanism": "intensity scales exaggeration (0.3+0.9*intensity, clamped 0.3-1.4); negative valence lowers cfg_weight (0.5-0.2*max(0,-valence), clamped 0.3-0.5)",
+          "per_render_receipt": "affect_effect (chatterbox.affect_effect.v1)",
+          "response_curve": {
+            "consumer_guidance": "Use large intensity/valence contrasts (>=0.5 apart) for audibly distinct arms; do not expect fine-grained gradations to be audible.",
+            "measured": {
+              "audible": "intensity 0.9 / valence -0.8 vs intensity 0.2 / valence -0.2 separated f0_median by 66.6 Hz against an 8.1 Hz same-parameter floor and rms by 3.5x its floor (eval_tone_audibility affect case, 2026-08-04)",
+              "inaudible": "single-axis deltas of 0.25-0.32 intensity from a 0.5 floor moved no metric past a 4-repeat noise floor (persona-dream measurement, chatterbox#21)"
+            },
+            "perceptual_validation": "Held-out dimensional emotion model (audeering MSP-Podcast wav2vec2): perceived arousal rank-correlates with requested intensity at Spearman 0.96 across all 15 calibrated tones; perceived valence does NOT track the requested valence knob (Spearman ~0.08) -- arousal is the single perceptually verified affect dimension. See the machine_listener eval case.",
+            "summary": "Response is nonlinear and top-weighted: audible change is measured only near the top of the intensity range. Small deltas sit below the renderer's own same-parameter noise floor."
+          },
+          "status": "intensity_applied_on_chatterbox_base_affect__valence_perceptually_inert",
+          "valence_inertness": {
+            "consumer_guidance": "Treat requested valence as engine-internal metadata, not a perceptual promise. Perceived tone differentiation comes from arousal (intensity) and tempo. A valence-capable engine is future work.",
+            "declared": true,
+            "evidence": "Full raw-knob sweep on /synthesize-emotion (cfg_weight 0.1-0.9, temperature 0.5-1.1, exaggeration 0.3-1.1; interleaved floor n=4) scored by the audeering dimensional model: every axis's perceived-valence sweep range (0.043-0.075) fell inside the same-parameter floor spread (0.082). No generation knob moves perceived valence on the Chatterbox engines. Receipt: docs/proofs/valence_sweep_20260804.json (chatterbox#23)."
+          }
+        },
+        "pace": {
+          "mechanism": "phase_vocoder_time_stretch",
+          "proof_metric": "duration_seconds scales by 1/tempo_factor; see per-render pace_effect receipt",
+          "status": "applied",
+          "tempo_factors": {
+            "brisk": 1.08,
+            "default": 1.0,
+            "fast": 1.18,
+            "measured": 0.92,
+            "neutral": 1.0,
+            "slow": 0.85
+          },
+          "unknown_value_behavior": "request_only"
+        },
+        "paralinguistic_tags": {
+          "accepted_tags": [
+            "[advertisement]",
+            "[angry]",
+            "[chuckle]",
+            "[clear throat]",
+            "[cough]",
+            "[crying]",
+            "[dramatic]",
+            "[fear]",
+            "[gasp]",
+            "[groan]",
+            "[happy]",
+            "[laugh]",
+            "[narration]",
+            "[sarcastic]",
+            "[shush]",
+            "[sigh]",
+            "[sniff]",
+            "[surprised]",
+            "[whispering]"
+          ],
+          "affect_tradeoff": {
+            "consumer_override": "Set voice_delivery.tag_realization='literal' to prefer the arousal knobs instead; the render then routes to chatterbox_base_affect and tag_handling reports tags_interpreted=false, so a consumer that cannot accept a spoken tag word fails closed on the receipt.",
+            "declared": true,
+            "explicit_knob_conflict": "Explicit intensity/valence/use_base_emotion always win the routing, because they are a direct instruction. With inline tags present that combination is declared unsatisfiable in tags_interpreted_reason rather than silently resolved.",
+            "resolution": "When inline event tags are present and tone-derived calibration is the only affect source, the render stays on the tag-consuming backend and carries the backend-independent TONE_CALIBRATION tempo axis. The intensity/valence knob axis is then NOT applied and affect_effect reports applied=false with the backend reason.",
+            "summary": "Tag realization and the arousal knob axis live on different backends and cannot both be applied to one render. chatterbox_turbo consumes the event tags but ignores exaggeration/cfg_weight; chatterbox_base_affect honors those knobs but speaks the tag as a literal word."
+          },
+          "mechanism": "native model vocabulary on chatterbox_turbo; no separate channel",
+          "proof_metric": "per-render tag_handling receipt; ASR transcript must not contain the tag word on a tag-consuming path",
+          "status": "applied_on_tag_consuming_backend__literal_text_elsewhere"
+        },
+        "pause_strategy": {
+          "audible_channel": "Use per-chunk pause_after_ms, which inserts real silence when segments are combined.",
+          "reason": "No synthesis code path consumes pause_strategy.",
+          "status": "request_only"
+        },
+        "tone": {
+          "audible_channel": "Set emotion_realization=audible (request field or voice_delivery key) and the tone alone routes through TONE_CALIBRATION -> chatterbox_base_affect knobs plus a per-tone tempo, with no knob knowledge required. Explicit intensity/valence or use_base_emotion also route audibly, as before.",
+          "calibration": "TONE_CALIBRATION; pairwise distinguishability matrix published by the tone_matrix eval case",
+          "default_policy": "Default is fast (turbo) for latency compatibility with live chat; override per request or via CHATTERBOX_EMOTION_REALIZATION_DEFAULT=audible.",
+          "reason": "On the default turbo fast path, tone maps to STAGE_PRESETS which shift only sampling params; measured acoustic shifts are below same-parameter stochastic spread, and the params that move affect (exaggeration, cfg_weight) are ignored by Turbo.",
+          "status": "audible_with_emotion_realization_audible__request_only_on_default_fast_path"
+        }
+      },
+      "schema": "chatterbox.voice_delivery_effect.v1"
+    }
+  },
+  "session": null,
+  "speaking_to": null,
+  "spoken_text": "",
+  "tag_handling": {
+    "accepted_tag_classes": {
+      "emotion_delivery": [
+        "[advertisement]",
+        "[angry]",
+        "[crying]",
+        "[dramatic]",
+        "[fear]",
+        "[happy]",
+        "[narration]",
+        "[sarcastic]",
+        "[surprised]",
+        "[whispering]"
+      ],
+      "vocal_event": [
+        "[chuckle]",
+        "[clear throat]",
+        "[cough]",
+        "[gasp]",
+        "[groan]",
+        "[laugh]",
+        "[shush]",
+        "[sigh]",
+        "[sniff]"
+      ]
+    },
+    "accepted_tags": [
+      "[advertisement]",
+      "[angry]",
+      "[chuckle]",
+      "[clear throat]",
+      "[cough]",
+      "[crying]",
+      "[dramatic]",
+      "[fear]",
+      "[gasp]",
+      "[groan]",
+      "[happy]",
+      "[laugh]",
+      "[narration]",
+      "[sarcastic]",
+      "[shush]",
+      "[sigh]",
+      "[sniff]",
+      "[surprised]",
+      "[whispering]"
+    ],
+    "applied_tags": [],
+    "backend": "chatterbox_base_affect",
+    "dedicated_tag_channel": "native_event_tags_on_tag_consuming_backend",
+    "detected_tags": [],
+    "inline_text_tag_behavior": "consumed_natively_on_tag_consuming_backend__literal_text_on_other_backends",
+    "requested_tags": [],
+    "schema": "chatterbox.tag_handling.v1",
+    "tag_consuming_backends": [
+      "chatterbox_turbo"
+    ],
+    "tags_interpreted": false,
+    "tags_interpreted_reason": "no_event_tags_in_text__backend_chatterbox_base_affect_would_speak_them_literally",
+    "unknown_tag_behavior": "synthesized_as_literal_text"
+  },
+  "temperature": 0.8,
+  "turn_id": "cli-413b48c70f6d4791a8c1a9d296edd30a",
+  "unknown_tag_policy": null,
+  "unknown_tags_detected": [],
+  "voice": "embry",
+  "voice_delivery": {
+    "emotion_realization": "audible",
+    "intensity": 0.9,
+    "pace": "brisk",
+    "tone": null
+  },
+  "wav": "/mnt/storage12tb/skills/chatterbox-speak/outputs/1789654109-chatterbox-speak-27e0e17b09f243349a0acc06a7006c7a/finished_response.wav"
+}
