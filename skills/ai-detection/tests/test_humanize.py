@@ -2,7 +2,9 @@
 import pytest
 
 from ai_detection.errors import DetectionError
-from ai_detection.humanize import Transform, humanize, probe_fragility
+from ai_detection.humanize import Evasion, Transform, humanize, probe_evasion, probe_fragility
+from ai_detection.model import train
+from tests.helpers import corpus
 
 SAMPLE = '''# a greeting helper
 def greet(name):
@@ -46,3 +48,17 @@ def test_docstring_removal_is_semantic_content_edit_that_moves_structure():
     assert "add one" not in out and "return x + 1" in out
     frag = {f.transform: f for f in probe_fragility(doc)}[Transform.STRIP_DOCSTRINGS.value]
     assert frag.normalized_digest_changed is True
+
+
+def test_evasion_probe_closes_the_loop_on_a_trained_synthetic_model():
+    # Detect -> humanize -> re-detect against a trained detector's threshold.
+    # Synthetic model: mechanism-only (analyze() still abstains); this measures
+    # score movement across the calibrated boundary, not real evasion/efficacy.
+    model, _report = train(corpus())
+    machine_sources = [r.source for r in corpus() if r.label == "machine"]
+    results = probe_evasion(model, machine_sources)
+    assert {r.transform for r in results} == {t.value for t in Transform}
+    for r in results:
+        assert isinstance(r, Evasion)
+        assert r.samples > 0
+        assert r.dropped_below_after <= r.flagged_before

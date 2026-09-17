@@ -22,6 +22,7 @@ from loguru import logger
 
 from ai_detection.errors import Code, DetectionError
 from ai_detection.features import HASH_WIDTH, extract
+from ai_detection.model import ModelArtifact, predict
 
 # Feature-vector layout from features.extract: [raw-hash | struct-hash | numeric].
 _RAW = slice(0, HASH_WIDTH)
@@ -145,4 +146,49 @@ def probe_fragility(source: str, transforms: list[Transform] | None = None) -> l
             token_count_before=before.token_count,
             token_count_after=after.token_count,
         ))
+    return results
+
+
+@dataclass(frozen=True, slots=True)
+class Evasion:
+    """One transform's effect on a trained detector's score relative to its threshold."""
+
+    transform: str
+    samples: int
+    flagged_before: int       # scored >= calibrated threshold before humanizing
+    dropped_below_after: int  # of those flagged, fell below threshold after
+    mean_score_delta: float   # mean(after - before) across scorable samples
+
+
+def probe_evasion(model: ModelArtifact, sources: list[str],
+                  transforms: list[Transform] | None = None) -> list[Evasion]:
+    """Measure whether each transform moves predict() across the trained threshold.
+
+    This is the red<->blue loop's core metric: a 'passing' solution is one whose
+    score drops from >=threshold to <threshold after humanizing. On a synthetic
+    model this is MECHANISM ONLY — analyze() still abstains for synthetic
+    training, and this is not evasion of a qualified detector, authorship, or
+    efficacy. A real number requires a real-provenance corpus under Battle/Judge.
+    """
+    threshold = model.calibration.threshold
+    selected = transforms or list(Transform)
+    results: list[Evasion] = []
+    for transform in selected:
+        flagged = dropped = 0
+        deltas: list[float] = []
+        for src in sources:
+            try:
+                before = predict(model, src)
+                after = predict(model, humanize(src, transform))
+            except DetectionError:
+                continue  # unparseable transform output is not a passing solution
+            deltas.append(after - before)
+            if before >= threshold:
+                flagged += 1
+                if after < threshold:
+                    dropped += 1
+        results.append(Evasion(
+            transform=transform.value, samples=len(deltas), flagged_before=flagged,
+            dropped_below_after=dropped,
+            mean_score_delta=float(sum(deltas) / len(deltas)) if deltas else 0.0))
     return results

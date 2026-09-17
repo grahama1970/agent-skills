@@ -58,6 +58,16 @@ structural/normalized channel over raw tokens. Mechanism-only — feature moveme
 is detector fragility, NOT evasion, authorship, or efficacy; a verdict flip
 requires a trained model under Battle/Judge replay.
 
+`probe_evasion(model, sources)` closes the detect→humanize→re-detect loop
+against a trained detector's calibrated threshold (a "passing" solution scores
+≥threshold before and <threshold after). On the synthetic corpus the current
+transforms evade 0/24 samples (mean score movement ~+0.001): the structure-keyed
+detector resists formatting/docstring humanization, corroborating the blue
+takeaway. Mechanism-only — analyze() still abstains for synthetic training; this
+is not evasion of a qualified detector or an efficacy number. Moving the
+frontier needs a real-provenance corpus, semantic red transforms, and
+Battle/Judge replay.
+
 ## Next meaningful gates
 
 Collect consented provenance-grounded human examples plus held-out generator
