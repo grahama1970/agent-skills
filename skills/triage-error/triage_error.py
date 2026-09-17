@@ -27,6 +27,7 @@ import typer
 from loguru import logger
 
 from classifier import classify, load_catalog, _normalize, _mint_code, _first_error_line  # noqa: F401
+from jev_shadow import log_shadow, shadow_classify, shadow_enabled
 
 app = typer.Typer(add_completion=False, help="Classify ambiguous pipeline errors into unambiguous codes.")
 
@@ -88,7 +89,6 @@ def _draft_or_file_ticket(report: dict[str, Any], target: str, receipt_path: str
         return {"ok": False, "error": "ticket skill not found"}
     args = [
         str(TICKET_RUN), "bug",
-        f"[{report['code']}] {report['cause'][:70]}",
         "--target", target,
         "--observed", f"[{report['code']}] {report['cause']}",
         "--expected", "The pipeline surfaces this unambiguous code + cause + a deterministic next command, not a generic error.",
@@ -108,7 +108,6 @@ def _store_memory(report: dict[str, Any]) -> dict[str, Any]:
     proc = _run([
         str(MEMORY_RUN), "learn",
         "-t", "Fragility", "-t", "error-taxonomy", "-t", str(report.get("layer") or "pipeline"),
-        "-t", str(report["code"]),
         "--problem", f"Ambiguous pipeline error assigned code {report['code']}: {report['cause']}",
         "--solution", (report.get("next_command") or "No deterministic fix yet; ticket + agentic-eval opened to pin it down."),
     ])
@@ -122,51 +121,21 @@ def catalog() -> None:
         typer.echo(f"{entry['code']:42} [{entry.get('layer','?'):7}] {entry.get('cause','')[:70]}")
 
 
-TAU_CLASSIFICATION_SCHEMA = "tau.triage_error_classification.v1"
-TAU_CONTRACT_LAYERS = frozenset(
-    {"tau", "dag-runtime", "scheduler", "adapter", "worker", "resource",
-     "workspace", "replay", "transition", "correction"}
-)
-
-
-def _tau_contract_payload(report: dict[str, Any]) -> dict[str, Any]:
-    """Map the simple classify() result onto tau's strict canonical contract.
-
-    tau.triage_error_classification.v1 consumers (the tau triage bridge) reject
-    anything else byte-level (`triage_contract_non_canonical_json`), which is
-    why every external classification degraded to triage_contract_invalid
-    before this existed. Output must be single-line compact sorted JSON.
-    """
-    code = str(report.get("code") or "triage_unclassified")
-    layer = str(report.get("layer") or "tau") or "tau"
-    if layer not in TAU_CONTRACT_LAYERS:
-        layer = "tau"
-    cause = " ".join(str(report.get("cause") or code).split()) or code
-    if "runner not found" in cause.lower() or code == "tau_triage_unavailable":
-        disposition, family = "UNAVAILABLE", "triage_unavailable"
-    else:
-        disposition, family = "AMBIGUOUS", "unknown_internal_failure"
-    return {
-        "schema": TAU_CLASSIFICATION_SCHEMA,
-        "code": code,
-        "layer": layer,
-        "cause": cause,
-        "repair_family": family,
-        "disposition": disposition,
-        "requires_human": bool(report.get("ambiguous")),
-        "diagnostics": {
-            "classifier_kind": "EXTERNAL_CLASSIFIER",
-            "next_command": report.get("next_command"),
-            "matched_tokens": report.get("matched_tokens") or [],
-            "recoverable": report.get("recoverable"),
-            "source": "triage-error skill",
-        },
-    }
-
-
-def _emit_tau_contract(report: dict[str, Any]) -> None:
-    payload = _tau_contract_payload(report)
-    typer.echo(json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False))
+def _run_shadow(signal: str, layer: str | None, report: dict[str, Any]) -> dict[str, Any] | None:
+    """Shadow Jev alongside the deterministic classifier. Never changes the decision."""
+    if not shadow_enabled():
+        return None
+    shadow = shadow_classify(signal, layer)
+    shadow["deterministic_code"] = report.get("code")
+    shadow["deterministic_ambiguous"] = report.get("ambiguous")
+    shadow["agree"] = (
+        (shadow.get("jev_code") == report.get("code"))
+        or (report.get("ambiguous") and shadow.get("jev_code") == "no_match")
+        if shadow.get("jev_decision") == "accept"
+        else None
+    )
+    log_shadow(shadow)
+    return shadow
 
 
 @app.command(name="classify")
@@ -174,10 +143,6 @@ def classify_cmd(
     text: str = typer.Option("", "--text", help="Raw error text."),
     receipt: Path = typer.Option(None, "--receipt", help="A lane receipt / *.meta.json to read."),
     layer: str = typer.Option("", "--layer", help="ask|tau|surf|scillm (optional)."),
-    contract: str = typer.Option(
-        "simple", "--contract",
-        help="simple (default) or tau (tau.triage_error_classification.v1 canonical, single-line).",
-    ),
 ) -> None:
     """Classify one error signal into a canonical (or minted) code."""
     signal = _read_signal(text, receipt)
@@ -185,10 +150,8 @@ def classify_cmd(
         typer.echo(json.dumps({"error": "no --text or --receipt content"}))
         raise typer.Exit(2)
     report = classify(signal, layer or None)
-    if contract == "tau":
-        _emit_tau_contract(report)
-        return
-    typer.echo(json.dumps(report, indent=2))
+    shadow = _run_shadow(signal, layer or None, report)
+    typer.echo(json.dumps({"report": report, "jev_shadow": shadow}, indent=2))
 
 
 @app.command()
@@ -209,6 +172,7 @@ def triage(
         typer.echo(json.dumps({"error": "no --text or --receipt content"}))
         raise typer.Exit(2)
     report = classify(signal, layer or None)
+    shadow = _run_shadow(signal, layer or None, report)
     actions: dict[str, Any] = {}
     if report["ambiguous"]:
         if update_catalog:
@@ -220,7 +184,7 @@ def triage(
             actions["scaffold_eval"] = {"ok": proc.returncode == 0, "stderr": proc.stderr[-300:]}
         if learn:
             actions["memory"] = _store_memory(report)
-    typer.echo(json.dumps({"report": report, "actions": actions}, indent=2))
+    typer.echo(json.dumps({"report": report, "jev_shadow": shadow, "actions": actions}, indent=2))
     typer.echo("TRIAGE_COMPLETE")
 
 

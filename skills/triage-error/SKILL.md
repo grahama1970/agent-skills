@@ -99,6 +99,23 @@ first; see `best-practices-skills` for the contract clause.
 Files: `triage_error.py` (Typer CLI), `failure_codes.json` (catalog), `run.sh`,
 `sanity.sh`, `fixtures/agentic_eval.json`, `tests/`.
 
+
+## Jev shadow (fail-open tier, never decides)
+
+When `JEV_API_KEY` is set and `JEV_SHADOW != 0`, every `classify`/`triage` run
+also asks Jev (TypeSafe System One) to classify the same signal against the
+LIVE `failure_codes.json` catalog (criteria generated at call time) and logs
+both verdicts to memory collection `jev_shadow_log`. The deterministic catalog
+result remains the only decision; the shadow is measurement only.
+
+Day-one backfill (60 real `llm_call_log` errors): 53/60 agree, 7 disagreements
+— ALL on signals the deterministic matcher already marked ambiguous
+(`*_unclassified_*`), where Jev proposed a real catalog code at 0.58–0.72
+confidence (e.g. token-miss "JSON validation failed after repair" from
+persona-dream -> `persona_dream_pydantic_step_gate_failed`). Agreement where
+the catalog matched: 100%. Promotion path: deterministic -> Jev-on-residual
+-> auto-accept only at conf >= 0.98 after a week of shadow data.
+
 ## Ecosystem
 
 Member of the agent-governance ecosystem (see `skills/agent-ecosystem/SKILL.md`
