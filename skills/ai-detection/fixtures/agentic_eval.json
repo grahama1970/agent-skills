@@ -1,0 +1,727 @@
+{
+  "version": 2,
+  "skill": "ai-detection",
+  "trials": 3,
+  "eval_tier": "compliance",
+  "proof_scope": "Full requested product capability; must remain non-READY without browser and independent real-human detection evidence.",
+  "claims": {
+    "proves": "Only declared mechanisms with capable guards and real HTTP readback.",
+    "does_not_prove": "Any-provider authorship detection, human fairness, browser journey, or full release readiness."
+  },
+  "capability_claims": [
+    {
+      "id": "http-contract",
+      "description": "The server must bind every accepted edit to one authenticated session and contiguous revision; exact retries must be idempotent.",
+      "criticality": "critical",
+      "required": true,
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
+      "id": "authorization",
+      "description": "Only the session token holder may export/delete active records; errors must not echo submitted source or credentials.",
+      "criticality": "critical",
+      "required": true,
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "control_flow"
+    },
+    {
+      "id": "value-representation",
+      "description": "Unknown, malformed, unsupported, missing-model, and uncertified inputs must not be converted into an authorship accusation.",
+      "criticality": "critical",
+      "required": true,
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "value_bearing",
+      "domain_profile": "json-scalar-v1"
+    },
+    {
+      "id": "evidence-integrity",
+      "description": "An independent verifier must reconstruct all accepted Unicode edits and reject changed, omitted, reordered, or wrongly bound evidence.",
+      "criticality": "critical",
+      "required": true,
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "control_flow"
+    },
+    {
+      "id": "dataset-independence",
+      "description": "Dataset evaluation must exclude session, author, task, repository, exact-source and normalized-token overlap between splits and hold out generator families.",
+      "criticality": "critical",
+      "required": true,
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "other"
+    },
+    {
+      "id": "calibration",
+      "description": "A frozen threshold must be selected without calibration/test labels; low-FPR qualification must use an independent human-session confidence bound.",
+      "criticality": "critical",
+      "required": true,
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "other"
+    },
+    {
+      "id": "unicode-replay",
+      "description": "An independent verifier must reconstruct all accepted Unicode edits and reject changed, omitted, reordered, or wrongly bound evidence.",
+      "criticality": "critical",
+      "required": true,
+      "evidence_required": {
+        "property_or_fuzz": true
+      },
+      "claim_semantics": "value_bearing",
+      "domain_profile": "json-scalar-v1"
+    },
+    {
+      "id": "training",
+      "description": "Synthetic examples and deterministic passing tests must never establish real-human or any-provider detection efficacy.",
+      "criticality": "critical",
+      "required": true,
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "other"
+    },
+    {
+      "id": "http-transport",
+      "description": "The server must bind every accepted edit to one authenticated session and contiguous revision; exact retries must be idempotent.",
+      "criticality": "critical",
+      "required": true,
+      "evidence_required": {
+        "live_e2e": true
+      },
+      "claim_semantics": "protocol"
+    },
+    {
+      "id": "server-time",
+      "description": "REQ-04: server-time and source budget enforcement",
+      "criticality": "critical",
+      "required": true,
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "timing"
+    },
+    {
+      "id": "browser-journey",
+      "description": "REQ-11: real-browser assessment journey including independent record readback",
+      "criticality": "critical",
+      "required": true,
+      "evidence_required": {
+        "live_e2e": true
+      },
+      "claim_semantics": "human_perceptual"
+    },
+    {
+      "id": "provider-agnostic-detection",
+      "description": "Provider-agnostic detection quality must be measured on independently sourced, consented real-human sessions and unseen model families at predeclared session-level FPRs.",
+      "criticality": "critical",
+      "required": true,
+      "evidence_required": {
+        "live_e2e": true,
+        "human_evaluation": true
+      },
+      "claim_semantics": "other"
+    },
+    {
+      "id": "no-execution",
+      "description": "REQ-13: candidate source is never executed on the host",
+      "criticality": "critical",
+      "required": true,
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "control_flow"
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "http-contract",
+      "seam_type": "typed-boundary",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "authorization",
+      "seam_type": "typed-boundary",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "value-representation",
+      "seam_type": "typed-boundary",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "evidence-integrity",
+      "seam_type": "typed-boundary",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "dataset-independence",
+      "seam_type": "typed-boundary",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "calibration",
+      "seam_type": "typed-boundary",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "unicode-replay",
+      "seam_type": "typed-boundary",
+      "criticality": "critical",
+      "required_evidence": [
+        "property_or_fuzz"
+      ]
+    },
+    {
+      "seam_id": "training",
+      "seam_type": "typed-boundary",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "http-transport",
+      "seam_type": "typed-boundary",
+      "criticality": "critical",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "server-time",
+      "seam_type": "capability-boundary",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "browser-journey",
+      "seam_type": "capability-boundary",
+      "criticality": "critical",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "human-ground-truth",
+      "seam_type": "capability-boundary",
+      "criticality": "critical",
+      "required_evidence": [
+        "live_e2e",
+        "human_evaluation"
+      ]
+    },
+    {
+      "seam_id": "no-execution",
+      "seam_type": "capability-boundary",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "api",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "http-contract"
+      ],
+      "seams": [
+        "http-contract"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--extra",
+        "dev",
+        "python",
+        "../scripts/eval_case.py",
+        "api",
+        "--samples",
+        "128"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "../reports/native-cases/api.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "../reports/native-cases/api.json",
+            "json_pointer": "/executed",
+            "equals": true
+          }
+        ]
+      },
+      "real_world": true
+    },
+    {
+      "name": "auth",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "authorization"
+      ],
+      "seams": [
+        "authorization"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--extra",
+        "dev",
+        "python",
+        "../scripts/eval_case.py",
+        "auth",
+        "--samples",
+        "128"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "../reports/native-cases/auth.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "../reports/native-cases/auth.json",
+            "json_pointer": "/executed",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "boundaries",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "value-representation"
+      ],
+      "seams": [
+        "value-representation"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--extra",
+        "dev",
+        "python",
+        "../scripts/eval_case.py",
+        "boundaries",
+        "--samples",
+        "128"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "../reports/native-cases/boundaries.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "../reports/native-cases/boundaries.json",
+            "json_pointer": "/executed",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "replay",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "evidence-integrity"
+      ],
+      "seams": [
+        "evidence-integrity"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--extra",
+        "dev",
+        "python",
+        "../scripts/eval_case.py",
+        "replay",
+        "--samples",
+        "128"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "../reports/native-cases/replay.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "../reports/native-cases/replay.json",
+            "json_pointer": "/executed",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "leakage",
+      "type": "negative",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "dataset-independence"
+      ],
+      "seams": [
+        "dataset-independence"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--extra",
+        "dev",
+        "python",
+        "../scripts/eval_case.py",
+        "leakage",
+        "--samples",
+        "128"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "../reports/native-cases/leakage.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "../reports/native-cases/leakage.json",
+            "json_pointer": "/executed",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "calibration",
+      "type": "negative",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "calibration"
+      ],
+      "seams": [
+        "calibration"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--extra",
+        "dev",
+        "python",
+        "../scripts/eval_case.py",
+        "calibration",
+        "--samples",
+        "128"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "../reports/native-cases/calibration.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "../reports/native-cases/calibration.json",
+            "json_pointer": "/executed",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "unicode",
+      "type": "adversarial",
+      "evidence_class": "property_or_fuzz",
+      "supports_claims": [
+        "unicode-replay"
+      ],
+      "seams": [
+        "unicode-replay"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--extra",
+        "dev",
+        "python",
+        "../scripts/eval_case.py",
+        "unicode",
+        "--samples",
+        "128"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "../reports/native-cases/unicode.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "../reports/native-cases/unicode.json",
+            "json_pointer": "/executed",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "training",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "training"
+      ],
+      "seams": [
+        "training"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--extra",
+        "dev",
+        "python",
+        "../scripts/eval_case.py",
+        "training",
+        "--samples",
+        "128"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "../reports/native-cases/training.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "../reports/native-cases/training.json",
+            "json_pointer": "/executed",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "http",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "http-transport"
+      ],
+      "seams": [
+        "http-transport"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--extra",
+        "dev",
+        "python",
+        "../scripts/eval_case.py",
+        "http",
+        "--samples",
+        "128"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "../reports/native-cases/http.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "../reports/native-cases/http.json",
+            "json_pointer": "/executed",
+            "equals": true
+          }
+        ],
+        "stdout_excludes": [
+          "BLOCKED_EXTERNAL"
+        ]
+      },
+      "real_world": true
+    },
+    {
+      "name": "server-time",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "server-time"
+      ],
+      "seams": [
+        "server-time"
+      ],
+      "command": [
+        "bash",
+        "../scripts/pytest-case.sh",
+        "tests/test_evidence.py::test_server_clock_not_client_clock_controls_deadline"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
+        ]
+      }
+    },
+    {
+      "name": "browser",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "browser-journey"
+      ],
+      "seams": [
+        "browser-journey"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--extra",
+        "dev",
+        "python",
+        "../scripts/eval_case.py",
+        "browser",
+        "--samples",
+        "128"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "../reports/native-cases/browser.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          }
+        ]
+      }
+    },
+    {
+      "name": "efficacy",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "provider-agnostic-detection"
+      ],
+      "seams": [
+        "human-ground-truth"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--extra",
+        "dev",
+        "python",
+        "../scripts/eval_case.py",
+        "efficacy",
+        "--samples",
+        "128"
+      ],
+      "blocked_when_stdout_contains": [
+        "BLOCKED_EXTERNAL"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "../reports/native-cases/efficacy.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          }
+        ]
+      }
+    },
+    {
+      "name": "no-execution",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "no-execution"
+      ],
+      "seams": [
+        "no-execution"
+      ],
+      "command": [
+        "bash",
+        "../scripts/pytest-case.sh",
+        "tests/test_detection.py::test_features_do_not_execute_code"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
+        ]
+      }
+    }
+  ]
+}

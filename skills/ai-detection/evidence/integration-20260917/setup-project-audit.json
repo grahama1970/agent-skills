@@ -1,0 +1,153 @@
+{
+  "schema": "setup_project.audit_receipt.v1",
+  "status": "FAIL",
+  "classification": "public_research_prototype",
+  "project": "ai-detection",
+  "project_root": "/home/graham/workspace/experiments/agent-skills/skills/a-detection",
+  "required_skills": [
+    "setup-project",
+    "agentic-evals",
+    "best-practices-python",
+    "best-practices-skills",
+    "acceptance-contract",
+    "battle",
+    "create-report"
+  ],
+  "curate_client_plan_status": null,
+  "curate_client_verify_status": null,
+  "curate_client_probe_count": 0,
+  "acceptance_contract": {
+    "status": "FAIL",
+    "code": "acceptance_contract_missing",
+    "path": "/home/graham/workspace/experiments/agent-skills/skills/a-detection/reports/acceptance/acceptance_bundle.json"
+  },
+  "client_contract_gate": {
+    "schema": "setup_project.client_contract_gate.v1",
+    "mode": "required",
+    "enabled": true,
+    "required_skills": [
+      "acceptance-contract",
+      "battle",
+      "create-report"
+    ],
+    "status": "FAIL",
+    "acceptance_contract": {
+      "status": "FAIL",
+      "code": "acceptance_contract_missing",
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/a-detection/reports/acceptance/acceptance_bundle.json"
+    },
+    "battle_receipts": [
+      {
+        "status": "FAIL",
+        "code": "battle_receipt_missing",
+        "path": "/home/graham/workspace/experiments/agent-skills/skills/a-detection/reports/battle/campaign.json"
+      }
+    ],
+    "release_report": {
+      "status": "FAIL",
+      "code": "release_report_missing",
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/a-detection/reports/release/create-report.json"
+    },
+    "wrapper_proof": null,
+    "problems": [
+      {
+        "code": "acceptance_contract_missing",
+        "detail": {
+          "status": "FAIL",
+          "code": "acceptance_contract_missing",
+          "path": "/home/graham/workspace/experiments/agent-skills/skills/a-detection/reports/acceptance/acceptance_bundle.json"
+        }
+      },
+      {
+        "status": "FAIL",
+        "code": "battle_receipt_missing",
+        "path": "/home/graham/workspace/experiments/agent-skills/skills/a-detection/reports/battle/campaign.json"
+      },
+      {
+        "code": "release_report_missing",
+        "detail": {
+          "status": "FAIL",
+          "code": "release_report_missing",
+          "path": "/home/graham/workspace/experiments/agent-skills/skills/a-detection/reports/release/create-report.json"
+        }
+      }
+    ]
+  },
+  "assembly_evidence": {
+    "schema": "setup_project.assembly_evidence.v1",
+    "first_commit": "03d4b6d135ed962313cc2bd9613e7b45e643d637",
+    "head_commit": "74ff0e1153a5a6ef2596bb001d3f1875e9da2063",
+    "first_commit_unix": 1775305640,
+    "head_commit_unix": 1789479229,
+    "elapsed_seconds": 14173589,
+    "commit_count": 4013
+  },
+  "missing_files": [],
+  "missing_readme_terms": [],
+  "immutable_goal_valid": true,
+  "problems": [
+    {
+      "code": "acceptance_contract_missing",
+      "detail": {
+        "status": "FAIL",
+        "code": "acceptance_contract_missing",
+        "path": "/home/graham/workspace/experiments/agent-skills/skills/a-detection/reports/acceptance/acceptance_bundle.json"
+      }
+    },
+    {
+      "code": "client_contract_gate_failed",
+      "detail": {
+        "schema": "setup_project.client_contract_gate.v1",
+        "mode": "required",
+        "enabled": true,
+        "required_skills": [
+          "acceptance-contract",
+          "battle",
+          "create-report"
+        ],
+        "status": "FAIL",
+        "acceptance_contract": {
+          "status": "FAIL",
+          "code": "acceptance_contract_missing",
+          "path": "/home/graham/workspace/experiments/agent-skills/skills/a-detection/reports/acceptance/acceptance_bundle.json"
+        },
+        "battle_receipts": [
+          {
+            "status": "FAIL",
+            "code": "battle_receipt_missing",
+            "path": "/home/graham/workspace/experiments/agent-skills/skills/a-detection/reports/battle/campaign.json"
+          }
+        ],
+        "release_report": {
+          "status": "FAIL",
+          "code": "release_report_missing",
+          "path": "/home/graham/workspace/experiments/agent-skills/skills/a-detection/reports/release/create-report.json"
+        },
+        "wrapper_proof": null,
+        "problems": [
+          {
+            "code": "acceptance_contract_missing",
+            "detail": {
+              "status": "FAIL",
+              "code": "acceptance_contract_missing",
+              "path": "/home/graham/workspace/experiments/agent-skills/skills/a-detection/reports/acceptance/acceptance_bundle.json"
+            }
+          },
+          {
+            "status": "FAIL",
+            "code": "battle_receipt_missing",
+            "path": "/home/graham/workspace/experiments/agent-skills/skills/a-detection/reports/battle/campaign.json"
+          },
+          {
+            "code": "release_report_missing",
+            "detail": {
+              "status": "FAIL",
+              "code": "release_report_missing",
+              "path": "/home/graham/workspace/experiments/agent-skills/skills/a-detection/reports/release/create-report.json"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

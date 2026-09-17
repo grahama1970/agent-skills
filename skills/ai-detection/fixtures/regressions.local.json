@@ -1,0 +1,13 @@
+{
+  "schema_version": "ai_detection.development_regressions.v1",
+  "native_regression_verification": "NOT_EXECUTED",
+  "incidents": [
+    {
+      "id": "boolean-zero-is-not-false",
+      "observed": "Pydantic Literal[False] admitted numeric zero without a strict pre-validator.",
+      "status": "FIXED_WITH_RETAINED_LOCAL_TEST",
+      "guard": "tests/test_contracts.py",
+      "non_vacuity": "The guard rejects numeric zero, one, strings and true; native fail-before-fix qualification remains unexecuted."
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "schema_version": "ai_detection.efficacy_request.v1",
+  "corpus": "/external/replace-with-real-study.jsonl",
+  "model": "/external/replace-with-real-model.json",
+  "model_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "study_id": "REPLACE_WITH_APPROVED_STUDY_ID",
+  "min_tpr": 0.5,
+  "minimum_heldout_families": 2,
+  "minimum_test_human_sessions": 300,
+  "require_temporal_holdout": true
+}
