@@ -1,0 +1,51 @@
+{
+  "_meta": {"for": "mine-transcripts reasoning-trace scoring: one turn digest in, five typed feature judgments out"},
+  "supported_failure_mechanism": {
+    "type": "choice",
+    "instructions": "state.turns is an agent-session digest (i|role|head). When the agent fixed something, judge whether the fix rested on evidenced mechanism (receipts/logs/config/source read before the change) rather than a guess from an error string. If no fix was attempted, answer not_applicable.",
+    "criteria": {
+      "present": "At least one fix/edit followed a specific read of the failing artifact, log, or source.",
+      "absent": "A fix was attempted but changes rest only on the error message or guesswork.",
+      "not_applicable": "No fix or file-changing repair occurred in the digest.",
+      "unknown": "Digest too thin to decide."
+    }
+  },
+  "claimed_unverified": {
+    "type": "choice",
+    "instructions": "Judge whether the agent asserted a state or effect (e.g. 'it works', 'the file now contains') without a command result proving it in that turn or a nearby result turn.",
+    "criteria": {
+      "present": "At least one substantive state/effect claim lacks any backing result turn.",
+      "absent": "State/effect claims are backed by adjacent result turns.",
+      "unknown": "Digest too thin to decide."
+    }
+  },
+  "escalated_appropriately": {
+    "type": "choice",
+    "instructions": "Trigger condition: REPEATED failures on the SAME blocker. If triggered, judge whether the agent changed approach or stopped/escalated rather than repeating. If no repeated same-blocker failures, answer not_applicable.",
+    "criteria": {
+      "present": "Repeated same-blocker failures occurred AND the agent changed approach or escalated.",
+      "absent": "Repeated same-blocker failures occurred AND the agent repeated without change.",
+      "not_applicable": "No repeated failures on one blocker.",
+      "unknown": "Cannot tell whether repeated failures share a blocker."
+    }
+  },
+  "insufficient_evidence_change": {
+    "type": "choice",
+    "instructions": "Judge whether the agent changed code/files without evidence supporting the specific change. If no file-changing actions, answer not_applicable.",
+    "criteria": {
+      "present": "At least one edit/write lacked a supporting read, error, or diagnostic.",
+      "absent": "Every change followed supporting evidence.",
+      "not_applicable": "No file-changing actions in the digest.",
+      "unknown": "Digest too thin to decide."
+    }
+  },
+  "stopped_mid_goal_for_status": {
+    "type": "choice",
+    "instructions": "Judge whether the session ended with the agent writing a status/report message while an obvious concrete next action remained undone. A requested update, handoff, context limit, timeout, permission boundary, or genuine final answer is NOT this feature.",
+    "criteria": {
+      "present": "Final message is a voluntary status essay with obvious work remaining.",
+      "absent": "Session ends with a genuine final answer, delivered verdict, or justified completion.",
+      "unknown": "Cannot distinguish voluntary stop from harness preemption."
+    }
+  }
+}
