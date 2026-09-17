@@ -403,6 +403,28 @@ def assess_update(unit: Annotated[str, typer.Option('--unit')],
         raise typer.Exit(2)
 
 
+@app.command(name='sanitize-denials')
+def sanitize_denials_command(unit: Annotated[str, typer.Option('--unit')],
+                             window: str = '-1 hour') -> None:
+    """Read real AppArmor denials for the unit and emit ONLY sanitized
+    resource_class+operation+count records (#1744). Raw paths are dropped at
+    this boundary; a root-only denial read degrades to ROOT_REQUIRED."""
+    import subprocess
+    from .evidence import sanitize
+    profile = profile_for(unit)
+    proc = subprocess.run(['journalctl', '-k', '--since', window, '--no-pager'], capture_output=True, text=True)
+    if proc.returncode != 0 or 'not permitted' in (proc.stderr + proc.stdout).lower() or 'insufficient' in (proc.stderr + proc.stdout).lower():
+        emit(Info(operation='sanitize-denials', status='BLOCKED',
+                  details={'denial_read': 'ROOT_REQUIRED', 'profile': profile}))
+        raise typer.Exit(2)
+    denied = [line for line in proc.stdout.splitlines() if profile in line and 'DENIED' in line]
+    records = sanitize(denied)
+    emit(Info(operation='sanitize-denials', status='PASS',
+              details={'denials_in_window': str(len(denied)), 'sanitized_records': str(len(records))}))
+    for record in records:
+        emit(record)
+
+
 @app.command(name='validate-delta')
 def validate_delta_command(proposal_file: Path) -> None:
     """Deterministic safety gate for an agent-proposed policy delta.

@@ -32,7 +32,10 @@
       "name": "policy-delta-adversarial-corpus",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "../scripts/policy_delta_corpus_driver.sh"],
+      "command": [
+        "bash",
+        "../scripts/policy_delta_corpus_driver.sh"
+      ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
@@ -49,7 +52,11 @@
       "name": "live-doctor-entrypoint",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "../run.sh", "doctor"],
+      "command": [
+        "bash",
+        "../run.sh",
+        "doctor"
+      ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
@@ -108,7 +115,13 @@
       "name": "live-change-snapshot-entrypoint",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "../run.sh", "change-snapshot", "--unit", "launcher.kolide-k2.service"],
+      "command": [
+        "bash",
+        "../run.sh",
+        "change-snapshot",
+        "--unit",
+        "launcher.kolide-k2.service"
+      ],
       "expected": {
         "exit_code": 2,
         "stdout_contains": [
@@ -126,7 +139,13 @@
       "name": "live-assess-update-entrypoint",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "../run.sh", "assess-update", "--unit", "launcher.kolide-k2.service"],
+      "command": [
+        "bash",
+        "../run.sh",
+        "assess-update",
+        "--unit",
+        "launcher.kolide-k2.service"
+      ],
       "expected": {
         "exit_code": 2,
         "stdout_contains": [
@@ -159,6 +178,26 @@
       "evidence_class": "fault_injected_deterministic",
       "supports_claims": [
         "service_privacy.policy_mechanisms"
+      ]
+    },
+    {
+      "name": "denial-sanitizer-leak-test",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "../scripts/evidence_leak_driver.sh"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "leak-test PASS: client path in, resource_class+count out, no path segments"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "service_privacy.owner_confidentiality"
       ]
     }
   ],
