@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 960" width="1600" height="960" role="img" aria-labelledby="title desc">
+<title id="title">How service-privacy keeps Kolide inside an owner-approved privacy cage</title>
+<desc id="desc">Kolide asks for access. service-privacy acts as an agentic assessor and policy manager. AppArmor and systemd enforce the owner-approved cage. Approved device posture reads pass, protected client data is denied, and a Kolide update triggers inspection, tests, evidence classification, a minimal proposed policy change when justified, human approval, and re-proving the cage. Permissions are never widened automatically.</desc>
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0b1118"/><stop offset="1" stop-color="#111827"/></linearGradient>
+  <linearGradient id="cagebg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0d2533"/><stop offset="1" stop-color="#101923"/></linearGradient>
+  <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%"><feGaussianBlur in="SourceAlpha" stdDeviation="10" result="blur"/><feOffset in="blur" dx="0" dy="8" result="offset"/><feColorMatrix in="offset" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .38 0" result="shadowColor"/><feMerge><feMergeNode in="shadowColor"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="glowCyan" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="glowGreen" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="glowRed" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <marker id="arrowCyan" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#53d9ff"/></marker>
+  <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#35e879"/></marker>
+  <marker id="arrowRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#ff5c6c"/></marker>
+  <marker id="arrowAmber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#ffbf47"/></marker>
+</defs>
+<style>
+  .sans{font-family:Inter,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}.mono{font-family:"JetBrains Mono","SFMono-Regular",Consolas,"Liberation Mono",monospace}
+  .title{font:700 46px Inter,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;fill:#f8fbff}.subtitle{font:400 23px Inter,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;fill:#aab8c7}
+  .label{font:700 24px Inter,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;fill:#f8fbff}.body{font:400 20px Inter,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;fill:#c6d2df}
+  .small{font:600 17px Inter,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;fill:#9eb0c2}.micro{font:500 15px "JetBrains Mono","SFMono-Regular",Consolas,monospace;fill:#8fa1b4;letter-spacing:.5px}
+  .card{filter:url(#shadow)}.line{fill:none;stroke-linecap:round;stroke-linejoin:round}.cyan{stroke:#53d9ff}.green{stroke:#35e879}.red{stroke:#ff5c6c}.amber{stroke:#ffbf47}.flowBase{opacity:.34}.dash{stroke-dasharray:16 18}.pulse{transform-box:fill-box;transform-origin:center}
+  @media (prefers-reduced-motion:no-preference){
+    @keyframes dashF{to{stroke-dashoffset:-68}}@keyframes dashB{to{stroke-dashoffset:68}}@keyframes cage{0%,100%{opacity:.34}50%{opacity:.8}}
+    @keyframes allow{0%,18%,100%{opacity:.25;transform:scale(1)}28%,42%{opacity:.9;transform:scale(1.02)}54%{opacity:.25;transform:scale(1)}}
+    @keyframes deny{0%,42%,100%{opacity:.25;transform:scale(1)}52%,67%{opacity:.92;transform:scale(1.025)}78%{opacity:.25;transform:scale(1)}}
+    @keyframes update{0%,66%,100%{opacity:.24;transform:scale(1)}74%,88%{opacity:.9;transform:scale(1.015)}}
+    @keyframes request{0%,4%{opacity:0;transform:translateX(-24px)}10%,28%{opacity:1;transform:translateX(0)}36%,100%{opacity:0;transform:translateX(20px)}}
+    @keyframes stop{0%,48%,100%{opacity:.34}55%,64%{opacity:1}72%{opacity:.34}}
+    #flow1,#flow2,#flowAllow{animation:dashF 1.8s linear infinite}#flowDeny{animation:dashF 1.8s linear .9s infinite}#flowUpdate{animation:dashB 2.2s linear infinite}
+    #cageGlow{animation:cage 3.8s ease-in-out infinite}#allowGlow{animation:allow 6.8s ease-in-out infinite}#denyGlow{animation:deny 6.8s ease-in-out infinite}#updateGlow{animation:update 6.8s ease-in-out infinite}#requestChip{animation:request 6.8s ease-in-out infinite}#stopRing{animation:stop 6.8s ease-in-out infinite}
+  }
+</style>
+<rect width="1600" height="960" rx="34" fill="url(#bg)"/>
+<g id="header" data-component="header"><text x="80" y="82" class="title">Kolide gets a fenced workspace — updates must requalify</text><text x="80" y="126" class="subtitle">service-privacy assesses changes and proposes policy; AppArmor + systemd make Linux enforce the approved cage.</text></g>
+<g id="steps" data-component="steps">
+  <g transform="translate(82 172)"><circle r="17" fill="#152c39" stroke="#53d9ff" stroke-width="2"/><text y="1" class="small" fill="#53d9ff" text-anchor="middle" dominant-baseline="middle">1</text><text x="30" y="1" class="small" dominant-baseline="middle">Agent asks</text></g>
+  <g transform="translate(465 172)"><circle r="17" fill="#152c39" stroke="#53d9ff" stroke-width="2"/><text y="1" class="small" fill="#53d9ff" text-anchor="middle" dominant-baseline="middle">2</text><text x="30" y="1" class="small" dominant-baseline="middle">Skill assesses + decides</text></g>
+  <g transform="translate(855 172)"><circle r="17" fill="#152c39" stroke="#53d9ff" stroke-width="2"/><text y="1" class="small" fill="#53d9ff" text-anchor="middle" dominant-baseline="middle">3</text><text x="30" y="1" class="small" dominant-baseline="middle">Linux enforces</text></g>
+  <g transform="translate(1252 172)"><circle r="17" fill="#342a16" stroke="#ffbf47" stroke-width="2"/><text y="1" class="small" fill="#ffbf47" text-anchor="middle" dominant-baseline="middle">4</text><text x="30" y="1" class="small" dominant-baseline="middle">Updates trigger tests</text></g>
+</g>
+<g id="agent" data-component="agent" class="card">
+  <rect x="78" y="250" width="306" height="286" rx="28" fill="#111b26" stroke="#34485c" stroke-width="2"/><circle cx="136" cy="310" r="31" fill="#17283a" stroke="#53d9ff" stroke-width="2.5"/><path d="M121 312h30M126 300h20M126 324h20" class="line cyan" stroke-width="3"/>
+  <text x="184" y="302" class="label">Kolide + osquery</text><text x="184" y="334" class="small">device-trust agent</text><rect x="110" y="382" width="240" height="52" rx="14" fill="#0d1721" stroke="#2c4156"/><text x="130" y="414" class="body">“May I read this?”</text>
+  <g id="requestChip" class="pulse"><rect x="119" y="457" width="220" height="45" rx="22" fill="#163145" stroke="#53d9ff" stroke-width="1.5"/><circle cx="145" cy="479.5" r="6" fill="#53d9ff"/><text x="163" y="484" class="micro" fill="#d7f5ff">READ REQUEST</text></g>
+</g>
+<g id="policy" data-component="service-privacy-policy" class="card">
+  <rect x="463" y="250" width="322" height="286" rx="28" fill="#10212d" stroke="#53d9ff" stroke-width="2.5"/>
+  <rect x="492" y="278" width="264" height="64" rx="16" fill="#143346" stroke="#53d9ff" stroke-width="1.5"/>
+  <text x="624" y="306" class="label" text-anchor="middle">service-privacy</text>
+  <text x="624" y="329" class="micro" font-size="13" text-anchor="middle">AGENTIC ASSESSOR + POLICY MANAGER</text>
+  <text x="495" y="382" class="body">It does more than render config:</text>
+  <circle cx="510" cy="420" r="5" fill="#53d9ff"/><text x="528" y="426" class="small">inspect + exercise changes</text>
+  <circle cx="510" cy="457" r="5" fill="#ffbf47"/><text x="528" y="463" class="small">classify evidence + propose</text>
+  <circle cx="510" cy="494" r="5" fill="#ff5c6c"/><text x="528" y="500" class="small">never auto-widen the cage</text>
+</g>
+<g id="cage" data-component="linux-enforcement-cage" class="card">
+  <rect id="cageGlow" class="pulse" x="845" y="238" width="347" height="310" rx="34" fill="none" stroke="#53d9ff" stroke-width="5" opacity=".34" filter="url(#glowCyan)"/><rect x="858" y="250" width="322" height="286" rx="28" fill="url(#cagebg)" stroke="#5c7388" stroke-width="2"/><text x="1019" y="295" class="label" text-anchor="middle">LINUX CAGE</text>
+  <g data-component="apparmor"><rect x="890" y="329" width="258" height="70" rx="18" fill="#102c24" stroke="#35e879" stroke-width="2"/><path d="M917 365l12 12 23-27" class="line green" stroke-width="4"/><text x="975" y="359" class="body">AppArmor</text><text x="975" y="382" class="micro">files • exec • IPC</text></g>
+  <g data-component="systemd"><rect x="890" y="419" width="258" height="82" rx="18" fill="#152438" stroke="#53d9ff" stroke-width="2"/><path d="M919 444v31M906 459h26" class="line cyan" stroke-width="3"/><text x="975" y="450" class="body">systemd sandbox</text><text x="975" y="474" class="micro">privileges • mounts • net</text></g>
+</g>
+<path d="M384 392H463" class="line cyan flowBase" stroke-width="5" marker-end="url(#arrowCyan)"/><path id="flow1" d="M384 392H463" class="line cyan dash" stroke-width="4"/><path d="M785 392H845" class="line cyan flowBase" stroke-width="5" marker-end="url(#arrowCyan)"/><path id="flow2" d="M785 392H845" class="line cyan dash" stroke-width="4"/>
+<g id="outcomes" data-component="outcomes">
+  <g id="allowed" data-component="allowed"><rect id="allowGlow" class="pulse" x="1233" y="240" width="293" height="144" rx="26" fill="none" stroke="#35e879" stroke-width="4" opacity=".25" filter="url(#glowGreen)"/><rect x="1244" y="251" width="271" height="122" rx="22" fill="#10251d" stroke="#35e879" stroke-width="2"/><circle cx="1283" cy="291" r="18" fill="#123321" stroke="#35e879" stroke-width="2"/><path d="M1274 291l7 8 13-17" class="line green" stroke-width="3"/><text x="1314" y="286" class="label" fill="#35e879">ALLOWED</text><text x="1282" y="333" class="body">Device posture</text><text x="1282" y="356" class="micro">OS • CPU • packages • agent state</text></g>
+  <g id="denied" data-component="denied"><rect id="denyGlow" class="pulse" x="1233" y="422" width="293" height="144" rx="26" fill="none" stroke="#ff5c6c" stroke-width="4" opacity=".25" filter="url(#glowRed)"/><rect x="1244" y="433" width="271" height="122" rx="22" fill="#2c171c" stroke="#ff5c6c" stroke-width="2"/><circle cx="1283" cy="473" r="18" fill="#39161c" stroke="#ff5c6c" stroke-width="2"/><path d="M1275 465l16 16M1291 465l-16 16" class="line red" stroke-width="3"/><text x="1314" y="468" class="label" fill="#ff5c6c">DENIED</text><text x="1282" y="515" class="body">Client + personal data</text><text x="1282" y="538" class="micro">repos • SSH keys • private storage</text></g>
+</g>
+<path d="M1180 340H1210Q1224 340 1224 326V314H1244" class="line green flowBase" stroke-width="5" marker-end="url(#arrowGreen)"/><path id="flowAllow" d="M1180 340H1210Q1224 340 1224 326V314H1244" class="line green dash" stroke-width="4"/><path d="M1180 455H1204Q1224 455 1224 476V494H1244" class="line red flowBase" stroke-width="5" marker-end="url(#arrowRed)"/><path id="flowDeny" d="M1180 455H1204Q1224 455 1224 476V494H1244" class="line red dash" stroke-width="4"/>
+<g id="stopRing" class="pulse" transform="translate(1209 473)" opacity=".34"><circle r="25" fill="#35181f" stroke="#ff5c6c" stroke-width="3"/><path d="M-9-9L9 9M9-9L-9 9" class="line red" stroke-width="4"/></g>
+<g id="updates" data-component="agentic-update-assessment">
+  <rect id="updateGlow" class="pulse" x="78" y="616" width="1440" height="250" rx="30" fill="none" stroke="#ffbf47" stroke-width="3" opacity=".24"/>
+  <rect x="89" y="627" width="1418" height="228" rx="26" fill="#171c22" stroke="#3b4652" stroke-width="1.8"/>
+  <text x="124" y="666" class="small" fill="#ffbf47">AGENTIC UPDATE ASSESSMENT</text>
+  <text x="1472" y="666" class="micro" text-anchor="end">EVIDENCE FIRST • HUMAN APPROVAL BEFORE POLICY CHANGE</text>
+
+  <g transform="translate(118 696)" data-component="detect-change">
+    <rect width="220" height="104" rx="18" fill="#241f16" stroke="#ffbf47"/>
+    <text x="110" y="32" class="body" text-anchor="middle">1. Detect change</text>
+    <text x="110" y="60" class="micro" text-anchor="middle">binary • helper • path</text>
+    <text x="110" y="82" class="micro" text-anchor="middle">version • behavior</text>
+  </g>
+  <g transform="translate(399 696)" data-component="inspect-test">
+    <rect width="230" height="104" rx="18" fill="#182431" stroke="#53d9ff"/>
+    <text x="115" y="32" class="body" text-anchor="middle">2. Inspect + test</text>
+    <text x="115" y="60" class="micro" text-anchor="middle">process tree • denials</text>
+    <text x="115" y="82" class="micro" text-anchor="middle">canaries • lifecycle</text>
+  </g>
+  <g transform="translate(690 696)" data-component="classify-evidence">
+    <rect width="230" height="104" rx="18" fill="#1c2530" stroke="#8aa2b8"/>
+    <text x="115" y="32" class="body" text-anchor="middle">3. Classify</text>
+    <text x="115" y="60" class="micro" text-anchor="middle">same cage / safe need</text>
+    <text x="115" y="82" class="micro" text-anchor="middle">protected read → block</text>
+  </g>
+  <g transform="translate(981 696)" data-component="propose-change">
+    <rect width="230" height="104" rx="18" fill="#2b2518" stroke="#ffbf47"/>
+    <text x="115" y="32" class="body" text-anchor="middle">4. Propose minimum</text>
+    <text x="115" y="60" class="micro" text-anchor="middle">exact policy delta</text>
+    <text x="115" y="82" class="micro" text-anchor="middle">no automatic grant</text>
+  </g>
+  <g transform="translate(1272 696)" data-component="approve-reprove">
+    <rect width="205" height="104" rx="18" fill="#18281f" stroke="#35e879"/>
+    <text x="102.5" y="32" class="body" text-anchor="middle">5. Approve + prove</text>
+    <text x="102.5" y="60" class="micro" text-anchor="middle">human approval</text>
+    <text x="102.5" y="82" class="micro" text-anchor="middle">rerun gates</text>
+  </g>
+
+  <path d="M338 748H399" class="line amber flowBase" stroke-width="4" marker-end="url(#arrowAmber)"/>
+  <path d="M629 748H690" class="line amber flowBase" stroke-width="4" marker-end="url(#arrowAmber)"/>
+  <path d="M920 748H981" class="line amber flowBase" stroke-width="4" marker-end="url(#arrowAmber)"/>
+  <path d="M1211 748H1272" class="line amber flowBase" stroke-width="4" marker-end="url(#arrowAmber)"/>
+  <path id="flowUpdate" d="M338 748H399M629 748H690M920 748H981M1211 748H1272" class="line amber dash" stroke-width="3"/>
+
+  <text x="800" y="834" class="small" text-anchor="middle" fill="#d4dde7">If protected data is requested, the result is BLOCK — not “teach the cage to allow it.”</text>
+</g>
+<g id="footer" data-component="footer"><text x="800" y="896" class="small" text-anchor="middle">The skill may propose a cage change from evidence; only approved policy is enforced.</text><text x="800" y="928" class="micro" text-anchor="middle">DETECT → INSPECT + TEST → CLASSIFY → PROPOSE → HUMAN APPROVAL → RE-PROVE</text></g>
+</svg>
