@@ -223,5 +223,10 @@ if __name__ == "__main__":
         ap.add_argument("--out-dir", default=".")
         ap.add_argument("--wave", type=int, default=1)
         a = ap.parse_args()
-        res = [json.loads(l) for l in open(a.results_jsonl) if l.strip()]
+        p = Path(a.results_jsonl)
+        if p.is_dir():  # run-dir + wave: merge this wave's results files
+            files = sorted(p.glob(f"w{a.wave}-*/results.jsonl"))
+            res = [json.loads(l) for f in files for l in open(f) if l.strip()]
+        else:
+            res = [json.loads(l) for l in open(p) if l.strip()]
         print(json.dumps(grade_results(res, Path(a.out_dir), a.wave), indent=2))
