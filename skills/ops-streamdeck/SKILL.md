@@ -238,6 +238,33 @@ For meeting/display button work:
 - If display recovery is needed, use the separate workstation rollback plan and
   do not fold recovery commands into Stream Deck meeting automation.
 
+### Teleprompter (DP-3) Heal — authorized display automation
+
+The middle monitor is a camera monitor that is manually power-cycled and
+cannot stay powered (operator, 2026-09-17). KScreen leaves DP-3 disabled
+across every disconnect/reconnect, so two heal paths are explicitly
+authorized. Both restore ONLY the known-good state (DP-3 enabled,
+1920x1080@60 at 3840,0) and never touch topology, mirroring, scale, or other
+outputs — do not remove or extend them past that boundary:
+
+1. **Video (meeting) button self-heal** — `meeting-mode.sh` in
+   `~/workspace/streamdeck` runs `scripts/teleprompter-restore.sh`, which
+   polls up to ~30s while DP-3's link is down and re-enables it the moment
+   it returns. State guards must stay word-matched (`grep -w`):
+   "disconnected" contains the substring "connected".
+2. **Hotplug watcher** — systemd --user unit `teleprompter-watch.service`
+   (source `~/workspace/streamdeck/scripts/`, symlinked from
+   `~/.config/systemd/user/`). Polls DRM connector status every 2s and runs
+   the same restore script whenever a connector comes back, so manually
+   powering the camera monitor on heals within ~2s with no button press.
+
+Known edge: an off→on flip inside one 2s poll gap is missed; the next event
+or Video press heals. Disable the watcher with
+`systemctl --user disable --now teleprompter-watch.service`.
+
+Receipt: `/tmp/teleprompter-restore.json`
+(`streamdeck.teleprompter_restore.v1`); log: `/tmp/teleprompter-restore.log`.
+
 ## Dynamic Page Safety
 
 Voice commands and SPARTA Explorer chat must enter the Stream Deck through the
