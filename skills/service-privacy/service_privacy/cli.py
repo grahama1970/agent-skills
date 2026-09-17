@@ -403,6 +403,23 @@ def assess_update(unit: Annotated[str, typer.Option('--unit')],
         raise typer.Exit(2)
 
 
+@app.command(name='validate-delta')
+def validate_delta_command(proposal_file: Path) -> None:
+    """Deterministic safety gate for an agent-proposed policy delta.
+
+    Only ACCEPTED_FOR_HUMAN_REVIEW (eligible for a human to approve; nothing
+    is applied) exits 0; every REJECTED_* and INCONCLUSIVE_NO_EVIDENCE exit 2.
+    """
+    from .policy_delta import PolicyDeltaProposal, validate_delta
+    verdict = validate_delta(load(proposal_file, PolicyDeltaProposal))
+    emit(Info(operation='validate-delta',
+              status='PASS' if verdict == 'ACCEPTED_FOR_HUMAN_REVIEW' else 'BLOCKED',
+              details={'verdict': verdict,
+                       'applied': 'false — human review gate only'}))
+    if verdict != 'ACCEPTED_FOR_HUMAN_REVIEW':
+        raise typer.Exit(2)
+
+
 @app.command(name='repo-check')
 def repo_check() -> None:
     """Delegate to the installed best-practices-skills validator; parse findings."""

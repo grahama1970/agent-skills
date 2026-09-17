@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import ipaddress
+import os
 import re
 from pathlib import PurePosixPath
 from typing import Literal
@@ -53,7 +54,23 @@ def literal_path(value: str) -> str:
 
 
 def contained(path: str, root: str) -> bool:
-    return path == root or path.startswith(root + '/')
+    prefix = '/' if root == '/' else root + '/'
+    return path == root or path.startswith(prefix)
+
+
+def overlaps_protected(path: str, protected_roots: list[str] | None = None) -> bool:
+    """SINGLE SOURCE OF TRUTH for protected-root overlap, shared by the
+    apply-time Policy validator AND validate_delta. Canonicalizes first
+    (os.path.realpath resolves symlinks and normalization tricks), rejects
+    '..' traversal, and checks overlap in both directions so a grant that
+    contains a protected root (e.g. '/') is caught too."""
+    roots = protected_roots if protected_roots is not None else DEFAULT_PROTECTED
+    if '..' in PurePosixPath(path).parts:
+        return True
+    resolved = os.path.realpath(path)
+    if '..' in PurePosixPath(resolved).parts:
+        return True
+    return any(contained(resolved, root) or contained(root, resolved) for root in roots)
 
 
 class Strict(BaseModel):
@@ -105,9 +122,11 @@ class Policy(Strict):
     def permissions(self) -> 'Policy':
         if not set(DEFAULT_PROTECTED).issubset(self.protected_roots):
             raise ValueError('baseline protected roots cannot be removed')
+        # Single source of truth: the same canonicalized overlap check the
+        # delta validator uses, so a proposal can never pass validate_delta
+        # but violate apply (or vice versa).
         for path in [*self.executables, *self.read_files, *self.read_roots, *self.write_roots]:
-            if any(contained(path, root) or (path in self.read_roots + self.write_roots and contained(root, path))
-                   for root in self.protected_roots):
+            if overlaps_protected(path, self.protected_roots):
                 raise ValueError('an allowed resource overlaps a protected root')
         # No writable cron/systemd/database directories or arbitrary host state.
         for root in self.write_roots:

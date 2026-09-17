@@ -1,0 +1,12 @@
+{
+  "accept_cpu_vulnerabilities.json": "ACCEPTED_FOR_HUMAN_REVIEW",
+  "inconclusive_no_evidence.json": "INCONCLUSIVE_NO_EVIDENCE",
+  "reject_cap_restore.json": "REJECTED_CAP_RESTORE",
+  "reject_deny_removal.json": "REJECTED_DENY_REMOVAL",
+  "reject_direct_home.json": "REJECTED_PROTECTED_OVERLAP",
+  "reject_dotdot_home.json": "REJECTED_PROTECTED_OVERLAP",
+  "reject_network_broaden.json": "REJECTED_NETWORK_BROADEN",
+  "reject_nnp_weaken.json": "REJECTED_NNP_WEAKEN",
+  "reject_symlink_home.json": "REJECTED_PROTECTED_OVERLAP",
+  "reject_writable_exec.json": "REJECTED_WRITABLE_EXEC"
+}

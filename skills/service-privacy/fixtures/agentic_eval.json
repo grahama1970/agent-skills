@@ -29,6 +29,23 @@
   ],
   "cases": [
     {
+      "name": "policy-delta-adversarial-corpus",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "../scripts/policy_delta_corpus_driver.sh"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "corpus 8/8 rejected + good accepted=yes"
+        ]
+      },
+      "readback": false,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "service_privacy.owner_confidentiality"
+      ]
+    },
+    {
       "name": "live-doctor-entrypoint",
       "type": "positive",
       "real_world": true,

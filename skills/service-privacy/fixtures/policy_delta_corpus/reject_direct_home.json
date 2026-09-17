@@ -1,0 +1,10 @@
+{
+  "schema_version": "ubuntu_service_privacy.policy_delta_proposal.v1",
+  "resource_class": "CPU_TOPOLOGY",
+  "reason": "observed AppArmor denial during qualification probe",
+  "required_for_observed_check": true,
+  "protected_overlap": false,
+  "add_read_roots": [
+    "/home/graham/client/data"
+  ]
+}
