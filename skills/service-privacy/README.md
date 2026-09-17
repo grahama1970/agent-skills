@@ -1,17 +1,12 @@
 # Service privacy
 
-**An agentic, owner-controlled privacy cage for privileged device-trust and endpoint agents.**
+**Let a device-trust agent like Kolide do its legitimate security job — without handing it the keys to the rest of your workstation.**
 
-The Ubuntu implementation uses AppArmor plus systemd to let a service such as Kolide perform approved device-security checks without automatically giving it unrestricted access to unrelated personal, consulting, or client data.
+Companies use tools like Kolide to verify a laptop meets security policy. Those tools need privileged access — but on a personally owned machine, that same access can reach client repositories, SSH keys, and personal or ITAR-controlled work that has nothing to do with device posture.
 
-- **Ubuntu:** implemented and under live qualification.
-- **macOS:** implementation coming soon.
+`service-privacy` builds an enforceable boundary around the agent. You approve exactly which operating-system and device-security data it may read, and the operating system — not the agent — enforces the rest. If the agent asks for a protected client file, the kernel answers **permission denied**. Denied reads fail normally and are logged; the agent always sees its real results, and the skill never forges inventory, fakes a check, or claims an unavailable check passed.
 
-This is transparent confinement, not evasion. Denied reads fail normally. The skill does not forge inventory, fake successful security checks, spoof telemetry, or claim that an unavailable check passed.
-
-**README explains the system; `SKILL.md` governs runtime.**
-
-**Current assurance status:** the Ubuntu policy model, rendering, planning, probing, apply/verify/rollback flow, runtime readback, and drift handling are implemented. Full production privacy, complete real-Kolide lifecycle/update qualification, and ITAR compliance are **not established**. See `GOAL.md` and `docs/PROJECT_KNOWLEDGE.md` for the exact evidence boundary.
+**Where it stands:** Ubuntu is implemented and under live qualification; macOS is planned. Full production privacy, complete real-Kolide lifecycle/update qualification, and ITAR compliance are **not established** — see `GOAL.md` and `docs/PROJECT_KNOWLEDGE.md` for the exact evidence boundary.
 
 ## What this does, in plain English
 
@@ -33,13 +28,10 @@ On Ubuntu, Linux enforces those rules. Kolide does not get to decide whether to 
 
 If Kolide asks to open a protected client file, the operating system can answer **permission denied**.
 
-The goal is simple:
-
-> **Let the device-trust agent do its legitimate security job without handing it the keys to the rest of the workstation.**
-
 <p align="center">
   <img src="images/service-privacy-how-it-works.svg" alt="How service-privacy works: Kolide asks for access, the agentic skill assesses policy and changes, AppArmor and systemd enforce the approved cage, approved device posture reads pass, protected client data is denied, and updates trigger inspection, testing, classification, human approval, and requalification" width="950">
 </p>
+<p align="center"><em>Approved device-posture reads pass; protected client data is denied; software updates trigger inspection, classification, and human approval before any policy change.</em></p>
 
 ## AppArmor is the guard; service-privacy is the assessor and cage manager
 
@@ -391,6 +383,8 @@ sudo env SERVICE_PRIVACY_PYTHON="$SERVICE_PRIVACY_PYTHON" \
 ```
 
 A one-minute successful startup proves very little about an endpoint agent. Delayed query packs, update checks, log/flare activity, helper processes, control reconciliation, restarts, and reboots all matter to qualification.
+
+Verification is a point-in-time readback, not continuous supervision; a single passing `verify` does not prove every future operation stays inside the cage.
 
 Rollback leaves the service visibly held OFF rather than automatically restarting it without protection.
 
