@@ -7,6 +7,15 @@ broader local access than the workstation owner intends. Enforcement is imposed
 by the owner via AppArmor, systemd and capabilities, rather than by changing the
 agent's answers. The client sees actual errors/missing connectivity.
 
+Concretely: osquery, the engine Kolide runs, supports remotely-delivered
+distributed/live queries and remotely refreshed configuration, and its YARA
+tables open and scan specified files on disk. That is a documented remote
+arbitrary-file-read primitive the managing organization can invoke at any time —
+which is why the control must be owner-imposed kernel enforcement, not vendor
+policy or product transparency. Technical read capability, not proof of actual
+viewing, is the boundary that matters: a privileged agent that *can* read client
+or controlled data is inside the trust boundary until the kernel denies it.
+
 Trusted: the owner, kernel, AppArmor/systemd implementations *at a verified
 patch level*, root-controlled policy deployment code and interpreter, and the
 explicit local approval. AppArmor userspace trust is conditional, not assumed:

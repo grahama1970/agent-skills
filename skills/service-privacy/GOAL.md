@@ -1,5 +1,10 @@
 # Owner confidentiality goal
 
+**Invariant:** client-required device trust must never implicitly grant access to
+unrelated client, proprietary, or controlled data. Everything else — AppArmor,
+systemd, update assessment, canaries, agentic requalification — is machinery for
+keeping that one invariant true.
+
 Source requirement, from the user: a personally owned Ubuntu consulting
 workstation must not give an unrelated employer access to proprietary or
 ITAR-controlled work merely because its device-trust agent is installed.
