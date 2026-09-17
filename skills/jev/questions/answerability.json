@@ -1,0 +1,13 @@
+{
+  "_meta": {"for": "create-evidence-case same-technique check / memory /answer-vs-/clarify: do grounded entities converge on one answerable request, or span unrelated domains?"},
+  "convergence": {
+    "type": "choice",
+    "instructions": "state.question is the user request. state.grounded is the list of controls/entities that resolved (id, name, framework) plus any known crosswalk links between them. Every entity is real and edges may exist pairwise. Judge ONLY whether these grounded entities converge on a single coherent, answerable request, or whether they span unrelated domains so the request cannot be answered as posed. Existing crosswalk edges do NOT make a request answerable if the entities address unrelated techniques.",
+    "criteria": {
+      "converges_answerable": "The grounded entities cluster on one shared technique/scope; the request is coherent and can be answered from them.",
+      "spans_unrelated_clarify": "The grounded entities address unrelated domains/techniques with no shared bridge; the request should be clarified or split, not answered.",
+      "partial_coverage_gap": "Some entities converge but a load-bearing part of the request is ungrounded; needs research or clarification before answering.",
+      "insufficient_evidence": "Too few grounded entities, ambiguous references, or a compound request prevents a reliable convergence judgment."
+    }
+  }
+}

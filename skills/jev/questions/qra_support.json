@@ -1,0 +1,12 @@
+{
+  "_meta": {"for": "memory pipeline: does the recalled QRA/control actually ANSWER this event with one of the offered options, or is it merely relevant? relevance != support. Deterministic exact-id match is decided upstream; jev judges the 'or close' residual."},
+  "support": {
+    "type": "choice",
+    "instructions": "state.event describes the situation and its technique. state.recalled is the QRA/control content memory returned (may be a near-match, not exact). state.offered is the list of options the agent can choose. Judge ONLY whether the recalled evidence supports answering this event with one of the offered options. Do not reward topical relatedness; support means the recalled evidence establishes that a specific offered option is a correct answer to THIS event.",
+    "criteria": {
+      "supported": "The recalled evidence establishes that at least one offered option is a correct answer to this event; the agent can answer from memory.",
+      "close_but_unsupported": "The recalled evidence is about this technique/topic but none of the offered options is a correct answer it establishes; the agent should clarify or draft, not answer.",
+      "no_support": "The recalled evidence does not address this event; the agent should not answer from it."
+    }
+  }
+}

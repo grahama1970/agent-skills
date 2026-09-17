@@ -44,6 +44,37 @@ pi-subagents skill's own references (`skills/pi-subagents/references/*.md`,
 especially `constraints-and-recipes.md`). When the two disagree, pi-subagents'
 runtime constraints win; file an issue here.
 
+## Core workflowScript router (call before you author)
+
+Like `$ask`'s named modes (one-shot, roundtable, compete, clean-room,
+creator-reviewer), the ecosystem has a small set of **named, config-driven core
+workflowScripts**. A project agent selects one by **reading this table** — the
+same way it reads `$ask`'s Mode Router — not by asking a model.
+
+**Read this table first. If a core mode covers the need, call it — do not author
+a new workflowScript.** Author a new one (through the mandatory Authoring flow
+below) ONLY when no core mode fits, then add its row here. This is the
+anti-bespoke / anti-duplication front door.
+
+| Mode | Use when | Config (amend here, not the JS) | Terminal states | Call |
+|---|---|---|---|---|
+| `preflight` | check model/seat availability before a round | model-list env vars | one availability report | `bash ~/.pi/agent/workflows/model-preflight.sh --timeout 90` |
+| `bounded-loop-gate` | config-gated work → grade → orchestrator gate, over bounded waves | `<repo>/.pi/<name>.json` | `*_found` / `blocked_human` / `iteration_cap_reached` / `*_bug_found` | reference example: `spacetrail-learn.workflow.js` |
+| `roundtable` | N seats, identical shared packet, converge to synthesis | handlers + immutable goal | consensus / degraded | `$ask tau-dag "<task>" --dag-template roundtable --topology concurrent` (or `$roundtable` for pi-native) |
+| `compete` | isolated candidates; orchestrator harvests/mixes the best | handlers, criterion, immutable goal | scorecard + winner | `$ask compete "<task>" --handler <a> --handler <b> --criterion <c>` |
+| `clean-room` | isolated review bundle, seats never see each other | target bundle | per-seat review | `$roundtable` (pi-native) or `$ask` |
+| `creator-reviewer` | sequential build → reviewer verdict gate | creator, reviewer, immutable goal | pass / fail | `$ask tau-dag "<task>" --dag-template creator-reviewer --topology sequential` |
+| `immutable-goal-mvp-loop` | goal-locked bounded MVP with anti-thrash escalation | goal_id, goal_hash, target | shipped / escalated | `$dag-templates materialize immutable-goal-mvp-loop ...` |
+
+Full per-mode contract (inputs, gates, canonical example + diagram, how to amend
+by config): `references/core-workflows.md`.
+
+**Selection is by reading the table** (deterministic, human-legible). If two
+modes plausibly fit, that is the ONLY place a bounded `$jev` shortlist screen may
+assist — over the enumerated candidates, abstaining to the human below
+threshold. `$jev` never authors, amends, or is the selection authority; the
+workflow running to its terminal state is the proof of a correct pick.
+
 ## Authoring flow (mandatory order)
 
 1. **Interview first.** A new workflowScript requires an `$interview` pass
@@ -172,6 +203,10 @@ workflowScript with this skill's linter plus `subagent action: "validate"`.
 
 ## References
 
+- `references/core-workflows.md` — the Core workflowScript router in full: each
+  named mode's inputs, gates, terminal states, canonical example + diagram, and
+  how to amend it by config instead of editing the JS. Read this to CALL a core
+  mode; read the Authoring flow only when none fits.
 - `references/patterns.md` — annotated canonical patterns (gate/prepare/process
   loop, lifecycle lane, preflight wiring) and the failure each rule prevents.
 - `references/interview.md` — the mandatory pre-authoring interview template.
