@@ -76,7 +76,11 @@ case "$1" in
         # Run local Horus Lore CLI
         # Ensure current dir is in PYTHONPATH for local modules like preset_storage
         export PYTHONPATH="${SCRIPT_DIR}:${MEMORY_ROOT}/src:${PYTHONPATH:-}"
-        exec uv run --directory "${SCRIPT_DIR}" --no-project python3 "${SCRIPT_DIR}/horus_lore_cli.py" "$@"
+        # --no-project gives a bare env, so the CLI's third-party imports must be named here:
+        # loguru (horus_lore_embeddings), typer (horus_lore_cli), python-arango (db.get_db).
+        exec uv run --directory "${SCRIPT_DIR}" --no-project \
+            --with loguru --with typer --with python-arango \
+            python3 "${SCRIPT_DIR}/horus_lore_cli.py" "$@"
         ;;
     learn)
         # Pre-commit quality gate: score memory before storing
