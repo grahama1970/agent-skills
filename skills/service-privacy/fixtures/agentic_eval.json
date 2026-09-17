@@ -88,6 +88,24 @@
       ]
     },
     {
+      "name": "live-change-snapshot-entrypoint",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "../run.sh", "change-snapshot", "--unit", "launcher.kolide-k2.service"],
+      "expected": {
+        "exit_code": 2,
+        "stdout_contains": [
+          "ubuntu_service_privacy.change_receipt.v1",
+          "\"disposition\":\"NO_BASELINE\""
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "service_privacy.policy_mechanisms"
+      ]
+    },
+    {
       "name": "adversarial-input-and-interrupted-apply",
       "type": "adversarial",
       "command": [

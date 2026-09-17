@@ -369,6 +369,24 @@ def rollback(unit: Annotated[str, typer.Option('--unit')], execute: bool = False
     emit(rollback_service(profile_for(unit)))
 
 
+@app.command(name='change-snapshot')
+def change_snapshot(unit: Annotated[str, typer.Option('--unit')],
+                   record_baseline: Annotated[bool, typer.Option('--record-baseline', help='Store this snapshot as the new last-qualified baseline (root only)')] = False) -> None:
+    """Capture the Kolide change snapshot and diff it against the stored baseline.
+
+    Disposition NO_CHANGE exits 0; NO_BASELINE, REQUALIFICATION_REQUIRED and
+    INCONCLUSIVE all exit nonzero so drift is never a silent success.
+    """
+    from .change import capture, diff_against_baseline, record_baseline as record
+    snapshot = capture(unit)
+    if record_baseline:
+        record(snapshot)
+    receipt = diff_against_baseline(snapshot)
+    emit(receipt)
+    if receipt.disposition != 'NO_CHANGE':
+        raise typer.Exit(2)
+
+
 @app.command(name='repo-check')
 def repo_check() -> None:
     """Delegate to the installed best-practices-skills validator; parse findings."""

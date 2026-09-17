@@ -282,6 +282,65 @@ class Verification(Strict):
         return self
 
 
+Disposition = Literal['NO_CHANGE', 'REQUALIFICATION_REQUIRED', 'NO_BASELINE', 'INCONCLUSIVE']
+
+
+class QualifiedSnapshot(Strict):
+    """Last-qualified binary/unit/profile identity bound to one host.
+
+    Root-only observations degrade to a typed status instead of crashing;
+    the paired sha256 is None exactly when the status is not HASHED.
+    """
+    schema_version: Literal['ubuntu_service_privacy.qualified_snapshot.v1'] = 'ubuntu_service_privacy.qualified_snapshot.v1'
+    unit: str
+    launcher: Executable
+    osqueryd: Executable | None = None
+    helper_executables: list[Executable] = Field(default_factory=list)
+    helpers_status: Literal['OBSERVED', 'ROOT_REQUIRED'] = 'OBSERVED'
+    unit_text_sha256: str | None = None
+    unit_text_status: Literal['HASHED', 'ROOT_REQUIRED'] = 'HASHED'
+    profile_sha256: str | None = None
+    profile_status: Literal['HASHED', 'ROOT_REQUIRED', 'NOT_PRESENT'] = 'HASHED'
+    host_binding: str
+    created_at: str
+
+    @model_validator(mode='after')
+    def hashes_match_status(self) -> 'QualifiedSnapshot':
+        if (self.unit_text_sha256 is None) != (self.unit_text_status == 'ROOT_REQUIRED'):
+            raise ValueError('unit text hash must be present exactly when hashed')
+        if self.profile_status == 'HASHED' and not self.profile_sha256:
+            raise ValueError('a hashed profile requires its sha256')
+        if self.profile_status != 'HASHED' and self.profile_sha256:
+            raise ValueError('an unhashable profile cannot carry a sha256')
+        if self.helpers_status != 'OBSERVED' and self.helper_executables:
+            raise ValueError('root-required observation cannot list helpers')
+        return self
+
+
+class ChangeReceipt(Strict):
+    schema_version: Literal['ubuntu_service_privacy.change_receipt.v1'] = 'ubuntu_service_privacy.change_receipt.v1'
+    unit: str
+    disposition: Disposition
+    changed: list[str] = Field(default_factory=list)
+    baseline_sha256: str | None = None
+    snapshot_sha256: str
+    host_binding: str
+    created_at: str
+    seam_validation: Seam = Field(default_factory=Seam)
+
+    @model_validator(mode='after')
+    def truth(self) -> 'ChangeReceipt':
+        # Fail-closed core: a positive verdict requires a comparable baseline
+        # and no degraded observation behind it.
+        if self.disposition == 'NO_CHANGE' and (self.changed or not self.baseline_sha256):
+            raise ValueError('no-change requires a baseline and an empty diff')
+        if self.disposition == 'REQUALIFICATION_REQUIRED' and not self.changed:
+            raise ValueError('requalification requires named changes')
+        if self.disposition == 'NO_BASELINE' and (self.baseline_sha256 or self.changed):
+            raise ValueError('no-baseline cannot carry a baseline or a diff')
+        return self
+
+
 class ValidationIssue(Strict):
     type: str
     loc: list[str | int]
