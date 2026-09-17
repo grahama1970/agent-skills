@@ -20,9 +20,28 @@ in `CURRENT_STATUS.json` and `PROJECT_KNOWLEDGE.md`.
   and make the chatterbox-speak render path safe and self-contained enough to
   serve it live.
 
-## 2. Current State (what landed on origin/main this session)
+## 2. Current State (Doc-Code Alignment)
 
-All commits verified as ancestors of `origin/main`, byte-matched at land time.
+**Documented features** (README "Where it stands" / SKILL.md): journal loop,
+recall-grounded dreaming, spoken journal, attributed discussion carried back
+into memory, calibrated tone delivery, honest "dreaming helps?" non-claim.
+
+**Implemented reality** now ALSO includes the C0/C1 thread, none of which is
+in the README yet: emotional-trigger recall → deterministic admission →
+folded persona state → later-turn framing + applied delivery.
+
+**Drift / misalignments** (found via `$handoff` fact pass 2026-09-17):
+
+- `README.md` "Where it stands" predates the entire C0/C1 thread — no mention
+  of admission/fold, the frozen matched experiment, or the later-turn effect.
+- `CURRENT_STATUS.json`, `PROJECT_KNOWLEDGE.md`, `CURRENT_STATE.md` contain
+  zero `c0c1`/`later_turn` references (verified by grep this session); they
+  still describe the pre-2026-09-15 state.
+- This `local/HANDOFF.md` is the ONLY current doc; treat it as authoritative
+  until README/EVIDENCE are refreshed.
+
+**What landed on origin/main** (all commits verified as ancestors of
+`origin/main`, byte-matched at land time):
 
 | Commit | What |
 |---|---|
@@ -32,7 +51,7 @@ All commits verified as ancestors of `origin/main`, byte-matched at land time.
 | `1ae62979` | **chatterbox-speak core extraction**: `speak_core.py` (typed VoiceDeliveryPlan → gated render → hashed receipt), CLI thinned, 13-case live eval |
 | `16a92c70` | **embry-voice-control wired through the core**: digest-verified loader, `/readiness` core parity, `render_evidence` in turn receipts, `check_no_direct_chatterbox_posts.py` |
 | `15bf4958` | **voice-stack cutover executed**: `speak_core` resolves host WAVs across layouts; `CUTOVER_RUNBOOK.md` addendum + sanitized override template |
-| this session | **later-turn delivery effect (loop's back half) landed**: `run_later_turn_effect.py` + `run.sh later-turn-effect`, `render_via_chatterbox_speak` gained `--intensity` passthrough + persisted core receipts, retained eval `fixtures/agentic_eval.later_turn_effect.json` (readiness READY, critical claim proven live). Retained proof: `local/proofs/later-turn-effect-20260917T140812Z/` (PASS: c0 warmth 0.20→RESERVED, c1 0.30→WARMER; answer byte-identical + invariance gate PASS; affect applied=true, exaggeration 0.57 vs 1.11; durations 12.38s slow vs 11.11s brisk; zero memory writes) |
+| `1fee9593` | **later-turn delivery effect (loop's back half)**: `run_later_turn_effect.py` + `run.sh later-turn-effect`, `render_via_chatterbox_speak` gained `--intensity` passthrough + persisted core receipts, retained eval `fixtures/agentic_eval.later_turn_effect.json` (readiness READY, critical claim proven live). Retained proof: `local/proofs/later-turn-effect-20260917T140812Z/` (PASS: c0 warmth 0.20→RESERVED, c1 0.30→WARMER; answer byte-identical + invariance gate PASS; affect applied=true, exaggeration 0.57 vs 1.11; durations 12.38s slow vs 11.11s brisk; zero memory writes) |
 
 Reference doc `18674b0d` (`skills/ask/references/strategy-to-workflow.md`) also
 landed: the ask-one-shot → lane-specs → workflowScript recipe used to drive all
@@ -103,6 +122,11 @@ of the above.
   restoring the disabled-compat checker at the expected path. New sessions load
   nothing; per operator directive report normally, no `pi.agent_status.v1`
   footer required.
+- **Doc drift (from the $handoff alignment pass)**: `README.md` "Where it
+  stands", `docs/EVIDENCE.md`, `CURRENT_STATUS.json`, `PROJECT_KNOWLEDGE.md`,
+  and `CURRENT_STATE.md` predate the C0/C1 thread (zero mentions — verified by
+  grep). Until refreshed, this `local/HANDOFF.md` plus
+  `contracts/c0c1_matched_experiment.v1.md` are the authoritative current state.
 - **Worker teardown artifacts**: several `pi-subagents` worker runs reported
   `failed` on already-completed work (fork-context thinking sanitization abort).
   Always verify child artifacts on disk before trusting either status.
