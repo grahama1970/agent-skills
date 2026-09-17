@@ -109,5 +109,5 @@ def log_shadow(record: dict[str, Any]) -> None:
             json={"collection": SHADOW_COLLECTION, "document": record},
             timeout=5.0,
         )
-    except Exception as exc:  # telemetry must never fail the shadow
-        logger.debug("jev shadow log skipped: {}", exc)
+    except Exception as exc:  # shadow logging is non-fatal but failures must be visible
+        logger.error("jev shadow log failed: {}", exc)

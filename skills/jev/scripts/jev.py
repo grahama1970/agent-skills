@@ -13,11 +13,12 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import httpx
 import typer
 from loguru import logger
+from pydantic import BaseModel, Field, ValidationError
 
 app = typer.Typer(add_completion=False, help="Jev typed-judgment adapter")
 
@@ -40,6 +41,33 @@ BLOCKED_MARKERS += tuple(
 )
 
 RECEIPT_SCHEMA = "jev.receipt.v1"
+
+
+class JevAnswer(BaseModel):
+    """Typed boundary model for one Jev answer (LLM-IO validation gate)."""
+
+    type: Literal["choice", "score", "noul"]
+    choice: str | None = None
+    noul: float | None = Field(default=None, ge=0.0, le=1.0)
+    score: float | None = None
+    probabilities: dict[str, float] | None = None
+    confidence: float | None = Field(default=None, ge=0.0, le=1.0)
+
+    def model_post_init(self, __context: Any) -> None:
+        if self.type == "noul" and self.noul is None:
+            raise ValueError("noul answer missing noul value")
+        if self.type == "choice" and (self.choice is None or self.probabilities is None):
+            raise ValueError("choice answer missing choice/probabilities")
+        if self.type == "score" and (self.score is None or self.probabilities is None):
+            raise ValueError("score answer missing score/probabilities")
+
+
+class JevResponse(BaseModel):
+    """Typed boundary model for the full /v1/systemone response."""
+
+    model: str
+    answers: dict[str, JevAnswer]
+    usage: dict[str, int] | None = None
 
 
 def _sha256(data: Any) -> str:
@@ -107,8 +135,8 @@ def _telemetry(task: str, took_ms: int, status: str) -> None:
             },
             timeout=3.0,
         )
-    except Exception as exc:  # telemetry must never fail the judgment
-        logger.debug("execution-runs telemetry skipped: {}", exc)
+    except Exception as exc:  # telemetry is non-fatal but failures must be visible
+        logger.error("execution-runs telemetry failed: {}", exc)
 
 
 @app.command()
@@ -189,7 +217,16 @@ def ask(
         print(json.dumps({"decision": "abstain", "reason": f"transport: {exc}"}))
         raise typer.Exit(3)
 
-    answers = data.get("answers", {})
+    try:
+        parsed = JevResponse.model_validate(data)
+    except ValidationError as exc:
+        print(json.dumps({
+            "decision": "abstain",
+            "reason": f"response failed typed validation: {exc.errors()[:3]}",
+        }))
+        raise typer.Exit(3)
+
+    answers = {qid: ans.model_dump(exclude_none=True) for qid, ans in parsed.answers.items()}
     missing = [q for q in qs if q not in answers]
     if missing:
         print(json.dumps({"decision": "abstain", "reason": f"missing answers: {missing}"}))

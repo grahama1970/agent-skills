@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 # Jev skill entrypoint. Usage: ./run.sh <command> [args...]
 set -euo pipefail
-cd "$(dirname "$0")"
-exec uv run --quiet --with httpx,typer,loguru python scripts/jev.py "$@"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec uv run --project "$SCRIPT_DIR" --quiet python "$SCRIPT_DIR/scripts/jev.py" "$@"
