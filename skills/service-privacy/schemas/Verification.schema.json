@@ -111,7 +111,7 @@
     "network_assertion": {
       "enum": [
         "SEPARATE_NETWORK_NAMESPACE",
-        "CONFIG_READBACK_AND_PRESTART_PROBE_ONLY"
+        "CONFIGURATION_MATCH"
       ],
       "title": "Network Assertion",
       "type": "string"

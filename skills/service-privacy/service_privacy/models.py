@@ -178,21 +178,35 @@ class Plan(Strict):
         return self
 
 
+NetworkDenial = Literal['ENFORCED', 'INCONCLUSIVE_FOR_FILTER_ENFORCEMENT', 'NOT_DENIED']
+
+
 class ProbeResults(Strict):
     schema_version: Literal['ubuntu_service_privacy.probe_result.v1']
     allowed_read: bool
     denied_read: bool
     denied_proc: bool
     denied_unix: bool
-    denied_ipv4: bool
-    denied_ipv6: bool
+    # ENETUNREACH/EHOSTUNREACH/ECONNREFUSED/EINPROGRESS on a DENIED address prove
+    # unreachability, not that the IPAddressDeny filter dropped the packet.
+    denied_ipv4: NetworkDenial
+    denied_ipv6: NetworkDenial
     no_capabilities: bool
     no_new_privileges: bool
     profile_attached: bool
     child_inherits: bool
 
     def all_pass(self) -> bool:
-        return all(value is True for key, value in self.model_dump().items() if key != 'schema_version')
+        # Network denial is a verdict string, not a bool: INCONCLUSIVE_FOR_FILTER_ENFORCEMENT is not a pass.
+        for key, value in self.model_dump().items():
+            if key == 'schema_version':
+                continue
+            if key in ('denied_ipv4', 'denied_ipv6'):
+                if value != 'ENFORCED':
+                    return False
+            elif value is not True:
+                return False
+        return True
 
 
 class ProbeReceipt(Strict):
@@ -243,7 +257,8 @@ class Verification(Strict):
     checked_at: str
     failures: list[str]
     processes: list[ProcessProof]
-    network_assertion: Literal['SEPARATE_NETWORK_NAMESPACE', 'CONFIG_READBACK_AND_PRESTART_PROBE_ONLY']
+    # Config readback proves the unit file agrees with intent, not that the kernel filter executes.
+    network_assertion: Literal['SEPARATE_NETWORK_NAMESPACE', 'CONFIGURATION_MATCH']
     effective_filesystem_access: Literal['SYNTHETIC_PROBES_ONLY_NOT_EXHAUSTIVE'] = 'SYNTHETIC_PROBES_ONLY_NOT_EXHAUSTIVE'
     privacy_boundary: Literal['NOT_ESTABLISHED'] = 'NOT_ESTABLISHED'
     itar_compliance: Literal['NOT_ASSESSED'] = 'NOT_ASSESSED'

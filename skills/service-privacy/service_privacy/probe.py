@@ -6,6 +6,8 @@ transmitted; positive network controls use only loopback listeners.
 """
 from __future__ import annotations
 
+import errno
+import json
 import os
 import socket
 import uuid
@@ -18,6 +20,23 @@ from .models import Plan, ProbeReceipt, ProbeResults
 from .planning import revalidate_host, syntax_check
 from .policy import apparmor, properties
 from .system import apparmor_ready, loaded_profile
+
+# Only these errnos on a connect() to a DENIED address prove the filter dropped the packet.
+FILTER_ENFORCED_ERRNOS = frozenset({errno.EPERM, errno.EACCES})
+
+
+def network_verdict(connect_failed: bool, error_number: int) -> str:
+    """Classify a failed connect() to a DENIED address: only EPERM/EACCES prove enforcement."""
+    if not connect_failed:
+        return 'NOT_DENIED'
+    return 'ENFORCED' if error_number in FILTER_ENFORCED_ERRNOS else 'INCONCLUSIVE_FOR_FILTER_ENFORCEMENT'
+
+
+def network_status_from_probe_bool(value: bool) -> str:
+    """probe.c collapses errnos to a bool over a superset acceptance set (unchanged per #1734):
+    a 'denied' connect may be EPERM (filter) or ENETUNREACH/EHOSTUNREACH/ECONNREFUSED/EINPROGRESS
+    (plain unreachability, no filter) — ambiguous, so never an enforcement pass."""
+    return 'NOT_DENIED' if not value else 'INCONCLUSIVE_FOR_FILTER_ENFORCEMENT'
 
 
 def live_probe(plan: Plan) -> tuple[Path, ProbeReceipt]:
@@ -75,7 +94,10 @@ def live_probe(plan: Plan) -> tuple[Path, ProbeReceipt]:
                      str(listeners[0].getsockname()[1]), str(listeners[1].getsockname()[1]),
                      profile_name + ' (enforce)']
             result = checked(argv, 40)
-            probe_results = parse_json(result.stdout, ProbeResults)
+            raw = json.loads(result.stdout)
+            for key in ('denied_ipv4', 'denied_ipv6'):
+                raw[key] = network_status_from_probe_bool(bool(raw[key]))
+            probe_results = parse_json(json.dumps(raw), ProbeResults)
             receipt = ProbeReceipt(plan_sha256=sha(canonical(plan)), host_binding=host_binding(), created_at=now(),
                                    production_profile_sha256=plan.rendered_sha256['apparmor.profile'],
                                    results=probe_results, status='PASS' if probe_results.all_pass() else 'FAIL')

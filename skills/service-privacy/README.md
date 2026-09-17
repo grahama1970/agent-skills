@@ -15,6 +15,55 @@ then **verify**. Every stage below expands one of these steps; the privacy
 presets (`firewall`/`configure`) shape the policy, so choose them before you
 create it.
 
+## What this does, in plain terms
+
+service-privacy is basically a privacy fence around a background program like Kolide.
+
+Kolide is installed to inspect your computer and report whether it meets company security requirements. The problem is that, by default, a program like that can potentially look at far more than you actually want it to see.
+
+service-privacy changes that.
+
+Think of your computer like a house. Kolide is a contractor who has been invited in to check that the smoke detectors work. Normally, that contractor may technically have keys to every room.
+
+service-privacy says:
+
+- You may enter the hallway, utility room, and electrical panel.
+- You may not enter the bedrooms, filing cabinets, or client archive room.
+
+Linux then enforces those rules.
+
+More specifically, the skill does four things:
+
+1. It defines what Kolide is allowed to see. Things like operating-system version, CPU information, package versions, and other information needed for device-compliance checks can be allowed.
+2. It defines what Kolide is not allowed to see. Client source code, personal files, SSH keys, consulting work, mounted storage, and other protected locations can be blocked.
+3. It installs those restrictions into Linux. AppArmor handles most of the file-access restrictions. Systemd adds additional restrictions, such as removing powerful privileges and limiting what the service can do.
+4. It checks that the restrictions are actually working. It can verify that Kolide is running inside the restricted environment, test that protected files cannot be read, notice when Kolide changes after an update, and safely stop or roll back if the protection is no longer valid.
+
+The important part is that Kolide itself does not get to decide whether it obeys these rules. Linux does.
+
+So even if Kolide asks:
+
+> "Open this client source-code file."
+
+the operating system can answer:
+
+> "No."
+
+And Kolide receives a normal permission-denied error.
+
+The skill also handles updates carefully. If Kolide updates itself, service-privacy should not simply give the new version whatever permissions it asks for. Instead, it checks:
+
+- Is this still the same kind of program?
+- Is it still inside the cage?
+- Does it still work with the existing safe permissions?
+- Is it trying to access something new?
+
+If the new version needs access to some harmless operating-system information, we can review that. If it suddenly wants access to protected client files, the answer remains no.
+
+So the simplest description is: service-privacy lets Kolide do its legitimate device-security job without giving it unrestricted access to the rest of your computer.
+
+Or even shorter: Kolide gets a fenced-off workspace instead of the keys to the whole machine.
+
 ## Platform support
 
 Today this is **Ubuntu-only**: the enforcement is AppArmor (mandatory access
@@ -274,7 +323,8 @@ sudo env SERVICE_PRIVACY_PYTHON="$SERVICE_PRIVACY_PYTHON" \
 
 Runtime verification is a snapshot, not continuous supervision. It does not
 re-run the full synthetic probe each time. Public network verification reports
-`CONFIG_READBACK_AND_PRESTART_PROBE_ONLY`, not continuous BPF attestation.
+`CONFIGURATION_MATCH` (unit config agrees with intent) plus a prestart probe;
+that is not continuous BPF attestation and not proof the kernel filter executes.
 
 Rollback removes only unchanged files installed by this tool. It leaves
 `99-owner-privacy-hold.conf` containing `ConditionPathExists=!/`. That visibly

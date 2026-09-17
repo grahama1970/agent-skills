@@ -19,7 +19,8 @@ from service_privacy.planning import save_plan
 
 def good_probe(plan):
     values={'schema_version':'ubuntu_service_privacy.probe_result.v1',
-            **{k:True for k in ProbeResults.model_fields if k!='schema_version'}}
+            **{k:True for k in ProbeResults.model_fields if k!='schema_version'},
+            'denied_ipv4':'ENFORCED','denied_ipv6':'ENFORCED'}
     return ProbeReceipt(plan_sha256=sha(canonical(plan)),host_binding=plan.host_binding,created_at=plan.created_at,
                         production_profile_sha256=plan.rendered_sha256['apparmor.profile'],
                         results=ProbeResults.model_validate(values),status='PASS')

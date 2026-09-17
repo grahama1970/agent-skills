@@ -25,12 +25,22 @@
           "type": "boolean"
         },
         "denied_ipv4": {
+          "enum": [
+            "ENFORCED",
+            "INCONCLUSIVE_FOR_FILTER_ENFORCEMENT",
+            "NOT_DENIED"
+          ],
           "title": "Denied Ipv4",
-          "type": "boolean"
+          "type": "string"
         },
         "denied_ipv6": {
+          "enum": [
+            "ENFORCED",
+            "INCONCLUSIVE_FOR_FILTER_ENFORCEMENT",
+            "NOT_DENIED"
+          ],
           "title": "Denied Ipv6",
-          "type": "boolean"
+          "type": "string"
         },
         "no_capabilities": {
           "title": "No Capabilities",

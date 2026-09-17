@@ -13,6 +13,7 @@ import pytest
 
 from service_privacy.core import Blocked, ROOT, canonical, load, read_private, secure_dir, write_new
 from service_privacy.models import Plan, Policy, ProbeResults
+from service_privacy.probe import network_status_from_probe_bool
 from service_privacy.planning import save_plan, verify_plan_files
 from service_privacy.policy import apparmor, dropin, rendered
 
@@ -80,10 +81,18 @@ def test_real_probe_does_not_pass_unconfined(tmp_path):
         server.bind(str(sockpath));server.listen(4)
         result=subprocess.run([str(exe),str(allowed),str(denied),'/proc/1/environ',str(sockpath),'9','9','not-this-profile (enforce)'],
                               capture_output=True,text=True,timeout=10)
-    data=ProbeResults.model_validate_json(result.stdout)
+    raw=json.loads(result.stdout)
+    for key in ('denied_ipv4','denied_ipv6'):
+        raw[key]=network_status_from_probe_bool(raw[key])
+    data=ProbeResults.model_validate(raw)
     assert data.allowed_read is True
     assert data.denied_read is False
     assert data.denied_unix is False
+    # Unconfined: a failed connect() here is plain unreachability (10.255.255.1
+    # routes via the LAN gateway, fd00::1 has no route), never filter enforcement.
+    assert data.denied_ipv4 == 'NOT_DENIED' or data.denied_ipv4 == 'INCONCLUSIVE_FOR_FILTER_ENFORCEMENT'
+    assert data.denied_ipv6 == 'NOT_DENIED' or data.denied_ipv6 == 'INCONCLUSIVE_FOR_FILTER_ENFORCEMENT'
+    assert data.denied_ipv4 != 'ENFORCED' and data.denied_ipv6 != 'ENFORCED'
     assert data.profile_attached is False
     assert not data.all_pass()
 

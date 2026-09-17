@@ -193,7 +193,7 @@ def verify_record(record: Registry) -> Verification:
             return Verification(unit=plan.policy.unit, status='STOPPED_NO_RUNNING_PROOF', checked_at=now(),
                                 failures=failures + ['SERVICE_NOT_RUNNING'], processes=[],
                                 network_assertion=('SEPARATE_NETWORK_NAMESPACE' if plan.policy.network_mode == 'OFFLINE'
-                                                   else 'CONFIG_READBACK_AND_PRESTART_PROBE_ONLY'))
+                                                   else 'CONFIGURATION_MATCH'))
         pids = cgroup_pids(actual_unit.control_group)
         if actual_unit.main_pid not in pids:
             failures.append('MAINPID_NOT_IN_CGROUP')
@@ -217,7 +217,7 @@ def verify_record(record: Registry) -> Verification:
     return Verification(unit=plan.policy.unit, status='FAIL' if failures or not proofs else 'RUNTIME_CHECKS_PASS',
                         checked_at=now(), failures=sorted(set(failures)), processes=proofs,
                         network_assertion=('SEPARATE_NETWORK_NAMESPACE' if plan.policy.network_mode == 'OFFLINE'
-                                           else 'CONFIG_READBACK_AND_PRESTART_PROBE_ONLY'))
+                                           else 'CONFIGURATION_MATCH'))
 
 
 def apply_plan(path: Path, approval: str, probe_path: Path) -> Verification:

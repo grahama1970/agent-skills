@@ -117,6 +117,7 @@ def test_false_runtime_pass_rejected():
 
 def test_probe_cannot_lie(plan):
     data={'schema_version':'ubuntu_service_privacy.probe_result.v1', **{k: True for k in ProbeResults.model_fields if k != 'schema_version'}}
+    data.update(denied_ipv4='ENFORCED', denied_ipv6='ENFORCED')
     data['denied_read']=False
     results=ProbeResults.model_validate(data)
     with pytest.raises(ValidationError):ProbeReceipt(plan_sha256=sha(canonical(plan)),host_binding=plan.host_binding,created_at=plan.created_at,
