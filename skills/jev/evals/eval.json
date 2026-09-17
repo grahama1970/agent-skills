@@ -1,0 +1,54 @@
+{
+  "version": "1.0",
+  "skill": "jev",
+  "proof_scope": "skill-contract",
+  "claims": [
+    "egress gate blocks restricted markers and unauthorized calls",
+    "ask returns typed answers with probabilities and hash-bound receipt",
+    "low confidence or transport failure fails closed with nonzero exit"
+  ],
+  "cases": [
+    {
+      "name": "egress-gate-blocks-cui",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd skills/jev && echo '{\"doc\": \"CUI// marked\"}' > /tmp/jev_eval_cui.json && ./run.sh ask --preset edge_stance --state @/tmp/jev_eval_cui.json --allow-egress"
+      ],
+      "expected": {
+        "exit_code": 2,
+        "stdout_contains": ["\"egress\": \"blocked\""]
+      }
+    },
+    {
+      "name": "live-typed-judgment",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "source <(grep -E '^export JEV_API_KEY=' ~/.zshrc) && cd skills/jev && ./run.sh ask --preset triage_error --state '{\"error\":\"The path argument must be of type string. Received undefined\",\"context\":\"emit_message switchboard extension failed before its own logic ran\"}' --allow-egress"
+      ],
+      "expected": {
+        "exit_code_any": [0, 3],
+        "stdout_contains": ["\"schema\": \"jev.receipt.v1\"", "\"decision\""]
+      }
+    },
+    {
+      "name": "abstention-band-fails-closed",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "source <(grep -E '^export JEV_API_KEY=' ~/.zshrc) && cd skills/jev && JEV_ACCEPT_CONFIDENCE=0.99999 ./run.sh ask --preset edge_stance --state '{\"claim\":\"the sky is often blue\",\"passage\":\"Rain fell all week in Glasgow.\"}' --allow-egress"
+      ],
+      "expected": {
+        "exit_code": 3,
+        "stdout_contains": ["\"decision\": \"abstain\""]
+      }
+    }
+  ]
+}

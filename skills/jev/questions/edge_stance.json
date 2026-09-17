@@ -1,0 +1,14 @@
+{
+  "_meta": {"for": "memory edge-verifier: one atomic claim vs one bounded passage"},
+  "stance": {
+    "type": "choice",
+    "instructions": "Compare state.claim with state.passage in its supplied context. Match entity, time, conditions, and quantifiers. Classify what the passage establishes about the claim, not whether the claim is true in the world.",
+    "criteria": {
+      "verifies": "The passage explicitly supports the complete claim or directly entails it within matching scope.",
+      "contradicts": "The passage establishes an incompatible statement within matching scope.",
+      "related": "The passage addresses the subject but neither establishes nor contradicts the claim.",
+      "unrelated": "The passage does not address the claim's subject.",
+      "insufficient_evidence": "Missing context, ambiguous reference, conflicting content, or a compound claim prevents a reliable stance judgment."
+    }
+  }
+}

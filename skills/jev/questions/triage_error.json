@@ -1,0 +1,16 @@
+{
+  "_meta": {"for": "triage-error: generate failure_code criteria from the LIVE versioned catalog at call time; this is a starter shape"},
+  "failure_code": {
+    "type": "choice",
+    "instructions": "Select the most specific failure code established by the supplied diagnostic evidence. Classify the observed failure mechanism; do not invent an upstream root cause. Use no_match when no catalog definition is supported.",
+    "criteria": {
+      "transport_extension_failure": "An extension or tool wrapper failed before reaching its own logic (missing path, module, or config).",
+      "provider_timeout": "An upstream model or API call exceeded its deadline.",
+      "provider_rate_limited": "An upstream returned 429/529 or equivalent backoff signal.",
+      "schema_validation_failure": "A payload failed schema or contract validation.",
+      "dependency_missing": "A required file, credential, service, or collection is absent.",
+      "silent_no_op": "The component reported success but the effect is verifiably absent.",
+      "no_match": "No listed failure code is established by the evidence."
+    }
+  }
+}
