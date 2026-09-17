@@ -1,0 +1,9 @@
+{
+  "source": "def example(value):\n    return value + 1\n",
+  "model_a": "/external/reference-a",
+  "model_b": "/external/reference-b",
+  "model_a_manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "model_b_manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "device": "cpu",
+  "max_tokens": 512
+}

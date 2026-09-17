@@ -1,0 +1,26 @@
+services:
+  a-detection:
+    build: .
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    ports:
+      - "127.0.0.1:8765:8765"
+    environment:
+      A_DETECTION_HOME: /state
+    volumes:
+      - "${A_DETECTION_HOST_DATA:-/mnt/storage12tb/skills/a-detection}:/state"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 1g
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://127.0.0.1:8765/api/health',timeout=2).raise_for_status()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks: [local_only]
+networks:
+  local_only:
+    internal: true

@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>a-detection · Assessment evidence</title><link rel="stylesheet" href="/static/style.css">
+<script defer src="/static/app.js"></script></head>
+<body><header><a class="brand" href="/">a-detection<span>RESEARCH WORKBENCH</span></a><span class="mode">LOCAL FIRST · NO AUTOMATIC PENALTIES</span></header>
+<main><section class="intro"><p class="eyebrow">ASSESSMENT INTEGRITY, NOT AUTHORSHIP CERTAINTY</p>
+<h1>Understand the work.<br>Keep the evidence.</h1><p class="lede">A timed coding workspace with a transparent development record, calibrated research signals, and an explicit right to uncertainty.</p></section>
+<div class="notice"><strong>Research build.</strong> Real-world detection accuracy is not established. No trained model is bundled. A missing model produces an abstention, never an accusation.</div>
+<div class="workspace"><section class="editor-panel"><div class="panel-title"><h2>Coding session</h2><span id="timer">15:00</span></div>
+<p class="task">Implement <code>unique_in_order(values)</code>: return each distinct value once, preserving first occurrence. Explain the equality and input assumptions you choose. This demo records your code; it does not execute or grade it.</p>
+<div class="controls"><label for="language">Language</label><select id="language"><option value="python">Python · detector supported</option><option value="javascript">JavaScript · capture only</option><option value="java">Java · capture only</option><option value="go">Go · capture only</option></select></div>
+<div id="consent-box"><label class="consent"><input id="consent" type="checkbox"><span>I agree to record edits made in this editor, including deleted text and reported paste/input events. Session data stays in this local service; nothing is collected from other tabs, devices, or my clipboard outside this editor.</span></label>
+<p class="muted">Export or delete your session below. The default retention window is 24 hours. Do not enter secrets or confidential client code. Refreshing loses the in-memory session key; export or delete before leaving.</p></div>
+<button id="start" disabled>Start consented session</button>
+<label class="editor-label" for="editor">Your solution</label><textarea id="editor" readonly spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="editor-help" placeholder="# Your code stays within this assessment workspace."></textarea>
+<p id="editor-help" class="muted">Unicode-aware edits · server-authoritative timer · no camera or microphone</p>
+<div class="actions"><button id="submit" disabled>Submit for evidence review</button><button id="export" class="secondary" disabled>Export record</button><button id="delete" class="ghost" disabled>Delete session</button></div>
+<p id="status" role="status" aria-live="polite">No session started. No editor activity is being recorded.</p></section>
+<aside><section class="card"><p class="eyebrow">EVIDENCE STATUS</p><h2 id="verdict">Not assessed</h2><p id="verdict-detail">The result will distinguish an observation from an authorship claim.</p><dl><div><dt>Durable revision</dt><dd id="revision">0</dd></div><div><dt>Authorship established</dt><dd>Never from this score</dd></div><div><dt>Automatic penalty</dt><dd>Disabled</dd></div></dl></section>
+<section class="card"><p class="eyebrow">UNDERSTANDING CHECK</p><h2>A second conversation</h2><p>After submitting, describe an input that challenges your assumptions. Then explain what would change for streaming input.</p><p class="muted">A reviewer assesses demonstrated understanding separately. This prototype does not send explanations to an AI judge.</p></section>
+<section class="card quiet"><h3>What we do not infer</h3><p>A paste is not proof of AI use. An input method is not suspicious. A low score is not proof of human authorship.</p></section></aside></div>
+<details><summary>Evidence and privacy boundaries</summary><p>The server retains what this page reports, not an independently trusted record of human actions. Chained hashes support consistency checks, not proof against a device owner rewriting history. Active database deletion does not guarantee erasure from disks or backups. This service is for loopback research, not public deployment.</p></details>
+</main><footer>a-detection / 0.1.0 <span>OBSERVATIONS ≠ AUTHORSHIP ≠ MISCONDUCT</span></footer></body></html>

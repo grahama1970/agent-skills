@@ -1,0 +1,91 @@
+{
+  "schema_version": "a_detection.delivery_status.v1",
+  "created_at": "2026-09-17T16:25:20.890638+00:00",
+  "project": "a-detection",
+  "version": "0.1.0",
+  "overall_readiness": "USABLE_WITH_GAPS",
+  "release_readiness": "NOT_ESTABLISHED",
+  "scope": "Local research prototype; not an operationally qualified assessment detector.",
+  "core_mechanisms": {
+    "status": "READY",
+    "trials": [
+      {
+        "tests": 96,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 96,
+        "trial_id": "trial-1"
+      },
+      {
+        "tests": 96,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 96,
+        "trial_id": "trial-2"
+      },
+      {
+        "tests": 96,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 96,
+        "trial_id": "trial-3"
+      }
+    ],
+    "report": "evidence/qualification-core/20260917T161943Z-3a2c354c/report.json"
+  },
+  "full_profile": {
+    "status": "NOT_READY",
+    "trials": [
+      {
+        "tests": 97,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 96,
+        "trial_id": "trial-1"
+      },
+      {
+        "tests": 97,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 96,
+        "trial_id": "trial-2"
+      },
+      {
+        "tests": 97,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "passed": 96,
+        "trial_id": "trial-3"
+      }
+    ],
+    "reason": "All browser journeys failed before app navigation with ERR_BLOCKED_BY_ADMINISTRATOR.",
+    "report": "evidence/qualification-full/20260917T162153Z-ab00e8a8/report.json"
+  },
+  "source_sha256": "136b73c047ef2b8e08ad679de2359d98bb65c0ed665ecb37fa97ee67b1a7d24e",
+  "same_source_for_both_profiles": true,
+  "wheel": "dist/a_detection-0.1.0-py3-none-any.whl",
+  "wheel_runtime_readback": "evidence/wheel-readback.json",
+  "native_setup": "BLOCKED_EXTERNAL",
+  "native_agentic_evals": "BLOCKED_EXTERNAL",
+  "native_conformance": "NOT_ESTABLISHED",
+  "detection_efficacy": "NOT_ESTABLISHED",
+  "pretrained_detector_included": false,
+  "default_disposition": "INSUFFICIENT_EVIDENCE",
+  "candidate_code_execution": false,
+  "external_model_uploads": false,
+  "not_executed": [
+    "Clean uv dependency resolution / lockfile",
+    "Ruff",
+    "Docker runtime",
+    "Transformer model-weight inference",
+    "Genuine human and held-out-generator study",
+    "Independent accessibility and fairness review",
+    "Acceptance-contract, Battle and create-report native chain"
+  ]
+}

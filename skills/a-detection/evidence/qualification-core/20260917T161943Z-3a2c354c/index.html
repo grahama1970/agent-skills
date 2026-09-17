@@ -1,0 +1,110 @@
+<!doctype html><meta charset='utf-8'><title>a-detection verification</title><style>body{max-width:1000px;margin:40px auto;font:16px/1.6 system-ui;padding:20px}pre{white-space:pre-wrap}</style><h1>a-detection: READY</h1><h2>Release and detection efficacy: NOT_ESTABLISHED</h2><pre>{
+  &quot;schema_version&quot;: &quot;a_detection.mechanism_verification.v1&quot;,
+  &quot;run_id&quot;: &quot;20260917T161943Z-3a2c354c&quot;,
+  &quot;created_at&quot;: &quot;2026-09-17T16:20:10.073195+00:00&quot;,
+  &quot;mechanism_readiness&quot;: &quot;READY&quot;,
+  &quot;release_readiness&quot;: &quot;NOT_ESTABLISHED&quot;,
+  &quot;real_world_detection&quot;: &quot;NOT_ESTABLISHED&quot;,
+  &quot;profile&quot;: &quot;core&quot;,
+  &quot;browser_journey&quot;: &quot;NOT_ESTABLISHED&quot;,
+  &quot;native_agentic_evals_executed&quot;: false,
+  &quot;source_sha256&quot;: &quot;136b73c047ef2b8e08ad679de2359d98bb65c0ed665ecb37fa97ee67b1a7d24e&quot;,
+  &quot;source_unchanged&quot;: true,
+  &quot;trials&quot;: [
+    {
+      &quot;trial_id&quot;: &quot;trial-1&quot;,
+      &quot;argv&quot;: [
+        &quot;/opt/pyvenv/bin/python&quot;,
+        &quot;-m&quot;,
+        &quot;pytest&quot;,
+        &quot;-q&quot;,
+        &quot;--samples&quot;,
+        &quot;128&quot;,
+        &quot;--junitxml&quot;,
+        &quot;/mnt/data/a-detection/evidence/qualification-core/20260917T161943Z-3a2c354c/trial-1/junit.xml&quot;,
+        &quot;--ignore=tests/test_browser.py&quot;
+      ],
+      &quot;exit_code&quot;: 0,
+      &quot;duration_seconds&quot;: 8.817685801000152,
+      &quot;evidence_directory&quot;: &quot;trial-1&quot;,
+      &quot;junit_exists&quot;: true,
+      &quot;transport_readback_status&quot;: &quot;PASS&quot;
+    },
+    {
+      &quot;trial_id&quot;: &quot;trial-2&quot;,
+      &quot;argv&quot;: [
+        &quot;/opt/pyvenv/bin/python&quot;,
+        &quot;-m&quot;,
+        &quot;pytest&quot;,
+        &quot;-q&quot;,
+        &quot;--samples&quot;,
+        &quot;128&quot;,
+        &quot;--junitxml&quot;,
+        &quot;/mnt/data/a-detection/evidence/qualification-core/20260917T161943Z-3a2c354c/trial-2/junit.xml&quot;,
+        &quot;--ignore=tests/test_browser.py&quot;
+      ],
+      &quot;exit_code&quot;: 0,
+      &quot;duration_seconds&quot;: 8.414435881999907,
+      &quot;evidence_directory&quot;: &quot;trial-2&quot;,
+      &quot;junit_exists&quot;: true,
+      &quot;transport_readback_status&quot;: &quot;PASS&quot;
+    },
+    {
+      &quot;trial_id&quot;: &quot;trial-3&quot;,
+      &quot;argv&quot;: [
+        &quot;/opt/pyvenv/bin/python&quot;,
+        &quot;-m&quot;,
+        &quot;pytest&quot;,
+        &quot;-q&quot;,
+        &quot;--samples&quot;,
+        &quot;128&quot;,
+        &quot;--junitxml&quot;,
+        &quot;/mnt/data/a-detection/evidence/qualification-core/20260917T161943Z-3a2c354c/trial-3/junit.xml&quot;,
+        &quot;--ignore=tests/test_browser.py&quot;
+      ],
+      &quot;exit_code&quot;: 0,
+      &quot;duration_seconds&quot;: 9.149711969999771,
+      &quot;evidence_directory&quot;: &quot;trial-3&quot;,
+      &quot;junit_exists&quot;: true,
+      &quot;transport_readback_status&quot;: &quot;PASS&quot;
+    }
+  ],
+  &quot;artifact_sha256&quot;: {
+    &quot;source-manifest.json&quot;: &quot;3e54e8afcb09a7cb8ce5bd6cf031d6ecf795b85129f6f6bffac75f34f08a74a3&quot;,
+    &quot;trial-1/browser/http-readback.json&quot;: &quot;541b2be7a7a1b37ff80c137174b4d0bcfd479e638d74b6fdf89cbcedd946f2c5&quot;,
+    &quot;trial-1/browser/http-server-45825.log&quot;: &quot;5dfb09d16dde67a8ffaf5a5f1f7851f71dccc15856f3402d1c0da429c035de02&quot;,
+    &quot;trial-1/junit.xml&quot;: &quot;1ad573ea823e13e1694ac3a37b52d02afe0fa913c02bebcd917add0966df9fec&quot;,
+    &quot;trial-1/stderr.log&quot;: &quot;e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855&quot;,
+    &quot;trial-1/stdout.log&quot;: &quot;045cb49d33755434f44854052488e4a43d04e12cf7d910569ebe4e6ca1096dbd&quot;,
+    &quot;trial-2/browser/http-readback.json&quot;: &quot;b8d6e5ed84a08bd41a5e55b9516f59cdfb9ad8112358c7aa02b4fb6e25ac827e&quot;,
+    &quot;trial-2/browser/http-server-42045.log&quot;: &quot;77fb1d4e97442f95e4337471885a56447436f44d03c08ab827eb78e57fa2b69c&quot;,
+    &quot;trial-2/junit.xml&quot;: &quot;609e38d8b36eb0dd2d712c37f0908bc2191225258a9fd249fc0e8182eba322d8&quot;,
+    &quot;trial-2/stderr.log&quot;: &quot;e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855&quot;,
+    &quot;trial-2/stdout.log&quot;: &quot;6eb8abb630ab7c4ffc0769b4283161251d5a1ce6704368a3c316b7567ca1d5f6&quot;,
+    &quot;trial-3/browser/http-readback.json&quot;: &quot;5ef577a0275e69104b91bd42ea7c0dbb100f4703963913cf905e7454cb486ab6&quot;,
+    &quot;trial-3/browser/http-server-55347.log&quot;: &quot;e8185978df2d33fbc5bd35076da9755ac560f86a09b789f0d82b6b89d43abb01&quot;,
+    &quot;trial-3/junit.xml&quot;: &quot;f8cd1948363f5018c852544145d2dcb91a8691bc8493bfbf30608cde71f518ec&quot;,
+    &quot;trial-3/stderr.log&quot;: &quot;e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855&quot;,
+    &quot;trial-3/stdout.log&quot;: &quot;6ddcb3bef5fbda221840d71f7b4e25ffa02ca06196035d144ab6c490c0833cc6&quot;
+  },
+  &quot;environment&quot;: {
+    &quot;fastapi&quot;: &quot;0.128.2&quot;,
+    &quot;pydantic&quot;: &quot;2.13.4&quot;,
+    &quot;scikit-learn&quot;: &quot;1.8.0&quot;,
+    &quot;pytest&quot;: &quot;9.0.2&quot;,
+    &quot;playwright&quot;: &quot;1.57.0&quot;,
+    &quot;httpx&quot;: &quot;0.28.1&quot;,
+    &quot;python&quot;: &quot;3.13.5 (main, Jul 15 2026, 20:25:40) [GCC 14.2.0]&quot;
+  },
+  &quot;proves&quot;: [
+    &quot;Declared schema, SQLite, statistical, training and independent-replay mechanisms.&quot;,
+    &quot;Actual HTTP server with independent exported-record readback; browser proof is profile-specific.&quot;,
+    &quot;Fresh Unicode sampling and negative controls under the declared source snapshot.&quot;
+  ],
+  &quot;does_not_prove&quot;: [
+    &quot;Real-human or unseen-generator detection efficacy.&quot;,
+    &quot;Transformer-backed likelihood, Docker, clean uv resolution or public deployment.&quot;,
+    &quot;Native agentic-evals, Battle, acceptance-contract or create-report qualification.&quot;,
+    &quot;Human accessibility and fairness qualification.&quot;
+  ]
+}</pre>

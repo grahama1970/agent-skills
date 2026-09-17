@@ -1,0 +1,26 @@
+{
+  "schema_version": "a_detection.build_environment.v1",
+  "python": "3.13.5 (main, Jul 15 2026, 20:25:40) [GCC 14.2.0]",
+  "packages": {
+    "fastapi": "0.128.2",
+    "starlette": "0.50.0",
+    "uvicorn": "0.48.0",
+    "pydantic": "2.13.4",
+    "typer": "0.26.3",
+    "loguru": "0.7.3",
+    "httpx": "0.28.1",
+    "numpy": "2.3.5",
+    "scipy": "1.17.0",
+    "scikit-learn": "1.8.0",
+    "pytest": "9.0.2",
+    "playwright": "1.57.0",
+    "PyYAML": "6.0.3"
+  },
+  "missing": [
+    "ruff",
+    "transformers",
+    "docker"
+  ],
+  "clean_uv_lock": "BLOCKED_EMPTY_OFFLINE_CACHE",
+  "browser_block": "Managed Chromium URLBlocklist policy prevented page navigation; policy was not modified."
+}

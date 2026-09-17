@@ -1,0 +1,29 @@
+{
+  "schema_version": "a_detection.wheel_readback.v1",
+  "status": "PASS",
+  "import_path": "/opt/pyvenv/lib/python3.13/site-packages/a_detection/__init__.py",
+  "static_assets_present": true,
+  "analysis": {
+    "schema_version": "a_detection.analysis.v1",
+    "disposition": "INSUFFICIENT_EVIDENCE",
+    "source_sha256": "edaaeb1663f87186a7d2b9942f72c68fdfb45038cadc123c80897872606d0c10",
+    "authorship_established": false,
+    "automatic_penalty": false,
+    "raw_classifier_score": null,
+    "model_sha256": null,
+    "calibration_qualified": false,
+    "reasons": [
+      "Insufficient source length for this detector."
+    ],
+    "observations": {},
+    "limitations": [
+      "A classifier score is not a percentage of AI authorship or proof of misconduct.",
+      "Client events are untrusted reports; receipt hashes do not prove a human typed the code.",
+      "Paste, input method, typing speed, or missing events are not evidence of AI use.",
+      "No automatic penalties; reviewers must consider authorized tools and accessibility needs.",
+      "Provider-agnostic interface does not establish performance on all providers."
+    ]
+  },
+  "dependency_isolation": "Wheel installed into existing build environment. This is not clean dependency resolution.",
+  "earlier_fresh_venv_attempt": "BLOCKED_DEPENDENCY: loguru unavailable without resolving or inheriting the original build virtual environment."
+}

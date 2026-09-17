@@ -1,0 +1,63 @@
+{
+  "schema_version": "a_detection.requirements.v1",
+  "source": "User request in this conversation, 2026-09-17",
+  "approval": "DRAFT_FOR_OWNER_REVIEW",
+  "requirements": [
+    {
+      "id": "REQ-01",
+      "invariant": "The browser must record editor content only after explicit informed consent."
+    },
+    {
+      "id": "REQ-02",
+      "invariant": "The server must bind every accepted edit to one authenticated session and contiguous revision; exact retries must be idempotent."
+    },
+    {
+      "id": "REQ-03",
+      "invariant": "An independent verifier must reconstruct all accepted Unicode edits and reject changed, omitted, reordered, or wrongly bound evidence."
+    },
+    {
+      "id": "REQ-04",
+      "invariant": "Assessment expiry and source/event/session resource limits must be enforced by the server and derived from policy.json."
+    },
+    {
+      "id": "REQ-05",
+      "invariant": "Unknown, malformed, unsupported, missing-model, and uncertified inputs must not be converted into an authorship accusation."
+    },
+    {
+      "id": "REQ-06",
+      "invariant": "Paste behavior, typing style, and client-reported event trust must not independently determine authorship or cause automatic penalties."
+    },
+    {
+      "id": "REQ-07",
+      "invariant": "Dataset evaluation must exclude session, author, task, repository, exact-source and normalized-token overlap between splits and hold out generator families."
+    },
+    {
+      "id": "REQ-08",
+      "invariant": "A frozen threshold must be selected without calibration/test labels; low-FPR qualification must use an independent human-session confidence bound."
+    },
+    {
+      "id": "REQ-09",
+      "invariant": "Synthetic examples and deterministic passing tests must never establish real-human or any-provider detection efficacy."
+    },
+    {
+      "id": "REQ-10",
+      "invariant": "Only the session token holder may export/delete active records; errors must not echo submitted source or credentials."
+    },
+    {
+      "id": "REQ-11",
+      "invariant": "A real browser must exercise consent, editing, server persistence, submission, export/readback, and deletion."
+    },
+    {
+      "id": "REQ-12",
+      "invariant": "All native skill execution and missing external evidence must be reported truthfully; the full release gate must fail closed."
+    },
+    {
+      "id": "REQ-13",
+      "invariant": "Candidate code must never execute in the assessment server; model loading must avoid pickle and verify configured model identity."
+    },
+    {
+      "id": "REQ-14",
+      "invariant": "Provider-agnostic detection quality must be measured on independently sourced, consented real-human sessions and unseen model families at predeclared session-level FPRs."
+    }
+  ]
+}

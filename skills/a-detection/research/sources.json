@@ -1,0 +1,71 @@
+{
+  "schema_version": "a_detection.research_sources.v1",
+  "checked_on": "2026-09-17",
+  "not_an_exhaustive_systematic_review": true,
+  "sources": [
+    {
+      "id": "aicd",
+      "title": "AICD Bench: A Challenging Benchmark for AI-Generated Code Detection",
+      "date": "2026-02-02",
+      "url": "https://arxiv.org/abs/2602.02079",
+      "use": "Hold-out family, domain and hybrid-label evaluation requirements.",
+      "implementation": "Protocol implemented; original benchmark not downloaded or reproduced."
+    },
+    {
+      "id": "multiview",
+      "title": "UCSC-NLP at SemEval-2026 Task 13: Multi-View Generalization and Diagnostic Analysis of Machine-Generated Code Detection",
+      "date": "2026-04-28",
+      "url": "https://arxiv.org/abs/2604.26990",
+      "use": "Separate raw and normalized/structural code views; quantify distribution shift.",
+      "implementation": "Handcrafted multi-view baseline only; no UniXcoder fine-tuning or paper reproduction."
+    },
+    {
+      "id": "codemirage",
+      "title": "CodeMirage: A Multi-Lingual Benchmark for Detecting AI-Generated and Paraphrased Source Code from Production-Level LLMs",
+      "date": "2025-05-27",
+      "url": "https://arxiv.org/abs/2506.11059",
+      "use": "Include rewritten, unfamiliar-generator and language-shift conditions.",
+      "implementation": "Evaluation design reference; multilingual detector/data collection remain unqualified."
+    },
+    {
+      "id": "binoculars",
+      "title": "Spotting LLMs With Binoculars: Zero-Shot Detection of Machine-Generated Text",
+      "date": "2024-10-13 (v3)",
+      "url": "https://arxiv.org/abs/2401.12070",
+      "use": "Two-reference-model contrastive likelihood rather than free-text authorship judgments.",
+      "implementation": "Local-only adapter and tested numerical kernel; real model weights and code-specific operating threshold unqualified."
+    },
+    {
+      "id": "dualcode",
+      "title": "DualCodeDetect: Zero-Shot LLM-Generated Code Detection via Dual-Channel Perturbation",
+      "date": "2026 (FSE research track)",
+      "url": "https://conf.researchr.org/details/fse-2026/fse-2026-research-papers/112/DualCodeDetect-Zero-Shot-LLM-Generated-Code-Detection-via-Dual-Channel-Perturbation",
+      "use": "Candidate secondary code-aware perturbation score.",
+      "implementation": "Researched, not implemented. No heuristic transform is falsely certified semantics-preserving."
+    },
+    {
+      "id": "matrix",
+      "title": "MATRIX: Multi-Layer Code Watermarking via Dual-Channel Constrained Parity-Check Encoding",
+      "date": "2026-04-17",
+      "url": "https://arxiv.org/abs/2604.16001",
+      "use": "Optional explicit provenance for deliberately marked outputs.",
+      "implementation": "Researched only; not a detector for arbitrary unmarked provider outputs."
+    },
+    {
+      "id": "spread",
+      "title": "Multi-Channel Spread-Spectrum Code Watermarking",
+      "date": "2026-07-07",
+      "url": "https://arxiv.org/abs/2607.06009",
+      "use": "Robustness and coverage considerations for an optional watermark adapter.",
+      "implementation": "Researched only; no embedded watermark decoder or universal fingerprint claimed."
+    },
+    {
+      "id": "multiaigcd",
+      "title": "MultiAIGCD: a comprehensive dataset for AI generated code detection covering multiple languages, models, prompts, and scenarios",
+      "date": "2026 (journal version)",
+      "url": "https://link.springer.com/article/10.1007/s00521-026-12336-0",
+      "use": "Consider multiple prompting and editing scenarios rather than only clean generation.",
+      "implementation": "Dataset shortlist; license and provenance admission still required."
+    }
+  ]
+}

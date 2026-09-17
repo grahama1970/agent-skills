@@ -1,0 +1,21 @@
+{
+  "schema_version": "a_detection.representation_matrix.v1",
+  "seam": "value-representation",
+  "representations": [
+    "JSON boolean true/false",
+    "integer 0/1 masquerading as booleans",
+    "float/integer/string revisions",
+    "NaN/Infinity",
+    "null/list/object",
+    "unknown members",
+    "duplicate keys",
+    "non-BMP Unicode",
+    "combining Unicode",
+    "invalid lone surrogate",
+    "codepoint offsets vs UTF-16 offsets"
+  ],
+  "retained_tests": [
+    "tests/test_contracts.py",
+    "tests/test_evidence.py::test_fresh_unicode_edit_sequences"
+  ]
+}

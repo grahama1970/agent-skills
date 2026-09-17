@@ -1,0 +1,7 @@
+{
+  "schema_version": "a_detection.interrupted_driver.v1",
+  "status": "DRIVER_INTERRUPTED",
+  "reason": "The outer container invocation reached its 45-second timeout before the report driver finished. Leaf test artifacts are preserved; this run is not qualification authority.",
+  "superseded_by": "evidence/qualification-full/20260917T162153Z-ab00e8a8/report.json",
+  "uncontrolled_processes_after_inspection": false
+}

@@ -1,0 +1,91 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>a-detection evidence</title><style>body{font:17px/1.65 system-ui;max-width:980px;margin:3rem auto;padding:0 1.5rem}pre{white-space:pre-wrap;background:#f3f5f4;padding:1rem;border-radius:8px}a{color:#12634a}h1{line-height:1.2}.notice{background:#fff1d9;padding:1rem;border-left:4px solid #946423}table{border-collapse:collapse;width:100%}td,th{text-align:left;padding:.6rem;border-bottom:1px solid #ddd}</style><h1>a-detection: execution evidence</h1><p class="notice"><strong>Research prototype. Release and real-world detection: NOT_ESTABLISHED.</strong></p><table><tr><th>Scope</th><th>Observed result</th></tr><tr><td>Core mechanisms</td><td>96 passed × 3 trials</td></tr><tr><td>Full profile</td><td>96 passed + 1 browser failure × 3 trials</td></tr><tr><td>Browser</td><td>Managed Chromium policy blocked navigation</td></tr><tr><td>Installed wheel</td><td>Passed with existing dependencies</td></tr><tr><td>Native skill chain / real-human efficacy</td><td>Not established</td></tr></table><p><a href="SUMMARY.md">Readable verification record</a> · <a href="SUMMARY.json">JSON source of truth</a> · <a href="../README.md">Project README</a></p><pre>{
+  &quot;schema_version&quot;: &quot;a_detection.delivery_status.v1&quot;,
+  &quot;created_at&quot;: &quot;2026-09-17T16:25:20.890638+00:00&quot;,
+  &quot;project&quot;: &quot;a-detection&quot;,
+  &quot;version&quot;: &quot;0.1.0&quot;,
+  &quot;overall_readiness&quot;: &quot;USABLE_WITH_GAPS&quot;,
+  &quot;release_readiness&quot;: &quot;NOT_ESTABLISHED&quot;,
+  &quot;scope&quot;: &quot;Local research prototype; not an operationally qualified assessment detector.&quot;,
+  &quot;core_mechanisms&quot;: {
+    &quot;status&quot;: &quot;READY&quot;,
+    &quot;trials&quot;: [
+      {
+        &quot;tests&quot;: 96,
+        &quot;failures&quot;: 0,
+        &quot;errors&quot;: 0,
+        &quot;skipped&quot;: 0,
+        &quot;passed&quot;: 96,
+        &quot;trial_id&quot;: &quot;trial-1&quot;
+      },
+      {
+        &quot;tests&quot;: 96,
+        &quot;failures&quot;: 0,
+        &quot;errors&quot;: 0,
+        &quot;skipped&quot;: 0,
+        &quot;passed&quot;: 96,
+        &quot;trial_id&quot;: &quot;trial-2&quot;
+      },
+      {
+        &quot;tests&quot;: 96,
+        &quot;failures&quot;: 0,
+        &quot;errors&quot;: 0,
+        &quot;skipped&quot;: 0,
+        &quot;passed&quot;: 96,
+        &quot;trial_id&quot;: &quot;trial-3&quot;
+      }
+    ],
+    &quot;report&quot;: &quot;evidence/qualification-core/20260917T161943Z-3a2c354c/report.json&quot;
+  },
+  &quot;full_profile&quot;: {
+    &quot;status&quot;: &quot;NOT_READY&quot;,
+    &quot;trials&quot;: [
+      {
+        &quot;tests&quot;: 97,
+        &quot;failures&quot;: 1,
+        &quot;errors&quot;: 0,
+        &quot;skipped&quot;: 0,
+        &quot;passed&quot;: 96,
+        &quot;trial_id&quot;: &quot;trial-1&quot;
+      },
+      {
+        &quot;tests&quot;: 97,
+        &quot;failures&quot;: 1,
+        &quot;errors&quot;: 0,
+        &quot;skipped&quot;: 0,
+        &quot;passed&quot;: 96,
+        &quot;trial_id&quot;: &quot;trial-2&quot;
+      },
+      {
+        &quot;tests&quot;: 97,
+        &quot;failures&quot;: 1,
+        &quot;errors&quot;: 0,
+        &quot;skipped&quot;: 0,
+        &quot;passed&quot;: 96,
+        &quot;trial_id&quot;: &quot;trial-3&quot;
+      }
+    ],
+    &quot;reason&quot;: &quot;All browser journeys failed before app navigation with ERR_BLOCKED_BY_ADMINISTRATOR.&quot;,
+    &quot;report&quot;: &quot;evidence/qualification-full/20260917T162153Z-ab00e8a8/report.json&quot;
+  },
+  &quot;source_sha256&quot;: &quot;136b73c047ef2b8e08ad679de2359d98bb65c0ed665ecb37fa97ee67b1a7d24e&quot;,
+  &quot;same_source_for_both_profiles&quot;: true,
+  &quot;wheel&quot;: &quot;dist/a_detection-0.1.0-py3-none-any.whl&quot;,
+  &quot;wheel_runtime_readback&quot;: &quot;evidence/wheel-readback.json&quot;,
+  &quot;native_setup&quot;: &quot;BLOCKED_EXTERNAL&quot;,
+  &quot;native_agentic_evals&quot;: &quot;BLOCKED_EXTERNAL&quot;,
+  &quot;native_conformance&quot;: &quot;NOT_ESTABLISHED&quot;,
+  &quot;detection_efficacy&quot;: &quot;NOT_ESTABLISHED&quot;,
+  &quot;pretrained_detector_included&quot;: false,
+  &quot;default_disposition&quot;: &quot;INSUFFICIENT_EVIDENCE&quot;,
+  &quot;candidate_code_execution&quot;: false,
+  &quot;external_model_uploads&quot;: false,
+  &quot;not_executed&quot;: [
+    &quot;Clean uv dependency resolution / lockfile&quot;,
+    &quot;Ruff&quot;,
+    &quot;Docker runtime&quot;,
+    &quot;Transformer model-weight inference&quot;,
+    &quot;Genuine human and held-out-generator study&quot;,
+    &quot;Independent accessibility and fairness review&quot;,
+    &quot;Acceptance-contract, Battle and create-report native chain&quot;
+  ]
+}</pre></html>
