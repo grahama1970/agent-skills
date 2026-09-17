@@ -24,7 +24,10 @@ app = typer.Typer(add_completion=False, help="Jev typed-judgment adapter")
 SKILL_DIR = Path(__file__).resolve().parent.parent
 QUESTIONS_DIR = SKILL_DIR / "questions"
 API_URL = "https://api.typesafe.ai/v1/systemone"
-MEMORY_URL = os.getenv("MEMORY_SERVICE_URL", "http://127.0.0.1:8601")
+# House rule: all /memory calls go through the Docker service on 127.0.0.1:8601.
+# MEMORY_SERVICE_URL may hold a unix:// wrapper in some shells; ignore non-http values.
+_env_memory = os.getenv("MEMORY_SERVICE_URL", "")
+MEMORY_URL = _env_memory if _env_memory.startswith("http") else "http://127.0.0.1:8601"
 
 # Restricted-content markers that must never egress. Machine-syntax markers
 # (markings and banner labels), not intent classification.
@@ -55,10 +58,11 @@ def _load_questions(questions: str | None, preset: str | None) -> dict[str, Any]
         if not path.exists():
             logger.error("unknown preset '{}'; run `tasks` to list", preset)
             raise typer.Exit(2)
-        return json.loads(path.read_text())
+        loaded = json.loads(path.read_text())
+        return {k: v for k, v in loaded.items() if k != "_meta"}
     if questions:
         raw = json.loads(Path(questions[1:]).read_text() if questions.startswith("@") else questions)
-        return raw.get("questions", raw)
+        return {k: v for k, v in (raw.get("questions", raw) or {}).items() if k != "_meta"}
     logger.error("need --preset or --questions")
     raise typer.Exit(2)
 
