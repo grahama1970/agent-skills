@@ -1,33 +1,71 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" role="img" aria-labelledby="rsa-title rsa-desc">
-  <title id="rsa-title">Confinement boundary</title>
-  <desc id="rsa-desc">What the caged agent may read, and what it cannot</desc>
-  <style>.rsa-sans{font-family:Play,'Trebuchet MS','Segoe UI',system-ui,sans-serif}.rsa-mono{font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace}.rsa-shadow{filter:drop-shadow(2px 2px 4px rgba(0,0,0,.8))}.rsa-shadow-strong{filter:drop-shadow(3px 3px 6px rgba(0,0,0,.9))}.rsa-target{transform-box:fill-box;transform-origin:center}@media (prefers-reduced-motion: no-preference){@keyframes rsa_k000{0%{opacity:0}0%{opacity:0;animation-timing-function:ease-in-out}50%{opacity:0.35;animation-timing-function:ease-in-out}100%{opacity:0}100%{opacity:0}}.rsa_a000{animation:rsa_k000 3s linear 0s infinite both}@keyframes rsa_k001{0%{opacity:0}0%{opacity:0;animation-timing-function:ease-in-out}50%{opacity:0.35;animation-timing-function:ease-in-out}100%{opacity:0}100%{opacity:0}}.rsa_a001{animation:rsa_k001 3s linear 1.5s infinite both}}</style>
-  <rect width="1920" height="1080" rx="24.0" fill="#0d1117"/>
-  <circle cx="380" cy="170" r="30" fill="none" stroke="#00FF10" stroke-width="5.0"/>
-  <path d="M 366 171 L 376 182 L 395 158" fill="none" stroke="#00FF10" stroke-width="6.0" stroke-linecap="round" stroke-linejoin="round"/>
-  <text x="440" y="170" class="rsa-sans rsa-shadow" font-size="46.0" fill="#00FF10" text-anchor="start" dominant-baseline="central" letter-spacing="6.0">ALLOWED</text>
-  <circle cx="1240" cy="170" r="30" fill="none" stroke="#EF4444" stroke-width="5.0"/>
-  <path d="M 1229 159 L 1251 181 M 1251 159 L 1229 181" fill="none" stroke="#EF4444" stroke-width="6.0" stroke-linecap="round"/>
-  <text x="1300" y="170" class="rsa-sans rsa-shadow" font-size="46.0" fill="#EF4444" text-anchor="start" dominant-baseline="central" letter-spacing="6.0">DENIED</text>
-  <rect x="139" y="249" width="782" height="682" rx="24.0" fill="none" stroke="#00FF10" opacity="0.35" stroke-width="3.0" data-target="left-glow" class="rsa-target rsa_a000"/>
-  <rect x="150" y="260" width="760" height="660" rx="18.0" fill="rgba(0,255,16,0.1)" stroke="#00FF10" stroke-width="4.0" data-target="left-card" class="rsa-target"/>
-  <text x="260" y="360" class="rsa-sans rsa-shadow" font-size="34.0" fill="#FFFFFF" text-anchor="start" dominant-baseline="central">System posture data</text>
-  <path d="M 200 360 L 212 372 L 232 346" fill="none" stroke="#00FF10" stroke-width="5.0" stroke-linecap="round" stroke-linejoin="round"/>
-  <text x="260" y="470" class="rsa-sans rsa-shadow" font-size="34.0" fill="#FFFFFF" text-anchor="start" dominant-baseline="central">Machine ID</text>
-  <path d="M 200 470 L 212 482 L 232 456" fill="none" stroke="#00FF10" stroke-width="5.0" stroke-linecap="round" stroke-linejoin="round"/>
-  <text x="260" y="580" class="rsa-sans rsa-shadow" font-size="34.0" fill="#FFFFFF" text-anchor="start" dominant-baseline="central">Agent config + state</text>
-  <path d="M 200 580 L 212 592 L 232 566" fill="none" stroke="#00FF10" stroke-width="5.0" stroke-linecap="round" stroke-linejoin="round"/>
-  <text x="260" y="690" class="rsa-sans rsa-shadow" font-size="34.0" fill="#FFFFFF" text-anchor="start" dominant-baseline="central">Control-server traffic</text>
-  <path d="M 200 690 L 212 702 L 232 676" fill="none" stroke="#00FF10" stroke-width="5.0" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="999" y="249" width="782" height="682" rx="24.0" fill="none" stroke="#EF4444" opacity="0.35" stroke-width="3.0" data-target="right-glow" class="rsa-target rsa_a001"/>
-  <rect x="1010" y="260" width="760" height="660" rx="18.0" fill="rgba(239,68,68,0.1)" stroke="#EF4444" stroke-width="4.0" data-target="right-card" class="rsa-target"/>
-  <text x="1120" y="360" class="rsa-sans rsa-shadow" font-size="34.0" fill="rgba(255,255,255,0.85)" text-anchor="start" dominant-baseline="central">User and client files</text>
-  <path d="M 1060 348 L 1084 372 M 1084 348 L 1060 372" fill="none" stroke="#EF4444" stroke-width="5.0" stroke-linecap="round"/>
-  <text x="1120" y="470" class="rsa-sans rsa-shadow" font-size="34.0" fill="rgba(255,255,255,0.85)" text-anchor="start" dominant-baseline="central">SSH keys</text>
-  <path d="M 1060 458 L 1084 482 M 1084 458 L 1060 482" fill="none" stroke="#EF4444" stroke-width="5.0" stroke-linecap="round"/>
-  <text x="1120" y="580" class="rsa-sans rsa-shadow" font-size="34.0" fill="rgba(255,255,255,0.85)" text-anchor="start" dominant-baseline="central">Browser credentials</text>
-  <path d="M 1060 568 L 1084 592 M 1084 568 L 1060 592" fill="none" stroke="#EF4444" stroke-width="5.0" stroke-linecap="round"/>
-  <text x="1120" y="690" class="rsa-sans rsa-shadow" font-size="34.0" fill="rgba(255,255,255,0.85)" text-anchor="start" dominant-baseline="central">Private IP ranges</text>
-  <path d="M 1060 678 L 1084 702 M 1084 678 L 1060 702" fill="none" stroke="#EF4444" stroke-width="5.0" stroke-linecap="round"/>
-  <text x="960" y="1000" class="rsa-sans" font-size="30.0" fill="rgba(255,255,255,0.55)" text-anchor="middle" dominant-baseline="central" letter-spacing="3.0">COMPLIANCE WITHOUT CLIENT WORK</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 960" width="1600" height="960" role="img" aria-labelledby="title desc">
+<title id="title">How service-privacy confines Kolide</title>
+<desc id="desc">Kolide asks for access. service-privacy defines the owner-approved policy. AppArmor and systemd enforce it. Approved device posture reads pass, protected client data is denied, and updates trigger requalification rather than automatic permission widening.</desc>
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0b1118"/><stop offset="1" stop-color="#111827"/></linearGradient>
+  <linearGradient id="cagebg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0d2533"/><stop offset="1" stop-color="#101923"/></linearGradient>
+  <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%"><feGaussianBlur in="SourceAlpha" stdDeviation="10" result="blur"/><feOffset in="blur" dx="0" dy="8" result="offset"/><feColorMatrix in="offset" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .38 0" result="shadowColor"/><feMerge><feMergeNode in="shadowColor"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="glowCyan" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="glowGreen" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="glowRed" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <marker id="arrowCyan" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#53d9ff"/></marker>
+  <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#35e879"/></marker>
+  <marker id="arrowRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#ff5c6c"/></marker>
+  <marker id="arrowAmber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#ffbf47"/></marker>
+</defs>
+<style>
+  .sans{font-family:Inter,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}.mono{font-family:"JetBrains Mono","SFMono-Regular",Consolas,"Liberation Mono",monospace}
+  .title{font:700 46px Inter,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;fill:#f8fbff}.subtitle{font:400 23px Inter,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;fill:#aab8c7}
+  .label{font:700 24px Inter,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;fill:#f8fbff}.body{font:400 20px Inter,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;fill:#c6d2df}
+  .small{font:600 17px Inter,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;fill:#9eb0c2}.micro{font:500 15px "JetBrains Mono","SFMono-Regular",Consolas,monospace;fill:#8fa1b4;letter-spacing:.5px}
+  .card{filter:url(#shadow)}.line{fill:none;stroke-linecap:round;stroke-linejoin:round}.cyan{stroke:#53d9ff}.green{stroke:#35e879}.red{stroke:#ff5c6c}.amber{stroke:#ffbf47}.flowBase{opacity:.34}.dash{stroke-dasharray:16 18}.pulse{transform-box:fill-box;transform-origin:center}
+  @media (prefers-reduced-motion:no-preference){
+    @keyframes dashF{to{stroke-dashoffset:-68}}@keyframes dashB{to{stroke-dashoffset:68}}@keyframes cage{0%,100%{opacity:.34}50%{opacity:.8}}
+    @keyframes allow{0%,18%,100%{opacity:.25;transform:scale(1)}28%,42%{opacity:.9;transform:scale(1.02)}54%{opacity:.25;transform:scale(1)}}
+    @keyframes deny{0%,42%,100%{opacity:.25;transform:scale(1)}52%,67%{opacity:.92;transform:scale(1.025)}78%{opacity:.25;transform:scale(1)}}
+    @keyframes update{0%,66%,100%{opacity:.24;transform:scale(1)}74%,88%{opacity:.9;transform:scale(1.015)}}
+    @keyframes request{0%,4%{opacity:0;transform:translateX(-24px)}10%,28%{opacity:1;transform:translateX(0)}36%,100%{opacity:0;transform:translateX(20px)}}
+    @keyframes stop{0%,48%,100%{opacity:.34}55%,64%{opacity:1}72%{opacity:.34}}
+    #flow1,#flow2,#flowAllow{animation:dashF 1.8s linear infinite}#flowDeny{animation:dashF 1.8s linear .9s infinite}#flowUpdate{animation:dashB 2.2s linear infinite}
+    #cageGlow{animation:cage 3.8s ease-in-out infinite}#allowGlow{animation:allow 6.8s ease-in-out infinite}#denyGlow{animation:deny 6.8s ease-in-out infinite}#updateGlow{animation:update 6.8s ease-in-out infinite}#requestChip{animation:request 6.8s ease-in-out infinite}#stopRing{animation:stop 6.8s ease-in-out infinite}
+  }
+</style>
+<rect width="1600" height="960" rx="34" fill="url(#bg)"/>
+<g id="header" data-component="header"><text x="80" y="82" class="title">Kolide gets a fenced workspace — not the whole machine</text><text x="80" y="126" class="subtitle">service-privacy defines the rules; AppArmor + systemd make Linux enforce them.</text></g>
+<g id="steps" data-component="steps">
+  <g transform="translate(82 172)"><circle r="17" fill="#152c39" stroke="#53d9ff" stroke-width="2"/><text y="1" class="small" fill="#53d9ff" text-anchor="middle" dominant-baseline="middle">1</text><text x="30" y="1" class="small" dominant-baseline="middle">Agent asks</text></g>
+  <g transform="translate(465 172)"><circle r="17" fill="#152c39" stroke="#53d9ff" stroke-width="2"/><text y="1" class="small" fill="#53d9ff" text-anchor="middle" dominant-baseline="middle">2</text><text x="30" y="1" class="small" dominant-baseline="middle">Owner policy decides</text></g>
+  <g transform="translate(855 172)"><circle r="17" fill="#152c39" stroke="#53d9ff" stroke-width="2"/><text y="1" class="small" fill="#53d9ff" text-anchor="middle" dominant-baseline="middle">3</text><text x="30" y="1" class="small" dominant-baseline="middle">Linux enforces</text></g>
+  <g transform="translate(1252 172)"><circle r="17" fill="#342a16" stroke="#ffbf47" stroke-width="2"/><text y="1" class="small" fill="#ffbf47" text-anchor="middle" dominant-baseline="middle">4</text><text x="30" y="1" class="small" dominant-baseline="middle">Updates requalify</text></g>
+</g>
+<g id="agent" data-component="agent" class="card">
+  <rect x="78" y="250" width="306" height="286" rx="28" fill="#111b26" stroke="#34485c" stroke-width="2"/><circle cx="136" cy="310" r="31" fill="#17283a" stroke="#53d9ff" stroke-width="2.5"/><path d="M121 312h30M126 300h20M126 324h20" class="line cyan" stroke-width="3"/>
+  <text x="184" y="302" class="label">Kolide + osquery</text><text x="184" y="334" class="small">device-trust agent</text><rect x="110" y="382" width="240" height="52" rx="14" fill="#0d1721" stroke="#2c4156"/><text x="130" y="414" class="body">“May I read this?”</text>
+  <g id="requestChip" class="pulse"><rect x="119" y="457" width="220" height="45" rx="22" fill="#163145" stroke="#53d9ff" stroke-width="1.5"/><circle cx="145" cy="479.5" r="6" fill="#53d9ff"/><text x="163" y="484" class="micro" fill="#d7f5ff">READ REQUEST</text></g>
+</g>
+<g id="policy" data-component="service-privacy-policy" class="card">
+  <rect x="463" y="250" width="322" height="286" rx="28" fill="#10212d" stroke="#53d9ff" stroke-width="2.5"/><rect x="492" y="278" width="264" height="56" rx="16" fill="#143346" stroke="#53d9ff" stroke-width="1.5"/><text x="624" y="314" class="label" text-anchor="middle">service-privacy</text>
+  <text x="495" y="381" class="body">Owner-reviewed rules:</text><circle cx="510" cy="420" r="5" fill="#35e879"/><text x="528" y="426" class="small">allow device posture</text><circle cx="510" cy="457" r="5" fill="#ff5c6c"/><text x="528" y="463" class="small">protect client data</text><circle cx="510" cy="494" r="5" fill="#ffbf47"/><text x="528" y="500" class="small">updates require review</text>
+</g>
+<g id="cage" data-component="linux-enforcement-cage" class="card">
+  <rect id="cageGlow" class="pulse" x="845" y="238" width="347" height="310" rx="34" fill="none" stroke="#53d9ff" stroke-width="5" opacity=".34" filter="url(#glowCyan)"/><rect x="858" y="250" width="322" height="286" rx="28" fill="url(#cagebg)" stroke="#5c7388" stroke-width="2"/><text x="1019" y="295" class="label" text-anchor="middle">LINUX CAGE</text>
+  <g data-component="apparmor"><rect x="890" y="329" width="258" height="70" rx="18" fill="#102c24" stroke="#35e879" stroke-width="2"/><path d="M917 365l12 12 23-27" class="line green" stroke-width="4"/><text x="975" y="359" class="body">AppArmor</text><text x="975" y="382" class="micro">files • exec • IPC</text></g>
+  <g data-component="systemd"><rect x="890" y="419" width="258" height="82" rx="18" fill="#152438" stroke="#53d9ff" stroke-width="2"/><path d="M919 444v31M906 459h26" class="line cyan" stroke-width="3"/><text x="975" y="450" class="body">systemd sandbox</text><text x="975" y="474" class="micro">privileges • mounts • network</text></g>
+</g>
+<path d="M384 392H463" class="line cyan flowBase" stroke-width="5" marker-end="url(#arrowCyan)"/><path id="flow1" d="M384 392H463" class="line cyan dash" stroke-width="4"/><path d="M785 392H845" class="line cyan flowBase" stroke-width="5" marker-end="url(#arrowCyan)"/><path id="flow2" d="M785 392H845" class="line cyan dash" stroke-width="4"/>
+<g id="outcomes" data-component="outcomes">
+  <g id="allowed" data-component="allowed"><rect id="allowGlow" class="pulse" x="1233" y="240" width="293" height="144" rx="26" fill="none" stroke="#35e879" stroke-width="4" opacity=".25" filter="url(#glowGreen)"/><rect x="1244" y="251" width="271" height="122" rx="22" fill="#10251d" stroke="#35e879" stroke-width="2"/><circle cx="1283" cy="291" r="18" fill="#123321" stroke="#35e879" stroke-width="2"/><path d="M1274 291l7 8 13-17" class="line green" stroke-width="3"/><text x="1314" y="286" class="label" fill="#35e879">ALLOWED</text><text x="1282" y="333" class="body">Device posture</text><text x="1282" y="356" class="micro">OS • CPU • packages • agent state</text></g>
+  <g id="denied" data-component="denied"><rect id="denyGlow" class="pulse" x="1233" y="422" width="293" height="144" rx="26" fill="none" stroke="#ff5c6c" stroke-width="4" opacity=".25" filter="url(#glowRed)"/><rect x="1244" y="433" width="271" height="122" rx="22" fill="#2c171c" stroke="#ff5c6c" stroke-width="2"/><circle cx="1283" cy="473" r="18" fill="#39161c" stroke="#ff5c6c" stroke-width="2"/><path d="M1275 465l16 16M1291 465l-16 16" class="line red" stroke-width="3"/><text x="1314" y="468" class="label" fill="#ff5c6c">DENIED</text><text x="1282" y="515" class="body">Client + personal data</text><text x="1282" y="538" class="micro">repos • SSH keys • private storage</text></g>
+</g>
+<path d="M1180 340H1210Q1224 340 1224 326V314H1244" class="line green flowBase" stroke-width="5" marker-end="url(#arrowGreen)"/><path id="flowAllow" d="M1180 340H1210Q1224 340 1224 326V314H1244" class="line green dash" stroke-width="4"/><path d="M1180 455H1204Q1224 455 1224 476V494H1244" class="line red flowBase" stroke-width="5" marker-end="url(#arrowRed)"/><path id="flowDeny" d="M1180 455H1204Q1224 455 1224 476V494H1244" class="line red dash" stroke-width="4"/>
+<g id="stopRing" class="pulse" transform="translate(1209 473)" opacity=".34"><circle r="25" fill="#35181f" stroke="#ff5c6c" stroke-width="3"/><path d="M-9-9L9 9M9-9L-9 9" class="line red" stroke-width="4"/></g>
+<g id="updates" data-component="update-requalification">
+  <rect id="updateGlow" class="pulse" x="78" y="632" width="1440" height="206" rx="30" fill="none" stroke="#ffbf47" stroke-width="3" opacity=".24"/><rect x="89" y="643" width="1418" height="184" rx="26" fill="#171c22" stroke="#3b4652" stroke-width="1.8"/>
+  <g transform="translate(128 690)"><circle cx="24" cy="24" r="23" fill="#342a16" stroke="#ffbf47" stroke-width="2"/><path d="M15 24a10 10 0 1 1 5 9M15 24l-5-6M15 24l7-1" class="line amber" stroke-width="3"/><text x="65" y="20" class="label">Kolide updates</text><text x="65" y="51" class="small">new binary / helper / behavior</text></g>
+  <g transform="translate(535 690)"><rect width="245" height="85" rx="18" fill="#182431" stroke="#53d9ff"/><text x="122.5" y="33" class="body" text-anchor="middle">Detect drift</text><text x="122.5" y="61" class="micro" text-anchor="middle">hash • path • process</text></g>
+  <g transform="translate(886 690)"><rect width="260" height="85" rx="18" fill="#2b2518" stroke="#ffbf47"/><text x="130" y="33" class="body" text-anchor="middle">Requalify</text><text x="130" y="61" class="micro" text-anchor="middle">prove cage still works</text></g>
+  <g transform="translate(1249 690)"><rect width="216" height="85" rx="18" fill="#18281f" stroke="#35e879"/><text x="108" y="33" class="body" text-anchor="middle">Same boundary</text><text x="108" y="61" class="micro" text-anchor="middle">no silent widening</text></g>
+  <path d="M360 733H535" class="line amber flowBase" stroke-width="4" marker-end="url(#arrowAmber)"/><path d="M780 733H886" class="line amber flowBase" stroke-width="4" marker-end="url(#arrowAmber)"/><path d="M1146 733H1249" class="line amber flowBase" stroke-width="4" marker-end="url(#arrowAmber)"/><path id="flowUpdate" d="M360 733H535M780 733H886M1146 733H1249" class="line amber dash" stroke-width="3"/>
+</g>
+<g id="footer" data-component="footer"><text x="800" y="896" class="small" text-anchor="middle">Denied access becomes an honest permission error — not fake telemetry.</text><text x="800" y="928" class="micro" text-anchor="middle">OWNER POLICY → SERVICE-PRIVACY → APPARMOR + SYSTEMD → KERNEL ENFORCEMENT</text></g>
 </svg>

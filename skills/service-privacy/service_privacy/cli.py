@@ -2,6 +2,10 @@
 
 Host changes require explicit execution and owner authorization. Help is prose;
 all operational results and failures are validated structured records.
+
+Diagram: images/confinement-boundary.svg (owner policy -> service-privacy ->
+AppArmor + systemd -> kernel enforcement; allowed posture vs denied client data;
+updates trigger requalification, never automatic widening).
 """
 from __future__ import annotations
 
