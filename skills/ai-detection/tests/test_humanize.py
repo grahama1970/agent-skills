@@ -35,3 +35,14 @@ def test_style_normalization_moves_raw_view_but_not_structure():
     assert strip.raw_view_distance > strip.struct_view_distance
     assert strip.normalized_digest_changed is False
     assert strip.struct_view_distance == pytest.approx(0.0, abs=1e-9)
+
+
+def test_docstring_removal_is_semantic_content_edit_that_moves_structure():
+    # Content-level attack (unlike whitespace): removing a docstring changes the
+    # normalized digest and perturbs the structural view — the evasion-vs-
+    # preservation tradeoff. Output must still parse.
+    doc = 'def f(x):\n    """add one."""\n    return x + 1\n'
+    out = humanize(doc, Transform.STRIP_DOCSTRINGS)
+    assert "add one" not in out and "return x + 1" in out
+    frag = {f.transform: f for f in probe_fragility(doc)}[Transform.STRIP_DOCSTRINGS.value]
+    assert frag.normalized_digest_changed is True

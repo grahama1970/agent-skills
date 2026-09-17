@@ -47,14 +47,16 @@ review, and accessibility qualification.
 
 `src/ai_detection/humanize.py` + `ai-detection humanize` add the first Battle
 red move: bounded, semantics-preserving style transforms (`ast_reformat`,
-`strip_comments`, `collapse_blanks`) that never execute input and re-validate
-output parses, plus a feature-fragility probe. Measured on a sample: style
-normalization moves the raw-token feature view (up to ~0.24 cosine for
-`ast_reformat`) while the AST/structure view stays 0.0 and the normalized digest
-is unchanged. Actionable: the formatting channel is fragile (red's easy win),
-the structural channel is not (blue should weight it). Mechanism-only — feature
-movement here is detector fragility, NOT evasion, authorship, or efficacy; a
-verdict flip requires a trained model under Battle/Judge replay.
+`strip_comments`, `collapse_blanks`, `strip_docstrings`) that never execute
+input and re-validate output parses, plus a feature-fragility probe. Measured
+frontier: pure-formatting attacks move only the fragile raw-token view (struct
+view 0.0, normalized digest unchanged) — cheap but shallow; the content-level
+`strip_docstrings` attack (SHIELD/stylometry-informed: docstring verbosity is an
+AI tell) also moves the structural view (~0.17) and changes the normalized
+digest — stronger but a detectable semantic edit. Blue takeaway: weight the
+structural/normalized channel over raw tokens. Mechanism-only — feature movement
+is detector fragility, NOT evasion, authorship, or efficacy; a verdict flip
+requires a trained model under Battle/Judge replay.
 
 ## Next meaningful gates
 

@@ -35,6 +35,7 @@ class Transform(StrEnum):
     AST_REFORMAT = "ast_reformat"      # canonical unparse: drops comments + all formatting
     STRIP_COMMENTS = "strip_comments"  # remove comments, keep code + layout
     COLLAPSE_BLANKS = "collapse_blanks"  # drop blank / trailing-whitespace lines
+    STRIP_DOCSTRINGS = "strip_docstrings"  # remove docstrings (a stylometric AI tell; content-level)
 
 
 def humanize(source: str, transform: Transform) -> str:
@@ -55,6 +56,8 @@ def humanize(source: str, transform: Transform) -> str:
         result = _strip_comments(source)
     elif transform == Transform.COLLAPSE_BLANKS:
         result = "\n".join(line.rstrip() for line in source.splitlines() if line.strip()) + "\n"
+    elif transform == Transform.STRIP_DOCSTRINGS:
+        result = ast.unparse(_strip_docstrings(tree))
     else:  # unreachable given the enum, but fail closed rather than silently pass through
         raise DetectionError(Code.INVALID_INPUT, f"Unknown transform: {transform!r}")
 
@@ -64,6 +67,24 @@ def humanize(source: str, transform: Transform) -> str:
         logger.error("classified_failure module=humanize transform={}", transform.value)
         raise DetectionError(Code.INVALID_INPUT, "Humanized output no longer parses.") from exc
     return result
+
+
+def _strip_docstrings(tree: ast.Module) -> ast.Module:
+    """Drop leading string-literal docstrings from module/function/class bodies.
+
+    Docstrings are non-functional, so removal preserves semantics; it is a
+    content-level edit (unlike whitespace) that does move the structural view.
+    """
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            continue
+        body = node.body
+        if (body and isinstance(body[0], ast.Expr)
+                and isinstance(body[0].value, ast.Constant)
+                and isinstance(body[0].value.value, str)):
+            # Keep at least a pass so an emptied body still parses.
+            node.body = body[1:] or [ast.Pass()]
+    return ast.fix_missing_locations(tree)
 
 
 def _strip_comments(source: str) -> str:
