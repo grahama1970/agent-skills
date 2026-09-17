@@ -1,4 +1,5 @@
 """Thin Typer entrypoints for serving, research, independent verification, and skill delegation."""
+import dataclasses
 import importlib.util
 import os
 import shutil
@@ -16,6 +17,7 @@ from ai_detection.api import create_app, home_path, load_policy
 from ai_detection.contracts import EvidenceExport, Policy
 from ai_detection.dataset import audit_splits, load_records
 from ai_detection.errors import Code, DetectionError, envelope
+from ai_detection.humanize import Transform, humanize, probe_fragility
 from ai_detection.io import atomic_json, canonical, read_json
 from ai_detection.model import evaluate, load_model, model_digest, save_model, train
 from ai_detection.native import invoke_native
@@ -96,6 +98,32 @@ def analyze_command(source: Annotated[Path, typer.Argument(exists=True, dir_okay
     except (DetectionError, ValidationError, OSError, UnicodeError) as exc:
         logger.error("classified_failure module=cli")
         fail(exc)
+
+@app.command("humanize")
+def humanize_command(source: Annotated[Path, typer.Argument(exists=True, dir_okay=False)],
+                     transform: Transform = Transform.AST_REFORMAT,
+                     code: bool = False, output: Path | None = None) -> None:
+    """Red-team style-normalization probe. Default: fragility receipt over all
+    transforms. --code emits the humanized source for the chosen --transform.
+    Mechanism-only: feature movement here is detector fragility, not evasion."""
+    try:
+        if source.stat().st_size > 512000:
+            raise DetectionError(Code.LIMIT, "Source exceeds the file byte limit.")
+        text = source.read_text(encoding="utf-8")
+        if code:
+            typer.echo(humanize(text, transform))
+            return
+        result = {"schema": "ai_detection.fragility_probe.v1", "feature_version": "python-multiview-1",
+                  "claim": "detector feature-view movement under style normalization",
+                  "does_not_prove": "evasion, authorship, or detection efficacy",
+                  "fragility": [dataclasses.asdict(f) for f in probe_fragility(text)]}
+        if output:
+            atomic_json(output, result)
+        emit(result)
+    except (DetectionError, ValidationError, OSError, UnicodeError) as exc:
+        logger.error("classified_failure module=cli")
+        fail(exc)
+
 
 @app.command("train")
 def train_command(corpus: Annotated[Path, typer.Argument(exists=True, dir_okay=False)],
