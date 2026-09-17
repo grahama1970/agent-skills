@@ -594,7 +594,9 @@ def run_single(
     answer = None
     nlg_response = None
 
-    if action == "QUERY":
+    if action in ("QUERY", "COMPLIANCE"):
+        # /intent returns COMPLIANCE for compliance questions -- a QUERY variant
+        # (per the intent contract both mean "recall/answer"); route identically.
         if is_code:
             # Nico's code questions: /recommend-skill-chain → invoke → synthesize
             answer = _ask_embry_via_skill_chain(question)
