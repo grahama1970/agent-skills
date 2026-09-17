@@ -40,11 +40,12 @@ def _event(
     sequence: int,
     turn_id: str,
     speaker: str = "interviewer",
+    created_at: str = "2026-09-15T18:00:00+00:00",
 ) -> dict[str, object]:
     return {
         "schema": "live_evidence.transcript_event.v1",
         "event_id": event_id,
-        "created_at": "2026-09-15T18:00:00+00:00",
+        "created_at": created_at,
         "speaker": speaker,
         "kind": kind,
         "text": text,
@@ -68,7 +69,7 @@ def _snapshot(transcript: list[dict[str, object]]) -> str:
             "lanes": [],
             "model_calls": [],
             "trace_events": [],
-            "updated_at": "2026-09-15T18:00:00+00:00",
+            "updated_at": "2026-09-15T18:00:04+00:00",
         }
     )
 
@@ -97,12 +98,15 @@ LATER_OTHER = _event(
     speaker="candidate",
 )
 # Turn C = open (final but nothing follows it).
+# created_at 6s in vs frame-2 snapshot updated_at 7s: inside SETTLE_SECONDS,
+# so this question-shaped final must NOT post (still open).
 TURN_C_FINAL = _event(
     "live-event-cccc0001",
     "final",
     "What breaks first at scale?",
     21,
     "turn-cccccccc",
+    created_at="2026-09-15T18:00:06+00:00",
 )
 
 FRAMES = [
