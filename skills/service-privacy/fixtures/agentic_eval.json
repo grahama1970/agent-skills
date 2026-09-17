@@ -181,6 +181,34 @@
       ]
     },
     {
+      "name": "assess-update-workflow-dryrun-needs-human",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "../workflows/assess-update-dryrun.sh"
+      ],
+      "expected": {
+        "exit_code": 2,
+        "stdout_contains": [
+          "workflow_receipt.v1",
+          "\"evidence_chain\"",
+          "\"terminal_state\":\"NEEDS_HUMAN\"",
+          "never applies",
+          "human approval"
+        ],
+        "stdout_excludes": [
+          "\"action\":\"APPLY",
+          "auto-widen"
+        ]
+      },
+      "readback": false,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "service_privacy.owner_confidentiality"
+      ]
+    },
+    {
       "name": "denial-sanitizer-leak-test",
       "type": "positive",
       "real_world": true,
