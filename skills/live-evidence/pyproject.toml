@@ -25,6 +25,25 @@ dev = [
 ]
 stt = [
   "RealtimeSTT[faster-whisper] @ git+https://github.com/grahama1970/RealtimeSTT.git@cbdbd12a8f573a92d7ffd14cfbd82baa59a59849",
+  # Pin the CUDA 12.8 torch build: the host RTX A5000 driver is CUDA 12.8, and
+  # the default (cu130) torch fails at import (libcudnn/libnccl mismatch), which
+  # crashed the GPU listeners. This keeps GPU STT surviving `uv sync`.
+  "torch==2.8.0+cu128",
+  # torch cu128 nvidia runtime deps (uv does not pull these from the torch
+  # index automatically -- astral-sh/uv#11945); pin + route to the cu128 index.
+  "nvidia-cudnn-cu12==9.10.2.21",
+  "nvidia-nccl-cu12==2.27.3",
+  "nvidia-cublas-cu12==12.8.4.1",
+  "nvidia-cusparse-cu12==12.5.8.93",
+  "nvidia-cusparselt-cu12==0.7.1",
+  "nvidia-cuda-runtime-cu12==12.8.90",
+  "nvidia-cuda-cupti-cu12==12.8.90",
+  "nvidia-cuda-nvrtc-cu12==12.8.93",
+  "nvidia-cufft-cu12==11.3.3.83",
+  "nvidia-curand-cu12==10.3.9.90",
+  "nvidia-cusolver-cu12==11.7.3.90",
+  "nvidia-nvjitlink-cu12==12.8.93",
+  "nvidia-nvtx-cu12==12.8.90",
 ]
 
 [project.scripts]
@@ -40,3 +59,24 @@ allow-direct-references = true
 testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = "-q"
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
+nvidia-cudnn-cu12 = { index = "pytorch-cu128" }
+nvidia-nccl-cu12 = { index = "pytorch-cu128" }
+nvidia-cublas-cu12 = { index = "pytorch-cu128" }
+nvidia-cusparse-cu12 = { index = "pytorch-cu128" }
+nvidia-cusparselt-cu12 = { index = "pytorch-cu128" }
+nvidia-cuda-runtime-cu12 = { index = "pytorch-cu128" }
+nvidia-cuda-cupti-cu12 = { index = "pytorch-cu128" }
+nvidia-cuda-nvrtc-cu12 = { index = "pytorch-cu128" }
+nvidia-cufft-cu12 = { index = "pytorch-cu128" }
+nvidia-curand-cu12 = { index = "pytorch-cu128" }
+nvidia-cusolver-cu12 = { index = "pytorch-cu128" }
+nvidia-nvjitlink-cu12 = { index = "pytorch-cu128" }
+nvidia-nvtx-cu12 = { index = "pytorch-cu128" }
