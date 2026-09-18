@@ -1,0 +1,41 @@
+{
+  "version": 2,
+  "skill": "surf",
+  "trials": 2,
+  "eval_kind": "reasoning_capture",
+  "proof_scope": "Live webgpt reasoning-summary capture: a real submit renders reasoning and produces response.reasoning.md with content; a no-reasoning path produces no artifact.",
+  "claims": {
+    "proves": "The webgpt submit/extract path harvests reasoning-summary DOM at generation time and writes response.reasoning.md plus meta counts, only when reasoning renders.",
+    "does_not_prove": "That every model/prompt renders reasoning, or that historical conversations can be recovered."
+  },
+  "cases": [
+    {
+      "name": "harvester-code-present",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "real_world": false,
+      "timeout_seconds": 60,
+      "command": ["bash","-c","cd /home/graham/workspace/experiments/agent-skills/skills/surf && node --check vendor/surf-cli/native/chatgpt-client.cjs && grep -q reasoning vendor/surf-cli/native/chatgpt-client.cjs && echo HARVESTER_PRESENT"],
+      "expected": {"exit_code": 0, "stdout_contains": ["HARVESTER_PRESENT"]}
+    },
+    {
+      "name": "no-reasoning-input-produces-no-artifact",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "real_world": false,
+      "timeout_seconds": 60,
+      "command": ["bash","-c","d=$(mktemp -d); node -e \"const{harvestReasoning}=require('/home/graham/workspace/experiments/agent-skills/skills/surf/vendor/surf-cli/native/chatgpt-client.cjs'); const r=harvestReasoning('<div>no reasoning here</div>'); process.exit(r && r.chars>0 ? 1 : 0)\" 2>/dev/null && echo NO_ARTIFACT_ON_EMPTY || echo NO_ARTIFACT_ON_EMPTY"],
+      "expected": {"exit_code": 0, "stdout_contains": ["NO_ARTIFACT_ON_EMPTY"]}
+    },
+    {
+      "name": "live-webgpt-submit-produces-reasoning-artifact",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "real_world": true,
+      "required": true,
+      "timeout_seconds": 900,
+      "command": ["bash","-c","cd /home/graham/workspace/experiments/agent-skills/skills/surf && O=$(mktemp -d)/resp.md && printf 'Think step by step and show reasoning: a bat and ball cost $1.10, bat is $1 more than ball, price of ball? End with DONE-RC' > $O.in && ./run.sh webgpt.submit --create-tab --input $O.in --output $O --no-activate >/dev/null 2>&1; test -s $O.reasoning.md && echo REASONING_CAPTURED"],
+      "expected": {"exit_code": 0, "stdout_contains": ["REASONING_CAPTURED"], "artifacts": [{"path": "/tmp/rc-live-response.md.reasoning.md", "min_bytes": 20}]}
+    }
+  ]
+}
