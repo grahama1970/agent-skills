@@ -48,6 +48,7 @@ export function useCockpit(
 
   const [syncError, setSyncError] = useState<string | null>(null)
   const catalogRevision = useRef(initialState?.revision ?? -1)
+  const bootId = useRef<string | null>(initialState?.boot_id ?? null)
   const pendingRefresh = useRef<Promise<void> | null>(null)
 
   const adoptState = useCallback((next: CockpitState) => {
@@ -58,6 +59,19 @@ export function useCockpit(
   }, [])
 
   const adoptBootstrap = useCallback((bootstrap: BootstrapResponse) => {
+    const incomingBootId = bootstrap.state.boot_id ?? null
+    const restarted = incomingBootId !== null && incomingBootId !== bootId.current
+    if (restarted) {
+      // Backend process restarted: its revision counter reset, so the usual
+      // monotonic guards (here and in adoptState) would wrongly reject fresh
+      // state. Clear the baselines and adopt unconditionally.
+      bootId.current = incomingBootId
+      catalogRevision.current = -1
+      stateRef.current = null
+      adoptState(bootstrap.state)
+      setExplainers(bootstrap.explainers)
+      return
+    }
     if (bootstrap.state.revision < (stateRef.current?.revision ?? -1)) return
     adoptState(bootstrap.state)
     if (bootstrap.state.revision > catalogRevision.current) {

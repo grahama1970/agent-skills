@@ -93,6 +93,8 @@ export interface CockpitState {
 
   repo?: string | null
 
+  boot_id?: string | null
+
   route: RouteDecision | null
 
   question: QuestionInput | null

@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import uuid
 from pathlib import Path
 import threading
 from datetime import datetime, timezone
@@ -221,6 +222,7 @@ class CockpitSession:
     ) -> None:
         self._rows = list(rows)
         self._repo = repo.resolve() if repo else None
+        self._boot_id = uuid.uuid4().hex
         self._state = self._with_repo(
             initial_state(self._rows)
         )
@@ -236,10 +238,11 @@ class CockpitSession:
         self,
         state: CockpitState,
     ) -> CockpitState:
-        """Stamp the bound codebase onto every projected state."""
+        """Stamp the bound codebase and process boot id onto every projected state."""
         state.repo = (
             self._repo.name if self._repo is not None else None
         )
+        state.boot_id = self._boot_id
         return state
 
     def diagram_svg(self) -> bytes | None:

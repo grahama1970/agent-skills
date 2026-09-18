@@ -600,6 +600,7 @@ class CockpitState(StrictModel):
     )
     adapter_receipts: list[AdapterReceipt] = Field(default_factory=list)
     repo: str | None = None
+    boot_id: str | None = None
 
     @model_validator(mode="after")
     def projections_synced(self) -> "CockpitState":
