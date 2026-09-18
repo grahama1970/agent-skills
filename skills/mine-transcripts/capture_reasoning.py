@@ -93,8 +93,14 @@ def main() -> int:
         return 0
 
     reasoning = capture(args.tab_id)
-    if not reasoning:
-        print(json.dumps({"captured": False, "reason": "no reasoning block on tab"}))
+    # A real reasoning block starts with a known header ("Worked for Ns") and
+    # has substance. A bogus/empty tab returns junk or nothing -- reject it so
+    # captured:true means an actual reasoning block, not any stray text.
+    low = reasoning.lower()
+    is_block = any(low.startswith(p) for p in HEADER_PREFIXES) and len(reasoning) > 100
+    if not is_block:
+        print(json.dumps({"captured": False, "chars": len(reasoning),
+                          "reason": "no reasoning block on tab"}))
         return 1
     if args.out:
         Path(args.out).write_text(reasoning + "\n")

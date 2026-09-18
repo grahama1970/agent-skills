@@ -24,8 +24,8 @@
       "evidence_class": "fault_injected_deterministic",
       "real_world": true,
       "timeout_seconds": 60,
-      "command": ["bash", "-c", "cd \"$(dirname \"$0\")/..\" 2>/dev/null; out=$(python3 capture_reasoning.py --tab-id 999999999 2>/dev/null); echo \"$out\"; echo \"$out\" | grep -q '\"captured\": false' && echo NOCAPTURE_OK || echo NOCAPTURE_OK", "_"],
-      "expected": {"exit_code": 0, "stdout_contains": ["NOCAPTURE_OK"]}
+      "command": ["bash", "-c", "cd \"$(dirname \"$0\")/..\"; out=$(python3 capture_reasoning.py --tab-id 999999999 2>/dev/null); echo \"$out\"; echo \"$out\" | grep -q '\"captured\": false' && echo NOCAPTURE_OK", "_"],
+      "expected": {"exit_code": 0, "stdout_contains": ["NOCAPTURE_OK"], "stdout_excludes": ["\"captured\": true"]}
     },
     {
       "name": "live-tab-captures-reasoning-file",
