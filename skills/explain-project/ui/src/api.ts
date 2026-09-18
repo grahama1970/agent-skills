@@ -10,6 +10,7 @@ export type EventType =
   | 'question.live_evidence'
   | 'step.next'
   | 'step.previous'
+  | 'step.select'
   | 'source.reveal.request'
   | 'debugger.prepare.request'
   | 'debugger.run.request'

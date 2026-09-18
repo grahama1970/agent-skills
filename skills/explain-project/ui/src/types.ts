@@ -154,6 +154,7 @@ export interface CockpitState {
     active_node_ids: string[]
     verified_binding: boolean
     highlight_intent?: DiagramHighlightIntent | null
+    node_steps?: { node_id: string; step_index: number }[]
   }
 
   integration_health: {

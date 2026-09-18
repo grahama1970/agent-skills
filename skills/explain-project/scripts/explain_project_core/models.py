@@ -554,6 +554,11 @@ class DebuggerProjection(Projection):
     proof: DebuggerProofReference | None = None
 
 
+class NodeStep(StrictModel):
+    node_id: str
+    step_index: int = Field(ge=0)
+
+
 class DiagramProjection(Projection):
     source_kind: Literal["excalidraw", "svg"] | None = None
     source_path: str | None = None
@@ -562,6 +567,7 @@ class DiagramProjection(Projection):
     active_node_ids: list[str] = Field(default_factory=list)
     verified_binding: bool = False
     highlight_intent: DiagramHighlightIntent | None = None
+    node_steps: list[NodeStep] = Field(default_factory=list)
 
 
 class Selection(StrictModel):
@@ -686,6 +692,15 @@ class StepPreviousEvent(BaseCockpitEvent):
     payload: EmptyPayload = Field(default_factory=EmptyPayload)
 
 
+class StepSelectPayload(StrictModel):
+    step_index: int = Field(ge=0)
+
+
+class StepSelectEvent(BaseCockpitEvent):
+    type: Literal["step.select"]
+    payload: StepSelectPayload
+
+
 class SourceRevealEvent(BaseCockpitEvent):
     type: Literal["source.reveal.request"]
     payload: EmptyPayload = Field(default_factory=EmptyPayload)
@@ -715,6 +730,7 @@ CockpitEvent: TypeAlias = Annotated[
     | LiveEvidenceQuestionEvent
     | StepNextEvent
     | StepPreviousEvent
+    | StepSelectEvent
     | SourceRevealEvent
     | DebuggerPrepareEvent
     | DebuggerRunEvent

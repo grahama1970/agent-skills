@@ -31,6 +31,7 @@ from .models import (
     IntegrationHealth,
     LiveEvidenceQuestionEvent,
     ManualQuestionEvent,
+    NodeStep,
     QuestionInput,
     RouteDecision,
     Selection,
@@ -39,6 +40,7 @@ from .models import (
     DebuggerRunEvent,
     StepNextEvent,
     StepPreviousEvent,
+    StepSelectEvent,
     TeleprompterProjection,
 )
 from .routing import _tokens, route
@@ -178,6 +180,15 @@ def project_state(
     )
     step = steps[bounded_index]
 
+    node_steps: list[NodeStep] = []
+    for node_id in row.diagram.node_ids:
+        for owning_index, owning_step in enumerate(steps):
+            if node_id in owning_step.diagram_node_ids:
+                node_steps.append(
+                    NodeStep(node_id=node_id, step_index=owning_index)
+                )
+                break
+
     source = row.source_ranges[
         step.source_range_index
     ]
@@ -311,6 +322,7 @@ def project_state(
                 row.diagram,
                 step.diagram_node_ids,
             ),
+            node_steps=node_steps,
         ),
         integration_health=IntegrationHealth(
             live_evidence=(
@@ -535,6 +547,20 @@ def reduce_cockpit(
             route_decision=decision,
             feature_id=feature_id,
             step_index=step_index - 1,
+            receipts=receipts,
+        )
+
+    if isinstance(event, StepSelectEvent):
+        if state.selection is None:
+            return state
+
+        return project_state(
+            state.revision + 1,
+            rows,
+            question=question,
+            route_decision=decision,
+            feature_id=feature_id,
+            step_index=event.payload.step_index,
             receipts=receipts,
         )
 

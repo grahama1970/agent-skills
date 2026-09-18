@@ -4,10 +4,66 @@ import type {
   CockpitState,
 } from '../types'
 
+import type { Dispatch } from '../useCockpit'
+
+import { useRegisterAction } from '../useRegisterAction'
+
+function DiagramNodeButton({
+  nodeId,
+  stepIndex,
+  isActive,
+  index,
+  onSelect,
+}: {
+  nodeId: string
+  stepIndex: number
+  isActive: boolean
+  index: number
+  onSelect: () => void
+}) {
+  const action = `COCKPIT_DIAGRAM_STEP_${stepIndex}`
+
+  useRegisterAction({
+    element_id: `cockpit:diagram:node:${nodeId}`,
+    app: 'explain-project',
+    action,
+    label: `Jump to step ${stepIndex + 1}`,
+    description: `Select diagram node "${nodeId}" and jump to step ${stepIndex + 1}.`,
+    params: { step_index: stepIndex },
+  })
+
+  return (
+    <button
+      type="button"
+      key={nodeId}
+      data-node-id={nodeId}
+      data-active={isActive ? 'true' : 'false'}
+      data-qid={`cockpit:diagram:node:${nodeId}`}
+      data-qs-action={action}
+      title={`Jump to step ${stepIndex + 1}: ${nodeId}`}
+      onClick={onSelect}
+      className={[
+        'min-h-[44px] w-full rounded-lg border px-2.5 py-2 font-mono text-sm cursor-pointer text-left',
+        'flex items-center justify-between gap-2',
+        isActive
+          ? 'border-cyan-500 bg-cyan-950/40 text-cyan-100'
+          : 'border-zinc-800 bg-zinc-950/80 text-zinc-400',
+      ].join(' ')}
+    >
+      <span className="truncate">{nodeId}</span>
+      <span className="text-[10px] uppercase tracking-wider text-zinc-500">
+        n{index + 1}
+      </span>
+    </button>
+  )
+}
+
 export function DiagramStage({
   state,
+  dispatch,
 }: {
   state: CockpitState
+  dispatch: Dispatch
 }) {
   const [artifact, setArtifact] = useState<
     'loading' | 'shown' | 'missing'
@@ -24,6 +80,18 @@ export function DiagramStage({
   const missing = state.diagram.active_node_ids.filter(
     (nodeId) => !state.diagram.node_ids.includes(nodeId),
   )
+
+  const nodeStepByNodeId = new Map(
+    (state.diagram.node_steps ?? []).map(
+      (entry) => [entry.node_id, entry.step_index],
+    ),
+  )
+
+  const goToNodeStep = (nodeId: string) => {
+    const stepIndex = nodeStepByNodeId.get(nodeId)
+    if (stepIndex === undefined) return
+    void dispatch('step.select', { step_index: stepIndex })
+  }
 
   const nodes = state.diagram.node_ids.map(
     (nodeId, index) => ({
@@ -138,25 +206,33 @@ export function DiagramStage({
       >
         {nodes.length ? nodes.map(({ nodeId }, index) => {
           const isActive = active.has(nodeId)
+          const stepIndex = nodeStepByNodeId.get(nodeId)
+
+          if (stepIndex === undefined) {
+            return (
+              <div
+                key={nodeId}
+                data-node-id={nodeId}
+                data-active={isActive ? 'true' : 'false'}
+                className="min-h-[44px] rounded-lg border px-2.5 py-2 font-mono text-sm flex items-center justify-between gap-2 border-zinc-800 bg-zinc-950/80 text-zinc-400"
+              >
+                <span className="truncate">{nodeId}</span>
+                <span className="text-[10px] uppercase tracking-wider text-zinc-500">
+                  n{index + 1}
+                </span>
+              </div>
+            )
+          }
 
           return (
-            <div
+            <DiagramNodeButton
               key={nodeId}
-              data-node-id={nodeId}
-              data-active={isActive ? 'true' : 'false'}
-              className={[
-                'min-h-[44px] rounded-lg border px-2.5 py-2 font-mono text-sm',
-                'flex items-center justify-between gap-2',
-                isActive
-                  ? 'border-cyan-500 bg-cyan-950/40 text-cyan-100'
-                  : 'border-zinc-800 bg-zinc-950/80 text-zinc-400',
-              ].join(' ')}
-            >
-              <span className="truncate">{nodeId}</span>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500">
-                n{index + 1}
-              </span>
-            </div>
+              nodeId={nodeId}
+              stepIndex={stepIndex}
+              isActive={isActive}
+              index={index}
+              onSelect={() => goToNodeStep(nodeId)}
+            />
           )
         }) : (
           <p className="rounded-lg border border-zinc-800 bg-zinc-950/80 p-2.5 font-mono text-sm text-zinc-500">

@@ -211,7 +211,7 @@ export function EvidenceRail({
         </section>
       </div>
 
-      <DiagramStage state={state} />
+      <DiagramStage state={state} dispatch={dispatch} />
     </aside>
   )
 }
