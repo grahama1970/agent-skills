@@ -48,7 +48,10 @@ def route(
     }
     best = max(scores.values(), default=0)
 
-    if best == 0:
+    # A single shared token ("your", "that") is not evidence: STT noise
+    # hallucinations ("Drink your juice, Ellen") scored 1 and routed to real
+    # walkthroughs. Require two distinct meaningful tokens to match.
+    if best < 2:
         return RouteDecision(
             status="NO_MATCH",
             question=question,

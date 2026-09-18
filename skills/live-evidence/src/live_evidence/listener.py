@@ -384,6 +384,13 @@ def _stt_final_boundary_kwargs() -> dict[str, object]:
     return {
         "faster_whisper_vad_filter": True,
         "ensure_sentence_ends_with_period": False,
+        # Anti-hallucination boundary: room-noise burps were passing VAD at the
+        # 0.4 default and whisper invented fluent text ("Drink your juice,
+        # Ellen"). Stricter speech-probability gate + drop sub-second bursts.
+        # ponytail: fixed knobs; expose per-profile override if a quiet
+        # speakerphone ever needs them looser.
+        "silero_sensitivity": 0.55,
+        "min_length_of_recording": 1.0,
     }
 
 
