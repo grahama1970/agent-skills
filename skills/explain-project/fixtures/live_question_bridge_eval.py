@@ -27,10 +27,18 @@ from http.server import (
     ThreadingHTTPServer,
 )
 
+from datetime import datetime
+
 from explain_project_core.catalog import sample_record
 from explain_project_core.models import COCKPIT_EVENT_ADAPTER
 from explain_project_core.server import CockpitSession
 from explain_project_core.voice_bridge import VoiceBridge
+
+
+def _now_iso() -> str:
+    from datetime import datetime, timezone
+
+    return datetime.now(timezone.utc).isoformat()
 
 
 def _event(
@@ -40,6 +48,8 @@ def _event(
     sequence: int,
     turn_id: str,
     speaker: str = "interviewer",
+    # authored-clock fixture: the bridge is constructed with started_at pinned
+    # to this epoch, so fixed timestamps pass the live-only cutoff.
     created_at: str = "2026-09-15T18:00:00+00:00",
 ) -> dict[str, object]:
     return {
@@ -178,6 +188,9 @@ def main() -> None:
         bridge = VoiceBridge(
             session,
             url=f"http://127.0.0.1:{port}",
+            started_at=datetime.fromisoformat(
+                "2026-09-15T18:00:00+00:00"
+            ),
         )
 
         posted = bridge.stream_once(

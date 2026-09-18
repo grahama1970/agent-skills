@@ -22,6 +22,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+from datetime import datetime, timezone
 import threading
 import time
 from typing import Any, Iterator
@@ -56,6 +57,7 @@ class VoiceBridge:
         session: Any,
         url: str | None = None,
         reconnect_seconds: float = RECONNECT_SECONDS,
+        started_at: "datetime | None" = None,
     ) -> None:
         self._session = session
         self._base = _base_url(url)
@@ -64,6 +66,15 @@ class VoiceBridge:
         self._lock = threading.Lock()
         self.consecutive_failures = 0
         self.last_success_monotonic: float | None = None
+        # Only questions asked AFTER the bridge starts count. The transcript
+        # snapshot carries the whole session backlog; without this, every
+        # cockpit restart re-posts the last historical question (observed:
+        # stale "publish pipeline" question revived at rev 1 on restart).
+        self._started_at = (
+            started_at
+            if started_at is not None
+            else datetime.now(timezone.utc)
+        )
 
     def health(self) -> dict[str, Any]:
         """Honest bridge health; never claims cockpit state."""
@@ -99,8 +110,6 @@ class VoiceBridge:
         quiet for SETTLE_SECONDS (no newer event since that final).
         """
 
-        from datetime import datetime, timezone
-
         def _when(value: Any) -> datetime | None:
             try:
                 parsed = datetime.fromisoformat(
@@ -121,6 +130,11 @@ class VoiceBridge:
             if isinstance(event, dict)
             and event.get("speaker") == "interviewer"
             and event.get("kind") in STABLE_KINDS
+            and (
+                (parsed := _when(event.get("created_at")))
+                is not None
+                and parsed >= self._started_at
+            )
         ]
         turns: dict[str, list[dict[str, Any]]] = {}
         for event in interviewer:
