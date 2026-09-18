@@ -1286,6 +1286,81 @@
         "human decision required",
         "reviewer opinion gap"
       ]
+    },
+    {
+      "code": "surf_ui_vite_preview_drops_post",
+      "layer": "surf",
+      "match": [
+        "reads work but clicks do nothing",
+        "GET polling updates the UI but POST does nothing",
+        "vite preview proxy",
+        "UI displays state but interactions have no effect",
+        "Unexpected token '<'",
+        "clicks and keys and forms silently no-op"
+      ],
+      "cause": "The SPA is served by `vite preview`, whose proxy does not forward POST/PUT/DELETE (vitejs/vite#13455). GET-based reads/polling update the screen so the UI looks live, but every mutation silently fails at the proxy. Not a React handler bug.",
+      "next_command": "Serve the UI same-origin from the backend (GET / -> index.html, /assets/*, /api/* handlers) OR use `vite dev` (its proxy forwards POST). Prove it: curl -X POST <ui-origin>/api/<event> and confirm the backend state/revision changed before touching any handler.",
+      "recoverable": true,
+      "not_this": [
+        "React onClick wiring bug",
+        "missing dispatch prop",
+        "stale revision fencing"
+      ]
+    },
+    {
+      "code": "surf_js_multi_statement_ignored",
+      "layer": "surf",
+      "match": [
+        "surf js click did nothing",
+        "document.title did not change after surf js",
+        "surf js returned empty",
+        "element.click(); document.title=",
+        "surf js side effect not applied"
+      ],
+      "cause": "`surf js` evaluates a single EXPRESSION; a multi-statement body like `el.click(); document.title=x` fails to parse and runs nothing, so no click and no return. Simple single expressions (e.g. `location.origin`) work, which masks the cause.",
+      "next_command": "Reduce the surf js to ONE expression: `document.querySelector('button[data-qs-action=X]').click()` with no trailing statement. Combine side effects with the comma operator if needed. Verify by reading back the resulting state, not the surf js return.",
+      "recoverable": true,
+      "not_this": [
+        "element not found",
+        "vite preview drops POST",
+        "React handler unwired"
+      ]
+    },
+    {
+      "code": "surf_cdp_click_offscreen_no_effect",
+      "layer": "surf",
+      "match": [
+        "surf click returned OK but nothing happened",
+        "CDP click no effect",
+        "click OK but state unchanged",
+        "clicked but step did not change"
+      ],
+      "cause": "A CDP `surf click` clicks at the element's viewport coordinates; if the element is scrolled out of view (or under a sticky header) the click lands on nothing or the wrong element. The command still reports OK.",
+      "next_command": "scrollIntoView first: `surf js \"document.querySelector('button[data-qs-action=X]').scrollIntoView({block:'center'})\"`, then `surf click`, then READ BACK the effect (revision/state changed). A click command returning OK is not proof the handler ran.",
+      "recoverable": true,
+      "not_this": [
+        "vite preview drops POST",
+        "surf js multi-statement ignored",
+        "non-button interactive element"
+      ]
+    },
+    {
+      "code": "react_interactive_element_not_button",
+      "layer": "surf",
+      "match": [
+        "role=\"button\" div not clickable",
+        "SVG g role=button click unreliable",
+        "onClick not firing on div or svg",
+        "interactive element missing data-qs-action"
+      ],
+      "cause": "The interactive target is a `<div role=\"button\">` or SVG `<g role=\"button\">` instead of a real `<button>`, and/or missing the best-practices-react four-attribute contract (data-qid, data-qs-action, title, useRegisterAction). Such elements are unreliable click targets for CDP, native .click(), and assistive tech.",
+      "next_command": "Make it a real `<button type=\"button\">` with data-qid + data-qs-action + title + useRegisterAction (see skills/best-practices-react). Then interact via document.querySelector('[data-qs-action=ACTION]').click().",
+      "recoverable": true,
+      "not_this": [
+        "vite preview drops POST",
+        "off-screen CDP click",
+        "surf js multi-statement ignored"
+      ]
     }
   ],
   "aliases": {}
