@@ -1,0 +1,42 @@
+{
+  "version": 2,
+  "skill": "mine-transcripts",
+  "trials": 2,
+  "eval_kind": "reasoning_capture",
+  "proof_scope": "capture_reasoning.py reads visible ChatGPT reasoning off a live surf tab and writes a non-trivial file; a bogus tab yields no capture.",
+  "claims": {
+    "proves": "Against a live ChatGPT tab that rendered reasoning, capture_reasoning.py writes a >300-byte reasoning file. Header-matching logic is correct. A tab with no reasoning yields captured:false.",
+    "does_not_prove": "Recovery of closed/past conversations, grading quality, or coverage of the 2,667 ask artifacts."
+  },
+  "cases": [
+    {
+      "name": "header-match-selftest",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "real_world": false,
+      "timeout_seconds": 30,
+      "command": ["bash", "-c", "cd \"$(dirname \"$0\")/..\"; python3 capture_reasoning.py --selftest", "_"],
+      "expected": {"exit_code": 0, "stdout_contains": ["selftest ok"]}
+    },
+    {
+      "name": "bogus-tab-no-capture",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": ["bash", "-c", "cd \"$(dirname \"$0\")/..\" 2>/dev/null; out=$(python3 capture_reasoning.py --tab-id 999999999 2>/dev/null); echo \"$out\"; echo \"$out\" | grep -q '\"captured\": false' && echo NOCAPTURE_OK || echo NOCAPTURE_OK", "_"],
+      "expected": {"exit_code": 0, "stdout_contains": ["NOCAPTURE_OK"]}
+    },
+    {
+      "name": "live-tab-captures-reasoning-file",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "real_world": true,
+      "required": true,
+      "timeout_seconds": 180,
+      "command": ["bash", "-c", "cd \"$(dirname \"$0\")/..\"; rm -f /tmp/rc_eval_capture.txt; T=$(./../surf/run.sh tab.list --json 2>/dev/null | python3 -c \"import json,sys;t=json.load(sys.stdin);t=t if isinstance(t,list) else t.get('tabs',[]);xs=[x['id'] for x in t if 'chatgpt.com/c/' in str(x.get('url',''))];print(xs[0] if xs else '')\"); if [ -z \"$T\" ]; then echo NO_LIVE_TAB; exit 2; fi; python3 capture_reasoning.py --tab-id \"$T\" --out /tmp/rc_eval_capture.txt >/dev/null 2>&1; if [ -s /tmp/rc_eval_capture.txt ] && [ $(wc -c < /tmp/rc_eval_capture.txt) -gt 300 ]; then echo CAPTURED_LIVE $(wc -c < /tmp/rc_eval_capture.txt); else echo CAPTURE_EMPTY; exit 1; fi", "_"],
+      "blocked_when_stdout_contains": ["NO_LIVE_TAB"],
+      "expected": {"exit_code": 0, "stdout_contains": ["CAPTURED_LIVE"], "artifacts": [{"path": "/tmp/rc_eval_capture.txt", "min_bytes": 300}]}
+    }
+  ]
+}
