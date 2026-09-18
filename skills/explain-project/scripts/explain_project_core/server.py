@@ -55,6 +55,18 @@ from .voice_bridge import VoiceBridge
 
 MAX_BODY_BYTES = 2_000_000
 
+DIST = Path(__file__).resolve().parents[2] / "ui" / "dist"
+
+_CONTENT_TYPES = {
+    ".js": "text/javascript",
+    ".css": "text/css",
+    ".html": "text/html",
+    ".svg": "image/svg+xml",
+    ".json": "application/json",
+    ".ico": "image/x-icon",
+    ".woff2": "font/woff2",
+}
+
 
 def _dump(model: Any) -> Any:
     if hasattr(model, "model_dump"):
@@ -553,10 +565,34 @@ def _handler_factory(
                 )
                 return
 
+            if not self.path.split("?")[0].startswith("/api/") and DIST.is_dir():
+                if self._serve_static():
+                    return
+
             self._json(
                 HTTPStatus.NOT_FOUND,
                 {"status": "not_found"},
             )
+
+        def _serve_static(self) -> bool:
+            relpath = self.path.split("?")[0].lstrip("/")
+            candidate = (DIST / relpath).resolve() if relpath else DIST / "index.html"
+            if not candidate.is_relative_to(DIST):
+                return False
+            target = candidate if candidate.is_file() else DIST / "index.html"
+            if not (target.is_relative_to(DIST) and target.is_file()):
+                return False
+            payload = target.read_bytes()
+            content_type = _CONTENT_TYPES.get(
+                target.suffix, "application/octet-stream"
+            )
+            self.send_response(HTTPStatus.OK)
+            self.send_header("content-type", content_type)
+            self.send_header("content-length", str(len(payload)))
+            self.send_header("cache-control", "no-store")
+            self.end_headers()
+            self.wfile.write(payload)
+            return True
 
         def do_POST(self) -> None:
             try:
