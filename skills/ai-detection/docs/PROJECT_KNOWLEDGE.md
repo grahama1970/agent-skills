@@ -81,6 +81,21 @@ confirming agent-attributed code is sparse and weak in the wild. Pulling code
 bodies for training remains gated behind explicit human license/consent
 clearance.
 
+## Battle invariant target (R&D, 2026-09-17)
+
+ai-detection is now a first-class `$battle` invariant target, composed (not
+reimplemented): `battle/detector_judge.py` is a Battle pluggable judge
+(`battle.invariant_result.v1`) enforcing "AI-authored code stays flagged"
+(score >= threshold); a below-threshold file is a Red win. `battle/authorization.json`
+is the operator `security.target_authorization.v1` manifest for this local
+self-target. Proven through Battle's own `battle_skill.invariant_judge.run_judge`
+(not a local copy). Live scoreboard on the synthetic detector: Red humanizes
+every AI sample with every transform -> Blue holds, 0 Red wins across all four
+transforms (structure-keyed detector resists formatting/docstring humanization).
+Mechanism-only: not qualified-detector evasion or efficacy. Next Red rung is
+semantic transforms; the efficacy-grade Battle (Docker campaign, adaptive
+lineage) awaits a real-provenance corpus that qualifies the detector.
+
 ## Next meaningful gates
 
 Collect consented provenance-grounded human examples plus held-out generator

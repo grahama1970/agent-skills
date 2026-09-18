@@ -1,0 +1,23 @@
+{
+  "schema": "security.target_authorization.v1",
+  "operator": "grahama1970",
+  "authorized_on": "2026-09-17",
+  "authorization_basis": "Operator instruction to run a never-ending red/blue hardening effort on the operator's own local research project.",
+  "project_scope": "agent-skills/skills/ai-detection",
+  "target": {
+    "identity": "ai-detection local research prototype",
+    "path": "skills/ai-detection",
+    "ownership": "operator-owned self-target; no third-party system"
+  },
+  "authorized_actions": [
+    "invariant judge execution against released detector outputs",
+    "red-team humanizer transform generation over locally produced code samples",
+    "blue-team detector hardening",
+    "local Docker isolation for campaign runs"
+  ],
+  "non_claims": [
+    "This manifest is not a legal opinion.",
+    "It does not prove exploit success, evasion of a qualified detector, or detection efficacy.",
+    "Mechanism-only until a real-provenance corpus qualifies the detector."
+  ]
+}
