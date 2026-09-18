@@ -55,12 +55,12 @@ Enterprise-grade React/Next.js/React Native rules from Vercel Engineering. 100+ 
 
 Every interactive element gets **4 things at write time** — no exceptions, no retrofitting:
 
-1. **`data-qid`** — stable automation/test identifier consumed only through `[data-qid='...']`. Format: `component:element:qualifier` (colon-separated). Used by test manifests, CDP automation, and `scripts/verify-data-qid.py` enforcement.
+1. **`data-qid`** — stable CSS selector. Format: `component:element:qualifier` (colon-separated). Used by test manifests, CDP automation, and `verify-data-qid.py` enforcement.
 2. **`data-qs-action`** — QuerySpec action ID for agent/voice execution. Format: `COMPONENT_ACTION` (uppercase, underscore). An agent resolves NL intent → action ID → `document.querySelector('[data-qs-action="APPROVE_ENTRY"]').click()` — zero latency, no database lookup, works offline.
 3. **`title`** — human-readable label. Required for MIL-STD-1472H compliance, screen readers, tooltips.
 4. **`useRegisterAction`** — registers the action to ArangoDB `app_actions` collection for training data, analytics, and cross-app action discovery.
 
-Components without all 4 are **not shippable**. `scripts/verify-data-qid.py` enforces source-level `data-qid` coverage in CI.
+Components without all 4 are **not shippable**. `verify-data-qid.py` enforces `data-qid` coverage in CI.
 
 **Write-time checklist:**
 ```tsx
@@ -87,32 +87,7 @@ useRegisterAction('quarantine:action:approve', {
 - `useRegisterAction` = ArangoDB registry (training data, cross-app discovery, analytics)
 - They use the SAME action ID (`QUARANTINE_APPROVE`) so intent → action → DOM click is one straight line
 
-**Enforcement**: `scripts/verify-data-qid.py` MUST run in CI and `/plan` DoD for any UX task. Exit 1 = not shippable. `/review-plan` MUST FAIL any UX plan without it.
-
-**QID selector contract:** executable interaction tests use only
-`[data-qid='...']` selectors. No `#id`, `.class`, text, XPath, `nth-child`, array
-position, render-order, or other CSS-selector fallback is acceptable. A missing
-or unstable QID is an instrumentation defect to fix in the component, not a test
-authoring problem to guess around.
-
-Every interactive control must expose a `data-qid` that is unique within every
-reachable live-DOM state.
-
-**Static vs live boundary:** `scripts/verify-data-qid.py` checks source-level
-facts it can prove: interactive JSX controls have a `data-qid`, literal QIDs use
-the canonical shape, repeated-entity QIDs do not derive from volatile identity,
-and obvious duplicate literal QIDs are rejected. It does **not** prove every
-conditionally rendered live-DOM state is reachable or unique. Live reachability,
-live uniqueness, missing rendered QIDs, and duplicate rendered QIDs remain owned
-by `skills/test-interactions/run.sh discover`.
-
-**Persistent controls:** use invariant semantic QIDs such as
-`component:element:qualifier`.
-
-**Repeated entity controls:** append a stable domain or test identity when
-needed, for example `orders:item:open:${order.id}`. Do not append array index,
-render position, sort order, `Date.now()`, timestamps, random values,
-per-render UUIDs, or `nth-child`.
+**Enforcement**: `verify-data-qid.py` MUST run in CI and `/plan` DoD for any UX task. Exit 1 = not shippable. `/review-plan` MUST FAIL any UX plan without it.
 
 ### File size — capped by contents, not one number
 
@@ -136,7 +111,7 @@ python3 scripts/verify-file-size.py src/       # exit 1 on violation
 Data files are **detected, not declared**, so the lower ceiling cannot be dodged
 by renaming. Existing violations go in `.file-size-allowlist` as `path: lines` —
 a debt marker that pins the current size, so an allowlisted file may not grow.
-Runs in CI and `/plan` DoD alongside `scripts/verify-data-qid.py`.
+Runs in CI and `/plan` DoD alongside `verify-data-qid.py`.
 - Eliminate request waterfalls (parallel fetching, `Promise.all`)
 - Bundle size (dynamic imports, tree shaking, barrel file avoidance)
 - Accessibility (aria-labels, semantic HTML, keyboard navigation)
@@ -181,6 +156,73 @@ best-practices-react/
 ```
 
 ## Common Mistakes
+
+### WRONG: Testing UI mutations through a `vite preview` proxy
+```bash
+# UI served by `vite preview` (built dist) with a proxied API.
+# GET polling updates the screen, so the UI "looks live"...
+curl http://127.0.0.1:4173/api/health        # 200 (GET proxied)
+# ...but every user action silently does nothing:
+curl -X POST http://127.0.0.1:4173/api/event # dropped by the preview proxy
+```
+`vite preview`'s proxy does not forward POST/PUT/DELETE (vitejs/vite#13455);
+only `vite dev`'s proxy does. A SPA whose reads work but whose clicks/keys/forms
+do nothing is almost always this — not a handler bug. Hours were lost here
+debugging click wiring that was already correct.
+
+### RIGHT: Serve mutation-testable UI same-origin, or use `vite dev`
+```bash
+# Best: backend serves the built dist AND /api on one origin -> no proxy at all.
+#   GET /  -> index.html, GET /assets/* -> built files, /api/* -> handlers
+# Acceptable for local dev: vite DEV server (proxy forwards POST)
+EXPLAIN_PROJECT_API_URL=http://127.0.0.1:15174 npx vite dev --port 5174
+# Prove POST actually reaches the backend before debugging any handler:
+curl -X POST http://127.0.0.1:5174/api/event -d '{...}' -w '%{http_code}'
+```
+**Why:** A production/interview UI must not depend on a proxy that drops writes.
+When a click "does nothing," first prove a raw POST reaches the backend through
+the SAME origin the browser uses; only then look at the React handler.
+
+### WRONG: `role="button"` on a `<div>` or SVG `<g>` as the interactive element
+```tsx
+<g role="button" data-qid="diagram:node:x" onClick={go}>...</g>   // SVG group
+<div role="button" data-qid="diagram:node:x" onClick={go}>...</div>
+```
+SVG groups and role-only divs are unreliable click targets for CDP automation,
+native `element.click()`, and assistive tech, and they miss the four-attribute
+contract. A real user's click may land on a child (`<circle>`) or pass through.
+
+### RIGHT: A real `<button type="button">` with the full contract
+```tsx
+<button type="button"
+  data-qid={`diagram:node:${nodeId}`}
+  data-qs-action={`COCKPIT_DIAGRAM_STEP_${stepIndex}`}
+  title={`Jump to step ${stepIndex + 1}`}
+  onClick={go}>...</button>
+```
+**Why:** `<button>` fires `onClick` reliably for CDP, native `.click()`, keyboard
+(Enter/Space, no hand-rolled `onKeyDown`), and real mice. Any element a user
+clicks must be a real interactive element, not a styled `<div>`/`<g>`.
+
+### WRONG: Driving a React handler with synthetic events or an off-screen click
+```bash
+# synthetic MouseEvent does not reliably trigger React's delegated listener
+el.dispatchEvent(new MouseEvent('click', {bubbles:true}))   // often no-op
+surf click "[data-qid=x]"   # returns OK but the element is scrolled out of view -> hits nothing
+```
+
+### RIGHT: Prove the harness, scroll into view, then click a trusted event
+```bash
+# 1. Confirm a KNOWN-good control works (e.g. a keyboard shortcut) to prove dispatch is alive.
+# 2. scrollIntoView, THEN issue a trusted CDP click, THEN read the backend/state for the effect.
+surf js "document.querySelector('button[data-qs-action=X]').scrollIntoView({block:'center'})"
+surf click "button[data-qs-action=X]"
+# 3. Read back the EFFECT (revision bumped, state changed) — a click command returning "OK" is not proof.
+```
+**Why:** A `click` command reporting success is not proof the handler ran. CDP
+clicks need the element in the viewport; synthetic events often bypass React.
+Verify by reading the resulting state/revision, and isolate harness failures
+from code failures before editing the component.
 
 ### WRONG: `useRegisterAction` inside JSX, `.map()`, or function params
 ```tsx
@@ -306,7 +348,7 @@ component commit and make the revert path explicit before applying new edits.
   </div>
 ))}
 ```
-**Why:** Test manifests need unique selectors. If 18 entries share `data-qid="quarantine:entry"`, `querySelector` always hits the first one. Use the entity ID to make each qid unique. Dynamic list manifests must come from the live DOM and target the rendered element by its `[data-qid='...']` selector. If no stable executable QID exists, fix instrumentation before writing the test.
+**Why:** Test manifests need unique selectors. If 18 entries share `data-qid="quarantine:entry"`, `querySelector` always hits the first one. Use the entity ID to make each qid unique. Note: dynamic qids change when data changes, so test manifests for list items must query the live DOM or use `:nth-child` fallbacks.
 
 ### WRONG: Early return that hides chrome (filters, nav, controls) on empty state
 ```tsx
