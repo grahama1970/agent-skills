@@ -1,0 +1,14 @@
+{
+  "view": "flowchart",
+  "nodes": [
+    {"id": "start", "label": "Start"},
+    {"id": "check", "label": "This label is deliberately far too long to fit inside a rendered Excalidraw box and will overlap neighboring elements"},
+    {"id": "done", "label": "Done"}
+  ],
+  "edges": [
+    {"source": "start", "target": "check"},
+    {"source": "check", "target": "done"}
+  ],
+  "gates": [],
+  "terminal_states": ["done"]
+}

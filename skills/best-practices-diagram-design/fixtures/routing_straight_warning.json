@@ -1,0 +1,12 @@
+{
+  "view": "flowchart",
+  "nodes": [
+    {"id": "start", "label": "Start"},
+    {"id": "done", "label": "Done"}
+  ],
+  "edges": [
+    {"source": "start", "target": "done", "routing": "straight"}
+  ],
+  "gates": [],
+  "terminal_states": ["done"]
+}

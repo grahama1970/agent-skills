@@ -1,0 +1,20 @@
+{
+  "view": "decision_tree",
+  "nodes": [
+    {"id": "detector", "label": "Thrash detector fires"},
+    {"id": "tier1", "label": "Tier 1"},
+    {"id": "tier2", "label": "Tier 2"},
+    {"id": "tier3", "label": "Tier 3"},
+    {"id": "tier4", "label": "Tier 4"},
+    {"id": "tier5", "label": "Tier 5"}
+  ],
+  "edges": [
+    {"source": "detector", "target": "tier1"},
+    {"source": "detector", "target": "tier2"},
+    {"source": "detector", "target": "tier3"},
+    {"source": "detector", "target": "tier4"},
+    {"source": "detector", "target": "tier5"}
+  ],
+  "gates": [],
+  "terminal_states": []
+}

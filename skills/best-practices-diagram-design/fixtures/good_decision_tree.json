@@ -1,0 +1,28 @@
+{
+  "view": "decision_tree",
+  "nodes": [
+    {"id": "detector", "label": "Thrash detector fires"},
+    {"id": "lock", "label": "Acquire escalation lock"},
+    {"id": "tier1", "label": "Tier 1: soft retry"},
+    {"id": "tier1_resolved", "label": "Resolved after tier 1?"},
+    {"id": "tier2", "label": "Tier 2: backoff + alert"},
+    {"id": "tier2_resolved", "label": "Resolved after tier 2?"},
+    {"id": "tier3", "label": "Tier 3: page on-call"},
+    {"id": "resume", "label": "Resume normal operation"},
+    {"id": "escalate", "label": "Escalate to incident"}
+  ],
+  "edges": [
+    {"source": "detector", "target": "lock", "routing": "orthogonal"},
+    {"source": "lock", "target": "tier1", "routing": "orthogonal"},
+    {"source": "tier1", "target": "tier1_resolved", "routing": "orthogonal"},
+    {"source": "tier1_resolved", "target": "resume", "branch_label": "yes", "routing": "orthogonal"},
+    {"source": "tier1_resolved", "target": "tier2", "branch_label": "no", "routing": "orthogonal"},
+    {"source": "tier2", "target": "tier2_resolved", "routing": "orthogonal"},
+    {"source": "tier2_resolved", "target": "resume", "branch_label": "yes", "routing": "orthogonal"},
+    {"source": "tier2_resolved", "target": "tier3", "branch_label": "no", "routing": "orthogonal"},
+    {"source": "tier3", "target": "escalate", "routing": "orthogonal"}
+  ],
+  "gates": ["tier1_resolved", "tier2_resolved"],
+  "terminal_states": ["resume", "escalate"],
+  "label_limit": 60
+}

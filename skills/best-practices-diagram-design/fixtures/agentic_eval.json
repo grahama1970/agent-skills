@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "skill": "best-practices-diagram-design",
+  "trials": 3,
+  "mocked": false,
+  "live": true,
+  "proof_scope": "local deterministic diagram-spec validation: view/topology rules, label-length rules, gate/branch-label rules, terminal-state rules, and advisory connector-routing rules against committed fixture specs",
+  "claims": {
+    "proves": "the checker accepts a valid gated decision-tree spec (thrash-guard escalation ladder), rejects a single-source fan-out-for-sequence spec with VIEW_TOPOLOGY_MISMATCH (the star bug), rejects an over-length node label with LABEL_TOO_LONG, and emits an advisory (non-blocking) CONNECTOR_ROUTING_STRAIGHT warning for straight-routed flow edges",
+    "does_not_prove": "that a rendered Excalidraw/graphviz image is actually legible -- routing/overlap legibility requires the screenshot read-back step in SKILL.md, not just spec validation; does not prove create-architecture or ops-excalidraw rendering fidelity"
+  },
+  "cases": [
+    {
+      "name": "positive-good-decision-tree-passes",
+      "type": "positive",
+      "real_world": true,
+      "command": ["./run.sh", "check", "fixtures/good_decision_tree.json", "--json"],
+      "expected": {"exit_code": 0, "stdout_contains": ["\"ok\": true"]},
+      "readback": true,
+      "evidence_class": "local_deterministic"
+    },
+    {
+      "name": "negative-fanout-star-rejected",
+      "type": "negative",
+      "real_world": true,
+      "command": ["./run.sh", "check", "fixtures/bad_fanout_star.json", "--json"],
+      "expected": {"exit_code": 1, "stdout_contains": ["VIEW_TOPOLOGY_MISMATCH"]},
+      "readback": true,
+      "evidence_class": "local_deterministic"
+    },
+    {
+      "name": "adversarial-label-too-long-rejected",
+      "type": "adversarial",
+      "real_world": true,
+      "command": ["./run.sh", "check", "fixtures/label_too_long.json", "--json"],
+      "expected": {"exit_code": 1, "stdout_contains": ["LABEL_TOO_LONG"]},
+      "readback": true,
+      "evidence_class": "local_deterministic"
+    }
+  ],
+  "readiness": "USABLE_WITH_GAPS"
+}

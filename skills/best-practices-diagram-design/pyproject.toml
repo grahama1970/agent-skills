@@ -1,0 +1,13 @@
+[project]
+name = "best-practices-diagram-design"
+version = "0.1.0"
+description = "Design gate: validate diagram view/topology/legibility before rendering"
+requires-python = ">=3.11"
+dependencies = [
+  "typer>=0.12",
+  "loguru>=0.7",
+  "pydantic>=2",
+]
+
+[tool.uv]
+package = false
