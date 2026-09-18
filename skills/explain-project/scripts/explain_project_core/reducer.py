@@ -41,7 +41,7 @@ from .models import (
     StepPreviousEvent,
     TeleprompterProjection,
 )
-from .routing import route
+from .routing import _tokens, route
 
 
 class CockpitReducerError(ValueError):
@@ -355,6 +355,36 @@ def initial_state(
     return project_state(0, rows)
 
 
+def _best_step_index(
+    row: "FeatureExplainer",
+    question: str,
+) -> int:
+    """Land on the step whose content best answers the asked question.
+
+    Haystack is title+bullets only: source_explanation is shared code
+    narration (e.g. "before any output is marked ready" on the *receive*
+    step) that talks about the pipeline in general and steals report-last
+    tokens like "ready"/"marked" from other steps' questions. Title/bullets
+    are authored per-step and stay distinctive.
+
+    With that cleaner haystack a single matched token is trustworthy, so
+    ties and zero overlap fall back to step 0; the first strictly-better
+    step wins.
+    """
+    from .catalog import steps_for
+
+    qtokens = _tokens(question)
+    best_index = 0
+    best_score = 0
+    for index, step in enumerate(steps_for(row)):
+        haystack = " ".join([step.title, *step.bullets])
+        score = len(qtokens & _tokens(haystack))
+        if score > best_score:
+            best_index = index
+            best_score = score
+    return best_index
+
+
 def _project_routed_question(
     state: CockpitState,
     rows: list[FeatureExplainer],
@@ -368,13 +398,23 @@ def _project_routed_question(
         else None
     )
 
+    row = (
+        _row_by_feature(rows, feature_id)
+        if feature_id
+        else None
+    )
+
     return project_state(
         state.revision + 1,
         rows,
         question=question,
         route_decision=decision,
         feature_id=feature_id,
-        step_index=0,
+        step_index=(
+            _best_step_index(row, question.text)
+            if row is not None
+            else 0
+        ),
         receipts=state.adapter_receipts,
     )
 

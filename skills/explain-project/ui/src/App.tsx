@@ -194,6 +194,18 @@ export function CockpitApp({
           >
             Interview Cockpit
           </div>
+          {state.repo ? (
+            <span
+              data-qid="cockpit:header:repo"
+              className={[
+                'rounded-md border border-cyan-500/40 bg-cyan-950/30',
+                'px-2 py-0.5 font-mono text-[11px] text-cyan-200',
+              ].join(' ')}
+              title={`Explaining the ${state.repo} codebase`}
+            >
+              {state.repo}
+            </span>
+          ) : null}
           <span className="text-zinc-700">|</span>
           <div className="text-xs text-zinc-400 truncate max-w-md">
             Answer follow-up questions from source, proof, and safe debugger targets.

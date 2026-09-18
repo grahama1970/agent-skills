@@ -33,6 +33,7 @@ from .models import (
     ActionRegistrationBatch,
     BootstrapResponse,
     COCKPIT_EVENT_ADAPTER,
+    CockpitState,
     ExplainerImportRequest,
     FailureCode,
     FeatureExplainer,
@@ -220,7 +221,9 @@ class CockpitSession:
     ) -> None:
         self._rows = list(rows)
         self._repo = repo.resolve() if repo else None
-        self._state = initial_state(self._rows)
+        self._state = self._with_repo(
+            initial_state(self._rows)
+        )
         self._seen_live_questions: set[str] = set()
         self._lock = threading.Lock()
         self.actions = ActionRegistry(memory_url)
@@ -228,6 +231,16 @@ class CockpitSession:
     @property
     def repo(self) -> Path | None:
         return self._repo
+
+    def _with_repo(
+        self,
+        state: CockpitState,
+    ) -> CockpitState:
+        """Stamp the bound codebase onto every projected state."""
+        state.repo = (
+            self._repo.name if self._repo is not None else None
+        )
+        return state
 
     def diagram_svg(self) -> bytes | None:
         """Bytes of the currently bound rendered SVG artifact, or None."""
@@ -264,10 +277,12 @@ class CockpitSession:
         )
 
         with self._lock:
-            self._state = reduce_cockpit(
-                self._state,
-                event,
-                self._rows,
+            self._state = self._with_repo(
+                reduce_cockpit(
+                    self._state,
+                    event,
+                    self._rows,
+                )
             )
             return self._state
 
@@ -323,10 +338,12 @@ class CockpitSession:
                     ),
                 }
             )
-            self._state = reduce_cockpit(
-                self._state,
-                event,
-                self._rows,
+            self._state = self._with_repo(
+                reduce_cockpit(
+                    self._state,
+                    event,
+                    self._rows,
+                )
             )
             self._seen_live_questions.add(question_key)
 
@@ -372,14 +389,16 @@ class CockpitSession:
 
             # Import changes cockpit-visible catalog state.
             # Advance one root revision and re-project all panes.
-            self._state = project_state(
-                self._state.revision + 1,
-                self._rows,
-                question=self._state.question,
-                route_decision=self._state.route,
-                feature_id=feature_id,
-                step_index=step_index,
-                receipts=self._state.adapter_receipts,
+            self._state = self._with_repo(
+                project_state(
+                    self._state.revision + 1,
+                    self._rows,
+                    question=self._state.question,
+                    route_decision=self._state.route,
+                    feature_id=feature_id,
+                    step_index=step_index,
+                    receipts=self._state.adapter_receipts,
+                )
             )
 
             return BootstrapResponse(

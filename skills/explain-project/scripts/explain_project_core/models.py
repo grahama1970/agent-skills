@@ -599,6 +599,7 @@ class CockpitState(StrictModel):
         default_factory=IntegrationHealth,
     )
     adapter_receipts: list[AdapterReceipt] = Field(default_factory=list)
+    repo: str | None = None
 
     @model_validator(mode="after")
     def projections_synced(self) -> "CockpitState":

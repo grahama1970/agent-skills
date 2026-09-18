@@ -91,6 +91,8 @@ export interface CockpitState {
   schema: 'explain_project.cockpit_state.v1'
   revision: number
 
+  repo?: string | null
+
   route: RouteDecision | null
 
   question: QuestionInput | null
