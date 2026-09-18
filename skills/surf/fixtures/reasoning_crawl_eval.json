@@ -1,0 +1,42 @@
+{
+  "version": 2,
+  "skill": "surf",
+  "trials": 2,
+  "eval_kind": "reasoning_crawl",
+  "proof_scope": "surf webgpt.reasoning-crawl captures reasoning from a live/past ChatGPT tab and rejects tabs with no reasoning.",
+  "claims": {
+    "proves": "The surf-integrated command captures a >100-char reasoning block from a tab that rendered reasoning, and returns captured:false for a tab that did not.",
+    "does_not_prove": "That every sidebar conversation has reasoning, grading quality, or overnight-run completion."
+  },
+  "cases": [
+    {
+      "name": "surf-command-registered",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "real_world": false,
+      "timeout_seconds": 30,
+      "command": ["bash", "-c", "cd \"$(dirname \"$0\")/..\"; python3 -c \"import ast; ast.parse(open('scripts/webgpt-reasoning-crawl.py').read())\" && grep -q 'webgpt.reasoning-crawl' run.sh && echo REGISTERED", "_"],
+      "expected": {"exit_code": 0, "stdout_contains": ["REGISTERED"]}
+    },
+    {
+      "name": "bogus-tab-no-reasoning",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": ["bash", "-c", "cd \"$(dirname \"$0\")/..\"; out=$(./run.sh webgpt.capture-reasoning --tab-id 999999999 --current-only 2>/dev/null); echo \"$out\"; echo \"$out\" | grep -q '\"captured\": false' && echo NOREASON_OK", "_"],
+      "expected": {"exit_code": 0, "stdout_contains": ["NOREASON_OK"], "stdout_excludes": ["\"captured\": true"]}
+    },
+    {
+      "name": "live-tab-captures-reasoning",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "real_world": true,
+      "required": true,
+      "timeout_seconds": 120,
+      "command": ["bash", "-c", "cd \"$(dirname \"$0\")/..\"; T=$(./run.sh tab.list --json 2>/dev/null | python3 -c \"import json,sys;t=json.load(sys.stdin);t=t if isinstance(t,list) else t.get('tabs',[]);xs=[x['id'] for x in t if 'chatgpt.com/c/' in str(x.get('url',''))];print(xs[0] if xs else '')\"); if [ -z \"$T\" ]; then echo NO_LIVE_TAB; exit 2; fi; out=$(./run.sh webgpt.capture-reasoning --tab-id \"$T\" --current-only 2>/dev/null); echo \"$out\"; echo \"$out\" | python3 -c \"import json,sys;d=json.load(sys.stdin);sys.exit(0 if d.get('captured') and d.get('chars',0)>100 else 1)\" && echo LIVE_REASONING_OK", "_"],
+      "blocked_when_stdout_contains": ["NO_LIVE_TAB"],
+      "expected": {"exit_code": 0, "stdout_contains": ["LIVE_REASONING_OK"]}
+    }
+  ]
+}

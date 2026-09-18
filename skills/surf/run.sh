@@ -612,6 +612,10 @@ if [[ "$1" == "webgpt.submit" ]]; then
     exec "$SKILL_DIR/scripts/run-immutable-shell.sh" "$SKILL_DIR/scripts/webgpt-submit.sh" "${@:2}"
 fi
 
+if [[ "$1" == "webgpt.reasoning-crawl" || "$1" == "webgpt.capture-reasoning" ]]; then
+    exec python3 "$SKILL_DIR/scripts/webgpt-reasoning-crawl.py" "${@:2}"
+fi
+
 if [[ "$1" == "gemini.submit" ]]; then
     exec "$SKILL_DIR/scripts/gemini-submit.sh" "${@:2}"
 fi
