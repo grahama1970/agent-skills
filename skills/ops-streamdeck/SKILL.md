@@ -248,9 +248,13 @@ authorized. Both restore ONLY the known-good state (DP-3 enabled,
 outputs — do not remove or extend them past that boundary:
 
 1. **Video (meeting) button self-heal** — `meeting-mode.sh` in
-   `~/workspace/streamdeck` runs `scripts/teleprompter-restore.sh`, which
-   polls up to ~30s while DP-3's link is down and re-enables it the moment
-   it returns. State guards must stay word-matched (`grep -w`):
+   `~/workspace/streamdeck` launches `scripts/teleprompter-restore.sh`
+   asynchronously (`setsid`, fire-and-forget). The restore polls up to ~30s
+   while DP-3's link is down and re-enables it the moment it returns. It
+   MUST stay async: when it ran synchronously, every press with the camera
+   monitor off stalled ~30s before any lights/audio/layout feedback, and
+   double-presses cancelled out — the button appeared dead (observed
+   2026-09-18). State guards must stay word-matched (`grep -w`):
    "disconnected" contains the substring "connected".
 2. **Hotplug watcher** — systemd --user unit `teleprompter-watch.service`
    (source `~/workspace/streamdeck/scripts/`, symlinked from
