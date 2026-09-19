@@ -140,10 +140,17 @@ try:
     # 2. Walk steps until the debugger-target step.
     rev = state["revision"]
     target_state = None
+    fallback_target_state = None
     for i in range(step_count):
-        if state["debugger"]["target"] is not None:
-            target_state = state
-            break
+        current_target = state["debugger"]["target"]
+        if current_target is not None:
+            fallback_target_state = fallback_target_state or state
+            # Prefer the report-last publish stop: the small rehearsal dataset
+            # always exercises it, while format-specific verifier stops depend
+            # on which file types the generated dataset contains.
+            if current_target["file"].endswith("src/anonymization_trial/pipeline.py"):
+                target_state = state
+                break
         state = post("/api/cockpit/event", {
             "schema": "explain_project.cockpit_event.v1",
             "event_id": f"rehearsal-step-{i}",
@@ -152,12 +159,13 @@ try:
             "payload": {},
         })
         rev = state["revision"]
+    target_state = target_state or fallback_target_state
     assert target_state is not None, "no debugger step found"
     target = target_state["debugger"]["target"]
-    assert target["file"].endswith(
-        "src/anonymization_trial/pipeline.py"
-    ), target
+    assert target["file"].startswith("src/anonymization_trial/"), target
     assert target["line"] > 0, target
+    target_locals = target.get("locals", [])
+    assert target_locals, target
     assert (
         target_state["integration_health"]["debugger_target"]
         == "STALE"
@@ -167,9 +175,9 @@ try:
         target["line"], "health STALE pre-receipt",
     )
 
-    # 3. REAL headless breakpoint stop at pipeline.py:210. The demo
-    #    subcommand shells out to a child process (untraceable), so the
-    #    driver calls run_pipeline in-process like a real reproduction.
+    # 3. REAL headless breakpoint stop at the source target selected by
+    #    the walkthrough. The demo command shells out to a child process,
+    #    so the driver calls run_pipeline in-process like a real reproduction.
     driver = T / "driver.py"
     driver.write_text(
         "from pathlib import Path\n"
@@ -184,16 +192,18 @@ try:
     )
     import os
 
+    break_cmd = [
+        "bash", str(DBG), "break",
+        f"{target['file']}:{target['line']}",
+    ]
+    for local_name in target_locals:
+        break_cmd.extend(["--local", local_name])
+    break_cmd.extend([
+        "--out", str(T / "proof.json"),
+        "--", "python3", str(driver),
+    ])
     brk = run(
-        [
-            "bash", str(DBG), "break",
-            f"src/anonymization_trial/pipeline.py:{target['line']}",
-            "--local", "tmp",
-            "--local", "report_path",
-            "--local", "output_corpus",
-            "--out", str(T / "proof.json"),
-            "--", "python3", str(driver),
-        ],
+        break_cmd,
         cwd=OAI,
         env={
             **os.environ,
@@ -212,8 +222,8 @@ try:
         assert status.get("ok") is True, status
     assert proof["hit_count"] >= 1, proof
     print(
-        "REAL_BREAK_OK pipeline.py:210 hits",
-        proof["hit_count"],
+        "REAL_BREAK_OK", f"{target['file']}:{target['line']}",
+        "hits", proof["hit_count"],
     )
 
     # 3b. Normalize the raw capture to canonical debugger.proof.v1.
@@ -234,23 +244,22 @@ try:
     # 4. Debugger proof adapter receipt -> health READY.
     step_id = target_state["selection"]["step_id"]
     rev = target_state["revision"]
-    rec = run([
+    receipt_cmd = [
         "bash", str(SKILL / "run.sh"),
         "debugger-runtime-proof-receipt",
         "--proof", str(T / "canonical.json"),
         "--workspace", str(OAI),
-        "--target-file",
-        "src/anonymization_trial/pipeline.py",
-        "--start-line", str(target["line"] - 30),
-        "--end-line", str(target["line"] + 10),
+        "--target-file", target["file"],
+        "--start-line", str(max(1, target["line"] - 5)),
+        "--end-line", str(target["line"] + 5),
         "--feature-id", "project.walkthrough",
         "--step-id", step_id,
         "--request-revision", str(rev),
-        "--local", "tmp",
-        "--local", "report_path",
-        "--local", "output_corpus",
-        "--proves", "paused runtime at atomic publish rename",
-    ], cwd=SKILL)
+        "--proves", target.get("proves", "paused at selected walkthrough source"),
+    ]
+    for local_name in target_locals:
+        receipt_cmd.extend(["--local", local_name])
+    rec = run(receipt_cmd, cwd=SKILL)
     (T / "dbg-rec.log").write_text(
         rec.stdout + "\n--STDERR--\n" + rec.stderr
     )
