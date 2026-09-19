@@ -96,6 +96,28 @@ Mechanism-only: not qualified-detector evasion or efficacy. Next Red rung is
 semantic transforms; the efficacy-grade Battle (Docker campaign, adaptive
 lineage) awaits a real-provenance corpus that qualifies the detector.
 
+## Jev shadow challenger (R&D, 2026-09-19)
+
+`ai-detection jev-shadow SOURCE --output RECEIPT --allow-provider-upload` composes
+the existing `$jev` skill as a pinned (`jev-1.13.0`), typed, shadow-only code-signal
+classifier. Provider upload is denied without the explicit per-call flag. Every
+attempt writes `ai_detection.jev_shadow.v1` with accepted/abstained/blocked/failed
+outcome; the result cannot change detector disposition, Battle scoring, or release
+status. This is an experiment, not an accuracy claim. Qualification requires an
+approved corpus and measured accepted-decision error, abstention/fallback rate,
+external wall-clock latency, and cost.
+
+## Hugging Face dataset candidates (R&D, 2026-09-19)
+
+Read-only `$ops-huggingface` checks pinned three repositories in
+`research/huggingface_candidates.json`. `AICD-bench/AICD-Bench` is quarantined
+because its pinned card exposes no license/provenance narrative. `HanxiGuo/CodeMirage`
+is a candidate for noncommercial evaluation only at the pinned revision; its card
+declares CC BY-NC-ND 4.0 and human/AI/paraphrased strata, so derivatives, training,
+and redistribution require review. `LTPhong/CSC15011_Detecting_AI-Generated_Code`
+is quarantined because no card/license was exposed. Discovery is not corpus
+admission and none of these datasets establishes consented-assessment efficacy.
+
 ## Next meaningful gates
 
 Collect consented provenance-grounded human examples plus held-out generator

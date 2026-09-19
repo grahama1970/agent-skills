@@ -14,6 +14,8 @@ provides:
 composes:
   - setup-project
   - agentic-evals
+  - jev
+  - ops-huggingface
 complies:
   - best-practices-python
   - best-practices-skills
@@ -42,7 +44,10 @@ system Python. Consult `docs/EVALUATION.md` for full qualification, and
 Consent precedes capture. Browser reports are untrusted observations. Never use
 paste behavior, typing cadence, or a scalar score as proof of misconduct.
 No model means abstain. Synthetic training never earns calibration authority.
-Candidate code is parsed, never executed. No provider upload or global monitoring.
+Candidate code is parsed, never executed. Assessment inference is local by default;
+provider upload is forbidden except for the explicit `jev-shadow` research command
+with per-call `--allow-provider-upload`. Jev is advisory only and never changes a
+production disposition, Battle score, or release gate. No global monitoring.
 Heavy data/weights stay on configured external storage, not in this skill folder.
 
 ## Owning skill gates

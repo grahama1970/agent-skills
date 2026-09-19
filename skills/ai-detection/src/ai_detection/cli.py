@@ -19,6 +19,7 @@ from ai_detection.dataset import audit_splits, load_records
 from ai_detection.errors import Code, DetectionError, envelope
 from ai_detection.humanize import Transform, humanize, probe_fragility
 from ai_detection.io import atomic_json, canonical, read_json
+from ai_detection.jev_shadow import run_shadow
 from ai_detection.model import evaluate, load_model, model_digest, save_model, train
 from ai_detection.native import invoke_native
 from ai_detection.provenance import CommitSignal, classify, detector_label, survey
@@ -143,6 +144,25 @@ def classify_provenance(metadata: Annotated[Path, typer.Argument(exists=True, di
               "counts": survey(signals), "items": items})
     except (DetectionError, ValidationError, OSError, UnicodeError, ValueError) as exc:
         logger.error("classified_failure module=cli")
+        fail(exc)
+
+
+@app.command("jev-shadow")
+def jev_shadow_command(
+    source: Annotated[Path, typer.Argument(exists=True, dir_okay=False)],
+    output: Annotated[Path, typer.Option()],
+    allow_provider_upload: bool = False,
+) -> None:
+    """Run pinned Jev as an advisory shadow; never changes detector/Battle decisions."""
+    try:
+        root = Path(os.environ.get("AGENT_SKILLS_ROOT", Path(__file__).resolve().parents[4]))
+        receipt = run_shadow(source, output, allow_provider_upload=allow_provider_upload,
+                             agent_skills_root=root)
+        emit(receipt.model_dump(mode="json", by_alias=True))
+        if receipt.outcome != "accepted":
+            raise typer.Exit(3)
+    except (OSError, ValidationError, ValueError) as exc:
+        logger.error("classified_failure module=jev_shadow")
         fail(exc)
 
 

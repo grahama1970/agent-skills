@@ -1,0 +1,12 @@
+{
+  "authorship_signal": {
+    "type": "choice",
+    "instructions": "Judge only the supplied Python source text. Do not infer identity, misconduct, or provenance. Select the best bounded description of whether the code contains stylistic or structural signals commonly associated with generated code. When evidence is mixed or insufficient, choose insufficient_evidence.",
+    "criteria": {
+      "machine_signal": "The source contains multiple mutually reinforcing stylistic or structural signals commonly associated with generated code.",
+      "human_signal": "The source contains multiple mutually reinforcing stylistic or structural signals commonly associated with human-written code.",
+      "mixed_signal": "The source contains substantial signals in both directions, consistent with editing, assistance, or hybrid origin.",
+      "insufficient_evidence": "The source is too short, generic, ambiguous, or otherwise insufficient for a reliable bounded judgment."
+    }
+  }
+}

@@ -11,4 +11,4 @@ cd "$SCRIPT_DIR"
 # it belongs to scripts/verify.sh --profile full and fails closed there.
 uv run --project "$SCRIPT_DIR" --extra dev python -m pytest \
   tests/test_api.py tests/test_live_http.py tests/test_contracts.py \
-  tests/test_detection.py tests/test_evidence.py tests/test_project.py tests/test_humanize.py tests/test_provenance.py tests/test_battle_judge.py -q
+  tests/test_detection.py tests/test_evidence.py tests/test_project.py tests/test_humanize.py tests/test_provenance.py tests/test_battle_judge.py tests/test_jev_shadow.py -q

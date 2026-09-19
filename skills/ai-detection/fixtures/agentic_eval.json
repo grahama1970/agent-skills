@@ -141,6 +141,16 @@
         "deterministic": true
       },
       "claim_semantics": "control_flow"
+    },
+    {
+      "id": "jev-shadow-boundary",
+      "description": "Jev source upload requires explicit per-call authorization and remains advisory with durable blocked/failed accounting.",
+      "criticality": "critical",
+      "required": true,
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "control_flow"
     }
   ],
   "seams": [
@@ -244,6 +254,14 @@
     {
       "seam_id": "no-execution",
       "seam_type": "capability-boundary",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "jev-shadow-boundary",
+      "seam_type": "typed-boundary",
       "criticality": "critical",
       "required_evidence": [
         "deterministic"
@@ -720,6 +738,28 @@
         "exit_code": 0,
         "stdout_contains": [
           "passed"
+        ]
+      }
+    },
+    {
+      "name": "jev-shadow-boundary",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "jev-shadow-boundary"
+      ],
+      "seams": [
+        "jev-shadow-boundary"
+      ],
+      "command": [
+        "bash",
+        "../scripts/pytest-case.sh",
+        "tests/test_jev_shadow.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
         ]
       }
     }

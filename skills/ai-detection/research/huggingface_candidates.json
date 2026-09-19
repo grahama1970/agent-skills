@@ -1,0 +1,30 @@
+{
+  "schema": "ai_detection.dataset_candidates.v1",
+  "checked_at": "2026-09-19",
+  "authority": "research planning only; not an admitted corpus manifest",
+  "candidates": [
+    {
+      "repo_id": "AICD-bench/AICD-Bench",
+      "revision": "b7dc6d82257de6e0146d1e7b0831abd7088633af",
+      "configs": ["T1", "T2", "T3"],
+      "license": null,
+      "disposition": "quarantine",
+      "reason": "Pinned README exposes dataset sizes and code/label fields but no dataset license or provenance narrative."
+    },
+    {
+      "repo_id": "HanxiGuo/CodeMirage",
+      "revision": "174c25ffa9e9f218f8526d403b3aba9631dcfc43",
+      "languages": ["Python", "Java", "JavaScript", "CPP", "C", "CSharp", "Go", "Ruby", "PHP", "HTML"],
+      "license": "cc-by-nc-nd-4.0",
+      "disposition": "candidate_noncommercial_evaluation_only",
+      "reason": "Card declares human, AI-normal, and AI-paraphrased strata, but NoDerivatives requires review before transformation, redistribution, or training-derived artifact use."
+    },
+    {
+      "repo_id": "LTPhong/CSC15011_Detecting_AI-Generated_Code",
+      "revision": "7a1988f959d33ec3f5ac35af5d81fcc4a24c1294",
+      "license": null,
+      "disposition": "quarantine",
+      "reason": "Repository contains Parquet data but repo-info exposed no card or license."
+    }
+  ]
+}
