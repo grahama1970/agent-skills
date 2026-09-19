@@ -1,23 +1,23 @@
 {
   "schema": "security.target_authorization.v1",
-  "operator": "grahama1970",
-  "authorized_on": "2026-09-17",
-  "authorization_basis": "Operator instruction to run a never-ending red/blue hardening effort on the operator's own local research project.",
-  "project_scope": "agent-skills/skills/ai-detection",
-  "target": {
-    "identity": "ai-detection local research prototype",
-    "path": "skills/ai-detection",
-    "ownership": "operator-owned self-target; no third-party system"
-  },
-  "authorized_actions": [
-    "invariant judge execution against released detector outputs",
-    "red-team humanizer transform generation over locally produced code samples",
-    "blue-team detector hardening",
-    "local Docker isolation for campaign runs"
-  ],
-  "non_claims": [
-    "This manifest is not a legal opinion.",
-    "It does not prove exploit success, evasion of a qualified detector, or detection efficacy.",
-    "Mechanism-only until a real-provenance corpus qualifies the detector."
-  ]
+  "authorization_id": "ai-detection-battle-smoke-001",
+  "issuer": "grahama1970",
+  "approver": "grahama1970",
+  "issued_at": "2026-09-19T00:00:00Z",
+  "expires_at": "2027-09-19T00:00:00Z",
+  "target": {"kind": "local_source", "canonical_id": "ai-detection-battle-smoke", "immutable_ref": "candidate-v1", "repository_url": "file:///home/graham/workspace/experiments/agent-skills/skills/ai-detection"},
+  "allowed_target_urls": ["file:///workspace/candidate.py"],
+  "allowed_cidrs": ["127.0.0.0/32"],
+  "allowed_ports": [1],
+  "runtime_modes": ["local_docker_fixture"],
+  "allowed_actions": ["battle"],
+  "allowed_probe_classes": ["code_behavior_equivalence"],
+  "denied_probe_classes": ["network", "third_party_target"],
+  "network_policy": "Docker target containers run with --network none.",
+  "egress_policy": "No target-container egress is authorized.",
+  "limits": {"requests_per_second": 1, "max_concurrency": 1, "duration_seconds": 60, "cpu": 1, "memory_mb": 256, "storage_mb": 64},
+  "permissions": {"destructive": false, "persistence": false, "credential": false, "denial_of_service": false, "nonlocal": false},
+  "artifact_root": "skills/ai-detection/evidence/battle-smoke-eval",
+  "redaction_policy": "Receipts contain hashes and deterministic CLI output only.",
+  "legal_non_opinion_ack": true
 }

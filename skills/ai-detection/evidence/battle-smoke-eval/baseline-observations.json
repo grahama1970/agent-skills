@@ -1,0 +1,23 @@
+{
+  "observations": [
+    {
+      "cause": "module docstring narrates fixture provenance",
+      "code": "verbose_module_docstring"
+    },
+    {
+      "cause": "4 narrative comments",
+      "code": "excessive_narrative_comments"
+    },
+    {
+      "cause": "function names exceed 32 characters",
+      "code": "overlong_identifier"
+    },
+    {
+      "cause": "simple helpers repeat explanatory docstrings",
+      "code": "redundant_explanatory_docstrings"
+    }
+  ],
+  "provenance": "agent_authored_fixture",
+  "schema": "ai_detection.violation_observations.v1",
+  "source_sha256": "1d55a0bb9057fb79cc7b4dfcd24fc5a9e766c11f3b4867e2f84a2efbcee29c29"
+}

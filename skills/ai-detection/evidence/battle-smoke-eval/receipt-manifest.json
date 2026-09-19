@@ -1,0 +1,16 @@
+{
+  "artifacts": {
+    "authorization-validation.json": "ce1bad1447dc421c2a4a30a81c6ca0ec7525631fd98bc79899aae3f26edcc7bd",
+    "baseline-observations.json": "a400199318897bd70bd84837ae7f660c000362bc1ccb12f4b3fd8ade299ef34f",
+    "campaign.json": "0e90f71ace6be3265518407cf83a68c1eaf583648913d4f695ed850dc0b21806",
+    "docker-after.json": "4cd1ad270bf0153f6026632880b7d66fa395d7aae2c916374f1e97d0fa9ecc87",
+    "docker-before.json": "46263cc3f82f0ba810462964c23bcb6c87b62a3128ba391ecd1aa1f2d4e21b85",
+    "frozen-detector-panel.json": "e3a436f177b68efda050ed41c57a1d5c5e3306f25408105d1b79bd4f0bff68b5",
+    "frozen-synthetic-model.json": "4c434e2076cc26135c86d9210a32151422aa99b765d1a40134ae850e1448df4e",
+    "judge-after.json": "e2b8303bf7fa2939b19c3ff9bf2cf95e55e9b9342db6f1288de6b1bb89d6484e",
+    "judge-before.json": "543157bf743bb2e3223b10bfd99875789c3fe02fdf55ef3502908fa9fdc6f409",
+    "repaired-observations.json": "b7bc3d35130ab71fae119415b69dd9416c8bd7b5dbb54839ef16f5dc280b452f"
+  },
+  "campaign_sha256": "0e90f71ace6be3265518407cf83a68c1eaf583648913d4f695ed850dc0b21806",
+  "schema": "battle.receipt_manifest.v1"
+}

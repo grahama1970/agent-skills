@@ -1,0 +1,16 @@
+{
+  "evidence": {
+    "does_not_prove": "qualified-detector evasion, authorship, or efficacy",
+    "files": 1,
+    "invariant": "ai_authored_code_stays_flagged",
+    "proof_scope": "mechanism_only_score_vs_threshold",
+    "scores": {
+      "candidate.py": 0.9517826817929002
+    },
+    "threshold": 0.06560502593240126
+  },
+  "judge_path": "/home/graham/workspace/experiments/agent-skills/skills/ai-detection/battle/detector_judge.py",
+  "passed": true,
+  "schema": "battle.invariant_result.v1",
+  "violations": []
+}

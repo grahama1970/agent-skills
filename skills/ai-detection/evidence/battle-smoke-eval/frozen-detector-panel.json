@@ -1,0 +1,8 @@
+{
+  "efficacy": "NOT_ESTABLISHED",
+  "model_file_sha256": "4c434e2076cc26135c86d9210a32151422aa99b765d1a40134ae850e1448df4e",
+  "model_sha256": "a04ac8f1bdb06b9ce90874065e51e213503f06a203c1b7f9eded04af006f3347",
+  "schema": "ai_detection.frozen_detector_panel.v1",
+  "synthetic_training": true,
+  "threshold": 0.06560502593240126
+}

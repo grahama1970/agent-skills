@@ -1,0 +1,1589 @@
+{
+  "schema": "agentic_evals.report.v2",
+  "source": "fixtures/agentic_eval.json",
+  "run_id": "bc62d846829c",
+  "fixture_sha256": "sha256:1074370c45cc530baa31aa9df85932c6cefaf8d79c84609a9a7ceba3cbbee2b7",
+  "repo": {
+    "sha": "74ff0e1153a5a6ef2596bb001d3f1875e9da2063",
+    "ref": "main"
+  },
+  "mocked": false,
+  "fixture_backed": true,
+  "live": true,
+  "proof_scope": "Full requested product capability; must remain non-READY without browser and independent real-human detection evidence.",
+  "claims": {
+    "proves": "Only declared mechanisms with capable guards and real HTTP readback.",
+    "does_not_prove": "Any-provider authorship detection, human fairness, browser journey, or full release readiness."
+  },
+  "what_was_exercised": "local commands declared in the fixture manifest",
+  "what_remains_unverified": "semantic correctness, live services, LLM judge behavior, and release readiness",
+  "readiness": "USABLE_WITH_GAPS",
+  "case_readiness": "USABLE_WITH_GAPS",
+  "capability_readiness": {
+    "aggregate_readiness": "USABLE_WITH_GAPS",
+    "critical_claim_count": 15,
+    "critical_claims_proven": 14,
+    "claims": [
+      {
+        "id": "http-contract",
+        "description": "The server must bind every accepted edit to one authenticated session and contiguous revision; exact retries must be idempotent.",
+        "criticality": "critical",
+        "required_evidence": [
+          "deterministic"
+        ],
+        "verdict": "PROVEN",
+        "per_class": {
+          "deterministic": {
+            "status": "PROVEN",
+            "cases": [
+              "api"
+            ]
+          }
+        },
+        "missing_evidence": [],
+        "blocked_evidence": [],
+        "exempt_evidence": [],
+        "exemptions": [],
+        "unqualified_live_cases": [],
+        "supporting_cases": [
+          "api"
+        ]
+      },
+      {
+        "id": "authorization",
+        "description": "Only the session token holder may export/delete active records; errors must not echo submitted source or credentials.",
+        "criticality": "critical",
+        "required_evidence": [
+          "deterministic"
+        ],
+        "verdict": "PROVEN",
+        "per_class": {
+          "deterministic": {
+            "status": "PROVEN",
+            "cases": [
+              "auth"
+            ]
+          }
+        },
+        "missing_evidence": [],
+        "blocked_evidence": [],
+        "exempt_evidence": [],
+        "exemptions": [],
+        "unqualified_live_cases": [],
+        "supporting_cases": [
+          "auth"
+        ]
+      },
+      {
+        "id": "value-representation",
+        "description": "Unknown, malformed, unsupported, missing-model, and uncertified inputs must not be converted into an authorship accusation.",
+        "criticality": "critical",
+        "required_evidence": [
+          "deterministic"
+        ],
+        "verdict": "PROVEN",
+        "per_class": {
+          "deterministic": {
+            "status": "PROVEN",
+            "cases": [
+              "boundaries"
+            ]
+          }
+        },
+        "missing_evidence": [],
+        "blocked_evidence": [],
+        "exempt_evidence": [],
+        "exemptions": [],
+        "unqualified_live_cases": [],
+        "supporting_cases": [
+          "boundaries"
+        ]
+      },
+      {
+        "id": "evidence-integrity",
+        "description": "An independent verifier must reconstruct all accepted Unicode edits and reject changed, omitted, reordered, or wrongly bound evidence.",
+        "criticality": "critical",
+        "required_evidence": [
+          "deterministic"
+        ],
+        "verdict": "PROVEN",
+        "per_class": {
+          "deterministic": {
+            "status": "PROVEN",
+            "cases": [
+              "replay"
+            ]
+          }
+        },
+        "missing_evidence": [],
+        "blocked_evidence": [],
+        "exempt_evidence": [],
+        "exemptions": [],
+        "unqualified_live_cases": [],
+        "supporting_cases": [
+          "replay"
+        ]
+      },
+      {
+        "id": "dataset-independence",
+        "description": "Dataset evaluation must exclude session, author, task, repository, exact-source and normalized-token overlap between splits and hold out generator families.",
+        "criticality": "critical",
+        "required_evidence": [
+          "deterministic"
+        ],
+        "verdict": "PROVEN",
+        "per_class": {
+          "deterministic": {
+            "status": "PROVEN",
+            "cases": [
+              "leakage"
+            ]
+          }
+        },
+        "missing_evidence": [],
+        "blocked_evidence": [],
+        "exempt_evidence": [],
+        "exemptions": [],
+        "unqualified_live_cases": [],
+        "supporting_cases": [
+          "leakage"
+        ]
+      },
+      {
+        "id": "calibration",
+        "description": "A frozen threshold must be selected without calibration/test labels; low-FPR qualification must use an independent human-session confidence bound.",
+        "criticality": "critical",
+        "required_evidence": [
+          "deterministic"
+        ],
+        "verdict": "PROVEN",
+        "per_class": {
+          "deterministic": {
+            "status": "PROVEN",
+            "cases": [
+              "calibration"
+            ]
+          }
+        },
+        "missing_evidence": [],
+        "blocked_evidence": [],
+        "exempt_evidence": [],
+        "exemptions": [],
+        "unqualified_live_cases": [],
+        "supporting_cases": [
+          "calibration"
+        ]
+      },
+      {
+        "id": "unicode-replay",
+        "description": "An independent verifier must reconstruct all accepted Unicode edits and reject changed, omitted, reordered, or wrongly bound evidence.",
+        "criticality": "critical",
+        "required_evidence": [
+          "property_or_fuzz"
+        ],
+        "verdict": "PROVEN",
+        "per_class": {
+          "property_or_fuzz": {
+            "status": "PROVEN",
+            "cases": [
+              "unicode"
+            ]
+          }
+        },
+        "missing_evidence": [],
+        "blocked_evidence": [],
+        "exempt_evidence": [],
+        "exemptions": [],
+        "unqualified_live_cases": [],
+        "supporting_cases": [
+          "unicode"
+        ]
+      },
+      {
+        "id": "training",
+        "description": "Synthetic examples and deterministic passing tests must never establish real-human or any-provider detection efficacy.",
+        "criticality": "critical",
+        "required_evidence": [
+          "deterministic"
+        ],
+        "verdict": "PROVEN",
+        "per_class": {
+          "deterministic": {
+            "status": "PROVEN",
+            "cases": [
+              "training"
+            ]
+          }
+        },
+        "missing_evidence": [],
+        "blocked_evidence": [],
+        "exempt_evidence": [],
+        "exemptions": [],
+        "unqualified_live_cases": [],
+        "supporting_cases": [
+          "training"
+        ]
+      },
+      {
+        "id": "http-transport",
+        "description": "The server must bind every accepted edit to one authenticated session and contiguous revision; exact retries must be idempotent.",
+        "criticality": "critical",
+        "required_evidence": [
+          "live_e2e"
+        ],
+        "verdict": "PROVEN",
+        "per_class": {
+          "live_e2e": {
+            "status": "PROVEN",
+            "cases": [
+              "http"
+            ]
+          }
+        },
+        "missing_evidence": [],
+        "blocked_evidence": [],
+        "exempt_evidence": [],
+        "exemptions": [],
+        "unqualified_live_cases": [],
+        "supporting_cases": [
+          "http"
+        ]
+      },
+      {
+        "id": "server-time",
+        "description": "REQ-04: server-time and source budget enforcement",
+        "criticality": "critical",
+        "required_evidence": [
+          "deterministic"
+        ],
+        "verdict": "PROVEN",
+        "per_class": {
+          "deterministic": {
+            "status": "PROVEN",
+            "cases": [
+              "server-time"
+            ]
+          }
+        },
+        "missing_evidence": [],
+        "blocked_evidence": [],
+        "exempt_evidence": [],
+        "exemptions": [],
+        "unqualified_live_cases": [],
+        "supporting_cases": [
+          "server-time"
+        ]
+      },
+      {
+        "id": "browser-journey",
+        "description": "REQ-11: real-browser assessment journey including independent record readback",
+        "criticality": "critical",
+        "required_evidence": [
+          "live_e2e"
+        ],
+        "verdict": "PROVEN",
+        "per_class": {
+          "live_e2e": {
+            "status": "PROVEN",
+            "cases": [
+              "browser"
+            ]
+          }
+        },
+        "missing_evidence": [],
+        "blocked_evidence": [],
+        "exempt_evidence": [],
+        "exemptions": [],
+        "unqualified_live_cases": [],
+        "supporting_cases": [
+          "browser"
+        ]
+      },
+      {
+        "id": "provider-agnostic-detection",
+        "description": "Provider-agnostic detection quality must be measured on independently sourced, consented real-human sessions and unseen model families at predeclared session-level FPRs.",
+        "criticality": "critical",
+        "required_evidence": [
+          "human_evaluation",
+          "live_e2e"
+        ],
+        "verdict": "NOT_ESTABLISHED",
+        "per_class": {
+          "human_evaluation": {
+            "status": "MISSING",
+            "cases": []
+          },
+          "live_e2e": {
+            "status": "MISSING",
+            "cases": []
+          }
+        },
+        "missing_evidence": [
+          "human_evaluation",
+          "live_e2e"
+        ],
+        "blocked_evidence": [],
+        "exempt_evidence": [],
+        "exemptions": [],
+        "unqualified_live_cases": [],
+        "supporting_cases": [
+          "efficacy"
+        ]
+      },
+      {
+        "id": "no-execution",
+        "description": "REQ-13: candidate source is never executed on the host",
+        "criticality": "critical",
+        "required_evidence": [
+          "deterministic"
+        ],
+        "verdict": "PROVEN",
+        "per_class": {
+          "deterministic": {
+            "status": "PROVEN",
+            "cases": [
+              "no-execution"
+            ]
+          }
+        },
+        "missing_evidence": [],
+        "blocked_evidence": [],
+        "exempt_evidence": [],
+        "exemptions": [],
+        "unqualified_live_cases": [],
+        "supporting_cases": [
+          "no-execution"
+        ]
+      },
+      {
+        "id": "jev-shadow-boundary",
+        "description": "Jev source upload requires explicit per-call authorization and remains advisory with durable blocked/failed accounting.",
+        "criticality": "critical",
+        "required_evidence": [
+          "deterministic"
+        ],
+        "verdict": "PROVEN",
+        "per_class": {
+          "deterministic": {
+            "status": "PROVEN",
+            "cases": [
+              "jev-shadow-boundary"
+            ]
+          }
+        },
+        "missing_evidence": [],
+        "blocked_evidence": [],
+        "exempt_evidence": [],
+        "exemptions": [],
+        "unqualified_live_cases": [],
+        "supporting_cases": [
+          "jev-shadow-boundary"
+        ]
+      },
+      {
+        "id": "battle-smoke-convergence",
+        "description": "A provenance-known candidate is parsed without host execution, behavior-replayed in a networkless authorized Docker container, and recorded with frozen detector Judge receipts.",
+        "criticality": "critical",
+        "required_evidence": [
+          "deterministic"
+        ],
+        "verdict": "PROVEN",
+        "per_class": {
+          "deterministic": {
+            "status": "PROVEN",
+            "cases": [
+              "battle-smoke-convergence"
+            ]
+          }
+        },
+        "missing_evidence": [],
+        "blocked_evidence": [],
+        "exempt_evidence": [],
+        "exemptions": [],
+        "unqualified_live_cases": [],
+        "supporting_cases": [
+          "battle-smoke-convergence"
+        ]
+      }
+    ]
+  },
+  "claims_coverage": "manifest-spanning",
+  "focused_cases": [],
+  "generated_at": "2026-09-19T15:06:01.657061+00:00",
+  "case_count": 15,
+  "required_case_count": 15,
+  "outcome_counts": {
+    "PASS": 14,
+    "FAIL": 0,
+    "BLOCKED": 1,
+    "NOT_TESTED": 0
+  },
+  "trial_count": 45,
+  "cases": [
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "api",
+      "type": "positive",
+      "case_id": "bc62d846829c-c000",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--extra",
+        "dev",
+        "python",
+        "../scripts/eval_case.py",
+        "api",
+        "--samples",
+        "128"
+      ],
+      "declared_evidence_class": "deterministic",
+      "effective_evidence_class": "deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "http-contract"
+      ],
+      "seams": [
+        "http-contract"
+      ],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 1965.088,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"api\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_api.py::test_http_session_roundtrip\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/api-df0a776608bc4bedabea1194d7a24844/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/api-df0a776608bc4bedabea1194d7a24844\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/api-df0a776608bc4bedabea1194d7a24844/junit.xml\":\"9e35c6b27647163c74d5564b9da745361501e23e10b7ba15b82eb957fe3d07bb\",\"reports/native-cases/api-df0a776608bc4bedabea1194d7a24844/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/api-df0a776608bc4bedabea1194d7a24844/stdout.log\":\"12c4509bf61be2f592d680cc3efbbc7c560895ca2e0008c1c2b812ee574a18dc\"}}\n",
+          "stderr": "",
+          "duration_ms": 1921.918,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c000-t00",
+          "artifact_hashes": {
+            "../reports/native-cases/api.json": "sha256:3b7b36094b432722fd557eb5fa04782738e6440a33d2147da0df7f4fe679632c"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"api\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_api.py::test_http_session_roundtrip\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/api-a75936db914d4cc89f6fa8982eb4a501/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/api-a75936db914d4cc89f6fa8982eb4a501\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/api-a75936db914d4cc89f6fa8982eb4a501/junit.xml\":\"6cbdef1a9d9ab5099e024e7499cba1d21175116cfd301e3d67934e0dc6c4ca60\",\"reports/native-cases/api-a75936db914d4cc89f6fa8982eb4a501/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/api-a75936db914d4cc89f6fa8982eb4a501/stdout.log\":\"d35d9d7e1dde6cf26927e7a67a0da0f979630b02169ec3a929861d3dd4f5600c\"}}\n",
+          "stderr": "",
+          "duration_ms": 1980.396,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c000-t01",
+          "artifact_hashes": {
+            "../reports/native-cases/api.json": "sha256:047c7f577fb0a4ad55f06a1b9b2297b56719cb91e2107ea969f90c48c324f45e"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"api\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_api.py::test_http_session_roundtrip\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/api-60bc9529cb1441ffbf1d6e4c0f2daf7f/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/api-60bc9529cb1441ffbf1d6e4c0f2daf7f\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/api-60bc9529cb1441ffbf1d6e4c0f2daf7f/junit.xml\":\"53a6f1b5f495f23795b1a3992935cc5e50f5d32d5e9659a89d8b92f12c7727de\",\"reports/native-cases/api-60bc9529cb1441ffbf1d6e4c0f2daf7f/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/api-60bc9529cb1441ffbf1d6e4c0f2daf7f/stdout.log\":\"ee2ab9af620c9d26d61019f0cfa77fd0a631b97beaad668d3cca75d874376d0b\"}}\n",
+          "stderr": "",
+          "duration_ms": 1992.951,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c000-t02",
+          "artifact_hashes": {
+            "../reports/native-cases/api.json": "sha256:6642fd2d2b9c656358453216fe37729aa2a8ea237bfe8cd8a76c4f9e8e4317fb"
+          },
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "auth",
+      "type": "adversarial",
+      "case_id": "bc62d846829c-c001",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--extra",
+        "dev",
+        "python",
+        "../scripts/eval_case.py",
+        "auth",
+        "--samples",
+        "128"
+      ],
+      "declared_evidence_class": "deterministic",
+      "effective_evidence_class": "deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "authorization"
+      ],
+      "seams": [
+        "authorization"
+      ],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 2046.676,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"auth\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_api.py::test_error_does_not_echo_sensitive_unknown_value\",\"tests/test_evidence.py::test_mutation_guards_preserve_durable_state\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/auth-797745210d1e428f9b1c10ed644205a3/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/auth-797745210d1e428f9b1c10ed644205a3\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/auth-797745210d1e428f9b1c10ed644205a3/junit.xml\":\"6f89fc1abd716116303c4c286f09c73996ce8b2609ec62739f07f75de7aef951\",\"reports/native-cases/auth-797745210d1e428f9b1c10ed644205a3/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/auth-797745210d1e428f9b1c10ed644205a3/stdout.log\":\"bd6f85883d4e434bd1e6aff402acee2c8b3a7afc7f848842e9ca7e30cc3d0688\"}}\n",
+          "stderr": "",
+          "duration_ms": 2045.22,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c001-t00",
+          "artifact_hashes": {
+            "../reports/native-cases/auth.json": "sha256:587ef9009ac017426779ca20f8e8eddb79e68600e9a13189c98fbc2e91bbde3f"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"auth\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_api.py::test_error_does_not_echo_sensitive_unknown_value\",\"tests/test_evidence.py::test_mutation_guards_preserve_durable_state\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/auth-32693d77636b493ca12e594b1836da93/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/auth-32693d77636b493ca12e594b1836da93\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/auth-32693d77636b493ca12e594b1836da93/junit.xml\":\"2678ddd6f09f4536265e5c039b117b14532f57b656cbe752e9b9c288a2cbc873\",\"reports/native-cases/auth-32693d77636b493ca12e594b1836da93/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/auth-32693d77636b493ca12e594b1836da93/stdout.log\":\"3942af68edee3223f593df85ad0db59b774f96edfc8b7668e2e4bd3f4f103629\"}}\n",
+          "stderr": "",
+          "duration_ms": 1993.536,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c001-t01",
+          "artifact_hashes": {
+            "../reports/native-cases/auth.json": "sha256:dfc98dae40604f9675a1e339557a54d90d39ef876dcbd90c58966b1f22fe008b"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"auth\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_api.py::test_error_does_not_echo_sensitive_unknown_value\",\"tests/test_evidence.py::test_mutation_guards_preserve_durable_state\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/auth-478413af7a944226a41bffc7726d6901/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/auth-478413af7a944226a41bffc7726d6901\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/auth-478413af7a944226a41bffc7726d6901/junit.xml\":\"2838ac0865db71c43e489f70f385fe0609f531da719e79922ab51431c618c398\",\"reports/native-cases/auth-478413af7a944226a41bffc7726d6901/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/auth-478413af7a944226a41bffc7726d6901/stdout.log\":\"bd6f85883d4e434bd1e6aff402acee2c8b3a7afc7f848842e9ca7e30cc3d0688\"}}\n",
+          "stderr": "",
+          "duration_ms": 2101.272,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c001-t02",
+          "artifact_hashes": {
+            "../reports/native-cases/auth.json": "sha256:03093d947cae4b8b281987c6004d71084641287ec491160d5ce93f27b7e475a0"
+          },
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "boundaries",
+      "type": "adversarial",
+      "case_id": "bc62d846829c-c002",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--extra",
+        "dev",
+        "python",
+        "../scripts/eval_case.py",
+        "boundaries",
+        "--samples",
+        "128"
+      ],
+      "declared_evidence_class": "deterministic",
+      "effective_evidence_class": "deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "value-representation"
+      ],
+      "seams": [
+        "value-representation"
+      ],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 710.261,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"boundaries\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_contracts.py\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/boundaries-44e5f61e55b14697a6f835a0d773069c/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/boundaries-44e5f61e55b14697a6f835a0d773069c\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/boundaries-44e5f61e55b14697a6f835a0d773069c/junit.xml\":\"a5ea7446188e78309a7e0e59d2e17d1c814a5dccce2d6252f31fd54b8d92dcbb\",\"reports/native-cases/boundaries-44e5f61e55b14697a6f835a0d773069c/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/boundaries-44e5f61e55b14697a6f835a0d773069c/stdout.log\":\"3eb49e90f1a7995262dbda42becfb450606ada9237ae18e287c5db2fbeb693ac\"}}\n",
+          "stderr": "",
+          "duration_ms": 731.269,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c002-t00",
+          "artifact_hashes": {
+            "../reports/native-cases/boundaries.json": "sha256:e42d9eec94da0701e3912cb98cc69f6edba1055380a075eb4681c8e2f5c5c314"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"boundaries\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_contracts.py\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/boundaries-5dad472088c64c6094ee64745ebf7092/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/boundaries-5dad472088c64c6094ee64745ebf7092\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/boundaries-5dad472088c64c6094ee64745ebf7092/junit.xml\":\"b79ca1a5b3a6fb77d7e6739913fec413c8a95b21b2f127ffa7a98e09debd91bc\",\"reports/native-cases/boundaries-5dad472088c64c6094ee64745ebf7092/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/boundaries-5dad472088c64c6094ee64745ebf7092/stdout.log\":\"cc155a910271f302e381631627fd5f6b017deb84bce80d232956d5cde447a01d\"}}\n",
+          "stderr": "",
+          "duration_ms": 736.159,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c002-t01",
+          "artifact_hashes": {
+            "../reports/native-cases/boundaries.json": "sha256:9d7b9d993e863a2bb106989e08ce15c5d6449a9a01e527884a879a04308d7479"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"boundaries\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_contracts.py\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/boundaries-01e4f72670b04eaf9283eb8834e553ae/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/boundaries-01e4f72670b04eaf9283eb8834e553ae\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/boundaries-01e4f72670b04eaf9283eb8834e553ae/junit.xml\":\"81107879e5b69add2ed8c3b0e4868ad9f1286cac336c8b74602709be79732bdd\",\"reports/native-cases/boundaries-01e4f72670b04eaf9283eb8834e553ae/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/boundaries-01e4f72670b04eaf9283eb8834e553ae/stdout.log\":\"3eb49e90f1a7995262dbda42becfb450606ada9237ae18e287c5db2fbeb693ac\"}}\n",
+          "stderr": "",
+          "duration_ms": 663.355,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c002-t02",
+          "artifact_hashes": {
+            "../reports/native-cases/boundaries.json": "sha256:cd0fd7ff26756deedab94413a6e3ab31a0ff9811e32e0a2894312cc577521f11"
+          },
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "replay",
+      "type": "adversarial",
+      "case_id": "bc62d846829c-c003",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--extra",
+        "dev",
+        "python",
+        "../scripts/eval_case.py",
+        "replay",
+        "--samples",
+        "128"
+      ],
+      "declared_evidence_class": "deterministic",
+      "effective_evidence_class": "deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "evidence-integrity"
+      ],
+      "seams": [
+        "evidence-integrity"
+      ],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 1564.871,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"replay\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_evidence.py::test_independent_checker_rejects_changed_evidence\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/replay-3a22a6c6eb8a46c29f7d60d4a95bbbfe/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/replay-3a22a6c6eb8a46c29f7d60d4a95bbbfe\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/replay-3a22a6c6eb8a46c29f7d60d4a95bbbfe/junit.xml\":\"9f735f4fb4001d6feae2024b16430229e1c412a65b111246a302d6ef3fdb6fd2\",\"reports/native-cases/replay-3a22a6c6eb8a46c29f7d60d4a95bbbfe/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/replay-3a22a6c6eb8a46c29f7d60d4a95bbbfe/stdout.log\":\"50e6f23c5821325d634f02eb3c4d66c8ef8215b62ca2e9b0916ac4f6a1311ba4\"}}\n",
+          "stderr": "",
+          "duration_ms": 1529.203,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c003-t00",
+          "artifact_hashes": {
+            "../reports/native-cases/replay.json": "sha256:8d3b9dd04beb995d15fa9b5ea15688d4e47252c6f0026596261514bf7fede7b7"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"replay\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_evidence.py::test_independent_checker_rejects_changed_evidence\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/replay-12e9a2dd8a054b559809938f871ec982/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/replay-12e9a2dd8a054b559809938f871ec982\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/replay-12e9a2dd8a054b559809938f871ec982/junit.xml\":\"9fbd4460e9499956a4c15786122dc12b4d1976a2dd6b3bce76508d50abfd2d43\",\"reports/native-cases/replay-12e9a2dd8a054b559809938f871ec982/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/replay-12e9a2dd8a054b559809938f871ec982/stdout.log\":\"50e6f23c5821325d634f02eb3c4d66c8ef8215b62ca2e9b0916ac4f6a1311ba4\"}}\n",
+          "stderr": "",
+          "duration_ms": 1573.448,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c003-t01",
+          "artifact_hashes": {
+            "../reports/native-cases/replay.json": "sha256:2dd6193d43cf1a26d3c163fba5ed50f588d8719b1bfbdf4966961c6959bb958b"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"replay\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_evidence.py::test_independent_checker_rejects_changed_evidence\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/replay-86e4b012b528472ebeab3c4960142952/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/replay-86e4b012b528472ebeab3c4960142952\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/replay-86e4b012b528472ebeab3c4960142952/junit.xml\":\"2b52a5865a138bb991375aa89ae0d0ad53486b8b78fae6b64fc8f9e3d87b28b5\",\"reports/native-cases/replay-86e4b012b528472ebeab3c4960142952/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/replay-86e4b012b528472ebeab3c4960142952/stdout.log\":\"810348f571f43ec0ebb8a956e13a38e43f125a14786b1fa48bd96e1717eaee6a\"}}\n",
+          "stderr": "",
+          "duration_ms": 1591.962,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c003-t02",
+          "artifact_hashes": {
+            "../reports/native-cases/replay.json": "sha256:b96ccb80283f5973bda68618483bf81319d5386c29eaa5dc30febadd25579362"
+          },
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "leakage",
+      "type": "negative",
+      "case_id": "bc62d846829c-c004",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--extra",
+        "dev",
+        "python",
+        "../scripts/eval_case.py",
+        "leakage",
+        "--samples",
+        "128"
+      ],
+      "declared_evidence_class": "deterministic",
+      "effective_evidence_class": "deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "dataset-independence"
+      ],
+      "seams": [
+        "dataset-independence"
+      ],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 1834.874,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"leakage\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_detection.py::test_cross_split_leakage_rejected\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/leakage-2db6027bbbf242aa954887ab851bb897/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/leakage-2db6027bbbf242aa954887ab851bb897\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/leakage-2db6027bbbf242aa954887ab851bb897/junit.xml\":\"847e1f9830839459f3379b6111ed3f42da57046d9ee01312392b6702bbfccd47\",\"reports/native-cases/leakage-2db6027bbbf242aa954887ab851bb897/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/leakage-2db6027bbbf242aa954887ab851bb897/stdout.log\":\"9c5b1d41e885b1b16025fb463e7963d20f2d5e2753ffd7117e5c8be8f6209e8f\"}}\n",
+          "stderr": "",
+          "duration_ms": 1825.423,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c004-t00",
+          "artifact_hashes": {
+            "../reports/native-cases/leakage.json": "sha256:48c522d456a5d6c84f850340c2c778fe13c7351f21bcf765bc44b2c59ed7e31f"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"leakage\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_detection.py::test_cross_split_leakage_rejected\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/leakage-7ed6022e35ff4c928b0b3518793a0906/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/leakage-7ed6022e35ff4c928b0b3518793a0906\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/leakage-7ed6022e35ff4c928b0b3518793a0906/junit.xml\":\"37d47bd4ce3c0e5a5d1e0216d9bf8eb02b06fed92d1730ff1d462c90d6aeeafc\",\"reports/native-cases/leakage-7ed6022e35ff4c928b0b3518793a0906/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/leakage-7ed6022e35ff4c928b0b3518793a0906/stdout.log\":\"83c8fd351c4e7227bc1e273d02da1b41486726781f56df0e5ba7e044631a8c72\"}}\n",
+          "stderr": "",
+          "duration_ms": 1842.965,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c004-t01",
+          "artifact_hashes": {
+            "../reports/native-cases/leakage.json": "sha256:b1c59b6f9acd8a995cd115e3558a474f2b49614eaf1a7367f2fc9fdce6df80cc"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"leakage\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_detection.py::test_cross_split_leakage_rejected\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/leakage-9bc2ccefd69d48ea91ad15efd0eb8b60/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/leakage-9bc2ccefd69d48ea91ad15efd0eb8b60\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/leakage-9bc2ccefd69d48ea91ad15efd0eb8b60/junit.xml\":\"797fb692c618ae9900951748dc1d87f18a3be2f083c1e602d9b1dfc407b7bb8a\",\"reports/native-cases/leakage-9bc2ccefd69d48ea91ad15efd0eb8b60/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/leakage-9bc2ccefd69d48ea91ad15efd0eb8b60/stdout.log\":\"83c8fd351c4e7227bc1e273d02da1b41486726781f56df0e5ba7e044631a8c72\"}}\n",
+          "stderr": "",
+          "duration_ms": 1836.233,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c004-t02",
+          "artifact_hashes": {
+            "../reports/native-cases/leakage.json": "sha256:39c382ca4f792d1013bc88b0c7e94f31f2ce77f1b65e401ff5a1355ba6919db4"
+          },
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "calibration",
+      "type": "negative",
+      "case_id": "bc62d846829c-c005",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--extra",
+        "dev",
+        "python",
+        "../scripts/eval_case.py",
+        "calibration",
+        "--samples",
+        "128"
+      ],
+      "declared_evidence_class": "deterministic",
+      "effective_evidence_class": "deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "calibration"
+      ],
+      "seams": [
+        "calibration"
+      ],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 1551.521,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"calibration\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_detection.py::test_independent_low_false_positive_confidence_bound\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/calibration-1aa4bd821eed41e9b6db02ff54c7d83c/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/calibration-1aa4bd821eed41e9b6db02ff54c7d83c\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/calibration-1aa4bd821eed41e9b6db02ff54c7d83c/junit.xml\":\"463fe62fc39112c83c0d561c72b42f23f165fb806299fd314ff557f32ddf3d4b\",\"reports/native-cases/calibration-1aa4bd821eed41e9b6db02ff54c7d83c/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/calibration-1aa4bd821eed41e9b6db02ff54c7d83c/stdout.log\":\"941fd927604956af95533710b95a4b5cfe32fe875376a69b8cd3d6db814e3c2b\"}}\n",
+          "stderr": "",
+          "duration_ms": 1571.838,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c005-t00",
+          "artifact_hashes": {
+            "../reports/native-cases/calibration.json": "sha256:dcaeadf15e68685b871643f1da93e2f30ae189df66c4293b84eab159c3612e2b"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"calibration\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_detection.py::test_independent_low_false_positive_confidence_bound\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/calibration-1a93719f8b26441a9a19a0ba39845a49/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/calibration-1a93719f8b26441a9a19a0ba39845a49\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/calibration-1a93719f8b26441a9a19a0ba39845a49/junit.xml\":\"6dffb34481cb1caa9643c090325a45a45d4400a99d2801f71865b10df6fd1351\",\"reports/native-cases/calibration-1a93719f8b26441a9a19a0ba39845a49/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/calibration-1a93719f8b26441a9a19a0ba39845a49/stdout.log\":\"c952b5c568a02b83362e5cf5a0f46f1c733434977b415fd71a83aa63e7031707\"}}\n",
+          "stderr": "",
+          "duration_ms": 1523.834,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c005-t01",
+          "artifact_hashes": {
+            "../reports/native-cases/calibration.json": "sha256:4268c8916e037162146eed955ec3d1be99cbbf3a62edc1aaf5f3d76c92deffde"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"calibration\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_detection.py::test_independent_low_false_positive_confidence_bound\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/calibration-cf54e8dfe22d48e883db176943f34659/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/calibration-cf54e8dfe22d48e883db176943f34659\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/calibration-cf54e8dfe22d48e883db176943f34659/junit.xml\":\"2f91d6454219f3fd7f0642ef12e06dac2a86588174a55dd41bf01fa64b59a6e7\",\"reports/native-cases/calibration-cf54e8dfe22d48e883db176943f34659/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/calibration-cf54e8dfe22d48e883db176943f34659/stdout.log\":\"f9c9506451c8c246d741ba6f531e0c5616255ea5048df68bdc58562afc09939b\"}}\n",
+          "stderr": "",
+          "duration_ms": 1558.892,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c005-t02",
+          "artifact_hashes": {
+            "../reports/native-cases/calibration.json": "sha256:b778c8260ea86502c2838835bcb791e8e3edaed7cac306b38ed39846b98c83b6"
+          },
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "unicode",
+      "type": "adversarial",
+      "case_id": "bc62d846829c-c006",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--extra",
+        "dev",
+        "python",
+        "../scripts/eval_case.py",
+        "unicode",
+        "--samples",
+        "128"
+      ],
+      "declared_evidence_class": "property_or_fuzz",
+      "effective_evidence_class": "property_or_fuzz",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "unicode-replay"
+      ],
+      "seams": [
+        "unicode-replay"
+      ],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 2127.392,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"unicode\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_evidence.py::test_fresh_unicode_edit_sequences\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/unicode-fd3f35ec6b7e450f87fcb3551258ec71/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/unicode-fd3f35ec6b7e450f87fcb3551258ec71\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/unicode-fd3f35ec6b7e450f87fcb3551258ec71/junit.xml\":\"f191ebcf14dd16a1b5e7269eaa3c2a8848cb3b2a1a46dde99de74902b203551b\",\"reports/native-cases/unicode-fd3f35ec6b7e450f87fcb3551258ec71/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/unicode-fd3f35ec6b7e450f87fcb3551258ec71/stdout.log\":\"77867685350b6877d0d59307683c52e13b4367bc73e0ba811df040b46ae5a6c7\"}}\n",
+          "stderr": "",
+          "duration_ms": 2146.16,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c006-t00",
+          "artifact_hashes": {
+            "../reports/native-cases/unicode.json": "sha256:4a41bf5fdd83a41ef3d8af702c06977dfef1578824b09488c39d0548c3db66a5"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"unicode\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_evidence.py::test_fresh_unicode_edit_sequences\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/unicode-04861548acdb40cfb1e66392f3e03800/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/unicode-04861548acdb40cfb1e66392f3e03800\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/unicode-04861548acdb40cfb1e66392f3e03800/junit.xml\":\"c4ff7c77fcd85789aea31c28eabccfde032fd2629c090be29901f40af110d776\",\"reports/native-cases/unicode-04861548acdb40cfb1e66392f3e03800/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/unicode-04861548acdb40cfb1e66392f3e03800/stdout.log\":\"172896570462eb33dfe37e808a819a44f06f79fc7b2e06eb2074dd578202a8aa\"}}\n",
+          "stderr": "",
+          "duration_ms": 2140.935,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c006-t01",
+          "artifact_hashes": {
+            "../reports/native-cases/unicode.json": "sha256:348920d5386892d108e9dca729e9bb83828953ca8686009a2c1782bc28c8b475"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"unicode\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_evidence.py::test_fresh_unicode_edit_sequences\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/unicode-d75964d12f9d418c952895e3fb999b1e/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/unicode-d75964d12f9d418c952895e3fb999b1e\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/unicode-d75964d12f9d418c952895e3fb999b1e/junit.xml\":\"8f50135d3c4891788dc584b5e29f86b33ad203e8dba65324670e501dcc56597e\",\"reports/native-cases/unicode-d75964d12f9d418c952895e3fb999b1e/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/unicode-d75964d12f9d418c952895e3fb999b1e/stdout.log\":\"e6c649e59e5603dcfdc2e052cedf668eafc0625e294a29d30d2bfdf64660ab10\"}}\n",
+          "stderr": "",
+          "duration_ms": 2095.081,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c006-t02",
+          "artifact_hashes": {
+            "../reports/native-cases/unicode.json": "sha256:afeab17f00e37d72e8b98f9890a52662e6421e7e796b704f3217895f5e53acd6"
+          },
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "training",
+      "type": "positive",
+      "case_id": "bc62d846829c-c007",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--extra",
+        "dev",
+        "python",
+        "../scripts/eval_case.py",
+        "training",
+        "--samples",
+        "128"
+      ],
+      "declared_evidence_class": "deterministic",
+      "effective_evidence_class": "deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "training"
+      ],
+      "seams": [
+        "training"
+      ],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 1890.318,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"training\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_detection.py::test_train_safe_serialization_and_frozen_test_protocol\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/training-97d82d0878554c4cbdd677ca43fe0d17/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/training-97d82d0878554c4cbdd677ca43fe0d17\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/training-97d82d0878554c4cbdd677ca43fe0d17/junit.xml\":\"f88cab03d4cfb103fe46e31a3e5ca3a28d338cba48019cbceec556333fa023f7\",\"reports/native-cases/training-97d82d0878554c4cbdd677ca43fe0d17/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/training-97d82d0878554c4cbdd677ca43fe0d17/stdout.log\":\"43db26f998bc22eb28c0a45cbdbba6a1e973537f513c2dcd663ff6df3a77cac6\"}}\n",
+          "stderr": "",
+          "duration_ms": 1927.196,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c007-t00",
+          "artifact_hashes": {
+            "../reports/native-cases/training.json": "sha256:38d920a46e6af9b84180f766e9fec1e3791924c7a6b2545641a7e460a299a8ad"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"training\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_detection.py::test_train_safe_serialization_and_frozen_test_protocol\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/training-90f3ffcf8fe548c9a3f061dcab441bc4/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/training-90f3ffcf8fe548c9a3f061dcab441bc4\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/training-90f3ffcf8fe548c9a3f061dcab441bc4/junit.xml\":\"2e4ff8bc8877c795711b165b98c6efaf90ed243fd13c7c618c9f009be33d4387\",\"reports/native-cases/training-90f3ffcf8fe548c9a3f061dcab441bc4/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/training-90f3ffcf8fe548c9a3f061dcab441bc4/stdout.log\":\"c46951216fb22cb70c4bbba01b026cd9532f4bdb3308e82f9390b88874bf801f\"}}\n",
+          "stderr": "",
+          "duration_ms": 1858.368,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c007-t01",
+          "artifact_hashes": {
+            "../reports/native-cases/training.json": "sha256:8c92f69b80b3169b1c5df243ee83a8d323998122ce6a0cf137e2b65cd49024cc"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"training\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_detection.py::test_train_safe_serialization_and_frozen_test_protocol\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/training-159bf6cdc2404e9c8ac79d2c95877a81/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/training-159bf6cdc2404e9c8ac79d2c95877a81\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/training-159bf6cdc2404e9c8ac79d2c95877a81/junit.xml\":\"82280278e340e2722b8cf18d8693b43406e39bc620421b4aa997932e038e85a1\",\"reports/native-cases/training-159bf6cdc2404e9c8ac79d2c95877a81/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/training-159bf6cdc2404e9c8ac79d2c95877a81/stdout.log\":\"2ab5bf1c418c4b50a82bb6d168950ab377ab0a377e4d5187213d9b176905f856\"}}\n",
+          "stderr": "",
+          "duration_ms": 1885.391,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c007-t02",
+          "artifact_hashes": {
+            "../reports/native-cases/training.json": "sha256:53d0c21422b85b4dcdd527fc4deffb27f7652fa398a1f83e011f70b7d2a06e14"
+          },
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "http",
+      "type": "positive",
+      "case_id": "bc62d846829c-c008",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--extra",
+        "dev",
+        "python",
+        "../scripts/eval_case.py",
+        "http",
+        "--samples",
+        "128"
+      ],
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "live_e2e",
+      "live_qualified": true,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "http-transport"
+      ],
+      "seams": [
+        "http-transport"
+      ],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 2218.353,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"http\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_live_http.py\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/http-08b7b3a53ffc48698767c797bbf29068/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/http-08b7b3a53ffc48698767c797bbf29068\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/http-08b7b3a53ffc48698767c797bbf29068/junit.xml\":\"422a91276ecf905c33e0990483d6fa3a796b4238929cf9eebbca36ec196c3745\",\"reports/native-cases/http-08b7b3a53ffc48698767c797bbf29068/readback/http-readback.json\":\"b81bb7e3b5eb315f70cf413113a8bc9e3588e2b41c2dc4ddc06c3979dbda2a63\",\"reports/native-cases/http-08b7b3a53ffc48698767c797bbf29068/readback/http-server-35443.log\":\"5b942766d13ec9952a45184b8989222387ced22d83aa76fba2747ff8ae2e1d56\",\"reports/native-cases/http-08b7b3a53ffc48698767c797bbf29068/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/http-08b7b3a53ffc48698767c797bbf29068/stdout.log\":\"1de35c6705200f587263c83005e9f31ab13478c878f7a3eb315d8c44fbbc91cc\"}}\n",
+          "stderr": "",
+          "duration_ms": 2185.319,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c008-t00",
+          "artifact_hashes": {
+            "../reports/native-cases/http.json": "sha256:eff1d1e102324e1c9786cccf9075782f615d881ef59ed7fa211b27a2a7048170"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"http\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_live_http.py\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/http-2fd7a04112f441df94a18e2b3b548d15/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/http-2fd7a04112f441df94a18e2b3b548d15\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/http-2fd7a04112f441df94a18e2b3b548d15/junit.xml\":\"aec93361867624b1f4f51c6825a03d54c9e5d3e0882e95d416f36176a8e876dc\",\"reports/native-cases/http-2fd7a04112f441df94a18e2b3b548d15/readback/http-readback.json\":\"ec3dab009080f4a054153154cb8ea8dd77565ea3c39f64bc9fdf1b6bdeb523d9\",\"reports/native-cases/http-2fd7a04112f441df94a18e2b3b548d15/readback/http-server-49391.log\":\"18bc2a748bdb7fed3072aabe7a7829306e90e1e35a5cd8e420bbd0cbbe620b33\",\"reports/native-cases/http-2fd7a04112f441df94a18e2b3b548d15/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/http-2fd7a04112f441df94a18e2b3b548d15/stdout.log\":\"32397ceb739e04bbfcda77323a43691e4a7bae6f7f08881f0c8c4ce30f21b5ac\"}}\n",
+          "stderr": "",
+          "duration_ms": 2284.505,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c008-t01",
+          "artifact_hashes": {
+            "../reports/native-cases/http.json": "sha256:c896d924ebf9a2bed00cf3cabdd402424c1fe91e5f613736da413f72c2f306e5"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"http\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_live_http.py\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/http-5562af8c7d184e83a66815250b5a8864/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/http-5562af8c7d184e83a66815250b5a8864\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/http-5562af8c7d184e83a66815250b5a8864/junit.xml\":\"665671f8a6ae536a313d720bc2a938da1f037e79c70e03beebf1d4f4327de78e\",\"reports/native-cases/http-5562af8c7d184e83a66815250b5a8864/readback/http-readback.json\":\"fe01a5c9df7885127282dba4c96eeb0f5ece8791b2801eb03c2cd12803187e58\",\"reports/native-cases/http-5562af8c7d184e83a66815250b5a8864/readback/http-server-44649.log\":\"a8e9c8d47748c7445820ef5fa4201ad4f0354941a96616842cff29c14300f43f\",\"reports/native-cases/http-5562af8c7d184e83a66815250b5a8864/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/http-5562af8c7d184e83a66815250b5a8864/stdout.log\":\"43557565734a08c43e5a3973973179f5bf3692ffb6987e822d48d508730995f8\"}}\n",
+          "stderr": "",
+          "duration_ms": 2185.236,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c008-t02",
+          "artifact_hashes": {
+            "../reports/native-cases/http.json": "sha256:16b915237860db0ec9d78bd418b4d7a97b8aabbf0c04815bb394b31d0bd3eab9"
+          },
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "server-time",
+      "type": "adversarial",
+      "case_id": "bc62d846829c-c009",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "../scripts/pytest-case.sh",
+        "tests/test_evidence.py::test_server_clock_not_client_clock_controls_deadline"
+      ],
+      "declared_evidence_class": "deterministic",
+      "effective_evidence_class": "deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "server-time"
+      ],
+      "seams": [
+        "server-time"
+      ],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 1428.417,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": ".                                                                        [100%]\n1 passed in 0.92s\n",
+          "stderr": "",
+          "duration_ms": 1384.718,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c009-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": ".                                                                        [100%]\n1 passed in 0.99s\n",
+          "stderr": "",
+          "duration_ms": 1487.512,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c009-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": ".                                                                        [100%]\n1 passed in 0.92s\n",
+          "stderr": "",
+          "duration_ms": 1413.02,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c009-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "browser",
+      "type": "positive",
+      "case_id": "bc62d846829c-c010",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--extra",
+        "dev",
+        "python",
+        "../scripts/eval_case.py",
+        "browser",
+        "--samples",
+        "128"
+      ],
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "live_e2e",
+      "live_qualified": true,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "browser-journey"
+      ],
+      "seams": [
+        "browser-journey"
+      ],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 3837.448,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"browser\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_browser.py\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/browser-599c780d7130449b82e5414de740ed5f/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/browser-599c780d7130449b82e5414de740ed5f\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/browser-599c780d7130449b82e5414de740ed5f/junit.xml\":\"630cdc6e779534542b6bb28859a0ba421fa30ae5140863816eb6591e686d462d\",\"reports/native-cases/browser-599c780d7130449b82e5414de740ed5f/readback/browser-desktop.png\":\"922fa3bdc71d398eb79c2930206192a0b2449d20da69c0657640f19d94843780\",\"reports/native-cases/browser-599c780d7130449b82e5414de740ed5f/readback/browser-mobile.png\":\"5a9b0ff615379d2789f8b7b3df077a85bfffea36f336ca8a4ef091a2b9ea6013\",\"reports/native-cases/browser-599c780d7130449b82e5414de740ed5f/readback/browser-readback.json\":\"5e74bbdddf5630c241f2e41228746efdd38b52d272b57b4b64aba78568b2c7a7\",\"reports/native-cases/browser-599c780d7130449b82e5414de740ed5f/readback/browser-session.json\":\"913964e73415f82c993200013d87b221e2eb2511b70223cd928aa409461c61a5\",\"reports/native-cases/browser-599c780d7130449b82e5414de740ed5f/readback/http-server-44285.log\":\"b24901d2b4d9793aa35de906c3a8f2dc220daf3c9c4e0537a24c4c5fc746593d\",\"reports/native-cases/browser-599c780d7130449b82e5414de740ed5f/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/browser-599c780d7130449b82e5414de740ed5f/stdout.log\":\"5e72ac8e90c38c6c1c584bbced5bff4f6f7b73a50a49c8e3e8f55871062ddc73\"}}\n",
+          "stderr": "",
+          "duration_ms": 3781.722,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c010-t00",
+          "artifact_hashes": {
+            "../reports/native-cases/browser.json": "sha256:98ed747ebb338c0b419ad567025eac6ff772eedc813b50dd63e3cfed854a5bcc"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"browser\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_browser.py\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/browser-b15eddb28a6d4e5c90039a1056472597/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/browser-b15eddb28a6d4e5c90039a1056472597\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/browser-b15eddb28a6d4e5c90039a1056472597/junit.xml\":\"11a53f3719450087135749359907597302b3feea4eb992c6c09387a003f18f26\",\"reports/native-cases/browser-b15eddb28a6d4e5c90039a1056472597/readback/browser-desktop.png\":\"922fa3bdc71d398eb79c2930206192a0b2449d20da69c0657640f19d94843780\",\"reports/native-cases/browser-b15eddb28a6d4e5c90039a1056472597/readback/browser-mobile.png\":\"5a9b0ff615379d2789f8b7b3df077a85bfffea36f336ca8a4ef091a2b9ea6013\",\"reports/native-cases/browser-b15eddb28a6d4e5c90039a1056472597/readback/browser-readback.json\":\"ca6decbe28b9e086f34179b785e9e6f8d0039efd9fdcecec2dca48ef14227fb4\",\"reports/native-cases/browser-b15eddb28a6d4e5c90039a1056472597/readback/browser-session.json\":\"7759b4b2975eef3ba9ccb7a7664a0f085b9002f2cb1e8b06a0f5629efbd70781\",\"reports/native-cases/browser-b15eddb28a6d4e5c90039a1056472597/readback/http-server-49447.log\":\"ded4ba60dfcd1ebb67cbb27fd1e8f511186c74ff84283136bc1f8eac1ac17e81\",\"reports/native-cases/browser-b15eddb28a6d4e5c90039a1056472597/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/browser-b15eddb28a6d4e5c90039a1056472597/stdout.log\":\"1c80614777f445ae84883bf640dd8f1c7e5b5d390edf948495300ef3b39489fa\"}}\n",
+          "stderr": "",
+          "duration_ms": 3840.529,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c010-t01",
+          "artifact_hashes": {
+            "../reports/native-cases/browser.json": "sha256:be6b62ca31fd14ec49108888bfe156c8f7574c5d9440fd9170e6c2d06b9ba740"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"browser\",\"status\":\"PASS\",\"executed\":true,\"exit_code\":0,\"argv\":[\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/.venv/bin/python3\",\"-m\",\"pytest\",\"-q\",\"tests/test_browser.py\",\"--samples\",\"128\",\"--junitxml\",\"/home/graham/workspace/experiments/agent-skills/skills/ai-detection/reports/native-cases/browser-9d89f0f7d653450ea64c7c7b562ce910/junit.xml\"],\"unique_run_directory\":\"reports/native-cases/browser-9d89f0f7d653450ea64c7c7b562ce910\",\"reason\":\"Named project check executed; inspect independent assertions and JUnit.\",\"artifact_sha256\":{\"reports/native-cases/browser-9d89f0f7d653450ea64c7c7b562ce910/junit.xml\":\"e4a29ede136c2d29ad8e659e324382b4a6676be0f3ef702c192d09c80f28679b\",\"reports/native-cases/browser-9d89f0f7d653450ea64c7c7b562ce910/readback/browser-desktop.png\":\"922fa3bdc71d398eb79c2930206192a0b2449d20da69c0657640f19d94843780\",\"reports/native-cases/browser-9d89f0f7d653450ea64c7c7b562ce910/readback/browser-mobile.png\":\"5a9b0ff615379d2789f8b7b3df077a85bfffea36f336ca8a4ef091a2b9ea6013\",\"reports/native-cases/browser-9d89f0f7d653450ea64c7c7b562ce910/readback/browser-readback.json\":\"95407664414b3f3c911a2349cab01f3b9db9b8583cec73e78fc0b2194fc7ccac\",\"reports/native-cases/browser-9d89f0f7d653450ea64c7c7b562ce910/readback/browser-session.json\":\"6a5c17ee36719fccf55e15ef5913272dfffd750c4236abcec0438615fc151d24\",\"reports/native-cases/browser-9d89f0f7d653450ea64c7c7b562ce910/readback/http-server-39879.log\":\"8712012d84dec510eab852eb8cca4c1e89685585b6165b4323a14c23365972cd\",\"reports/native-cases/browser-9d89f0f7d653450ea64c7c7b562ce910/stderr.log\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"reports/native-cases/browser-9d89f0f7d653450ea64c7c7b562ce910/stdout.log\":\"09ccad90ec56493f4587c6321552cfa1830ad8ad4c3b8cbac59a84c4e22256e2\"}}\n",
+          "stderr": "",
+          "duration_ms": 3890.093,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c010-t02",
+          "artifact_hashes": {
+            "../reports/native-cases/browser.json": "sha256:08de66896b156c0127753d8b52df16e6e6f19abc099c72909fd029e248295555"
+          },
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "efficacy",
+      "type": "positive",
+      "case_id": "bc62d846829c-c011",
+      "required": true,
+      "outcome": "BLOCKED",
+      "problems": [
+        "precondition unmet: saw 'BLOCKED_EXTERNAL'"
+      ],
+      "argv": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--extra",
+        "dev",
+        "python",
+        "../scripts/eval_case.py",
+        "efficacy",
+        "--samples",
+        "128"
+      ],
+      "declared_evidence_class": "deterministic",
+      "effective_evidence_class": "deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "provider-agnostic-detection"
+      ],
+      "seams": [
+        "human-ground-truth"
+      ],
+      "passed_trials": 0,
+      "total_trials": 3,
+      "pass_rate": 0.0,
+      "avg_latency_ms": 198.834,
+      "trials": [
+        {
+          "exit_code": 3,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"efficacy\",\"status\":\"BLOCKED_EXTERNAL\",\"executed\":false,\"exit_code\":3,\"argv\":[],\"unique_run_directory\":\"reports/native-cases/efficacy-3c91787007f6490ebb0d6d884ad46a96\",\"reason\":\"Independent human and held-out-generator evidence has not been qualified.\",\"artifact_sha256\":{}}\n",
+          "stderr": "",
+          "duration_ms": 205.426,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c011-t00",
+          "outcome": "BLOCKED",
+          "problems": [
+            "precondition unmet: saw 'BLOCKED_EXTERNAL'"
+          ]
+        },
+        {
+          "exit_code": 3,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"efficacy\",\"status\":\"BLOCKED_EXTERNAL\",\"executed\":false,\"exit_code\":3,\"argv\":[],\"unique_run_directory\":\"reports/native-cases/efficacy-09313c3063fc4a579cdbd8fc8533d2d7\",\"reason\":\"Independent human and held-out-generator evidence has not been qualified.\",\"artifact_sha256\":{}}\n",
+          "stderr": "",
+          "duration_ms": 197.941,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c011-t01",
+          "outcome": "BLOCKED",
+          "problems": [
+            "precondition unmet: saw 'BLOCKED_EXTERNAL'"
+          ]
+        },
+        {
+          "exit_code": 3,
+          "stdout": "{\"schema_version\":\"ai_detection.case_execution.v1\",\"case\":\"efficacy\",\"status\":\"BLOCKED_EXTERNAL\",\"executed\":false,\"exit_code\":3,\"argv\":[],\"unique_run_directory\":\"reports/native-cases/efficacy-edf83c73cc574b1a88c5a90a298e0409\",\"reason\":\"Independent human and held-out-generator evidence has not been qualified.\",\"artifact_sha256\":{}}\n",
+          "stderr": "",
+          "duration_ms": 193.136,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c011-t02",
+          "outcome": "BLOCKED",
+          "problems": [
+            "precondition unmet: saw 'BLOCKED_EXTERNAL'"
+          ]
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "no-execution",
+      "type": "adversarial",
+      "case_id": "bc62d846829c-c012",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "../scripts/pytest-case.sh",
+        "tests/test_detection.py::test_features_do_not_execute_code"
+      ],
+      "declared_evidence_class": "deterministic",
+      "effective_evidence_class": "deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "no-execution"
+      ],
+      "seams": [
+        "no-execution"
+      ],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 1356.562,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": ".                                                                        [100%]\n1 passed in 0.83s\n",
+          "stderr": "",
+          "duration_ms": 1279.854,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c012-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": ".                                                                        [100%]\n1 passed in 0.91s\n",
+          "stderr": "",
+          "duration_ms": 1399.138,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c012-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": ".                                                                        [100%]\n1 passed in 0.91s\n",
+          "stderr": "",
+          "duration_ms": 1390.695,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c012-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "jev-shadow-boundary",
+      "type": "adversarial",
+      "case_id": "bc62d846829c-c013",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "../scripts/pytest-case.sh",
+        "tests/test_jev_shadow.py"
+      ],
+      "declared_evidence_class": "deterministic",
+      "effective_evidence_class": "deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "jev-shadow-boundary"
+      ],
+      "seams": [
+        "jev-shadow-boundary"
+      ],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 332.679,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "..                                                                       [100%]\n2 passed in 0.08s\n",
+          "stderr": "",
+          "duration_ms": 343.646,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c013-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "..                                                                       [100%]\n2 passed in 0.08s\n",
+          "stderr": "",
+          "duration_ms": 322.473,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c013-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "..                                                                       [100%]\n2 passed in 0.08s\n",
+          "stderr": "",
+          "duration_ms": 331.919,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c013-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "battle-smoke-convergence",
+      "type": "adversarial",
+      "case_id": "bc62d846829c-c014",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--extra",
+        "dev",
+        "python",
+        "../scripts/battle_smoke.py",
+        "--out",
+        "../evidence/battle-smoke-eval"
+      ],
+      "declared_evidence_class": "deterministic",
+      "effective_evidence_class": "deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "battle-smoke-convergence"
+      ],
+      "seams": [
+        "battle-smoke-convergence"
+      ],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 1852.146,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "{\"authorization_manifest_sha256\": \"f0a01371ec8abb9462092f7dfdfd935b9638f12ad0d98c05292005a2b5badebe\", \"baseline_source_sha256\": \"1d55a0bb9057fb79cc7b4dfcd24fc5a9e766c11f3b4867e2f84a2efbcee29c29\", \"baseline_violation_count\": 4, \"behavior_preserved\": true, \"campaign_id\": \"ai-detection-battle-smoke-001\", \"deslop_scope\": {\"covered\": [\"extra-comments\", \"generated-docs\", \"style-inconsistency\"], \"not_applicable\": [\"any-cast\", \"defensive-checks\", \"ui-slop\"], \"reused_instead_of_reinvented\": [\"authorization [REDACTED] \"Battle invariant Judge\"]}, \"detector_invariant_preserved\": true, \"does_not_prove\": [\"human authorship\", \"real-world detector efficacy\", \"qualified-detector evasion\"], \"efficacy\": \"NOT_ESTABLISHED\", \"frozen_model_sha256\": \"4c434e2076cc26135c86d9210a32151422aa99b765d1a40134ae850e1448df4e\", \"judge_after_passed\": true, \"judge_before_passed\": true, \"mechanism_only\": true, \"repaired_source_sha256\": \"64af88e418dc49a687a2ff7686d1f3ef6626e781b1d09e646a29787517d12f7f\", \"repaired_violation_count\": 0, \"schema\": \"ai_detection.battle_smoke.v1\", \"terminal_state\": \"mechanism_smoke_complete\"}\n",
+          "stderr": "",
+          "duration_ms": 1856.697,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c014-t00",
+          "artifact_hashes": {
+            "../evidence/battle-smoke-eval/campaign.json": "sha256:0e90f71ace6be3265518407cf83a68c1eaf583648913d4f695ed850dc0b21806",
+            "../evidence/battle-smoke-eval/receipt-manifest.json": "sha256:d6faab867981d67fef957c777e073c90e0acf92c916fc91ac532569338bb7bf0"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\"authorization_manifest_sha256\": \"f0a01371ec8abb9462092f7dfdfd935b9638f12ad0d98c05292005a2b5badebe\", \"baseline_source_sha256\": \"1d55a0bb9057fb79cc7b4dfcd24fc5a9e766c11f3b4867e2f84a2efbcee29c29\", \"baseline_violation_count\": 4, \"behavior_preserved\": true, \"campaign_id\": \"ai-detection-battle-smoke-001\", \"deslop_scope\": {\"covered\": [\"extra-comments\", \"generated-docs\", \"style-inconsistency\"], \"not_applicable\": [\"any-cast\", \"defensive-checks\", \"ui-slop\"], \"reused_instead_of_reinvented\": [\"authorization [REDACTED] \"Battle invariant Judge\"]}, \"detector_invariant_preserved\": true, \"does_not_prove\": [\"human authorship\", \"real-world detector efficacy\", \"qualified-detector evasion\"], \"efficacy\": \"NOT_ESTABLISHED\", \"frozen_model_sha256\": \"4c434e2076cc26135c86d9210a32151422aa99b765d1a40134ae850e1448df4e\", \"judge_after_passed\": true, \"judge_before_passed\": true, \"mechanism_only\": true, \"repaired_source_sha256\": \"64af88e418dc49a687a2ff7686d1f3ef6626e781b1d09e646a29787517d12f7f\", \"repaired_violation_count\": 0, \"schema\": \"ai_detection.battle_smoke.v1\", \"terminal_state\": \"mechanism_smoke_complete\"}\n",
+          "stderr": "",
+          "duration_ms": 1909.521,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c014-t01",
+          "artifact_hashes": {
+            "../evidence/battle-smoke-eval/campaign.json": "sha256:0e90f71ace6be3265518407cf83a68c1eaf583648913d4f695ed850dc0b21806",
+            "../evidence/battle-smoke-eval/receipt-manifest.json": "sha256:e1584fe70233c3b95b56b23309cd761acb0c426bbb9552ed9fdccc4f6926d7e5"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\"authorization_manifest_sha256\": \"f0a01371ec8abb9462092f7dfdfd935b9638f12ad0d98c05292005a2b5badebe\", \"baseline_source_sha256\": \"1d55a0bb9057fb79cc7b4dfcd24fc5a9e766c11f3b4867e2f84a2efbcee29c29\", \"baseline_violation_count\": 4, \"behavior_preserved\": true, \"campaign_id\": \"ai-detection-battle-smoke-001\", \"deslop_scope\": {\"covered\": [\"extra-comments\", \"generated-docs\", \"style-inconsistency\"], \"not_applicable\": [\"any-cast\", \"defensive-checks\", \"ui-slop\"], \"reused_instead_of_reinvented\": [\"authorization [REDACTED] \"Battle invariant Judge\"]}, \"detector_invariant_preserved\": true, \"does_not_prove\": [\"human authorship\", \"real-world detector efficacy\", \"qualified-detector evasion\"], \"efficacy\": \"NOT_ESTABLISHED\", \"frozen_model_sha256\": \"4c434e2076cc26135c86d9210a32151422aa99b765d1a40134ae850e1448df4e\", \"judge_after_passed\": true, \"judge_before_passed\": true, \"mechanism_only\": true, \"repaired_source_sha256\": \"64af88e418dc49a687a2ff7686d1f3ef6626e781b1d09e646a29787517d12f7f\", \"repaired_violation_count\": 0, \"schema\": \"ai_detection.battle_smoke.v1\", \"terminal_state\": \"mechanism_smoke_complete\"}\n",
+          "stderr": "",
+          "duration_ms": 1790.22,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "bc62d846829c-c014-t02",
+          "artifact_hashes": {
+            "../evidence/battle-smoke-eval/campaign.json": "sha256:0e90f71ace6be3265518407cf83a68c1eaf583648913d4f695ed850dc0b21806",
+            "../evidence/battle-smoke-eval/receipt-manifest.json": "sha256:a4d73b04ffd917368aa366a8b4d44c9083b2c1d3df6a1935b1ba0deeab2d554d"
+          },
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "authorization_manifest_sha256": "f0a01371ec8abb9462092f7dfdfd935b9638f12ad0d98c05292005a2b5badebe",
+  "baseline_source_sha256": "1d55a0bb9057fb79cc7b4dfcd24fc5a9e766c11f3b4867e2f84a2efbcee29c29",
+  "baseline_violation_count": 4,
+  "behavior_preserved": true,
+  "campaign_id": "ai-detection-battle-smoke-001",
+  "deslop_scope": {
+    "covered": [
+      "extra-comments",
+      "generated-docs",
+      "style-inconsistency"
+    ],
+    "not_applicable": [
+      "any-cast",
+      "defensive-checks",
+      "ui-slop"
+    ],
+    "reused_instead_of_reinvented": [
+      "authorization validator",
+      "Battle invariant Judge"
+    ]
+  },
+  "detector_invariant_preserved": true,
+  "does_not_prove": [
+    "human authorship",
+    "real-world detector efficacy",
+    "qualified-detector evasion"
+  ],
+  "efficacy": "NOT_ESTABLISHED",
+  "frozen_model_sha256": "4c434e2076cc26135c86d9210a32151422aa99b765d1a40134ae850e1448df4e",
+  "judge_after_passed": true,
+  "judge_before_passed": true,
+  "mechanism_only": true,
+  "repaired_source_sha256": "64af88e418dc49a687a2ff7686d1f3ef6626e781b1d09e646a29787517d12f7f",
+  "repaired_violation_count": 0,
+  "schema": "ai_detection.battle_smoke.v1",
+  "terminal_state": "mechanism_smoke_complete"
+}

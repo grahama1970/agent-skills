@@ -151,6 +151,16 @@
         "deterministic": true
       },
       "claim_semantics": "control_flow"
+    },
+    {
+      "id": "battle-smoke-convergence",
+      "description": "A provenance-known candidate is parsed without host execution, behavior-replayed in a networkless authorized Docker container, and recorded with frozen detector Judge receipts.",
+      "criticality": "critical",
+      "required": true,
+      "evidence_required": {
+        "deterministic": true
+      },
+      "claim_semantics": "control_flow"
     }
   ],
   "seams": [
@@ -262,6 +272,14 @@
     {
       "seam_id": "jev-shadow-boundary",
       "seam_type": "typed-boundary",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "battle-smoke-convergence",
+      "seam_type": "capability-boundary",
       "criticality": "critical",
       "required_evidence": [
         "deterministic"
@@ -760,6 +778,59 @@
         "exit_code": 0,
         "stdout_contains": [
           "2 passed"
+        ]
+      }
+    },
+    {
+      "name": "battle-smoke-convergence",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "battle-smoke-convergence"
+      ],
+      "seams": [
+        "battle-smoke-convergence"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--extra",
+        "dev",
+        "python",
+        "../scripts/battle_smoke.py",
+        "--out",
+        "../evidence/battle-smoke-eval"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "../evidence/battle-smoke-eval/campaign.json",
+            "json_pointer": "/terminal_state",
+            "equals": "mechanism_smoke_complete"
+          },
+          {
+            "path": "../evidence/battle-smoke-eval/campaign.json",
+            "json_pointer": "/efficacy",
+            "equals": "NOT_ESTABLISHED"
+          },
+          {
+            "path": "../evidence/battle-smoke-eval/campaign.json",
+            "json_pointer": "/detector_invariant_preserved",
+            "equals": true
+          },
+          {
+            "path": "../evidence/battle-smoke-eval/campaign.json",
+            "json_pointer": "/judge_after_passed",
+            "equals": true
+          },
+          {
+            "path": "../evidence/battle-smoke-eval/receipt-manifest.json",
+            "json_pointer": "/artifacts/campaign.json",
+            "min_bytes": 64
+          }
         ]
       }
     }
