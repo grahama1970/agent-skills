@@ -31,32 +31,35 @@ from pathlib import Path
 
 import httpx
 import typer
+from dotenv import load_dotenv
 from loguru import logger
 from pydantic import BaseModel, Field
 
-app = typer.Typer(add_completion=False, no_args_is_help=True)
+load_dotenv()
 
+from project_refresh import refresh_registered_projects
+
+app = typer.Typer(add_completion=False, no_args_is_help=True)
 SKILL_DIR = Path(__file__).resolve().parents[1]
 SKILLS_ROOT = SKILL_DIR.parent
 REPO_ROOT = SKILLS_ROOT.parent
 REPORTS_ROOT = REPO_ROOT / "reports" / "monitor-projects"
 
 HANDLERS = ["webgpt", "webclaude", "webkimi", "webgrok", "webgemini"]
-MEMORY_URL = os.environ.get("MEMORY_SERVICE_URL", "http://127.0.0.1:8601")
+MEMORY_URL = os.environ["MEMORY_SERVICE_URL"] if "MEMORY_SERVICE_URL" in os.environ else "http://127.0.0.1:8601"
 ROUNDTABLE_COLLECTION = "project_roundtables"
 SCHEMA = "monitor_projects.roundtable.v1"
 RESEARCH_CAP = 3
 NON_SKILL_DIRS = {"_shared", "__pycache__", ".system"}
 WATERMARK_PATH = Path(
-    os.environ.get(
-        "MONITOR_PROJECTS_WATERMARK",
-        str(Path.home() / ".local" / "state" / "monitor-projects" / "watermark.json"),
-    )
+    os.environ["MONITOR_PROJECTS_WATERMARK"]
+    if "MONITOR_PROJECTS_WATERMARK" in os.environ
+    else str(Path.home() / ".local" / "state" / "monitor-projects" / "watermark.json")
 )
 
 
-def read_watermark(repo_root: Path) -> str | None:
-    """Last commit SHA this repo was reviewed through, or None on first run."""
+def read_watermark(repo_root: Path, field: str = "last_reviewed_sha") -> str | None:
+    """Return one lane's last proven commit SHA, or None on first run."""
     if not WATERMARK_PATH.is_file():
         return None
     try:
@@ -64,7 +67,7 @@ def read_watermark(repo_root: Path) -> str | None:
     except (json.JSONDecodeError, OSError) as exc:
         logger.error("watermark unreadable ({}); falling back to time window", exc)
         return None
-    sha = (data.get("repos") or {}).get(str(repo_root), {}).get("last_reviewed_sha")
+    sha = (data.get("repos") or {}).get(str(repo_root.resolve()), {}).get(field)
     if not sha:
         return None
     # A watermark naming a commit this checkout does not have is worse than
@@ -76,21 +79,27 @@ def read_watermark(repo_root: Path) -> str | None:
     return sha
 
 
-def write_watermark(repo_root: Path, sha: str, run_id: str) -> None:
-    """Advance the watermark. Only ever called after a successful live run."""
+def write_watermark(
+    repo_root: Path,
+    sha: str,
+    run_id: str,
+    field: str = "last_reviewed_sha",
+) -> None:
+    """Atomically advance one lane's watermark after verified persistence."""
     data: dict = {"schema": "monitor_projects.watermark.v1", "repos": {}}
     if WATERMARK_PATH.is_file():
         try:
             data = json.loads(WATERMARK_PATH.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError) as exc:
             logger.error("watermark unreadable, recreating: {}", exc)
-    data.setdefault("repos", {})[str(repo_root)] = {
-        "last_reviewed_sha": sha,
-        "last_reviewed_at": datetime.now(UTC).isoformat(),
-        "run_id": run_id,
-    }
+    repo_state = data.setdefault("repos", {}).setdefault(str(repo_root.resolve()), {})
+    repo_state[field] = sha
+    repo_state[f"{field}_at"] = datetime.now(UTC).isoformat()
+    repo_state[f"{field}_run_id"] = run_id
     WATERMARK_PATH.parent.mkdir(parents=True, exist_ok=True)
-    WATERMARK_PATH.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    temporary = WATERMARK_PATH.with_suffix(".tmp")
+    temporary.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    temporary.replace(WATERMARK_PATH)
 
 
 @dataclass(frozen=True, slots=True)
@@ -100,14 +109,30 @@ class AmendedSkill:
     commits: tuple[str, ...]
 
 
-class StoreResponse(BaseModel):
-    """Boundary model for the memory daemon /store reply."""
+class AskEnvelope(BaseModel):
+    run_dir: str | None = None
+    run_directory: str | None = None
+    model_config = {"extra": "allow"}
 
+
+class AskInvocation(BaseModel):
+    rc: int
+    target: str
+    ask: AskEnvelope | None = None
+    raw_tail: str | None = None
+    stderr_tail: str | None = None
+
+
+class SeatArtifact(BaseModel):
+    handler: str = Field(min_length=1)
+    path: Path
+    response_text: str = Field(min_length=1, max_length=8000)
+
+
+class StoreResponse(BaseModel):
     stored: bool | None = None
     key: str | None = Field(default=None, alias="_key")
-
     model_config = {"populate_by_name": True, "extra": "allow"}
-
 
 @dataclass
 class RunContext:
@@ -147,27 +172,29 @@ def _run(
 def discover_amended(
     repo_root: Path, since_hours: int = 24, use_watermark: bool = True
 ) -> tuple[list[AmendedSkill], dict]:
-    """Amended skills = skills/<name>/ paths touched since the last review.
+    """Return amended skill directories from the resumable commit range.
 
-    Selection prefers a commit watermark (`<last_reviewed>..HEAD`) over a wall
-    clock window, because a window cannot resume: if a night is missed, the
-    next run silently skips everything in the gap and its receipt still looks
-    complete. The window remains the first-run fallback only.
-
-    Fetches first — `git log` sees only what the checkout has, and this repo is
-    routinely behind origin, so an unfetched checkout would hide skills other
-    lanes already pushed.
+    A verified watermark is preferred; first runs use a bounded time window.
+    Repositories with an origin are fetched and read from ``origin/main``.
     """
-    _run(["git", "fetch", "-q", "origin"], timeout=180, cwd=repo_root)
+    has_origin = _run(["git", "remote", "get-url", "origin"], timeout=30, cwd=repo_root)[0] == 0
+    target_ref = "HEAD"
+    if has_origin:
+        fetch_rc, _, fetch_err = _run(["git", "fetch", "-q", "origin", "main"], timeout=180, cwd=repo_root)
+        if fetch_rc != 0:
+            logger.error("git fetch origin/main failed: {}", fetch_err.strip())
+            raise typer.Exit(code=2)
+        target_ref = "origin/main"
     watermark = read_watermark(repo_root) if use_watermark else None
     if watermark:
-        rev_args = [f"{watermark}..HEAD"]
+        rev_args = [f"{watermark}..{target_ref}"]
         selection = {"mode": "watermark", "since_sha": watermark}
     else:
         rev_args = [f"--since={since_hours} hours ago"]
         selection = {"mode": "time_window", "since_hours": since_hours}
     rc, out, err = _run(
-        ["git", "log", *rev_args, "--name-only", "--pretty=format:@@%h %s"],
+        ["git", "log", *rev_args, "--name-only", "--pretty=format:@@%h %s", target_ref] if not watermark
+        else ["git", "log", *rev_args, "--name-only", "--pretty=format:@@%h %s"],
         timeout=60,
         cwd=repo_root,
     )
@@ -191,7 +218,7 @@ def discover_amended(
                 continue
             touched.setdefault(name, set()).add(current_commit)
             counts[name] = counts.get(name, 0) + 1
-    head = _run(["git", "rev-parse", "HEAD"], timeout=30, cwd=repo_root)[1].strip()
+    head = _run(["git", "rev-parse", target_ref], timeout=30, cwd=repo_root)[1].strip()
     selection["head_sha"] = head
     return (
         sorted(
@@ -365,7 +392,7 @@ slice is closed.
 """
 
 
-def run_roundtable(ctx: RunContext, packet_path: Path) -> dict:
+def run_roundtable(ctx: RunContext, packet_path: Path) -> AskInvocation:
     """Compile (and unless dry-run, execute) the roundtable through /ask."""
     target = f"monitor-projects-{ctx.run_id.split('T')[0]}"
     args = [
@@ -386,27 +413,29 @@ def run_roundtable(ctx: RunContext, packet_path: Path) -> dict:
         args.extend(["--execute", "--poll-timeout-seconds", "3600"])
 
     rc, out, err = _run(args, timeout=4200, cwd=SKILLS_ROOT / "ask")
-    result: dict = {"rc": rc, "target": target}
     try:
         start = out.index("{")
-        result["ask"] = json.loads(out[start:])
-    except (ValueError, json.JSONDecodeError):
-        logger.error("ask output was not JSON (rc={}): {}", rc, (err or out).strip()[:400])
-        result["ask"] = None
-        result["raw_tail"] = out.strip()[-2000:]
-        result["stderr_tail"] = err.strip()[-1000:]
-    return result
+        envelope = AskEnvelope.model_validate(json.loads(out[start:]))
+        return AskInvocation(rc=rc, target=target, ask=envelope)
+    except (ValueError, json.JSONDecodeError) as exc:
+        logger.error("ask output failed typed validation (rc={}): {}", rc, exc)
+        return AskInvocation(
+            rc=rc,
+            target=target,
+            raw_tail=out.strip()[-2000:],
+            stderr_tail=err.strip()[-1000:],
+        )
 
 
-def synthesize(ctx: RunContext, ask_result: dict, state_receipts: list[dict] | None = None,
+def synthesize(ctx: RunContext, ask_result: AskInvocation, state_receipts: list[dict] | None = None,
                selection: dict | None = None) -> dict:
     """Deterministic synthesis skeleton with per-seat status and pointers.
 
     Attributed prose synthesis is done by the project agent reading the seat
     responses; this function never fabricates consensus.
     """
-    ask = ask_result.get("ask") or {}
-    run_dir = ask.get("run_dir") or ask.get("run_directory")
+    ask = ask_result.ask
+    run_dir = (ask.run_dir or ask.run_directory) if ask else None
     seat_status: dict[str, str] = {}
     seat_responses: dict[str, str] = {}
     if ctx.dry_run:
@@ -415,9 +444,15 @@ def synthesize(ctx: RunContext, ask_result: dict, state_receipts: list[dict] | N
         for handler in HANDLERS:
             matches = sorted(Path(run_dir).rglob(f"*{handler}*response*"))
             if matches:
-                text = matches[0].read_text(encoding="utf-8", errors="replace")
+                text = matches[0].read_text(encoding="utf-8", errors="replace")[:8000]
+                try:
+                    artifact = SeatArtifact(handler=handler, path=matches[0], response_text=text)
+                except ValueError as exc:
+                    logger.error("{} response failed typed validation: {}", handler, exc)
+                    seat_status[handler] = "NEEDS_ATTENTION_invalid_response_artifact"
+                    continue
                 seat_status[handler] = "responded"
-                seat_responses[handler] = text[:8000]
+                seat_responses[handler] = artifact.response_text
             else:
                 seat_status[handler] = "NEEDS_ATTENTION_no_response_artifact"
     else:
@@ -434,8 +469,8 @@ def synthesize(ctx: RunContext, ask_result: dict, state_receipts: list[dict] | N
         "topology": "concurrent",
         "dry_run": ctx.dry_run,
         "selection": selection or {},
-        "ask_target": ask_result.get("target"),
-        "ask_rc": ask_result.get("rc"),
+        "ask_target": ask_result.target,
+        "ask_rc": ask_result.rc,
         "ask_compiled": bool(ask),
         "ask_run_dir": run_dir,
         "project_state_sweep": {
@@ -470,7 +505,8 @@ def store_receipt(receipt: dict) -> bool:
             "solution": (
                 f"Roundtable {receipt['run_id']} status={receipt['status']} "
                 f"seats={json.dumps(receipt['seat_status'])} "
-                f"full receipt: {ROUNDTABLE_COLLECTION}/{key} ask_run_dir={receipt['ask_run_dir']}"
+                f"full receipt: {ROUNDTABLE_COLLECTION}/{key} "
+                f"ask_run_dir={receipt.get('ask_run_dir') or 'not_applicable'}"
             ),
             "tags": ["monitor-projects", "roundtable", receipt["date"], *receipt["skills_reviewed"][:8]],
         }
@@ -500,6 +536,29 @@ def discover(json_out: bool = typer.Option(True, "--json/--no-json"),
     typer.echo(json.dumps(payload, indent=2) if json_out else "\n".join(s.name for s in amended))
 
 
+@app.command("refresh-projects")
+def refresh_projects(since_hours: int = typer.Option(24, "--since-hours")) -> None:
+    """Refresh registered-project commit Q&A through governed Memory lifecycle."""
+    run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    results = refresh_registered_projects(
+        SKILLS_ROOT / "project-watchdog" / "registry" / "projects.json",
+        read_watermark,
+        write_watermark,
+        run_id,
+        MEMORY_URL,
+        since_hours,
+    )
+    payload = {
+        "schema": "monitor_projects.project_refresh.v1",
+        "run_id": run_id,
+        "projects": results,
+        "status": "ok" if all(item.get("status") == "stored_verified" for item in results) else "NEEDS_ATTENTION",
+    }
+    typer.echo(json.dumps(payload, indent=2))
+    if payload["status"] != "ok":
+        raise typer.Exit(code=1)
+
+
 @app.command()
 def nightly(dry_run: bool = typer.Option(False, "--dry-run"),
             since_hours: int = typer.Option(24, "--since-hours")) -> None:
@@ -508,21 +567,41 @@ def nightly(dry_run: bool = typer.Option(False, "--dry-run"),
     run_dir = REPORTS_ROOT / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
     ctx = RunContext(run_id=run_id, run_dir=run_dir, dry_run=dry_run)
+    project_refresh = [] if dry_run else refresh_registered_projects(
+        SKILLS_ROOT / "project-watchdog" / "registry" / "projects.json",
+        read_watermark,
+        write_watermark,
+        run_id,
+        MEMORY_URL,
+        since_hours,
+    )
+    (run_dir / "project_refresh.json").write_text(
+        json.dumps(project_refresh, indent=2), encoding="utf-8"
+    )
+    refresh_ok = dry_run or all(item.get("status") == "stored_verified" for item in project_refresh)
     ctx.amended, selection = discover_amended(REPO_ROOT, since_hours)
 
     if not ctx.amended:
         receipt = {
             "schema": SCHEMA, "run_id": run_id, "date": run_id.split("T")[0],
             "created_at": datetime.now(UTC).isoformat(), "skills_reviewed": [],
-            "status": "no_changes", "dry_run": dry_run, "selection": selection,
+            "status": "no_changes" if refresh_ok else "NEEDS_ATTENTION",
+            "dry_run": dry_run, "selection": selection,
+            "project_refresh": project_refresh,
+            "ask_run_dir": None,
         }
         (run_dir / "receipt.json").write_text(json.dumps(receipt, indent=2), encoding="utf-8")
         if not dry_run:
-            store_receipt(receipt)
-            # Nothing to review is a successful review of nothing: advance so the
-            # next run does not re-scan the same empty range.
-            write_watermark(REPO_ROOT, selection["head_sha"], run_id)
+            receipt["stored_verified"] = store_receipt(receipt)
+            if refresh_ok and receipt["stored_verified"]:
+                # Nothing to review is a successful review of nothing: advance so the
+                # next run does not re-scan the same empty range.
+                write_watermark(REPO_ROOT, selection["head_sha"], run_id)
+                receipt["watermark_advanced_to"] = selection["head_sha"]
+            (run_dir / "receipt.json").write_text(json.dumps(receipt, indent=2), encoding="utf-8")
         typer.echo(json.dumps(receipt, indent=2))
+        if not dry_run and (not refresh_ok or not receipt.get("stored_verified")):
+            raise typer.Exit(code=1)
         return
 
     logger.info("amended skills: {}", [s.name for s in ctx.amended])
@@ -541,6 +620,9 @@ def nightly(dry_run: bool = typer.Option(False, "--dry-run"),
 
     ask_result = run_roundtable(ctx, packet_path)
     receipt = synthesize(ctx, ask_result, state_receipts, selection)
+    receipt["project_refresh"] = project_refresh
+    if not refresh_ok:
+        receipt["status"] = "NEEDS_ATTENTION"
     (run_dir / "receipt.json").write_text(json.dumps(receipt, indent=2), encoding="utf-8")
 
     if dry_run:
@@ -692,16 +774,24 @@ def discuss(question: str) -> None:
 
 
 @app.command()
-def register(cron: str = typer.Option("30 2 * * *", "--cron")) -> None:
-    """Register the nightly job with /scheduler."""
-    rc, out, err = _run(
-        [str(SKILLS_ROOT / "scheduler" / "run.sh"), "register",
-         "--name", "monitor-projects-nightly",
-         "--cron", cron,
-         "--command", str(SKILL_DIR / "run.sh") + " nightly"],
+def register() -> None:
+    """Install the centralized Project Watchdog cron and remove the legacy job."""
+    unregister_rc, unregister_out, unregister_err = _run(
+        [str(SKILLS_ROOT / "scheduler" / "run.sh"), "unregister", "monitor-projects-nightly"],
         timeout=60,
     )
-    typer.echo(out.strip() or err.strip())
+    if unregister_rc not in {0, 1}:
+        logger.error("legacy scheduler unregister failed: {}", unregister_err.strip())
+        raise typer.Exit(code=1)
+    rc, out, err = _run(
+        [str(SKILLS_ROOT / "project-watchdog" / "run.sh"), "install-cron", "--apply"],
+        timeout=60,
+    )
+    typer.echo(json.dumps({
+        "centralized": rc == 0,
+        "watchdog": out.strip() or err.strip(),
+        "legacy_scheduler": unregister_out.strip() or unregister_err.strip(),
+    }, indent=2))
     if rc != 0:
         raise typer.Exit(code=1)
 

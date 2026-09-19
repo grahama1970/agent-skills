@@ -32,6 +32,10 @@ LOG_PATH = Path(os.environ.get("PROJECT_WATCHDOG_LOG", str(STATE_ROOT / "events.
 COOLDOWN_SECONDS = int(os.environ.get("PROJECT_WATCHDOG_COOLDOWN_SECONDS", "1800"))
 OWNER = os.environ.get("PROJECT_WATCHDOG_OWNER", f"project-watchdog-v2:{os.uname().nodename}:{os.getpid()}")
 PI_EXTENSION = Path(os.environ.get("PROJECT_WATCHDOG_PI_EXTENSION", "/home/graham/workspace/experiments/pi-subagents/index.ts"))
+MAINTENANCE_ROOT = STATE_ROOT / "maintenance"
+MONITOR_PROJECTS_STATE = MAINTENANCE_ROOT / "monitor-projects.json"
+MONITOR_PROJECTS_LOCK = MAINTENANCE_ROOT / "monitor-projects.lock"
+MONITOR_PROJECTS_LOG = MAINTENANCE_ROOT / "monitor-projects.log"
 
 HUMAN_HOLD_LABELS = {
     "agent-blocked", "maintainer-active", "maintainer-blocked", "next:human", "human-hold",
@@ -638,6 +642,78 @@ class Watchdog:
         return path
 
 
+def _claim_monitor_projects_day(now: datetime | None = None) -> dict[str, Any]:
+    """Atomically claim today's post-02:30 Monitor Projects maintenance slot."""
+    local_now = now or datetime.now().astimezone()
+    if (local_now.hour, local_now.minute) < (2, 30):
+        return {"due": False, "reason": "before_02_30_local"}
+    day = local_now.date().isoformat()
+    MAINTENANCE_ROOT.mkdir(parents=True, exist_ok=True)
+    lock_fd = os.open(MONITOR_PROJECTS_LOCK, os.O_CREAT | os.O_RDWR, 0o600)
+    try:
+        fcntl.flock(lock_fd, fcntl.LOCK_EX)
+        state: dict[str, Any] = {}
+        if MONITOR_PROJECTS_STATE.is_file():
+            try:
+                state = json.loads(MONITOR_PROJECTS_STATE.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError) as exc:
+                log_event("monitor-projects-maintenance", "STATE_INVALID", error=str(exc))
+        if state.get("claimed_day") == day:
+            return {"due": False, "reason": "already_claimed", **state}
+        state = {
+            "schema": "project_watchdog.monitor_projects_maintenance.v1",
+            "claimed_day": day,
+            "claimed_at": utc_now(),
+            "status": "launching",
+        }
+        temporary = MONITOR_PROJECTS_STATE.with_suffix(".tmp")
+        temporary.write_text(json.dumps(state, indent=2), encoding="utf-8")
+        temporary.replace(MONITOR_PROJECTS_STATE)
+        return {"due": True, **state}
+    finally:
+        os.close(lock_fd)
+
+
+def maybe_launch_monitor_projects(now: datetime | None = None) -> dict[str, Any]:
+    """Launch Monitor Projects once daily without holding the ticket cron lock."""
+    claim = _claim_monitor_projects_day(now)
+    if not claim.get("due"):
+        return claim
+    command = [
+        "flock", "-n", str(MONITOR_PROJECTS_LOCK),
+        str(SKILLS / "monitor-projects" / "run.sh"), "nightly",
+    ]
+    MAINTENANCE_ROOT.mkdir(parents=True, exist_ok=True)
+    log_handle = MONITOR_PROJECTS_LOG.open("ab")
+    try:
+        process = subprocess.Popen(
+            command,
+            stdin=subprocess.DEVNULL,
+            stdout=log_handle,
+            stderr=subprocess.STDOUT,
+            start_new_session=True,
+            close_fds=True,
+        )
+    except OSError as exc:
+        log_handle.close()
+        failed = {**claim, "due": False, "status": "launch_failed", "error": str(exc)}
+        write_json(MONITOR_PROJECTS_STATE, failed)
+        log_event("monitor-projects-maintenance", "LAUNCH_FAILED", error=str(exc))
+        return failed
+    log_handle.close()
+    launched = {
+        **claim,
+        "due": False,
+        "status": "launched",
+        "pid": process.pid,
+        "command": command,
+        "log_path": str(MONITOR_PROJECTS_LOG),
+    }
+    write_json(MONITOR_PROJECTS_STATE, launched)
+    log_event("monitor-projects-maintenance", "LAUNCHED", pid=process.pid, log=str(MONITOR_PROJECTS_LOG))
+    return launched
+
+
 def cron_line() -> str:
     return f"*/15 * * * * flock -n {shlex.quote(str(LOCK_PATH))} {shlex.quote(str(ROOT / 'run.sh'))} tick --apply --project all --lock-held"
 
@@ -707,6 +783,8 @@ def main(argv: list[str] | None = None) -> int:
             emit(wd.status())
         elif args.cmd == "tick":
             result = wd.tick(args.apply, args.project, args.lock_held)
+            if args.apply and args.project == "all":
+                result["maintenance"] = maybe_launch_monitor_projects()
             emit(result)
             if result.get("outcome") == "invalid_project":
                 return 2

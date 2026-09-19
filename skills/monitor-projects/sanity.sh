@@ -20,6 +20,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path("scripts").resolve()))
 import monitor_projects as mp  # noqa: E402
+import project_refresh as pr  # noqa: E402
 
 
 def git(repo, *args):
@@ -87,6 +88,32 @@ with tempfile.TemporaryDirectory(prefix="monitor-projects-sanity-") as tmp:
     finally:
         mp.WATERMARK_PATH = orig_wm
 
+    # Registered-project positive control uses real git history and validates
+    # deduplication when two registry entries share one repository root.
+    remote = Path(tmp) / "remote.git"
+    subprocess.run(["git", "init", "--bare", "-q", str(remote)], check=True, timeout=30)
+    git(repo, "remote", "add", "origin", str(remote))
+    git(repo, "branch", "-M", "main")
+    git(repo, "push", "-q", "-u", "origin", "main")
+    registry = Path(tmp) / "projects.json"
+    registry.write_text(json.dumps({"projects": [
+        {"project_id": "demo", "worktree": str(repo), "status": "registered"},
+        {"project_id": "duplicate", "worktree": str(repo), "status": "registered"},
+    ]}), encoding="utf-8")
+    projects = pr.load_registered_projects(registry)
+    if [p.project_id for p in projects] != ["demo"]:
+        failures.append(f"registry dedupe failed: {[p.project_id for p in projects]}")
+    selection = pr.discover_project_commits(projects[0], None, 24)
+    if not selection.commits or selection.head_sha != head:
+        failures.append("registered-project discovery did not return origin/main commits")
+    evidence = pr._activity_document(selection.commits[-1])
+    version = pr._version_document(selection.commits[-1], evidence)
+    if not version["claims"][0]["evidence_refs"][0].startswith("project_activity/"):
+        failures.append("project-memory Q&A is not bound to project_activity evidence")
+    forbidden = {"embedding", "embedding_visual", "vector"}.intersection(version)
+    if forbidden:
+        failures.append(f"project-memory Q&A contains forbidden vector fields: {sorted(forbidden)}")
+
 
 # Packet shape + safety boundary: build a packet with stubbed context sources
 # (no live downstream calls, no /store, no --execute).
@@ -113,5 +140,5 @@ if "--execute" in flat_calls or "/store" in flat_calls:
 if failures:
     print(json.dumps({"status": "FAIL", "failures": failures}, indent=2))
     raise SystemExit(1)
-print(json.dumps({"status": "PASS", "gates": ["positive", "negative", "noise", "packet-shape", "safety", "watermark-range", "watermark-idempotent", "watermark-unknown-fallback"]}))
+print(json.dumps({"status": "PASS", "gates": ["positive", "negative", "noise", "packet-shape", "safety", "watermark-range", "watermark-idempotent", "watermark-unknown-fallback", "registered-project-dedupe", "project-memory-evidence-binding", "no-inline-vectors"]}))
 PY

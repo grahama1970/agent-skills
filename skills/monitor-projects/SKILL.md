@@ -1,8 +1,9 @@
 ---
 name: monitor-projects
 description: >
-  Nightly cron roundtable review of every skill amended during the day.
-  Discovers amended skills from git history, builds an equal-context packet
+  Project Watchdog-composed nightly refresh of registered project knowledge
+  plus a roundtable review of every skill amended during the day. Discovers
+  project commits and amended skills from git history, builds an equal-context packet
   from /project-state, /ops-workstation, and /brave-search, convenes a
   five-seat browser roundtable (webgpt, webclaude, webkimi, webgrok,
   webgemini) through /ask tau-dag, and stores the attributed synthesis in
@@ -22,6 +23,7 @@ provides:
   - nightly-skill-review
   - roundtable-receipts
   - amended-skill-discovery
+  - registered-project-memory-refresh
 composes:
   - ask
   - memory
@@ -29,7 +31,7 @@ composes:
   - project-taxonomy
   - brave-search
   - ops-workstation
-  - scheduler
+  - project-watchdog
   - agentic-evals
 complies:
   - best-practices-skills
@@ -49,14 +51,24 @@ disciplines:
 
 # Monitor Projects
 
-Nightly, on a scheduler cron, review **the skills amended during the day** —
+Nightly, composed by the single `$project-watchdog` cron, refresh source-backed
+Q&A for every registered project with new commits, then review **the skills amended during the day** —
 not the whole agent-skills project (agent-skills is a collection of skills;
 the unit of review is the skill directory) — via a five-seat concurrent
 roundtable, then store the result in `/memory` for later recall.
 
 ## Pipeline (one `nightly` run)
 
-1. **Discover** — fetches, then selects skills whose `skills/<name>/` paths
+1. **Refresh registered projects** — validates Project Watchdog's registry,
+   deduplicates shared Git roots, fetches `origin/main`, and selects commits
+   after each repository's independent `project_qa_last_sha` watermark. Each
+   commit becomes a deterministic `project_activity` evidence row plus a
+   source-backed question/answer in Memory's governed `project_memory_versions`
+   lifecycle. The skill stages and promotes through `/project-memory/*`, then
+   reads back the exact active head before advancing that project's watermark.
+   It never writes a parallel literal `project_memory` collection, bypasses the
+   lifecycle authority, or stores vector arrays in ArangoDB.
+2. **Discover amended skills** — fetches, then selects skills whose `skills/<name>/` paths
    were touched since the **last reviewed commit** (`<watermark>..HEAD`).
    The watermark lives at `~/.local/state/monitor-projects/watermark.json`
    (override with `MONITOR_PROJECTS_WATERMARK`) and advances **only after a
@@ -66,12 +78,12 @@ roundtable, then store the result in `/memory` for later recall.
    silently skip everything in the gap while its receipt still looked
    complete. An unknown watermark falls back to the window rather than
    selecting nothing. No amendments → `no_changes` receipt, exit 0.
-2. **Context** — build the shared packet from:
+3. **Context** — build the shared packet from:
    - `/project-state report --json --cached` (project readiness evidence),
    - `/ops-workstation` quick health (host context),
    - `/brave-search web` for each amended skill's load-bearing topic
      (capped, external evidence per `/best-practices-roundtable`).
-3. **Roundtable** — one `/ask` compile+execute, per
+4. **Roundtable** — one `/ask` compile+execute, per
    `/best-practices-roundtable` (equal context, concurrent topology, no
    privileged seat):
 
@@ -83,10 +95,10 @@ roundtable, then store the result in `/memory` for later recall.
      --topology concurrent --execute --poll-timeout-seconds 3600 --json
    ```
 
-4. **Synthesize** — per-seat status (responded / blocked / stale tab /
+5. **Synthesize** — per-seat status (responded / blocked / stale tab /
    timed out), common ground, attributed dissent, executable slices. A
    missing seat is `NEEDS_ATTENTION`, never silent consensus.
-5. **Store** — via the memory daemon only (NEVER direct ArangoDB):
+6. **Store** — via the memory daemon only (NEVER direct ArangoDB):
    - full receipt → `POST /store` `collection: project_roundtables`
      (searchable via `/memory recall`; the memory repo registers this
      collection in the ArangoSearch view per `arango-recall-all-collections`);
@@ -106,21 +118,16 @@ cd skills/monitor-projects
 ./run.sh nightly --dry-run        # everything except --execute and /store
 ./run.sh last                     # recall the most recent roundtable from /memory
 ./run.sh discuss "<question>"     # recall roundtable receipts relevant to a question
-./run.sh register                 # register the nightly cron with /scheduler
+./run.sh register                 # install centralized Project Watchdog cron; remove legacy job
 ```
 
 ## Cron
 
-`./run.sh register` runs:
-
-```bash
-skills/scheduler/run.sh register \
-  --name monitor-projects-nightly \
-  --cron "30 2 * * *" \
-  --command "skills/monitor-projects/run.sh nightly"
-```
-
-02:30 sits before the 03:00–04:15 monitor-taxonomy/monitor-skills window.
+`./run.sh register` removes the legacy `monitor-projects-nightly` scheduler job
+and installs Project Watchdog's single `*/15` cron. After the ticket tick has
+run and released its work, Project Watchdog launches `monitor-projects nightly`
+at most once per local day after 02:30 under a separate maintenance lock. Ticket
+selection and leases never wait for the roundtable.
 
 ## Retrieval and discussion
 

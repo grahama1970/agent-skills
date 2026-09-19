@@ -1,54 +1,51 @@
 {
-  "schema": "agentic_eval.fixture.v1",
+  "version": 2,
   "skill": "monitor-projects",
   "trials": 3,
+  "mocked": false,
+  "live": true,
+  "proof_scope": "deterministic git discovery and safety gates plus live Memory project_activity, governed project-memory lifecycle, ArangoSearch, and Qdrant read-back",
+  "claims": {
+    "proves": "registered project commits can become source-backed active project-memory Q&A before their independent watermarks advance, and dry-run skill review remains mutation-free",
+    "does_not_prove": "live five-browser roundtable transport or architectural answer quality beyond deterministic commit facts"
+  },
   "cases": [
     {
-      "id": "discover-positive",
-      "case_type": "positive-control",
-      "command": "./run.sh discover --json --since-hours 24",
-      "assertions": [
-        "exit code 0",
-        "output is a JSON array",
-        "every entry has name, files_changed, commits"
-      ]
-    },
-    {
-      "id": "nightly-dry-run-safety",
-      "case_type": "safety-boundary",
-      "command": "./run.sh nightly --dry-run",
-      "assertions": [
-        "no POST to memory /store occurs",
-        "ask invocation (if any) omits --execute",
-        "receipt.json written under reports/monitor-projects/<run-id>/",
-        "receipt seat_status marks every seat not_run_dry_run"
-      ]
-    },
-    {
-      "id": "no-changes-negative",
-      "case_type": "negative-control",
-      "command": "./run.sh nightly --dry-run --since-hours 0",
-      "assertions": [
-        "status is no_changes",
-        "no roundtable is convened"
-      ]
-    },
-    {
-      "id": "live-nightly",
-      "case_type": "adversarial-live",
-      "command": "./run.sh nightly",
-      "mocked": false,
-      "proof_scope": "live browser roundtable + memory read-back",
-      "claims": {
-        "proves": "five-seat concurrent roundtable executes and receipt is recallable via /memory",
-        "does_not_prove": "quality of seat responses or closure of executable slices"
+      "name": "registered-project-memory-refresh",
+      "type": "positive",
+      "real_world": true,
+      "command": ["uv", "run", "--project", "..", "python", "../scripts/eval_project_memory_refresh.py"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["\"status\": \"PASS\"", "\"semantic_sync_state\": \"synced\"", "\"watermark_advanced_after_readback\": true"]
       },
-      "assertions": [
-        "receipt status ok requires all five seats responded",
-        "stored_verified true only after /memory recall read-back surfaces the receipt",
-        "missing seat yields NEEDS_ATTENTION and exit code 1, never silent consensus"
-      ]
+      "readback": true,
+      "evidence_class": "live_e2e"
+    },
+    {
+      "name": "deterministic-sanity-contract",
+      "type": "positive",
+      "real_world": false,
+      "command": ["bash", "../sanity.sh"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["\"status\": \"PASS\"", "project-memory-evidence-binding", "no-inline-vectors"]
+      },
+      "readback": true,
+      "evidence_class": "deterministic"
+    },
+    {
+      "name": "nightly-dry-run-safety",
+      "type": "negative",
+      "real_world": false,
+      "command": ["../run.sh", "nightly", "--dry-run", "--since-hours", "0"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["\"dry_run\": true"]
+      },
+      "readback": true,
+      "evidence_class": "deterministic"
     }
   ],
-  "readiness_vocabulary": ["READY", "USABLE_WITH_GAPS", "NOT_READY", "NOT_ESTABLISHED"]
+  "readiness": "USABLE_WITH_GAPS"
 }

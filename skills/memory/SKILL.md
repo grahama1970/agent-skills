@@ -865,6 +865,31 @@ fields, verifies `persona_memory_search` view coverage, checks Qdrant text
 identity, and proves the configured multimodal Qdrant collection can query both
 `text_mm` and `image_mm` vectors.
 
+## Governed Project Memory: Source-Backed Project Q&A
+
+Project questions, architecture explanations, decisions, and commit summaries
+use the existing governed lifecycle collections, not a parallel literal
+`project_memory` collection:
+
+- `project_memory_versions` stores candidate, active, and historical versions;
+- `project_memory_heads` identifies the single active version for a
+  `(project_id, topic_id)` pair;
+- `project_memory_runs` records lifecycle execution;
+- `project_memory_edges` binds versions to evidence and lineage.
+
+Writers first store immutable evidence such as a `project_activity` commit row,
+then call `/project-memory/stage`, `/project-memory/promote`, and
+`/project-memory/status`. Active/current writes through generic `/store` or
+`/upsert` are rejected. A successful write is established only when the exact
+active head and source digest are independently read back. Question/answer
+records should include `question`, `answer`, `last_verified_commit`,
+`source_refs`, evidence-bound `claims`, and clean `retrieval_text`. ArangoDB
+stores pointer metadata only; Qdrant semantic sync remains Memory-owned.
+
+`$monitor-projects` is the scheduled producer for deterministic commit Q&A. It
+must retain a project's prior watermark when staging, promotion, semantic sync,
+or exact read-back fails.
+
 ## Project Activity Memory: Code Work By Day/Week
 
 Use `project_activity` when a project agent needs to answer questions like:

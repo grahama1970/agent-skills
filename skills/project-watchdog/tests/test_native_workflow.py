@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+from datetime import datetime
 from pathlib import Path
 import tempfile
 import unittest
@@ -95,6 +96,20 @@ class NativeWorkflowTests(unittest.TestCase):
                 child = watchdog.pi_environment()
         self.assertEqual(child["PI_SUBAGENT_PI_BINARY"], "/global/bin/pi")
         self.assertEqual(child["PATH"], "/global/bin")
+
+    def test_monitor_projects_daily_claim_is_atomic_and_bounded(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with patch.object(watchdog, "MAINTENANCE_ROOT", root), \
+                 patch.object(watchdog, "MONITOR_PROJECTS_STATE", root / "state.json"), \
+                 patch.object(watchdog, "MONITOR_PROJECTS_LOCK", root / "lock"):
+                before = watchdog._claim_monitor_projects_day(datetime(2026, 9, 20, 2, 29))
+                first = watchdog._claim_monitor_projects_day(datetime(2026, 9, 20, 2, 30))
+                second = watchdog._claim_monitor_projects_day(datetime(2026, 9, 20, 4, 0))
+        self.assertFalse(before["due"])
+        self.assertTrue(first["due"])
+        self.assertFalse(second["due"])
+        self.assertEqual(second["reason"], "already_claimed")
 
     def test_complete_native_workflow_passes(self) -> None:
         result = self.parse(event_stream())

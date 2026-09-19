@@ -19,6 +19,14 @@ Path per tick:
 
 Cron owns timing only. This skill owns selection, lease, proof, close/release, cooldown, and receipts. Pi subagents owns the fixer-reviewer sequence. The controller reads the native workflow result, including explicit `COMPLETE` and `PASS` statuses, before running proof.
 
+After each ticket tick, the same cron entry checks a separate daily maintenance
+claim. At most once per local day after 02:30 it launches
+`skills/monitor-projects/run.sh nightly` under its own nonblocking lock and
+returns immediately. Monitor Projects therefore cannot hold the issue lease or
+delay the ticket loop. It owns its reports and project watermarks; Project
+Watchdog owns the single timer and launch state. Do not install the legacy
+`monitor-projects-nightly` scheduler job alongside this composition.
+
 ## CLI
 
 ```bash
