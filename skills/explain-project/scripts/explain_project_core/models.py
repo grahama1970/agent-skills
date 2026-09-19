@@ -524,6 +524,12 @@ class Projection(StrictModel):
 
 class TeleprompterProjection(Projection):
     title: str | None = None
+    spoken: str | None = None
+    answer_status: Literal["READY", "PARTIAL", "CLARIFY", "NO_MATCH"] = "PARTIAL"
+    question_intent: Literal[
+        "direct", "source", "flow", "failure", "proof", "debugger",
+        "diagram", "scale", "tradeoff", "comparison", "unknown",
+    ] = "unknown"
     bullets: list[str] = Field(default_factory=list)
     proof_boundary: str | None = None
     confidence: Confidence | None = None

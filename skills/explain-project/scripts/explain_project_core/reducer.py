@@ -126,6 +126,101 @@ def _latest_debugger_proof(
     return matching[-1].proof if matching else None
 
 
+def _question_intent(question: QuestionInput | None) -> str:
+    if question is None:
+        return "unknown"
+    text = question.text.lower()
+    checks = (
+        ("comparison", ("compare", "difference between", "versus")),
+        ("debugger", ("debugger", "breakpoint", "runtime state")),
+        ("diagram", ("diagram", "architecture map", "node")),
+        ("source", ("source code", "which file", "where should i start", "start reading")),
+        ("flow", ("walk through", "walk me through", "step by step", "end to end", "input to result")),
+        ("scale", ("at scale", "bottleneck", "throughput", "workload")),
+        ("tradeoff", ("tradeoff", "trade-off", "alternative")),
+        ("proof", ("evidence", "prove", "proven", "unproven")),
+        ("failure", ("fails", "failure", "crash", "half-written", "prevents")),
+    )
+    for intent, phrases in checks:
+        if any(phrase in text for phrase in phrases):
+            return intent
+    return "direct"
+
+
+def _spoken_answer(
+    row: FeatureExplainer,
+    step_index: int,
+    question: QuestionInput | None,
+) -> tuple[str, str, str]:
+    """Build a truthful presenter answer from authored, typed evidence only."""
+    steps = steps_for(row)
+    step = steps[step_index]
+    intent = _question_intent(question)
+    missing = (
+        "I found the relevant explainer, but it does not contain an authored "
+        "answer to this question. The record supplies a source reference, not "
+        "a complete explanation. The spoken answer still needs authoring."
+    )
+    if intent == "comparison":
+        return (
+            "This question asks for a comparison, but the current route selected "
+            "only one explainer. I can show this explainer's evidence, but I need "
+            "both records before I can make a source-backed comparison.",
+            "PARTIAL", intent,
+        )
+    if intent == "flow":
+        authored = [item.spoken for item in steps if item.spoken]
+        if len(authored) != len(steps):
+            return missing, "PARTIAL", intent
+        stages = "; then ".join(item.title.lower() for item in steps)
+        return (
+            f"The flow has {len(steps)} stages: {stages}. "
+            + " ".join(text.split(".", 1)[0] + "." for text in authored),
+            "READY", intent,
+        )
+    if intent == "source":
+        source = row.source_ranges[step.source_range_index]
+        detail = step.spoken or missing
+        return (
+            f"Start in {source.file}, lines {source.start_line} through "
+            f"{source.end_line}. {step.source_explanation} {detail}",
+            "READY" if step.spoken else "PARTIAL", intent,
+        )
+    if intent == "debugger":
+        if step.debugger_stop_index is None:
+            return (
+                "This explainer does not define a debugger target for the selected "
+                "step. I can show the source range, but a runtime breakpoint and "
+                "observed variable state are still missing.",
+                "PARTIAL", intent,
+            )
+        target = row.debugger_stops[step.debugger_stop_index]
+        return (
+            f"Use the configured breakpoint at {target.file}, line {target.line}. "
+            f"It is intended to prove {target.proves} The cockpit distinguishes "
+            "this configured target from a debugger proof captured at runtime.",
+            "READY", intent,
+        )
+    if intent == "diagram":
+        nodes = ", then ".join(step.diagram_node_ids)
+        return (
+            f"Read the editable architecture board through {nodes}. These are the "
+            "nodes bound to the selected source step; the highlight is navigation, "
+            "not proof that the code executed.",
+            "READY", intent,
+        )
+    if intent in {"scale", "tradeoff"}:
+        return (
+            f"The selected explainer is relevant, but it does not record a "
+            f"source-backed {intent} answer. I will not infer one from the feature "
+            "title; the missing constraint or rationale must be authored first.",
+            "PARTIAL", intent,
+        )
+    if step.spoken:
+        return step.spoken, "READY", intent
+    return missing, "PARTIAL", intent
+
+
 def project_state(
     revision: int,
     rows: list[FeatureExplainer],
@@ -152,6 +247,15 @@ def project_state(
             selection=None,
             teleprompter=TeleprompterProjection(
                 revision=revision,
+                spoken=(
+                    "I do not have a source-backed explainer for that question. "
+                    "I cleared the source, debugger, and diagram selections rather "
+                    "than showing unrelated evidence."
+                    if question is not None
+                    else None
+                ),
+                answer_status="NO_MATCH" if question is not None else "PARTIAL",
+                question_intent=_question_intent(question),
             ),
             source=SourceProjection(
                 revision=revision,
@@ -179,6 +283,11 @@ def project_state(
         len(steps) - 1,
     )
     step = steps[bounded_index]
+    spoken, answer_status, question_intent = _spoken_answer(
+        row,
+        bounded_index,
+        question,
+    )
 
     node_steps: list[NodeStep] = []
     for node_id in row.diagram.node_ids:
@@ -258,6 +367,12 @@ def project_state(
             )
             debugger_status = "RUN_INTENT"
 
+    active_diagram_nodes = (
+        row.diagram.node_ids
+        if question_intent == "flow"
+        else step.diagram_node_ids
+    )
+
     return CockpitState(
         revision=revision,
         route=route_decision,
@@ -271,6 +386,9 @@ def project_state(
         teleprompter=TeleprompterProjection(
             revision=revision,
             title=step.title,
+            spoken=spoken,
+            answer_status=answer_status,
+            question_intent=question_intent,
             bullets=step.bullets,
             proof_boundary=(
                 step.proof_boundary
@@ -315,12 +433,12 @@ def project_state(
                 row.diagram.rendered_svg_path
             ),
             node_ids=row.diagram.node_ids,
-            active_node_ids=step.diagram_node_ids,
+            active_node_ids=active_diagram_nodes,
             verified_binding=bool(row.diagram.sha256),
             highlight_intent=diagram_highlight_intent(
                 revision,
                 row.diagram,
-                step.diagram_node_ids,
+                active_diagram_nodes,
             ),
             node_steps=node_steps,
         ),
@@ -386,15 +504,13 @@ def _best_step_index(
     from .catalog import steps_for
 
     qtokens = _tokens(question)
-    best_index = 0
-    best_score = 0
-    for index, step in enumerate(steps_for(row)):
+    scores = []
+    for step in steps_for(row):
         haystack = " ".join([step.title, *step.bullets])
-        score = len(qtokens & _tokens(haystack))
-        if score > best_score:
-            best_index = index
-            best_score = score
-    return best_index
+        scores.append(len(qtokens & _tokens(haystack)))
+    best = max(scores, default=0)
+    winners = [index for index, value in enumerate(scores) if value == best]
+    return winners[0] if best > 0 and len(winners) == 1 else 0
 
 
 def _project_routed_question(

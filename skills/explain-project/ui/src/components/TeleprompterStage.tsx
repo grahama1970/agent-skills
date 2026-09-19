@@ -112,10 +112,8 @@ export function TeleprompterStage({
     }, 1000)
     return () => window.clearInterval(timer)
   }, [])
-  const stepWords = [
-    state.teleprompter.title ?? '',
-    ...state.teleprompter.bullets,
-  ].join(' ').split(/\s+/).filter(Boolean).length
+  const stepWords = (state.teleprompter.spoken ?? '')
+    .split(/\s+/).filter(Boolean).length
   const minutes = dwellMs / 60_000
   const wpm = minutes >= 0.05
     ? Math.round(stepWords / minutes)
@@ -148,9 +146,7 @@ export function TeleprompterStage({
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/40 bg-cyan-950/60 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-cyan-300">
             <Gauge aria-hidden="true" className="size-3" />
-            {state.teleprompter.confidence
-              ? `${state.teleprompter.confidence} confidence`
-              : 'No confidence'}
+            {state.teleprompter.answer_status} · {state.teleprompter.question_intent}
           </span>
           <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1 text-xs font-medium uppercase tracking-wider text-zinc-400">
             <ShieldAlert aria-hidden="true" className="size-3" />
@@ -201,9 +197,9 @@ export function TeleprompterStage({
 
           <h1
             className={[
-              'max-w-[24ch]',
-              'text-3xl font-extrabold tracking-tight leading-[1.12]',
-              'text-balance xl:text-4xl text-white',
+              'max-w-[42ch]',
+              'text-2xl font-bold tracking-tight leading-[1.15]',
+              'text-balance xl:text-3xl text-white',
             ].join(' ')}
           >
             {interpolateVars(
@@ -213,22 +209,19 @@ export function TeleprompterStage({
           </h1>
         </div>
 
-        <ul
+        <p
+          data-qid="cockpit:teleprompter:spoken-answer"
           className={[
-            'max-w-[36ch] space-y-3.5',
-            'text-[clamp(1.05rem,1.35vw,1.55rem)]',
-            'leading-[1.4] text-zinc-100 font-normal',
+            'max-w-[65ch] text-[clamp(1.2rem,1.55vw,1.75rem)]',
+            'leading-[1.48] text-zinc-100 font-normal',
           ].join(' ')}
         >
-          {state.teleprompter.bullets.map(
-            (bullet) => (
-              <li key={bullet} className="flex items-start gap-3 bg-zinc-950/70 border border-zinc-800/80 rounded-xl p-2.5 shadow-sm">
-                <span className="text-cyan-400 font-bold shrink-0 mt-0.5">•</span>
-                <span className="text-zinc-100">{interpolateVars(bullet, vars)}</span>
-              </li>
-            ),
+          {interpolateVars(
+            state.teleprompter.spoken
+              ?? 'Select an explainer to prepare a source-backed answer.',
+            vars,
           )}
-        </ul>
+        </p>
 
         <div
           className={[

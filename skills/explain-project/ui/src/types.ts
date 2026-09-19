@@ -109,6 +109,12 @@ export interface CockpitState {
   teleprompter: {
     revision: number
     title?: string | null
+    spoken?: string | null
+    answer_status: 'READY' | 'PARTIAL' | 'CLARIFY' | 'NO_MATCH'
+    question_intent:
+      | 'direct' | 'source' | 'flow' | 'failure' | 'proof'
+      | 'debugger' | 'diagram' | 'scale' | 'tradeoff'
+      | 'comparison' | 'unknown'
     bullets: string[]
     proof_boundary?: string | null
     confidence?: Confidence | null

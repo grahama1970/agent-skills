@@ -663,6 +663,32 @@
       ]
     },
     {
+      "name": "seeded-question-campaign",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; cd ..; T=$(mktemp -d); P=$(python3 -c 'import socket; s=socket.socket(); s.bind((\"127.0.0.1\",0)); print(s.getsockname()[1]); s.close()'); PYTHONPATH=scripts uv run --isolated --with pydantic --with typer --with httpx --with loguru python3 scripts/explain_project.py cockpit --explainers /home/graham/workspace/experiments/oai-trial/docs/explain/explainers.jsonl --repo /home/graham/workspace/experiments/oai-trial --host 127.0.0.1 --port $P >$T/server.log 2>&1 & PID=$!; trap 'kill $PID 2>/dev/null || true' EXIT; for i in $(seq 1 30); do curl -sf http://127.0.0.1:$P/api/health >/dev/null && break; sleep 1; done; uv run --with httpx python scripts/eval_question_campaign.py --base-url http://127.0.0.1:$P --repo /home/graham/workspace/experiments/oai-trial --output $T/campaign --seed 20260919 --per-category 5 --trials 2; python3 - <<'PY2' $T/campaign/summary.json $T/campaign/traces.jsonl\nimport json,sys\ns=json.load(open(sys.argv[1])); rows=[json.loads(x) for x in open(sys.argv[2])]\nassert s['status']=='PASS' and s['bank_size']==180 and s['selected_count']==60 and s['trial_count']==120\nassert s['stable_count']==60 and s['expected_count']==60 and s['diagram_bindings_valid']==60\nassert len(rows)==60 and all(len(r['trials'])==2 for r in rows)\nprint('EXPLAIN_PROJECT_SEEDED_QUESTION_CAMPAIGN_OK')\nPY2"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXPLAIN_PROJECT_SEEDED_QUESTION_CAMPAIGN_OK"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e",
+      "notes": "Starts a disposable real cockpit API and runs a seed-recorded 180-bank/60-question stratified campaign twice per question. It validates stable routing and Excalidraw node bindings; live VS Code bridge and Chatterbox receipts are exercised by the retained external campaign, not this portable fixture.",
+      "supports_claims": [
+        "explain_project.seeded_question_campaign"
+      ],
+      "seams": [
+        "routing-source-grounding",
+        "excalidraw-proposal-boundary"
+      ]
+    },
+    {
       "name": "sparta-memory-pipeline-question",
       "type": "positive",
       "real_world": true,
@@ -753,6 +779,15 @@
         "live_e2e": true
       },
       "claim_semantics": "human_perceptual"
+    },
+    {
+      "id": "explain_project.seeded_question_campaign",
+      "description": "Explain Project can run a seed-recorded stratified 180-bank/60-question live HTTP campaign with two stable trials per selected question and validated active diagram bindings.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      },
+      "claim_semantics": "protocol"
     }
   ],
   "seams": [
