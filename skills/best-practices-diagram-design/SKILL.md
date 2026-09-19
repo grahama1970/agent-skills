@@ -97,7 +97,9 @@ For each required `{target, gate, outcome}`, the checker removes that required g
 
 ## 4. Select a template or renderer
 
-Use the small typed catalog in `references/template-catalog.md` rather than redrawing repeated patterns. Deterministic eligibility runs first. `$jev` may choose among the locally enumerated eligible templates; because Jev is a closed-set classifier, it must abstain/fall back rather than invent a template.
+Use the typed local catalog at `fixtures/template-catalog.json` rather than redrawing repeated patterns. A governed request supplies `requirements` `{intent, view, data, steps}`. Deterministic eligibility admits only catalog assets that exist locally, match `view`, have every `required_data` key, and meet `min_steps`; the sorted resulting paths are the closed candidate set.
+
+`ops-excalidraw select-template` invokes `skills/jev/run.sh ask` itself only with explicit `--allow-egress`. Its supplied questions file must offer exactly the eligible template IDs plus `ABSTAIN`; Jev's `jev.decision.v2` accepted choice is mapped to the catalog's existing asset path. A selection receipt binds requirements/catalog hashes, eligible IDs/paths, selected asset, Jev status/confidence, and Jev request/state/questions hashes plus resolved model. Caller-authored choice/path JSON is not accepted by the production command. `replay-template-selection` is deterministic validation of a real v2-shaped receipt and its hashes/options, not a live selection. Governed render/push validates that receipt; ordinary commands remain ungoverned.
 
 `ops-excalidraw` owns parameterized template rendering. This skill owns eligibility and acceptance. A template passing once does not qualify all populated instances.
 

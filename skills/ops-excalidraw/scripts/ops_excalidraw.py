@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any, Literal
@@ -15,6 +16,18 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_valida
 app = typer.Typer(help="Compile Excalidraw animation tokens into create-svg input.")
 
 SKILL_DIR = Path(__file__).resolve().parents[1]
+REPO_ROOT = SKILL_DIR.parents[1]
+DIAGRAM_DESIGN_SCRIPTS = REPO_ROOT / "skills/best-practices-diagram-design/scripts"
+sys.path.insert(0, str(DIAGRAM_DESIGN_SCRIPTS))
+from template_selection import (  # noqa: E402
+    RequirementsPacket,
+    eligible_entries,
+    invoke_jev,
+    load_catalog,
+    load_questions,
+    receipt_from_jev,
+    validate_receipt,
+)
 
 PRESETS = {
     "reveal": "fade-slide-y",
@@ -470,6 +483,55 @@ def toolkit(output: Path) -> None:
     output.write_text(json.dumps({"type": "excalidrawlib", "version": 2, "source": "ops-excalidraw", "libraryItems": items}, indent=2) + "\n")
 
 
+def require_governed_receipt(governed: bool, receipt: Path | None, packet: Path | None, catalog: Path | None) -> None:
+    """Fail closed only for explicitly governed render/push operations."""
+    if not governed:
+        return
+    if receipt is None or packet is None or catalog is None:
+        raise ValueError("--governed requires --receipt, --requirements, and --catalog")
+    validate_receipt(receipt, packet, catalog, REPO_ROOT)
+
+
+@app.command(name="select-template")
+def select_template_command(
+    requirements: Path = typer.Option(..., "--requirements"),
+    catalog: Path = typer.Option(..., "--catalog"),
+    questions: Path = typer.Option(..., "--questions"),
+    output: Path = typer.Option(..., "--output"),
+    allow_egress: bool = typer.Option(False, "--allow-egress", help="Explicitly authorize the live Jev request."),
+) -> None:
+    """Invoke Jev over the deterministic closed set and retain its v2-bound receipt."""
+    try:
+        if not allow_egress:
+            raise ValueError("select-template requires explicit --allow-egress")
+        receipt = invoke_jev(RequirementsPacket.model_validate(load_json(requirements)), load_catalog(catalog), questions, REPO_ROOT)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(receipt.model_dump_json(by_alias=True, indent=2) + "\n", encoding="utf-8")
+        print(json.dumps({"schema": "ops_excalidraw.selection.v2", "status": "PASS", "output": str(output), "eligible": receipt.eligible_template_ids, "jev_status": receipt.jev_status}))
+    except (OSError, ValueError, ValidationError, json.JSONDecodeError, subprocess.SubprocessError) as exc:
+        fail(exc)
+
+
+@app.command(name="replay-template-selection")
+def replay_template_selection_command(
+    requirements: Path = typer.Option(..., "--requirements"),
+    catalog: Path = typer.Option(..., "--catalog"),
+    questions: Path = typer.Option(..., "--questions"),
+    jev_receipt: Path = typer.Option(..., "--jev-receipt"),
+    output: Path = typer.Option(..., "--output"),
+) -> None:
+    """Validate a real Jev v2 receipt deterministically; this is replay, never a live choice."""
+    try:
+        packet = RequirementsPacket.model_validate(load_json(requirements)); parsed_catalog = load_catalog(catalog)
+        parsed_questions = load_questions(questions, eligible_entries(packet, parsed_catalog, REPO_ROOT))
+        receipt = receipt_from_jev(packet, parsed_catalog, parsed_questions, load_json(jev_receipt), REPO_ROOT, "replay")
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(receipt.model_dump_json(by_alias=True, indent=2) + "\n", encoding="utf-8")
+        print(json.dumps({"schema": "ops_excalidraw.selection.v2", "status": "PASS", "mode": "replay", "output": str(output)}))
+    except (OSError, ValueError, ValidationError, json.JSONDecodeError) as exc:
+        fail(exc)
+
+
 def fail(exc: Exception) -> None:
     """Print a typed failure and exit non-zero."""
 
@@ -576,12 +638,17 @@ def push_board_command(
     board: Path,
     port: int = typer.Option(7683, "--port", help="Whiteboard server port."),
     replace: bool = typer.Option(False, "--replace", help="Unsafe: replace the live canvas directly instead of proposing."),
+    governed: bool = typer.Option(False, "--governed", help="Require a valid template-selection receipt."),
+    receipt: Path | None = typer.Option(None, "--receipt"),
+    requirements: Path | None = typer.Option(None, "--requirements"),
+    catalog: Path | None = typer.Option(None, "--catalog"),
 ) -> None:
     """Propose a board to the whiteboard (human Accepts/Rejects); --replace applies it directly."""
 
     import urllib.request
 
     try:
+        require_governed_receipt(governed, receipt, requirements, catalog)
         load_scene(board)  # fail closed before pushing
         endpoint = "board" if replace else "proposal"
         req = urllib.request.Request(
@@ -598,6 +665,10 @@ def render_board_command(
     board: Path,
     output: Path = typer.Option(..., "--output", help="Destination .svg file."),
     show: bool = typer.Option(False, "--show", help="Open the rendered SVG in the default viewer."),
+    governed: bool = typer.Option(False, "--governed", help="Require a valid template-selection receipt."),
+    receipt: Path | None = typer.Option(None, "--receipt"),
+    requirements: Path | None = typer.Option(None, "--requirements"),
+    catalog: Path | None = typer.Option(None, "--catalog"),
 ) -> None:
     """Compile a board and render it to an SVG file (no browser needed)."""
 
@@ -605,6 +676,7 @@ def render_board_command(
     import tempfile
 
     try:
+        require_governed_receipt(governed, receipt, requirements, catalog)
         with tempfile.TemporaryDirectory() as tmp:
             scene = Path(tmp) / "scene.yml"
             compile_scene(board, scene)

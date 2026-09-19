@@ -41,6 +41,7 @@ Use this skill to make Excalidraw the movable whiteboard layer and `$create-svg`
 - `$create-svg` owns final rendering, CSS animation, reduced-motion base state, SVG safety, and verification.
 - This skill emits `$create-svg` scene/timeline JSON; it does not emit final SVG.
 - v1 compiles single-source fan-out boards: exactly one `role: "source"` node and one or more `role: "target"` nodes.
+- Ordinary commands are ungoverned. Explicit `--governed` render/push requires a valid typed selection receipt from `best-practices-diagram-design`; it fails closed for a missing receipt, changed requirements/catalog, an ineligible selection, abstention, or a missing local selected asset.
 
 ## Quickstart (one prompt)
 
@@ -58,6 +59,11 @@ Accent values on nodes must stay within the create-svg set: cyan, green, amber, 
 skills/ops-excalidraw/run.sh toolkit --output /tmp/interview-animation-toolkit.excalidrawlib
 skills/ops-excalidraw/run.sh validate skills/ops-excalidraw/fixtures/interview-board.excalidraw
 skills/ops-excalidraw/run.sh compile skills/ops-excalidraw/fixtures/interview-board.excalidraw /tmp/interview-scene.yml
+# governed: invoke Jev with a closed-set questions file; live egress is explicit
+skills/ops-excalidraw/run.sh select-template --requirements packet.json --catalog skills/best-practices-diagram-design/fixtures/template-catalog.json --questions template-questions.json --allow-egress --output receipt.json
+# deterministic test/recovery only: validates an existing jev.decision.v2 receipt, never makes a choice
+skills/ops-excalidraw/run.sh replay-template-selection --requirements packet.json --catalog skills/best-practices-diagram-design/fixtures/template-catalog.json --questions template-questions.json --jev-receipt jev-v2.json --output receipt.json
+skills/ops-excalidraw/run.sh render-board board.excalidraw --output out.svg --governed --receipt receipt.json --requirements packet.json --catalog skills/best-practices-diagram-design/fixtures/template-catalog.json
 skills/ops-excalidraw/run.sh register-diagram --diagram-id project.flow --owner-project my-project --source-path docs/flow.excalidraw --bound-symbol src/app.py:main
 skills/create-svg/run.sh render /tmp/interview-scene.yml /tmp/interview.svg
 ```

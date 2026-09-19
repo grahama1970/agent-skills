@@ -1,0 +1,19 @@
+{
+  "schema": "diagram_template_catalog.v1",
+  "templates": [
+    {
+      "id": "decision-flow-control",
+      "asset_path": "skills/ops-excalidraw/assets/toolkits/vendor/decision-flow-control.excalidrawlib",
+      "views": ["decision-flow"],
+      "required_data": ["outcomes"],
+      "min_steps": 2
+    },
+    {
+      "id": "fanout-interview-board",
+      "asset_path": "skills/ops-excalidraw/fixtures/interview-board.excalidraw",
+      "views": ["fanout"],
+      "required_data": ["targets"],
+      "min_steps": 1
+    }
+  ]
+}
