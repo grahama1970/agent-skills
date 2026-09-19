@@ -2,62 +2,80 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-# Positive control: a valid gated decision-tree spec must pass.
-out=$(./run.sh check fixtures/good_decision_tree.json --json)
-echo "$out" | python3 -c "import json,sys; v=json.load(sys.stdin); assert v['ok'] is True, v; assert v['errors']==[], v" \
-  || { echo "FAIL: good_decision_tree.json should pass"; exit 1; }
-echo "OK: good_decision_tree.json passes"
+check_codes() {
+  local fixture=$1 expected_ok=$2 expected_codes=$3 out
+  out=$(mktemp)
+  if ./run.sh check "fixtures/$fixture" --json >"$out" 2>/dev/null; then rc=0; else rc=$?; fi
+  python3 - "$out" "$expected_ok" "$expected_codes" "$rc" <<'PY'
+import json,sys
+path, expected_ok, expected_codes, rc = sys.argv[1:]
+v=json.load(open(path))
+want_ok=expected_ok == 'true'
+assert v['ok'] is want_ok, v
+assert (int(rc)==0) is want_ok, (rc,v)
+codes={e['code'] for e in v['errors']}
+for code in filter(None, expected_codes.split(',')):
+    assert code in codes, (code,codes)
+PY
+  rm -f "$out"
+  echo "OK: $fixture => $expected_codes"
+}
 
-# Negative control: the star fan-out-for-sequence bug must be rejected with VIEW_TOPOLOGY_MISMATCH.
-if ./run.sh check fixtures/bad_fanout_star.json --json > /tmp/bad_fanout_verdict.json 2>/dev/null; then
-  echo "FAIL: bad_fanout_star.json should have been rejected"; exit 1
-fi
-python3 -c "
-import json
-v = json.load(open('/tmp/bad_fanout_verdict.json'))
-assert v['ok'] is False, v
-codes = {e['code'] for e in v['errors']}
-assert 'VIEW_TOPOLOGY_MISMATCH' in codes, codes
-"
-echo "OK: bad_fanout_star.json rejected with VIEW_TOPOLOGY_MISMATCH"
+check_geometry() {
+  local fixture=$1 expected_ok=$2 expected_codes=$3 out
+  out=$(mktemp)
+  if ./run.sh geometry "fixtures/$fixture" --json >"$out" 2>/dev/null; then rc=0; else rc=$?; fi
+  python3 - "$out" "$expected_ok" "$expected_codes" "$rc" <<'PY'
+import json,sys
+path, expected_ok, expected_codes, rc = sys.argv[1:]
+v=json.load(open(path))
+want_ok=expected_ok == 'true'
+assert v['ok'] is want_ok, v
+assert (int(rc)==0) is want_ok, (rc,v)
+codes={e['code'] for e in v['errors']}
+for code in filter(None, expected_codes.split(',')):
+    assert code in codes, (code,codes)
+PY
+  rm -f "$out"
+  echo "OK: $fixture => ${expected_codes:-PASS}"
+}
 
-# Negative control: labels overlapping arrows/boxes -- too-long label must be rejected.
-if ./run.sh check fixtures/label_too_long.json --json > /tmp/label_verdict.json 2>/dev/null; then
-  echo "FAIL: label_too_long.json should have been rejected"; exit 1
-fi
-python3 -c "
-import json
-v = json.load(open('/tmp/label_verdict.json'))
-assert v['ok'] is False, v
-codes = {e['code'] for e in v['errors']}
-assert 'LABEL_TOO_LONG' in codes, codes
-"
-echo "OK: label_too_long.json rejected with LABEL_TOO_LONG"
+check_codes good_decision_tree.json true ""
+check_codes bad_fanout_star.json false PRECONDITION_BYPASS
+check_codes bad_fanout_star_extra_gate.json false PRECONDITION_BYPASS
+check_codes bypass_direct_tier3.json false PRECONDITION_BYPASS
+check_codes branch_label_swap.json false BRANCH_LABEL_MISMATCH
+# Independent fanout is semantically valid; only the create-svg adapter ceiling rejects five targets.
+check_codes fanout_5_targets.json false FANOUT_TOO_MANY
 
-# Advisory: straight routing on a flow edge warns but does not block by itself.
-out=$(./run.sh check fixtures/routing_straight_warning.json --json)
-echo "$out" | python3 -c "
-import json, sys
-v = json.load(sys.stdin)
-assert v['ok'] is True, v
-codes = {w['code'] for w in v['warnings']}
-assert 'CONNECTOR_ROUTING_STRAIGHT' in codes, v
-"
-echo "OK: routing_straight_warning.json passes with advisory CONNECTOR_ROUTING_STRAIGHT warning"
+check_geometry geometry_straight_clean.svg true ""
+check_geometry geometry_node_overlap.svg false NODE_OVERLAP
+check_geometry geometry_edge_node_cross.svg false EDGE_NODE_INTERSECTION,EDGE_TEXT_INTERSECTION
+check_geometry geometry_diamond_overflow.svg false TEXT_OUTSIDE_CONTAINER
 
-# best-practices-python module hygiene.
+python3 - <<'PY'
+import ast, json
+from pathlib import Path
+for path in ('scripts/diagram_design_check.py', 'scripts/diagram_geometry_check.py'):
+    text=Path(path).read_text()
+    ast.parse(text)
+    assert len(text.splitlines()) <= 800, path
+    assert text.startswith('#!/usr/bin/env python3\n"""'), path
+    for forbidden in ('import requests', 'shell=True', 'pickle', 'yaml.load(', 'argparse', 'import click'):
+        assert forbidden not in text, (path, forbidden)
+json.loads(Path('fixtures/agentic_eval.json').read_text())
+print('PYTHON_AND_JSON_STANDARDS_OK')
+PY
+
 python3 - <<'PY'
 from pathlib import Path
-p = Path('scripts/diagram_design_check.py')
-text = p.read_text()
-if len(text.splitlines()) > 800:
-    raise SystemExit('diagram_design_check.py exceeds 800 lines')
-if not text.startswith('#!/usr/bin/env python3\n"""'):
-    raise SystemExit('module docstring missing')
-for forbidden in ('import requests', 'shell=True', 'pickle', 'yaml.load(', 'argparse', 'import click'):
-    if forbidden in text:
-        raise SystemExit(f'forbidden token: {forbidden}')
-print('PYTHON_STANDARDS_OK')
+import yaml
+text=Path('SKILL.md').read_text()
+front=text.split('---',2)[1]
+data=yaml.safe_load(front)
+for key in ('name','description','triggers','provides','composes','complies'):
+    assert data.get(key), key
+print('FRONTMATTER_OK')
 PY
 
 echo "SANITY PASS"

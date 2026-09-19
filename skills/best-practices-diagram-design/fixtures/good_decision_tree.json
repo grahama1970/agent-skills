@@ -1,15 +1,15 @@
 {
-  "view": "decision_tree",
+  "view": "flowchart",
   "nodes": [
-    {"id": "detector", "label": "Thrash detector fires"},
-    {"id": "lock", "label": "Acquire escalation lock"},
-    {"id": "tier1", "label": "Tier 1: soft retry"},
-    {"id": "tier1_resolved", "label": "Resolved after tier 1?"},
-    {"id": "tier2", "label": "Tier 2: backoff + alert"},
-    {"id": "tier2_resolved", "label": "Resolved after tier 2?"},
-    {"id": "tier3", "label": "Tier 3: page on-call"},
-    {"id": "resume", "label": "Resume normal operation"},
-    {"id": "escalate", "label": "Escalate to incident"}
+    {"id": "detector", "label": "Thrash detector fires", "kind": "action"},
+    {"id": "lock", "label": "Acquire escalation lock", "kind": "action"},
+    {"id": "tier1", "label": "Tier 1: soft retry", "kind": "action"},
+    {"id": "tier1_resolved", "label": "Resolved after tier 1?", "kind": "decision", "outcome_domain": ["yes", "no"]},
+    {"id": "tier2", "label": "Tier 2: backoff + alert", "kind": "action"},
+    {"id": "tier2_resolved", "label": "Resolved after tier 2?", "kind": "decision", "outcome_domain": ["yes", "no"]},
+    {"id": "tier3", "label": "Tier 3: page on-call", "kind": "action"},
+    {"id": "resume", "label": "Resume normal operation", "kind": "terminal"},
+    {"id": "escalate", "label": "Escalate to incident", "kind": "terminal"}
   ],
   "edges": [
     {"source": "detector", "target": "lock", "routing": "orthogonal"},
@@ -24,5 +24,19 @@
   ],
   "gates": ["tier1_resolved", "tier2_resolved"],
   "terminal_states": ["resume", "escalate"],
-  "label_limit": 60
+  "label_limit": 60,
+  "requirements": {
+    "intent": "gated 3-tier escalation ladder: lock must be held before any tier runs; tier_2 only after tier_1 fails to resolve; tier_3 (page on-call) only after tier_2 also fails to resolve",
+    "required_order": ["detector", "lock", "tier1", "tier2", "tier3"],
+    "required_preconditions": [
+      {"target": "tier2", "gate": "tier1_resolved", "outcome": "no"},
+      {"target": "tier3", "gate": "tier2_resolved", "outcome": "no"}
+    ],
+    "required_outcome_targets": [
+      {"gate": "tier1_resolved", "outcome": "yes", "target": "resume"},
+      {"gate": "tier1_resolved", "outcome": "no", "target": "tier2"},
+      {"gate": "tier2_resolved", "outcome": "yes", "target": "resume"},
+      {"gate": "tier2_resolved", "outcome": "no", "target": "tier3"}
+    ]
+  }
 }

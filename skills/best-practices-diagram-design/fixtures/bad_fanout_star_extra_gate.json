@@ -2,6 +2,7 @@
   "view": "fanout",
   "nodes": [
     {"id": "detector", "label": "Thrash detector fires", "kind": "action"},
+    {"id": "unrelated_check", "label": "Unrelated feature flag on?", "kind": "decision", "outcome_domain": ["yes", "no"]},
     {"id": "tier1", "label": "Tier 1", "kind": "action"},
     {"id": "tier1_resolved", "label": "Resolved after tier 1?", "kind": "decision", "outcome_domain": ["yes", "no"]},
     {"id": "tier2", "label": "Tier 2", "kind": "action"},
@@ -11,8 +12,9 @@
     {"id": "escalate", "label": "Escalate", "kind": "terminal"}
   ],
   "edges": [
-    {"source": "detector", "target": "tier1"},
-    {"source": "detector", "target": "tier2"},
+    {"source": "detector", "target": "unrelated_check"},
+    {"source": "unrelated_check", "target": "tier1", "branch_label": "yes"},
+    {"source": "unrelated_check", "target": "tier2", "branch_label": "no"},
     {"source": "detector", "target": "tier3"},
     {"source": "tier1", "target": "tier1_resolved"},
     {"source": "tier1_resolved", "target": "resume", "branch_label": "yes"},
@@ -22,10 +24,10 @@
     {"source": "tier2_resolved", "target": "tier3", "branch_label": "no"},
     {"source": "tier3", "target": "escalate"}
   ],
-  "gates": ["tier1_resolved", "tier2_resolved"],
+  "gates": ["unrelated_check", "tier1_resolved", "tier2_resolved"],
   "terminal_states": ["resume", "escalate"],
   "requirements": {
-    "intent": "gated 3-tier escalation ladder: tier_2 only after tier_1 fails to resolve; tier_3 (page on-call) only after tier_2 also fails to resolve -- relabeled here as a 'fanout' star, still carrying the same escalation requirements",
+    "intent": "same escalation ladder, now with an unrelated feature-flag gate added upstream -- an extra gate that has nothing to do with the required tier gating does not excuse the direct detector->tier3 bypass",
     "required_order": ["detector", "tier1", "tier2", "tier3"],
     "required_preconditions": [
       {"target": "tier2", "gate": "tier1_resolved", "outcome": "no"},

@@ -1,0 +1,26 @@
+{
+  "view": "fanout",
+  "nodes": [
+    {"id": "picker", "label": "Choose a region to deploy to", "kind": "fork"},
+    {"id": "us_east", "label": "us-east-1", "kind": "action"},
+    {"id": "us_west", "label": "us-west-2", "kind": "action"},
+    {"id": "eu_west", "label": "eu-west-1", "kind": "action"},
+    {"id": "ap_south", "label": "ap-south-1", "kind": "action"},
+    {"id": "sa_east", "label": "sa-east-1", "kind": "action"}
+  ],
+  "edges": [
+    {"source": "picker", "target": "us_east"},
+    {"source": "picker", "target": "us_west"},
+    {"source": "picker", "target": "eu_west"},
+    {"source": "picker", "target": "ap_south"},
+    {"source": "picker", "target": "sa_east"}
+  ],
+  "gates": [],
+  "terminal_states": [],
+  "requirements": {
+    "intent": "genuinely independent parallel choices -- picking one region has no lock or ordering relationship with any other region",
+    "required_order": [],
+    "required_preconditions": [],
+    "required_outcome_targets": []
+  }
+}

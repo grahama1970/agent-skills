@@ -1,0 +1,29 @@
+{
+  "view": "flowchart",
+  "nodes": [
+    {"id": "detector", "label": "Thrash detector fires", "kind": "action"},
+    {"id": "tier1", "label": "Tier 1: soft retry", "kind": "action"},
+    {"id": "tier1_resolved", "label": "Resolved after tier 1?", "kind": "decision", "outcome_domain": ["yes", "no"]},
+    {"id": "tier2", "label": "Tier 2: backoff + alert", "kind": "action"},
+    {"id": "resume", "label": "Resume normal operation", "kind": "terminal"},
+    {"id": "escalate", "label": "Escalate to incident", "kind": "terminal"}
+  ],
+  "edges": [
+    {"source": "detector", "target": "tier1"},
+    {"source": "tier1", "target": "tier1_resolved"},
+    {"source": "tier1_resolved", "target": "resume", "branch_label": "no", "outcome": "yes"},
+    {"source": "tier1_resolved", "target": "tier2", "branch_label": "yes", "outcome": "no"},
+    {"source": "tier2", "target": "escalate"}
+  ],
+  "gates": ["tier1_resolved"],
+  "terminal_states": ["resume", "escalate"],
+  "requirements": {
+    "intent": "the displayed yes/no branch labels have been swapped on the rendered diagram while the underlying outcome data (which edge is truly the 'resolved' vs 'not resolved' path) was left unchanged -- readers see the opposite of what happens",
+    "required_order": ["detector", "tier1", "tier2"],
+    "required_preconditions": [],
+    "required_outcome_targets": [
+      {"gate": "tier1_resolved", "outcome": "yes", "target": "resume"},
+      {"gate": "tier1_resolved", "outcome": "no", "target": "tier2"}
+    ]
+  }
+}

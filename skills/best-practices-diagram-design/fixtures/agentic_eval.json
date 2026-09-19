@@ -1,41 +1,50 @@
 {
-  "version": 1,
+  "version": 2,
   "skill": "best-practices-diagram-design",
   "trials": 3,
   "mocked": false,
   "live": true,
-  "proof_scope": "local deterministic diagram-spec validation: view/topology rules, label-length rules, gate/branch-label rules, terminal-state rules, and advisory connector-routing rules against committed fixture specs",
+  "proof_scope": "local deterministic semantic validation of source-bound process requirements plus measured Graphviz SVG geometry validation",
   "claims": {
-    "proves": "the checker accepts a valid gated decision-tree spec (thrash-guard escalation ladder), rejects a single-source fan-out-for-sequence spec with VIEW_TOPOLOGY_MISMATCH (the star bug), rejects an over-length node label with LABEL_TOO_LONG, and emits an advisory (non-blocking) CONNECTOR_ROUTING_STRAIGHT warning for straight-routed flow edges",
-    "does_not_prove": "that a rendered Excalidraw/graphviz image is actually legible -- routing/overlap legibility requires the screenshot read-back step in SKILL.md, not just spec validation; does not prove create-architecture or ops-excalidraw rendering fidelity"
+    "proves": "the checker preserves required gated-process semantics, returns concrete precondition-bypass paths, distinguishes independent fanout from ordered escalation, and detects selected overlaps/intersections/overflow in actual Graphviz SVG output",
+    "does_not_prove": "that requirements were initially extracted correctly; Mermaid or Excalidraw geometry; universal curve collision freedom; or human comprehension at intended reading size"
   },
   "cases": [
     {
-      "name": "positive-good-decision-tree-passes",
+      "name": "live-graphviz-render-and-measured-scene-check",
       "type": "positive",
       "real_world": true,
-      "command": ["./run.sh", "check", "fixtures/good_decision_tree.json", "--json"],
+      "command": ["bash", "-c", "D=$(mktemp -d); trap 'rm -rf \"$D\"' EXIT; printf 'digraph G { rankdir=TB; node [shape=box]; start [label=\"Start\"]; done [label=\"Done\"]; start -> done [label=\"ok\"]; }\\n' > \"$D/live.dot\"; dot -Tsvg \"$D/live.dot\" > \"$D/live.svg\"; ../run.sh geometry \"$D/live.svg\" --json"],
       "expected": {"exit_code": 0, "stdout_contains": ["\"ok\": true"]},
       "readback": true,
-      "evidence_class": "local_deterministic"
+      "evidence_class": "live_e2e"
     },
     {
-      "name": "negative-fanout-star-rejected",
+      "name": "positive-gated-flowchart-passes",
+      "type": "positive",
+      "real_world": false,
+      "command": ["../run.sh", "check", "fixtures/good_decision_tree.json", "--json"],
+      "expected": {"exit_code": 0, "stdout_contains": ["\"ok\": true"]},
+      "readback": true,
+      "evidence_class": "deterministic"
+    },
+    {
+      "name": "negative-relabeled-star-has-precondition-bypass",
       "type": "negative",
-      "real_world": true,
-      "command": ["./run.sh", "check", "fixtures/bad_fanout_star.json", "--json"],
-      "expected": {"exit_code": 1, "stdout_contains": ["VIEW_TOPOLOGY_MISMATCH"]},
+      "real_world": false,
+      "command": ["../run.sh", "check", "fixtures/bad_fanout_star.json", "--json"],
+      "expected": {"exit_code": 1, "stdout_contains": ["PRECONDITION_BYPASS", "detector", "tier2"]},
       "readback": true,
-      "evidence_class": "local_deterministic"
+      "evidence_class": "deterministic"
     },
     {
-      "name": "adversarial-label-too-long-rejected",
+      "name": "adversarial-rendered-edge-crosses-node-and-text",
       "type": "adversarial",
-      "real_world": true,
-      "command": ["./run.sh", "check", "fixtures/label_too_long.json", "--json"],
-      "expected": {"exit_code": 1, "stdout_contains": ["LABEL_TOO_LONG"]},
+      "real_world": false,
+      "command": ["../run.sh", "geometry", "fixtures/geometry_edge_node_cross.svg", "--json"],
+      "expected": {"exit_code": 1, "stdout_contains": ["EDGE_NODE_INTERSECTION", "EDGE_TEXT_INTERSECTION"]},
       "readback": true,
-      "evidence_class": "local_deterministic"
+      "evidence_class": "fault_injected_deterministic"
     }
   ],
   "readiness": "USABLE_WITH_GAPS"

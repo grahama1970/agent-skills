@@ -1,22 +1,18 @@
 # Diagram spec schema
 
-The typed boundary model is `DiagramSpec` in `scripts/diagram_design_check.py`
-(Pydantic, `extra="forbid"`). Fields:
+The typed boundary is `DiagramSpec` in `scripts/diagram_design_check.py` (Pydantic, `extra="forbid"`).
 
-| field | type | required | notes |
-|---|---|---|---|
-| `view` | `decision_tree \| flowchart \| sequence \| structure \| fanout \| lifecycle` | yes | chosen per `references/view_selection.md` |
-| `nodes` | `[{id, label}]` | yes, ≥1 | `label` is the on-box text |
-| `edges` | `[{source, target, branch_label?, routing?}]` | no, default `[]` | `routing`: `orthogonal` (default) \| `curved` \| `straight` |
-| `gates` | `[node_id]` | no, default `[]` | node ids that are decision points; every outgoing edge from a gate must have `branch_label` |
-| `terminal_states` | `[node_id]` | no, default `[]` | required (≥1) for process views (`decision_tree`, `flowchart`, `sequence`, `lifecycle`) |
-| `label_limit` | `int` | no, default `60` | overridable per-spec character limit for non-fanout labels |
+| Field | Type | Notes |
+|---|---|---|
+| `view` | `decision_tree | flowchart | sequence | structure | fanout | lifecycle` | Semantic view, selected before renderer. |
+| `nodes` | `[{id, label, kind, outcome_domain?}]` | `kind`: action, decision, terminal, handoff, fork, join. Decision domains should be finite Boolean/enum values. |
+| `edges` | `[{source, target, branch_label?, outcome?, routing?, kind?}]` | `kind`: control (default), annotation, dependency. Semantic checks only traverse control edges. |
+| `requirements` | `{intent, required_order, required_preconditions, required_outcome_targets}` | Source-bound process contract; layout/rendering cannot modify it. |
+| `gates`, `terminal_states` | `[node_id]` | Backward-compatible indexes; canonical semantics come from `node.kind`. |
+| `label_limit` | integer | Authoring limit only; rendered text fit is checked from measured geometry. |
 
-Fan-out views use fixed limits regardless of `label_limit`: source node
-labels ≤80 chars, target node labels ≤40 chars (Excalidraw fan-out box
-sizing), and a hard ceiling of 4 targets from a single source
-(`create-svg` fan-out compiler contract).
+A required precondition is `{target, gate, outcome}`. A required outcome target is `{gate, outcome, target}`.
 
-See `fixtures/good_decision_tree.json` (accepted) and
-`fixtures/bad_fanout_star.json` (rejected, `VIEW_TOPOLOGY_MISMATCH`) for
-worked examples.
+The `create-svg` fanout adapter currently supports four targets. `FANOUT_TOO_MANY` reports that capability limit; it is not a universal diagram-design rule.
+
+See `fixtures/good_decision_tree.json` for the accepted gated flowchart and `fixtures/bad_fanout_star.json` for a relabeled star rejected by `INTENT_VIEW_MISMATCH` and `PRECONDITION_BYPASS` with counterexample paths.

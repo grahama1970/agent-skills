@@ -1,19 +1,20 @@
 {
-  "view": "fanout",
+  "view": "flowchart",
   "nodes": [
     {"id": "detector", "label": "Thrash detector fires", "kind": "action"},
-    {"id": "tier1", "label": "Tier 1", "kind": "action"},
+    {"id": "lock", "label": "Acquire escalation lock", "kind": "action"},
+    {"id": "tier1", "label": "Tier 1: soft retry", "kind": "action"},
     {"id": "tier1_resolved", "label": "Resolved after tier 1?", "kind": "decision", "outcome_domain": ["yes", "no"]},
-    {"id": "tier2", "label": "Tier 2", "kind": "action"},
+    {"id": "tier2", "label": "Tier 2: backoff + alert", "kind": "action"},
     {"id": "tier2_resolved", "label": "Resolved after tier 2?", "kind": "decision", "outcome_domain": ["yes", "no"]},
-    {"id": "tier3", "label": "Tier 3", "kind": "action"},
-    {"id": "resume", "label": "Resume", "kind": "terminal"},
-    {"id": "escalate", "label": "Escalate", "kind": "terminal"}
+    {"id": "tier3", "label": "Tier 3: page on-call", "kind": "action"},
+    {"id": "resume", "label": "Resume normal operation", "kind": "terminal"},
+    {"id": "escalate", "label": "Escalate to incident", "kind": "terminal"}
   ],
   "edges": [
-    {"source": "detector", "target": "tier1"},
-    {"source": "detector", "target": "tier2"},
-    {"source": "detector", "target": "tier3"},
+    {"source": "detector", "target": "lock"},
+    {"source": "lock", "target": "tier1"},
+    {"source": "lock", "target": "tier3"},
     {"source": "tier1", "target": "tier1_resolved"},
     {"source": "tier1_resolved", "target": "resume", "branch_label": "yes"},
     {"source": "tier1_resolved", "target": "tier2", "branch_label": "no"},
@@ -25,8 +26,8 @@
   "gates": ["tier1_resolved", "tier2_resolved"],
   "terminal_states": ["resume", "escalate"],
   "requirements": {
-    "intent": "gated 3-tier escalation ladder: tier_2 only after tier_1 fails to resolve; tier_3 (page on-call) only after tier_2 also fails to resolve -- relabeled here as a 'fanout' star, still carrying the same escalation requirements",
-    "required_order": ["detector", "tier1", "tier2", "tier3"],
+    "intent": "gated 3-tier escalation ladder -- this spec has a direct lock->tier3 shortcut edge that bypasses both tier resolution gates",
+    "required_order": ["detector", "lock", "tier1", "tier2", "tier3"],
     "required_preconditions": [
       {"target": "tier2", "gate": "tier1_resolved", "outcome": "no"},
       {"target": "tier3", "gate": "tier2_resolved", "outcome": "no"}

@@ -1,25 +1,22 @@
-# View selection (harvested research)
+# View selection
 
-Match the diagram TYPE to the intent. Choosing the wrong view is the root
-cause the incident that created this skill: a gated sequential escalation
-ladder (detector → lock → tier1 → tier2 → tier3, each gated by a
-resolved?-check) was drawn as a fan-out star (one node, five parallel-looking
-targets, no gates). It read as "pick any of five options" when it was
-actually "walk this ladder one gated step at a time."
+Choose the view from the reader's question and immutable requirements; choose the renderer afterward.
 
-| Intent | Correct view | Renderer | Wrong-view smell |
-|---|---|---|---|
-| Sequential steps + decision logic | `decision_tree` / `flowchart` | graphviz/mermaid | drawn as unconnected boxes with no arrows, or as a fan-out |
-| Time-ordered interactions between actors (who calls whom, in order) | `sequence` | mermaid sequence diagram | drawn as a flowchart, losing actor lanes and message order |
-| Structure, components, dependencies (what depends on what) | `structure` / C4 | graphviz, `create-architecture` | drawn as a flowchart implying execution order that doesn't exist |
-| Entry/exit states, lifecycle transitions | `lifecycle` | graphviz/mermaid state diagram | drawn as a flowchart without transition conditions |
-| Genuinely parallel, independent choices (≤4, no ordering/lock between them) | `fanout` | `create-svg` fan-out compiler | used for a sequence that actually has gates or ordering — the star bug |
+| Reader question / requirement | View | Enforceable distinction |
+|---|---|---|
+| What happens next, including decisions, retries, and shared endings? | `flowchart` | Explicit control flow; declared cycles and merges allowed. |
+| Which mutually exclusive choices lead to distinct leaves? | strict `decision_tree` | One root, no cycles, one parent per non-root. |
+| Which actor sends what, and in what order? | `sequence` | Participants, messages, ordering, interaction fragments. |
+| What states can an entity occupy and what triggers transitions? | `lifecycle` | States, events, guards, lifecycle boundary. |
+| What exists, owns, contains, or depends on what? | `structure` | Typed elements, containment, relationship kinds, scope. |
+| What executes concurrently and how does it complete? | `flowchart` with fork/join | Explicit `all`, `any`, or `detached` completion policy. |
+| What independent relationships radiate from a source? | `fanout` | No sequential requirement among targets. |
+| Who performs each process step? | flowchart plus swimlanes | Ownership overlay; control-flow semantics remain explicit. |
 
-## The star-for-sequence test
+The motivating gated escalation is a `flowchart`, not a strict decision tree: multiple success outcomes merge into one logical `resume` terminal. “Acquire lock” is an action; “Lock acquired?” is a decision.
 
-Before accepting a `fanout` view, ask: if I resolve target A, does that change
-whether B is still reachable, or is there a lock/gate between them? If yes to
-either, it is not a fan-out — it is a `decision_tree`/`flowchart` with gates.
-The checker's `VIEW_TOPOLOGY_MISMATCH` rule encodes a narrow, checkable proxy
-for this: a single source node fanning out to 3+ targets with zero declared
-gates, on a `decision_tree`/`flowchart` view.
+## Semantics, not shape
+
+Do not reject a star merely because it is a star. A star may correctly represent independent dependencies. Instead, bind the approved process contract and run `PRECONDITION_BYPASS`: remove the required gate/outcome edge and search from every entry. If a protected target remains reachable, the diagram is wrong and the checker returns the bypass path.
+
+Likewise, do not reject a straight connector by style alone. Reject measured intersections and clipping in the rendered scene.

@@ -1,26 +1,25 @@
 ---
 name: best-practices-diagram-design
 description: >
-  Design gate for diagrams: choose the correct view before drawing, author a
-  typed spec, run deterministic legibility/topology checks, then render and
-  screenshot-verify. Use when an agent is about to draw a flowchart, decision
-  tree, sequence diagram, architecture/C4 diagram, or fan-out, or when a
-  rendered diagram needs review.
+  Validate diagram meaning and rendered geometry before publication. Use when
+  selecting or reviewing flowcharts, decision trees, sequences, lifecycles,
+  fanouts, swimlanes, C4/architecture diagrams, or Excalidraw templates.
 triggers:
   - design a diagram
   - diagram design
-  - which diagram type
-  - is this diagram badly designed
+  - diagram template
   - decision tree vs flowchart
   - diagram legibility
   - review a diagram
 provides:
-  - diagram-design-review
-  - diagram-spec-validation
+  - diagram-semantic-validation
+  - rendered-diagram-geometry-validation
+  - diagram-template-eligibility-guidance
 composes:
   - create-architecture
   - ops-excalidraw
   - create-svg
+  - jev
   - agentic-evals
 complies:
   - best-practices-skills
@@ -33,141 +32,105 @@ runtime_self_improvement: basic
 
 # best-practices-diagram-design
 
-This skill exists because an agent flattened a **gated sequential escalation
-ladder** into a **fan-out star** (wrong view), with labels overlapping arrows
-and no decision gates. It is the gate between "agent wants to draw a diagram"
-and "diagram gets shipped."
+A diagram passes only when it preserves the approved process **and** its rendered scene is legible. Do not reject a star merely because it is star-shaped, or a connector merely because it is straight. A star can correctly show independent relationships; a beautifully routed drawing can still describe the wrong process.
 
-Grabbing the fastest one-command describe/template render is the mistake this
-skill exists to stop. Choosing the view is a design decision, not a rendering
-detail — it takes one extra minute and it is not optional.
+## Required acceptance chain
 
-## Workflow
+```text
+requirements → semantic spec → semantic checks → render → measured scene
+             → geometry checks → screenshot review → publication
+```
 
-### 1. Choose the VIEW first
+Missing adapters, fonts, or mandatory checks mean `UNVERIFIED`, never PASS.
 
-| Intent | View | Renderer |
-|---|---|---|
-| Sequential steps with yes/no decisions | `decision_tree` / `flowchart` | graphviz or mermaid (compose `create-architecture`) |
-| Time-ordered interactions between actors | `sequence` | mermaid sequence diagram |
-| Structure / dependencies / components | `structure` (C4-style) | graphviz or `create-architecture` |
-| State machine with entry/exit states | `lifecycle` | graphviz/mermaid state diagram |
-| Genuinely parallel, independent options (≤4) | `fanout` | `create-svg` fan-out compiler |
+## 1. Record immutable requirements
 
-A **gated escalation ladder is a `decision_tree`/`flowchart`, never a
-`fanout`.** If a "parallel" set of options actually has an order, a lock, or
-a resolved?-gate between them, it is not parallel — pick `decision_tree`.
+Before choosing a view, record source-backed `requirements` in the typed JSON spec:
 
-See `references/view_selection.md` for the full table and rationale.
+- `intent`
+- `required_order`
+- `required_preconditions[]`: `{target, gate, outcome}`
+- `required_outcome_targets[]`: `{gate, outcome, target}`
 
-### 2. Author a typed diagram SPEC
+Rendering and layout repair must not alter this fragment. This proves preservation of an approved contract; it does not prove the contract was extracted correctly.
 
-Write a JSON spec (`view`, `nodes[]`, `edges[]`, `gates[]`,
-`terminal_states[]`) before touching a renderer. Schema and examples:
-`references/spec_schema.md`. Reference fixtures:
-`fixtures/good_decision_tree.json`, `fixtures/bad_fanout_star.json`.
+## 2. Choose the semantic view, then the renderer
 
-### 3. Run the checker
+| Reader question | View |
+|---|---|
+| What happens next, including decisions, retries, and shared endings? | `flowchart` |
+| Which mutually exclusive choices lead to distinct leaves? | strict `decision_tree` |
+| Which actor sends what, and in what order? | `sequence` |
+| What states exist and what triggers transitions? | `lifecycle` |
+| What exists, owns, contains, or depends on what? | `structure` |
+| What executes concurrently and how does it complete? | `flowchart` with typed fork/join |
+| What independent relationships radiate from one source? | `fanout` |
+
+The gated-escalation example is a **flowchart**, because success branches merge into a shared `resume` endpoint. “Acquire lock” is an action; “Lock acquired?” is a decision.
+
+## 3. Run semantic checks
 
 ```bash
 ./run.sh check path/to/spec.json --json
 ```
 
-Deterministic rule codes (error unless marked advisory):
+The checker uses `node.kind` (`action`, `decision`, `terminal`, `handoff`, `fork`, `join`) as canonical semantics and examines control-flow edges separately from annotations/dependencies.
 
-| code | meaning |
-|---|---|
-| `VIEW_TOPOLOGY_MISMATCH` | `decision_tree`/`flowchart` view but a single source fans out to many targets with zero gates — the star-for-sequence bug |
-| `MISSING_GATES` | `decision_tree`/`flowchart` has branching (a node with 2+ outgoing edges) but no decision gates declared |
-| `UNLABELED_BRANCH` | a gate's outgoing edge has no `branch_label` (no yes/no) |
-| `MISSING_TERMINAL_STATE` | a process view (`decision_tree`/`flowchart`/`sequence`/`lifecycle`) declares no `terminal_states` |
-| `LABEL_TOO_LONG` | a node label exceeds the limit (default 60 chars; 80 for fan-out source, 40 for fan-out target, per Excalidraw box sizing) |
-| `FANOUT_TOO_MANY` | `view: fanout` with more than 4 targets — the `create-svg` fan-out compiler's ceiling |
-| `CONNECTOR_ROUTING_STRAIGHT` (advisory, warning) | a `decision_tree`/`flowchart` edge declares `routing: straight` — prefer `orthogonal`/`curved` |
+Important deterministic errors:
 
-Exit code is non-zero only on error-level violations; `CONNECTOR_ROUTING_STRAIGHT`
-is advisory and never fails the gate on its own — see limits below.
+- `INTENT_VIEW_MISMATCH`
+- `REQUIRED_RELATION_MISSING`
+- `REQUIRED_ORDER_VIOLATED`
+- `PRECONDITION_BYPASS` — includes a concrete bypass path
+- `UNREACHABLE_PROCESS_NODE`
+- `TERMINAL_HAS_CONTINUATION`
+- `DECISION_OUTCOMES_INVALID`
+- `BRANCH_LABEL_MISMATCH`
+- `TREE_TOPOLOGY_INVALID`
+- `MISSING_GATES`, `UNLABELED_BRANCH`, `MISSING_TERMINAL_STATE`
 
-### 4. Render
+`CONDITION_COVERAGE_UNVERIFIED` is advisory for free-text predicates without a finite Boolean/enum domain. `LABEL_TOO_LONG` is authoring guidance; measured fit is the hard rendered gate. `FANOUT_TOO_MANY` is the current `create-svg` adapter ceiling, not a universal design rule.
 
-- `decision_tree`/`flowchart`/`sequence`/`lifecycle` → graphviz/mermaid via
-  `create-architecture`.
-- Editable/collaborative board → `ops-excalidraw`.
-- True fan-out (≤4 targets, checker passed `FANOUT_TOO_MANY`) → `create-svg`
-  fan-out compiler. `create-svg`'s fan-out compiler is NOT a general renderer
-  for sequences — using it for a sequential process is the exact bug this
-  skill was created to stop.
+### Why `PRECONDITION_BYPASS` matters
 
-### 5. Screenshot read-back acceptance
+For each required `{target, gate, outcome}`, the checker removes that required gate/outcome edge and searches from every entry. If the target remains reachable, the process is wrong regardless of layout. A fanout star that bypasses tier gates fails; a legitimate independent fanout passes.
 
-Render to an image and **look at it** — do not accept on file-exists alone.
-Check: one start point, consistent direction, labels inside boxes, no label
-sitting on top of an arrow, decision branches labeled, a visible terminal
-state. Compose `agentic-evals` for the fixture-based regression gate; this
-step is a human/agent visual read of the rendered artifact, not a checker
-rule (routing legibility can't be fully proven from the spec alone).
+## 4. Select a template or renderer
 
-## Connector routing (legibility)
+Use the small typed catalog in `references/template-catalog.md` rather than redrawing repeated patterns. Deterministic eligibility runs first. `$jev` may choose among the locally enumerated eligible templates; because Jev is a closed-set classifier, it must abstain/fall back rather than invent a template.
 
-Excalidraw supports orthogonal (elbow) and curved connectors, not just
-straight lines. For `decision_tree`/`flowchart`, default to **orthogonal or
-curved** routing that goes around nodes and labels. Straight diagonal arrows
-that cross a label or a box are the same defect that made the star fan-out
-unreadable in the original incident — the diagonal arrows crossed the tier
-labels. Declare `routing` per edge (`orthogonal` | `curved` | `straight`,
-default `orthogonal`); the checker warns on `straight` for flow/decision
-views. This is advisory because whether a specific arrow visually crosses a
-specific label can only be confirmed at step 5 (screenshot read-back), not
-from the spec's topology alone. See `references/legibility_rules.md`.
+`ops-excalidraw` owns parameterized template rendering. This skill owns eligibility and acceptance. A template passing once does not qualify all populated instances.
 
-## Common Mistakes
+## 5. Check actual rendered geometry
 
-### WRONG: fan-out for a gated sequence (the star)
-A detector → lock → tier-1 → tier-2 → tier-3 escalation ladder drawn as one
-node fanning out to 5 tier boxes with no gates. Looks like parallel options;
-is actually an ordered, gated sequence.
+For the implemented Graphviz SVG adapter:
 
-### RIGHT: decision_tree with gates
-`detector` → `lock` gate → `tier_1` → `resolved?` gate → (`resume` terminal |
-`tier_2`) → ... Each gate's edges carry `branch_label: "yes"/"no"`.
+```bash
+./run.sh geometry rendered.svg --json
+```
 
-### WRONG: labels overlapping arrows or boxes
-Long node text left at renderer defaults, straight diagonal arrows crossing
-under the text.
+It reads renderer-produced shapes, text, paths, transforms, stroke widths, and viewport. It does not trust author-written collision metadata.
 
-### RIGHT: short labels, routed connectors
-Node labels under the limit; orthogonal/curved edges routed around boxes and
-text (see Connector routing above).
+Deterministic errors:
 
-### WRONG: no decision gates on a branching flow
-Two outgoing edges from a node with no gate marking it a decision point —
-readers can't tell it's a choice vs. two unconditional continuations.
+- `NODE_OVERLAP`
+- `TEXT_OUTSIDE_CONTAINER`
+- `EDGE_TEXT_INTERSECTION`
+- `EDGE_NODE_INTERSECTION`
+- `CONTENT_CLIPPED`
 
-### RIGHT: explicit gates with labeled branches
-Declare the node in `gates[]`; label every outgoing edge `yes`/`no` (or the
-actual branch condition).
+`ROUTING_NOT_REALIZED` is advisory. A clean straight edge passes; an orthogonal or curved edge crossing text fails. Geometry support is currently Graphviz SVG only. Mermaid and Excalidraw remain `UNVERIFIED` until normalized-scene adapters and fixtures exist; see `references/roadmap.md`.
 
-### WRONG: no terminal states
-A flow that trails off with edges but never reaches a node in
-`terminal_states[]` — readers can't tell where it ends.
+## 6. Screenshot acceptance
 
-### RIGHT: explicit terminal states
-List every ending node (`resume`, `escalate`, `done`, `failed`, ...) in
-`terminal_states[]`.
+Inspect the actual intended reading size with Surf/`ops-excalidraw`: reading order, emphasis, crowding, branch comprehension, and whether the diagram answers its stated question. Screenshot judgment supplements semantic and geometry checks; it cannot replace them.
 
-### WRONG: grabbing the one-command describe/template because it's fast
-`ops-excalidraw describe` or a fan-out template is one command — but running
-it before choosing the view is how the star-for-sequence bug happened.
+## Validation
 
-### RIGHT: view choice before template/render command
-Steps 1–2 above happen before any renderer or template command is invoked.
+```bash
+bash sanity.sh
+```
 
-## Limits (do not overclaim)
+The retained mutations prove: a correct gated escalation passes; a relabeled star and an unrelated-gate variant still fail by semantics; a direct tier bypass returns a path; swapped branch labels fail; a five-target independent fanout passes semantics but hits only the adapter ceiling; clean straight Graphviz geometry passes; overlap, overflow, and connector intersection fixtures fail.
 
-- The checker proves **topology and label-length** claims deterministically.
-  It does NOT prove that a rendered arrow visually crosses a label — that is
-  advisory (`CONNECTOR_ROUTING_STRAIGHT`) and requires the step-5 screenshot
-  read-back for real confirmation.
-- `MISSING_GATES`/`UNLABELED_BRANCH` detect the *absence* of gate/label
-  metadata in the spec, not whether the eventual rendered diagram visually
-  communicates the decision — still requires read-back.
+Research provenance: `references/webgpt-design-review.md`. Template plan: `references/template-catalog.md`.
