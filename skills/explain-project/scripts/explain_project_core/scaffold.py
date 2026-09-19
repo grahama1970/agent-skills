@@ -18,6 +18,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import httpx
+from pydantic import BaseModel, ConfigDict, Field
+
 from .models import FeatureExplainer
 
 DIAGRAM_RE = re.compile(
@@ -44,6 +47,24 @@ class DiagramRef:
     rendered_svg: str | None
     editable: bool
     found_in: str
+
+
+class ProjectMemoryItem(BaseModel):
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
+    key: str = Field(alias="_key")
+    title: str = ""
+    answer: str | None = None
+    text: str | None = None
+    status: str = ""
+    source_refs: list[str] = Field(default_factory=list)
+    last_verified_commit: str | None = None
+
+
+class ProjectMemoryRecall(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    found: bool = False
+    items: list[ProjectMemoryItem] = Field(default_factory=list)
+    errors: list[Any] = Field(default_factory=list)
 
 
 def _rel(repo: Path, path: Path) -> str:
@@ -401,8 +422,11 @@ def _slug(value: str) -> str:
 
 
 def _tokens(value: str) -> set[str]:
-    stop = {"the", "and", "for", "that", "this", "with", "does", "why", "what", "how", "from", "into", "wait", "when"}
-    return {part for part in re.findall(r"[a-zA-Z_][a-zA-Z0-9_]{2,}", value.lower()) if part not in stop}
+    stop = {"the", "and", "for", "that", "this", "with", "does", "why", "what", "how", "from", "into", "wait", "when", "project"}
+    tokens = {part for part in re.findall(r"[a-zA-Z_][a-zA-Z0-9_]{2,}", value.lower()) if part not in stop}
+    if {"memory", "pipeline"} <= tokens:
+        tokens.update({"intent", "recall", "answer", "clarify", "deflect", "evidence"})
+    return tokens
 
 
 def _code_files(repo: Path) -> list[Path]:
@@ -418,9 +442,38 @@ def _code_files(repo: Path) -> list[Path]:
 
 
 def _target_for_question_in_file(repo: Path, path: Path, question: str) -> SourceTarget:
-    if path.suffix != ".py":
-        return _first_code_target(repo, path)
     text = path.read_text(encoding="utf-8", errors="replace")
+    if path.suffix != ".py":
+        lines = text.splitlines() or [""]
+        want = _tokens(question)
+        window = 80
+        def window_score(start: int) -> int:
+            chunk = "\n".join(lines[start:start + window]).lower()
+            endpoints = set(re.findall(
+                r"/(?:api/)?(?:memory/)?(?:extract-entities|intent|recall|create-evidence-case|answer|clarify|deflect)(?:/stream|/run)?",
+                chunk,
+            ))
+            return len(endpoints) * 10 + sum(token in chunk for token in want)
+
+        best_start = max(range(0, len(lines), 20), key=window_score)
+        method_re = re.compile(r"^\s+(?:private|public|protected)\s+(?:async\s+)?\*?\w+\(")
+        route_start = next(
+            (index for index in range(best_start, max(-1, best_start - 1000), -1) if re.match(r"\s*app\.(?:get|post|put|patch|delete)\(", lines[index]) or method_re.match(lines[index])),
+            None,
+        )
+        route_end = None
+        if route_start is not None:
+            route_end = next(
+                (index - 1 for index in range(route_start + 1, len(lines)) if re.match(r"\s*app\.(?:get|post|put|patch|delete)\(", lines[index]) or method_re.match(lines[index])),
+                len(lines) - 1,
+            )
+        start = (route_start if route_start is not None else best_start) + 1
+        end = (route_end + 1) if route_end is not None else min(len(lines), best_start + window)
+        breakpoint = next(
+            (number for number in range(start, end + 1) if lines[number - 1].strip() and not lines[number - 1].lstrip().startswith(("//", "/*", "*"))),
+            start,
+        )
+        return SourceTarget(_rel(repo, path), start, end, None, breakpoint)
     try:
         tree = ast.parse(text)
     except SyntaxError:
@@ -466,6 +519,21 @@ def _select_question_target(repo: Path, question: str, entrypoint: Path | None =
         text = path.read_text(encoding="utf-8", errors="replace")
         hay = text.lower() + " " + path.as_posix().lower()
         score = sum(3 if token in path.stem.lower() else 1 for token in want if token in hay)
+        parts = {part.lower() for part in path.parts}
+        stem = path.stem.lower()
+        endpoint_count = len({
+            match.group(1) for match in re.finditer(
+                r"/(?:api/)?(?:memory/)?(extract-entities|intent|recall|create-evidence-case|answer|clarify|deflect)(?:/stream|/run)?",
+                text.lower(),
+            )
+        })
+        score += endpoint_count * 3
+        score += 4 if "server" in parts else 0
+        score += 4 if "pipeline" in parts or "pipeline" in stem else 0
+        score += 3 if "adapter" in stem else 0
+        score += 5 if "memory-turn" in parts else 0
+        score -= 6 if ".test" in path.name or "tests" in parts else 0
+        score -= 4 if "components" in parts else 0
         if score and (best is None or score > best[0]):
             best = (score, path)
     if best is None:
@@ -485,8 +553,14 @@ def _ensure_question_diagram(repo: Path, question: str, target: SourceTarget, ou
     existing = find_diagrams(repo, entry)
     diagram_id = _diagram_id(repo, question)
     registry = out / "diagram-registry.json"
-    if existing:
-        diagram = existing[0]
+    question_tokens = _tokens(question)
+    relevant = [
+        candidate for candidate in existing
+        if candidate.source_kind == "excalidraw"
+        or len(question_tokens & _tokens(candidate.source)) >= 2
+    ]
+    if relevant:
+        diagram = relevant[0]
     else:
         board = out / "diagrams" / f"{diagram_id}.excalidraw"
         board.parent.mkdir(parents=True, exist_ok=True)
@@ -534,6 +608,45 @@ def _ensure_question_diagram(repo: Path, question: str, target: SourceTarget, ou
     return diagram, json.loads(register.stdout)
 
 
+def _endpoint_flow(repo: Path, target: SourceTarget) -> list[str]:
+    lines = (repo / target.file).read_text(encoding="utf-8", errors="replace").splitlines()
+    source = "\n".join(lines[target.start_line - 1:target.end_line])
+    endpoints: list[str] = []
+    for match in re.finditer(r"/(?:api/)?(?:memory/)?(extract-entities|intent|recall|create-evidence-case|answer|clarify|deflect)(?:/stream|/run)?", source):
+        endpoint = f"/{match.group(1)}"
+        if endpoint not in endpoints:
+            endpoints.append(endpoint)
+    return endpoints
+
+
+def _recall_project_answer(repo: Path, question: str) -> ProjectMemoryItem | None:
+    try:
+        with httpx.Client(
+            base_url="http://127.0.0.1:8601",
+            timeout=httpx.Timeout(20.0, connect=3.0),
+        ) as client:
+            response = client.post("/recall", json={
+                "q": question,
+                "scope": repo.name,
+                "collections": ["project_memory_active"],
+                "k": 5,
+            })
+            response.raise_for_status()
+            recall = ProjectMemoryRecall.model_validate(response.json())
+    except (httpx.HTTPError, ValueError):
+        return None
+    normalized = question.strip().casefold()
+    return next(
+        (
+            item for item in recall.items
+            if item.status == "active"
+            and item.title.strip().casefold() == normalized
+            and (item.answer or item.text)
+        ),
+        None,
+    )
+
+
 def _question_record(
     question: str,
     repo: Path,
@@ -541,8 +654,22 @@ def _question_record(
     diagram: DiagramRef,
     project_state: Path,
     acceptance_ref: dict[str, Any] | None = None,
+    memory_item: ProjectMemoryItem | None = None,
 ) -> FeatureExplainer:
     bp_index = 0 if target.breakpoint_line else None
+    endpoints = _endpoint_flow(repo, target)
+    direct_answer = (
+        (memory_item.answer or memory_item.text or "")
+        if memory_item else
+        "Sparta sends the turn through " + " → ".join(f"`{endpoint}`" for endpoint in endpoints) +
+        "; each stage keeps routing, retrieval, and final-answer authority separate."
+        if endpoints else f"The selected implementation path starts in `{target.file}`."
+    )
+    memory_boundary = (
+        f" Active project-memory record: project_memory_versions/{memory_item.key}; "
+        f"last verified commit: {memory_item.last_verified_commit or 'not recorded'}."
+        if memory_item else " No exact active project-memory answer matched; the answer was derived from source."
+    )
     record: dict[str, Any] = {
         "schema": "project.feature_explainer.v1",
         "feature_id": _slug(question).replace("-", "."),
@@ -550,8 +677,8 @@ def _question_record(
         "question_family": "walkthrough",
         "question": question,
         "teleprompter_points": [
-            "Here is the short version in plain English.",
-            f"The answer is in `{target.file}`.",
+            direct_answer,
+            f"The implementation evidence is in `{target.file}`.",
             "We will connect the code, diagram, and runtime proof one step at a time.",
             "Anything not proven by the shown source, acceptance bundle, or receipts stays a non-claim.",
         ],
@@ -564,12 +691,12 @@ def _question_record(
             "editable": diagram.editable,
             "compiled_by": "ops-excalidraw registry",
         },
-        "proof_boundary": f"Question-first scaffold from local source plus project-state receipt {project_state}. {_acceptance_boundary(acceptance_ref)} Teaching tone is plain, spoken, and concise; architecture completeness is not claimed.",
+        "proof_boundary": f"Question-first scaffold from local source plus project-state receipt {project_state}.{memory_boundary} {_acceptance_boundary(acceptance_ref)} Teaching tone is plain, spoken, and concise; architecture completeness is not claimed.",
         "acceptance_contract": acceptance_ref,
         "debugger_stops": [],
         "confidence": "medium",
         "steps": [
-            {"step_id": "question", "title": "Answer the question first", "bullets": ["Start with the direct answer.", "Name the source file before details."], "source_range_index": 0, "source_explanation": f"Selected for question tokens: {', '.join(sorted(_tokens(question))[:6])}.", "diagram_node_ids": ["question"], "proof_boundary": "Lexical source selection is a starting point for project-agent review.", "confidence": "medium"},
+            {"step_id": "question", "title": "Answer the question first", "bullets": [direct_answer, f"Source: `{target.file}`."], "source_range_index": 0, "source_explanation": f"Selected for question tokens: {', '.join(sorted(_tokens(question))[:8])}.", "diagram_node_ids": ["question"], "proof_boundary": "The endpoint order is extracted from the selected source range; broader architecture remains outside this record.", "confidence": "medium"},
             {"step_id": "source", "title": "Walk the code slowly", "bullets": [f"Open `{target.file}`.", "Explain one branch or state change at a time."], "source_range_index": 0, "source_explanation": "This source range is the cockpit's first teaching path.", "debugger_stop_index": bp_index, "diagram_node_ids": ["source"], "proof_boundary": "Source explains behavior only for this range.", "confidence": "medium"},
             {"step_id": "breakpoint", "title": "Pause only when state matters", "bullets": ["Use `$debugger` when a live value answers the question.", "Show captured locals as proof, not as decoration."], "source_range_index": 0, "source_explanation": "Breakpoint target is created for the relevant code path.", "debugger_stop_index": bp_index, "diagram_node_ids": ["breakpoint"], "proof_boundary": "Debugger execution requires a debugger-owned proof receipt.", "confidence": "medium"},
         ],
@@ -590,9 +717,10 @@ def answer_question(
     out.mkdir(parents=True, exist_ok=True)
     project_state = run_project_state(repo, out / "project-state.quick.json")
     acceptance_ref = _load_acceptance_contract(repo, acceptance_bundle)
+    memory_item = _recall_project_answer(repo, question)
     target = _select_question_target(repo, question, entrypoint)
     diagram, diagram_receipt = _ensure_question_diagram(repo, question, target, out)
-    record = _question_record(question, repo, target, diagram, project_state, acceptance_ref)
+    record = _question_record(question, repo, target, diagram, project_state, acceptance_ref, memory_item)
     explainers = out / "explainers.jsonl"
     explainers.write_text(record.model_dump_json(by_alias=True) + "\n", encoding="utf-8")
     breakpoints = [{"file": stop.file, "line": stop.line, "proves": stop.proves} for stop in record.debugger_stops]
@@ -613,6 +741,14 @@ def answer_question(
         "explainers": str(explainers),
         "project_state": str(project_state),
         "acceptance_contract": record.acceptance_contract.model_dump(by_alias=True, mode="json") if record.acceptance_contract else None,
+        "project_memory": (
+            {
+                "ref": f"project_memory_versions/{memory_item.key}",
+                "last_verified_commit": memory_item.last_verified_commit,
+                "source_refs": memory_item.source_refs,
+            }
+            if memory_item else None
+        ),
         "selected_source": target.__dict__,
         "breakpoints": breakpoints,
         "debugger_proof": debugger_proof,

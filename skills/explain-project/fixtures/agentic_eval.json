@@ -661,6 +661,29 @@
       "seams": [
         "acceptance-contract-boundary"
       ]
+    },
+    {
+      "name": "sparta-memory-pipeline-question",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "set -o pipefail; cd .. && T=$(mktemp -d) && ./run.sh answer-question --repo /home/graham/workspace/experiments/sparta --question 'How does the Memory pipeline work in the Sparta project?' --out $T/out >$T/monitor.json && python3 - <<'PY' $T/monitor.json $T/out/explainers.jsonl\nimport json,sys\nm=json.load(open(sys.argv[1])); r=json.loads(open(sys.argv[2]).readline()); source=m['selected_source']['file']; answer=r['teleprompter_points'][0]\nassert source.endswith('SpartaComplianceAdapter.ts'), source\nassert m['diagram']['source_kind']=='excalidraw' and m['diagram']['editable'] is True\nassert m['project_memory']['ref'].startswith('project_memory_versions/')\nassert all(phrase in answer for phrase in ['extracts entities','initial Memory recall','finalize intent','Memory answer']), answer\nassert 'sparta-front-helmet' not in m['diagram']['source_path']\nprint('EXPLAIN_PROJECT_SPARTA_MEMORY_PIPELINE_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXPLAIN_PROJECT_SPARTA_MEMORY_PIPELINE_OK"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e",
+      "notes": "Runs the real client-style architecture question against the live Sparta checkout. It proves source and editable-diagram selection, not debugger execution or human acceptance of the generated board.",
+      "seams": [
+        "routing-source-grounding",
+        "excalidraw-proposal-boundary"
+      ]
     }
   ],
   "capability_claims": [
