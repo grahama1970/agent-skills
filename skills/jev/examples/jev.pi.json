@@ -1,0 +1,16 @@
+{
+  "schema": "jev.pi.config.v1",
+  "mode": "off",
+  "model": "jev-latest",
+  "policy": {
+    "allow_egress": false,
+    "data_class": "unknown",
+    "threshold": 0.98,
+    "timeout_ms": 1500,
+    "blocked_terms": []
+  },
+  "memory": null,
+  "skillNames": ["memory", "ingest-code", "debugger", "best-practices-python"],
+  "requiredSkills": ["memory", "best-practices-python"],
+  "contextChars": 12000
+}

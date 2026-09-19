@@ -1,0 +1,30 @@
+{
+  "schema": "jev.immutable_goal.v1",
+  "goal_id": "jev-native-harness-efficiency-v1",
+  "revision": 1,
+  "origin": "Owner-requested scope in the 2026-09-19 implementation conversation",
+  "owner_signature": null,
+  "outcome": "Reduce unnecessary generative-model tokens and elapsed time in Pi and Tau by using native Jev typed decisions for intent/capability, skills, bounded tool proposals and useful Memory/code evidence, without weakening task success, data boundaries, freshness, evidence authority or human checkpoints.",
+  "architecture": {
+    "pi": "Native TypeScript extension and library; no Python subprocess for Jev calls",
+    "tau": "Native Python package and typed registration decorator; no Node dependency",
+    "shared": "Versioned question definitions, strict decision semantics, schemas and conformance fixtures",
+    "memory": "Shared service owns retrieval, ingest-code projection, grounded routing and QRA state",
+    "monitor_skills": "Catalog qualification/version evidence and drift feedback, not live quota guesses",
+    "executor": "Pi/Tau retain policy, source checks, capacity reservation, execution and completion authority"
+  },
+  "acceptance": [
+    {"id": "JEV-01", "requirement": "Native Python and TypeScript agree on decisions and bindings for shared valid, malformed, uncertain and denied fixtures."},
+    {"id": "JEV-02", "requirement": "Complete-payload egress checks precede hosted calls; restricted/unknown data does not silently reach Jev or a hosted fallback."},
+    {"id": "JEV-03", "requirement": "Pi reads scoped ingest-code evidence through Memory, retains source identity and uncertainty, and never presents indexing or relevance as current-source repair proof."},
+    {"id": "JEV-04", "requirement": "Skill selection preserves explicit requests, required contracts and qualified version evidence; missing/broken skills are distinguished from semantic no-match."},
+    {"id": "JEV-05", "requirement": "Intent/capability judgment is separate from deterministic model eligibility, cost, context fit, live rate/capacity admission and user pins."},
+    {"id": "JEV-06", "requirement": "Tool candidates have validated bound arguments; the owner rechecks state/schema/policy and produces independent execution receipts."},
+    {"id": "JEV-07", "requirement": "Memory answer/clarify/deflect/draft semantics remain shared; implementation work continues after informational recall and genuine human/QRA checkpoints cannot be silently approved."},
+    {"id": "JEV-08", "requirement": "Installed Pi, headless/subagent sessions and Tau integration pass cancellation, replay, version drift, no-match and dependency-failure canaries."},
+    {"id": "JEV-09", "requirement": "On retained matched workloads, main-model token use and end-to-end elapsed time improve over the deterministic-cleanup baseline, including Jev overhead, caches, queues and retries."},
+    {"id": "JEV-10", "requirement": "The same matched workloads retain required evidence and independently verified success; no savings claim relies only on character counts or model self-reported completion."}
+  ],
+  "completion_rule": "MET requires retained evidence for every acceptance ID, including live integrations and matched-task efficacy. Offline tests alone cannot satisfy the goal.",
+  "change_rule": "Changes to this target require explicit owner authorization, a new revision and preserved prior goal evidence; agents may not weaken it to match implementation."
+}
