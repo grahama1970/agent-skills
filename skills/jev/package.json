@@ -1,0 +1,16 @@
+{
+  "name": "@grahama1970/jev-harness",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Native Pi extension and typed Jev routing primitives; no Python bridge",
+  "engines": {"node": ">=22.6"},
+  "pi": {"extensions": ["./typescript/pi.ts"]},
+  "exports": {".": "./typescript/runtime.ts", "./pi": "./typescript/pi.ts"},
+  "scripts": {
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {"@typesafe-ai/sdk": "0.6.0"},
+  "devDependencies": {"@types/node": "^22.0.0", "typescript": "^5.8.0"}
+}
